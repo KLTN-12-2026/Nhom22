@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tạo bộ thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .form-grid { display: grid; gap: var(--sp-5); }
+  .form-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+  .form-foot .row { margin-left: auto; }
+  .preview-row { border-top: var(--rule) solid var(--primary); }
+  .preview-row .answer-row { grid-template-columns: 1.5rem minmax(0, 1fr); padding-right: 0; }
+  .danger-zone { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--primary-line); display: grid; gap: var(--sp-2); justify-items: start; }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F1.8 · UI14 · API: POST /decks, GET/PATCH/DELETE /decks/{id} (version), GET /public/topics (B1.7, B1.8) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span id="mode-code">Phiếu tạo bộ thẻ</span></div>
+          <a class="btn btn-quiet" id="back" href="bo-the.html" style="margin:0 0 var(--sp-2) -12px;justify-self:start"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>Bộ của tôi</span></a>
+            <h1 id="page-title">Tạo bộ thẻ</h1>
+          </div>
+
+          <form id="form" class="form-grid" novalidate>
+            <div data-form-error hidden></div>
+            <div class="field">
+              <label class="field-label" for="name">Tên bộ thẻ</label>
+              <input class="input" id="name" name="name" maxlength="160" required placeholder="Ví dụ: TOEIC Part 5 — từ hay sai">
+              <p class="field-counter" id="name-count" aria-live="polite">0/150</p>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="description"><span>Mô tả</span><span class="optional">Không bắt buộc</span></label>
+              <textarea class="textarea" id="description" name="description" maxlength="1000" placeholder="Bộ này dùng để làm gì, lấy từ đâu"></textarea>
+              <p class="field-error"></p>
+            </div>
+            <fieldset class="fieldset field" data-field="goal">
+              <legend>Mục tiêu</legend>
+              <div class="choice-grid cols-2">
+                <label class="choice choice-card"><input type="radio" name="goal" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="goal" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">TOEIC</span></span></label>
+              </div>
+              <p class="field-error"></p>
+            </fieldset>
+            <div class="field">
+              <label class="field-label" for="topicId">Chủ đề</label>
+              <select class="select" id="topicId" name="topicId" required><option value="">Chọn chủ đề</option></select>
+              <p class="field-error"></p>
+            </div>
+            <fieldset class="fieldset field" data-field="level">
+              <legend>Trình độ</legend>
+              <div class="choice-grid cols-2">
+                <label class="choice"><input type="radio" name="level" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span></span></label>
+              </div>
+              <p class="field-error"></p>
+            </fieldset>
+            <fieldset class="fieldset field" data-field="visibility">
+              <legend>Ai xem được bộ này?</legend>
+              <div class="choice-grid">
+                <label class="choice choice-card"><input type="radio" name="visibility" value="RIENG_TU" checked><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Riêng tư</span><span class="choice-desc">Chỉ bạn thấy. Không xuất hiện trong thư viện.</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="visibility" value="CONG_KHAI"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Công khai</span><span class="choice-desc">Hiện trong thư viện với nhãn “Người học chia sẻ”. Người khác sao chép được nội dung, không thấy tiến độ học của bạn.</span></span></label>
+              </div>
+            </fieldset>
+            <div class="form-foot">
+              <div class="row">
+                <a class="btn btn-quiet" id="cancel" href="bo-the.html">Hủy</a>
+                <button type="submit" class="btn btn-primary btn-lg" id="submit">Tạo bộ thẻ</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="danger-zone" id="danger" hidden>
+            <h2 style="font-size:var(--fs-h3)">Xóa bộ thẻ</h2>
+            <p class="muted small">Xóa bộ và toàn bộ thẻ trong bộ. Bộ đã có lịch sử học sẽ được ẩn để giữ thống kê của bạn.</p>
+            <button type="button" class="btn btn-danger" id="delete">Xóa bộ thẻ</button>
+          </div>
+        </section>
+
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="pv-title">
+            <h2 class="panel-title" id="pv-title">Xem trước trong danh sách</h2>
+            <ol class="answer-list preview-row" role="list"><li class="answer-row"><span class="answer-no">1</span><div class="answer-main"><span class="answer-title" id="pv-name" style="position:static">Tên bộ thẻ</span><div class="answer-meta" id="pv-meta"></div></div></li></ol>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const id = VL.params().id;
+  const region = document.getElementById("region");
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  let version;
+  let topics = [];
+
+  function preview() {
+    const fd = new FormData(form);
+    const name = (fd.get("name") || "").trim();
+    document.getElementById("pv-name").textContent = name || "Tên bộ thẻ";
+    const n = name.length;
+    const counter = document.getElementById("name-count");
+    counter.textContent = n + "/150";
+    counter.toggleAttribute("data-over", n > 150);
+    const t = topics.find((x) => x.id === fd.get("topicId"));
+    document.getElementById("pv-meta").innerHTML =
+      (fd.get("visibility") === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
+      (fd.get("goal") ? "<span>" + VL.GOAL[fd.get("goal")] + "</span>" : "") + (t ? "<span>" + VL.esc(t.name) + "</span>" : "") + (fd.get("level") ? VL.levelHtml(fd.get("level")) : "");
+  }
+  form.addEventListener("input", preview);
+  form.addEventListener("change", preview);
+
+  VL.load(region, {
+    fetch: async () => {
+      topics = await VL.api("GET", "/public/topics");
+      return id ? VL.api("GET", "/decks/" + encodeURIComponent(id)) : null;
+    },
+    render: (deck) => {
+      form.topicId.insertAdjacentHTML("beforeend", topics.map((t) => '<option value="' + t.id + '">' + VL.esc(t.name) + "</option>").join(""));
+      if (deck) {
+        version = deck.version;
+        document.title = "Sửa bộ thẻ – VocabLearning";
+        document.getElementById("page-title").textContent = "Sửa bộ thẻ";
+        document.getElementById("mode-code").textContent = "Phiếu sửa bộ thẻ";
+        submit.textContent = "Lưu thay đổi";
+        const back = "bo-the-chi-tiet.html?id=" + deck.id;
+        document.getElementById("back").href = back;
+        document.querySelector("#back span").textContent = deck.name.length > 40 ? deck.name.slice(0, 40) + "…" : deck.name;
+        document.getElementById("cancel").href = back;
+        form.name.value = deck.name;
+        form.description.value = deck.description || "";
+        form.topicId.value = deck.topicId;
+        form.querySelector('[name="goal"][value="' + deck.goal + '"]').checked = true;
+        form.querySelector('[name="level"][value="' + deck.level + '"]').checked = true;
+        form.querySelector('[name="visibility"][value="' + deck.visibility + '"]').checked = true;
+        document.getElementById("danger").hidden = false;
+      } else {
+        const s = VLDemo.db.learning[VL.me().id];
+        if (s && s.goal) form.querySelector('[name="goal"][value="' + s.goal + '"]').checked = true;
+        if (s && s.level) form.querySelector('[name="level"][value="' + s.level + '"]').checked = true;
+      }
+      preview();
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    const fd = new FormData(form);
+    const data = { name: fd.get("name"), description: fd.get("description"), goal: fd.get("goal"), topicId: fd.get("topicId"), level: fd.get("level"), visibility: fd.get("visibility") };
+    VL.busy(submit, async () => {
+      try {
+        if (id) {
+          const d = await VL.api("PATCH", "/decks/" + id, Object.assign(data, { version }));
+          version = d.version;
+          VL.toast("Đã lưu bộ thẻ");
+        } else {
+          const d = await VL.api("POST", "/decks", data);
+          location.href = "bo-the-chi-tiet.html?id=" + d.id + "&created=1";
+        }
+      } catch (err) {
+        if (err.code === "VERSION_CONFLICT") {
+          const box = form.querySelector("[data-form-error]");
+          box.hidden = false;
+          box.className = "notice notice-warning";
+          box.innerHTML = VL.icon("alert") + '<div class="stack-sm"><p class="notice-title">' + VL.esc(err.message) + '</p><div><button type="button" class="btn btn-secondary btn-sm" onclick="location.reload()">Tải lại</button></div></div>';
+          return;
+        }
+        VL.showErrors(form, err);
+      }
+    });
+  });
+
+  const del = document.getElementById("delete");
+  del.addEventListener("click", async () => {
+    const ok = await VL.confirm({ title: "Xóa bộ thẻ này?", message: "“" + form.name.value + "” và toàn bộ thẻ trong bộ sẽ bị xóa khỏi danh sách của bạn.", confirmText: "Xóa bộ thẻ", danger: true });
+    if (!ok) return;
+    VL.busy(del, async () => {
+      try { await VL.api("DELETE", "/decks/" + id); location.href = "bo-the.html?deleted=1"; }
+      catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

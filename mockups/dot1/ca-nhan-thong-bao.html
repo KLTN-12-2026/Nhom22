@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thông báo và nhắc học – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .time-field { max-width: 220px; }
+  .time-field[data-disabled] { opacity: 0.5; }
+</style>
+</head>
+<body data-root=".." data-nav="notify" data-auth="required">
+<!-- F1.5 · UI43 · API: GET/PUT /me/notification-settings (B1.5) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <nav class="tabs account-tabs" aria-label="Tài khoản">
+            <a class="tab" href="ca-nhan.html">Hồ sơ</a>
+            <a class="tab" href="ca-nhan-hoc-tap.html">Thiết lập học</a>
+            <a class="tab" href="ca-nhan-bao-mat.html">Bảo mật</a>
+            <a class="tab" href="ca-nhan-thong-bao.html" aria-current="page">Thông báo</a>
+          </nav>
+          <div class="form-head">
+            <div class="form-code"><span>Tài khoản</span><span>Thông báo</span></div>
+            <h1 id="page-title">Thông báo và nhắc học</h1>
+            <p>Thông báo quan trọng về tài khoản (xác thực, đổi mật khẩu) luôn được gửi qua email.</p>
+          </div>
+
+          <form id="form" class="settings-form" novalidate>
+            <div data-form-error hidden></div>
+            <fieldset class="fieldset">
+              <legend>Kênh nhận thông báo</legend>
+              <label class="choice choice-card"><input type="checkbox" name="inApp"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Trong ứng dụng</span><span class="choice-desc">Hiện ở biểu tượng chuông khi bạn đăng nhập.</span></span></label>
+              <label class="choice choice-card"><input type="checkbox" name="email"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Email</span><span class="choice-desc">Tổng kết tuần và nhắc học. Mỗi email có liên kết ngừng nhận.</span></span></label>
+            </fieldset>
+            <fieldset class="fieldset">
+              <legend>Nhắc học mỗi ngày</legend>
+              <label class="choice choice-card"><input type="checkbox" name="studyReminder" id="studyReminder"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Nhắc tôi học</span><span class="choice-desc">Không nhắc nếu hôm đó bạn đã học xong.</span></span></label>
+              <div class="field time-field" id="time-field">
+                <label class="field-label" for="reminderTime">Giờ nhắc</label>
+                <input class="input" id="reminderTime" name="reminderTime" type="time">
+                <p class="field-hint" id="tz-hint"></p>
+                <p class="field-error"></p>
+              </div>
+            </fieldset>
+            <div class="settings-foot">
+              <button type="submit" class="btn btn-primary btn-lg" id="save">Lưu cài đặt</button>
+              <span class="saved-at" id="saved-at" aria-live="polite"></span>
+            </div>
+          </form>
+        </section>
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="n-title">
+            <h2 class="panel-title" id="n-title">Khi nào có nhắc học?</h2>
+            <p class="small muted">Nhắc học gửi theo múi giờ trong Hồ sơ. Mỗi ngày tối đa một lần cho mỗi kênh.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const save = document.getElementById("save");
+  const tf = document.getElementById("time-field");
+  const sync = () => { const on = form.studyReminder.checked; form.reminderTime.disabled = !on; tf.toggleAttribute("data-disabled", !on); };
+  form.studyReminder.addEventListener("change", sync);
+  document.getElementById("tz-hint").textContent = "Theo múi giờ " + (VL.me().timeZone || "Asia/Ho_Chi_Minh");
+
+  VL.load(document.getElementById("region"), {
+    fetch: () => VL.api("GET", "/me/notification-settings"),
+    render: (s) => {
+      form.inApp.checked = s.inApp; form.email.checked = s.email; form.studyReminder.checked = s.studyReminder; form.reminderTime.value = s.reminderTime;
+      sync();
+    }
+  });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(save, async () => {
+      try {
+        await VL.api("PUT", "/me/notification-settings", { inApp: form.inApp.checked, email: form.email.checked, studyReminder: form.studyReminder.checked, reminderTime: form.reminderTime.value });
+        VL.toast("Đã lưu cài đặt");
+        document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      } catch (err) { VL.showErrors(form, err); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

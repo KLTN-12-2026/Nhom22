@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bộ của tôi – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-3); flex-wrap: wrap; }
+  .plan { display: grid; gap: var(--sp-3); }
+  .plan-line { display: flex; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+  .plan-line span:first-child { color: var(--primary); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 600; font-size: var(--fs-small); }
+  .plan-line span:last-child { font-weight: 650; text-align: right; }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F1.8 · UI13 · API: GET /decks?tab=mine|favorites&q (B1.8), GET /me/learning-settings (B1.5) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Bộ của tôi</span><span id="count-code">—</span></div>
+            <div class="head-row">
+              <h1 id="page-title">Bộ thẻ của bạn</h1>
+              <a class="btn btn-primary" href="bo-the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Tạo bộ thẻ</a>
+            </div>
+          </div>
+
+          <p class="notice notice-success" id="welcome" hidden style="margin-bottom:var(--sp-5)"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Đã lưu thiết lập học. Các bộ bạn sao chép nằm ở đây, mở một bộ để thêm hoặc sửa thẻ.</span></p>
+
+          <div class="row-between" style="margin-bottom:var(--sp-4)">
+            <div class="tabs" role="tablist" aria-label="Loại bộ thẻ">
+              <button class="tab" role="tab" id="tab-mine" aria-selected="true" aria-controls="region" data-tab="mine">Của tôi</button>
+              <button class="tab" role="tab" id="tab-fav" aria-selected="false" aria-controls="region" data-tab="favorites">Yêu thích</button>
+            </div>
+            <div class="input-with-icon" style="flex:1 1 220px;max-width:320px">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <label class="sr-only" for="q">Tìm trong bộ của tôi</label>
+              <input class="input" id="q" type="search" placeholder="Tìm theo tên bộ" autocomplete="off">
+            </div>
+          </div>
+
+          <div data-view="loading" id="region" role="tabpanel" aria-labelledby="tab-mine">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <div class="deck-head has-actions" aria-hidden="true"><span>Số</span><span>Bộ thẻ</span><span>Mục tiêu</span><span>Trình độ</span><span style="text-align:right">Số thẻ</span><span></span></div>
+              <ol class="answer-list" id="list" role="list"></ol>
+            </div>
+            <div data-when="empty">
+              <div class="empty" id="empty-box">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span><span data-n="3"><i></i><i></i><i></i><i></i></span></div>
+                <h2 id="empty-title">Bạn chưa có bộ thẻ nào</h2>
+                <p id="empty-text">Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ đầu tiên.</p>
+                <div class="row"><a class="btn btn-primary" href="thu-vien.html">Xem thư viện</a><a class="btn btn-secondary" href="bo-the-tao.html">Tạo bộ thẻ</a></div>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="plan-title">
+            <h2 class="panel-title" id="plan-title">Kế hoạch mỗi ngày</h2>
+            <div class="plan" id="plan"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-line"></div></div></div>
+            <a class="btn btn-quiet" href="ca-nhan-hoc-tap.html" style="margin:var(--sp-2) 0 0 -12px">Đổi thiết lập học</a>
+          </section>
+          <section class="panel" aria-labelledby="csv-title">
+            <h2 class="panel-title" id="csv-title">Có sẵn danh sách từ?</h2>
+            <p class="small muted">Mở một bộ thẻ rồi chọn <strong>Nhập CSV</strong> để thêm nhiều thẻ một lần. Tệp tối đa 1000 dòng.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  if (p.welcome) document.getElementById("welcome").hidden = false;
+  if (p.deleted) VL.toast("Đã xóa bộ thẻ");
+  const region = document.getElementById("region");
+  let tab = p.tab === "favorites" ? "favorites" : "mine";
+
+  VL.api("GET", "/me/learning-settings").then((s) => {
+    document.getElementById("plan").innerHTML =
+      '<p class="plan-line"><span>Mục tiêu</span><span>' + VL.esc(s.goal ? VL.GOAL[s.goal] : "Chưa chọn") + "</span></p>" +
+      '<p class="plan-line"><span>Trình độ</span><span>' + VL.levelHtml(s.level) + "</span></p>" +
+      '<p class="plan-line"><span>Thời gian</span><span>' + s.minutesPerDay + " phút/ngày</span></p>" +
+      '<p class="plan-line"><span>Từ mới</span><span>' + s.newCardsPerDay + " từ/ngày</span></p>";
+  });
+
+  function load() {
+    const q = document.getElementById("q").value.trim();
+    document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    region.setAttribute("aria-labelledby", tab === "mine" ? "tab-mine" : "tab-fav");
+    VL.load(region, {
+      fetch: () => VL.api("GET", "/decks?tab=" + tab + (q ? "&q=" + encodeURIComponent(q) : "")),
+      isEmpty: (d) => !d.items.length,
+      empty: () => {
+        document.getElementById("count-code").textContent = "0 bộ";
+        const fav = tab === "favorites";
+        document.getElementById("empty-title").textContent = q ? "Không có bộ nào tên chứa “" + q + "”" : fav ? "Chưa có bộ yêu thích" : "Bạn chưa có bộ thẻ nào";
+        document.getElementById("empty-text").textContent = q ? "Thử từ khóa khác." : fav ? "Bấm Yêu thích ở một bộ trong thư viện để lưu lại xem sau." : "Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ đầu tiên.";
+      },
+      render: (d) => {
+        document.getElementById("count-code").textContent = d.totalElements + " bộ";
+        document.getElementById("list").innerHTML = d.items.map((deck, i) => {
+          const mine = deck.ownerId === VL.me().id;
+          const href = mine ? "bo-the-chi-tiet.html?id=" + deck.id : "thu-vien-chi-tiet.html?id=" + deck.id;
+          return '<li class="answer-row deck-row has-actions">' +
+            '<span class="answer-no">' + (i + 1) + "</span>" +
+            '<div class="answer-main"><a class="answer-title" href="' + href + '">' + VL.esc(deck.name) + "</a>" +
+            '<div class="answer-meta">' + (deck.visibility === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
+            (deck.sourceDeckId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
+            '<div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + VL.levelHtml(deck.level) + '</span><span class="col-count">' + deck.cardCount + " thẻ</span></div>" +
+            '<div class="deck-actions">' + (mine ? '<a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + deck.id + '">Mở</a><a class="btn btn-quiet btn-sm" href="bo-the-tao.html?id=' + deck.id + '">Sửa</a>' : '<a class="btn btn-secondary btn-sm" href="' + href + '">Xem</a>') + "</div></li>";
+        }).join("");
+      }
+    });
+  }
+  document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { tab = b.dataset.tab; history.replaceState(null, "", tab === "favorites" ? "?tab=favorites" : "?"); load(); }));
+  document.querySelector(".tabs").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const tabs = [...document.querySelectorAll("[data-tab]")];
+    const i = tabs.findIndex((t) => t.dataset.tab === tab);
+    const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    n.focus(); n.click();
+  });
+  let t;
+  document.getElementById("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 300); });
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thêm thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .form-grid { display: grid; gap: var(--sp-5); }
+  .two { display: grid; gap: var(--sp-4); }
+  @media (min-width: 720px) { .two { grid-template-columns: 2fr 1fr; } .two.even { grid-template-columns: 1fr 1fr; } }
+  .ipa-keys { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .ipa-keys button { min-width: 36px; min-height: 36px; border: var(--rule) solid var(--primary-line); background: var(--field); border-radius: var(--radius-field); font-family: var(--font-word); font-size: 1.0625rem; color: var(--ink); }
+  .ipa-keys button:hover { border-color: var(--primary); background: var(--primary-tint); }
+  .media { display: grid; gap: var(--sp-4); }
+  @media (min-width: 720px) { .media { grid-template-columns: 1fr 1fr; } }
+  .file-box { display: grid; gap: var(--sp-2); padding: var(--sp-3); border: var(--rule) dashed var(--primary-line); background: var(--field); min-height: 132px; align-content: start; }
+  .file-box:has(.dropzone) { border: 0; padding: 0; background: none; min-height: 0; }
+  .file-box img { width: 100%; max-height: 160px; object-fit: cover; border: var(--rule) solid var(--primary-line); }
+  .file-box audio { width: 100%; }
+  .face { border: var(--rule) solid var(--primary-line); background: var(--field); padding: var(--sp-5) var(--sp-4); display: grid; gap: var(--sp-2); justify-items: center; text-align: center; min-height: 170px; align-content: center; }
+  .face + .face { border-top: 0; }
+  .face-label { justify-self: start; font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: var(--fs-caption); font-weight: 650; color: var(--primary); margin-bottom: var(--sp-2); }
+  .face .word { font-size: 2rem; }
+  .face .pv-img { width: 100%; max-height: 120px; object-fit: cover; }
+  .form-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F1.9, F1.6 · UI16 · API: POST /decks/{id}/cards, GET/PATCH /cards/{id} (B1.9), POST /files/upload-requests, PUT <uploadUrl>, POST /files/{id}/complete (B1.6), GET /public/tags -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span id="mode-code">Phiếu thêm thẻ</span><span id="deck-code"></span></div>
+          <a class="btn btn-quiet" id="back" href="bo-the.html" style="margin:0 0 var(--sp-2) -12px;justify-self:start"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span id="back-label">Bộ thẻ</span></a>
+            <h1 id="page-title">Thêm thẻ</h1>
+          </div>
+
+          <form id="form" class="form-grid" novalidate>
+            <div data-form-error hidden></div>
+            <div class="two">
+              <div class="field">
+                <label class="field-label" for="word">Từ hoặc cụm từ tiếng Anh</label>
+                <input class="input en" id="word" name="word" lang="en" maxlength="110" required autocomplete="off" spellcheck="false" placeholder="receipt">
+                <p class="field-error"></p>
+              </div>
+              <div class="field">
+                <label class="field-label" for="pos">Từ loại</label>
+                <select class="select" id="pos" name="pos">
+                  <option value="">Không ghi</option>
+                  <option value="n.">Danh từ (n.)</option>
+                  <option value="v.">Động từ (v.)</option>
+                  <option value="adj.">Tính từ (adj.)</option>
+                  <option value="adv.">Trạng từ (adv.)</option>
+                  <option value="phr. v.">Cụm động từ (phr. v.)</option>
+                  <option value="phr.">Cụm từ (phr.)</option>
+                  <option value="prep.">Giới từ (prep.)</option>
+                  <option value="conj.">Liên từ (conj.)</option>
+                </select>
+              </div>
+            </div>
+            <div id="dup" class="notice notice-warning" hidden role="status"></div>
+            <div class="field">
+              <label class="field-label" for="ipa"><span>Phiên âm IPA</span><span class="optional">Không bắt buộc</span></label>
+              <input class="input en" id="ipa" name="ipa" lang="en" maxlength="100" autocomplete="off" spellcheck="false" placeholder="/rɪˈsiːt/">
+              <div class="ipa-keys" id="ipa-keys" aria-label="Chèn ký hiệu IPA"></div>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="meaningVi">Nghĩa tiếng Việt</label>
+              <textarea class="textarea" id="meaningVi" name="meaningVi" maxlength="520" required rows="2" placeholder="biên lai, giấy biên nhận"></textarea>
+              <p class="field-counter" id="mean-count">0/500</p>
+              <p class="field-error"></p>
+            </div>
+            <div class="two even">
+              <div class="field">
+                <label class="field-label" for="exampleEn"><span>Câu ví dụ tiếng Anh</span><span class="optional">Không bắt buộc</span></label>
+                <textarea class="textarea en" id="exampleEn" name="exampleEn" lang="en" maxlength="300" rows="3" placeholder="Keep the receipt in case you need a refund."></textarea>
+                <p class="field-error"></p>
+              </div>
+              <div class="field">
+                <label class="field-label" for="exampleVi"><span>Bản dịch ví dụ</span><span class="optional">Không bắt buộc</span></label>
+                <textarea class="textarea" id="exampleVi" name="exampleVi" maxlength="300" rows="3" placeholder="Giữ lại biên lai phòng khi bạn cần hoàn tiền."></textarea>
+                <p class="field-error"></p>
+              </div>
+            </div>
+            <fieldset class="fieldset field">
+              <legend>Độ khó theo bạn</legend>
+              <div class="row">
+                <label class="choice"><input type="radio" name="difficulty" value="1"><span class="bubble" aria-hidden="true">1</span><span>Dễ</span></label>
+                <label class="choice"><input type="radio" name="difficulty" value="2" checked><span class="bubble" aria-hidden="true">2</span><span>Vừa</span></label>
+                <label class="choice"><input type="radio" name="difficulty" value="3"><span class="bubble" aria-hidden="true">3</span><span>Khó</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="fieldset field">
+              <legend>Nhãn</legend>
+              <div class="choice-grid cols-3" id="tags"></div>
+            </fieldset>
+
+            <div class="media">
+              <div class="field" data-field="image">
+                <span class="field-label">Ảnh minh họa <span class="optional">JPG, PNG, WEBP tối đa 2 MB</span></span>
+                <div class="file-box" id="image-box"></div>
+                <p class="field-error"></p>
+              </div>
+              <div class="field" data-field="audio">
+                <span class="field-label">Âm thanh <span class="optional">MP3, M4A, WEBM tối đa 5 MB</span></span>
+                <div class="file-box" id="audio-box"></div>
+                <p class="field-error"></p>
+              </div>
+            </div>
+
+            <div class="form-foot">
+              <a class="btn btn-quiet" id="cancel" href="bo-the.html">Hủy</a>
+              <button type="submit" class="btn btn-secondary" id="save-more" data-more="1">Lưu và thêm thẻ khác</button>
+              <button type="submit" class="btn btn-primary btn-lg" id="save">Lưu thẻ</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="side-col" data-when="ready">
+          <section aria-labelledby="pv-title">
+            <h2 class="panel-title" id="pv-title" style="background:var(--sheet)">Xem trước khi học</h2>
+            <div class="face">
+              <span class="face-label">Mặt trước, chiều Anh → Việt</span>
+              <p class="word" id="pv-word" lang="en">receipt</p>
+              <p class="ipa" id="pv-ipa" lang="en"></p>
+            </div>
+            <div class="face">
+              <span class="face-label">Mặt sau</span>
+              <img class="pv-img" id="pv-img" alt="" hidden src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+              <p id="pv-mean" style="font-weight:600"></p>
+              <p class="entry-example" id="pv-ex" lang="en"></p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const deckId = p.deckId || "21";
+  const cardId = p.id;
+  const form = document.getElementById("form");
+  const region = document.getElementById("region");
+  let version, existing = [], media = { imageUrl: null, audioUrl: null };
+  if (p.added) VL.toast("Đã lưu thẻ");
+
+  const IPA = ["ə", "ɪ", "iː", "æ", "ʌ", "ɑː", "ɒ", "ɔː", "ʊ", "uː", "ɜː", "eɪ", "aɪ", "ɔɪ", "aʊ", "oʊ", "θ", "ð", "ʃ", "ʒ", "tʃ", "dʒ", "ŋ", "ˈ", "ˌ", "ː"];
+  document.getElementById("ipa-keys").innerHTML = IPA.map((s) => '<button type="button" data-ipa="' + s + '" aria-label="Chèn ' + s + '">' + s + "</button>").join("");
+  document.getElementById("ipa-keys").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-ipa]");
+    if (!b) return;
+    const el = form.ipa;
+    const s = el.selectionStart ?? el.value.length, en = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0, s) + b.dataset.ipa + el.value.slice(en);
+    el.focus();
+    el.setSelectionRange(s + b.dataset.ipa.length, s + b.dataset.ipa.length);
+    preview();
+  });
+
+  function preview() {
+    const v = (n) => form[n].value.trim();
+    document.getElementById("pv-word").textContent = v("word") || "receipt";
+    document.getElementById("pv-ipa").textContent = [v("ipa"), v("pos")].filter(Boolean).join("  ");
+    document.getElementById("pv-mean").textContent = v("meaningVi") || "Nghĩa tiếng Việt";
+    document.getElementById("pv-ex").textContent = v("exampleEn");
+    const img = document.getElementById("pv-img");
+    img.hidden = !media.imageUrl;
+    if (media.imageUrl) img.src = media.imageUrl;
+    const n = form.meaningVi.value.length;
+    const c = document.getElementById("mean-count");
+    c.textContent = n + "/500";
+    c.toggleAttribute("data-over", n > 500);
+  }
+  form.addEventListener("input", preview);
+  form.addEventListener("change", preview);
+
+  const strip = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+  function checkDup() {
+    const w = strip(form.word.value), pos = form.pos.value;
+    const hit = w && existing.find((c) => c.id !== cardId && strip(c.word) === w && (c.pos || "") === pos);
+    const box = document.getElementById("dup");
+    box.hidden = !hit;
+    if (hit) box.innerHTML = VL.icon("alert") + '<div><p class="notice-title">Bộ này đã có “' + VL.esc(hit.word) + "”" + (hit.pos ? " (" + VL.esc(hit.pos) + ")" : "") + '</p><p class="small">Nghĩa đã lưu: ' + VL.esc(hit.meaningVi) + ". Bạn vẫn lưu được nếu đây là nghĩa khác.</p></div>";
+  }
+  form.word.addEventListener("blur", checkDup);
+  form.pos.addEventListener("change", checkDup);
+
+  function renderFile(kind) {
+    const box = document.getElementById(kind + "-box");
+    const url = media[kind + "Url"];
+    const accept = kind === "image" ? "image/jpeg,image/png,image/webp" : "audio/mpeg,audio/mp4,audio/webm,audio/ogg,audio/wav";
+    box.innerHTML = url
+      ? (kind === "image" ? '<img src="' + url + '" alt="Ảnh minh họa của thẻ">' : '<audio controls src="' + url + '"></audio>') + '<div class="row"><label class="btn btn-quiet btn-sm">Đổi tệp<input type="file" class="sr-only" accept="' + accept + '" data-kind="' + kind + '"></label><button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-remove="' + kind + '">Gỡ</button></div>'
+      : '<label class="dropzone" style="padding:var(--sp-4)">' + VL.icon(kind === "image" ? "image" : "volume") + '<span>' + (kind === "image" ? "Chọn ảnh" : "Chọn tệp âm thanh") + '</span><span class="muted small">hoặc kéo thả vào đây</span><input type="file" accept="' + accept + '" data-kind="' + kind + '"></label>';
+  }
+  function downscale(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 640, r = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", 0.82));
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => reject(new Error("Không đọc được ảnh. Hãy chọn tệp JPG, PNG hoặc WEBP khác."));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  async function upload(kind, file) {
+    const field = form.querySelector('[data-field="' + kind + '"]');
+    field.removeAttribute("data-invalid");
+    const box = document.getElementById(kind + "-box");
+    box.innerHTML = '<p class="small" aria-live="polite">Đang tải lên ' + VL.esc(file.name) + '…</p><div class="sk sk-line"></div>';
+    try {
+      const req = await VL.api("POST", "/files/upload-requests", { fileName: file.name, contentType: file.type, size: file.size, purpose: kind === "image" ? "CARD_IMAGE" : "CARD_AUDIO" });
+      const dataUrl = kind === "image" ? await downscale(file) : URL.createObjectURL(file);
+      const done = await VL.api("POST", "/files/" + req.fileId + "/complete", { dataUrl: kind === "image" ? dataUrl : null });
+      media[kind + "Url"] = kind === "image" ? done.url : dataUrl;
+      renderFile(kind);
+      preview();
+    } catch (err) {
+      renderFile(kind);
+      field.setAttribute("data-invalid", "");
+      field.querySelector(".field-error").innerHTML = VL.icon("alert", "icon-sm") + "<span>" + VL.esc((err.fieldErrors && err.fieldErrors[0] ? err.fieldErrors[0].message : err.message)) + "</span>";
+    }
+  }
+  form.addEventListener("change", (e) => { if (e.target.matches('input[type="file"]') && e.target.files[0]) upload(e.target.dataset.kind, e.target.files[0]); });
+  form.addEventListener("click", (e) => { const r = e.target.closest("[data-remove]"); if (r) { media[r.dataset.remove + "Url"] = null; renderFile(r.dataset.remove); preview(); } });
+  form.addEventListener("dragover", (e) => { const z = e.target.closest(".dropzone"); if (z) { e.preventDefault(); z.setAttribute("data-over", ""); } });
+  form.addEventListener("dragleave", (e) => { const z = e.target.closest(".dropzone"); if (z) z.removeAttribute("data-over"); });
+  form.addEventListener("drop", (e) => { const z = e.target.closest(".dropzone"); if (!z) return; e.preventDefault(); z.removeAttribute("data-over"); const f = e.dataTransfer.files[0]; if (f) upload(z.querySelector("input").dataset.kind, f); });
+
+  VL.load(region, {
+    errorTitle: "Không mở được thẻ",
+    fetch: async () => {
+      const deck = await VL.api("GET", "/decks/" + encodeURIComponent(deckId));
+      const tags = await VL.api("GET", "/public/tags");
+      const cards = await VL.api("GET", "/decks/" + deckId + "/cards?size=500");
+      const card = cardId ? await VL.api("GET", "/cards/" + encodeURIComponent(cardId)) : null;
+      return { deck, tags, cards: cards.items, card };
+    },
+    render: ({ deck, tags, cards, card }) => {
+      existing = cards;
+      const back = "bo-the-chi-tiet.html?id=" + deck.id;
+      document.getElementById("back").href = back;
+      document.getElementById("cancel").href = back;
+      document.getElementById("back-label").textContent = deck.name.length > 40 ? deck.name.slice(0, 40) + "…" : deck.name;
+      document.getElementById("deck-code").textContent = deck.cardCount + " thẻ trong bộ";
+      document.getElementById("tags").innerHTML = tags.map((t) => '<label class="choice"><input type="checkbox" name="tagIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.name) + "</span></label>").join("");
+      if (card) {
+        version = card.version;
+        document.title = "Sửa thẻ – VocabLearning";
+        document.getElementById("page-title").textContent = "Sửa thẻ “" + card.word + "”";
+        document.getElementById("mode-code").textContent = "Phiếu sửa thẻ";
+        document.getElementById("save-more").hidden = true;
+        document.getElementById("save").textContent = "Lưu thay đổi";
+        ["word", "pos", "ipa", "meaningVi", "exampleEn", "exampleVi"].forEach((k) => { form[k].value = card[k] || ""; });
+        const d = form.querySelector('[name="difficulty"][value="' + (card.difficulty || 2) + '"]');
+        if (d) d.checked = true;
+        (card.tagIds || []).forEach((t) => { const x = form.querySelector('[name="tagIds"][value="' + t + '"]'); if (x) x.checked = true; });
+        media.imageUrl = card.imageUrl; media.audioUrl = card.audioUrl;
+      }
+      renderFile("image"); renderFile("audio");
+      preview();
+      form.word.focus();
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const btn = e.submitter || document.getElementById("save");
+    const more = !!btn.dataset.more;
+    VL.clearErrors(form);
+    const fd = new FormData(form);
+    const data = { word: fd.get("word"), pos: fd.get("pos"), ipa: fd.get("ipa"), meaningVi: fd.get("meaningVi"), exampleEn: fd.get("exampleEn"), exampleVi: fd.get("exampleVi"), difficulty: Number(fd.get("difficulty")), tagIds: fd.getAll("tagIds"), imageUrl: media.imageUrl, audioUrl: media.audioUrl };
+    VL.busy(btn, async () => {
+      try {
+        if (cardId) await VL.api("PATCH", "/cards/" + cardId, Object.assign(data, { version }));
+        else await VL.api("POST", "/decks/" + deckId + "/cards", data);
+        location.href = more ? "the-tao.html?deckId=" + deckId + "&added=1" : "bo-the-chi-tiet.html?id=" + deckId + "&saved=1";
+      } catch (err) {
+        if (err.code === "VERSION_CONFLICT") { VL.toast(err.message, "error"); return; }
+        VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

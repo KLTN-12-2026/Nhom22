@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chi tiết bộ thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .deck-title { overflow-wrap: anywhere; }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .card-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; }
+  .speak { width: var(--tap); height: var(--tap); display: grid; place-items: center; border: 1.5px solid var(--primary-line); border-radius: 50%; background: var(--field); color: var(--primary); position: relative; z-index: 1; }
+  .speak:hover { border-color: var(--primary); background: var(--primary-tint); }
+  .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); font-size: var(--fs-small); }
+  .facts li { display: grid; grid-template-columns: 18px 1fr; gap: var(--sp-2); }
+  .facts .bubble { width: 14px; height: 14px; border-width: 1.25px; margin-top: 3px; }
+</style>
+</head>
+<body data-root=".." data-nav="library" data-auth="optional">
+<!-- F1.7, F1.10 · UI03 · API: GET /library/decks/{id} (B1.10), POST /decks/{id}/copy + Idempotency-Key (B1.11), PUT/DELETE /decks/{id}/favorite (B1.8) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-line"></div><div class="sk sk-line" style="width:70%"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"><div class="sheet"><div class="empty"><h1 style="font-size:var(--fs-h3)">Bộ thẻ này chưa có thẻ nào</h1><p>Người soạn chưa thêm nội dung. Hãy chọn bộ khác trong thư viện.</p><a class="btn btn-secondary" href="thu-vien.html">Về thư viện</a></div></div></div>
+        <div data-when="ready" class="is-grid page-grid with-side">
+          <article class="sheet" aria-labelledby="deck-title">
+            <a class="btn btn-quiet" href="thu-vien.html" style="margin:0 0 var(--sp-3) -12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Thư viện</a>
+            <div class="form-head">
+              <div class="answer-meta" id="stamps"></div>
+              <h1 id="deck-title" class="deck-title"></h1>
+              <p id="deck-desc"></p>
+              <div class="actions">
+                <button type="button" class="btn btn-accent btn-lg" id="copy">Sao chép để học</button>
+                <button type="button" class="btn btn-secondary btn-lg" id="fav" hidden aria-pressed="false"></button>
+                <button type="button" class="btn btn-quiet btn-lg" id="share"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Sao chép liên kết</button>
+              </div>
+              <div id="copied" class="notice notice-success" hidden role="status"></div>
+            </div>
+
+            <div class="row-between" style="margin-bottom:var(--sp-3)">
+              <h2 style="font-size:var(--fs-h3)">Thẻ mẫu</h2>
+              <p class="muted small" id="sample-note"></p>
+            </div>
+            <ol class="answer-list" id="cards" role="list"></ol>
+          </article>
+
+          <aside class="side-col">
+            <section class="panel" aria-labelledby="info-title">
+              <h2 class="panel-title" id="info-title">Thông tin bộ thẻ</h2>
+              <dl class="kv" id="kv"></dl>
+            </section>
+            <section class="panel" aria-labelledby="copy-title">
+              <h2 class="panel-title" id="copy-title">Khi bạn sao chép</h2>
+              <ul class="facts">
+                <li><span class="bubble is-filled" aria-hidden="true"></span><span>Bản sao là bộ riêng tư của bạn, sửa, thêm, xóa thẻ thoải mái.</span></li>
+                <li><span class="bubble is-filled" aria-hidden="true"></span><span>Tiến độ học bắt đầu từ đầu. Không mang theo lịch sử hay điểm của người soạn.</span></li>
+                <li><span class="bubble is-filled" aria-hidden="true"></span><span>Bộ gốc cập nhật sau này không ghi đè bản sao của bạn.</span></li>
+              </ul>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const id = VL.params().id || "11";
+  const region = document.getElementById("region");
+  const user = VL.me();
+  let deck;
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+
+  VL.load(region, {
+    errorTitle: "Không mở được bộ thẻ",
+    fetch: () => VL.api("GET", "/library/decks/" + encodeURIComponent(id)),
+    isEmpty: (d) => !d.sampleCards.length,
+    render: (d) => {
+      deck = d;
+      document.title = d.name + " – VocabLearning";
+      document.getElementById("stamps").innerHTML =
+        '<span class="stamp ' + (d.kind === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (d.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + '</span><span class="stamp">' + VL.esc(VL.GOAL[d.goal]) + '</span><span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>";
+      document.getElementById("deck-title").textContent = d.name;
+      document.getElementById("deck-desc").textContent = d.description;
+      document.getElementById("kv").innerHTML =
+        "<dt>Chủ đề</dt><dd>" + VL.esc(d.topicName) + "</dd>" +
+        "<dt>Trình độ</dt><dd>" + VL.levelHtml(d.level) + "</dd>" +
+        "<dt>Số thẻ</dt><dd>" + d.cardCount + "</dd>" +
+        "<dt>Người soạn</dt><dd>" + VL.esc(d.ownerName) + "</dd>" +
+        "<dt>Nguồn</dt><dd>" + VL.esc(d.source) + "</dd>" +
+        "<dt>Cập nhật</dt><dd>" + VL.fmtDate(d.updatedAt) + "</dd>";
+      document.getElementById("sample-note").textContent = "Hiển thị " + d.sampleCards.length + "/" + d.cardCount + " thẻ";
+      document.getElementById("cards").innerHTML = d.sampleCards.map((c, i) =>
+        '<li class="answer-row card-row"><span class="answer-no">' + (i + 1) + '</span>' +
+        '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + '</span><span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + '</span><span class="pos" lang="en">' + VL.esc(c.pos) + "</span></div>" +
+        '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
+        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + "</div>" +
+        '<button type="button" class="speak" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "</button></li>").join("");
+      const fav = document.getElementById("fav");
+      if (user) {
+        fav.hidden = false;
+        setFav(d.favorite);
+      }
+    }
+  });
+
+  function setFav(on) {
+    const fav = document.getElementById("fav");
+    fav.setAttribute("aria-pressed", String(on));
+    fav.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="' + (on ? "fill:var(--accent);stroke:var(--accent-text)" : "") + '"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg>' + (on ? "Đã yêu thích" : "Yêu thích");
+  }
+
+  document.getElementById("cards").addEventListener("click", (e) => { const b = e.target.closest("[data-say]"); if (b) speak(b.dataset.say); });
+
+  const copyBtn = document.getElementById("copy");
+  const idemKey = "copy-" + id + "-" + Math.random().toString(16).slice(2);
+  copyBtn.addEventListener("click", () => {
+    if (!user) { location.href = "dang-nhap.html?next=" + encodeURIComponent("dot1/thu-vien-chi-tiet.html?id=" + id); return; }
+    VL.busy(copyBtn, async () => {
+      try {
+        const res = await VL.api("POST", "/decks/" + id + "/copy", null, { headers: { "Idempotency-Key": idemKey } });
+        const box = document.getElementById("copied");
+        box.hidden = false;
+        box.innerHTML = VL.icon("check") + '<div class="stack-sm"><p class="notice-title">Đã sao chép ' + res.cardCount + ' thẻ vào Bộ của tôi</p><div><a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + res.deckId + '">Mở bộ vừa sao chép</a></div></div>';
+        copyBtn.textContent = "Đã sao chép";
+        copyBtn.setAttribute("aria-disabled", "true");
+        copyBtn.disabled = true;
+        VL.toast("Đã sao chép bộ thẻ");
+      } catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+
+  const favBtn = document.getElementById("fav");
+  favBtn.addEventListener("click", () => {
+    const on = favBtn.getAttribute("aria-pressed") !== "true";
+    VL.busy(favBtn, async () => {
+      try {
+        await VL.api(on ? "PUT" : "DELETE", "/decks/" + id + "/favorite");
+        setFav(on);
+        VL.toast(on ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+      } catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+
+  document.getElementById("share").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(location.href); VL.toast("Đã sao chép liên kết"); }
+    catch (e) { VL.toast("Không sao chép được. Hãy sao chép địa chỉ trên thanh trình duyệt.", "error"); }
+  });
+})();
+</script>
+</body>
+</html>

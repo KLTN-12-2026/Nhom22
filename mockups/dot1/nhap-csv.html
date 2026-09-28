@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nhập CSV – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .csv-step { display: grid; gap: var(--sp-5); margin-top: var(--sp-6); }
+  .spec { font-size: var(--fs-small); }
+  .spec td:first-child { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; white-space: nowrap; }
+  .counts { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .counts .stamp { min-height: 32px; font-size: 0.9375rem; }
+  .table-wrap { max-height: 60vh; }
+  .data-table td.pick { width: 44px; }
+  .data-table .choice { padding: 0; min-height: 0; }
+  .data-table .choice:hover { background: none; }
+  .data-table .line { font-family: var(--font-form); font-stretch: 78%; font-weight: 700; color: var(--primary); text-align: right; }
+  .data-table td.mean { min-width: 180px; }
+  .commit-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+  .result-num { font-family: var(--font-form); font-stretch: 80%; font-weight: 800; font-size: 3rem; line-height: 1; color: var(--ink); }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F1.11 · UI17 · API: POST /decks/{id}/imports/preview, POST /imports/{id}/commit (B1.12); GET /decks/{id} -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Phiếu nhập thẻ từ CSV</span><span id="deck-code"></span></div>
+          <a class="btn btn-quiet" id="back" href="bo-the.html" style="margin:0 0 var(--sp-2) -12px;justify-self:start"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span id="back-label">Bộ thẻ</span></a>
+            <h1 id="page-title">Nhập thẻ từ tệp CSV</h1>
+            <p>Xem trước từng dòng trước khi nhập. Dòng lỗi không bao giờ được ghi vào bộ thẻ.</p>
+          </div>
+
+          <ol class="steps" id="steps" aria-label="Các bước">
+            <li data-state="current"><span class="bubble">1</span><span class="step-bar"></span><span class="step-label">Chọn tệp</span></li>
+            <li><span class="bubble">2</span><span class="step-bar"></span><span class="step-label">Xem trước</span></li>
+            <li><span class="bubble">3</span><span class="step-bar"></span><span class="step-label">Kết quả</span></li>
+          </ol>
+
+          <div class="csv-step" data-step="1">
+            <div id="pick-error" hidden></div>
+            <label class="dropzone" id="drop">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+              <span style="font-weight:650">Chọn tệp CSV</span>
+              <span class="muted small">hoặc kéo thả vào đây. Mã hóa UTF-8, tối đa 1 MB và 1000 dòng.</span>
+              <input type="file" id="file" accept=".csv,text/csv">
+            </label>
+            <div class="row">
+              <button type="button" class="btn btn-quiet" id="template"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải tệp mẫu</button>
+              <button type="button" class="btn btn-quiet" id="sample">Thử với dữ liệu có lỗi</button>
+            </div>
+            <p id="reading" class="muted" aria-live="polite" hidden>Đang đọc tệp…</p>
+          </div>
+
+          <div class="csv-step" data-step="2" hidden>
+            <div class="row-between">
+              <h2 tabindex="-1" id="pv-title" style="font-size:var(--fs-h3)">Xem trước <span class="muted" id="file-name"></span></h2>
+              <div class="counts" id="counts"></div>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Lọc dòng" id="filter">
+              <button class="tab" role="tab" aria-selected="true" data-f="ALL">Tất cả</button>
+              <button class="tab" role="tab" aria-selected="false" data-f="OK">Hợp lệ</button>
+              <button class="tab" role="tab" aria-selected="false" data-f="DUPLICATE">Trùng</button>
+              <button class="tab" role="tab" aria-selected="false" data-f="ERROR">Lỗi</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <caption class="sr-only">Các dòng trong tệp CSV</caption>
+                <thead><tr><th scope="col"><span class="sr-only">Chọn</span></th><th scope="col">Dòng</th><th scope="col">Từ</th><th scope="col">Từ loại</th><th scope="col">IPA</th><th scope="col">Nghĩa</th><th scope="col">Ghi chú</th></tr></thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+            <div class="commit-bar">
+              <button type="button" class="btn btn-quiet" id="restart">Chọn tệp khác</button>
+              <button type="button" class="btn btn-primary btn-lg" id="commit">Nhập 0 dòng đã chọn</button>
+            </div>
+          </div>
+
+          <div class="csv-step" data-step="3" hidden>
+            <div class="stack">
+              <p class="result-num" id="created">0</p>
+              <h2 tabindex="-1" id="done-title">thẻ đã được thêm vào bộ</h2>
+              <p class="muted" id="skipped"></p>
+              <div class="row"><a class="btn btn-primary" id="open-deck" href="bo-the.html">Mở bộ thẻ</a><button type="button" class="btn btn-quiet" id="again">Nhập tệp khác</button></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="spec-title">
+            <h2 class="panel-title" id="spec-title">Cột trong tệp</h2>
+            <table class="spec" style="width:100%;border-collapse:collapse">
+              <tbody>
+                <tr><td>word</td><td>Từ tiếng Anh <strong>(bắt buộc)</strong></td></tr>
+                <tr><td>meaning_vi</td><td>Nghĩa tiếng Việt <strong>(bắt buộc)</strong></td></tr>
+                <tr><td>pos</td><td>Từ loại: n., v., adj.…</td></tr>
+                <tr><td>ipa</td><td>Phiên âm</td></tr>
+                <tr><td>example_en</td><td>Câu ví dụ</td></tr>
+                <tr><td>example_vi</td><td>Bản dịch ví dụ</td></tr>
+              </tbody>
+            </table>
+            <p class="small muted" style="margin-top:var(--sp-3)">Dòng đầu tiên là tên cột. Ô bắt đầu bằng = + - @ bị từ chối để tránh công thức bảng tính.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const deckId = VL.params().deckId || "21";
+  let importId = null, rows = [], filter = "ALL";
+  const selected = new Set();
+
+  VL.api("GET", "/decks/" + encodeURIComponent(deckId)).then((d) => {
+    const back = "bo-the-chi-tiet.html?id=" + d.id;
+    document.getElementById("back").href = back;
+    document.getElementById("open-deck").href = back;
+    document.getElementById("back-label").textContent = d.name.length > 40 ? d.name.slice(0, 40) + "…" : d.name;
+    document.getElementById("deck-code").textContent = "Bộ đích: " + (d.name.length > 30 ? d.name.slice(0, 30) + "…" : d.name);
+  }).catch((err) => { if (err.status === 404) location.href = "bo-the.html"; });
+
+  function go(n) {
+    document.querySelectorAll("[data-step]").forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
+    document.querySelectorAll("#steps li").forEach((m, i) => { m.dataset.state = i + 1 < n ? "done" : i + 1 === n ? "current" : ""; });
+  }
+
+  const TEMPLATE = "word,pos,ipa,meaning_vi,example_en,example_vi\ninvoice,n.,/ˈɪnvɔɪs/,hóa đơn,Please send the invoice by Friday.,Vui lòng gửi hóa đơn trước thứ Sáu.\n";
+  const SAMPLE = "word,pos,ipa,meaning_vi,example_en,example_vi\n" +
+    "deadline,n.,/ˈdedlaɪn/,hạn chót,The deadline is next Monday.,Hạn chót là thứ Hai tới.\n" +
+    "negotiate,v.,/nɪˈɡoʊʃieɪt/,đàm phán,We need to negotiate the price.,Chúng ta cần đàm phán giá.\n" +
+    "receipt,n.,/rɪˈsiːt/,biên lai,Keep your receipt.,Giữ biên lai của bạn.\n" +
+    "warehouse,n.,/ˈwerhaʊs/,,The goods are stored in the warehouse.,\n" +
+    "\"=HYPERLINK(\"\"http://example.com\"\")\",n.,,liên kết,,\n" +
+    "brochure,n.,/broʊˈʃʊr/,tờ rơi quảng cáo,\"Take a brochure, please.\",Mời bạn lấy một tờ rơi.\n" +
+    "brochure,n.,/broʊˈʃʊr/,tập sách giới thiệu,,\n" +
+    ",adj.,,miễn phí,,\n";
+
+  function download(name, text) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" }));
+    a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  }
+  document.getElementById("template").addEventListener("click", () => download("mau-nhap-the.csv", TEMPLATE));
+  document.getElementById("sample").addEventListener("click", () => preview(SAMPLE, "du-lieu-thu.csv"));
+
+  function pickError(msg, reqId) {
+    const box = document.getElementById("pick-error");
+    box.hidden = false;
+    box.className = "notice notice-danger";
+    box.setAttribute("role", "alert");
+    box.innerHTML = VL.icon("alert") + '<div><p class="notice-title">' + VL.esc(msg) + "</p>" + (reqId ? '<p class="request-id">Mã yêu cầu: ' + VL.esc(reqId) + "</p>" : "") + "</div>";
+  }
+  function readFile(file) {
+    document.getElementById("pick-error").hidden = true;
+    if (!/\.csv$/i.test(file.name)) { pickError("Tệp “" + file.name + "” không phải CSV. Hãy lưu bảng tính dưới dạng CSV UTF-8."); return; }
+    if (file.size > 1024 * 1024) { pickError("Tệp lớn hơn 1 MB. Hãy chia thành nhiều tệp nhỏ hơn."); return; }
+    const r = new FileReader();
+    r.onload = () => preview(String(r.result).replace(/^﻿/, ""), file.name);
+    r.onerror = () => pickError("Không đọc được tệp. Thử chọn lại.");
+    r.readAsText(file, "utf-8");
+  }
+  document.getElementById("file").addEventListener("change", (e) => { if (e.target.files[0]) readFile(e.target.files[0]); e.target.value = ""; });
+  const drop = document.getElementById("drop");
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.setAttribute("data-over", ""); });
+  drop.addEventListener("dragleave", () => drop.removeAttribute("data-over"));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.removeAttribute("data-over"); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+
+  async function preview(text, name) {
+    const reading = document.getElementById("reading");
+    reading.hidden = false;
+    try {
+      const res = await VL.api("POST", "/decks/" + deckId + "/imports/preview", { csv: text });
+      importId = res.importId;
+      rows = res.rows;
+      selected.clear();
+      rows.filter((r) => r.status === "OK").forEach((r) => selected.add(r.line));
+      document.getElementById("file-name").textContent = name;
+      document.getElementById("counts").innerHTML =
+        '<span class="stamp stamp-success">' + res.summary.ok + ' hợp lệ</span><span class="stamp stamp-warning">' + res.summary.duplicate + ' trùng</span><span class="stamp stamp-danger">' + res.summary.error + " lỗi</span>";
+      filter = "ALL";
+      renderRows();
+      go(2);
+      document.getElementById("pv-title").focus();
+    } catch (err) {
+      pickError(err.fieldErrors && err.fieldErrors[0] ? err.fieldErrors[0].message : err.message, err.requestId);
+    } finally { reading.hidden = true; }
+  }
+
+  function renderRows() {
+    document.querySelectorAll("#filter [data-f]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.f === filter)));
+    const list = rows.filter((r) => filter === "ALL" || r.status === filter);
+    document.getElementById("rows").innerHTML = list.length ? list.map((r) => {
+      const dis = r.status === "ERROR";
+      const label = { OK: "Hợp lệ", DUPLICATE: r.note, ERROR: r.note }[r.status];
+      return '<tr data-row="' + (r.status === "ERROR" ? "error" : r.status === "DUPLICATE" ? "dup" : "ok") + '">' +
+        '<td class="pick"><label class="choice"><input type="checkbox" data-line="' + r.line + '"' + (selected.has(r.line) ? " checked" : "") + (dis ? " disabled" : "") + ' aria-label="Chọn dòng ' + r.line + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span></label></td>' +
+        '<td class="line">' + r.line + '</td><td class="en" lang="en">' + (VL.esc(r.word) || '<span class="muted">—</span>') + "</td><td>" + VL.esc(r.pos) + '</td><td class="en" lang="en">' + VL.esc(r.ipa) + '</td><td class="mean">' + (VL.esc(r.meaningVi) || '<span class="muted">—</span>') + "</td>" +
+        "<td" + (r.status === "ERROR" ? ' class="cell-error"' : "") + ">" + VL.esc(label) + "</td></tr>";
+    }).join("") : '<tr><td colspan="7" class="muted">Không có dòng nào trong nhóm này.</td></tr>';
+    const btn = document.getElementById("commit");
+    btn.textContent = "Nhập " + selected.size + " dòng đã chọn";
+    btn.disabled = selected.size === 0;
+  }
+  document.getElementById("rows").addEventListener("change", (e) => {
+    const l = Number(e.target.dataset.line);
+    if (!l) return;
+    if (e.target.checked) selected.add(l); else selected.delete(l);
+    renderRows();
+  });
+  document.getElementById("filter").addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; renderRows(); } });
+  document.getElementById("restart").addEventListener("click", () => go(1));
+  document.getElementById("again").addEventListener("click", () => go(1));
+
+  const commit = document.getElementById("commit");
+  commit.addEventListener("click", () => VL.busy(commit, async () => {
+    try {
+      const res = await VL.api("POST", "/imports/" + importId + "/commit", { lines: [...selected] });
+      document.getElementById("created").textContent = res.created;
+      document.getElementById("skipped").textContent = res.skipped ? "Bỏ qua " + res.skipped + " dòng không chọn hoặc bị lỗi." : "Không bỏ qua dòng nào.";
+      document.getElementById("open-deck").href = "bo-the-chi-tiet.html?id=" + deckId + "&imported=" + res.created;
+      go(3);
+      document.getElementById("done-title").focus();
+    } catch (err) {
+      if (err.status === 404) { go(1); pickError(err.message, err.requestId); return; }
+      VL.toast(err.message, "error");
+    }
+  }));
+})();
+</script>
+</body>
+</html>

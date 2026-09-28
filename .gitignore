@@ -30,3 +30,9 @@ graphify-out/memory/
 .gitignore
 postman/
 .codex/
+
+PRODUCT.md
+DESIGN.md
+.graphifyignore
+/graphify-out/
+.impeccable/
