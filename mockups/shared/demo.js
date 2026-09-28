@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v1";
+  const KEY = "vl-demo-v2";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Hoctap@2026";
 
@@ -91,10 +91,10 @@
     addCards("22", DAILY.map((x) => Object.assign({}, x)));
 
     const users = [
-      { id: "1", email: "admin@vocab.local", displayName: "Quản trị viên", status: "HOAT_DONG", roles: ["ADMIN", "USER"], timeZone: "Asia/Ho_Chi_Minh", avatarUrl: null, password: DEMO_PASSWORD },
-      { id: "2", email: "an@vocab.local", displayName: "Nguyễn An", status: "HOAT_DONG", roles: ["USER"], timeZone: "Asia/Ho_Chi_Minh", avatarUrl: null, password: DEMO_PASSWORD },
-      { id: "3", email: "binh@vocab.local", displayName: "Lê Bình", status: "HOAT_DONG", roles: ["USER"], timeZone: "Asia/Ho_Chi_Minh", avatarUrl: null, password: DEMO_PASSWORD },
-      { id: "4", email: "chi@vocab.local", displayName: "Phạm Chi", status: "CHUA_XAC_THUC", roles: ["USER"], timeZone: "Asia/Ho_Chi_Minh", avatarUrl: null, password: DEMO_PASSWORD }
+      { id: "1", email: "admin@vocab.local", tenHienThi: "Quản trị viên", trangThai: "HOAT_DONG", vaiTro: ["ADMIN", "USER"], muiGio: "Asia/Ho_Chi_Minh", anhDaiDienUrl: null, password: DEMO_PASSWORD },
+      { id: "2", email: "an@vocab.local", tenHienThi: "Nguyễn An", trangThai: "HOAT_DONG", vaiTro: ["USER"], muiGio: "Asia/Ho_Chi_Minh", anhDaiDienUrl: null, password: DEMO_PASSWORD },
+      { id: "3", email: "binh@vocab.local", tenHienThi: "Lê Bình", trangThai: "HOAT_DONG", vaiTro: ["USER"], muiGio: "Asia/Ho_Chi_Minh", anhDaiDienUrl: null, password: DEMO_PASSWORD },
+      { id: "4", email: "chi@vocab.local", tenHienThi: "Phạm Chi", trangThai: "CHUA_XAC_THUC", vaiTro: ["USER"], muiGio: "Asia/Ho_Chi_Minh", anhDaiDienUrl: null, password: DEMO_PASSWORD }
     ];
 
     const learning = {
@@ -151,7 +151,7 @@
   function requireMe() { const u = me(); if (!u) unauth(); return u; }
   function publicUser(u) {
     const l = db.learning[u.id];
-    return { id: u.id, email: u.email, displayName: u.displayName, roles: u.roles, timeZone: u.timeZone, avatarUrl: u.avatarUrl, status: u.status, onboardingDone: !!(l && l.onboardingDone) };
+    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienUrl: u.anhDaiDienUrl, trangThai: u.trangThai, daHoanTatKhoiDau: !!(l && l.onboardingDone) };
   }
   function topicName(id) { const t = db.topics.find((x) => x.id === id); return t ? t.name : "Chưa phân loại"; }
   function deckView(d, uid) {
@@ -224,37 +224,37 @@
     ["GET", /^\/auth\/csrf$/, () => ({ headerName: "X-XSRF-TOKEN", token: "demo-csrf" })],
 
     ["POST", /^\/auth\/register$/, (m, b) => {
-      const limiter = rateLimit("register", 6);
+      const limiter = rateLimit("register", 5);
       const errors = [];
       const email = norm(b.email);
-      if (!email) errors.push(fe("email", "Nhập email"));
-      else if (!EMAIL_RE.test(email) || email.length > 255) errors.push(fe("email", "Email chưa đúng định dạng, ví dụ: ten@gmail.com"));
-      if (!validPassword(b.password)) errors.push(fe("password", "Mật khẩu cần 8–72 ký tự, có cả chữ và số"));
-      const name = (b.displayName || "").trim();
-      if (!name) errors.push(fe("displayName", "Nhập tên hiển thị"));
-      else if (name.length > 100) errors.push(fe("displayName", "Tên hiển thị tối đa 100 ký tự"));
-      if (!b.acceptTerms) errors.push(fe("acceptTerms", "Bạn cần đồng ý với điều khoản để tạo tài khoản"));
+      if (!email) errors.push(fe("email", "Vui lòng nhập email"));
+      else if (!EMAIL_RE.test(email) || email.length > 255) errors.push(fe("email", "Email không hợp lệ"));
+      if (!validPassword(b.password)) errors.push(fe("password", "Mật khẩu 8–72 ký tự, có chữ cái và chữ số"));
+      const name = (b.tenHienThi || "").trim();
+      if (!name) errors.push(fe("tenHienThi", "Vui lòng nhập tên hiển thị"));
+      else if (name.length > 100) errors.push(fe("tenHienThi", "Tên hiển thị tối đa 100 ký tự"));
+      if (!b.acceptTerms) errors.push(fe("acceptTerms", "Bạn cần đồng ý với điều khoản sử dụng"));
       if (errors.length) bad(errors);
       limiter.fail();
-      if (db.users.some((u) => u.email === email)) throw new ApiError(409, "CONFLICT", "Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.", [fe("email", "Email này đã được đăng ký")]);
-      const u = { id: nextId(), email, displayName: name, status: "CHUA_XAC_THUC", roles: ["USER"], timeZone: b.timeZone || "Asia/Ho_Chi_Minh", avatarUrl: null, password: b.password };
+      if (db.users.some((u) => u.email === email)) throw new ApiError(409, "CONFLICT", "Email đã được sử dụng");
+      const u = { id: nextId(), email, tenHienThi: name, trangThai: "CHUA_XAC_THUC", vaiTro: ["USER"], muiGio: b.muiGio || "Asia/Ho_Chi_Minh", anhDaiDienUrl: null, password: b.password };
       db.users.push(u);
       db.tokens["demo-" + u.id] = { userId: u.id, type: "XAC_THUC_EMAIL", used: false, expiresAt: Date.now() + 86400000 };
-      return { status: 201, body: { id: u.id, email: u.email, status: u.status, demoToken: "demo-" + u.id } };
+      return { status: 201, body: Object.assign(publicUser(u), { demoToken: "demo-" + u.id }) };
     }],
     ["POST", /^\/auth\/verify-email$/, (m, b) => {
       const t = db.tokens[b.token];
       if (!t || t.type !== "XAC_THUC_EMAIL" || t.used || t.expiresAt < Date.now()) throw new ApiError(400, "TOKEN_INVALID", "Liên kết xác thực không hợp lệ hoặc đã hết hạn");
       t.used = true;
       const u = db.users.find((x) => x.id === t.userId);
-      if (u && u.status === "CHUA_XAC_THUC") u.status = "HOAT_DONG";
+      if (u && u.trangThai === "CHUA_XAC_THUC") u.trangThai = "HOAT_DONG";
       return { status: 204 };
     }],
     ["POST", /^\/auth\/resend-verification$/, (m, b) => {
       rateLimit("resend:" + norm(b.email), 3).fail();
       const u = db.users.find((x) => x.email === norm(b.email));
-      if (u && u.status === "CHUA_XAC_THUC") db.tokens["demo-" + u.id] = { userId: u.id, type: "XAC_THUC_EMAIL", used: false, expiresAt: Date.now() + 86400000 };
-      return { status: 202 };
+      if (u && u.trangThai === "CHUA_XAC_THUC") db.tokens["demo-" + u.id] = { userId: u.id, type: "XAC_THUC_EMAIL", used: false, expiresAt: Date.now() + 86400000 };
+      return { status: 204 };
     }],
     ["POST", /^\/auth\/login$/, (m, b) => {
       const email = norm(b.email);
@@ -265,8 +265,8 @@
       const limiter = rateLimit("login:" + email, 5);
       const u = db.users.find((x) => x.email === email);
       if (!u || u.password !== b.password) { limiter.fail(); throw new ApiError(401, "INVALID_CREDENTIALS", "Email hoặc mật khẩu chưa đúng"); }
-      if (u.status === "CHUA_XAC_THUC") throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Tài khoản chưa xác thực email. Mở thư xác thực hoặc gửi lại thư.");
-      if (u.status === "BI_KHOA") throw new ApiError(403, "ACCOUNT_LOCKED", "Tài khoản đang bị khóa. Liên hệ quản trị viên để được hỗ trợ.");
+      if (u.trangThai === "CHUA_XAC_THUC") throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Tài khoản chưa xác thực email. Mở thư xác thực hoặc gửi lại thư.");
+      if (u.trangThai === "BI_KHOA") throw new ApiError(403, "ACCOUNT_LOCKED", "Tài khoản đang bị khóa. Liên hệ quản trị viên để được hỗ trợ.");
       limiter.reset();
       session.set({ userId: u.id }, !!b.remember);
       return publicUser(u);
@@ -292,14 +292,14 @@
     ["GET", /^\/me$/, () => publicUser(requireMe())],
     ["PATCH", /^\/me$/, (m, b) => {
       const u = requireMe();
-      if (b.displayName !== undefined) {
-        const name = (b.displayName || "").trim();
-        if (!name) bad([fe("displayName", "Nhập tên hiển thị")]);
-        if (name.length > 100) bad([fe("displayName", "Tên hiển thị tối đa 100 ký tự")]);
-        u.displayName = name;
+      if (b.tenHienThi !== undefined) {
+        const name = (b.tenHienThi || "").trim();
+        if (!name) bad([fe("tenHienThi", "Nhập tên hiển thị")]);
+        if (name.length > 100) bad([fe("tenHienThi", "Tên hiển thị tối đa 100 ký tự")]);
+        u.tenHienThi = name;
       }
-      if (b.timeZone !== undefined) u.timeZone = b.timeZone;
-      if (b.avatarFileId !== undefined) { const f = db.files[b.avatarFileId]; u.avatarUrl = f ? f.url : null; }
+      if (b.muiGio !== undefined) u.muiGio = b.muiGio;
+      if (b.anhDaiDienId !== undefined) { const f = db.files[b.anhDaiDienId]; u.anhDaiDienUrl = f ? f.url : null; }
       return publicUser(u);
     }],
     ["PUT", /^\/me\/password$/, (m, b) => {
@@ -395,7 +395,7 @@
       if (key && db.idem[key]) return { status: 201, body: db.idem[key] };
       const src = db.decks.find((x) => x.id === m[1] && (x.visibility === "CONG_KHAI" || x.ownerId === u.id) && !x.deleted);
       if (!src) notFound();
-      const d = Object.assign({}, src, { id: nextId(), ownerId: u.id, ownerName: u.displayName, visibility: "RIENG_TU", kind: "CA_NHAN", source: "Sao chép từ thư viện", sourceDeckId: src.id, updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0 });
+      const d = Object.assign({}, src, { id: nextId(), ownerId: u.id, ownerName: u.tenHienThi, visibility: "RIENG_TU", kind: "CA_NHAN", source: "Sao chép từ thư viện", sourceDeckId: src.id, updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0 });
       db.decks.push(d);
       db.cards.filter((x) => x.deckId === src.id).forEach((x) => db.cards.push(Object.assign({}, x, { id: nextId(), deckId: d.id, version: 0 })));
       const res = { deckId: d.id, name: d.name, cardCount: db.cards.filter((x) => x.deckId === d.id).length };
@@ -415,7 +415,7 @@
     ["POST", /^\/decks$/, (m, b) => {
       const u = requireMe();
       validateDeck(b);
-      const d = { id: nextId(), name: b.name.trim(), description: (b.description || "").trim(), goal: b.goal, topicId: b.topicId, level: b.level, visibility: b.visibility === "CONG_KHAI" ? "CONG_KHAI" : "RIENG_TU", kind: b.visibility === "CONG_KHAI" ? "CHIA_SE" : "CA_NHAN", ownerId: u.id, ownerName: u.displayName, source: "Tự tạo", updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0, sourceDeckId: null };
+      const d = { id: nextId(), name: b.name.trim(), description: (b.description || "").trim(), goal: b.goal, topicId: b.topicId, level: b.level, visibility: b.visibility === "CONG_KHAI" ? "CONG_KHAI" : "RIENG_TU", kind: b.visibility === "CONG_KHAI" ? "CHIA_SE" : "CA_NHAN", ownerId: u.id, ownerName: u.tenHienThi, source: "Tự tạo", updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0, sourceDeckId: null };
       db.decks.push(d);
       return { status: 201, body: deckView(d, u.id) };
     }],
@@ -532,7 +532,7 @@
       return { csv: "﻿" + [head].concat(body).join("\n") };
     }],
 
-    ["GET", /^\/admin\/topics$/, () => { const u = requireMe(); if (!u.roles.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && !d.deleted).length })); }],
+    ["GET", /^\/admin\/topics$/, () => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && !d.deleted).length })); }],
     ["POST", /^\/admin\/topics$/, (m, b) => {
       requireAdmin();
       const name = (b.name || "").trim();
@@ -573,7 +573,7 @@
     ["DELETE", /^\/admin\/tags\/(\w+)$/, (m) => { requireAdmin(); db.tags = db.tags.filter((x) => x.id !== m[1]); db.cards.forEach((x) => { x.tagIds = (x.tagIds || []).filter((t) => t !== m[1]); }); return { status: 204 }; }]
   ];
 
-  function requireAdmin() { const u = requireMe(); if (!u.roles.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return u; }
+  function requireAdmin() { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return u; }
 
   function handle(method, url, body, headers) {
     const [path, qs] = url.split("?");

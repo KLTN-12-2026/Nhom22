@@ -21,7 +21,7 @@
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
-**Tình trạng hiện tại (28/09):** BE đã xong GĐ0 (B0.1–B0.8, 25 test xanh), đang làm B1.1 → **BE vượt ~2 tuần**. Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
+**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8) và B1.1, 33 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `bao-cao-tien-do-BE/BAO_CAO_TIEN_DO_BE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
 
 ---
 
@@ -35,7 +35,7 @@
 | Chủ nhật | Tick roadmap, cập nhật `bao-cao-tien-do-BE/` | Tick roadmap FE | Retro ngắn; cuối giai đoạn chạy `/fe-report <PHASE>` |
 
 **Quy ước thống nhất BE ↔ FE** (chi tiết: `report/GD0_BAO_CAO_FE.md` §3)
-- `/api/v1`, JSON camelCase, ID dạng string, thời gian ISO-8601 UTC, phân trang `{items, page, size, totalElements, totalPages}`.
+- `/api/v1`, JSON camelCase với **tên trường = tên field entity** (tiếng Việt không dấu: `tenHienThi`, `trangThai`, `muiGio`; không có trong entity thì chọn tên gần nhất: `password`, `token`), ID dạng string, thời gian ISO-8601 UTC, phân trang `{items, page, size, totalElements, totalPages}`.
 - Lỗi `{code, message, fieldErrors, requestId}`; 401 → `/dang-nhap?next=`, 403 CSRF → lấy token rồi thử lại 1 lần, 404 cả với dữ liệu riêng của người khác.
 - Cookie `SESSION` + CSRF `X-XSRF-TOKEN`; ghi kết quả học dùng `clientEventId`, nộp bài dùng `submitKey`, sao chép/commit dùng `Idempotency-Key`.
 - Giới hạn validate FE (Zod) = giới hạn BE (Bean Validation) — lấy từ báo cáo FE của giai đoạn.
