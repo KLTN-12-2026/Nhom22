@@ -1,13 +1,11 @@
 package com.do_an_tot_nghiep.k28;
 
+import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class K28ApplicationTests {
+class K28ApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void contextLoads() {
 	}
-
 }

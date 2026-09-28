@@ -167,16 +167,16 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `RateLimiter` đơn giản: đếm `INCR` + `EXPIRE` trên Redis theo khóa (IP/user + hành động).
 - **Xong khi:** gọi API cần đăng nhập → 401 JSON; POST thiếu CSRF → 403.
 
-### [ ] B0.6 OpenAPI & quy ước API
+### [x] B0.6 OpenAPI & quy ước API
 - springdoc: nhóm theo module, mô tả cookie session + CSRF. Tiền tố `/api/v1`, JSON camelCase, ID trả dạng string.
 - **Xong khi:** Swagger UI mở được, có endpoint `GET /api/v1/public/ping`.
 
-### [ ] B0.7 Nền kiểm thử
+### [x] B0.7 Nền kiểm thử
 - `AbstractIntegrationTest`: `@SpringBootTest` + MockMvc + Testcontainers (MySQL 8.4, Redis) dùng `@ServiceConnection`.
 - Tên test theo mã: `FR01RegisterTest`, phương thức `tc01_...`.
 - **Xong khi:** `./mvnw -q verify` chạy qua với Docker đang bật.
 
-### [ ] B0.8 Kho lưu tệp & email
+### [x] B0.8 Kho lưu tệp & email
 - `StorageService`: tạo presigned PUT/GET (hết hạn ngắn), xóa object; bucket riêng tư.
 - `MailService`: gửi mail HTML đơn giản qua SMTP (Mailpit khi dev), gửi **sau commit** bằng `@TransactionalEventListener(AFTER_COMMIT)` + `@Async`.
 - **Xong khi:** test tích hợp upload/download qua URL ký; gửi mail thử thấy trong Mailpit.
