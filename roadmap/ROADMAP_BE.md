@@ -37,6 +37,7 @@
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
 Sau bước cuối mỗi giai đoạn: chạy `/fe-report <GĐ>` để bàn giao cho FE.
+Lịch theo tuần (S1–S11) ghép BE ↔ FE: `roadmap/SPRINT_PLAN.md`; bước FE: `roadmap/ROADMAP_FE.md`.
 
 ---
 
@@ -226,6 +227,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B1.10 Thư viện công khai — FR-04
 - API: `GET /library/decks` (q, chủ đề, trình độ, mục tiêu, nguồn, sắp xếp, phân trang), `GET /library/decks/{id}`.
 - Chỉ bộ `CONG_KHAI` + đã duyệt; nhãn "Bộ mẫu" hoặc "Người học chia sẻ". Dùng JPA `Specification`.
+- Bộ khởi động sau onboarding (TK §6.1 bước 5): lọc theo mục tiêu/trình độ trong `ho_so_hoc_tap`. `GET /library/decks/{id}` là link chia sẻ công khai.
 
 ### [ ] B1.11 Sao chép bộ — FR-04, TC-03
 - API: `POST /decks/{id}/copy` với header `Idempotency-Key`.
@@ -315,7 +317,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
 - `V8__engagement.sql`: `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
 - `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày; chuỗi ngày khi phiên có ≥ 5 lượt hợp lệ (TK §15.1).
-- API: `GET /rewards/history`, `GET /badges`, `GET /challenges`.
+- API: `GET /rewards/history`, `GET /badges`, `GET /challenges`; Admin: CRUD `/admin/badges`, `/admin/challenges` (TK §4.2).
 
 ### [ ] B3.7 Thông báo & nhắc học — FR-12, TC-15
 - `V9__notification_report.sql`: `thong_bao`, `bao_cao_noi_dung`.
@@ -331,6 +333,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
 - `V10__privacy.sql`: `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
+- Admin: `GET /admin/deletion-requests` theo dõi tiến độ xóa (TK §4.2).
 
 ### [ ] B3.11 Quản trị vận hành — FR-13
 - API: `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi, thời gian, chi phí; chưa có đơn giá → "Chưa xác định"), `GET /admin/statistics`, `GET /admin/jobs`.
