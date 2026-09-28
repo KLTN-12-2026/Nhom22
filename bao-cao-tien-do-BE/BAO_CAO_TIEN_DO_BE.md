@@ -27,15 +27,7 @@
 
 `nguoi_dung`, `vai_tro`, `nguoi_dung_vai_tro`, `danh_tinh_oauth`, `token_tai_khoan`, `ho_so_hoc_tap`, `cai_dat_thong_bao`.
 
-### Quyết định & thay đổi so với kế hoạch
 
-| Vấn đề | Quyết định |
-|---|---|
-| MinIO ngừng phát hành Docker image (`minio/minio`, `minio/mc` không pull được) | Dùng RustFS (tương thích S3); tạo bucket bằng `amazon/aws-cli`. Code dùng AWS SDK nên không phụ thuộc nhà cung cấp |
-| IntelliJ build lỗi `ExceptionInInitializerError` với JDK 27 | Lombok chưa hỗ trợ JDK 27 → cố định project SDK = JDK 21 |
-| MySQL báo healthy sớm khi khởi tạo lần đầu, API kết nối lỗi | Healthcheck qua TCP `127.0.0.1` + `restart: on-failure` cho API |
-| Mật khẩu DB dev | Thống nhất `123456` ở compose, `.env.example`, `application.yaml` (chỉ dùng cho dev) |
-| Quy ước mã nguồn | Không viết comment trong code/cấu hình; giải thích để ở tài liệu |
 
 ### Cách chạy (cho FE và thành viên khác)
 
