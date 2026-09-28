@@ -1,0 +1,70 @@
+{
+  "workspace": {
+    "id": "95a0cc45-47be-411b-81c1-f31b773fdc3f",
+    "name": "VocabLearning"
+  },
+  "ownerId": "37353260",
+  "collection": {
+    "id": "50ce8fcf-6215-4f76-a4bc-5cfd2975f796",
+    "uid": "37353260-50ce8fcf-6215-4f76-a4bc-5cfd2975f796",
+    "name": "VocabLearning API"
+  },
+  "environments": {
+    "local": {
+      "uid": "37353260-d1c8f22c-8b63-4bf3-b8c8-fd020f129c69",
+      "name": "VocabLearning - Local (8080)"
+    },
+    "nextjs": {
+      "uid": "37353260-117f2bf2-522c-4011-b6ab-8d480c35d98a",
+      "name": "VocabLearning - Qua Next.js (3000)"
+    }
+  },
+  "folders": {
+    "system": {
+      "id": "e80f244d-7e85-44c9-b32a-509a710d409a",
+      "name": "00 Hệ thống",
+      "match": ["/public", "/actuator", "/v3/api-docs"]
+    },
+    "account": {
+      "id": "0ac32ab6-2d3e-40e6-a585-2b9573143839",
+      "name": "01 Tài khoản",
+      "match": ["/auth", "/me"]
+    },
+    "content": {
+      "id": "f523f66e-1cbe-44b1-ab79-8fcbc80a18fe",
+      "name": "02 Nội dung",
+      "match": ["/decks", "/cards", "/library", "/imports", "/files", "/public/topics"]
+    },
+    "learning": {
+      "id": "e3724804-4ba0-4cb1-bb2b-fbb5298369f1",
+      "name": "03 Học tập",
+      "match": ["/learning", "/notebook"]
+    },
+    "practice": {
+      "id": "7c6335b6-c248-4db4-bae7-18dcef79906b",
+      "name": "04 Luyện tập",
+      "match": ["/practice"]
+    },
+    "aiSpeaking": {
+      "id": "57af91c4-7ce3-4a2c-8733-4214166c854e",
+      "name": "05 AI & phát âm",
+      "match": ["/ai", "/pronunciation"]
+    },
+    "engagement": {
+      "id": "567a02e6-6dbb-4c8c-bff5-6b410ddbfdc6",
+      "name": "06 Tương tác & thống kê",
+      "match": ["/statistics", "/rewards", "/badges", "/challenges", "/notifications", "/reports"]
+    },
+    "admin": {
+      "id": "4fc5a61a-5974-490a-8a86-62e8c6075b2d",
+      "name": "07 Quản trị",
+      "match": ["/admin"]
+    }
+  },
+  "synced": [
+    "GET /api/v1/public/ping",
+    "GET /actuator/health",
+    "GET /v3/api-docs/all",
+    "GET /api/v1/auth/csrf"
+  ]
+}

@@ -19,11 +19,12 @@ node_modules/
 coverage/
 *.log
 
-.claude/settings.local.json
+.claude/
 graphify-out/cache/
 graphify-out/memory/
 
-.agents
+.agents/
+/CLAUDE.md
 
-CLAUDE.md
 
+.gitignore
