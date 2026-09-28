@@ -9,6 +9,43 @@
 
 ---
 
+## 29/09/2026 — Đợt 1: B1.1 Đăng ký & xác thực email ✅ (sớm ~2 tuần so với S3)
+
+### Đã hoàn thành
+
+| Bước | Nội dung | Kết quả kiểm chứng |
+|---|---|---|
+| B1.1 | `POST /api/v1/auth/register`, `/auth/verify-email`, `/auth/resend-verification`. Email chuẩn hóa trim + chữ thường, trùng → 409; mật khẩu BCrypt; token 32 byte ngẫu nhiên, chỉ lưu SHA-256, hết hạn 24 giờ, dùng một lần; gửi lại thư vô hiệu token cũ và không lộ email tồn tại; hạn mức đăng ký 5/giờ/IP, gửi lại 3/15 phút theo IP và email; tạo `ho_so_hoc_tap` + `cai_dat_thong_bao` mặc định; thư gửi sau commit | `FR01RegisterTest` 8/8 pass; gọi thử bằng curl trên BE thật (201, 204, 400, 409, 429, 403) |
+| Quy ước | Tên trường DTO/JSON = tên field entity (`tenHienThi`, `trangThai`, `muiGio`, `vaiTro`, `daHoanTatKhoiDau`) → MapStruct không cần `@Mapping`; bỏ `@Setter` ở `NguoiDung` | Đã cập nhật quy ước BE, skill, roadmap, báo cáo GĐ0, mockup |
+
+**Tổng kiểm thử:** `./mvnw test` → 33/33 pass. Đã sửa `IntegrationSetupTest` phụ thuộc thứ tự chạy (chỉ kiểm không có user seed dev).
+
+**Bàn giao FE:** [`report/DOT1_BAO_CAO_FE.md`](../report/DOT1_BAO_CAO_FE.md) (bản 1) — 3 API đã kiểm chứng, hợp đồng dự kiến B1.2.
+
+**Postman:** +8 request trong "01 Tài khoản" (đăng ký → Mailpit lấy token → xác thực → gửi lại + 4 case lỗi), biến môi trường `newEmail`.
+
+**Mockup:** đổi tên trường theo entity; demo khớp BE thật (thông điệp lỗi, 204 khi gửi lại, 409 hiện dưới ô email). Kiểm tra trên trình duyệt: không lỗi console, 360px không tràn ngang.
+
+### Bảng dữ liệu
+
+Không thêm migration. Map thêm entity `HoSoHocTap`, `CaiDatThongBao` (enum `TrinhDo`, `MucTieu`) cho bảng đã có ở V1.
+
+### Việc tiếp theo
+
+| Bước | Nội dung |
+|---|---|
+| B1.2 | Đăng nhập, đăng xuất, `GET /me`; lỗi `INVALID_CREDENTIALS` 401, `EMAIL_NOT_VERIFIED`/`ACCOUNT_LOCKED` 403, sai nhiều lần 429; đổi session id; logout xóa phiên Redis |
+| B1.3 | Quên / đặt lại / đổi mật khẩu |
+
+### Rủi ro / cần lưu ý
+
+- FE chưa khởi tạo Next.js, trong khi F0.1–F0.3 hạn 04/10 → FE nên bắt đầu và nối thật F1.1 vì API đã có.
+- Hạn mức gửi lại thư đếm chung theo IP (3/15 phút) → người dùng chung mạng dễ bị 429; xem lại ở B1.3.
+- `api-client` GĐ0 thử lại mọi 403 → khi có B1.2 chỉ thử lại với `code === 'FORBIDDEN'` (đã ghi ở DOT1 §10).
+- Chưa commit thay đổi của kỳ này.
+
+---
+
 ## 28/09/2026 — GĐ0: Khởi tạo & nền tảng (B0.1–B0.8) ✅ hoàn thành
 
 ### Đã hoàn thành

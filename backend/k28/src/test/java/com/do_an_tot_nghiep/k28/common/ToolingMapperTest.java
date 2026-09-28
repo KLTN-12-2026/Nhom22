@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 class ToolingMapperTest {
@@ -18,11 +17,10 @@ class ToolingMapperTest {
         private final String tenHienThi;
     }
 
-    record Target(String id, String displayName) {}
+    record Target(String id, String tenHienThi) {}
 
     @Mapper
     interface SourceMapper {
-        @Mapping(target = "displayName", source = "tenHienThi")
         Target toTarget(Source source);
     }
 

@@ -105,7 +105,7 @@
     VL.busy(submit, async () => {
       try {
         const user = await VL.api("POST", "/auth/login", { email: form.email.value, password: form.password.value, remember: form.remember.checked });
-        const dest = !user.onboardingDone ? "bat-dau.html" : (p.next ? "../" + p.next : "bo-the.html");
+        const dest = !user.daHoanTatKhoiDau ? "bat-dau.html" : (p.next ? "../" + p.next : "bo-the.html");
         location.href = dest;
       } catch (err) {
         if (err.status === 429) { VL.countdown(submit, err.retryAfter || 60); }

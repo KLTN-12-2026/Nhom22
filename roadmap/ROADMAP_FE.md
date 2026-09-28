@@ -83,7 +83,7 @@ frontend/
 ### [ ] F0.5 Trang công khai tĩnh — UI01, UI04, UI05
 - Giới thiệu, cách học, hướng dẫn, FAQ, chính sách quyền riêng tư, điều khoản.
 
-### [ ] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48
+### [ ] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48 (ko cần thiết)
 - `/ui-mockup` cho từng màn, nối API thật khi đã có.
 
 ## Đợt 1 — Tài khoản & nội dung (S3–S4 · 12/10–25/10) · FR-01…05

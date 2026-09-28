@@ -62,7 +62,7 @@ Dừng: `docker compose --profile app down`. **Không** dùng `-v`, vì lệnh �
 | Mục | Quy ước |
 |---|---|
 | Tiền tố | `/api/v1` |
-| JSON | camelCase, UTF-8 |
+| JSON | camelCase, UTF-8; tên trường = tên field entity (tiếng Việt không dấu: `tenHienThi`, `trangThai`, `muiGio`, `vaiTro`), FE dùng nguyên tên, không đổi sang tiếng Anh |
 | Thời gian | ISO-8601 UTC, ví dụ `2026-09-28T03:15:58.044Z` |
 | ID | Trả về dạng **string** (tránh mất chính xác số lớn trong JS) |
 | Phân trang | `?page=0&size=20` (page bắt đầu từ 0). Phản hồi dạng `{items, page, size, totalElements, totalPages}` |
@@ -350,16 +350,16 @@ Hợp đồng **dự kiến** (theo TK §12.2, §13.2), có thể đổi tên tr
 
 ```json
 // POST /auth/register  (dự kiến)
-{ "email": "an@example.com", "password": "********", "displayName": "An", "timeZone": "Asia/Ho_Chi_Minh" }
-// 201 → { "id": "5", "email": "an@example.com", "status": "CHUA_XAC_THUC" }
+{ "tenHienThi": "An", "email": "an@example.com", "password": "********", "muiGio": "Asia/Ho_Chi_Minh", "acceptTerms": true }
+// 201 → { "id": "5", "email": "an@example.com", "tenHienThi": "An", "trangThai": "CHUA_XAC_THUC", "muiGio": "Asia/Ho_Chi_Minh", "emailXacThucAt": null, "vaiTro": ["USER"], "daHoanTatKhoiDau": false }
 // 409 CONFLICT khi email trùng · 429 RATE_LIMITED sau 5 lần/giờ
 
 // POST /auth/login  (dự kiến)
 { "email": "an@example.com", "password": "********" }
-// 200 → { "id": "5", "email": "...", "displayName": "An", "roles": ["USER"] } + Set-Cookie SESSION
+// 200 → cùng dạng với response đăng ký + Set-Cookie SESSION
 
 // GET /me  (dự kiến)
-{ "id": "5", "email": "...", "displayName": "An", "roles": ["USER"], "timeZone": "Asia/Ho_Chi_Minh", "avatarUrl": null }
+{ "id": "5", "email": "...", "tenHienThi": "An", "trangThai": "HOAT_DONG", "muiGio": "Asia/Ho_Chi_Minh", "vaiTro": ["USER"], "daHoanTatKhoiDau": true, "anhDaiDienUrl": null }
 ```
 
 Luồng tải tệp **dự kiến** (B1.6), dùng `StorageService` đã có:

@@ -85,7 +85,7 @@
   const tf = document.getElementById("time-field");
   const sync = () => { const on = form.studyReminder.checked; form.reminderTime.disabled = !on; tf.toggleAttribute("data-disabled", !on); };
   form.studyReminder.addEventListener("change", sync);
-  document.getElementById("tz-hint").textContent = "Theo múi giờ " + (VL.me().timeZone || "Asia/Ho_Chi_Minh");
+  document.getElementById("tz-hint").textContent = "Theo múi giờ " + (VL.me().muiGio || "Asia/Ho_Chi_Minh");
 
   VL.load(document.getElementById("region"), {
     fetch: () => VL.api("GET", "/me/notification-settings"),

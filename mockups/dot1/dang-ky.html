@@ -34,8 +34,8 @@
       <form id="form" novalidate>
         <div data-form-error hidden></div>
         <div class="field">
-          <label class="field-label" for="displayName">Tên hiển thị</label>
-          <input class="input" id="displayName" name="displayName" autocomplete="nickname" maxlength="100" required placeholder="Ví dụ: Minh Anh">
+          <label class="field-label" for="tenHienThi">Tên hiển thị</label>
+          <input class="input" id="tenHienThi" name="tenHienThi" autocomplete="nickname" maxlength="100" required placeholder="Ví dụ: Minh Anh">
           <p class="field-error"></p>
         </div>
         <div class="field">
@@ -110,11 +110,11 @@
     e.preventDefault();
     VL.clearErrors(form);
     const data = {
-      displayName: form.displayName.value,
+      tenHienThi: form.tenHienThi.value,
       email: form.email.value,
       password: form.password.value,
       acceptTerms: form.acceptTerms.checked,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      muiGio: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
     VL.busy(submit, async () => {
       try {
@@ -127,6 +127,7 @@
         document.getElementById("sent-title").focus();
       } catch (err) {
         if (err.status === 429) { VL.countdown(submit, err.retryAfter || 60); VL.toast(err.message, "error"); return; }
+        if (err.code === "CONFLICT") { VL.clearErrors(form); VL.setFieldError(form, "email", err.message + ". Hãy đăng nhập hoặc dùng email khác."); form.email.focus(); return; }
         VL.showErrors(form, err);
       }
     });

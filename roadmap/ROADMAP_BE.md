@@ -169,7 +169,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Xong khi:** gọi API cần đăng nhập → 401 JSON; POST thiếu CSRF → 403.
 
 ### [x] B0.6 OpenAPI & quy ước API
-- springdoc: nhóm theo module, mô tả cookie session + CSRF. Tiền tố `/api/v1`, JSON camelCase, ID trả dạng string.
+- springdoc: nhóm theo module, mô tả cookie session + CSRF. Tiền tố `/api/v1`, JSON camelCase, **tên trường DTO = tên field entity** (`tenHienThi`, `trangThai`…), ID trả dạng string.
 - **Xong khi:** Swagger UI mở được, có endpoint `GET /api/v1/public/ping`.
 
 ### [x] B0.7 Nền kiểm thử
@@ -186,7 +186,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ## Đợt 1 — Tài khoản, hồ sơ & nội dung (12/10–25/10) · FR-01…05
 
-### [ ] B1.1 Đăng ký & xác thực email — FR-01, TC-01
+### [x] B1.1 Đăng ký & xác thực email — FR-01, TC-01
 - API: `POST /auth/register`, `POST /auth/verify-email`, `POST /auth/resend-verification`.
 - Tạo `nguoi_dung` trạng thái `CHUA_XAC_THUC`; token ngẫu nhiên, **chỉ lưu `token_hash`** (SHA-256), có `het_han_at`, `da_dung_at` (dùng một lần). Email trùng → 409. Rate limit đăng ký/gửi lại.
 - **Xong khi:** token sai/hết hạn/dùng lần 2 bị từ chối; mật khẩu lưu BCrypt.

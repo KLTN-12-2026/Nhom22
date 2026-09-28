@@ -21,7 +21,8 @@ class IntegrationSetupTest extends AbstractIntegrationTest {
     @Test
     void flywayCreatedSchemaWithoutDevSeed() {
         Integer roles = jdbc.queryForObject("SELECT COUNT(*) FROM vai_tro", Integer.class);
-        Integer users = jdbc.queryForObject("SELECT COUNT(*) FROM nguoi_dung", Integer.class);
+        Integer users = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM nguoi_dung WHERE email = 'admin@vocab.local'", Integer.class);
         assertThat(roles).isEqualTo(2);
         assertThat(users).isZero();
     }

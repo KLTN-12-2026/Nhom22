@@ -88,7 +88,7 @@
     return (parts.length > 1 ? parts[parts.length - 1][0] : parts[0][0] || "?").toUpperCase();
   }
   function avatarHtml(u, cls) {
-    return '<span class="avatar ' + (cls || "") + '">' + (u.avatarUrl ? '<img src="' + esc(u.avatarUrl) + '" alt="">' : esc(initials(u.displayName))) + "</span>";
+    return '<span class="avatar ' + (cls || "") + '">' + (u.anhDaiDienUrl ? '<img src="' + esc(u.anhDaiDienUrl) + '" alt="">' : esc(initials(u.tenHienThi))) + "</span>";
   }
 
   /* ---------- Toast ---------- */
@@ -264,13 +264,13 @@
     if (header) {
       header.innerHTML =
         '<a class="brand" href="' + url("dot1/bo-the.html") + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
-        '<div class="header-actions"><a class="user-chip" href="' + url("dot1/ca-nhan.html") + '" aria-label="Hồ sơ của ' + esc(u.displayName) + '">' + avatarHtml(u) + '<span class="user-name">' + esc(u.displayName) + "</span></a>" +
+        '<div class="header-actions"><a class="user-chip" href="' + url("dot1/ca-nhan.html") + '" aria-label="Hồ sơ của ' + esc(u.tenHienThi) + '">' + avatarHtml(u) + '<span class="user-name">' + esc(u.tenHienThi) + "</span></a>" +
         '<button type="button" class="btn btn-quiet btn-icon" data-logout aria-label="Đăng xuất" title="Đăng xuất">' + icon("logout") + "</button></div>";
     }
     const side = document.querySelector(".sidebar");
     if (side) {
       side.setAttribute("aria-label", "Điều hướng chính");
-      side.innerHTML = NAV.filter((g) => !g.admin || u.roles.includes("ADMIN")).map((g) =>
+      side.innerHTML = NAV.filter((g) => !g.admin || u.vaiTro.includes("ADMIN")).map((g) =>
         '<div class="nav-group"><p class="nav-group-title">' + esc(g.group) + "</p>" + g.items.map((it) => it.soon
           ? '<span class="nav-link" aria-disabled="true"><span class="nav-dot"></span>' + esc(it.label) + '<span class="nav-soon">' + esc(it.soon) + "</span></span>"
           : '<a class="nav-link" href="' + url(it.href) + '"' + (it.key === nav ? ' aria-current="page"' : "") + '><span class="nav-dot"></span>' + esc(it.label) + "</a>").join("") + "</div>").join("");
@@ -387,7 +387,7 @@
       location.replace(url("dot1/bat-dau.html"));
       return false;
     }
-    if (body.dataset.role === "ADMIN" && u && !u.roles.includes("ADMIN")) {
+    if (body.dataset.role === "ADMIN" && u && !u.vaiTro.includes("ADMIN")) {
       const main = document.querySelector("#main");
       if (main) main.innerHTML = '<div class="page sheet"><div class="error-state" role="alert">' + icon("lock", "icon-lg") + '<h1>Bạn không có quyền vào trang này</h1><p>Trang quản trị chỉ dành cho tài khoản quản trị viên.</p><a class="btn btn-secondary" href="' + url("dot1/bo-the.html") + '">Về Bộ của tôi</a></div></div>';
     }

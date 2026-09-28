@@ -57,8 +57,8 @@
               <p class="field-error"></p>
             </div>
             <div class="field">
-              <label class="field-label" for="displayName">Tên hiển thị</label>
-              <input class="input" id="displayName" name="displayName" maxlength="110" autocomplete="nickname" required>
+              <label class="field-label" for="tenHienThi">Tên hiển thị</label>
+              <input class="input" id="tenHienThi" name="tenHienThi" maxlength="110" autocomplete="nickname" required>
               <p class="field-hint">Hiện trên bộ thẻ bạn chia sẻ công khai.</p>
               <p class="field-error"></p>
             </div>
@@ -68,8 +68,8 @@
               <p class="field-hint" id="email-hint">Không đổi được email ở bản này.</p>
             </div>
             <div class="field">
-              <label class="field-label" for="timeZone">Múi giờ</label>
-              <select class="select" id="timeZone" name="timeZone">
+              <label class="field-label" for="muiGio">Múi giờ</label>
+              <select class="select" id="muiGio" name="muiGio">
                 <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
                 <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
                 <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
@@ -113,19 +113,19 @@
 
   function renderAvatar() {
     document.getElementById("avatar").innerHTML = VL.avatarHtml(me, "avatar-xl");
-    document.getElementById("avatar-remove").hidden = !me.avatarUrl;
+    document.getElementById("avatar-remove").hidden = !me.anhDaiDienUrl;
   }
 
   VL.load(document.getElementById("region"), {
     fetch: () => VL.api("GET", "/me"),
     render: (u) => {
       me = u;
-      form.displayName.value = u.displayName;
+      form.tenHienThi.value = u.tenHienThi;
       document.getElementById("email").value = u.email;
-      form.timeZone.value = u.timeZone;
+      form.muiGio.value = u.muiGio;
       renderAvatar();
-      document.getElementById("admin-link").hidden = !u.roles.includes("ADMIN");
-      document.getElementById("kv").innerHTML = "<dt>Trạng thái</dt><dd>" + (u.status === "HOAT_DONG" ? '<span class="stamp stamp-success">Đã xác thực email</span>' : '<span class="stamp stamp-warning">Chưa xác thực</span>') + "</dd><dt>Vai trò</dt><dd>" + u.roles.map((r) => r === "ADMIN" ? "Quản trị viên" : "Người học").join(", ") + "</dd>";
+      document.getElementById("admin-link").hidden = !u.vaiTro.includes("ADMIN");
+      document.getElementById("kv").innerHTML = "<dt>Trạng thái</dt><dd>" + (u.trangThai === "HOAT_DONG" ? '<span class="stamp stamp-success">Đã xác thực email</span>' : '<span class="stamp stamp-warning">Chưa xác thực</span>') + "</dd><dt>Vai trò</dt><dd>" + u.vaiTro.map((r) => r === "ADMIN" ? "Quản trị viên" : "Người học").join(", ") + "</dd>";
     }
   });
 
@@ -154,7 +154,7 @@
       const req = await VL.api("POST", "/files/upload-requests", { fileName: file.name, contentType: file.type, size: file.size, purpose: "AVATAR" });
       const dataUrl = await downscale(file);
       const done = await VL.api("POST", "/files/" + req.fileId + "/complete", { dataUrl });
-      me = await VL.api("PATCH", "/me", { avatarFileId: done.fileId });
+      me = await VL.api("PATCH", "/me", { anhDaiDienId: done.fileId });
       renderAvatar();
       VL.toast("Đã đổi ảnh đại diện");
       document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
@@ -163,7 +163,7 @@
   });
   const rm = document.getElementById("avatar-remove");
   rm.addEventListener("click", () => VL.busy(rm, async () => {
-    me = await VL.api("PATCH", "/me", { avatarFileId: null });
+    me = await VL.api("PATCH", "/me", { anhDaiDienId: null });
     renderAvatar();
     document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
     VL.toast("Đã gỡ ảnh đại diện");
@@ -174,11 +174,11 @@
     VL.clearErrors(form);
     VL.busy(save, async () => {
       try {
-        me = await VL.api("PATCH", "/me", { displayName: form.displayName.value, timeZone: form.timeZone.value });
+        me = await VL.api("PATCH", "/me", { tenHienThi: form.tenHienThi.value, muiGio: form.muiGio.value });
         VL.toast("Đã lưu hồ sơ");
         document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
         const name = document.querySelector(".app-header .user-name");
-        if (name) name.textContent = me.displayName;
+        if (name) name.textContent = me.tenHienThi;
       } catch (err) { VL.showErrors(form, err); }
     });
   });

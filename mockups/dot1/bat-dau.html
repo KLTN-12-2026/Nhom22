@@ -133,8 +133,8 @@
             <p class="field-error"></p>
           </div>
           <div class="field">
-            <label class="field-label" for="timeZone">Múi giờ</label>
-            <select class="select" id="timeZone" name="timeZone">
+            <label class="field-label" for="muiGio">Múi giờ</label>
+            <select class="select" id="muiGio" name="muiGio">
               <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
               <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
               <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
@@ -190,7 +190,7 @@
       '<label class="choice choice-card"><input type="checkbox" name="topicIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">' + VL.esc(t.name) + '</span></span></label>').join("");
   });
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if ([...form.timeZone.options].some((o) => o.value === tz)) form.timeZone.value = tz;
+  if ([...form.muiGio.options].some((o) => o.value === tz)) form.muiGio.value = tz;
 
   function values() {
     const fd = new FormData(form);
@@ -201,7 +201,7 @@
       minutesPerDay: Number(fd.get("minutesPerDay")),
       newCardsPerDay: Number(fd.get("newCardsPerDay")),
       reminderTime: fd.get("reminderTime"),
-      timeZone: fd.get("timeZone")
+      muiGio: fd.get("muiGio")
     };
   }
   function summary() {
@@ -286,7 +286,7 @@
         try {
           await VL.api("PUT", "/me/learning-settings", { goal: v.goal, level: v.level, topicIds: v.topicIds, minutesPerDay: v.minutesPerDay, newCardsPerDay: v.newCardsPerDay, onboardingDone: true });
           await VL.api("PUT", "/me/notification-settings", { inApp: true, email: true, studyReminder: !!v.reminderTime, reminderTime: v.reminderTime || "20:00" });
-          await VL.api("PATCH", "/me", { timeZone: v.timeZone });
+          await VL.api("PATCH", "/me", { muiGio: v.muiGio });
           go(5);
         } catch (err) {
           VL.showErrors(form, err);
