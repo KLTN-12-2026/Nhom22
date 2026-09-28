@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thư viện bộ thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .filters { display: grid; gap: var(--sp-3); grid-template-columns: 1fr 1fr; margin-bottom: var(--sp-5); }
+  .filters .search { grid-column: 1 / -1; }
+  @media (min-width: 720px) { .filters { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1200px) { .filters { grid-template-columns: 2fr repeat(4, 1fr); } .filters .search { grid-column: auto; } }
+  .result-bar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+  .topic-links { list-style: none; margin: 0; padding: 0; display: grid; }
+  .topic-links a { display: flex; justify-content: space-between; gap: var(--sp-3); min-height: var(--tap); align-items: center; padding: 0 var(--sp-2); color: var(--ink); text-decoration: none; border-bottom: var(--rule) dashed var(--primary-line); }
+  .topic-links a:hover { background: var(--primary-tint); }
+  .topic-links a[aria-current="true"] { font-weight: 700; color: var(--primary-strong); }
+  .topic-links .num { color: var(--ink-3); }
+  .legend { display: grid; gap: var(--sp-3); font-size: var(--fs-small); }
+  .legend div { display: grid; gap: 4px; }
+  .side-topics { display: none; }
+  @media (min-width: 1024px) { .side-topics { display: block; } }
+</style>
+</head>
+<body data-root=".." data-nav="library" data-auth="optional">
+<!-- F1.7 · UI02 · API: GET /library/decks?q&goal&topicId&level&source&sort&page&size, GET /public/topics (B1.7, B1.10) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Thư viện công khai</span><span>Giao tiếp và TOEIC</span></div>
+            <h1 id="page-title">Thư viện bộ thẻ</h1>
+            <p>Sao chép một bộ về tài khoản để học. Bộ mẫu do nhóm biên soạn kiểm tra nội dung; bộ chia sẻ do người học đăng công khai.</p>
+          </div>
+
+          <form class="filters" id="filters" role="search" aria-label="Lọc thư viện">
+            <div class="field search">
+              <label class="field-label" for="q">Tìm bộ thẻ hoặc từ</label>
+              <div class="input-with-icon">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                <input class="input" id="q" name="q" type="search" placeholder="Ví dụ: invoice, sân bay…" autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="goal">Mục tiêu</label>
+              <select class="select" id="goal" name="goal"><option value="">Tất cả</option><option value="GIAO_TIEP">Giao tiếp</option><option value="TOEIC">TOEIC</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="topicId">Chủ đề</label>
+              <select class="select" id="topicId" name="topicId"><option value="">Tất cả</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="level">Trình độ</label>
+              <select class="select" id="level" name="level"><option value="">Tất cả</option><option value="MOI_BAT_DAU">Mới bắt đầu</option><option value="CO_BAN">Cơ bản</option><option value="TRUNG_CAP">Trung cấp</option><option value="NANG_CAO">Nâng cao</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="source">Nguồn</label>
+              <select class="select" id="source" name="source"><option value="">Tất cả</option><option value="MAU">Bộ mẫu</option><option value="CHIA_SE">Người học chia sẻ</option></select>
+            </div>
+          </form>
+
+          <div class="result-bar">
+            <p id="result-count" class="muted" aria-live="polite"></p>
+            <div class="row">
+              <label for="sort" class="caption">Sắp xếp</label>
+              <select class="select" id="sort" style="width:auto;min-height:40px"><option value="updated">Mới cập nhật</option><option value="name">Tên A–Z</option><option value="size">Nhiều thẻ nhất</option></select>
+            </div>
+          </div>
+
+          <div data-view="loading" id="region">
+            <div data-when="loading"><div class="skeleton" aria-label="Đang tải thư viện"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <div class="deck-head" aria-hidden="true"><span>Số</span><span>Bộ thẻ</span><span>Mục tiêu</span><span>Trình độ</span><span style="text-align:right">Số thẻ</span></div>
+              <ol class="answer-list" id="list" role="list"></ol>
+              <nav class="pager" id="pager" aria-label="Phân trang" style="margin-top:var(--sp-5)"></nav>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span><span data-n="3"><i></i><i></i><i></i><i></i></span></div>
+                <h2>Không có bộ thẻ nào khớp bộ lọc</h2>
+                <p>Thử từ khóa ngắn hơn hoặc bỏ bớt điều kiện lọc.</p>
+                <button type="button" class="btn btn-secondary" id="clear">Xóa bộ lọc</button>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel side-topics" aria-labelledby="t-title">
+            <h2 class="panel-title" id="t-title">Chủ đề</h2>
+            <ul class="topic-links" id="topic-links"></ul>
+          </section>
+          <section class="panel" aria-labelledby="l-title">
+            <h2 class="panel-title" id="l-title">Cách đọc nhãn</h2>
+            <div class="legend">
+              <div><span><span class="stamp stamp-solid">Bộ mẫu</span></span><p class="muted">Nhóm biên soạn soạn và kiểm tra nghĩa, ví dụ, nguồn.</p></div>
+              <div><span><span class="stamp stamp-graphite">Người học chia sẻ</span></span><p class="muted">Bộ do người học đăng công khai. Kiểm tra lại trước khi học.</p></div>
+              <div>${level}<p class="muted">Trình độ do người soạn tự đánh giá, không phải chứng nhận.</p></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const legendLevel = document.querySelector(".legend");
+  legendLevel.innerHTML = legendLevel.innerHTML.replace("${level}", "<span>" + VL.levelHtml("TRUNG_CAP") + "</span>");
+
+  const form = document.getElementById("filters");
+  const sort = document.getElementById("sort");
+  const region = document.getElementById("region");
+  const state = Object.assign({ q: "", goal: "", topicId: "", level: "", source: "", sort: "updated", page: "0" }, VL.params());
+  ["q", "goal", "level", "source"].forEach((k) => { form[k].value = state[k] || ""; });
+  sort.value = state.sort;
+
+  VL.api("GET", "/public/topics").then((topics) => {
+    form.topicId.insertAdjacentHTML("beforeend", topics.map((t) => '<option value="' + t.id + '">' + VL.esc(t.name) + "</option>").join(""));
+    form.topicId.value = state.topicId || "";
+    renderTopics(topics);
+  });
+  function renderTopics(topics) {
+    document.getElementById("topic-links").innerHTML =
+      '<li><a href="?"' + (!state.topicId ? ' aria-current="true"' : "") + ' data-topic=""><span>Tất cả chủ đề</span></a></li>' +
+      topics.map((t) => '<li><a href="?topicId=' + t.id + '" data-topic="' + t.id + '"' + (state.topicId === t.id ? ' aria-current="true"' : "") + "><span>" + VL.esc(t.name) + '</span><span class="num">' + t.deckCount + "</span></a></li>").join("");
+  }
+  document.getElementById("topic-links").addEventListener("click", (e) => {
+    const a = e.target.closest("[data-topic]");
+    if (!a) return;
+    e.preventDefault();
+    form.topicId.value = a.dataset.topic;
+    state.topicId = a.dataset.topic;
+    document.querySelectorAll("#topic-links a").forEach((x) => x.setAttribute("aria-current", String(x === a)));
+    apply(true);
+  });
+
+  function query() {
+    const q = new URLSearchParams();
+    ["q", "goal", "topicId", "level", "source", "sort", "page"].forEach((k) => { if (state[k] && !(k === "page" && state[k] === "0") && !(k === "sort" && state[k] === "updated")) q.set(k, state[k]); });
+    return q.toString();
+  }
+  function apply(resetPage) {
+    ["q", "goal", "topicId", "level", "source"].forEach((k) => { state[k] = form[k].value.trim(); });
+    state.sort = sort.value;
+    if (resetPage) state.page = "0";
+    history.replaceState(null, "", "?" + query());
+    fetchList();
+  }
+  let t;
+  form.q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => apply(true), 350); });
+  form.addEventListener("change", (e) => { if (e.target.name !== "q") apply(true); });
+  form.addEventListener("submit", (e) => { e.preventDefault(); apply(true); });
+  sort.addEventListener("change", () => apply(true));
+  document.getElementById("clear").addEventListener("click", () => { form.reset(); sort.value = "updated"; apply(true); form.q.focus(); });
+
+  function fetchList() {
+    const q = new URLSearchParams(query());
+    q.set("size", "8");
+    VL.load(region, {
+      fetch: () => VL.api("GET", "/library/decks?" + q.toString()),
+      isEmpty: (d) => !d.items.length,
+      empty: () => { document.getElementById("result-count").textContent = "Không có kết quả"; },
+      render: (d) => {
+        document.getElementById("result-count").textContent = d.totalElements + " bộ thẻ";
+        const start = d.page * d.size;
+        document.getElementById("list").innerHTML = d.items.map((deck, i) =>
+          '<li class="answer-row deck-row">' +
+          '<span class="answer-no">' + (start + i + 1) + "</span>" +
+          '<div class="answer-main"><a class="answer-title" href="thu-vien-chi-tiet.html?id=' + deck.id + '">' + VL.esc(deck.name) + "</a>" +
+          '<p class="clamp-2 muted small">' + VL.esc(deck.description) + "</p>" +
+          '<div class="answer-meta"><span class="stamp ' + (deck.kind === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (deck.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span><span>" + VL.esc(deck.topicName) + "</span><span>Cập nhật " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
+          '<div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + VL.levelHtml(deck.level) + '</span><span class="col-count">' + deck.cardCount + " thẻ</span></div></li>").join("");
+        const pages = [];
+        for (let p = 0; p < d.totalPages; p++) pages.push(p === d.page ? '<span aria-current="page">' + (p + 1) + "</span>" : '<button type="button" data-page="' + p + '" aria-label="Trang ' + (p + 1) + '">' + (p + 1) + "</button>");
+        document.getElementById("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+  document.getElementById("pager").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-page]");
+    if (!b) return;
+    state.page = b.dataset.page;
+    history.replaceState(null, "", "?" + query());
+    fetchList();
+    document.getElementById("page-title").scrollIntoView({ behavior: "smooth" });
+  });
+  fetchList();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bảo mật – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+</head>
+<body data-root=".." data-nav="security" data-auth="required">
+<!-- F1.3 · UI42 · API: PUT /me/password (B1.3 — dự kiến; đổi xong vô hiệu các phiên khác) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <nav class="tabs account-tabs" aria-label="Tài khoản">
+            <a class="tab" href="ca-nhan.html">Hồ sơ</a>
+            <a class="tab" href="ca-nhan-hoc-tap.html">Thiết lập học</a>
+            <a class="tab" href="ca-nhan-bao-mat.html" aria-current="page">Bảo mật</a>
+            <a class="tab" href="ca-nhan-thong-bao.html">Thông báo</a>
+          </nav>
+          <div class="form-head">
+            <div class="form-code"><span>Tài khoản</span><span>Bảo mật</span></div>
+            <h1 id="page-title">Đổi mật khẩu</h1>
+            <p>Sau khi đổi, bạn vẫn đăng nhập trên thiết bị này. Các thiết bị khác sẽ bị đăng xuất.</p>
+          </div>
+
+          <form id="form" class="settings-form" novalidate>
+            <div data-form-error hidden></div>
+            <div class="field">
+              <label class="field-label" for="currentPassword">Mật khẩu hiện tại</label>
+              <div class="input-group">
+                <input class="input" id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+                <button type="button" class="input-action" data-toggle-password aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="newPassword">Mật khẩu mới</label>
+              <div class="input-group">
+                <input class="input" id="newPassword" name="newPassword" type="password" autocomplete="new-password" required maxlength="72" aria-describedby="pw-rules">
+                <button type="button" class="input-action" data-toggle-password aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+              <ul class="pw-rules" id="pw-rules">
+                <li data-rule="len"><span class="bubble box" aria-hidden="true"></span>8–72 ký tự</li>
+                <li data-rule="letter"><span class="bubble box" aria-hidden="true"></span>Có chữ cái</li>
+                <li data-rule="digit"><span class="bubble box" aria-hidden="true"></span>Có chữ số</li>
+              </ul>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="confirm">Nhập lại mật khẩu mới</label>
+              <input class="input" id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+              <p class="field-error"></p>
+            </div>
+            <div class="settings-foot">
+              <button type="submit" class="btn btn-primary btn-lg" id="save">Đổi mật khẩu</button>
+              <a href="quen-mat-khau.html" class="small">Quên mật khẩu hiện tại?</a>
+            </div>
+          </form>
+        </section>
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="s-title">
+            <h2 class="panel-title" id="s-title">Phiên đăng nhập</h2>
+            <p class="small muted">Phiên trên mỗi thiết bị kéo dài 7 ngày nếu bạn chọn ghi nhớ đăng nhập. Đăng xuất để kết thúc phiên trên thiết bị này.</p>
+            <button type="button" class="btn btn-secondary" data-logout style="margin-top:var(--sp-3)">Đăng xuất</button>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const save = document.getElementById("save");
+  VL.bindPassword(form.currentPassword);
+  VL.bindPassword(form.newPassword, document.getElementById("pw-rules"));
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    if (form.confirm.value !== form.newPassword.value) { VL.setFieldError(form, "confirm", "Hai mật khẩu chưa khớp"); form.confirm.focus(); return; }
+    VL.busy(save, async () => {
+      try {
+        await VL.api("PUT", "/me/password", { currentPassword: form.currentPassword.value, newPassword: form.newPassword.value });
+        form.reset();
+        form.newPassword.dispatchEvent(new Event("input"));
+        VL.toast("Đã đổi mật khẩu");
+      } catch (err) { VL.showErrors(form, err); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

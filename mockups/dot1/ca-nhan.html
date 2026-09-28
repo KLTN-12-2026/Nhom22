@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hồ sơ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .avatar-row { display: flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; }
+  .avatar-actions { display: grid; gap: var(--sp-2); }
+  .mobile-only { display: grid; gap: var(--sp-2); }
+  @media (min-width: 1024px) { .mobile-only { display: none; } }
+</style>
+</head>
+<body data-root=".." data-nav="profile" data-auth="required">
+<!-- F1.5, F1.6 · UI40 · API: GET/PATCH /me (B1.5), POST /files/upload-requests, POST /files/{id}/complete, DELETE /files/{id} (B1.6), POST /auth/logout (B1.2) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <nav class="tabs account-tabs" aria-label="Tài khoản">
+            <a class="tab" href="ca-nhan.html" aria-current="page">Hồ sơ</a>
+            <a class="tab" href="ca-nhan-hoc-tap.html">Thiết lập học</a>
+            <a class="tab" href="ca-nhan-bao-mat.html">Bảo mật</a>
+            <a class="tab" href="ca-nhan-thong-bao.html">Thông báo</a>
+          </nav>
+          <div class="form-head">
+            <div class="form-code"><span>Tài khoản</span><span>Hồ sơ</span></div>
+            <h1 id="page-title">Hồ sơ của bạn</h1>
+          </div>
+
+          <form id="form" class="settings-form" novalidate>
+            <div data-form-error hidden></div>
+            <div class="field" data-field="file">
+              <span class="field-label">Ảnh đại diện</span>
+              <div class="avatar-row">
+                <span id="avatar"></span>
+                <div class="avatar-actions">
+                  <label class="btn btn-secondary" for="avatar-file"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải ảnh lên</label>
+                  <input type="file" id="avatar-file" class="sr-only" accept="image/jpeg,image/png,image/webp">
+                  <button type="button" class="btn btn-quiet" id="avatar-remove" hidden>Gỡ ảnh</button>
+                  <p class="field-hint">JPG, PNG hoặc WEBP, tối đa 2 MB.</p>
+                </div>
+              </div>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="displayName">Tên hiển thị</label>
+              <input class="input" id="displayName" name="displayName" maxlength="110" autocomplete="nickname" required>
+              <p class="field-hint">Hiện trên bộ thẻ bạn chia sẻ công khai.</p>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="email">Email đăng nhập</label>
+              <input class="input" id="email" type="email" readonly aria-describedby="email-hint">
+              <p class="field-hint" id="email-hint">Không đổi được email ở bản này.</p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="timeZone">Múi giờ</label>
+              <select class="select" id="timeZone" name="timeZone">
+                <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
+                <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
+                <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+                <option value="Europe/Berlin">Berlin (GMT+1)</option>
+                <option value="America/New_York">New York (GMT−5)</option>
+              </select>
+              <p class="field-hint">Dùng để tính ngày học và giờ nhắc.</p>
+            </div>
+            <div class="settings-foot">
+              <button type="submit" class="btn btn-primary btn-lg" id="save">Lưu hồ sơ</button>
+              <span class="saved-at" id="saved-at" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div class="mobile-only" style="margin-top:var(--sp-6)">
+            <a class="btn btn-secondary" id="admin-link" href="quan-tri-chu-de.html" hidden>Quản trị chủ đề và nhãn</a>
+            <button type="button" class="btn btn-quiet" data-logout>Đăng xuất</button>
+          </div>
+        </section>
+
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="acc-title">
+            <h2 class="panel-title" id="acc-title">Tài khoản</h2>
+            <dl class="kv" id="kv"></dl>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const save = document.getElementById("save");
+  let me;
+
+  function renderAvatar() {
+    document.getElementById("avatar").innerHTML = VL.avatarHtml(me, "avatar-xl");
+    document.getElementById("avatar-remove").hidden = !me.avatarUrl;
+  }
+
+  VL.load(document.getElementById("region"), {
+    fetch: () => VL.api("GET", "/me"),
+    render: (u) => {
+      me = u;
+      form.displayName.value = u.displayName;
+      document.getElementById("email").value = u.email;
+      form.timeZone.value = u.timeZone;
+      renderAvatar();
+      document.getElementById("admin-link").hidden = !u.roles.includes("ADMIN");
+      document.getElementById("kv").innerHTML = "<dt>Trạng thái</dt><dd>" + (u.status === "HOAT_DONG" ? '<span class="stamp stamp-success">Đã xác thực email</span>' : '<span class="stamp stamp-warning">Chưa xác thực</span>') + "</dd><dt>Vai trò</dt><dd>" + u.roles.map((r) => r === "ADMIN" ? "Quản trị viên" : "Người học").join(", ") + "</dd>";
+    }
+  });
+
+  function downscale(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const s = 256, c = document.createElement("canvas");
+        const r = Math.min(img.width, img.height);
+        c.width = s; c.height = s;
+        c.getContext("2d").drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s);
+        resolve(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => reject(new Error("Không đọc được ảnh"));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  document.getElementById("avatar-file").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    VL.clearErrors(form);
+    const label = document.querySelector('label[for="avatar-file"]');
+    label.setAttribute("aria-busy", "true");
+    try {
+      const req = await VL.api("POST", "/files/upload-requests", { fileName: file.name, contentType: file.type, size: file.size, purpose: "AVATAR" });
+      const dataUrl = await downscale(file);
+      const done = await VL.api("POST", "/files/" + req.fileId + "/complete", { dataUrl });
+      me = await VL.api("PATCH", "/me", { avatarFileId: done.fileId });
+      renderAvatar();
+      VL.toast("Đã đổi ảnh đại diện");
+      document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
+    } catch (err) { VL.showErrors(form, err); }
+    finally { label.removeAttribute("aria-busy"); }
+  });
+  const rm = document.getElementById("avatar-remove");
+  rm.addEventListener("click", () => VL.busy(rm, async () => {
+    me = await VL.api("PATCH", "/me", { avatarFileId: null });
+    renderAvatar();
+    document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
+    VL.toast("Đã gỡ ảnh đại diện");
+  }));
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(save, async () => {
+      try {
+        me = await VL.api("PATCH", "/me", { displayName: form.displayName.value, timeZone: form.timeZone.value });
+        VL.toast("Đã lưu hồ sơ");
+        document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        const name = document.querySelector(".app-header .user-name");
+        if (name) name.textContent = me.displayName;
+      } catch (err) { VL.showErrors(form, err); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

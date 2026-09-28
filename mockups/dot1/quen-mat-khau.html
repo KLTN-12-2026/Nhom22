@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quên mật khẩu – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+</head>
+<body data-root=".." data-auth="guest" class="no-bottom-nav">
+<!-- F1.3 · UI09 · API: POST /auth/forgot-password (B1.3 — dự kiến, luôn trả 202) -->
+<div class="auth">
+  <aside class="auth-aside"></aside>
+  <main class="auth-main" id="main">
+    <a class="brand" href="../gd0/trang-chu.html"><img class="brand-mark" src="../shared/assets/logo-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+
+    <div class="auth-form">
+      <a class="btn btn-quiet" href="dang-nhap.html" style="justify-self:start;margin-left:-12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Quay lại đăng nhập</a>
+
+      <div id="ask" class="stack">
+        <div class="auth-title">
+          <h1>Quên mật khẩu</h1>
+          <p>Nhập email bạn dùng để đăng nhập. Chúng tôi sẽ gửi liên kết đặt lại mật khẩu, có hiệu lực 30 phút.</p>
+        </div>
+        <form id="form" novalidate>
+          <div data-form-error hidden></div>
+          <div class="field">
+            <label class="field-label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="ten@gmail.com">
+            <p class="field-error"></p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit">Gửi liên kết đặt lại</button>
+        </form>
+      </div>
+
+      <div id="sent" class="stack" hidden aria-live="polite">
+        <div class="auth-title">
+          <h1 tabindex="-1">Kiểm tra hộp thư</h1>
+          <p>Nếu <strong id="sent-email"></strong> đã đăng ký, thư đặt lại mật khẩu sẽ tới trong vài phút. Để bảo mật, chúng tôi không cho biết email có tồn tại hay không.</p>
+        </div>
+        <div class="notice" id="demo-link" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>
+          <div class="stack-sm">
+            <p><strong>Bản mockup:</strong> thư được mô phỏng như trong Mailpit.</p>
+            <a class="btn btn-secondary" id="open-mail" href="dat-lai-mat-khau.html">Mở thư đặt lại mật khẩu</a>
+          </div>
+        </div>
+        <button type="button" class="btn btn-quiet" id="again" style="justify-self:start">Gửi tới email khác</button>
+      </div>
+    </div>
+    <p class="auth-foot">Chưa có tài khoản? <a href="dang-ky.html">Tạo tài khoản</a></p>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(submit, async () => {
+      try {
+        await VL.api("POST", "/auth/forgot-password", { email: form.email.value });
+        document.getElementById("sent-email").textContent = form.email.value.trim();
+        const token = VLDemo.resetTokenFor(form.email.value);
+        document.getElementById("demo-link").hidden = !token;
+        if (token) document.getElementById("open-mail").href = "dat-lai-mat-khau.html?token=" + encodeURIComponent(token);
+        document.getElementById("ask").hidden = true;
+        document.getElementById("sent").hidden = false;
+        document.querySelector("#sent h1").focus();
+      } catch (err) {
+        if (err.status === 429) VL.countdown(submit, err.retryAfter || 60);
+        VL.showErrors(form, err);
+      }
+    });
+  });
+  document.getElementById("again").addEventListener("click", () => {
+    document.getElementById("sent").hidden = true;
+    document.getElementById("ask").hidden = false;
+    form.email.select();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chủ đề và nhãn – Quản trị VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .add-form { display: flex; gap: var(--sp-3); align-items: flex-start; flex-wrap: wrap; margin: var(--sp-5) 0; }
+  .add-form .field { flex: 1 1 260px; }
+  .add-form .btn { margin-top: 26px; }
+  .admin-table td:last-child { text-align: right; white-space: nowrap; }
+  .admin-table td { vertical-align: middle; }
+  .admin-table .name { font-weight: 650; font-size: 1rem; }
+</style>
+</head>
+<body data-root=".." data-nav="admin-topics" data-auth="required" data-role="ADMIN">
+<!-- F1.12 · UI48 · API: GET/POST/PATCH/DELETE /admin/topics, GET/POST/DELETE /admin/tags (B1.7, quyền ADMIN) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Quản trị</span><span>Danh mục nội dung</span></div>
+            <h1 id="page-title">Chủ đề và nhãn</h1>
+            <p>Chủ đề dùng để lọc thư viện. Nhãn gắn vào từng thẻ, ví dụ “Part 5” hay “Cụm động từ”.</p>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Danh mục">
+            <button class="tab" role="tab" aria-selected="true" data-kind="topics" id="t-topics">Chủ đề</button>
+            <button class="tab" role="tab" aria-selected="false" data-kind="tags" id="t-tags">Nhãn</button>
+          </div>
+
+          <form class="add-form" id="add" novalidate>
+            <div class="field">
+              <label class="field-label" for="name" id="add-label">Tên chủ đề mới</label>
+              <input class="input" id="name" name="name" maxlength="90" autocomplete="off" placeholder="Ví dụ: Y tế và sức khỏe">
+              <p class="field-error"></p>
+            </div>
+            <button type="submit" class="btn btn-primary" id="add-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="add-text">Thêm chủ đề</span></button>
+          </form>
+
+          <div data-view="loading" id="region" role="tabpanel" aria-labelledby="t-topics">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <div class="table-wrap">
+                <table class="data-table admin-table">
+                  <caption class="sr-only" id="cap">Danh sách chủ đề</caption>
+                  <thead><tr><th scope="col" style="width:3rem">Số</th><th scope="col">Tên</th><th scope="col" id="col-use">Số bộ thẻ</th><th scope="col"><span class="sr-only">Thao tác</span></th></tr></thead>
+                  <tbody id="rows"></tbody>
+                </table>
+              </div>
+            </div>
+            <div data-when="empty"><div class="empty"><h2>Chưa có mục nào</h2><p>Thêm mục đầu tiên bằng ô phía trên.</p></div></div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="r-title">
+            <h2 class="panel-title" id="r-title">Quy tắc</h2>
+            <ul class="small muted" style="padding-left:1.1rem;display:grid;gap:var(--sp-2)">
+              <li>Tên không trùng nhau, không phân biệt hoa thường và dấu.</li>
+              <li>Chỉ xóa được chủ đề khi không còn bộ thẻ nào dùng.</li>
+              <li>Xóa nhãn sẽ gỡ nhãn khỏi mọi thẻ đang gắn.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const u = VL.me();
+  if (!u || !u.roles.includes("ADMIN")) return;
+  let kind = "topics";
+  const form = document.getElementById("add");
+  const region = document.getElementById("region");
+  const LABEL = { topics: ["Tên chủ đề mới", "Thêm chủ đề", "Số bộ thẻ", "Ví dụ: Y tế và sức khỏe", "Danh sách chủ đề"], tags: ["Tên nhãn mới", "Thêm nhãn", "Số thẻ", "Ví dụ: Part 6", "Danh sách nhãn"] };
+
+  function load() {
+    const L = LABEL[kind];
+    document.getElementById("add-label").textContent = L[0];
+    document.getElementById("add-text").textContent = L[1];
+    document.getElementById("col-use").textContent = L[2];
+    form.name.placeholder = L[3];
+    document.getElementById("cap").textContent = L[4];
+    document.querySelectorAll("[data-kind]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.kind === kind)));
+    region.setAttribute("aria-labelledby", kind === "topics" ? "t-topics" : "t-tags");
+    VL.load(region, {
+      fetch: () => VL.api("GET", "/admin/" + kind),
+      isEmpty: (d) => !d.length,
+      render: (list) => {
+        document.getElementById("rows").innerHTML = list.map((x, i) =>
+          '<tr><td class="num">' + (i + 1) + '</td><td class="name">' + VL.esc(x.name) + "</td><td>" + (kind === "topics" ? x.deckCount : x.cardCount) + "</td><td>" +
+          (kind === "topics" ? '<button type="button" class="btn btn-quiet btn-sm" data-rename="' + x.id + '" data-name="' + VL.esc(x.name) + '">' + VL.icon("edit") + "Đổi tên</button>" : "") +
+          '<button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + x.id + '" data-name="' + VL.esc(x.name) + '">' + VL.icon("trash") + "Xóa</button></td></tr>").join("");
+      }
+    });
+  }
+  document.querySelectorAll("[data-kind]").forEach((b) => b.addEventListener("click", () => { kind = b.dataset.kind; VL.clearErrors(form); form.reset(); load(); }));
+
+  const addBtn = document.getElementById("add-btn");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(addBtn, async () => {
+      try {
+        await VL.api("POST", "/admin/" + kind, { name: form.name.value });
+        VL.toast(kind === "topics" ? "Đã thêm chủ đề" : "Đã thêm nhãn");
+        form.reset();
+        load();
+      } catch (err) { VL.showErrors(form, err); }
+    });
+  });
+
+  document.getElementById("rows").addEventListener("click", async (e) => {
+    const del = e.target.closest("[data-del]");
+    const ren = e.target.closest("[data-rename]");
+    if (del) {
+      const ok = await VL.confirm({ title: "Xóa “" + del.dataset.name + "”?", message: kind === "topics" ? "Chủ đề sẽ biến khỏi bộ lọc thư viện." : "Nhãn sẽ được gỡ khỏi mọi thẻ đang gắn.", confirmText: "Xóa", danger: true });
+      if (!ok) return;
+      VL.busy(del, async () => {
+        try { await VL.api("DELETE", "/admin/" + kind + "/" + del.dataset.del); VL.toast("Đã xóa"); load(); }
+        catch (err) { VL.toast(err.message, "error"); }
+      });
+    }
+    if (ren) {
+      const d = document.createElement("dialog");
+      d.className = "dialog";
+      d.setAttribute("aria-labelledby", "rn-title");
+      d.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="rn-title">Đổi tên chủ đề</h2></div><div class="field"><label class="field-label" for="rn">Tên mới</label><input class="input" id="rn" name="name" maxlength="90"><p class="field-error"></p></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">Lưu tên</button></div></form>';
+      document.body.appendChild(d);
+      const f = d.querySelector("form");
+      f.name.value = ren.dataset.name;
+      d.addEventListener("close", () => d.remove());
+      d.querySelector("[data-close]").addEventListener("click", () => d.close());
+      f.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        VL.busy(f.querySelector('[type="submit"]'), async () => {
+          try { await VL.api("PATCH", "/admin/topics/" + ren.dataset.rename, { name: f.name.value }); d.close(); VL.toast("Đã lưu tên"); load(); }
+          catch (err) { VL.showErrors(f, err); }
+        });
+      });
+      d.showModal();
+      f.name.select();
+    }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

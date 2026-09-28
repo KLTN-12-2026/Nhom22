@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bộ thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .deck-title { overflow-wrap: anywhere; }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .card-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .card-tools { grid-column: 2; display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+  @media (min-width: 720px) { .card-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; } .card-tools { grid-column: auto; flex-direction: column; align-items: flex-end; } }
+  .card-flags { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: 4px; }
+  .thumb { width: 64px; height: 48px; object-fit: cover; border: var(--rule) solid var(--primary-line); }
+  .list-bar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F1.9, F1.11 · UI15 · API: GET /decks/{id} (B1.8), GET /decks/{id}/cards, DELETE /cards/{id} (B1.9), GET /decks/{id}/export (B1.12) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="deck-region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-line"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <article class="sheet" data-when="ready" aria-labelledby="deck-title">
+          <a class="btn btn-quiet" href="bo-the.html" style="margin:0 0 var(--sp-3) -12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Bộ của tôi</a>
+          <div class="form-head">
+            <div class="answer-meta" id="stamps"></div>
+            <h1 id="deck-title" class="deck-title"></h1>
+            <p id="deck-desc"></p>
+            <div class="actions">
+              <a class="btn btn-primary" id="add" href="the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Thêm thẻ</a>
+              <a class="btn btn-secondary" id="import" href="nhap-csv.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Nhập CSV</a>
+              <button type="button" class="btn btn-quiet" id="export"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Xuất CSV</button>
+              <a class="btn btn-quiet" id="edit" href="bo-the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg>Sửa bộ</a>
+            </div>
+          </div>
+
+          <div class="list-bar">
+            <h2 style="font-size:var(--fs-h3)">Thẻ trong bộ <span class="muted num" id="card-count"></span></h2>
+            <div class="input-with-icon" style="flex:1 1 200px;max-width:300px">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <label class="sr-only" for="q">Tìm thẻ</label>
+              <input class="input" id="q" type="search" placeholder="Tìm từ hoặc nghĩa" autocomplete="off">
+            </div>
+          </div>
+
+          <div data-view="loading" id="cards-region">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready"><ol class="answer-list" id="cards" role="list"></ol></div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+                <h2 id="empty-title">Bộ này chưa có thẻ</h2>
+                <p id="empty-text">Thêm từng thẻ hoặc nhập nhiều thẻ từ tệp CSV.</p>
+                <div class="row" id="empty-actions"></div>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </article>
+
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="info-title">
+            <h2 class="panel-title" id="info-title">Thông tin bộ thẻ</h2>
+            <dl class="kv" id="kv"></dl>
+          </section>
+          <section class="panel" aria-labelledby="dup-title">
+            <h2 class="panel-title" id="dup-title">Thẻ có thể trùng</h2>
+            <p class="small muted">Hai thẻ cùng từ và cùng từ loại được đánh dấu <span class="stamp stamp-warning">Có thể trùng</span>. Hệ thống không tự xóa vì một từ có thể có nhiều nghĩa.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const id = p.id || "21";
+  if (p.created) VL.toast("Đã tạo bộ thẻ");
+  if (p.saved) VL.toast("Đã lưu thẻ");
+  if (p.imported) VL.toast("Đã nhập " + p.imported + " thẻ");
+  let deck;
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "en-US"; u.rate = 0.9; speechSynthesis.speak(u);
+  }
+
+  VL.load(document.getElementById("deck-region"), {
+    errorTitle: "Không mở được bộ thẻ",
+    fetch: () => VL.api("GET", "/decks/" + encodeURIComponent(id)),
+    render: (d) => {
+      deck = d;
+      document.title = d.name + " – VocabLearning";
+      document.getElementById("stamps").innerHTML = (d.visibility === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") + '<span class="stamp">' + VL.esc(VL.GOAL[d.goal]) + "</span>";
+      document.getElementById("deck-title").textContent = d.name;
+      document.getElementById("deck-desc").textContent = d.description || "Chưa có mô tả.";
+      document.getElementById("add").href = "the-tao.html?deckId=" + d.id;
+      document.getElementById("import").href = "nhap-csv.html?deckId=" + d.id;
+      document.getElementById("edit").href = "bo-the-tao.html?id=" + d.id;
+      document.getElementById("empty-actions").innerHTML = '<a class="btn btn-primary" href="the-tao.html?deckId=' + d.id + '">Thêm thẻ</a><a class="btn btn-secondary" href="nhap-csv.html?deckId=' + d.id + '">Nhập CSV</a>';
+      document.getElementById("kv").innerHTML =
+        "<dt>Chủ đề</dt><dd>" + VL.esc(d.topicName) + "</dd><dt>Trình độ</dt><dd>" + VL.levelHtml(d.level) + "</dd><dt>Số thẻ</dt><dd>" + d.cardCount + "</dd>" +
+        "<dt>Nguồn</dt><dd>" + (d.sourceDeckId ? '<a href="thu-vien-chi-tiet.html?id=' + d.sourceDeckId + '">Bộ gốc trong thư viện</a>' : VL.esc(d.source)) + "</dd><dt>Cập nhật</dt><dd>" + VL.fmtDate(d.updatedAt) + "</dd>";
+      loadCards();
+    }
+  });
+
+  function loadCards() {
+    const q = document.getElementById("q").value.trim();
+    VL.load(document.getElementById("cards-region"), {
+      fetch: () => VL.api("GET", "/decks/" + id + "/cards" + (q ? "?q=" + encodeURIComponent(q) : "")),
+      isEmpty: (d) => !d.items.length,
+      empty: () => {
+        document.getElementById("card-count").textContent = "";
+        document.getElementById("empty-title").textContent = q ? "Không có thẻ nào khớp “" + q + "”" : "Bộ này chưa có thẻ";
+        document.getElementById("empty-text").textContent = q ? "Thử tìm bằng nghĩa tiếng Việt hoặc từ khác." : "Thêm từng thẻ hoặc nhập nhiều thẻ từ tệp CSV.";
+      },
+      render: (d) => {
+        document.getElementById("card-count").textContent = "(" + d.totalElements + ")";
+        const noById = {};
+        d.items.forEach((c, i) => { noById[c.id] = i + 1; });
+        document.getElementById("cards").innerHTML = d.items.map((c, i) =>
+          '<li class="answer-row card-row"><span class="answer-no">' + (i + 1) + "</span>" +
+          '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + "</span>" + (c.ipa ? '<span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + "</span>" : "") + (c.pos ? '<span class="pos" lang="en">' + VL.esc(c.pos) + "</span>" : "") + "</div>" +
+          '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
+          (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + "</p>" : "") +
+          '<div class="card-flags">' + (c.duplicateOf.length ? '<span class="stamp stamp-warning">' + VL.icon("alert") + "Có thể trùng với thẻ " + c.duplicateOf.map((x) => noById[x] || "khác").join(", ") + "</span>" : "") +
+          (c.imageUrl ? '<span class="stamp stamp-quiet">' + VL.icon("image") + "Có ảnh</span>" : "") + (c.audioUrl ? '<span class="stamp stamp-quiet">' + VL.icon("volume") + "Có âm thanh</span>" : "") +
+          (c.tagIds || []).map((t) => { const tag = VLDemo.db.tags.find((x) => x.id === t); return tag ? '<span class="stamp stamp-quiet">' + VL.esc(tag.name) + "</span>" : ""; }).join("") + "</div></div>" +
+          '<div class="card-tools"><button type="button" class="btn btn-quiet btn-sm" data-say="' + VL.esc(c.word) + '" aria-label="Nghe ' + VL.esc(c.word) + '">' + VL.icon("volume") + '<span>Nghe</span></button><a class="btn btn-quiet btn-sm" href="the-tao.html?deckId=' + id + "&id=" + c.id + '" aria-label="Sửa thẻ ' + VL.esc(c.word) + '">' + VL.icon("edit") + '<span>Sửa</span></a><button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + c.id + '" data-word="' + VL.esc(c.word) + '">' + VL.icon("trash") + "<span>Xóa</span></button></div></li>").join("");
+      }
+    });
+  }
+
+  document.getElementById("cards").addEventListener("click", async (e) => {
+    const s = e.target.closest("[data-say]");
+    if (s) { speak(s.dataset.say); return; }
+    const b = e.target.closest("[data-del]");
+    if (!b) return;
+    const ok = await VL.confirm({ title: "Xóa thẻ “" + b.dataset.word + "”?", message: "Thẻ sẽ bị xóa khỏi bộ này.", confirmText: "Xóa thẻ", danger: true });
+    if (!ok) return;
+    VL.busy(b, async () => {
+      try { await VL.api("DELETE", "/cards/" + b.dataset.del); VL.toast("Đã xóa thẻ"); loadCards(); }
+      catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+
+  let t;
+  document.getElementById("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(loadCards, 300); });
+
+  const exp = document.getElementById("export");
+  exp.addEventListener("click", () => VL.busy(exp, async () => {
+    try {
+      const res = await VL.api("GET", "/decks/" + id + "/export");
+      const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = (deck ? deck.name : "bo-the").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60).toLowerCase() + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      VL.toast("Đã xuất tệp CSV");
+    } catch (err) { VL.toast(err.message, "error"); }
+  }));
+})();
+</script>
+</body>
+</html>

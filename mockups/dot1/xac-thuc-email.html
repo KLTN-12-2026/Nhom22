@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xác thực email – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .verify-mark { width: 64px; height: 64px; border-width: 2.5px; font-size: 1.25rem; margin: 0; }
+  .verify-mark.is-ok { border-color: var(--secondary); }
+  .verify-mark.is-ok::after { background: var(--secondary); }
+  .verify-mark svg { position: relative; z-index: 1; width: 30px; height: 30px; stroke: #fff; stroke-width: 2.5; fill: none; }
+</style>
+</head>
+<body data-root=".." class="no-bottom-nav">
+<!-- F1.1 · UI07 · API: POST /auth/verify-email, POST /auth/resend-verification (B1.1) -->
+<div class="auth">
+  <aside class="auth-aside"></aside>
+  <main class="auth-main" id="main">
+    <a class="brand" href="../gd0/trang-chu.html"><img class="brand-mark" src="../shared/assets/logo-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+
+    <div class="auth-form" aria-live="polite">
+      <section id="v-loading" hidden class="stack">
+        <span class="bubble verify-mark" aria-hidden="true"></span>
+        <h1>Đang xác thực email…</h1>
+        <p class="muted">Vui lòng chờ vài giây.</p>
+      </section>
+
+      <section id="v-ok" hidden class="stack">
+        <span class="bubble verify-mark is-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+        <h1 tabindex="-1">Email đã được xác thực</h1>
+        <p class="muted">Tài khoản của bạn đã sẵn sàng. Đăng nhập để chọn mục tiêu học.</p>
+        <a class="btn btn-primary btn-lg btn-block" id="to-login" href="dang-nhap.html">Đăng nhập</a>
+      </section>
+
+      <section id="v-bad" hidden class="stack">
+        <div class="auth-title">
+          <h1 tabindex="-1">Liên kết không dùng được nữa</h1>
+          <p>Liên kết có thể đã hết hạn sau 24 giờ, đã được dùng một lần, hoặc bị sao chép thiếu. Nhập email để nhận liên kết mới.</p>
+        </div>
+      </section>
+
+      <section id="v-wait" hidden class="stack">
+        <div class="auth-title">
+          <h1>Xác thực email</h1>
+          <p>Mở thư chúng tôi gửi và bấm liên kết xác thực. Nếu không nhận được thư, gửi lại bên dưới.</p>
+        </div>
+      </section>
+
+      <form id="resend-form" hidden novalidate>
+        <div data-form-error hidden></div>
+        <div class="field">
+          <label class="field-label" for="email">Email đã đăng ký</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="ten@gmail.com">
+          <p class="field-error"></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="resend">Gửi lại thư xác thực</button>
+        <p id="resend-done" class="notice notice-success" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Nếu email này đã đăng ký và chưa xác thực, thư mới sẽ tới trong vài phút.</span></p>
+      </form>
+    </div>
+
+    <p class="auth-foot"><a href="dang-nhap.html">Đăng nhập</a> hoặc <a href="dang-ky.html">tạo tài khoản khác</a></p>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const show = (id) => ["v-loading", "v-ok", "v-bad", "v-wait"].forEach((x) => { document.getElementById(x).hidden = x !== id; });
+  const form = document.getElementById("resend-form");
+  if (p.email) form.email.value = p.email;
+
+  async function verify() {
+    show("v-loading");
+    try {
+      await VL.api("POST", "/auth/verify-email", { token: p.token });
+      show("v-ok");
+      document.getElementById("to-login").href = "dang-nhap.html" + (p.email ? "?email=" + encodeURIComponent(p.email) : "");
+      document.querySelector("#v-ok h1").focus();
+    } catch (err) {
+      show("v-bad");
+      form.hidden = false;
+      document.querySelector("#v-bad h1").focus();
+    }
+  }
+  if (p.token) verify(); else { show("v-wait"); form.hidden = false; }
+
+  const btn = document.getElementById("resend");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.value.trim())) { VL.setFieldError(form, "email", "Email chưa đúng định dạng, ví dụ: ten@gmail.com"); form.email.focus(); return; }
+    VL.busy(btn, async () => {
+      try {
+        await VL.api("POST", "/auth/resend-verification", { email: form.email.value });
+        document.getElementById("resend-done").hidden = false;
+        VL.countdown(btn, 60, "Gửi lại sau");
+      } catch (err) {
+        if (err.status === 429) VL.countdown(btn, err.retryAfter || 60, "Gửi lại sau");
+        VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

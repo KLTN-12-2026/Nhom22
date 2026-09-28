@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Danh sách mockup – VocabLearning</title>
+<link rel="icon" href="shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="shared/tokens.css">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/components.css">
+<style>
+  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .phase { margin-top: var(--sp-6); }
+  .phase h2 { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-h2); }
+  .mock-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; border-top: var(--rule-strong) solid var(--primary); }
+  .mock-list li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); position: relative; }
+  .mock-list .ui { font-family: var(--font-form); font-stretch: 78%; font-weight: 800; color: var(--primary); }
+  .mock-list a { font-weight: 650; }
+  .mock-list .meta { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-top: 2px; }
+  @media (min-width: 800px) { .mock-list li { grid-template-columns: 3.5rem 15rem minmax(0, 1fr); align-items: baseline; } .mock-list .meta { margin: 0; } }
+</style>
+</head>
+<body data-root=".">
+<main id="main" class="wrap">
+  <div class="sheet">
+    <div class="form-head">
+      <div class="form-code"><span>VocabLearning</span><span>Mockup HTML/CSS/JS</span></div>
+      <h1>Danh sách mockup</h1>
+      <p>Giao diện mẫu cho FE dựng lại bằng Next.js (<code>/fe-from-mockup</code>). Chạy bằng dữ liệu mẫu trong trình duyệt, không cần backend. Tài khoản dùng thử: <code>an@vocab.local</code>, <code>admin@vocab.local</code>, mật khẩu <code>Hoctap@2026</code>.</p>
+    </div>
+
+    <section class="phase" aria-labelledby="p0">
+      <h2 id="p0">GĐ0, trang công khai <span class="stamp stamp-success">Đủ 3/3</span></h2>
+      <ul class="mock-list" role="list">
+        <li><span class="ui">UI01</span><a href="gd0/trang-chu.html">Trang chủ</a><span class="meta"><span class="stamp">F0.5</span>Giới thiệu, câu hỏi thử hai chiều, bộ mẫu</span></li>
+        <li><span class="ui">UI04</span><a href="gd0/huong-dan.html">Cách học</a><span class="meta"><span class="stamp">F0.5</span>Bốn mức tự đánh giá, hai chiều, CSV, phím tắt, hỏi đáp</span></li>
+        <li><span class="ui">UI05</span><a href="gd0/chinh-sach.html">Quyền riêng tư và điều khoản</a><span class="meta"><span class="stamp">F0.5</span>Bản nháp</span></li>
+      </ul>
+    </section>
+
+    <section class="phase" aria-labelledby="p1">
+      <h2 id="p1">Đợt 1, tài khoản và nội dung <span class="stamp stamp-success">Đủ 18/18</span></h2>
+      <ul class="mock-list" role="list">
+        <li><span class="ui">UI06</span><a href="dot1/dang-ky.html">Đăng ký</a><span class="meta"><span class="stamp">F1.1</span>B1.1: 400 theo trường, 409 email trùng, 429 đếm ngược</span></li>
+        <li><span class="ui">UI07</span><a href="dot1/xac-thuc-email.html">Xác thực email</a><span class="meta"><span class="stamp">F1.1</span>Token đúng, sai, hết hạn, đã dùng; gửi lại thư</span></li>
+        <li><span class="ui">UI08</span><a href="dot1/dang-nhap.html">Đăng nhập</a><span class="meta"><span class="stamp">F1.2</span>Sai mật khẩu, chưa xác thực, bị khóa, 429</span></li>
+        <li><span class="ui">UI09</span><a href="dot1/quen-mat-khau.html">Quên mật khẩu</a><span class="meta"><span class="stamp">F1.3</span>Luôn trả cùng một thông báo</span></li>
+        <li><span class="ui">UI10</span><a href="dot1/dat-lai-mat-khau.html?token=reset-2">Đặt lại mật khẩu</a><span class="meta"><span class="stamp">F1.3</span>Mở từ thư mô phỏng ở trang Quên mật khẩu</span></li>
+        <li><span class="ui">UI11</span><a href="dot1/bat-dau.html">Khởi đầu</a><span class="meta"><span class="stamp">F1.5</span>5 bước, tóm tắt phiếu, sao chép bộ khởi động</span></li>
+        <li><span class="ui">UI02</span><a href="dot1/thu-vien.html">Thư viện</a><span class="meta"><span class="stamp">F1.7</span>Tìm, lọc, sắp xếp, phân trang theo URL</span></li>
+        <li><span class="ui">UI03</span><a href="dot1/thu-vien-chi-tiet.html?id=15">Chi tiết bộ công khai</a><span class="meta"><span class="stamp">F1.7</span><span class="stamp">F1.10</span>Sao chép với Idempotency-Key, yêu thích, chia sẻ, tên 150 ký tự</span></li>
+        <li><span class="ui">UI13</span><a href="dot1/bo-the.html">Bộ của tôi</a><span class="meta"><span class="stamp">F1.8</span>Của tôi, yêu thích, tìm kiếm</span></li>
+        <li><span class="ui">UI14</span><a href="dot1/bo-the-tao.html">Tạo và sửa bộ thẻ</a><span class="meta"><span class="stamp">F1.8</span>Xem trước, version 409, xóa có xác nhận</span></li>
+        <li><span class="ui">UI15</span><a href="dot1/bo-the-chi-tiet.html?id=21">Chi tiết bộ của tôi</a><span class="meta"><span class="stamp">F1.9</span>Danh sách thẻ, cảnh báo trùng, xuất CSV</span></li>
+        <li><span class="ui">UI16</span><a href="dot1/the-tao.html?deckId=21">Tạo và sửa thẻ</a><span class="meta"><span class="stamp">F1.9</span><span class="stamp">F1.6</span>Bàn phím IPA, ảnh, âm thanh, xem trước mặt thẻ</span></li>
+        <li><span class="ui">UI17</span><a href="dot1/nhap-csv.html?deckId=21">Nhập CSV</a><span class="meta"><span class="stamp">F1.11</span>Xem trước, lỗi từng dòng, trùng, chống công thức</span></li>
+        <li><span class="ui">UI40</span><a href="dot1/ca-nhan.html">Hồ sơ</a><span class="meta"><span class="stamp">F1.5</span><span class="stamp">F1.6</span>Ảnh đại diện, tên, múi giờ</span></li>
+        <li><span class="ui">UI41</span><a href="dot1/ca-nhan-hoc-tap.html">Thiết lập học</a><span class="meta"><span class="stamp">F1.5</span>Mục tiêu, trình độ, chủ đề, phút và từ mới mỗi ngày</span></li>
+        <li><span class="ui">UI42</span><a href="dot1/ca-nhan-bao-mat.html">Bảo mật</a><span class="meta"><span class="stamp">F1.3</span>Đổi mật khẩu</span></li>
+        <li><span class="ui">UI43</span><a href="dot1/ca-nhan-thong-bao.html">Thông báo và nhắc học</a><span class="meta"><span class="stamp">F1.5</span>Kênh, giờ nhắc</span></li>
+        <li><span class="ui">UI48</span><a href="dot1/quan-tri-chu-de.html">Quản trị chủ đề và nhãn</a><span class="meta"><span class="stamp">F1.12</span>Cần tài khoản admin</span></li>
+      </ul>
+    </section>
+
+    <section class="phase" aria-labelledby="dev">
+      <h2 id="dev">Cách dùng</h2>
+      <ul class="small" style="padding-left:1.1rem;display:grid;gap:6px;margin-top:var(--sp-3)">
+        <li>Chạy <code>npx http-server mockups -p 5173</code> rồi mở <code>http://localhost:5173</code>, hoặc mở trực tiếp tệp HTML bằng trình duyệt.</li>
+        <li>Nút <strong>Mockup</strong> ở góc phải dưới: chuyển trạng thái Có dữ liệu, Đang tải, Trống, Lỗi và đặt lại dữ liệu mẫu.</li>
+        <li>Dữ liệu lưu trong localStorage của trình duyệt. Thư xác thực và thư đặt lại mật khẩu được mô phỏng ngay trên trang.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+<script src="shared/demo.js"></script>
+<script src="shared/app.js"></script>
+</body>
+</html>

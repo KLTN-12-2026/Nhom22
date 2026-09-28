@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tạo tài khoản – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+</head>
+<body data-root=".." data-auth="guest" class="no-bottom-nav">
+<!-- F1.1 · UI06 · API: POST /auth/register (B1.1), POST /auth/resend-verification -->
+<div class="auth">
+  <aside class="auth-aside"></aside>
+  <main class="auth-main" id="main">
+    <a class="brand" href="../gd0/trang-chu.html"><img class="brand-mark" src="../shared/assets/logo-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+
+    <div class="auth-form" id="step-form">
+      <div class="auth-title">
+        <h1>Tạo tài khoản</h1>
+        <p>Học miễn phí. Bạn sẽ nhận một thư để xác thực email trước khi đăng nhập.</p>
+      </div>
+
+      <button type="button" class="btn btn-secondary btn-lg btn-block" id="google">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.8 6.1C12.3 13.6 17.6 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5Z"/><path fill="#FBBC05" d="M10.4 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.9-4.7l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.8-6.1Z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8L32.3 36.3c-2.1 1.4-4.9 2.3-8.3 2.3-6.4 0-11.7-4.1-13.6-9.8l-7.8 6.1C6.6 42.6 14.6 48 24 48Z"/></svg>
+        Tiếp tục với Google
+      </button>
+      <p class="or-divider">hoặc dùng email</p>
+
+      <form id="form" novalidate>
+        <div data-form-error hidden></div>
+        <div class="field">
+          <label class="field-label" for="displayName">Tên hiển thị</label>
+          <input class="input" id="displayName" name="displayName" autocomplete="nickname" maxlength="100" required placeholder="Ví dụ: Minh Anh">
+          <p class="field-error"></p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="ten@gmail.com">
+          <p class="field-error"></p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="password">Mật khẩu</label>
+          <div class="input-group">
+            <input class="input" id="password" name="password" type="password" autocomplete="new-password" required maxlength="72" aria-describedby="pw-rules">
+            <button type="button" class="input-action" data-toggle-password aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <ul class="pw-rules" id="pw-rules">
+            <li data-rule="len"><span class="bubble box" aria-hidden="true"></span>8–72 ký tự</li>
+            <li data-rule="letter"><span class="bubble box" aria-hidden="true"></span>Có chữ cái</li>
+            <li data-rule="digit"><span class="bubble box" aria-hidden="true"></span>Có chữ số</li>
+          </ul>
+          <p class="field-error"></p>
+        </div>
+        <div class="field" data-field="acceptTerms">
+          <label class="choice">
+            <input type="checkbox" name="acceptTerms" id="acceptTerms">
+            <span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+            <span class="choice-body"><span>Tôi đồng ý với <a href="../gd0/chinh-sach.html#dieu-khoan">điều khoản sử dụng</a> và <a href="../gd0/chinh-sach.html">chính sách quyền riêng tư</a></span></span>
+          </label>
+          <p class="field-error"></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit">Tạo tài khoản</button>
+      </form>
+      <p class="auth-foot" style="margin-top:0">Đã có tài khoản? <a href="dang-nhap.html">Đăng nhập</a></p>
+    </div>
+
+    <div class="auth-form" id="step-sent" hidden>
+      <div class="auth-title">
+        <h1 tabindex="-1" id="sent-title">Kiểm tra hộp thư của bạn</h1>
+        <p>Chúng tôi đã gửi thư xác thực tới <strong id="sent-email"></strong>. Mở thư và bấm liên kết trong vòng 24 giờ.</p>
+      </div>
+      <div class="notice">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>
+        <div class="stack-sm">
+          <p><strong>Bản mockup:</strong> thư được mô phỏng như trong Mailpit. Bấm nút dưới để mở liên kết xác thực.</p>
+          <a class="btn btn-secondary" id="open-mail" href="xac-thuc-email.html">Mở thư xác thực</a>
+        </div>
+      </div>
+      <div class="stack-sm">
+        <p class="muted small">Không thấy thư? Xem thư mục Spam hoặc gửi lại.</p>
+        <div class="row">
+          <button type="button" class="btn btn-quiet" id="resend">Gửi lại thư</button>
+          <button type="button" class="btn btn-quiet" id="change-email">Đổi email</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="auth-foot"><a href="../gd0/trang-chu.html">Về trang chủ</a></p>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  VL.bindPassword(form.password, document.getElementById("pw-rules"));
+  let lastEmail = "";
+
+  document.getElementById("google").addEventListener("click", () => VL.toast("Bản mockup chưa kết nối Google. Luồng này có ở bước B1.4."));
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    const data = {
+      displayName: form.displayName.value,
+      email: form.email.value,
+      password: form.password.value,
+      acceptTerms: form.acceptTerms.checked,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+    VL.busy(submit, async () => {
+      try {
+        const res = await VL.api("POST", "/auth/register", data);
+        lastEmail = res.email;
+        document.getElementById("sent-email").textContent = res.email;
+        document.getElementById("open-mail").href = "xac-thuc-email.html?token=" + encodeURIComponent(res.demoToken) + "&email=" + encodeURIComponent(res.email);
+        document.getElementById("step-form").hidden = true;
+        document.getElementById("step-sent").hidden = false;
+        document.getElementById("sent-title").focus();
+      } catch (err) {
+        if (err.status === 429) { VL.countdown(submit, err.retryAfter || 60); VL.toast(err.message, "error"); return; }
+        VL.showErrors(form, err);
+      }
+    });
+  });
+
+  const resend = document.getElementById("resend");
+  resend.addEventListener("click", () => VL.busy(resend, async () => {
+    try {
+      await VL.api("POST", "/auth/resend-verification", { email: lastEmail });
+      VL.toast("Đã gửi lại thư xác thực");
+      VL.countdown(resend, 60, "Gửi lại sau");
+    } catch (err) {
+      if (err.status === 429) { VL.countdown(resend, err.retryAfter || 60, "Gửi lại sau"); }
+      VL.toast(err.message, "error");
+    }
+  }));
+  document.getElementById("change-email").addEventListener("click", () => {
+    document.getElementById("step-sent").hidden = true;
+    document.getElementById("step-form").hidden = false;
+    form.email.focus();
+  });
+})();
+</script>
+</body>
+</html>

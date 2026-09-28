@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thiết lập học – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .num-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+  .num-row .input { width: 7.5rem; text-align: center; font-family: var(--font-form); font-stretch: 85%; font-weight: 700; font-size: 1.125rem; }
+  .quick { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick button { min-width: var(--tap); min-height: var(--tap); border-radius: 22px; border: 1.5px solid var(--primary-line); background: var(--field); font-family: var(--font-form); font-stretch: 85%; font-weight: 700; color: var(--primary); }
+  .quick button:hover { border-color: var(--primary); background: var(--primary-tint); }
+  .quick button[aria-pressed="true"] { background: var(--graphite); border-color: var(--graphite); color: #fff; }
+  .estimate { font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="learning" data-auth="required">
+<!-- F1.5 · UI41 · API: GET/PUT /me/learning-settings (version), GET /public/topics (B1.5, B1.7) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <div data-when="empty"></div>
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <nav class="tabs account-tabs" aria-label="Tài khoản">
+            <a class="tab" href="ca-nhan.html">Hồ sơ</a>
+            <a class="tab" href="ca-nhan-hoc-tap.html" aria-current="page">Thiết lập học</a>
+            <a class="tab" href="ca-nhan-bao-mat.html">Bảo mật</a>
+            <a class="tab" href="ca-nhan-thong-bao.html">Thông báo</a>
+          </nav>
+          <div class="form-head">
+            <div class="form-code"><span>Tài khoản</span><span>Thiết lập học</span></div>
+            <h1 id="page-title">Thiết lập học</h1>
+            <p>Kế hoạch mỗi ngày dùng các con số dưới đây. Thay đổi có hiệu lực từ phiên học tiếp theo.</p>
+          </div>
+
+          <form id="form" class="settings-form" novalidate>
+            <div data-form-error hidden></div>
+            <fieldset class="fieldset field" data-field="goal">
+              <legend>Mục tiêu</legend>
+              <div class="choice-grid cols-2">
+                <label class="choice choice-card"><input type="radio" name="goal" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span><span class="choice-desc">Hằng ngày, công sở, du lịch</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="goal" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Thi TOEIC</span><span class="choice-desc">Part 5–7, email và văn bản công việc</span></span></label>
+              </div>
+              <p class="field-error"></p>
+            </fieldset>
+            <fieldset class="fieldset field" data-field="level">
+              <legend>Trình độ tự đánh giá</legend>
+              <div class="choice-grid cols-2">
+                <label class="choice"><input type="radio" name="level" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span></span></label>
+                <label class="choice"><input type="radio" name="level" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span></span></label>
+              </div>
+              <p class="field-hint">Chỉ dùng để gợi ý bộ thẻ, không phải kết quả kiểm tra.</p>
+              <p class="field-error"></p>
+            </fieldset>
+            <fieldset class="fieldset field" data-field="topicIds">
+              <legend>Chủ đề quan tâm <span class="muted" style="font-weight:500">(tối đa 5)</span></legend>
+              <div class="choice-grid cols-2" id="topics"></div>
+              <p class="field-error"></p>
+            </fieldset>
+            <div class="field">
+              <label class="field-label" for="minutesPerDay">Thời gian học mỗi ngày (phút)</label>
+              <div class="num-row">
+                <input class="input" id="minutesPerDay" name="minutesPerDay" type="number" min="1" max="240" inputmode="numeric" required>
+                <div class="quick" data-for="minutesPerDay" aria-label="Chọn nhanh"><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div>
+              </div>
+              <p class="field-hint">Từ 1 đến 240 phút.</p>
+              <p class="field-error"></p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="newCardsPerDay">Số từ mới mỗi ngày</label>
+              <div class="num-row">
+                <input class="input" id="newCardsPerDay" name="newCardsPerDay" type="number" min="0" max="100" inputmode="numeric" required>
+                <div class="quick" data-for="newCardsPerDay" aria-label="Chọn nhanh"><button type="button" data-v="0">0</button><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="20">20</button></div>
+              </div>
+              <p class="field-hint">Đặt 0 để chỉ ôn từ đã học. Thẻ đến hạn ôn luôn được đưa vào phiên học.</p>
+              <p class="estimate" id="estimate" aria-live="polite"></p>
+              <p class="field-error"></p>
+            </div>
+            <div class="settings-foot">
+              <button type="submit" class="btn btn-primary btn-lg" id="save">Lưu thiết lập</button>
+              <span class="saved-at" id="saved-at" aria-live="polite"></span>
+            </div>
+          </form>
+        </section>
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="h-title">
+            <h2 class="panel-title" id="h-title">Gợi ý chọn con số</h2>
+            <p class="small muted">Mỗi từ mới cần khoảng 1 phút trong ngày đầu, cộng thêm thời gian ôn các ngày sau. Với 10 phút mỗi ngày, 5–10 từ mới là vừa sức.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const form = document.getElementById("form");
+  const save = document.getElementById("save");
+  let version;
+
+  function sync() {
+    document.querySelectorAll(".quick").forEach((q) => { const v = form[q.dataset.for].value; q.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v))); });
+    const m = Number(form.minutesPerDay.value), n = Number(form.newCardsPerDay.value);
+    document.getElementById("estimate").textContent = m && n > m ? "Số từ mới đang nhiều hơn số phút mỗi ngày. Bạn có thể không kịp ôn." : "";
+  }
+  document.querySelectorAll(".quick").forEach((q) => q.addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (b) { form[q.dataset.for].value = b.dataset.v; sync(); } }));
+  form.addEventListener("input", sync);
+  form.addEventListener("change", (e) => {
+    if (e.target.name === "topicIds" && form.querySelectorAll('[name="topicIds"]:checked').length > 5) { e.target.checked = false; VL.setFieldError(form, "topicIds", "Chọn tối đa 5 chủ đề"); }
+  });
+
+  VL.load(document.getElementById("region"), {
+    fetch: async () => ({ s: await VL.api("GET", "/me/learning-settings"), topics: await VL.api("GET", "/public/topics") }),
+    render: ({ s, topics }) => {
+      version = s.version;
+      document.getElementById("topics").innerHTML = topics.map((t) => '<label class="choice"><input type="checkbox" name="topicIds" value="' + t.id + '"' + ((s.topicIds || []).includes(t.id) ? " checked" : "") + '><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.name) + "</span></label>").join("");
+      if (s.goal) form.querySelector('[name="goal"][value="' + s.goal + '"]').checked = true;
+      if (s.level) form.querySelector('[name="level"][value="' + s.level + '"]').checked = true;
+      form.minutesPerDay.value = s.minutesPerDay;
+      form.newCardsPerDay.value = s.newCardsPerDay;
+      sync();
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    const fd = new FormData(form);
+    const data = { goal: fd.get("goal"), level: fd.get("level"), topicIds: fd.getAll("topicIds"), minutesPerDay: Number(fd.get("minutesPerDay")), newCardsPerDay: Number(fd.get("newCardsPerDay")), onboardingDone: true, version };
+    VL.busy(save, async () => {
+      try {
+        const s = await VL.api("PUT", "/me/learning-settings", data);
+        version = s.version;
+        VL.toast("Đã lưu thiết lập");
+        document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      } catch (err) {
+        if (err.code === "VERSION_CONFLICT") {
+          const box = form.querySelector("[data-form-error]");
+          box.hidden = false; box.className = "notice notice-warning";
+          box.innerHTML = VL.icon("alert") + '<div class="stack-sm"><p class="notice-title">' + VL.esc(err.message) + '</p><div><button type="button" class="btn btn-secondary btn-sm" onclick="location.reload()">Tải lại</button></div></div>';
+          return;
+        }
+        VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

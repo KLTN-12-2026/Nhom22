@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đăng nhập – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+</head>
+<body data-root=".." data-auth="guest" class="no-bottom-nav">
+<!-- F1.2 · UI08 · API: POST /auth/login, GET /me (B1.2 — dự kiến), POST /auth/resend-verification; Google: GET /auth/google/start (B1.4) -->
+<div class="auth">
+  <aside class="auth-aside"></aside>
+  <main class="auth-main" id="main">
+    <a class="brand" href="../gd0/trang-chu.html"><img class="brand-mark" src="../shared/assets/logo-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+
+    <div class="auth-form">
+      <div class="auth-title">
+        <h1>Đăng nhập</h1>
+        <p>Tiếp tục học từ chỗ bạn dừng lại.</p>
+      </div>
+
+      <p class="notice notice-success" id="logged-out" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Bạn đã đăng xuất. Phiên đăng nhập trên thiết bị này đã kết thúc.</span></p>
+      <p class="notice" id="need-login" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg><span>Đăng nhập để mở trang bạn vừa chọn.</span></p>
+
+      <button type="button" class="btn btn-secondary btn-lg btn-block" id="google">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.8 6.1C12.3 13.6 17.6 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5Z"/><path fill="#FBBC05" d="M10.4 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.9-4.7l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.8-6.1Z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8L32.3 36.3c-2.1 1.4-4.9 2.3-8.3 2.3-6.4 0-11.7-4.1-13.6-9.8l-7.8 6.1C6.6 42.6 14.6 48 24 48Z"/></svg>
+        Đăng nhập với Google
+      </button>
+      <p class="or-divider">hoặc dùng email</p>
+
+      <form id="form" novalidate>
+        <div data-form-error hidden></div>
+        <div class="field">
+          <label class="field-label" for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="username" inputmode="email" required placeholder="ten@gmail.com">
+          <p class="field-error"></p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="password"><span>Mật khẩu</span><a href="quen-mat-khau.html" class="small" style="font-weight:550">Quên mật khẩu?</a></label>
+          <div class="input-group">
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="input-action" data-toggle-password aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <p class="field-error"></p>
+        </div>
+        <label class="choice">
+          <input type="checkbox" name="remember" checked>
+          <span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="choice-body"><span>Ghi nhớ đăng nhập trên thiết bị này (7 ngày)</span></span>
+        </label>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit">Đăng nhập</button>
+      </form>
+
+      <details class="demo-accounts">
+        <summary>Tài khoản dùng thử (mockup)</summary>
+        <p class="muted" style="margin-top:4px">Mật khẩu chung: <code id="demo-pw"></code>. Bấm để điền.</p>
+        <ul id="demo-list"></ul>
+      </details>
+
+      <p class="auth-foot" style="margin-top:0">Chưa có tài khoản? <a href="dang-ky.html">Tạo tài khoản</a></p>
+    </div>
+    <p class="auth-foot"><a href="../gd0/trang-chu.html">Về trang chủ</a></p>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  VL.bindPassword(form.password);
+  if (p.email) form.email.value = p.email;
+  if (p.loggedOut) document.getElementById("logged-out").hidden = false;
+  if (p.next) document.getElementById("need-login").hidden = false;
+  (p.email ? form.password : form.email).focus();
+
+  document.getElementById("demo-pw").textContent = VLDemo.DEMO_PASSWORD;
+  const accounts = [
+    ["an@vocab.local", "Người học, đã có bộ thẻ"],
+    ["admin@vocab.local", "Quản trị viên"],
+    ["chi@vocab.local", "Chưa xác thực email"]
+  ];
+  document.getElementById("demo-list").innerHTML = accounts.map((a) => '<li><button type="button" data-email="' + a[0] + '"><span>' + a[0] + '</span><span class="muted">' + a[1] + "</span></button></li>").join("");
+  document.getElementById("demo-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-email]");
+    if (!b) return;
+    form.email.value = b.dataset.email;
+    form.password.value = VLDemo.DEMO_PASSWORD;
+    submit.focus();
+  });
+  document.getElementById("google").addEventListener("click", () => VL.toast("Bản mockup chưa kết nối Google. Luồng này có ở bước B1.4."));
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(submit, async () => {
+      try {
+        const user = await VL.api("POST", "/auth/login", { email: form.email.value, password: form.password.value, remember: form.remember.checked });
+        const dest = !user.onboardingDone ? "bat-dau.html" : (p.next ? "../" + p.next : "bo-the.html");
+        location.href = dest;
+      } catch (err) {
+        if (err.status === 429) { VL.countdown(submit, err.retryAfter || 60); }
+        if (err.code === "EMAIL_NOT_VERIFIED") {
+          const box = form.querySelector("[data-form-error]");
+          box.hidden = false;
+          box.className = "notice notice-warning";
+          box.innerHTML = VL.icon("mail") + '<div class="stack-sm"><p class="notice-title">' + VL.esc(err.message) + '</p><div><a class="btn btn-secondary btn-sm" href="xac-thuc-email.html?email=' + encodeURIComponent(form.email.value) + '">Gửi lại thư xác thực</a></div></div>';
+          return;
+        }
+        VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

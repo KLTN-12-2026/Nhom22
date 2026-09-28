@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đặt lại mật khẩu – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+</head>
+<body data-root=".." class="no-bottom-nav">
+<!-- F1.3 · UI10 · API: POST /auth/reset-password (B1.3 — dự kiến) -->
+<div class="auth">
+  <aside class="auth-aside"></aside>
+  <main class="auth-main" id="main">
+    <a class="brand" href="../gd0/trang-chu.html"><img class="brand-mark" src="../shared/assets/logo-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+
+    <div class="auth-form" aria-live="polite">
+      <div id="ask" class="stack">
+        <div class="auth-title">
+          <h1>Đặt mật khẩu mới</h1>
+          <p>Sau khi đổi, các phiên đăng nhập khác của bạn sẽ bị đăng xuất.</p>
+        </div>
+        <form id="form" novalidate>
+          <div data-form-error hidden></div>
+          <div class="field">
+            <label class="field-label" for="password">Mật khẩu mới</label>
+            <div class="input-group">
+              <input class="input" id="password" name="password" type="password" autocomplete="new-password" required maxlength="72" aria-describedby="pw-rules">
+              <button type="button" class="input-action" data-toggle-password aria-label="Hiện mật khẩu" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <ul class="pw-rules" id="pw-rules">
+              <li data-rule="len"><span class="bubble box" aria-hidden="true"></span>8–72 ký tự</li>
+              <li data-rule="letter"><span class="bubble box" aria-hidden="true"></span>Có chữ cái</li>
+              <li data-rule="digit"><span class="bubble box" aria-hidden="true"></span>Có chữ số</li>
+            </ul>
+            <p class="field-error"></p>
+          </div>
+          <div class="field">
+            <label class="field-label" for="confirm">Nhập lại mật khẩu mới</label>
+            <input class="input" id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+            <p class="field-error"></p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit">Lưu mật khẩu mới</button>
+        </form>
+      </div>
+
+      <div id="done" class="stack" hidden>
+        <div class="auth-title">
+          <h1 tabindex="-1">Đã lưu mật khẩu mới</h1>
+          <p>Đăng nhập lại bằng mật khẩu vừa đặt.</p>
+        </div>
+        <a class="btn btn-primary btn-lg btn-block" href="dang-nhap.html">Đăng nhập</a>
+      </div>
+
+      <div id="bad" class="stack" hidden>
+        <div class="error-state" role="alert">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>
+          <h1 tabindex="-1" style="font-size:var(--fs-h3)">Liên kết đặt lại không dùng được</h1>
+          <p id="bad-msg">Liên kết đã hết hạn sau 30 phút, đã được dùng, hoặc bị sao chép thiếu.</p>
+          <a class="btn btn-secondary" href="quen-mat-khau.html">Gửi liên kết mới</a>
+          <p class="request-id" id="bad-id"></p>
+        </div>
+      </div>
+    </div>
+    <p class="auth-foot"><a href="dang-nhap.html">Quay lại đăng nhập</a></p>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const form = document.getElementById("form");
+  const submit = document.getElementById("submit");
+  VL.bindPassword(form.password, document.getElementById("pw-rules"));
+  const showBad = (err) => {
+    document.getElementById("ask").hidden = true;
+    document.getElementById("bad").hidden = false;
+    if (err) document.getElementById("bad-id").textContent = "Mã yêu cầu: " + err.requestId;
+    document.querySelector("#bad h1").focus();
+  };
+  if (!p.token) showBad();
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    if (form.confirm.value !== form.password.value) { VL.setFieldError(form, "confirm", "Hai mật khẩu chưa khớp"); form.confirm.focus(); return; }
+    VL.busy(submit, async () => {
+      try {
+        await VL.api("POST", "/auth/reset-password", { token: p.token, password: form.password.value });
+        document.getElementById("ask").hidden = true;
+        document.getElementById("done").hidden = false;
+        document.querySelector("#done h1").focus();
+      } catch (err) {
+        if (err.code === "TOKEN_INVALID") showBad(err); else VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

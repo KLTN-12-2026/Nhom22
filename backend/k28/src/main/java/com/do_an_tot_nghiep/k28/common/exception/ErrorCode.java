@@ -17,7 +17,8 @@ public enum ErrorCode {
     BUSINESS_RULE(HttpStatus.UNPROCESSABLE_CONTENT),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
     DEPENDENCY_DOWN(HttpStatus.SERVICE_UNAVAILABLE),
-    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+    TOKEN_INVALID(HttpStatus.BAD_REQUEST);
 
     private final HttpStatus status;
 }
