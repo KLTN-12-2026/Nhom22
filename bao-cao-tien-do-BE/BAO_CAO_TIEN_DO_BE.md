@@ -28,7 +28,6 @@
 `nguoi_dung`, `vai_tro`, `nguoi_dung_vai_tro`, `danh_tinh_oauth`, `token_tai_khoan`, `ho_so_hoc_tap`, `cai_dat_thong_bao`.
 
 
-
 ### Cách chạy (cho FE và thành viên khác)
 
 ```bash
