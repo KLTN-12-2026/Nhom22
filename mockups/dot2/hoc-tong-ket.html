@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tổng kết phiên – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .block { margin-top: var(--sp-6); display: grid; gap: var(--sp-3); }
+  .block h2 { font-size: var(--fs-h3); }
+  .dist { display: grid; gap: var(--sp-3); margin: 0; }
+  .dist > div { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) 2.5rem; gap: var(--sp-3); align-items: center; }
+  .dist dt { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 650; color: var(--primary); }
+  .dist dd { margin: 0; }
+  .dist .num { text-align: right; font-weight: 700; }
+  .plain-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; }
+  .plain-row:hover { background: none; }
+  .when { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; white-space: nowrap; text-align: right; }
+  .foot { display: flex; flex-wrap: wrap; gap: var(--sp-3); padding-top: var(--sp-4); margin-top: var(--sp-6); border-top: var(--rule-strong) solid var(--primary); }
+</style>
+</head>
+<body data-root=".." data-nav="today" data-auth="required">
+<!-- F2.3 · UI20 · API: GET /learning/sessions/{id} kèm tongKet (B2.3, B2.5), POST /learning/sessions/{id}/finish (B2.5), GET /learning/history?phienId (B2.5), POST /practice/sessions (B2.7) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <section class="sheet" data-when="empty" aria-labelledby="open-title">
+          <div class="form-head">
+            <div class="form-code"><span>Tổng kết phiên</span><span>Đang học</span></div>
+            <h1 id="open-title">Phiên này chưa kết thúc</h1>
+            <p>Học tiếp để chấm các thẻ còn lại, hoặc kết thúc ngay. Các thẻ đã chấm vẫn được lưu.</p>
+          </div>
+          <div class="row"><a class="btn btn-primary" id="resume" href="hoc.html">Học tiếp</a><button type="button" class="btn btn-secondary" id="end">Kết thúc phiên</button></div>
+        </section>
+
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Tổng kết phiên</span><span id="code"></span></div>
+            <h1 id="page-title" tabindex="-1"></h1>
+            <p id="lead"></p>
+          </div>
+          <dl class="tally cols-2" id="tally"></dl>
+
+          <section class="block" aria-labelledby="dist-title">
+            <h2 id="dist-title">Mức bạn đã chọn</h2>
+            <dl class="dist" id="dist"></dl>
+            <p class="small muted">Đây là tự đánh giá khi ôn, dùng để xếp lịch, không phải điểm số.</p>
+          </section>
+
+          <section class="block" aria-labelledby="hard-title" id="hard-box">
+            <h2 id="hard-title">Từ cần luyện thêm</h2>
+            <ol class="answer-list" id="hard" role="list"></ol>
+          </section>
+
+          <section class="block" aria-labelledby="next-title">
+            <h2 id="next-title">Lần ôn tiếp theo</h2>
+            <ol class="answer-list" id="next" role="list"></ol>
+          </section>
+
+          <section class="block" aria-labelledby="hist-title">
+            <h2 id="hist-title">Các lượt trong phiên</h2>
+            <p class="small muted">Số liệu tổng kết được tính từ đúng các lượt này.</p>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th scope="col">Số</th><th scope="col">Từ</th><th scope="col">Mức</th><th scope="col">Trạng thái sau</th><th scope="col">Lúc</th></tr></thead>
+                <tbody id="hist"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="foot">
+            <a class="btn btn-primary" href="hoc.html">Học phiên khác</a>
+            <a class="btn btn-secondary" href="hom-nay.html">Về trang Hôm nay</a>
+          </div>
+        </section>
+
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="streak-title">
+            <h2 class="panel-title" id="streak-title">Chuỗi ngày học</h2>
+            <p><span class="tally-n" id="streak-n">0</span> ngày liên tiếp</p>
+            <p class="small muted" id="streak-note"></p>
+          </section>
+          <section class="panel" aria-labelledby="tip-title">
+            <h2 class="panel-title" id="tip-title">Gợi ý tiếp theo</h2>
+            <p class="small" id="tip-text"></p>
+            <button type="button" class="btn btn-accent" id="practice" hidden style="margin-top:var(--sp-3)"></button>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const id = VL.params().id;
+  const $ = (x) => document.getElementById(x);
+  let hardIds = [];
+
+  function renderSummary(t) {
+    document.title = "Tổng kết: " + t.boTheTen + " – VocabLearning";
+    $("code").textContent = VL.DIR[t.chieuHoc];
+    $("page-title").textContent = t.soLuot ? "Bạn đã ôn " + t.soThe + " thẻ" : "Phiên kết thúc khi chưa chấm thẻ nào";
+    $("lead").textContent = t.boTheTen;
+    $("tally").innerHTML =
+      '<div><dt>Lượt chấm</dt><dd><span class="tally-n">' + t.soLuot + "</span>lượt</dd></div>" +
+      '<div><dt>Thẻ khác nhau</dt><dd><span class="tally-n">' + t.soThe + "</span>thẻ</dd></div>" +
+      '<div><dt>Từ mới</dt><dd><span class="tally-n">' + t.soTheMoi + "</span>từ</dd></div>" +
+      '<div><dt>Thời gian<small>quỹ ' + t.quyThoiGian + " phút</small></dt><dd><span class=\"tally-n\">" + Math.floor(t.thoiGianGiay / 60) + "</span>phút " + (t.thoiGianGiay % 60) + " giây</dd></div>";
+    const max = Math.max(1, ...Object.values(t.theoDanhGia));
+    $("dist").innerHTML = ["QUEN", "KHO", "NHO", "DE"].map((r) =>
+      "<div><dt>" + VL.RATING[r] + '</dt><dd><div class="meter" role="img" aria-label="' + t.theoDanhGia[r] + " lượt " + VL.RATING[r] + '" style="--v:' + t.theoDanhGia[r] / max + '"><span></span></div></dd><dd class="num">' + t.theoDanhGia[r] + "</dd></div>").join("");
+
+    hardIds = t.tuCanLuyen.map((w) => w.theId);
+    $("hard-box").hidden = !t.tuCanLuyen.length;
+    $("hard").innerHTML = t.tuCanLuyen.map((w, i) =>
+      '<li class="answer-row plain-row"><span class="answer-no">' + (i + 1) + '</span><div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(w.tu) + '</span><span class="pos" lang="en">' + VL.esc(w.tuLoai || "") + '</span></div><p class="entry-mean">' + VL.esc(w.nghiaVi) + '</p></div><span class="answer-meta">' + w.danhGia.map((r) => '<span class="stamp stamp-graphite">' + VL.RATING[r] + "</span>").join("") + "</span></li>").join("");
+
+    $("next").innerHTML = t.lichTiepTheo.length ? t.lichTiepTheo.map((w, i) =>
+      '<li class="answer-row plain-row"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><span class="entry-word" lang="en" style="font-size:1.125rem">' + VL.esc(w.tu) + '</span><span class="answer-meta"><span>' + VL.esc(VL.SRS_STATE[w.trangThai] || "") + "</span><span>" + VL.fmtDateTime(w.hanOnAt) + '</span></span></div><span class="when">sau ' + VL.esc(w.khoangHienThi) + "</span></li>").join("") : '<li class="small muted" style="padding:var(--sp-3) 0">Chưa có thẻ nào được chấm.</li>';
+
+    $("streak-n").textContent = t.chuoiNgay;
+    $("streak-note").textContent = t.homNayDaTinhChuoi ? "Hôm nay đã được tính vào chuỗi." : "Hôm nay chưa được tính. Cần một phiên có ít nhất " + t.luotToiThieuChuoi + " lượt ôn.";
+
+    const btn = $("practice");
+    if (hardIds.length) {
+      $("tip-text").textContent = "Bạn chọn Quên hoặc Khó với " + hardIds.length + " từ. Gõ lại từ theo nghĩa giúp nhớ chắc hơn. Bài luyện được lưu riêng, không đổi lịch ôn thẻ.";
+      btn.hidden = false;
+      btn.textContent = "Luyện " + hardIds.length + " từ này";
+    } else {
+      $("tip-text").textContent = t.soLuot ? "Không có từ nào cần luyện thêm. Quay lại khi có thẻ đến hạn." : "Bắt đầu một phiên mới khi bạn sẵn sàng.";
+    }
+
+    VL.api("GET", "/learning/history?phienId=" + encodeURIComponent(id) + "&size=50").then((h) => {
+      $("hist").innerHTML = h.items.slice().reverse().map((r, i) =>
+        '<tr><td class="num">' + (i + 1) + '</td><td class="en">' + VL.esc(r.tu) + "</td><td>" + VL.RATING[r.danhGia] + "</td><td>" + VL.esc(VL.SRS_STATE[r.sau.trangThai] || "") + "</td><td>" + VL.fmtTime(r.createdAt) + "</td></tr>").join("") || '<tr><td colspan="5">Không có lượt nào.</td></tr>';
+    }).catch(() => { $("hist").innerHTML = '<tr><td colspan="5">Chưa tải được lịch sử.</td></tr>'; });
+  }
+
+  const region = $("region");
+  function load() {
+    VL.load(region, {
+      errorTitle: "Không mở được tổng kết",
+      fetch: () => VL.api("GET", "/learning/sessions/" + encodeURIComponent(id || "")),
+      isEmpty: (s) => s.trangThai === "DANG_HOC",
+      empty: () => { $("resume").href = "hoc-phien.html?id=" + id; },
+      render: (s) => renderSummary(s.tongKet)
+    });
+  }
+  $("end").addEventListener("click", (e) => VL.busy(e.currentTarget, async () => {
+    try { await VL.api("POST", "/learning/sessions/" + id + "/finish"); load(); } catch (err) { VL.toast(err.message, "error"); }
+  }));
+  $("practice").addEventListener("click", (e) => VL.busy(e.currentTarget, async () => {
+    try {
+      const s = await VL.api("POST", "/practice/sessions", { loaiBai: "NHAP_TU_THEO_NGHIA", soCau: 20, theIds: hardIds });
+      location.href = "luyen-tap-lam-bai.html?id=" + s.id;
+    } catch (err) { VL.toast(err.message, "error"); }
+  }));
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bộ và thẻ mẫu – Quản trị VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .toolbar-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--sp-3); margin: var(--sp-4) 0; }
+  .toolbar-row .field { flex: 1 1 260px; }
+  .d-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .d-row:hover { background: none; }
+  .d-name { font-weight: 650; font-size: 1.0625rem; overflow-wrap: anywhere; }
+  .d-desc { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+  .tools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-left: -12px; }
+  .danger-text { color: var(--danger); }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+  .card-form { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: var(--rule) solid var(--primary-line); background: var(--field); margin-bottom: var(--sp-5); }
+  .card-form .grid-2 { display: grid; gap: var(--sp-3); }
+  @media (min-width: 720px) { .card-form .grid-2 { grid-template-columns: 1fr 1fr; } }
+  .c-word { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+  .c-word strong { font-size: 1.125rem; overflow-wrap: anywhere; }
+  .c-ex { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+  .dlg-grid { display: grid; gap: var(--sp-3); }
+  @media (min-width: 640px) { .dlg-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dlg-grid.cols-2 { grid-template-columns: 1fr 1fr; } }
+  .dialog.wide { width: min(640px, calc(100vw - 32px)); }
+  .rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="admin-decks" data-auth="required" data-role="ADMIN">
+<!-- F2.8 · UI49 · API: GET/POST /admin/decks, GET/PATCH/DELETE /admin/decks/{id} {…, quyenTruyCap, trangThaiKiemDuyet, lyDo, version} (B2.11), GET /admin/cards?boTheId, POST /admin/cards, PATCH/DELETE /admin/cards/{id} (B2.11), GET /admin/topics (B1.7) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title" id="list-view">
+          <div class="form-head">
+            <div class="form-code"><span>Quản trị</span><span id="total">—</span></div>
+            <h1 id="page-title">Bộ và thẻ mẫu</h1>
+            <p>Bộ mẫu là nội dung của nhóm biên soạn, hiện trong thư viện khi đã xuất bản. Người học sao chép về để học.</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Lọc theo trạng thái" id="tabs">
+            <button type="button" class="tab" role="tab" data-st="">Tất cả</button>
+            <button type="button" class="tab" role="tab" data-st="BAN_NHAP">Bản nháp</button>
+            <button type="button" class="tab" role="tab" data-st="DA_XUAT_BAN">Đã xuất bản</button>
+            <button type="button" class="tab" role="tab" data-st="DA_AN">Đã ẩn</button>
+          </div>
+          <form class="toolbar-row" id="search" role="search" novalidate>
+            <div class="field">
+              <label class="field-label" for="q">Tìm theo tên bộ</label>
+              <input class="input" type="search" id="q" name="q" maxlength="100" autocomplete="off">
+            </div>
+            <button type="submit" class="btn btn-secondary">Tìm</button>
+            <button type="button" class="btn btn-primary" id="create">Tạo bộ mẫu</button>
+          </form>
+          <div data-view="loading" id="region" aria-live="polite">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <h2 id="empty-title">Chưa có bộ mẫu nào</h2>
+                <p>Tạo bộ ở trạng thái nháp, thêm thẻ rồi xuất bản.</p>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <section class="sheet" aria-labelledby="deck-title" id="deck-view" hidden>
+          <a class="btn btn-quiet" href="quan-tri-bo-mau.html" style="margin:0 0 var(--sp-3) -12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Tất cả bộ mẫu</a>
+          <div data-view="loading" id="deck-region">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <div class="form-head">
+                <div class="form-code"><span>Bộ mẫu</span><span id="deck-count">—</span></div>
+                <h1 id="deck-title" class="d-name" style="font-size:inherit"></h1>
+                <div class="answer-meta" id="deck-meta"></div>
+                <div class="tools" id="deck-tools"></div>
+              </div>
+              <form class="card-form" id="card-form" novalidate>
+                <h2 class="panel-title" style="margin:0">Thêm thẻ</h2>
+                <div class="grid-2">
+                  <div class="field"><label class="field-label" for="c-tu">Từ hoặc cụm từ</label><input class="input" id="c-tu" name="tu" maxlength="120" lang="en" autocomplete="off"><p class="field-error"></p></div>
+                  <div class="field"><label class="field-label" for="c-nghia">Nghĩa tiếng Việt</label><input class="input" id="c-nghia" name="nghiaVi" maxlength="520" autocomplete="off"><p class="field-error"></p></div>
+                  <div class="field"><label class="field-label" for="c-loai">Từ loại<span class="optional">không bắt buộc</span></label><input class="input" id="c-loai" name="tuLoai" maxlength="40" placeholder="n., v., adj., phr." autocomplete="off"><p class="field-error"></p></div>
+                  <div class="field"><label class="field-label" for="c-ipa">Phiên âm<span class="optional">không bắt buộc</span></label><input class="input" id="c-ipa" name="phienAm" maxlength="120" autocomplete="off"><p class="field-error"></p></div>
+                  <div class="field"><label class="field-label" for="c-vd">Ví dụ tiếng Anh<span class="optional">không bắt buộc</span></label><input class="input" id="c-vd" name="viDuEn" maxlength="320" lang="en" autocomplete="off"><p class="field-error"></p></div>
+                  <div class="field"><label class="field-label" for="c-dich">Dịch ví dụ<span class="optional">không bắt buộc</span></label><input class="input" id="c-dich" name="dichVi" maxlength="320" autocomplete="off"><p class="field-error"></p></div>
+                </div>
+                <div data-form-error hidden></div>
+                <div><button type="submit" class="btn btn-primary" id="card-add">Thêm thẻ</button></div>
+              </form>
+              <div data-view="loading" id="cards-region" aria-live="polite">
+                <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+                <div data-when="ready"><ol class="answer-list" id="cards" role="list"></ol></div>
+                <div data-when="empty"><div class="empty"><h2>Bộ chưa có thẻ</h2><p>Thêm ít nhất một thẻ để xuất bản bộ.</p></div></div>
+                <div data-when="error"></div>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="rules-title">
+            <h2 class="panel-title" id="rules-title">Quy tắc</h2>
+            <ul class="rules">
+              <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
+              <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
+              <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
+              <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
+              <li>Nếu hai người cùng sửa một bộ, người lưu sau được báo tải lại để không ghi đè.</li>
+            </ul>
+          </section>
+          <section class="panel" aria-labelledby="log-title">
+            <h2 class="panel-title" id="log-title">Nhật ký</h2>
+            <a class="btn btn-quiet" href="quan-tri-nhat-ky.html?loai=BO_THE" style="margin-left:-12px">Mở nhật ký bộ mẫu</a>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const me = VL.me();
+  if (!me || !me.vaiTro.includes("ADMIN")) return;
+  const $ = (x) => document.getElementById(x);
+  const p = VL.params();
+  $("create").innerHTML = VL.icon("plus") + "Tạo bộ mẫu";
+  let topics = [];
+  const topicsReady = VL.api("GET", "/admin/topics").then((t) => { topics = t; });
+
+  function stateOf(d) {
+    if (d.trangThaiKiemDuyet === "DA_AN") return ["Đã ẩn", "stamp-warning"];
+    return d.quyenTruyCap === "CONG_KHAI" ? ["Đã xuất bản", ""] : ["Bản nháp", "stamp-quiet"];
+  }
+  function metaHtml(d) {
+    const s = stateOf(d);
+    return '<span class="stamp ' + s[1] + '">' + s[0] + "</span><span>" + VL.GOAL[d.mucTieu] + "</span><span>" + VL.esc(d.chuDeTen || "Chưa có chủ đề") + "</span><span>" + VL.LEVEL[d.trinhDo] + "</span><span>" + d.soThe + " thẻ</span><span>" + d.soBanSao + " bản sao</span><span>Sửa " + VL.fmtDate(d.updatedAt) + "</span>";
+  }
+  function toolsHtml(d, withCards) {
+    const t = [];
+    if (withCards) t.push('<a class="btn btn-quiet" href="quan-tri-bo-mau.html?id=' + d.id + '">Quản lý thẻ</a>');
+    t.push('<button type="button" class="btn btn-quiet" data-act="edit">' + VL.icon("edit") + "Sửa thông tin</button>");
+    if (d.trangThaiKiemDuyet !== "DA_AN") t.push(d.quyenTruyCap === "CONG_KHAI" ? '<button type="button" class="btn btn-quiet" data-act="draft">Chuyển về nháp</button>' : '<button type="button" class="btn btn-quiet" data-act="publish">Xuất bản</button>');
+    t.push(d.trangThaiKiemDuyet === "DA_AN" ? '<button type="button" class="btn btn-quiet" data-act="show">Hiện lại</button>' : '<button type="button" class="btn btn-quiet" data-act="hide">Ẩn khỏi thư viện</button>');
+    t.push('<button type="button" class="btn btn-quiet danger-text" data-act="delete">' + VL.icon("trash") + "Xóa bộ</button>");
+    return t.join("");
+  }
+
+  async function deckDialog(d) {
+    await topicsReady;
+    const opt = (map, v) => Object.keys(map).map((k) => '<option value="' + k + '"' + (k === v ? " selected" : "") + ">" + map[k] + "</option>").join("");
+    const dlg = document.createElement("dialog");
+    dlg.className = "dialog wide";
+    dlg.setAttribute("aria-labelledby", "dd-title");
+    dlg.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="dd-title">' + (d ? "Sửa thông tin bộ" : "Tạo bộ mẫu") + '</h2></div>' +
+      '<div class="field"><label class="field-label" for="dd-ten">Tên bộ</label><input class="input" id="dd-ten" name="ten" maxlength="170" autocomplete="off"><p class="field-counter"></p><p class="field-error"></p></div>' +
+      '<div class="field"><label class="field-label" for="dd-mota">Mô tả<span class="optional">không bắt buộc</span></label><textarea class="textarea" id="dd-mota" name="moTa" rows="3" maxlength="1100"></textarea><p class="field-error"></p></div>' +
+      '<div class="dlg-grid cols-3"><div class="field"><label class="field-label" for="dd-goal">Mục tiêu</label><select class="select" id="dd-goal" name="mucTieu"><option value="">Chọn</option>' + opt(VL.GOAL, d && d.mucTieu) + '</select><p class="field-error"></p></div>' +
+      '<div class="field"><label class="field-label" for="dd-topic">Chủ đề</label><select class="select" id="dd-topic" name="chuDeId"><option value="">Chọn</option>' + topics.map((t) => '<option value="' + t.id + '"' + (d && d.chuDeId === t.id ? " selected" : "") + ">" + VL.esc(t.name) + "</option>").join("") + '</select><p class="field-error"></p></div>' +
+      '<div class="field"><label class="field-label" for="dd-level">Trình độ</label><select class="select" id="dd-level" name="trinhDo"><option value="">Chọn</option>' + opt(VL.LEVEL, d && d.trinhDo) + '</select><p class="field-error"></p></div></div>' +
+      (d ? "" : '<p class="small muted">Bộ mới ở trạng thái nháp. Thêm thẻ rồi xuất bản.</p>') +
+      '<div data-form-error hidden></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">' + (d ? "Lưu thông tin" : "Tạo bộ") + "</button></div></form>";
+    document.body.appendChild(dlg);
+    const f = dlg.querySelector("form");
+    const counter = f.querySelector(".field-counter");
+    const count = () => { counter.textContent = f.ten.value.trim().length + "/150"; counter.toggleAttribute("data-over", f.ten.value.trim().length > 150); };
+    f.ten.value = d ? d.ten : "";
+    f.moTa.value = d ? (d.moTa || "") : "";
+    count();
+    f.ten.addEventListener("input", count);
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (v) => { if (done) return; done = true; if (dlg.open) dlg.close(); dlg.remove(); resolve(v); };
+      dlg.addEventListener("close", () => finish(null));
+      dlg.querySelector("[data-close]").addEventListener("click", () => finish(null));
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        VL.clearErrors(f);
+        const body = { ten: f.ten.value, moTa: f.moTa.value, mucTieu: f.mucTieu.value, chuDeId: f.chuDeId.value, trinhDo: f.trinhDo.value };
+        if (d) body.version = d.version;
+        VL.busy(f.querySelector('[type="submit"]'), async () => {
+          try { finish(await VL.api(d ? "PATCH" : "POST", "/admin/decks" + (d ? "/" + d.id : ""), body)); }
+          catch (err) { VL.showErrors(f, err); }
+        });
+      });
+      dlg.showModal();
+      f.ten.focus();
+    });
+  }
+
+  async function deckAction(act, d, after) {
+    const name = d.ten.length > 60 ? d.ten.slice(0, 60) + "…" : d.ten;
+    let res = null;
+    if (act === "edit") { res = await deckDialog(d); if (res) VL.toast("Đã lưu thông tin bộ"); }
+    else if (act === "publish") {
+      if (!(await VL.confirm({ title: "Xuất bản " + name + "?", message: "Bộ sẽ hiện trong thư viện cho mọi người học.", confirmText: "Xuất bản" }))) return;
+      try { res = await VL.api("PATCH", "/admin/decks/" + d.id, { quyenTruyCap: "CONG_KHAI", version: d.version }); VL.toast("Đã xuất bản bộ"); }
+      catch (err) { VL.toast(err.message, "error"); if (err.status === 409) after(); return; }
+    } else {
+      const C = {
+        draft: ["Chuyển " + name + " về nháp?", "Bộ rời khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.", "Chuyển về nháp", false, { quyenTruyCap: "RIENG_TU" }, "Đã chuyển bộ về nháp"],
+        hide: ["Ẩn " + name + " khỏi thư viện?", "Dùng khi nội dung có lỗi hoặc vi phạm. Bản sao người học đã lưu vẫn giữ nguyên.", "Ẩn bộ", true, { trangThaiKiemDuyet: "DA_AN" }, "Đã ẩn bộ"],
+        show: ["Hiện lại " + name + "?", "Bộ trở về trạng thái trước khi ẩn.", "Hiện lại", false, { trangThaiKiemDuyet: "BINH_THUONG" }, "Đã hiện lại bộ"],
+        delete: ["Xóa " + name + "?", "Bộ và thẻ mẫu bị xóa khỏi hệ thống quản trị. " + (d.soBanSao ? d.soBanSao + " bản sao của người học vẫn giữ nguyên." : "Chưa có ai sao chép bộ này."), "Xóa bộ", true, null, "Đã xóa bộ"]
+      }[act];
+      res = await VL.reasonDialog({ title: C[0], message: C[1], confirmText: C[2], danger: C[3], submit: (r) => act === "delete" ? VL.api("DELETE", "/admin/decks/" + d.id, { lyDo: r }) : VL.api("PATCH", "/admin/decks/" + d.id, Object.assign({ lyDo: r, version: d.version }, C[4])) });
+      if (res) VL.toast(C[5]);
+      if (res && act === "delete") { location.href = "quan-tri-bo-mau.html"; return; }
+    }
+    after();
+  }
+
+  if (p.id) {
+    $("list-view").hidden = true;
+    $("deck-view").hidden = false;
+    let deck = null;
+    let cards = [];
+    const loadDeck = () => VL.load($("deck-region"), {
+      fetch: () => VL.api("GET", "/admin/decks/" + p.id),
+      render: (d) => {
+        deck = d;
+        document.title = d.ten + " – Quản trị VocabLearning";
+        $("deck-title").textContent = d.ten;
+        $("deck-count").textContent = d.soThe + " thẻ";
+        $("deck-meta").innerHTML = metaHtml(d);
+        $("deck-tools").innerHTML = toolsHtml(d, false);
+        loadCards();
+      },
+      errorTitle: "Không mở được bộ mẫu"
+    });
+    const loadCards = () => VL.load($("cards-region"), {
+      fetch: () => VL.api("GET", "/admin/cards?boTheId=" + p.id),
+      isEmpty: (l) => !l.length,
+      render: (l) => {
+        cards = l;
+        $("cards").innerHTML = l.map((c, i) => '<li class="answer-row d-row" data-id="' + c.id + '"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><div class="c-word"><strong lang="en">' + VL.esc(c.tu) + "</strong>" + (c.phienAm ? '<span class="small muted">' + VL.esc(c.phienAm) + "</span>" : "") + (c.tuLoai ? '<span class="small muted">' + VL.esc(c.tuLoai) + "</span>" : "") + "</div><div>" + VL.esc(c.nghiaVi) + "</div>" + (c.viDuEn ? '<div class="c-ex"><span lang="en">' + VL.esc(c.viDuEn) + "</span>" + (c.dichVi ? "<br>" + VL.esc(c.dichVi) : "") + "</div>" : "") +
+          '<div class="tools"><button type="button" class="btn btn-quiet" data-card="edit">' + VL.icon("edit") + 'Sửa thẻ</button><button type="button" class="btn btn-quiet danger-text" data-card="delete">' + VL.icon("trash") + "Xóa thẻ</button></div></div></li>").join("");
+      }
+    });
+    $("deck-tools").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b && deck) deckAction(b.dataset.act, deck, loadDeck); });
+
+    const cf = $("card-form");
+    cf.addEventListener("submit", (e) => {
+      e.preventDefault();
+      VL.clearErrors(cf);
+      const body = { boTheId: p.id };
+      ["tu", "nghiaVi", "tuLoai", "phienAm", "viDuEn", "dichVi"].forEach((k) => { body[k] = cf[k].value; });
+      VL.busy($("card-add"), async () => {
+        try { await VL.api("POST", "/admin/cards", body); VL.toast("Đã thêm thẻ"); cf.reset(); cf.tu.focus(); loadDeck(); }
+        catch (err) { VL.showErrors(cf, err); }
+      });
+    });
+
+    $("cards").addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-card]");
+      if (!b) return;
+      const c = cards.find((x) => x.id === b.closest("[data-id]").dataset.id);
+      if (b.dataset.card === "delete") {
+        if (!(await VL.confirm({ title: "Xóa thẻ " + c.tu + "?", message: "Thẻ bị xóa khỏi bộ mẫu. Bản sao người học đã lưu vẫn giữ thẻ này.", confirmText: "Xóa thẻ", danger: true }))) return;
+        VL.busy(b, async () => {
+          try { await VL.api("DELETE", "/admin/cards/" + c.id); VL.toast("Đã xóa thẻ"); loadDeck(); }
+          catch (err) { VL.toast(err.message, "error"); }
+        });
+        return;
+      }
+      const dlg = document.createElement("dialog");
+      dlg.className = "dialog wide";
+      dlg.setAttribute("aria-labelledby", "cd-title2");
+      const F = [["tu", "Từ hoặc cụm từ", 120], ["nghiaVi", "Nghĩa tiếng Việt", 520], ["tuLoai", "Từ loại", 40], ["phienAm", "Phiên âm", 120], ["viDuEn", "Ví dụ tiếng Anh", 320], ["dichVi", "Dịch ví dụ", 320]];
+      dlg.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="cd-title2">Sửa thẻ ' + VL.esc(c.tu) + '</h2></div><div class="dlg-grid cols-2">' +
+        F.map((x) => '<div class="field"><label class="field-label" for="ce-' + x[0] + '">' + x[1] + '</label><input class="input" id="ce-' + x[0] + '" name="' + x[0] + '" maxlength="' + x[2] + '" autocomplete="off"><p class="field-error"></p></div>').join("") +
+        '</div><div data-form-error hidden></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">Lưu thẻ</button></div></form>';
+      document.body.appendChild(dlg);
+      const f = dlg.querySelector("form");
+      F.forEach((x) => { f[x[0]].value = c[x[0]] || ""; });
+      const close = () => { if (dlg.open) dlg.close(); dlg.remove(); };
+      dlg.querySelector("[data-close]").addEventListener("click", close);
+      dlg.addEventListener("close", () => dlg.remove());
+      f.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        VL.clearErrors(f);
+        const body = { version: c.version };
+        F.forEach((x) => { body[x[0]] = f[x[0]].value; });
+        VL.busy(f.querySelector('[type="submit"]'), async () => {
+          try { await VL.api("PATCH", "/admin/cards/" + c.id, body); close(); VL.toast("Đã lưu thẻ"); loadCards(); }
+          catch (err) { VL.showErrors(f, err); }
+        });
+      });
+      dlg.showModal();
+      f.tu.focus();
+    });
+    loadDeck();
+    return;
+  }
+
+  let st = ["BAN_NHAP", "DA_XUAT_BAN", "DA_AN"].includes(p.trangThai) ? p.trangThai : "";
+  let pageNo = Number(p.page || 0);
+  let items = [];
+  const sf = $("search");
+  sf.q.value = p.q || "";
+
+  function load() {
+    document.querySelectorAll("#tabs [data-st]").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.st === st)));
+    const params = new URLSearchParams();
+    if (st) params.set("trangThai", st);
+    if (sf.q.value.trim()) params.set("q", sf.q.value.trim());
+    params.set("page", pageNo);
+    const qs = "?" + params.toString();
+    history.replaceState(null, "", qs);
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/admin/decks" + qs),
+      isEmpty: (d) => !d.items.length,
+      empty: () => { $("total").textContent = "0 bộ"; $("empty-title").textContent = st || sf.q.value.trim() ? "Không có bộ nào khớp bộ lọc" : "Chưa có bộ mẫu nào"; },
+      render: (d) => {
+        items = d.items;
+        $("total").textContent = d.totalElements + " bộ";
+        $("list").innerHTML = d.items.map((x, i) => '<li class="answer-row d-row" data-id="' + x.id + '"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main"><a class="d-name" href="quan-tri-bo-mau.html?id=' + x.id + '" style="color:inherit">' + VL.esc(x.ten) + "</a>" + (x.moTa ? '<div class="d-desc">' + VL.esc(x.moTa) + "</div>" : "") + '<div class="answer-meta">' + metaHtml(x) + '</div><div class="tools">' + toolsHtml(x, true) + "</div></div></li>").join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+  $("list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const d = items.find((x) => x.id === b.closest("[data-id]").dataset.id);
+    deckAction(b.dataset.act, d, load);
+  });
+  $("create").addEventListener("click", async () => {
+    const d = await deckDialog(null);
+    if (d) { VL.toast("Đã tạo bộ mẫu"); location.href = "quan-tri-bo-mau.html?id=" + d.id; }
+  });
+  $("tabs").addEventListener("click", (e) => { const t = e.target.closest("[data-st]"); if (t) { st = t.dataset.st; pageNo = 0; load(); } });
+  sf.addEventListener("submit", (e) => { e.preventDefault(); pageNo = 0; load(); });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chọn phiên học – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .deck-choice .choice-title { overflow-wrap: anywhere; }
+  .deck-choice .choice-desc { display: flex; flex-wrap: wrap; gap: 2px var(--sp-3); }
+  .form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+  .rate-table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+  .rate-table th, .rate-table td { text-align: left; padding: var(--sp-2) var(--sp-2) var(--sp-2) 0; border-bottom: var(--rule) dashed var(--primary-line); vertical-align: top; }
+  .rate-table th { font-family: var(--font-form); font-stretch: var(--stretch-form); color: var(--primary); white-space: nowrap; }
+  .queue-order { margin: 0; padding-left: 1.2rem; display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="today" data-auth="required">
+<!-- F2.2 · UI18 · API: GET /learning/today (B2.2) để lấy danh sách bộ và số thẻ cần ôn, POST /learning/sessions {boTheId, chieuHoc, quyThoiGian, cheDo} (B2.3) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Phiên học</span><span>Chọn bộ, chiều và thời gian</span></div>
+            <a class="btn btn-quiet" href="hom-nay.html" style="justify-self:start;margin-left:-12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Hôm nay</a>
+            <h1 id="page-title">Chọn phiên học</h1>
+            <p>Hệ thống xếp thẻ theo thứ tự: bước học lại đến hạn, thẻ ôn quá hạn và đến hạn, rồi mới đến từ mới trong hạn mức.</p>
+          </div>
+
+          <div data-view="loading" id="region">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="error"></div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+                <h2>Chưa có bộ thẻ nào để học</h2>
+                <p>Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ thẻ trước.</p>
+                <div class="row"><a class="btn btn-primary" href="../dot1/thu-vien.html">Xem thư viện</a><a class="btn btn-secondary" href="../dot1/bo-the-tao.html">Tạo bộ thẻ</a></div>
+              </div>
+            </div>
+            <form data-when="ready" id="form" class="stack-lg" novalidate>
+              <fieldset class="fieldset" data-field="boTheId">
+                <legend>Bộ thẻ</legend>
+                <div class="choice-grid" id="decks"></div>
+              </fieldset>
+              <fieldset class="fieldset field" data-field="chieuHoc">
+                <legend>Chiều học</legend>
+                <div class="choice-grid cols-2">
+                  <label class="choice choice-card"><input type="radio" name="chieuHoc" value="EN_VI" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Anh → Việt</span><span class="choice-desc">Mặt trước là từ tiếng Anh, bạn nhớ lại nghĩa</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="chieuHoc" value="VI_EN"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Việt → Anh</span><span class="choice-desc">Mặt trước là nghĩa tiếng Việt, bạn nhớ lại từ</span></span></label>
+                </div>
+                <p class="field-hint">Mỗi chiều có lịch ôn riêng. Học chiều này không làm thay đổi lịch của chiều kia.</p>
+                <p class="field-error"></p>
+              </fieldset>
+              <fieldset class="fieldset field" data-field="quyThoiGian">
+                <legend>Thời gian</legend>
+                <div class="choice-grid cols-3">
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 phút</span><span class="choice-desc">khoảng 20 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 phút</span><span class="choice-desc">khoảng 40 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 phút</span><span class="choice-desc">khoảng 80 lượt</span></span></label>
+                </div>
+                <p class="field-hint">Số lượt là ước tính theo 15 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
+                <p class="field-error"></p>
+              </fieldset>
+              <div data-form-error hidden></div>
+              <div class="form-foot">
+                <button type="submit" class="btn btn-accent btn-lg" id="submit">Bắt đầu học</button>
+                <a class="btn btn-quiet" href="hom-nay.html">Hủy</a>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="rate-title">
+            <h2 class="panel-title" id="rate-title">Bốn mức tự đánh giá</h2>
+            <table class="rate-table">
+              <thead><tr><th scope="col">Mức</th><th scope="col">Khi nào chọn</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Quên <span class="kbd">1</span></th><td>Không nhớ ra, hoặc nhớ sai</td></tr>
+                <tr><th scope="row">Khó <span class="kbd">2</span></th><td>Nhớ ra nhưng phải nghĩ lâu</td></tr>
+                <tr><th scope="row">Nhớ <span class="kbd">3</span></th><td>Nhớ đúng trong vài giây</td></tr>
+                <tr><th scope="row">Dễ <span class="kbd">4</span></th><td>Biết ngay, không cần nghĩ</td></tr>
+              </tbody>
+            </table>
+            <p class="small muted" style="margin-top:var(--sp-3)">Chọn theo trí nhớ thật của bạn. Đây không phải điểm số, chỉ dùng để xếp lịch ôn.</p>
+          </section>
+          <section class="panel" aria-labelledby="key-title">
+            <h2 class="panel-title" id="key-title">Phím tắt khi học</h2>
+            <ul class="queue-order" style="list-style:none;padding:0">
+              <li><span class="kbd">Space</span> Lật thẻ</li>
+              <li><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> <span class="kbd">4</span> Quên, Khó, Nhớ, Dễ</li>
+              <li><span class="kbd">P</span> Nghe phát âm</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const form = document.getElementById("form");
+  const btn = document.getElementById("submit");
+
+  VL.load(document.getElementById("region"), {
+    fetch: () => VL.api("GET", "/learning/today"),
+    isEmpty: (d) => !d.boThe.length,
+    render: (d) => {
+      const all = d.boThe.reduce((a, b) => ({ soCanOn: a.soCanOn + b.soCanOn, soMoi: a.soMoi + b.soMoi }), { soCanOn: 0, soMoi: 0 });
+      const opt = (id, name, b) => '<label class="choice choice-card deck-choice"><input type="radio" name="boTheId" value="' + id + '"' + ((p.boTheId || "") === id ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + VL.esc(name) + '</span><span class="choice-desc"><span>' + b.soCanOn + " thẻ cần ôn</span><span>" + b.soMoi + " từ chưa học</span></span></span></label>";
+      document.getElementById("decks").innerHTML = opt("", "Tất cả bộ của tôi", all) + d.boThe.map((b) => opt(b.boTheId, b.ten, b)).join("");
+      if (!form.querySelector('[name="boTheId"]:checked')) form.querySelector('[name="boTheId"]').checked = true;
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    VL.busy(btn, async () => {
+      try {
+        const s = await VL.api("POST", "/learning/sessions", { boTheId: form.boTheId.value || null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.quyThoiGian.value), cheDo: "THUONG" });
+        location.href = "hoc-phien.html?id=" + s.id;
+      } catch (err) { VL.showErrors(form, err); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

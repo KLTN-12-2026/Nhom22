@@ -40,6 +40,8 @@
             <h1 id="deck-title" class="deck-title"></h1>
             <p id="deck-desc"></p>
             <div class="actions">
+              <a class="btn btn-accent" id="study" href="../dot2/hoc.html">Học bộ này</a>
+              <a class="btn btn-secondary" id="progress" href="../dot2/bo-the-tien-do.html">Tiến độ</a>
               <a class="btn btn-primary" id="add" href="the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Thêm thẻ</a>
               <a class="btn btn-secondary" id="import" href="nhap-csv.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Nhập CSV</a>
               <button type="button" class="btn btn-quiet" id="export"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Xuất CSV</button>
@@ -115,6 +117,8 @@
       document.getElementById("deck-title").textContent = d.name;
       document.getElementById("deck-desc").textContent = d.description || "Chưa có mô tả.";
       document.getElementById("add").href = "the-tao.html?deckId=" + d.id;
+      document.getElementById("study").href = "../dot2/hoc.html?boTheId=" + d.id;
+      document.getElementById("progress").href = "../dot2/bo-the-tien-do.html?id=" + d.id;
       document.getElementById("import").href = "nhap-csv.html?deckId=" + d.id;
       document.getElementById("edit").href = "bo-the-tao.html?id=" + d.id;
       document.getElementById("empty-actions").innerHTML = '<a class="btn btn-primary" href="the-tao.html?deckId=' + d.id + '">Thêm thẻ</a><a class="btn btn-secondary" href="nhap-csv.html?deckId=' + d.id + '">Nhập CSV</a>';

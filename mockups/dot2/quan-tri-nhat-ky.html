@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nhật ký quản trị – Quản trị VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .tab[aria-disabled="true"] { color: var(--ink-3); cursor: not-allowed; }
+  .filters { display: grid; gap: var(--sp-3); margin: var(--sp-4) 0; }
+  @media (min-width: 720px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1200px) { .filters { grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1.4fr)) repeat(2, minmax(0, 1fr)); } }
+  .filters .foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .l-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .l-row:hover { background: none; }
+  .l-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+  .l-action { font-weight: 650; }
+  .l-obj { overflow-wrap: anywhere; }
+  .l-reason { font-size: var(--fs-small); padding: var(--sp-2) var(--sp-3); border-left: var(--rule-strong) solid var(--primary-line); background: var(--field); overflow-wrap: anywhere; }
+  .l-diff summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: var(--fs-small); min-height: var(--tap); display: inline-flex; align-items: center; }
+  .l-diff td { overflow-wrap: anywhere; }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+</style>
+</head>
+<body data-root=".." data-nav="admin-audit" data-auth="required" data-role="ADMIN">
+<!-- F2.8 · UI53 · API: GET /admin/audit-logs?hanhDong&loai&q&tuNgay&denNgay&page&size (B2.11); tab Tác vụ nền: GET /admin/jobs (B3.11, Đợt 3) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Quản trị</span><span id="total">—</span></div>
+            <h1 id="page-title">Nhật ký quản trị</h1>
+            <p>Mọi thao tác quản trị quan trọng: ai làm, làm gì, trên đối tượng nào, vì sao, và giá trị trước, sau. Nhật ký chỉ đọc, không sửa hay xóa được.</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Loại nhật ký">
+            <button type="button" class="tab" role="tab" aria-selected="true" id="t-admin">Thao tác quản trị</button>
+            <button type="button" class="tab" role="tab" aria-selected="false" aria-disabled="true" title="Có ở Đợt 3">Tác vụ nền <span class="stamp stamp-quiet">Đợt 3</span></button>
+          </div>
+          <form class="filters" id="filters" role="search" novalidate>
+            <div class="field">
+              <label class="field-label" for="q">Tìm theo người làm, đối tượng hoặc lý do</label>
+              <input class="input" type="search" id="q" name="q" maxlength="100" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field-label" for="act">Hành động</label>
+              <select class="select" id="act" name="hanhDong"><option value="">Tất cả hành động</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="kind">Đối tượng</label>
+              <select class="select" id="kind" name="loai"><option value="">Tất cả đối tượng</option><option value="NGUOI_DUNG">Tài khoản</option><option value="BO_THE">Bộ mẫu</option><option value="THE_TU_VUNG">Thẻ mẫu</option></select>
+            </div>
+            <div class="field" data-field="tuNgay">
+              <label class="field-label" for="tuNgay">Từ ngày</label>
+              <input class="input" type="date" id="tuNgay" name="tuNgay">
+              <p class="field-error"></p>
+            </div>
+            <div class="field" data-field="denNgay">
+              <label class="field-label" for="denNgay">Đến ngày</label>
+              <input class="input" type="date" id="denNgay" name="denNgay">
+              <p class="field-error"></p>
+            </div>
+            <div class="foot">
+              <button type="submit" class="btn btn-primary">Lọc nhật ký</button>
+              <button type="button" class="btn btn-quiet" id="clear">Xóa bộ lọc</button>
+            </div>
+          </form>
+          <div data-view="loading" id="region" role="tabpanel" aria-labelledby="t-admin" aria-live="polite">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <h2 id="empty-title">Chưa có thao tác nào</h2>
+                <p id="empty-text">Khi quản trị viên khóa tài khoản, đổi vai trò hay sửa bộ mẫu, thao tác sẽ hiện ở đây.</p>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const me = VL.me();
+  if (!me || !me.vaiTro.includes("ADMIN")) return;
+  const $ = (x) => document.getElementById(x);
+  const form = $("filters");
+  const p = VL.params();
+  const ACTION = {
+    KHOA_TAI_KHOAN: "Khóa tài khoản", MO_KHOA_TAI_KHOAN: "Mở khóa tài khoản", CAP_QUYEN_QUAN_TRI: "Cấp quyền quản trị", THU_QUYEN_QUAN_TRI: "Thu quyền quản trị",
+    TAO_BO_MAU: "Tạo bộ mẫu", SUA_BO_MAU: "Sửa bộ mẫu", XUAT_BAN_BO_MAU: "Xuất bản bộ mẫu", CHUYEN_VE_NHAP: "Chuyển bộ về nháp", AN_BO_MAU: "Ẩn bộ mẫu", HIEN_BO_MAU: "Hiện lại bộ mẫu", XOA_BO_MAU: "Xóa bộ mẫu",
+    TAO_THE_MAU: "Thêm thẻ mẫu", SUA_THE_MAU: "Sửa thẻ mẫu", XOA_THE_MAU: "Xóa thẻ mẫu"
+  };
+  const KIND = { NGUOI_DUNG: "Tài khoản", BO_THE: "Bộ mẫu", THE_TU_VUNG: "Thẻ mẫu" };
+  const FIELD = { trangThai: "Trạng thái", vaiTro: "Vai trò", quyenTruyCap: "Xuất bản", trangThaiKiemDuyet: "Kiểm duyệt", ten: "Tên", moTa: "Mô tả", mucTieu: "Mục tiêu", chuDeId: "Chủ đề", trinhDo: "Trình độ", tu: "Từ", nghiaVi: "Nghĩa", tuLoai: "Từ loại", phienAm: "Phiên âm", viDuEn: "Ví dụ", dichVi: "Dịch ví dụ" };
+  const VALUE = { HOAT_DONG: "Đang hoạt động", BI_KHOA: "Bị khóa", CHUA_XAC_THUC: "Chưa xác thực", DANG_XOA: "Đang xóa", ADMIN: "Quản trị viên", USER: "Người học", CONG_KHAI: "Đã xuất bản", RIENG_TU: "Bản nháp", BINH_THUONG: "Bình thường", DA_AN: "Đã ẩn" };
+  const today = VLDemo.localDate(Date.now(), me.muiGio || "Asia/Ho_Chi_Minh");
+  $("act").insertAdjacentHTML("beforeend", Object.keys(ACTION).map((k) => '<option value="' + k + '">' + ACTION[k] + "</option>").join(""));
+  $("tuNgay").max = $("denNgay").max = today;
+  ["q", "hanhDong", "loai", "tuNgay", "denNgay"].forEach((k) => { if (p[k]) form[k].value = p[k]; });
+  let pageNo = Number(p.page || 0);
+
+  const show = (v) => {
+    if (v === null || v === undefined || v === "") return '<span class="muted">(trống)</span>';
+    if (Array.isArray(v)) return v.map((x) => VALUE[x] || VL.esc(x)).join(", ");
+    return VALUE[v] || VL.GOAL[v] || VL.LEVEL[v] || VL.esc(String(v));
+  };
+  function diff(a) {
+    const keys = [...new Set(Object.keys(a.truoc || {}).concat(Object.keys(a.sau || {})))];
+    if (!keys.length) return "";
+    return '<details class="l-diff"><summary>Trước và sau (' + keys.length + " trường)</summary>" + '<div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Trường</th><th scope="col">Trước</th><th scope="col">Sau</th></tr></thead><tbody>' +
+      keys.map((k) => '<tr><th scope="row">' + (FIELD[k] || VL.esc(k)) + "</th><td>" + show(a.truoc ? a.truoc[k] : null) + "</td><td>" + show(a.sau ? a.sau[k] : null) + "</td></tr>").join("") + "</tbody></table></div></details>";
+  }
+  function objLink(o) {
+    if (!o) return "";
+    const name = VL.esc(o.ten.length > 90 ? o.ten.slice(0, 90) + "…" : o.ten);
+    const href = o.loai === "NGUOI_DUNG" ? "quan-tri-tai-khoan.html?q=" + encodeURIComponent(o.ten) : o.loai === "BO_THE" ? "quan-tri-bo-mau.html?id=" + o.id : null;
+    return KIND[o.loai] + ": " + (href ? '<a href="' + href + '">' + name + "</a>" : name);
+  }
+
+  function load() {
+    VL.clearErrors(form);
+    if (form.tuNgay.value && form.denNgay.value && form.tuNgay.value > form.denNgay.value) { VL.setFieldError(form, "tuNgay", "Ngày bắt đầu phải trước ngày kết thúc"); form.tuNgay.focus(); return; }
+    const params = new URLSearchParams();
+    ["q", "hanhDong", "loai", "tuNgay", "denNgay"].forEach((k) => { const v = form[k].value.trim(); if (v) params.set(k, v); });
+    const filtered = [...params.keys()].length > 0;
+    params.set("page", pageNo);
+    const qs = "?" + params.toString();
+    history.replaceState(null, "", qs);
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/admin/audit-logs" + qs),
+      isEmpty: (d) => !d.items.length,
+      empty: () => {
+        $("total").textContent = "0 mục";
+        $("empty-title").textContent = filtered ? "Không có mục nào khớp bộ lọc" : "Chưa có thao tác nào";
+        $("empty-text").textContent = filtered ? "Thử bỏ bớt điều kiện hoặc mở rộng khoảng ngày." : "Khi quản trị viên khóa tài khoản, đổi vai trò hay sửa bộ mẫu, thao tác sẽ hiện ở đây.";
+      },
+      render: (d) => {
+        $("total").textContent = d.totalElements + " mục";
+        $("list").innerHTML = d.items.map((a, i) =>
+          '<li class="answer-row l-row"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main">' +
+          '<div class="l-head"><span class="l-action">' + (ACTION[a.hanhDong] || VL.esc(a.hanhDong)) + '</span><span class="l-obj">' + objLink(a.doiTuong) + "</span></div>" +
+          '<div class="answer-meta"><span>' + VL.esc(a.nguoiThucHien.tenHienThi) + "</span><time datetime=\"" + a.createdAt + '">' + VL.fmtDateTime(a.createdAt) + "</time></div>" +
+          (a.lyDo ? '<div class="l-reason"><strong>Lý do:</strong> ' + VL.esc(a.lyDo) + "</div>" : "") + diff(a) + "</div></li>").join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+
+  form.addEventListener("submit", (e) => { e.preventDefault(); pageNo = 0; load(); });
+  form.addEventListener("change", (e) => { if (e.target.tagName === "SELECT") { pageNo = 0; load(); } });
+  $("clear").addEventListener("click", () => { form.reset(); pageNo = 0; load(); });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+  load();
+})();
+</script>
+</body>
+</html>

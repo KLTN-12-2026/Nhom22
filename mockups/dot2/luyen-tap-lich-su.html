@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lịch sử bài luyện – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .score { font-family: var(--font-form); font-stretch: 80%; font-weight: 800; font-size: 1.375rem; white-space: nowrap; text-align: right; }
+  .score small { display: block; font-size: var(--fs-caption); font-weight: 600; color: var(--ink-2); }
+  .bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .bar .field { flex: 0 1 280px; }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+</style>
+</head>
+<body data-root=".." data-nav="practice" data-auth="required">
+<!-- F2.5 · UI26 · API: GET /practice/history?loaiBai&page&size (B2.8) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Luyện tập</span><span id="total">—</span></div>
+            <a class="btn btn-quiet" href="luyen-tap.html" style="justify-self:start;margin-left:-12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Chọn dạng bài</a>
+            <h1 id="page-title">Lịch sử bài luyện</h1>
+            <p>Mở một bài để xem lại đáp án, giải thích và luyện lại câu sai.</p>
+          </div>
+          <div class="bar">
+            <div class="field">
+              <label class="field-label" for="type">Dạng bài</label>
+              <select class="select" id="type"><option value="">Tất cả dạng bài</option></select>
+            </div>
+          </div>
+          <div data-view="loading" id="region" aria-live="polite">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+                <h2 id="empty-title">Bạn chưa làm bài luyện nào</h2>
+                <p>Làm một bài ngắn 5 câu để biết mình hay sai ở đâu.</p>
+                <a class="btn btn-primary" href="luyen-tap.html">Chọn dạng bài</a>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const $ = (x) => document.getElementById(x);
+  const p = VL.params();
+  let pageNo = Number(p.page || 0);
+  const sel = $("type");
+  sel.insertAdjacentHTML("beforeend", Object.keys(VL.PRACTICE).map((k) => '<option value="' + k + '">' + VL.PRACTICE[k] + "</option>").join(""));
+  sel.value = p.loaiBai || "";
+
+  function load() {
+    const q = "?page=" + pageNo + (sel.value ? "&loaiBai=" + sel.value : "");
+    history.replaceState(null, "", q);
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/practice/history" + q),
+      isEmpty: (d) => !d.items.length,
+      empty: () => { $("total").textContent = "0 bài"; $("empty-title").textContent = sel.value ? "Chưa có bài " + VL.PRACTICE[sel.value].toLowerCase() : "Bạn chưa làm bài luyện nào"; },
+      render: (d) => {
+        $("total").textContent = d.totalElements + " bài";
+        $("list").innerHTML = d.items.map((a, i) =>
+          '<li class="answer-row"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main"><a class="answer-title" href="luyen-tap-ket-qua.html?id=' + a.baiLuyenId + '">' + VL.PRACTICE[a.loaiBai] + '</a><div class="answer-meta">' +
+          (a.laLuyenLai ? '<span class="stamp stamp-quiet">Luyện lại</span>' : "") + "<span>" + VL.esc(a.boTheTen) + "</span><span>" + VL.fmtDateTime(a.nopAt) + "</span><span>" + VL.fmtDuration(Math.round(a.thoiGianMs / 1000)) + "</span>" +
+          (a.soCauSai ? "<span>" + a.soCauSai + " câu sai</span>" : '<span class="stamp stamp-success">' + VL.icon("check") + "Đúng hết</span>") + '</div></div><div class="score">' + a.soCauDung + "/" + a.tongSoCau + "<small>" + a.diem + " điểm</small></div></li>").join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+  sel.addEventListener("change", () => { pageNo = 0; load(); });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+  load();
+})();
+</script>
+</body>
+</html>

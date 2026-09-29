@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tiến độ bộ thẻ – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .deck-title { overflow-wrap: anywhere; }
+  .prog-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .prog-row:hover { background: none; }
+  .dirs { display: grid; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .dir { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+  .dir-name { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 650; color: var(--primary); min-width: 6.5rem; }
+  .row-tools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
+  .hist { margin-top: var(--sp-2); }
+  .toolbar-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-3); margin: var(--sp-4) 0 var(--sp-3); }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+</style>
+</head>
+<body data-root=".." data-nav="decks" data-auth="required">
+<!-- F2.3 · UI21 · API: GET /decks/{id} (B1.8), GET /decks/{id}/progress?nhom&q&page (dự kiến, cần bổ sung vào B2.5), PUT /cards/{id}/progress/suspend {tamNgung}, POST /cards/{id}/progress/reset, GET /learning/history?theId (B2.5) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <a class="btn btn-quiet" id="back" href="../dot1/bo-the.html" style="margin:0 0 var(--sp-3) -12px"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Về bộ thẻ</a>
+          <div class="form-head">
+            <div class="form-code"><span>Tiến độ bộ thẻ</span><span id="tz"></span></div>
+            <h1 id="page-title" class="deck-title">Tiến độ</h1>
+            <p>Mỗi thẻ có hai chiều học, mỗi chiều một lịch ôn riêng. Quá hạn nghĩa là trễ từ hôm trước trở đi.</p>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Lọc theo trạng thái" id="tabs"></div>
+          <div class="toolbar-row">
+            <div class="input-with-icon" style="flex:1 1 220px;max-width:320px">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <label class="sr-only" for="q">Tìm thẻ</label>
+              <input class="input" id="q" type="search" placeholder="Tìm từ hoặc nghĩa" autocomplete="off">
+            </div>
+          </div>
+
+          <div data-view="loading" id="region" role="tabpanel">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+                <h2 id="empty-title">Không có thẻ nào ở trạng thái này</h2>
+                <p id="empty-text">Chọn trạng thái khác hoặc xóa từ khóa tìm kiếm.</p>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="sum-title">
+            <h2 class="panel-title" id="sum-title">Tổng hợp, mỗi chiều tính riêng</h2>
+            <dl class="tally" id="sum"></dl>
+            <a class="btn btn-accent" id="study" href="hoc.html" style="margin-top:var(--sp-4)">Học bộ này</a>
+          </section>
+          <section class="panel" aria-labelledby="rule-title">
+            <h2 class="panel-title" id="rule-title">Tạm ngưng và đặt lại</h2>
+            <ul class="small muted" style="padding-left:1.1rem;display:grid;gap:var(--sp-2)">
+              <li><strong>Tạm ngưng</strong>: thẻ không vào phiên học nữa. Khôi phục thì thẻ giữ nguyên lịch cũ, kể cả khi đã trễ.</li>
+              <li><strong>Đặt lại</strong>: cả hai chiều quay về trạng thái Mới. Lịch sử ôn cũ vẫn được giữ.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const $ = (x) => document.getElementById(x);
+  const p = VL.params();
+  const id = p.id || "21";
+  const GROUPS = [["", "Tất cả"], ["MOI", "Mới"], ["DANG_HOC", "Đang học"], ["DEN_HAN", "Đến hạn"], ["QUA_HAN", "Quá hạn"], ["TAM_NGUNG", "Tạm ngưng"]];
+  const STAMP = { MOI: "stamp-quiet", DANG_HOC: "", DEN_HAN: "stamp-solid", QUA_HAN: "stamp-warning", TAM_NGUNG: "stamp-graphite" };
+  let nhom = p.nhom || "";
+  let pageNo = 0;
+  $("back").href = "../dot1/bo-the-chi-tiet.html?id=" + id;
+  $("study").href = "hoc.html?boTheId=" + id;
+
+  function when(c) {
+    if (c.nhom === "MOI") return "Chưa học";
+    if (c.nhom === "TAM_NGUNG") return "Không vào phiên học";
+    if (c.nhom === "QUA_HAN") return "Đến hạn từ " + new Date(c.hanOnAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", timeZone: VL.me().muiGio }) + ", đang trễ";
+    if (c.nhom === "DEN_HAN") return "Đến hạn " + VL.fmtTime(c.hanOnAt) + " hôm nay";
+    return "Ôn lại sau " + c.khoangHienThi;
+  }
+  function dirHtml(dir, c) {
+    return '<div class="dir"><span class="dir-name">' + VL.DIR[dir] + '</span><span class="stamp ' + STAMP[c.nhom] + '">' + GROUPS.find((g) => g[0] === c.nhom)[1] + "</span>" +
+      (c.trangThai !== c.nhom && ["ON_TAP", "HOC_LAI"].includes(c.trangThai) ? "<span>" + VL.SRS_STATE[c.trangThai] + "</span>" : "") +
+      "<span>" + when(c) + "</span>" + (c.soLanQuen ? "<span>Quên " + c.soLanQuen + " lần</span>" : "") + "</div>";
+  }
+
+  function load() {
+    const q = $("q").value.trim();
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/decks/" + encodeURIComponent(id) + "/progress?page=" + pageNo + (nhom ? "&nhom=" + nhom : "") + (q ? "&q=" + encodeURIComponent(q) : "")).then((d) => { renderHead(d); return d; }),
+      isEmpty: (d) => !d.items.length,
+      render: (d) => {
+        $("list").innerHTML = d.items.map((it, i) =>
+          '<li class="answer-row prog-row"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main">' +
+          '<div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(it.tu) + "</span>" + (it.phienAm ? '<span class="entry-ipa" lang="en">' + VL.esc(it.phienAm) + "</span>" : "") + (it.tuLoai ? '<span class="pos" lang="en">' + VL.esc(it.tuLoai) + "</span>" : "") + "</div>" +
+          '<p class="entry-mean">' + VL.esc(it.nghiaVi) + '</p><div class="dirs">' + dirHtml("EN_VI", it.chieu.EN_VI) + dirHtml("VI_EN", it.chieu.VI_EN) + "</div>" +
+          '<div class="row-tools">' + (it.tamNgung
+            ? '<button type="button" class="btn btn-secondary btn-sm" data-act="resume" data-id="' + it.theId + '" data-word="' + VL.esc(it.tu) + '">Khôi phục</button>'
+            : '<button type="button" class="btn btn-secondary btn-sm" data-act="suspend" data-id="' + it.theId + '" data-word="' + VL.esc(it.tu) + '">' + VL.icon("pause") + "Tạm ngưng</button>") +
+          '<button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-act="reset" data-id="' + it.theId + '" data-word="' + VL.esc(it.tu) + '">' + VL.icon("refresh") + "Đặt lại</button>" +
+          '<button type="button" class="btn btn-quiet btn-sm" data-act="hist" data-id="' + it.theId + '" aria-expanded="false">Lịch sử ôn</button></div>' +
+          '<div class="hist" id="hist-' + it.theId + '" hidden></div></div></li>').join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+  function renderHead(d) {
+    document.title = "Tiến độ: " + d.ten + " – VocabLearning";
+    $("page-title").textContent = d.ten;
+    $("tz").textContent = "Múi giờ " + d.muiGio;
+    const t = d.tongHop;
+    $("tabs").innerHTML = GROUPS.map((g) => '<button class="tab" role="tab" aria-selected="' + (g[0] === nhom) + '" data-nhom="' + g[0] + '">' + g[1] + (g[0] ? ' <span class="count">' + t[g[0]] + "</span>" : "") + "</button>").join("");
+    $("sum").innerHTML = GROUPS.slice(1).map((g) => "<div><dt>" + g[1] + '</dt><dd><span class="tally-n" style="font-size:1.375rem">' + t[g[0]] + "</span>thẻ</dd></div>").join("");
+  }
+
+  $("tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-nhom]"); if (!b) return; nhom = b.dataset.nhom; pageNo = 0; load(); });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+  let t;
+  $("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { pageNo = 0; load(); }, 300); });
+
+  $("list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const word = b.dataset.word;
+    if (b.dataset.act === "hist") {
+      const box = $("hist-" + b.dataset.id);
+      const open = b.getAttribute("aria-expanded") === "true";
+      b.setAttribute("aria-expanded", String(!open));
+      box.hidden = open;
+      if (open) return;
+      box.innerHTML = '<div class="skeleton"><div class="sk sk-line"></div></div>';
+      try {
+        const h = await VL.api("GET", "/learning/history?theId=" + b.dataset.id + "&size=10");
+        box.innerHTML = h.items.length ? '<div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Lúc</th><th scope="col">Chiều</th><th scope="col">Mức</th><th scope="col">Trước</th><th scope="col">Sau</th></tr></thead><tbody>' +
+          h.items.map((r) => "<tr><td>" + VL.fmtDateTime(r.createdAt) + "</td><td>" + VL.DIR[r.chieuHoc] + "</td><td>" + VL.RATING[r.danhGia] + "</td><td>" + VL.SRS_STATE[r.truoc.trangThai] + "</td><td>" + VL.SRS_STATE[r.sau.trangThai] + "</td></tr>").join("") + "</tbody></table></div>"
+          : '<p class="small muted">Thẻ này chưa có lượt ôn nào.</p>';
+      } catch (err) { box.innerHTML = '<p class="small" style="color:var(--danger)">' + VL.esc(err.message) + "</p>"; }
+      return;
+    }
+    const cfg = {
+      suspend: { title: "Tạm ngưng thẻ “" + word + "”?", message: "Cả hai chiều sẽ không vào phiên học cho đến khi bạn khôi phục.", confirmText: "Tạm ngưng", toast: "Đã tạm ngưng thẻ" },
+      resume: { title: "Khôi phục thẻ “" + word + "”?", message: "Thẻ quay lại lịch cũ. Nếu lịch cũ đã qua, thẻ sẽ hiện là quá hạn.", confirmText: "Khôi phục", toast: "Đã khôi phục thẻ" },
+      reset: { title: "Đặt lại tiến độ “" + word + "”?", message: "Cả hai chiều quay về trạng thái Mới và học lại từ đầu. Lịch sử ôn cũ vẫn được giữ. Không hoàn tác được.", confirmText: "Đặt lại tiến độ", danger: true, toast: "Đã đặt lại tiến độ" }
+    }[b.dataset.act];
+    if (!(await VL.confirm(cfg))) return;
+    VL.busy(b, async () => {
+      try {
+        if (b.dataset.act === "reset") await VL.api("POST", "/cards/" + b.dataset.id + "/progress/reset");
+        else await VL.api("PUT", "/cards/" + b.dataset.id + "/progress/suspend", { tamNgung: b.dataset.act === "suspend" });
+        VL.toast(cfg.toast);
+        load();
+      } catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+  load();
+})();
+</script>
+</body>
+</html>
