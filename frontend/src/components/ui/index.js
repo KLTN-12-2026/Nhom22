@@ -1,4 +1,4 @@
-// Barrel export — import từ '@/components/ui'
+export { Icon } from './Icon';
 export { Button }        from './Button';
 export { Input }         from './Input';
 export { Select }        from './Select';
