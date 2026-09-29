@@ -23,7 +23,7 @@ public class RateLimiter {
     private final StringRedisTemplate redis;
 
     public void check(Policy policy, String subject) {
-        String key = "rl:" + policy.action() + ":" + subject;
+        String key = key(policy, subject);
         Long count;
         try {
             count = redis.opsForValue().increment(key);
@@ -36,5 +36,17 @@ public class RateLimiter {
         if (count != null && count > policy.limit()) {
             throw new ApiException(ErrorCode.RATE_LIMITED, "Bạn thao tác quá nhiều lần, vui lòng thử lại sau");
         }
+    }
+
+    public void reset(Policy policy, String subject) {
+        try {
+            redis.delete(key(policy, subject));
+        } catch (DataAccessException ex) {
+            throw new ApiException(ErrorCode.DEPENDENCY_DOWN, "Hệ thống tạm thời gián đoạn, vui lòng thử lại sau");
+        }
+    }
+
+    private static String key(Policy policy, String subject) {
+        return "rl:" + policy.action() + ":" + subject;
     }
 }

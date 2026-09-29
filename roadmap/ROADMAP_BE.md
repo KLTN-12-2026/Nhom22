@@ -191,7 +191,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Tạo `nguoi_dung` trạng thái `CHUA_XAC_THUC`; token ngẫu nhiên, **chỉ lưu `token_hash`** (SHA-256), có `het_han_at`, `da_dung_at` (dùng một lần). Email trùng → 409. Rate limit đăng ký/gửi lại.
 - **Xong khi:** token sai/hết hạn/dùng lần 2 bị từ chối; mật khẩu lưu BCrypt.
 
-### [ ] B1.2 Đăng nhập, đăng xuất, thông tin phiên — FR-01
+### [x] B1.2 Đăng nhập, đăng xuất, thông tin phiên — FR-01
 - API: `POST /auth/login`, `POST /auth/logout`, `GET /me`, `GET /auth/csrf`.
 - Chưa xác thực email hoặc bị khóa → từ chối có mã lỗi riêng; sai mật khẩu nhiều lần → 429. Đăng nhập thành công đổi session id (chống fixation). Logout xóa session Redis.
 - **Xong khi:** sau logout, cookie cũ gọi `/me` → 401.
