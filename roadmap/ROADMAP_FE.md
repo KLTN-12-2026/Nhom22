@@ -75,15 +75,15 @@ frontend/
 - `api-client.js`, `ApiError`, `applyServerErrors`, `QueryClient` xử lý 401 toàn cục (GĐ0 report §6). MSW handlers nền.
 - **Xong khi:** `GET /public/ping` chạy với cả MSW và BE thật.
 
-### [ ] F0.4 Layout & bảo vệ route
+### [x] F0.4 Layout & bảo vệ route
 - `PublicLayout` (header, footer), `AppShell` (sidebar desktop, bottom nav mobile), `AdminLayout`.
 - Guard: chưa đăng nhập → `/dang-nhap?next=`; không phải ADMIN → trang 403; chưa onboarding → `/bat-dau`.
 - **Xong khi:** responsive 360px không tràn ngang.
 
-### [ ] F0.5 Trang công khai tĩnh — UI01, UI04, UI05
+### [x] F0.5 Trang công khai tĩnh — UI01, UI04, UI05
 - Giới thiệu, cách học, hướng dẫn, FAQ, chính sách quyền riêng tư, điều khoản.
 
-### [ ] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48 (ko cần thiết)
+### [x] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48 (ko cần thiết)
 - `/ui-mockup` cho từng màn, nối API thật khi đã có.
 
 ## Đợt 1 — Tài khoản & nội dung (S3–S4 · 12/10–25/10) · FR-01…05
