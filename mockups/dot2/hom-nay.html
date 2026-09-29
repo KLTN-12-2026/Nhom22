@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hôm nay – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .start { display: grid; gap: var(--sp-5); margin-top: var(--sp-5); }
+  .start-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+  .done { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
+  .rescue { display: grid; gap: var(--sp-4); }
+  .rescue-lead { font-size: var(--fs-lead); max-width: 52ch; }
+  .rescue-lead strong { font-family: var(--font-form); font-stretch: 80%; font-size: 1.375rem; }
+  .plan-list .answer-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; padding: var(--sp-3) var(--sp-2) var(--sp-3) 0; }
+  .plan-list .answer-title::after { display: none; }
+  .plan-list .when { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; }
+  .streak { display: flex; align-items: baseline; gap: var(--sp-2); }
+  .streak .tally-n { font-size: 2.5rem; }
+  .deck-mini { list-style: none; margin: 0; padding: 0; display: grid; }
+  .deck-mini li { display: grid; gap: 4px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+  .deck-mini li:first-child { padding-top: 0; }
+  .deck-mini .name { font-weight: 650; overflow-wrap: anywhere; }
+  .deck-mini .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+  .goal-line { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
+  .links { display: grid; gap: var(--sp-1); }
+  .links a { justify-content: flex-start; margin-left: -12px; }
+</style>
+</head>
+<body data-root=".." data-nav="today" data-auth="required">
+<!-- F2.1, F2.4 · UI12, UI22 · API: GET /learning/today?phut&giuTuMoi (B2.2, B2.6), POST /learning/sessions (B2.3) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side" data-view="loading" id="region">
+        <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-line"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+        <div data-when="error"></div>
+        <section class="sheet" data-when="empty" aria-labelledby="empty-title">
+          <div class="form-head">
+            <div class="form-code"><span>Hôm nay</span><span class="js-day">—</span></div>
+            <h1 id="empty-title">Hôm nay học gì?</h1>
+          </div>
+          <div class="empty">
+            <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span><span data-n="3"><i></i><i></i><i></i><i></i></span></div>
+            <h2>Bạn chưa có thẻ nào để học</h2>
+            <p>Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ thẻ. Kế hoạch hôm nay sẽ hiện ở đây.</p>
+            <div class="row"><a class="btn btn-primary" href="../dot1/thu-vien.html">Xem thư viện</a><a class="btn btn-secondary" href="../dot1/bo-the-tao.html">Tạo bộ thẻ</a></div>
+          </div>
+        </section>
+
+        <section class="sheet" data-when="ready" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Hôm nay</span><span class="js-day">—</span></div>
+            <h1 id="page-title" tabindex="-1">Hôm nay học gì?</h1>
+            <p id="lead"></p>
+          </div>
+
+          <p class="notice notice-success" id="welcome" hidden style="margin-bottom:var(--sp-5)"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Đã lưu thiết lập học. Chọn thời gian bên dưới rồi bắt đầu phiên học đầu tiên.</span></p>
+
+          <section class="rescue" id="rescue" hidden aria-labelledby="rescue-title">
+            <h2 id="rescue-title" style="font-size:var(--fs-h3)">Kế hoạch học lại sau thời gian nghỉ</h2>
+            <p class="rescue-lead" id="rescue-lead"></p>
+            <form id="rescue-form" class="stack">
+              <fieldset class="fieldset">
+                <legend>Mỗi ngày bạn dành được bao nhiêu phút?</legend>
+                <div class="choice-grid cols-3" id="rescue-minutes"></div>
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend>Ôn chiều nào trước?</legend>
+                <div class="choice-grid cols-2">
+                  <label class="choice choice-card"><input type="radio" name="rescueDir" value="EN_VI" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Anh → Việt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="rescueDir" value="VI_EN"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Việt → Anh</span></span></label>
+                </div>
+              </fieldset>
+              <label class="choice" style="margin-left:calc(var(--sp-2) * -1)">
+                <input type="checkbox" name="pauseNew" checked>
+                <span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+                <span class="choice-body"><span class="choice-title">Tạm dừng từ mới cho đến khi ôn hết thẻ tồn</span><span class="choice-desc">Thẻ quên nhiều và quá hạn lâu nhất được ôn trước.</span></span>
+              </label>
+            </form>
+            <div aria-live="polite">
+              <ol class="answer-list plan-list" id="rescue-plan" role="list"></ol>
+            </div>
+            <p class="notice"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg><span id="rescue-note"></span></p>
+            <div class="start-foot">
+              <button type="button" class="btn btn-accent btn-lg" id="rescue-start">Bắt đầu phiên hôm nay</button>
+              <a class="btn btn-quiet" href="hoc.html">Tự chọn bộ và thời gian</a>
+            </div>
+          </section>
+
+          <div id="normal">
+            <dl class="tally cols-2" id="tally"></dl>
+
+            <form class="start" id="start-form" novalidate hidden>
+              <fieldset class="fieldset">
+                <legend>Hôm nay bạn có bao nhiêu phút?</legend>
+                <div class="choice-grid cols-3" id="minutes"></div>
+              </fieldset>
+              <fieldset class="fieldset">
+                <legend>Chiều học</legend>
+                <div class="choice-grid cols-2">
+                  <label class="choice choice-card"><input type="radio" name="chieuHoc" value="EN_VI" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Anh → Việt</span><span class="choice-desc">Thấy từ tiếng Anh, nhớ lại nghĩa</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="chieuHoc" value="VI_EN"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">Việt → Anh</span><span class="choice-desc">Thấy nghĩa, nhớ lại từ tiếng Anh</span></span></label>
+                </div>
+              </fieldset>
+              <div data-form-error hidden></div>
+              <div class="start-foot">
+                <button type="submit" class="btn btn-accent btn-lg" id="start">Bắt đầu học</button>
+                <a class="btn btn-quiet" href="hoc.html">Chọn bộ khác</a>
+              </div>
+            </form>
+
+            <div class="done" id="done" hidden>
+              <p class="notice notice-success"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span><strong>Hôm nay đã ôn xong.</strong> Không còn thẻ đến hạn và đã đủ từ mới theo thiết lập. Thẻ tiếp theo sẽ đến hạn vào ngày mai.</span></p>
+              <div class="row"><a class="btn btn-primary" href="luyen-tap.html">Làm một bài luyện</a><a class="btn btn-secondary" href="so-tay.html">Xem sổ tay từ khó</a></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="side-col" data-when="ready">
+          <section class="panel" aria-labelledby="streak-title">
+            <h2 class="panel-title" id="streak-title">Chuỗi ngày học</h2>
+            <p class="streak"><span class="tally-n" id="streak-n">0</span><span>ngày liên tiếp</span></p>
+            <p class="small muted" id="streak-note"></p>
+          </section>
+          <section class="panel" aria-labelledby="goal-title">
+            <h2 class="panel-title" id="goal-title">Mục tiêu mỗi ngày</h2>
+            <p class="goal-line"><span id="goal-text"></span><span id="goal-num" class="num"></span></p>
+            <div class="meter is-progress" role="img" id="goal-meter"><span></span></div>
+            <a class="btn btn-quiet" href="../dot1/ca-nhan-hoc-tap.html" style="margin:var(--sp-2) 0 0 -12px">Đổi thiết lập học</a>
+          </section>
+          <section class="panel" aria-labelledby="decks-title">
+            <h2 class="panel-title" id="decks-title">Theo bộ thẻ</h2>
+            <ul class="deck-mini" id="decks" role="list"></ul>
+          </section>
+          <nav class="panel links" aria-label="Liên kết nhanh">
+            <a class="btn btn-quiet" href="thong-ke.html">Xem thống kê học tập</a>
+            <a class="btn btn-quiet" href="../dot1/bo-the.html">Bộ của tôi</a>
+          </nav>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const region = document.getElementById("region");
+  const form = document.getElementById("start-form");
+  let plan;
+  let rescueMinutes = null;
+
+  document.querySelectorAll(".js-day").forEach((el) => { el.textContent = VL.fmtDay(VLDemo.localDate(Date.now(), (VL.me() || {}).muiGio || "Asia/Ho_Chi_Minh"), true); });
+  if (p.welcome) document.getElementById("welcome").hidden = false;
+
+  function choiceMinutes(host, name, values, current) {
+    host.innerHTML = values.map((v) => '<label class="choice choice-card"><input type="radio" name="' + name + '" value="' + v + '"' + (v === current ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + v + ' phút</span><span class="choice-desc">khoảng ' + Math.floor(v * 60 / plan.giayMoiLuot) + " lượt</span></span></label>").join("");
+  }
+  const nearest = (m) => [5, 10, 20].reduce((a, b) => Math.abs(b - m) < Math.abs(a - m) ? b : a, 10);
+
+  function fetchPlan() {
+    const q = [];
+    if (rescueMinutes) q.push("phut=" + rescueMinutes);
+    if (!document.querySelector('[name="pauseNew"]').checked) q.push("giuTuMoi=true");
+    return VL.api("GET", "/learning/today" + (q.length ? "?" + q.join("&") : ""));
+  }
+
+  function renderRescue(r) {
+    const box = document.getElementById("rescue");
+    box.hidden = !r;
+    document.getElementById("normal").hidden = !!r;
+    if (!r) return;
+    document.getElementById("rescue-lead").innerHTML = "Có <strong>" + r.soTheCanOn + "</strong> thẻ cần ôn; hôm nay bạn có <strong>" + r.phutMoiNgay + "</strong> phút. Chia thành " + r.soNgay + " ngày là vừa sức.";
+    if (!document.querySelector('[name="rescueMin"]')) {
+      document.getElementById("rescue-minutes").innerHTML = [5, 10, 20].map((v) => '<label class="choice choice-card"><input type="radio" name="rescueMin" value="' + v + '"' + (v === r.phutMoiNgay ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + v + ' phút mỗi ngày</span><span class="choice-desc">khoảng ' + Math.floor(v * 60 / r.giayMoiLuot) + " lượt</span></span></label>").join("");
+    }
+    document.getElementById("rescue-plan").innerHTML = r.keHoach.map((d, i) =>
+      '<li class="answer-row"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><span class="answer-title">' + (i === 0 ? "Hôm nay" : i === 1 ? "Ngày mai" : VL.fmtDay(d.ngay, true)) + '</span><span class="answer-meta"><span>' + VL.fmtDay(d.ngay) + '</span></span></div><span class="when">' + d.soThe + " thẻ, khoảng " + d.phut + " phút</span></li>").join("");
+    document.getElementById("rescue-note").textContent = "Đây là ước tính, tính theo khoảng " + r.giayMoiLuot + " giây mỗi lượt và sẽ chỉnh theo tốc độ làm bài thực tế. Ngày đến hạn gốc của thẻ vẫn được giữ, nên thống kê vẫn cho thấy đúng số thẻ đang trễ.";
+  }
+
+  function render(d) {
+    plan = d;
+    const canOn = d.soQuaHan + d.soDenHan;
+    document.getElementById("lead").textContent = d.cuuLichOn
+      ? "Bạn nghỉ một thời gian nên có nhiều thẻ trễ hạn. Không cần ôn hết trong một ngày."
+      : canOn + d.soMoiConLai === 0 ? "Không còn thẻ nào cần học hôm nay." : "Có " + canOn + " thẻ cần ôn và " + d.soMoiConLai + " từ mới, cần khoảng " + d.uocTinhPhut + " phút (ước tính).";
+    document.getElementById("tally").innerHTML =
+      "<div><dt>Quá hạn<small>trễ từ hôm trước</small></dt><dd><span class=\"tally-n\">" + d.soQuaHan + "</span>thẻ</dd></div>" +
+      "<div><dt>Đến hạn hôm nay</dt><dd><span class=\"tally-n\">" + d.soDenHan + "</span>thẻ</dd></div>" +
+      "<div><dt>Từ mới còn lại<small>đã học " + d.soTheMoiDaHoc + "/" + d.tuMoiMoiNgay + " từ mới hôm nay</small></dt><dd><span class=\"tally-n\">" + d.soMoiConLai + "</span>từ</dd></div>" +
+      "<div><dt>Thời gian cần<small>ước tính " + d.giayMoiLuot + " giây mỗi lượt</small></dt><dd><span class=\"tally-n\">" + d.uocTinhPhut + "</span>phút</dd></div>";
+    const nothing = canOn + d.soMoiConLai === 0;
+    form.hidden = nothing;
+    document.getElementById("done").hidden = !nothing;
+    if (!document.querySelector('[name="minutes"]')) choiceMinutes(document.getElementById("minutes"), "minutes", [5, 10, 20], nearest(d.phutMoiNgay));
+    renderRescue(d.cuuLichOn);
+
+    document.getElementById("streak-n").textContent = d.chuoiNgay;
+    document.getElementById("streak-note").textContent = (d.homNayDaTinhChuoi ? "Hôm nay đã được tính. " : "Hôm nay chưa được tính. ") + "Một ngày được tính khi bạn hoàn thành một phiên có ít nhất " + d.luotToiThieuChuoi + " lượt ôn.";
+    const pct = Math.min(1, d.daHocHomNay.soPhut / d.phutMoiNgay);
+    document.getElementById("goal-text").textContent = "Đã học " + d.daHocHomNay.soLuot + " lượt hôm nay";
+    document.getElementById("goal-num").textContent = d.daHocHomNay.soPhut + "/" + d.phutMoiNgay + " phút";
+    const meter = document.getElementById("goal-meter");
+    meter.style.setProperty("--v", pct);
+    meter.setAttribute("aria-label", "Đã học " + d.daHocHomNay.soPhut + " trên " + d.phutMoiNgay + " phút mục tiêu");
+    document.getElementById("decks").innerHTML = d.boThe.map((b) =>
+      '<li><span class="name">' + VL.esc(b.ten) + '</span><span class="meta"><span>' + b.soCanOn + " thẻ cần ôn</span><span>" + b.soMoi + ' từ chưa học</span></span><span class="row" style="gap:var(--sp-2)"><a class="btn btn-secondary btn-sm" href="hoc.html?boTheId=' + b.boTheId + '">Học bộ này</a><a class="btn btn-quiet btn-sm" href="bo-the-tien-do.html?id=' + b.boTheId + '">Tiến độ</a></span></li>').join("");
+  }
+
+  VL.load(region, { fetch: fetchPlan, isEmpty: (d) => d.tongSoThe === 0, render });
+
+  document.getElementById("rescue-form").addEventListener("change", async (e) => {
+    if (e.target.name === "rescueDir") return;
+    if (e.target.name === "rescueMin") rescueMinutes = Number(e.target.value);
+    try { const d = await fetchPlan(); plan = d; renderRescue(d.cuuLichOn); } catch (err) { VL.toast(err.message, "error"); }
+  });
+
+  async function start(btn, body) {
+    await VL.busy(btn, async () => {
+      try {
+        const s = await VL.api("POST", "/learning/sessions", body);
+        location.href = "hoc-phien.html?id=" + s.id;
+      } catch (err) {
+        if (err.status === 422) { VL.showErrors(form, err); return; }
+        VL.toast(err.message, "error");
+      }
+    });
+  }
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    start(document.getElementById("start"), { boTheId: null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.minutes.value), cheDo: "THUONG" });
+  });
+  document.getElementById("rescue-start").addEventListener("click", (e) => {
+    const r = plan.cuuLichOn;
+    const dir = document.querySelector('[name="rescueDir"]:checked').value;
+    start(e.currentTarget, { boTheId: null, chieuHoc: dir, quyThoiGian: nearest(r.phutMoiNgay), cheDo: "CUU_LICH" });
+  });
+})();
+</script>
+</body>
+</html>

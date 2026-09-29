@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đang học – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .flash { display: grid; gap: 0; padding-bottom: 0; }
+  .flash .form-code { margin-bottom: 0; }
+  .face { display: grid; justify-items: center; align-content: center; gap: var(--sp-2); text-align: center; min-height: 220px; padding: var(--sp-6) 0 var(--sp-5); }
+  .face-label { justify-self: start; font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: var(--fs-caption); font-weight: 650; color: var(--primary); }
+  .flash-word { font-family: var(--font-word); font-weight: 700; font-size: var(--fs-word); line-height: 1.1; overflow-wrap: anywhere; max-width: 100%; }
+  .flash-mean { font-weight: 700; font-stretch: 92%; font-size: clamp(1.375rem, 1.1rem + 1.4vw, 2rem); line-height: 1.25; overflow-wrap: anywhere; max-width: 32ch; }
+  .flash .ipa { font-size: 1.1875rem; }
+  .back { border-top: var(--rule) dashed var(--primary-line); animation: reveal var(--dur-3) var(--ease-out); }
+  @keyframes reveal { from { opacity: 0; transform: translateY(6px); } }
+  .example { display: grid; gap: 2px; max-width: 52ch; margin-top: var(--sp-3); }
+  .example .en { font-style: italic; color: var(--ink); font-size: 1.0625rem; }
+  .example .vi { color: var(--ink-2); font-size: var(--fs-small); }
+  .back-img { width: min(280px, 100%); aspect-ratio: 4 / 3; object-fit: cover; border: var(--rule) solid var(--primary-line); margin-top: var(--sp-3); }
+  .face-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .actions { position: sticky; bottom: 0; z-index: 5; display: grid; gap: var(--sp-3); padding: var(--sp-3) 0 calc(var(--sp-4) + env(safe-area-inset-bottom)); background: var(--sheet); border-top: var(--rule-strong) solid var(--primary); }
+  .flip { width: 100%; min-height: 56px; font-size: 1.125rem; }
+  .rates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2); }
+  .rate {
+    min-height: 68px; display: grid; place-items: center; gap: 4px; padding: var(--sp-2) 4px;
+    background: var(--field); color: var(--ink); border: 1.5px solid var(--primary); border-radius: var(--radius-btn);
+    font-family: var(--font-form); font-stretch: 90%; font-weight: 650; font-size: 1.0625rem;
+    transition: background var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+  }
+  .rate:hover:not(:disabled) { background: var(--primary-tint); }
+  .rate:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--shadow-press); }
+  .rate:disabled { opacity: 0.5; cursor: not-allowed; }
+  .rate-top { display: inline-flex; align-items: center; gap: 6px; }
+  .rate-when { font-size: var(--fs-caption); color: var(--ink-2); font-weight: 600; }
+  .rate-help summary { cursor: pointer; min-height: var(--tap); display: inline-flex; align-items: center; color: var(--primary); font-weight: 600; font-size: var(--fs-small); }
+  .rate-help ul { list-style: none; margin: 0 0 var(--sp-2); padding: 0; display: grid; gap: 4px; font-size: var(--fs-small); color: var(--ink-2); }
+  .bar-stamps { display: flex; align-items: center; gap: var(--sp-2); }
+  .sync-btn { min-height: 32px; padding: 0 10px; font-size: 0.875rem; }
+  .wait { display: grid; justify-items: center; gap: var(--sp-3); text-align: center; padding: var(--sp-7) var(--sp-3); }
+  .wait .tally-n { font-size: 2.5rem; }
+  .key-help { margin-top: var(--sp-4); font-size: var(--fs-small); color: var(--ink-2); }
+  .key-help summary { cursor: pointer; min-height: var(--tap); display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--primary); font-weight: 600; }
+  .key-help ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+  @media (max-width: 479px) { .bar-stamps .stamp .lbl { display: none; } .rate { font-size: 1rem; } }
+</style>
+</head>
+<body data-root=".." data-nav="study" data-auth="required" class="no-bottom-nav">
+<!-- F2.2 · UI19 · API: GET /learning/sessions/{id} (B2.3), POST /learning/sessions/{id}/reviews {clientEventId, theId, chieuHoc, danhGia, expectedVersion, thoiGianTraLoiMs} (B2.4), POST /learning/sessions/{id}/finish (B2.5), PUT /notebook/{cardId} (B2.9) -->
+<div class="session">
+  <header class="session-bar">
+    <button type="button" class="btn btn-quiet btn-icon" id="exit" aria-label="Kết thúc phiên"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="grow">
+      <p class="bar-title" id="bar-title">Phiên học</p>
+      <p class="bar-sub"><span id="bar-dir"></span><span id="bar-count"></span></p>
+    </div>
+    <div class="bar-stamps">
+      <span class="stamp" id="timer" role="timer" aria-live="off"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="timer-text">--:--</span></span>
+      <span class="stamp stamp-success" id="sync"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span class="lbl" id="sync-text">Đã lưu</span></span>
+    </div>
+  </header>
+  <div class="meter is-progress session-meter" id="progress" role="progressbar" aria-label="Tiến độ phiên" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><span></span></div>
+
+  <main class="session-main" id="main">
+    <p class="sr-only" aria-live="polite" id="live"></p>
+    <div data-view="loading" id="region">
+      <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk" style="height:220px"></div><div class="sk sk-row"></div></div></div></div>
+      <div data-when="error"></div>
+      <div data-when="empty"></div>
+      <div data-when="ready">
+        <div class="notice notice-warning" id="pending-note" hidden style="margin-bottom:var(--sp-3)">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/></svg>
+          <div class="grow"><p class="notice-title" id="pending-title"></p><p class="small">Kết quả được giữ trên máy và gửi lại với đúng mã cũ, nên không bị tính hai lần.</p></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="resend">Gửi lại</button>
+        </div>
+        <p class="notice" id="flash-note" hidden style="margin-bottom:var(--sp-3)"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg><span id="flash-note-text"></span></p>
+
+        <article class="sheet flash" id="card" aria-labelledby="card-head" hidden>
+          <div class="form-head" style="margin-bottom:0;padding-bottom:0;border-bottom:0">
+            <div class="form-code" id="card-head"><span id="card-no"></span><span id="card-state"></span></div>
+          </div>
+          <div class="face" id="front"></div>
+          <div class="face back" id="back" hidden></div>
+          <div class="actions">
+            <button type="button" class="btn btn-primary flip" id="flip">Lật thẻ <span class="kbd">Space</span></button>
+            <div id="rating" hidden>
+              <div class="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
+                <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span><span class="rate-when" data-when-for="QUEN"></span></button>
+                <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span><span class="rate-when" data-when-for="KHO"></span></button>
+                <button type="button" class="rate" data-rate="NHO"><span class="rate-top"><span class="kbd">3</span>Nhớ</span><span class="rate-when" data-when-for="NHO"></span></button>
+                <button type="button" class="rate" data-rate="DE"><span class="rate-top"><span class="kbd">4</span>Dễ</span><span class="rate-when" data-when-for="DE"></span></button>
+              </div>
+              <details class="rate-help">
+                <summary>Khi nào chọn mức nào?</summary>
+                <ul>
+                  <li><strong>Quên</strong>: không nhớ ra, hoặc nhớ sai.</li>
+                  <li><strong>Khó</strong>: nhớ ra nhưng phải nghĩ lâu.</li>
+                  <li><strong>Nhớ</strong>: nhớ đúng trong vài giây.</li>
+                  <li><strong>Dễ</strong>: biết ngay, không cần nghĩ.</li>
+                  <li>Thời gian dưới mỗi nút là lần ôn tiếp theo do máy chủ tính.</li>
+                </ul>
+              </details>
+            </div>
+          </div>
+        </article>
+
+        <section class="sheet wait" id="wait" hidden aria-labelledby="wait-title">
+          <h2 id="wait-title">Thẻ tiếp theo chưa đến giờ ôn</h2>
+          <p><span class="tally-n" id="wait-n">0</span><span id="wait-unit">giây</span></p>
+          <p class="muted" id="wait-text">Các thẻ vừa học lại cần nghỉ ngắn trước khi gặp lại. Bạn có thể đợi hoặc kết thúc phiên ngay.</p>
+          <button type="button" class="btn btn-primary" id="finish-now">Kết thúc phiên</button>
+        </section>
+
+        <details class="key-help">
+          <summary><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>Phím tắt</summary>
+          <ul>
+            <li><span class="kbd">Space</span> Lật thẻ</li>
+            <li><span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> <span class="kbd">4</span> Quên, Khó, Nhớ, Dễ (sau khi lật)</li>
+            <li><span class="kbd">P</span> Nghe phát âm</li>
+            <li>Phím tắt không hoạt động khi con trỏ đang ở ô nhập.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const id = VL.params().id;
+  const region = document.getElementById("region");
+  const $ = (x) => document.getElementById(x);
+  const pendKey = "vl-pending:" + id;
+  let S = null;
+  let cur = null;
+  let flipped = false;
+  let shownAt = 0;
+  let sending = false;
+  let timeUp = false;
+  let finishing = false;
+  let pending = [];
+  try { pending = JSON.parse(sessionStorage.getItem(pendKey) || "[]"); } catch (e) {}
+  const savePending = () => { try { sessionStorage.setItem(pendKey, JSON.stringify(pending)); } catch (e) {} };
+  const announce = (t) => { $("live").textContent = t; };
+
+  if (!id) { location.replace("hoc.html"); return; }
+
+  VL.mockAction("Mô phỏng mất mạng: tắt", (b) => {
+    VLDemo.flags.offline = !VLDemo.flags.offline;
+    b.textContent = "Mô phỏng mất mạng: " + (VLDemo.flags.offline ? "bật" : "tắt");
+    if (!VLDemo.flags.offline) syncPending();
+  });
+  VL.mockAction("Mô phỏng tab khác chấm trước (409)", () => { VLDemo.flags.conflictOnce = true; VL.toast("Lần chấm tiếp theo sẽ gặp xung đột phiên bản"); });
+
+  function speak(the) {
+    if (the.amThanhUrl) { new Audio(the.amThanhUrl).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
+    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(the.tu);
+    u.lang = "en-US"; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+
+  function setSync(state) {
+    const el = $("sync");
+    const n = pending.length;
+    const map = {
+      saved: ["stamp stamp-success", '<path d="m5 12.5 4.5 4.5L19 7.5"/>', "Đã lưu"],
+      saving: ["stamp", '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', "Đang lưu"],
+      pending: ["stamp stamp-warning", '<path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>', "Chưa đồng bộ " + n]
+    };
+    const s = n && state !== "saving" ? map.pending : map[state];
+    el.className = s[0];
+    el.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + s[1] + '</svg><span class="lbl">' + s[2] + "</span>";
+    $("pending-note").hidden = !n;
+    $("pending-title").textContent = n + " kết quả chưa gửi được lên máy chủ";
+  }
+
+  function progress() {
+    const real = S.hangDoi.filter((h) => h.the);
+    const done = real.filter((h) => h.trangThai === "DA_ON").length;
+    const total = real.length;
+    const m = $("progress");
+    m.style.setProperty("--v", total ? done / total : 0);
+    m.setAttribute("aria-valuenow", String(total ? Math.round(done / total * 100) / 100 : 0));
+    m.setAttribute("aria-valuetext", "Đã chấm " + done + " trên " + total + " lượt");
+    $("bar-count").textContent = "Đã chấm " + done + "/" + total;
+  }
+
+  function dueNow(h) { return !h.tienDo.hanOnAt || h.tienDo.trangThai === "MOI" || h.tienDo.trangThai === "ON_TAP" || Date.parse(h.tienDo.hanOnAt) <= Date.now(); }
+  function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHO" && h.the); }
+
+  function faceHtml(the, side) {
+    const listen = '<div class="face-tools"><button type="button" class="btn btn-secondary btn-sm" data-say>' + VL.icon("volume") + 'Nghe <span class="kbd">P</span></button>' + (the.amThanhUrl ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
+    const word = '<p class="flash-word" lang="en">' + VL.esc(the.tu) + "</p>" + (the.phienAm ? '<p class="ipa" lang="en">' + VL.esc(the.phienAm) + "</p>" : "") + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
+    const mean = '<p class="flash-mean">' + VL.esc(the.nghiaVi) + "</p>" + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
+    const example = the.viDuEn ? '<div class="example"><p class="en" lang="en">' + VL.esc(the.viDuEn) + "</p>" + (the.dichVi ? '<p class="vi">' + VL.esc(the.dichVi) + "</p>" : "") + "</div>" : "";
+    const img = the.anhUrl ? '<img class="back-img" src="' + VL.esc(the.anhUrl) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
+    const mark = '<div class="face-tools"><button type="button" class="btn btn-quiet btn-sm" data-mark>' + VL.icon("star") + "Đánh dấu từ khó</button></div>";
+    if (S.chieuHoc === "EN_VI") return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại nghĩa</span>' + word + listen : '<span class="face-label">Mặt sau</span>' + mean + example + img + mark;
+    return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại từ tiếng Anh</span>' + mean : '<span class="face-label">Mặt sau</span>' + word + listen + example + img + mark;
+  }
+
+  function show() {
+    $("flash-note").hidden = !timeUp;
+    if (timeUp) $("flash-note-text").textContent = "Đã hết " + S.quyThoiGian + " phút. Chấm nốt thẻ này rồi phiên sẽ kết thúc.";
+    const list = waiting();
+    cur = list.find(dueNow) || null;
+    progress();
+    if (!cur) {
+      $("card").hidden = true;
+      if (!list.length || timeUp) { if (pending.length) { $("wait").hidden = true; setSync("pending"); return; } finish(); return; }
+      const next = list.map((h) => Date.parse(h.tienDo.hanOnAt)).sort((a, b) => a - b)[0];
+      $("wait").hidden = false;
+      tickWait(next);
+      return;
+    }
+    $("wait").hidden = true;
+    $("card").hidden = false;
+    flipped = false;
+    shownAt = performance.now();
+    const pos = S.hangDoi.filter((h) => h.the).indexOf(cur) + 1;
+    $("card-no").textContent = "Thẻ " + pos + " trên " + S.hangDoi.filter((h) => h.the).length;
+    $("card-state").textContent = VL.SRS_STATE[cur.tienDo.trangThai] || "";
+    $("front").innerHTML = faceHtml(cur.the, "front");
+    $("back").hidden = true;
+    $("back").innerHTML = "";
+    $("flip").hidden = false;
+    $("rating").hidden = true;
+    RATE_KEYS.forEach((r) => { document.querySelector('[data-when-for="' + r + '"]').textContent = cur.duKien[r] ? "Gặp lại sau " + cur.duKien[r] : ""; });
+    $("flip").focus({ preventScroll: true });
+  }
+
+  let waitTimer;
+  function tickWait(at) {
+    clearInterval(waitTimer);
+    const tick = () => {
+      const s = Math.max(0, Math.round((at - Date.now()) / 1000));
+      $("wait-n").textContent = s >= 60 ? Math.ceil(s / 60) : s;
+      $("wait-unit").textContent = s >= 60 ? " phút nữa" : " giây nữa";
+      if (s <= 0) { clearInterval(waitTimer); show(); }
+    };
+    tick();
+    waitTimer = setInterval(tick, 1000);
+  }
+
+  function flip() {
+    if (!cur || flipped) return;
+    flipped = true;
+    $("back").innerHTML = faceHtml(cur.the, "back");
+    $("back").hidden = false;
+    $("flip").hidden = true;
+    $("rating").hidden = false;
+    document.querySelector(".rate").focus({ preventScroll: true });
+    announce("Đã lật thẻ. Chọn Quên, Khó, Nhớ hoặc Dễ.");
+  }
+
+  const RATE_KEYS = ["QUEN", "KHO", "NHO", "DE"];
+  function applyResult(item, res) {
+    item.trangThai = "DA_ON";
+    item.tienDo = res.tienDo;
+    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHO", tienDo: res.tienDo, duKien: res.duKien, the: item.the });
+  }
+
+  async function rate(r) {
+    if (!cur || !flipped || sending) return;
+    const item = cur;
+    const body = { clientEventId: VL.eventId(), theId: item.theId, chieuHoc: S.chieuHoc, danhGia: r, expectedVersion: item.tienDo.version, thoiGianTraLoiMs: Math.round(performance.now() - shownAt) };
+    sending = true;
+    document.querySelectorAll(".rate").forEach((b) => { b.disabled = true; });
+    document.querySelector('[data-rate="' + r + '"]').setAttribute("aria-busy", "true");
+    setSync("saving");
+    try {
+      const res = await VL.api("POST", "/learning/sessions/" + id + "/reviews", body);
+      applyResult(item, res);
+      announce("Đã lưu " + VL.RATING[r] + ". Gặp lại sau " + res.khoangHienThi + ".");
+      setSync("saved");
+    } catch (err) {
+      if (err.status === 0) {
+        pending.push(body);
+        item.trangThai = "CHO_DONG_BO";
+        savePending();
+        setSync("pending");
+        announce("Chưa gửi được kết quả. Đã giữ lại để gửi sau.");
+      } else if (err.code === "VERSION_CONFLICT") {
+        item.tienDo = err.tienDo;
+        item.duKien = err.duKien;
+        setSync("saved");
+        sending = false;
+        document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
+        $("flash-note").hidden = false;
+        $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[err.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
+        RATE_KEYS.forEach((k) => { document.querySelector('[data-when-for="' + k + '"]').textContent = err.duKien[k] ? "Gặp lại sau " + err.duKien[k] : ""; });
+        return;
+      } else if (err.code === "CONFLICT") {
+        location.replace("hoc-tong-ket.html?id=" + id);
+        return;
+      } else {
+        sending = false;
+        setSync("saved");
+        document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
+        VL.toast(err.message, "error");
+        return;
+      }
+    }
+    sending = false;
+    document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
+    if (timeUp) { finish(); return; }
+    show();
+  }
+
+  async function syncPending() {
+    if (!pending.length) { setSync("saved"); return; }
+    const btn = $("resend");
+    await VL.busy(btn, async () => {
+      for (const body of pending.slice()) {
+        const item = S.hangDoi.find((h) => h.theId === body.theId && h.trangThai === "CHO_DONG_BO");
+        try {
+          const res = await VL.api("POST", "/learning/sessions/" + id + "/reviews", body);
+          pending = pending.filter((x) => x !== body);
+          if (item) applyResult(item, res);
+        } catch (err) {
+          if (err.status === 0) { VL.toast("Vẫn chưa có mạng. Kết quả vẫn được giữ.", "error"); break; }
+          pending = pending.filter((x) => x !== body);
+          if (item) { item.trangThai = "CHO"; if (err.tienDo) { item.tienDo = err.tienDo; item.duKien = err.duKien; } }
+          VL.toast(err.code === "VERSION_CONFLICT" ? "Một thẻ đã được chấm ở tab khác, bạn sẽ gặp lại để chấm lại" : err.message, "error");
+        }
+      }
+      savePending();
+      setSync("saved");
+      if (!pending.length) { VL.toast("Đã gửi các kết quả còn lại"); if ($("card").hidden) show(); }
+      progress();
+    });
+  }
+  $("resend").addEventListener("click", syncPending);
+  window.addEventListener("online", syncPending);
+
+  async function finish() {
+    if (finishing) return;
+    if (pending.length) { $("pending-note").hidden = false; $("pending-note").scrollIntoView({ block: "center" }); VL.toast("Gửi lại các kết quả chưa đồng bộ trước khi kết thúc", "error"); return; }
+    finishing = true;
+    try {
+      await VL.api("POST", "/learning/sessions/" + id + "/finish");
+      try { sessionStorage.removeItem(pendKey); } catch (e) {}
+      location.replace("hoc-tong-ket.html?id=" + id);
+    } catch (err) { finishing = false; VL.toast(err.message, "error"); }
+  }
+
+  $("exit").addEventListener("click", async () => {
+    if (pending.length) { finish(); return; }
+    const ok = await VL.confirm({ title: "Kết thúc phiên học?", message: "Các thẻ đã chấm vẫn được lưu. Thẻ chưa chấm sẽ quay lại ở phiên sau.", confirmText: "Kết thúc phiên" });
+    if (ok) finish();
+  });
+  $("finish-now").addEventListener("click", finish);
+  $("flip").addEventListener("click", flip);
+  document.querySelectorAll(".rate").forEach((b) => b.addEventListener("click", () => rate(b.dataset.rate)));
+  document.getElementById("card").addEventListener("click", async (e) => {
+    if (e.target.closest("[data-say]")) speak(cur.the);
+    const mk = e.target.closest("[data-mark]");
+    if (mk) {
+      await VL.busy(mk, async () => {
+        try { await VL.api("PUT", "/notebook/" + cur.theId, { danhDauThuCong: true }); mk.innerHTML = VL.icon("check") + "Đã đánh dấu"; mk.disabled = true; VL.toast("Đã thêm vào sổ tay"); }
+        catch (err) { VL.toast(err.message, "error"); }
+      });
+      if (mk.innerHTML.includes("Đã đánh dấu")) mk.disabled = true;
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    const t = e.target;
+    if (t && (t.closest("input, textarea, select, [contenteditable]") || t.closest("dialog"))) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || $("card").hidden) return;
+    if (e.code === "Space" || e.key === " ") { if (!flipped) { e.preventDefault(); flip(); } return; }
+    if (["1", "2", "3", "4"].includes(e.key) && flipped) { e.preventDefault(); rate(RATE_KEYS[Number(e.key) - 1]); return; }
+    if (e.key === "p" || e.key === "P") { e.preventDefault(); speak(cur.the); }
+  });
+
+  function startTimer() {
+    const end = Date.parse(S.hetGioAt);
+    const tick = () => {
+      const s = Math.max(0, Math.round((end - Date.now()) / 1000));
+      $("timer-text").textContent = s ? "Còn " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") : "Hết giờ";
+      if (!s && !timeUp) {
+        timeUp = true;
+        $("timer").className = "stamp stamp-warning";
+        announce("Đã hết giờ. Chấm nốt thẻ đang mở rồi phiên sẽ kết thúc.");
+        if ($("card").hidden) finish();
+        else { $("flash-note").hidden = false; $("flash-note-text").textContent = "Đã hết " + S.quyThoiGian + " phút. Chấm nốt thẻ này rồi phiên sẽ kết thúc."; }
+      }
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  VL.load(region, {
+    errorTitle: "Không mở được phiên học",
+    fetch: () => VL.api("GET", "/learning/sessions/" + encodeURIComponent(id)),
+    render: (s) => {
+      if (s.trangThai !== "DANG_HOC") { location.replace("hoc-tong-ket.html?id=" + id); return; }
+      S = s;
+      pending.forEach((b) => { const h = S.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHO"); if (h) h.trangThai = "CHO_DONG_BO"; });
+      document.title = s.boTheTen + " – Đang học";
+      $("bar-title").textContent = s.boTheTen;
+      $("bar-dir").textContent = VL.DIR[s.chieuHoc] + (s.cheDo === "CUU_LICH" ? ", học lại sau nghỉ" : "");
+      setSync("saved");
+      startTimer();
+      show();
+    }
+  });
+})();
+</script>
+</body>
+</html>

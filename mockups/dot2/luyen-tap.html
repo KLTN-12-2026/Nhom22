@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Luyện tập – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .type-grid { display: grid; gap: var(--sp-2); }
+  @media (min-width: 720px) { .type-grid { grid-template-columns: 1fr 1fr; } }
+  .type-skill { font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: var(--fs-caption); font-weight: 650; color: var(--primary); }
+  .form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+  .recent { list-style: none; margin: 0; padding: 0; display: grid; }
+  .recent li { display: grid; gap: 2px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+  .recent li:first-child { padding-top: 0; }
+  .recent .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="practice" data-auth="required">
+<!-- F2.5 · UI23 · API: POST /practice/sessions {loaiBai, boTheId, nguon, soCau} (B2.7), GET /decks?tab=mine (B1.8), GET /practice/history?size=3 (B2.8) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Luyện tập</span><span>Bài cố định, chấm tại máy chủ</span></div>
+            <h1 id="page-title">Chọn dạng bài</h1>
+            <p>Đề không kèm đáp án. Bạn nộp một lần, máy chủ chấm và giải thích từng câu. Câu sai được ghi vào sổ tay.</p>
+          </div>
+          <form id="form" class="stack-lg" novalidate>
+            <fieldset class="fieldset field" data-field="loaiBai">
+              <legend>Dạng bài</legend>
+              <div class="type-grid" id="types"></div>
+              <p class="field-error"></p>
+            </fieldset>
+            <div class="field">
+              <label class="field-label" for="source">Lấy từ</label>
+              <select class="select" id="source" name="source"></select>
+              <p class="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
+            </div>
+            <fieldset class="fieldset field" data-field="soCau">
+              <legend>Số câu</legend>
+              <div class="choice-grid cols-3">
+                <label class="choice choice-card"><input type="radio" name="soCau" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 câu</span><span class="choice-desc">khoảng 3 phút</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="soCau" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 câu</span><span class="choice-desc">khoảng 6 phút</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="soCau" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 câu</span><span class="choice-desc">khoảng 12 phút</span></span></label>
+              </div>
+              <p class="field-hint">Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
+              <p class="field-error"></p>
+            </fieldset>
+            <div data-form-error hidden></div>
+            <div class="form-foot">
+              <button type="submit" class="btn btn-accent btn-lg" id="submit">Làm bài</button>
+              <a class="btn btn-quiet" href="luyen-tap-lich-su.html">Xem lịch sử bài làm</a>
+            </div>
+          </form>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="recent-title">
+            <h2 class="panel-title" id="recent-title">Bài gần đây</h2>
+            <div data-view="loading" id="recent-region">
+              <div data-when="loading"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-line"></div></div></div>
+              <div data-when="ready"><ul class="recent" id="recent" role="list"></ul></div>
+              <div data-when="empty"><p class="small muted">Bạn chưa làm bài nào.</p></div>
+              <div data-when="error"></div>
+            </div>
+            <a class="btn btn-quiet" href="luyen-tap-lich-su.html" style="margin:var(--sp-2) 0 0 -12px">Tất cả bài làm</a>
+          </section>
+          <section class="panel" aria-labelledby="nb-title">
+            <h2 class="panel-title" id="nb-title">Luyện từ hay sai</h2>
+            <p class="small muted">Chọn nguồn <strong>Sổ tay từ khó</strong> để luyện các từ bạn sai nhiều hoặc tự đánh dấu.</p>
+            <a class="btn btn-quiet" href="so-tay.html" style="margin:var(--sp-2) 0 0 -12px">Mở sổ tay</a>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const p = VL.params();
+  const form = document.getElementById("form");
+  const TYPES = [
+    ["CHON_NGHIA", "Thấy từ tiếng Anh, chọn nghĩa đúng trong 4 phương án", "Nhận nghĩa"],
+    ["CHON_TU", "Thấy nghĩa tiếng Việt, chọn từ đúng", "Nhận nghĩa"],
+    ["GHEP_TU", "Nối từ với nghĩa, chấm từng cặp", "Nhận nghĩa"],
+    ["DIEN_CHO_TRONG", "Điền từ còn thiếu vào câu ví dụ", "Dùng từ trong câu"],
+    ["NHAP_TU_THEO_NGHIA", "Gõ từ tiếng Anh theo nghĩa cho sẵn", "Viết đúng chính tả"],
+    ["NGHE_VIET", "Nghe phát âm rồi gõ lại từ", "Nghe và viết"],
+    ["PHAN_BIET_CAP", "Chọn đúng từ giữa hai từ bạn hay nhầm", "Phân biệt cặp dễ nhầm"],
+    ["TONG_HOP", "Trộn nhiều dạng, báo kết quả theo từng kỹ năng", "Nhiều kỹ năng"]
+  ];
+  const chosen = TYPES.some((t) => t[0] === p.loaiBai) ? p.loaiBai : "CHON_NGHIA";
+  document.getElementById("types").innerHTML = TYPES.map((t) =>
+    '<label class="choice choice-card"><input type="radio" name="loaiBai" value="' + t[0] + '"' + (t[0] === chosen ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + VL.PRACTICE[t[0]] + '</span><span class="choice-desc">' + t[1] + '</span><span class="type-skill">' + t[2] + "</span></span></label>").join("");
+
+  const src = document.getElementById("source");
+  src.innerHTML = '<option value="">Tất cả bộ của tôi</option><option value="SO_TAY">Sổ tay từ khó</option>';
+  VL.api("GET", "/decks?tab=mine").then((d) => {
+    src.insertAdjacentHTML("beforeend", d.items.map((x) => '<option value="deck:' + x.id + '">' + VL.esc(x.name.length > 80 ? x.name.slice(0, 80) + "…" : x.name) + " (" + x.cardCount + " thẻ)</option>").join(""));
+    if (p.boTheId) src.value = "deck:" + p.boTheId;
+    if (p.nguon === "SO_TAY") src.value = "SO_TAY";
+  });
+
+  VL.load(document.getElementById("recent-region"), {
+    fetch: () => VL.api("GET", "/practice/history?size=3"),
+    isEmpty: (d) => !d.items.length,
+    render: (d) => {
+      document.getElementById("recent").innerHTML = d.items.map((a) =>
+        '<li><a href="luyen-tap-ket-qua.html?id=' + a.baiLuyenId + '">' + VL.PRACTICE[a.loaiBai] + (a.laLuyenLai ? " (luyện lại)" : "") + '</a><span class="meta"><span>Đúng ' + a.soCauDung + "/" + a.tongSoCau + "</span><span>" + VL.fmtDate(a.nopAt) + "</span></span></li>").join("");
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    VL.clearErrors(form);
+    const v = src.value;
+    const body = { loaiBai: form.loaiBai.value, soCau: Number(form.soCau.value), boTheId: v.startsWith("deck:") ? v.slice(5) : null, nguon: v === "SO_TAY" ? "SO_TAY" : "BO_THE" };
+    const btn = document.getElementById("submit");
+    VL.busy(btn, async () => {
+      try { const s = await VL.api("POST", "/practice/sessions", body); location.href = "luyen-tap-lam-bai.html?id=" + s.id; }
+      catch (err) { VL.showErrors(form, err); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

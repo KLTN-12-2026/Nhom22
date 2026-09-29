@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sổ tay từ khó – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .nb-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .nb-row:hover { background: none; }
+  .nb-word { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+  .nb-word strong { font-size: 1.25rem; overflow-wrap: anywhere; }
+  .nb-ipa { font-family: var(--font-body); color: var(--ink-2); }
+  .nb-mean { overflow-wrap: anywhere; }
+  .nb-stamps { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
+  .nb-note { padding: var(--sp-2) var(--sp-3); background: var(--accent-bg); border-left: var(--rule-strong) solid var(--accent); font-size: var(--fs-small); overflow-wrap: anywhere; white-space: pre-line; }
+  .nb-proof { font-size: var(--fs-small); color: var(--ink-2); }
+  .nb-proof summary { cursor: pointer; color: var(--primary); font-weight: 600; min-height: var(--tap); display: inline-flex; align-items: center; }
+  .nb-proof ol { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); }
+  .nb-proof del { color: var(--danger); }
+  .nb-tools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-left: -12px; }
+  .nb-edit { display: grid; gap: var(--sp-2); }
+  .toolbar-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-3); margin: var(--sp-4) 0 var(--sp-3); }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+  .pairs { list-style: none; margin: 0; padding: 0; display: grid; }
+  .pairs li { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+  .pairs li:first-child { padding-top: 0; }
+  .pair-words { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
+  .pair-words b { display: block; overflow-wrap: anywhere; }
+  .pair-words span { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+  .pair-vs { font-family: var(--font-form); font-stretch: 80%; font-weight: 700; color: var(--ink-3); padding-top: 2px; }
+  .rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="notebook" data-auth="required">
+<!-- F2.6 · UI27 · API: GET /notebook?nhomLoi&page&size (B2.9), PUT /notebook/{cardId} {ghiChu, danhDauThuCong} (B2.9), DELETE /notebook/{cardId} (B2.9), GET /learning/confusing-pairs (B2.9), POST /practice/sessions {loaiBai, nguon: SO_TAY | theIds, soCau} (B2.7) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Sổ tay từ khó</span><span id="total">—</span></div>
+            <h1 id="page-title">Sổ tay từ khó</h1>
+            <p>Từ tự vào sổ khi bạn làm sai trong bài luyện, quên nhiều lần khi ôn hoặc hay nhầm với từ khác. Bạn cũng có thể tự đánh dấu và ghi chú.</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Lọc theo nhóm lỗi" id="tabs"></div>
+          <div class="toolbar-row">
+            <p class="small muted" id="filter-note" aria-live="polite"></p>
+            <button type="button" class="btn btn-accent btn-lg" id="practice">Luyện các từ trong sổ tay</button>
+          </div>
+          <div data-view="loading" id="region" aria-live="polite">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+                <h2 id="empty-title">Sổ tay đang trống</h2>
+                <p id="empty-text">Từ sẽ vào sổ khi bạn làm sai trong bài luyện hoặc quên nhiều lần khi ôn. Trong lúc học, bấm "Đánh dấu từ khó" để tự thêm.</p>
+                <a class="btn btn-primary" href="luyen-tap.html" id="empty-action">Làm một bài luyện</a>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="pairs-title">
+            <h2 class="panel-title" id="pairs-title">Cặp dễ nhầm</h2>
+            <div data-view="loading" id="pairs-region" aria-live="polite">
+              <div data-when="loading"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-line"></div></div></div>
+              <div data-when="ready"><ul class="pairs" id="pairs" role="list"></ul></div>
+              <div data-when="empty"><p class="small muted">Chưa có cặp nào. Cặp được ghi lại khi bạn chọn nhầm giữa hai từ trong bài luyện.</p></div>
+              <div data-when="error"></div>
+            </div>
+          </section>
+          <section class="panel" aria-labelledby="rules-title">
+            <h2 class="panel-title" id="rules-title">Khi nào từ vào sổ</h2>
+            <ul class="rules">
+              <li>Làm sai trong bài luyện. Lỗi được xếp theo nhóm: nghĩa, chính tả, nghe, dùng từ trong câu, cặp dễ nhầm.</li>
+              <li>Quên từ 3 lần trở lên khi ôn.</li>
+              <li>Chọn nhầm với một từ khác trong bài luyện.</li>
+              <li>Bạn tự đánh dấu khi học.</li>
+            </ul>
+            <p class="small muted" style="margin-top:var(--sp-2)">Bỏ một từ khỏi sổ không xóa lịch sử. Nếu sau đó bạn sai lại, từ sẽ quay lại sổ.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const $ = (x) => document.getElementById(x);
+  const p = VL.params();
+  const GROUPS = [["", "Tất cả", "TAT_CA"], ["NGHIA", "Nghĩa"], ["CHINH_TA", "Chính tả"], ["NGHE", "Nghe"], ["NGU_CANH", "Dùng từ trong câu"], ["CAP_NHAM", "Cặp dễ nhầm"], ["QUEN_NHIEU", "Quên nhiều"], ["DANH_DAU", "Tự đánh dấu"]];
+  const REASON = { QUEN_NHIEU: "Quên nhiều lần", SAI_CHINH_TA: "Sai chính tả lặp lại", CAP_DE_NHAM: "Hay nhầm với từ khác", DANH_DAU_THU_CONG: "Bạn tự đánh dấu" };
+  const MIX = { HINH_THUC_GAN_GIONG: "Viết gần giống", NGHIA_GAN_NHAU: "Nghĩa gần nhau" };
+  let nhom = GROUPS.some((g) => g[0] === p.nhomLoi) ? (p.nhomLoi || "") : "";
+  let pageNo = Number(p.page || 0);
+  let items = [];
+
+  function renderTabs(t) {
+    $("tabs").innerHTML = GROUPS.map((g) => '<button type="button" class="tab" role="tab" aria-selected="' + (g[0] === nhom) + '" data-nhom="' + g[0] + '">' + g[1] + ' <span class="count">' + (t[g[2] || g[0]] || 0) + "</span></button>").join("");
+  }
+
+  function row(it, i, d) {
+    const reasons = it.lyDo.map((r) => '<span class="stamp' + (r === "DANH_DAU_THU_CONG" ? "" : " stamp-warning") + '">' + REASON[r] + "</span>").join("");
+    const groups = it.nhomLoi.map((g) => '<span class="stamp stamp-quiet">' + VL.ERROR_GROUP[g.nhomLoi] + " × " + g.soLan + "</span>").join("");
+    const forgot = it.soLanQuen ? "<span>Quên " + it.soLanQuen + " lần khi ôn</span>" : "";
+    const proof = it.bangChung.length ? '<details class="nb-proof"><summary>Lần sai gần nhất (' + it.bangChung.length + ')</summary><ol>' + it.bangChung.map((b) =>
+      "<li>" + VL.ERROR_GROUP[b.nhomLoi] + ": bạn trả lời <del>" + VL.esc(b.traLoi || "(bỏ trống)") + "</del>, đáp án <strong>" + VL.esc(b.dapAn) + "</strong>, " + VL.fmtDateTime(b.createdAt) +
+      (b.baiLuyenId ? '. <a href="luyen-tap-ket-qua.html?id=' + b.baiLuyenId + '">Xem bài</a>' : "") + "</li>").join("") + "</ol></details>" : "";
+    return '<li class="answer-row nb-row" data-id="' + it.theId + '"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main">' +
+      '<div class="nb-word"><strong lang="en">' + VL.esc(it.tu) + "</strong>" + (it.phienAm ? '<span class="nb-ipa">' + VL.esc(it.phienAm) + "</span>" : "") + (it.tuLoai ? '<span class="small muted">' + VL.esc(it.tuLoai) + "</span>" : "") + "</div>" +
+      '<div class="nb-mean">' + VL.esc(it.nghiaVi) + "</div>" +
+      '<div class="nb-stamps">' + reasons + groups + "</div>" +
+      '<div class="answer-meta"><a href="bo-the-tien-do.html?id=' + it.boTheId + '">' + VL.esc(it.boTheTen.length > 60 ? it.boTheTen.slice(0, 60) + "…" : it.boTheTen) + "</a>" + forgot + (it.lanGanNhatAt ? "<span>Cập nhật " + VL.fmtDate(it.lanGanNhatAt) + "</span>" : "") + "</div>" +
+      (it.ghiChu ? '<div class="nb-note" data-note>' + VL.esc(it.ghiChu) + "</div>" : "") + proof +
+      '<div class="nb-tools"><button type="button" class="btn btn-quiet" data-act="play">' + VL.icon("play") + 'Nghe</button><button type="button" class="btn btn-quiet" data-act="note">' + (it.ghiChu ? "Sửa ghi chú" : "Thêm ghi chú") + '</button><button type="button" class="btn btn-quiet" data-act="mark" aria-pressed="' + it.danhDauThuCong + '">' + (it.danhDauThuCong ? "Bỏ đánh dấu" : "Đánh dấu từ khó") + '</button><button type="button" class="btn btn-quiet" data-act="remove">Bỏ khỏi sổ tay</button></div>' +
+      "</div></li>";
+  }
+
+  function load() {
+    const q = "?page=" + pageNo + (nhom ? "&nhomLoi=" + nhom : "");
+    history.replaceState(null, "", q);
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/notebook" + q).then((d) => { renderTabs(d.tongHop); $("total").textContent = d.tongHop.TAT_CA + " từ"; $("practice").disabled = !d.tongHop.TAT_CA; return d; }),
+      isEmpty: (d) => !d.items.length,
+      empty: (d) => {
+        $("filter-note").textContent = "";
+        const any = d && d.tongHop && d.tongHop.TAT_CA;
+        $("empty-title").textContent = nhom && any ? "Không có từ nào trong nhóm này" : "Sổ tay đang trống";
+        $("empty-text").textContent = nhom && any ? "Chọn Tất cả để xem mọi từ trong sổ." : "Từ sẽ vào sổ khi bạn làm sai trong bài luyện hoặc quên nhiều lần khi ôn. Trong lúc học, bấm \"Đánh dấu từ khó\" để tự thêm.";
+        $("empty-action").hidden = !!(nhom && any);
+      },
+      render: (d) => {
+        items = d.items;
+        $("filter-note").textContent = d.totalElements + " từ" + (nhom ? " trong nhóm " + GROUPS.find((g) => g[0] === nhom)[1].toLowerCase() : "") + ", mới nhất trước";
+        $("list").innerHTML = d.items.map((it, i) => row(it, i, d)).join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+
+  function openNote(li, it) {
+    if (li.querySelector(".nb-edit")) return;
+    const box = document.createElement("form");
+    box.className = "nb-edit";
+    box.noValidate = true;
+    box.innerHTML = '<div class="field" data-field="ghiChu"><label class="field-label" for="note-' + it.theId + '">Ghi chú cho ' + VL.esc(it.tu) + '<span class="optional">tối đa 500 ký tự</span></label><textarea class="textarea" id="note-' + it.theId + '" name="ghiChu" rows="3" maxlength="600">' + VL.esc(it.ghiChu) + '</textarea><p class="field-counter" aria-live="polite"></p><p class="field-error"></p></div><div class="row"><button type="submit" class="btn btn-primary">Lưu ghi chú</button><button type="button" class="btn btn-quiet" data-cancel>Hủy</button></div>';
+    li.querySelector(".nb-tools").before(box);
+    const ta = box.querySelector("textarea");
+    const counter = box.querySelector(".field-counter");
+    const count = () => { counter.textContent = ta.value.length + "/500"; counter.toggleAttribute("data-over", ta.value.length > 500); };
+    count();
+    ta.addEventListener("input", count);
+    ta.focus();
+    box.querySelector("[data-cancel]").addEventListener("click", () => box.remove());
+    box.addEventListener("submit", (e) => {
+      e.preventDefault();
+      VL.clearErrors(box);
+      VL.busy(box.querySelector("[type=submit]"), async () => {
+        try { await VL.api("PUT", "/notebook/" + it.theId, { ghiChu: ta.value }); VL.toast("Đã lưu ghi chú"); load(); }
+        catch (err) { VL.showErrors(box, err); }
+      });
+    });
+  }
+
+  $("list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const li = b.closest("[data-id]");
+    const it = items.find((x) => x.theId === li.dataset.id);
+    if (b.dataset.act === "play") { if (!VLDemo.play("demo-audio://" + it.theId, 0.9)) VL.toast("Trình duyệt chưa phát được âm thanh", "error"); return; }
+    if (b.dataset.act === "note") { openNote(li, it); return; }
+    if (b.dataset.act === "mark") {
+      VL.busy(b, async () => {
+        try { await VL.api("PUT", "/notebook/" + it.theId, { danhDauThuCong: !it.danhDauThuCong }); VL.toast(it.danhDauThuCong ? "Đã bỏ đánh dấu" : "Đã đánh dấu từ khó"); load(); }
+        catch (err) { VL.toast(err.message, "error"); }
+      });
+      return;
+    }
+    if (b.dataset.act === "remove") {
+      const ok = await VL.confirm({ title: "Bỏ " + it.tu + " khỏi sổ tay?", message: "Lịch sử ôn và bài luyện vẫn giữ nguyên. Nếu bạn sai từ này ở lần sau, từ sẽ quay lại sổ.", confirmText: "Bỏ khỏi sổ tay" });
+      if (!ok) return;
+      VL.busy(b, async () => {
+        try { await VL.api("DELETE", "/notebook/" + it.theId); VL.toast("Đã bỏ khỏi sổ tay"); if (items.length === 1 && pageNo > 0) pageNo--; load(); }
+        catch (err) { VL.toast(err.message, "error"); }
+      });
+    }
+  });
+
+  $("tabs").addEventListener("click", (e) => { const t = e.target.closest("[data-nhom]"); if (t) { nhom = t.dataset.nhom; pageNo = 0; load(); } });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+
+  $("practice").addEventListener("click", (e) => {
+    VL.busy(e.currentTarget, async () => {
+      try { const s = await VL.api("POST", "/practice/sessions", { loaiBai: "TONG_HOP", nguon: "SO_TAY", soCau: 10 }); location.href = "luyen-tap-lam-bai.html?id=" + s.id; }
+      catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+
+  VL.load($("pairs-region"), {
+    fetch: () => VL.api("GET", "/learning/confusing-pairs"),
+    isEmpty: (d) => !d.length,
+    render: (d) => {
+      $("pairs").innerHTML = d.map((pr) =>
+        '<li><div class="pair-words"><div><b lang="en">' + VL.esc(pr.the1.tu) + "</b><span>" + VL.esc(pr.the1.nghiaVi) + '</span></div><span class="pair-vs" aria-label="và">/</span><div><b lang="en">' + VL.esc(pr.the2.tu) + "</b><span>" + VL.esc(pr.the2.nghiaVi) + "</span></div></div>" +
+        '<div class="answer-meta"><span>' + (MIX[pr.loaiNham] || "Dễ nhầm") + "</span><span>Nhầm " + pr.soLan + " lần</span><span>" + VL.fmtDate(pr.ganNhatAt) + "</span></div>" +
+        '<button type="button" class="btn btn-secondary" data-pair="' + pr.the1.id + "," + pr.the2.id + '" style="justify-self:start">Luyện phân biệt</button></li>').join("");
+    }
+  });
+  $("pairs").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pair]");
+    if (!b) return;
+    VL.busy(b, async () => {
+      try { const s = await VL.api("POST", "/practice/sessions", { loaiBai: "PHAN_BIET_CAP", theIds: b.dataset.pair.split(","), soCau: 5 }); location.href = "luyen-tap-lam-bai.html?id=" + s.id; }
+      catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Làm bài – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .match { display: grid; gap: var(--sp-2); }
+  .match-row { display: grid; gap: var(--sp-2); align-items: center; padding: var(--sp-2) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+  @media (min-width: 640px) { .match-row { grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); } }
+  .match-row label { font-family: var(--font-word); font-weight: 700; font-size: 1.125rem; overflow-wrap: anywhere; }
+  .listen { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .hint { font-size: var(--fs-small); color: var(--ink-2); }
+  .submit-bar { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-top: var(--sp-5); padding: var(--sp-3) 0 calc(var(--sp-3) + env(safe-area-inset-bottom)); background: var(--sheet); border-top: var(--rule-strong) solid var(--primary); }
+  .answered { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; }
+</style>
+</head>
+<body data-root=".." data-nav="practice" data-auth="required" class="no-bottom-nav">
+<!-- F2.5 · UI24 · API: GET /practice/sessions/{id} (B2.7, không có đáp án), POST /practice/sessions/{id}/submissions {submitKey, traLoi[], thoiGianMs} (B2.8) -->
+<div class="session">
+  <header class="session-bar">
+    <a class="btn btn-quiet btn-icon" href="luyen-tap.html" id="exit" aria-label="Thoát bài làm"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
+    <div class="grow">
+      <p class="bar-title" id="bar-title">Bài luyện</p>
+      <p class="bar-sub"><span id="bar-source"></span></p>
+    </div>
+    <span class="stamp" id="clock"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock-text">0:00</span></span>
+  </header>
+  <div class="meter is-progress session-meter" id="progress" role="progressbar" aria-label="Số câu đã trả lời" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><span></span></div>
+
+  <main class="session-main" id="main">
+    <div data-view="loading" id="region">
+      <div data-when="loading"><div class="sheet"><div class="skeleton"><div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div></div>
+      <div data-when="error"></div>
+      <div data-when="empty"></div>
+      <form class="sheet" data-when="ready" id="form" novalidate aria-labelledby="page-title">
+        <div class="form-head">
+          <div class="form-code"><span id="code">Phiếu làm bài</span><span id="count"></span></div>
+          <h1 id="page-title">Bài luyện</h1>
+          <p id="lead">Trả lời theo thứ tự nào cũng được. Không phân biệt chữ hoa, chữ thường; dấu nháy và gạch nối được giữ nguyên.</p>
+        </div>
+        <div data-form-error hidden></div>
+        <div id="questions"></div>
+        <div class="submit-bar">
+          <span class="answered" id="answered" aria-live="polite"></span>
+          <button type="submit" class="btn btn-accent btn-lg" id="submit">Nộp bài</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const id = VL.params().id;
+  const $ = (x) => document.getElementById(x);
+  const form = $("form");
+  const draftKey = "vl-draft:" + id;
+  const keyKey = "vl-submitkey:" + id;
+  let S;
+  let started = Date.now();
+  let draft = {};
+  try { draft = JSON.parse(sessionStorage.getItem(draftKey) || "{}"); started = draft.__start || started; } catch (e) {}
+  const saveDraft = () => { draft.__start = started; try { sessionStorage.setItem(draftKey, JSON.stringify(draft)); } catch (e) {} };
+  let submitKey = null;
+  try { submitKey = sessionStorage.getItem(keyKey); } catch (e) {}
+  if (!submitKey) { submitKey = VL.eventId(); try { sessionStorage.setItem(keyKey, submitKey); } catch (e) {} }
+
+  VL.mockAction("Mô phỏng mất mạng: tắt", (b) => { VLDemo.flags.offline = !VLDemo.flags.offline; b.textContent = "Mô phỏng mất mạng: " + (VLDemo.flags.offline ? "bật" : "tắt"); });
+
+  const LETTERS = "ABCD";
+  const textInput = (q, label) => '<div class="field"><label class="field-label" for="a-' + q.id + '">' + label + '</label><input class="input en" id="a-' + q.id + '" name="' + q.id + '" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="200" lang="en"></div>';
+  const options = (q, en) => '<ul class="opt-list" role="list">' + q.phuongAn.map((o, i) =>
+    '<li><label class="choice opt"><input type="radio" name="' + q.id + '" value="' + o.id + '"><span class="bubble" aria-hidden="true">' + LETTERS[i] + '</span><span class="' + (en ? "en" : "") + '"' + (en ? ' lang="en"' : "") + ">" + VL.esc(o.noiDung) + "</span></label></li>").join("") + "</ul>";
+  const sentence = (s) => '<p class="q-sentence" lang="en">' + VL.esc(s).replace("_____", '<span class="gap" aria-label="chỗ trống">?</span>') + "</p>";
+
+  function questionHtml(q) {
+    const d = q.deBai;
+    let body = "";
+    let label = VL.PRACTICE[q.loaiCau];
+    if (q.loaiCau === "CHON_NGHIA") body = '<p class="q-prompt en" lang="en">' + VL.esc(d.tu) + '</p><p><span class="ipa" lang="en">' + VL.esc(d.phienAm || "") + '</span> <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span></p>" + options(q, false);
+    if (q.loaiCau === "CHON_TU") body = '<p class="q-prompt">' + VL.esc(d.nghiaVi) + '</p><p class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</p>" + options(q, true);
+    if (q.loaiCau === "PHAN_BIET_CAP") body = (d.cau ? sentence(d.cau) : '<p class="q-prompt">Từ nào nghĩa là “' + VL.esc(d.goiY) + "”?</p>") + options(q, true);
+    if (q.loaiCau === "DIEN_CHO_TRONG") body = sentence(d.cau) + '<p class="hint">Gợi ý: ' + VL.esc(d.goiY) + ' <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span></p>" + textInput(q, "Từ cần điền");
+    if (q.loaiCau === "NHAP_TU_THEO_NGHIA") body = '<p class="q-prompt">' + VL.esc(d.nghiaVi) + '</p><p class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</p>" + (d.viDuVi ? '<p class="hint">Ví dụ: ' + VL.esc(d.viDuVi) + "</p>" : "") + textInput(q, "Từ tiếng Anh");
+    if (q.loaiCau === "NGHE_VIET") body = '<div class="listen"><button type="button" class="btn btn-secondary" data-play="' + VL.esc(d.amThanhUrl) + '">' + VL.icon("volume") + 'Nghe</button><button type="button" class="btn btn-quiet" data-play="' + VL.esc(d.amThanhUrl) + '" data-rate="0.6">Nghe chậm</button></div><p class="hint">Từ loại <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span>, nghe bao nhiêu lần cũng được</p>" + textInput(q, "Từ bạn nghe được");
+    if (q.loaiCau === "GHEP_TU") {
+      label = "Ghép mỗi từ với nghĩa đúng";
+      body = '<div class="match">' + d.cotTrai.map((l) => '<div class="match-row"><label for="m-' + q.id + "-" + l.id + '" lang="en">' + VL.esc(l.noiDung) + '</label><select class="select" id="m-' + q.id + "-" + l.id + '" name="' + q.id + '" data-left="' + l.id + '"><option value="">Chọn nghĩa</option>' + d.cotPhai.map((r) => '<option value="' + r.id + '">' + VL.esc(r.noiDung) + "</option>").join("") + "</select></div>").join("") + "</div>";
+    }
+    return '<section class="q-row" aria-labelledby="qn-' + q.id + '"><span class="q-no" id="qn-' + q.id + '">' + q.thuTu + '</span><div class="q-body"><span class="q-kind">' + label + "</span>" + body + "</div></section>";
+  }
+
+  function collect() {
+    return S.cauHoi.map((q) => {
+      if (q.loaiCau === "GHEP_TU") return { cauHoiId: q.id, cap: [...form.querySelectorAll('select[name="' + q.id + '"]')].filter((s) => s.value).map((s) => ({ traiId: s.dataset.left, phaiId: s.value })) };
+      if (q.phuongAn) { const c = form.querySelector('input[name="' + q.id + '"]:checked'); return { cauHoiId: q.id, luaChonId: c ? c.value : null }; }
+      return { cauHoiId: q.id, noiDung: form.querySelector('input[name="' + q.id + '"]').value };
+    });
+  }
+  const isAnswered = (a) => a.cap ? a.cap.length === S.cauHoi.find((q) => q.id === a.cauHoiId).deBai.cotTrai.length : a.luaChonId ? true : !!(a.noiDung && a.noiDung.trim());
+
+  function update() {
+    const all = collect();
+    const n = all.filter(isAnswered).length;
+    $("answered").textContent = "Đã trả lời " + n + "/" + all.length;
+    const m = $("progress");
+    m.style.setProperty("--v", all.length ? n / all.length : 0);
+    m.setAttribute("aria-valuenow", String(all.length ? n / all.length : 0));
+    all.forEach((a) => { draft[a.cauHoiId] = a; });
+    saveDraft();
+    return { all, n };
+  }
+  function restore() {
+    S.cauHoi.forEach((q) => {
+      const a = draft[q.id];
+      if (!a) return;
+      if (a.cap) a.cap.forEach((c) => { const s = form.querySelector('select[name="' + q.id + '"][data-left="' + c.traiId + '"]'); if (s) s.value = c.phaiId; });
+      else if (a.luaChonId) { const r = form.querySelector('input[name="' + q.id + '"][value="' + a.luaChonId + '"]'); if (r) r.checked = true; }
+      else if (a.noiDung) form.querySelector('input[name="' + q.id + '"]').value = a.noiDung;
+    });
+  }
+
+  setInterval(() => { const s = Math.floor((Date.now() - started) / 1000); $("clock-text").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }, 1000);
+
+  VL.load($("region"), {
+    errorTitle: "Không mở được bài luyện",
+    fetch: () => VL.api("GET", "/practice/sessions/" + encodeURIComponent(id || "")),
+    render: (s) => {
+      if (s.daNop) { location.replace("luyen-tap-ket-qua.html?id=" + s.id); return; }
+      S = s;
+      document.title = VL.PRACTICE[s.loaiBai] + " – Làm bài";
+      $("bar-title").textContent = VL.PRACTICE[s.loaiBai] + (s.laLuyenLai ? " (luyện lại)" : "");
+      $("bar-source").textContent = s.boTheTen;
+      $("page-title").textContent = VL.PRACTICE[s.loaiBai];
+      $("count").textContent = s.soCau + " câu";
+      if (s.soCau < s.soCauYeuCau && !s.laLuyenLai) $("lead").textContent = "Nguồn đã chọn chỉ đủ tạo " + s.soCau + " câu. " + $("lead").textContent;
+      $("questions").innerHTML = s.cauHoi.map(questionHtml).join("");
+      restore();
+      update();
+    }
+  });
+
+  form.addEventListener("input", update);
+  form.addEventListener("change", update);
+  form.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-play]");
+    if (!b) return;
+    if (!VLDemo.play(b.dataset.play, Number(b.dataset.rate) || 0.9)) VL.toast("Trình duyệt chưa phát được âm thanh", "error");
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { all, n } = update();
+    if (n < all.length) {
+      const ok = await VL.confirm({ title: "Nộp khi còn " + (all.length - n) + " câu trống?", message: "Câu để trống được tính là sai. Bạn không sửa được sau khi nộp.", confirmText: "Nộp bài" });
+      if (!ok) return;
+    }
+    VL.clearErrors(form);
+    VL.busy($("submit"), async () => {
+      try {
+        await VL.api("POST", "/practice/sessions/" + id + "/submissions", { submitKey, traLoi: all, thoiGianMs: Date.now() - started });
+        try { sessionStorage.removeItem(draftKey); sessionStorage.removeItem(keyKey); } catch (x) {}
+        location.replace("luyen-tap-ket-qua.html?id=" + id);
+      } catch (err) {
+        if (err.code === "CONFLICT") { location.replace("luyen-tap-ket-qua.html?id=" + id); return; }
+        if (err.status === 0) err.message = "Chưa nộp được vì mất kết nối. Bài làm vẫn giữ trên máy; bấm Nộp bài để gửi lại, bài sẽ không bị tính hai lần.";
+        VL.showErrors(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tài khoản và vai trò – Quản trị VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<style>
+  .filter-bar { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  @media (min-width: 720px) { .filter-bar { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; } }
+  .u-row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .u-row:hover { background: none; }
+  .u-head { display: flex; align-items: flex-start; gap: var(--sp-3); }
+  .u-name { font-weight: 650; overflow-wrap: anywhere; }
+  .u-mail { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+  .u-tools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-left: -12px; }
+  .u-tools .btn-danger-text { color: var(--danger); }
+  .result-line { font-size: var(--fs-small); color: var(--ink-2); margin: 0 0 var(--sp-2); }
+  .pager-wrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+  .rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
+</style>
+</head>
+<body data-root=".." data-nav="admin-users" data-auth="required" data-role="ADMIN">
+<!-- F2.8 · UI47 · API: GET /admin/users?q&trangThai&vaiTro&page&size (B2.11), PATCH /admin/users/{id}/status {trangThai, lyDo} (B2.11), PUT /admin/users/{id}/roles {vaiTro, lyDo} (B2.11, TC-17) -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar"></nav>
+    <main class="app-main" id="main">
+      <div class="page page-grid with-side">
+        <section class="sheet" aria-labelledby="page-title">
+          <div class="form-head">
+            <div class="form-code"><span>Quản trị</span><span id="total">—</span></div>
+            <h1 id="page-title">Tài khoản và vai trò</h1>
+            <p>Tìm người dùng, khóa hoặc mở khóa tài khoản, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi vào nhật ký.</p>
+          </div>
+          <form class="filter-bar" id="filters" role="search" novalidate>
+            <div class="field">
+              <label class="field-label" for="q">Tìm theo email hoặc tên</label>
+              <input class="input" type="search" id="q" name="q" maxlength="100" autocomplete="off" placeholder="Ví dụ: an@vocab.local">
+            </div>
+            <div class="field">
+              <label class="field-label" for="st">Trạng thái</label>
+              <select class="select" id="st" name="trangThai"><option value="">Tất cả</option><option value="HOAT_DONG">Đang hoạt động</option><option value="BI_KHOA">Bị khóa</option><option value="CHUA_XAC_THUC">Chưa xác thực</option><option value="DANG_XOA">Đang xóa</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="role">Vai trò</label>
+              <select class="select" id="role" name="vaiTro"><option value="">Tất cả</option><option value="ADMIN">Quản trị viên</option><option value="USER">Người học</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Tìm</button>
+          </form>
+          <div data-view="loading" id="region" aria-live="polite">
+            <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
+            <div data-when="ready">
+              <p class="result-line" id="result-line"></p>
+              <ol class="answer-list" id="list" role="list"></ol>
+              <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
+            </div>
+            <div data-when="empty">
+              <div class="empty">
+                <h2>Không tìm thấy tài khoản</h2>
+                <p>Thử bỏ bớt bộ lọc hoặc tìm bằng một phần email.</p>
+                <button type="button" class="btn btn-secondary" id="clear">Xóa bộ lọc</button>
+              </div>
+            </div>
+            <div data-when="error"></div>
+          </div>
+        </section>
+
+        <aside class="side-col">
+          <section class="panel" aria-labelledby="rules-title">
+            <h2 class="panel-title" id="rules-title">Quy tắc</h2>
+            <ul class="rules">
+              <li>Khóa tài khoản sẽ hủy mọi phiên đăng nhập của người đó ngay lập tức.</li>
+              <li>Không tự khóa tài khoản của mình.</li>
+              <li>Luôn còn ít nhất một quản trị viên đang hoạt động: không khóa và không thu quyền người cuối cùng.</li>
+              <li>Tài khoản chưa xác thực email phải tự xác thực qua thư, quản trị không mở thay.</li>
+              <li>Trang này chỉ hiện thông tin cần để quản lý tài khoản, không hiện nội dung học riêng tư.</li>
+            </ul>
+          </section>
+          <section class="panel" aria-labelledby="log-title">
+            <h2 class="panel-title" id="log-title">Nhật ký</h2>
+            <p class="small muted">Xem ai đã khóa, mở khóa hay đổi vai trò, lúc nào và vì sao.</p>
+            <a class="btn btn-quiet" href="quan-tri-nhat-ky.html?loai=NGUOI_DUNG" style="margin:var(--sp-2) 0 0 -12px">Mở nhật ký tài khoản</a>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav"></nav>
+</div>
+
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const me = VL.me();
+  if (!me || !me.vaiTro.includes("ADMIN")) return;
+  const $ = (x) => document.getElementById(x);
+  const form = $("filters");
+  const p = VL.params();
+  const STATUS = { HOAT_DONG: ["Đang hoạt động", ""], BI_KHOA: ["Bị khóa", "stamp-danger"], CHUA_XAC_THUC: ["Chưa xác thực", "stamp-warning"], DANG_XOA: ["Đang xóa", "stamp-quiet"] };
+  form.q.value = p.q || "";
+  form.trangThai.value = p.trangThai || "";
+  form.vaiTro.value = p.vaiTro || "";
+  let pageNo = Number(p.page || 0);
+  let items = [];
+
+  function actions(x) {
+    const self = x.id === me.id;
+    const out = [];
+    if (x.trangThai === "HOAT_DONG") out.push(self ? '<button type="button" class="btn btn-quiet" disabled title="Không tự khóa tài khoản của mình">Khóa tài khoản</button>' : '<button type="button" class="btn btn-quiet btn-danger-text" data-act="lock">Khóa tài khoản</button>');
+    if (x.trangThai === "BI_KHOA") out.push('<button type="button" class="btn btn-quiet" data-act="unlock">Mở khóa</button>');
+    if (x.vaiTro.includes("ADMIN")) out.push('<button type="button" class="btn btn-quiet" data-act="revoke">Thu quyền quản trị</button>');
+    else if (x.trangThai === "HOAT_DONG") out.push('<button type="button" class="btn btn-quiet" data-act="grant">Cấp quyền quản trị</button>');
+    return out.join("");
+  }
+
+  function row(x, i, d) {
+    const st = STATUS[x.trangThai];
+    return '<li class="answer-row u-row" data-id="' + x.id + '"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main">' +
+      '<div class="u-head">' + VL.avatarHtml(x) + '<div style="min-width:0"><div class="u-name">' + VL.esc(x.tenHienThi) + (x.id === me.id ? ' <span class="small muted">(bạn)</span>' : "") + '</div><div class="u-mail">' + VL.esc(x.email) + "</div></div></div>" +
+      '<div class="answer-meta"><span class="stamp ' + st[1] + '">' + st[0] + "</span>" + (x.vaiTro.includes("ADMIN") ? "<strong>Quản trị viên</strong>" : "<span>Người học</span>") +
+      "<span>" + x.soBoThe + " bộ thẻ</span><span>Tạo " + VL.fmtDate(x.createdAt) + "</span><span>" + (x.dangNhapCuoiAt ? "Đăng nhập " + VL.fmtDateTime(x.dangNhapCuoiAt) : "Chưa đăng nhập") + "</span></div>" +
+      '<div class="u-tools">' + actions(x) + "</div></div></li>";
+  }
+
+  function load() {
+    const params = new URLSearchParams();
+    ["q", "trangThai", "vaiTro"].forEach((k) => { const v = form[k].value.trim(); if (v) params.set(k, v); });
+    params.set("page", pageNo);
+    const qs = "?" + params.toString();
+    history.replaceState(null, "", qs);
+    VL.load($("region"), {
+      fetch: () => VL.api("GET", "/admin/users" + qs),
+      isEmpty: (d) => !d.items.length,
+      empty: () => { $("total").textContent = "0 tài khoản"; },
+      render: (d) => {
+        items = d.items;
+        $("total").textContent = d.totalElements + " tài khoản";
+        $("result-line").textContent = d.totalElements + " tài khoản khớp bộ lọc, mới tạo trước";
+        $("list").innerHTML = d.items.map((x, i) => row(x, i, d)).join("");
+        const pages = [];
+        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
+        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+      }
+    });
+  }
+
+  const CFG = {
+    lock: (x) => ({ title: "Khóa tài khoản " + x.tenHienThi + "?", message: "Người này sẽ bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho đến khi được mở khóa. Dữ liệu học vẫn giữ nguyên.", confirmText: "Khóa tài khoản", danger: true, call: (r) => VL.api("PATCH", "/admin/users/" + x.id + "/status", { trangThai: "BI_KHOA", lyDo: r }), done: (res) => "Đã khóa tài khoản" + (res.soPhienDaHuy ? ", hủy " + res.soPhienDaHuy + " phiên đăng nhập" : "") }),
+    unlock: (x) => ({ title: "Mở khóa tài khoản " + x.tenHienThi + "?", message: "Người này đăng nhập lại được ngay.", confirmText: "Mở khóa", call: (r) => VL.api("PATCH", "/admin/users/" + x.id + "/status", { trangThai: "HOAT_DONG", lyDo: r }), done: () => "Đã mở khóa tài khoản" }),
+    grant: (x) => ({ title: "Cấp quyền quản trị cho " + x.tenHienThi + "?", message: "Người này sẽ quản lý được tài khoản, bộ mẫu và xem nhật ký quản trị.", confirmText: "Cấp quyền quản trị", call: (r) => VL.api("PUT", "/admin/users/" + x.id + "/roles", { vaiTro: ["USER", "ADMIN"], lyDo: r }), done: () => "Đã cấp quyền quản trị" }),
+    revoke: (x) => ({ title: "Thu quyền quản trị của " + x.tenHienThi + "?", message: x.id === me.id ? "Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được các trang quản trị." : "Người này vẫn học bình thường nhưng không vào được trang quản trị.", confirmText: "Thu quyền quản trị", danger: true, call: (r) => VL.api("PUT", "/admin/users/" + x.id + "/roles", { vaiTro: ["USER"], lyDo: r }), done: () => "Đã thu quyền quản trị" })
+  };
+
+  $("list").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const x = items.find((it) => it.id === b.closest("[data-id]").dataset.id);
+    const c = CFG[b.dataset.act](x);
+    const res = await VL.reasonDialog({ title: c.title, message: c.message, confirmText: c.confirmText, danger: c.danger, submit: c.call });
+    if (!res) return;
+    VL.toast(c.done(res));
+    if (res.banThanMatQuyen) {
+      location.href = VL.url(VL.HOME);
+      return;
+    }
+    load();
+  });
+
+  form.addEventListener("submit", (e) => { e.preventDefault(); pageNo = 0; load(); });
+  form.addEventListener("change", (e) => { if (e.target.tagName === "SELECT") { pageNo = 0; load(); } });
+  $("clear").addEventListener("click", () => { form.reset(); pageNo = 0; load(); });
+  $("pager").addEventListener("click", (e) => { const b = e.target.closest("[data-page]"); if (b) { pageNo = Number(b.dataset.page); load(); } });
+  load();
+})();
+</script>
+</body>
+</html>

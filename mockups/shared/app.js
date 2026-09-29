@@ -40,7 +40,13 @@
     file: '<path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
     filter: '<path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z"/>',
-    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/>',
+    play: '<path d="M7 5v14l11-7L7 5Z"/>',
+    flame: '<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.2 2.2-5.3 3.6-7.4.3 1.6 1.2 2.7 2.3 3.1C11.1 7.1 12.4 4.6 15 3c-.3 2.8 1.2 4.6 2.4 6.3.9 1.3 1.6 2.9 1.6 4.8C19 18.3 16 21 12 21Z"/>',
+    pause: '<path d="M8 5v14M16 5v14"/>',
+    wifi: '<path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>',
+    keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'
   };
 
   const GOAL = { GIAO_TIEP: "Giao tiếp", TOEIC: "TOEIC" };
@@ -226,19 +232,56 @@
       d.setAttribute("aria-labelledby", "cd-title");
       d.innerHTML = '<form method="dialog" class="dialog-body"><div class="dialog-head"><h2 id="cd-title">' + esc(title) + '</h2></div><p>' + esc(message) + '</p><div class="dialog-actions"><button value="cancel" class="btn btn-quiet">Hủy</button><button value="ok" class="btn ' + (danger ? "btn-danger-solid" : "btn-primary") + '">' + esc(confirmText || "Xác nhận") + "</button></div></form>";
       body.appendChild(d);
-      d.addEventListener("close", () => { resolve(d.returnValue === "ok"); d.remove(); });
+      let settled = false;
+      const finish = (v) => { if (settled) return; settled = true; if (d.open) d.close(); d.remove(); resolve(v); };
+      d.querySelectorAll("button[value]").forEach((b) => b.addEventListener("click", (e) => { e.preventDefault(); finish(b.value === "ok"); }));
+      d.addEventListener("close", () => finish(d.returnValue === "ok"));
       d.showModal();
     });
   }
 
+  function reasonDialog({ title, message, confirmText, danger, submit }) {
+    return new Promise((resolve) => {
+      const d = document.createElement("dialog");
+      d.className = "dialog";
+      d.setAttribute("aria-labelledby", "rd-title");
+      d.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="rd-title">' + esc(title) + "</h2></div>" + (message ? "<p>" + esc(message) + "</p>" : "") +
+        '<div class="field" data-field="lyDo"><label class="field-label" for="rd-reason">Lý do<span class="optional">10 đến 500 ký tự, ghi vào nhật ký</span></label><textarea class="textarea" id="rd-reason" name="lyDo" rows="3" maxlength="600"></textarea><p class="field-counter" aria-live="polite">0/500</p><p class="field-error"></p></div>' +
+        '<div data-form-error hidden></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn ' + (danger ? "btn-danger-solid" : "btn-primary") + '">' + esc(confirmText || "Xác nhận") + "</button></div></form>";
+      body.appendChild(d);
+      const f = d.querySelector("form");
+      const ta = f.lyDo;
+      const counter = f.querySelector(".field-counter");
+      let settled = false;
+      const finish = (v) => { if (settled) return; settled = true; if (d.open) d.close(); d.remove(); resolve(v); };
+      ta.addEventListener("input", () => { const n = ta.value.trim().length; counter.textContent = n + "/500"; counter.toggleAttribute("data-over", n > 500); });
+      d.querySelector("[data-close]").addEventListener("click", () => finish(null));
+      d.addEventListener("close", () => finish(null));
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        clearErrors(f);
+        const v = ta.value.trim();
+        if (v.length < 10 || v.length > 500) { setFieldError(f, "lyDo", "Nhập lý do từ 10 đến 500 ký tự"); ta.focus(); return; }
+        busy(f.querySelector('[type="submit"]'), async () => {
+          try { const out = await submit(v); finish(out || true); }
+          catch (err) { showErrors(f, err); }
+        });
+      });
+      d.showModal();
+      ta.focus();
+    });
+  }
+
   /* ---------- Shell ---------- */
+  const HOME = "dot2/hom-nay.html";
   const NAV = [
     { group: "Học tập", items: [
-      { key: "today", label: "Hôm nay", icon: "today", soon: "Đợt 2" },
+      { key: "today", label: "Hôm nay", icon: "today", href: HOME },
       { key: "decks", label: "Bộ của tôi", icon: "decks", href: "dot1/bo-the.html" },
       { key: "library", label: "Thư viện", icon: "library", href: "dot1/thu-vien.html" },
-      { key: "practice", label: "Luyện tập", icon: "practice", soon: "Đợt 2" },
-      { key: "notebook", label: "Sổ tay", icon: "notebook", soon: "Đợt 2" }
+      { key: "practice", label: "Luyện tập", icon: "practice", href: "dot2/luyen-tap.html" },
+      { key: "notebook", label: "Sổ tay", icon: "notebook", href: "dot2/so-tay.html" },
+      { key: "stats", label: "Thống kê", icon: "chart", href: "dot2/thong-ke.html" }
     ] },
     { group: "Tài khoản", items: [
       { key: "profile", label: "Hồ sơ", icon: "user", href: "dot1/ca-nhan.html" },
@@ -247,15 +290,18 @@
       { key: "notify", label: "Thông báo & nhắc học", icon: "bell", href: "dot1/ca-nhan-thong-bao.html" }
     ] },
     { group: "Quản trị", admin: true, items: [
-      { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "dot1/quan-tri-chu-de.html" }
+      { key: "admin-users", label: "Tài khoản & vai trò", icon: "user", href: "dot2/quan-tri-tai-khoan.html" },
+      { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "dot1/quan-tri-chu-de.html" },
+      { key: "admin-decks", label: "Bộ và thẻ mẫu", icon: "decks", href: "dot2/quan-tri-bo-mau.html" },
+      { key: "admin-audit", label: "Nhật ký quản trị", icon: "file", href: "dot2/quan-tri-nhat-ky.html" }
     ] }
   ];
   const BOTTOM = [
-    { key: "decks", label: "Học", icon: "decks", href: "dot1/bo-the.html", also: ["deck-new"] },
+    { key: "today", label: "Học", icon: "today", href: HOME, also: ["decks", "deck-new", "study", "stats"] },
     { key: "library", label: "Thư viện", icon: "library", href: "dot1/thu-vien.html" },
-    { key: "practice", label: "Luyện tập", icon: "practice", soon: "Đợt 2" },
-    { key: "notebook", label: "Sổ tay", icon: "notebook", soon: "Đợt 2" },
-    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["profile", "learning", "security", "notify", "admin-topics"] }
+    { key: "practice", label: "Luyện tập", icon: "practice", href: "dot2/luyen-tap.html" },
+    { key: "notebook", label: "Sổ tay", icon: "notebook", href: "dot2/so-tay.html" },
+    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["profile", "learning", "security", "notify", "admin-topics", "admin-users", "admin-decks", "admin-audit"] }
   ];
 
   function renderAppShell(u) {
@@ -263,7 +309,7 @@
     const header = document.querySelector(".app-header");
     if (header) {
       header.innerHTML =
-        '<a class="brand" href="' + url("dot1/bo-the.html") + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
+        '<a class="brand" href="' + url(HOME) + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
         '<div class="header-actions"><a class="user-chip" href="' + url("dot1/ca-nhan.html") + '" aria-label="Hồ sơ của ' + esc(u.tenHienThi) + '">' + avatarHtml(u) + '<span class="user-name">' + esc(u.tenHienThi) + "</span></a>" +
         '<button type="button" class="btn btn-quiet btn-icon" data-logout aria-label="Đăng xuất" title="Đăng xuất">' + icon("logout") + "</button></div>";
     }
@@ -333,6 +379,17 @@
     if (!hasRegions) { const l = d.querySelector("[data-mock-label]"); if (l) l.textContent = "dữ liệu mẫu"; }
   }
 
+  function mockAction(label, fn) {
+    const box = document.querySelector(".mock-bar .mock-options");
+    if (!box) return null;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.addEventListener("click", () => fn(b));
+    box.insertBefore(b, box.querySelector("[data-reset]"));
+    return b;
+  }
+
   /* ---------- Image slots ---------- */
   function mountImageSlots() {
     document.querySelectorAll(".img-slot[data-src]").forEach((slot) => {
@@ -380,7 +437,7 @@
       return false;
     }
     if (auth === "guest" && u && body.dataset.guestRedirect !== "off") {
-      location.replace(url(onboardingDone(u) ? "dot1/bo-the.html" : "dot1/bat-dau.html"));
+      location.replace(url(onboardingDone(u) ? HOME : "dot1/bat-dau.html"));
       return false;
     }
     if (u && auth === "required" && body.dataset.onboarding !== "skip" && body.dataset.role !== "ADMIN" && !onboardingDone(u)) {
@@ -409,6 +466,19 @@
     return true;
   }
 
-  window.VL = { root, url, icon, esc, params, api, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, bindPassword, countdown, fmtDate, levelHtml, avatarHtml, initials, GOAL, LEVEL, ready: false };
+  const DIR = { EN_VI: "Anh → Việt", VI_EN: "Việt → Anh" };
+  const RATING = { QUEN: "Quên", KHO: "Khó", NHO: "Nhớ", DE: "Dễ" };
+  const SRS_STATE = { MOI: "Mới", DANG_HOC: "Đang học", ON_TAP: "Ôn tập", HOC_LAI: "Học lại", TAM_NGUNG: "Tạm ngưng" };
+  const PRACTICE = { CHON_NGHIA: "Chọn nghĩa", CHON_TU: "Chọn từ", GHEP_TU: "Ghép từ với nghĩa", DIEN_CHO_TRONG: "Điền chỗ trống", NHAP_TU_THEO_NGHIA: "Nhập từ theo nghĩa", NGHE_VIET: "Nghe và viết", PHAN_BIET_CAP: "Phân biệt cặp dễ nhầm", TONG_HOP: "Kiểm tra tổng hợp" };
+  const ERROR_GROUP = { NGHIA: "Nghĩa", CHINH_TA: "Chính tả", NGHE: "Nghe", NGU_CANH: "Dùng từ trong câu", CAP_NHAM: "Cặp dễ nhầm", PHAT_AM: "Phát âm" };
+  const SKILL = { NHAN_NGHIA: "Nhận nghĩa", VIET: "Viết đúng chính tả", NGHE: "Nghe và viết", NGU_CANH: "Dùng từ trong câu", CAP_NHAM: "Phân biệt cặp dễ nhầm" };
+  function tz() { const u = me(); return (u && u.muiGio) || "Asia/Ho_Chi_Minh"; }
+  function eventId() { try { return crypto.randomUUID(); } catch (e) { return "evt-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); } }
+  function fmtDateTime(iso) { return new Date(iso).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric", timeZone: tz() }); }
+  function fmtTime(iso) { return new Date(iso).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: tz() }); }
+  function fmtDay(ymd, weekday) { return new Date(ymd + "T12:00:00Z").toLocaleDateString("vi-VN", Object.assign({ day: "2-digit", month: "2-digit", timeZone: "UTC" }, weekday ? { weekday: "long" } : {})); }
+  function fmtDuration(sec) { const m = Math.floor(sec / 60); const s = Math.round(sec % 60); return m ? m + " phút" + (s ? " " + s + " giây" : "") : s + " giây"; }
+
+  window.VL = { root, url, icon, esc, params, api, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
   window.VL.ready = boot();
 })();
