@@ -9,6 +9,41 @@
 
 ---
 
+## 29/09/2026 — Đợt 1: B1.2 Đăng nhập, đăng xuất, thông tin phiên ✅
+
+### Đã hoàn thành
+
+| Bước | Nội dung | Kết quả kiểm chứng |
+|---|---|---|
+| B1.2 | `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/me`. Phiên lưu Redis (Spring Session), cookie `SESSION` HttpOnly; đổi session id khi đăng nhập (chống fixation); logout xóa phiên. Sai email và sai mật khẩu trả cùng 401 `INVALID_CREDENTIALS`, email không tồn tại vẫn chạy BCrypt giả (chống dò tài khoản); kiểm mật khẩu trước rồi mới báo 403 `EMAIL_NOT_VERIFIED` / `ACCOUNT_LOCKED`; 5 lần/15 phút theo email → 429; ghi `dang_nhap_cuoi_at` | `FR01LoginTest` 9/9 pass; gọi thật bằng curl: login 200, `/me` 200, logout 204, cookie cũ gọi `/me` → 401 |
+| Sửa lỗi | Bản gõ tay của `LoginService` trả "Tài khoản không tồn tại" (`UNAUTHENTICATED`) khi email không có → lộ email đã đăng ký; test `tc01_wrongPasswordAndUnknownEmailReturnSame401` bắt được, đã sửa về `orElse(null)` + hash giả | Test pass |
+| Sửa lỗi (có từ B0.5) | Request khách bị 401 vẫn tạo phiên rỗng trên Redis do `RequestCache` → tắt `requestCache` trong `SecurityConfig` | Test mới `tc01_anonymousRequestDoesNotCreateSession` |
+| Dọn code | `;` thừa trong `ErrorCode`, `.cors()` lặp trong `SecurityConfig`, `@Transactional(readOnly = true)` cho `AccountService.me` | 42/42 pass |
+
+**Tổng kiểm thử:** `./mvnw test` → 42/42 pass.
+
+**Bàn giao FE:** [`report/DOT1_BAO_CAO_FE.md`](../report/DOT1_BAO_CAO_FE.md) bản 2 — thêm mục 5.4–5.6 (login, `/me`, logout), sửa bắt buộc `api-client.js` (chỉ thử lại 403 khi `code === 'FORBIDDEN'`), checklist F1.2.
+
+**Postman:** +5 request trong "01 Tài khoản": Đăng nhập, `GET /me`, sai mật khẩu → 401, Đăng xuất, `/me` sau đăng xuất → 401.
+
+**Mockup:** `dang-nhap.html` + demo khớp BE (thông điệp lỗi, `DANG_XOA` → `ACCOUNT_LOCKED`); mật khẩu demo đổi thành `Vocab@12345` giống seed. Kiểm tra trình duyệt: lỗi 400/401/403 hiện đúng, đăng nhập → vào app, đăng xuất → trang cần đăng nhập bị đẩy về `/dang-nhap?next=`, không lỗi console.
+
+### Việc tiếp theo
+
+| Bước | Nội dung |
+|---|---|
+| B1.3 | Quên / đặt lại / đổi mật khẩu; vô hiệu mọi phiên khác (`FindByIndexNameSessionRepository`, cần ghi tên người dùng vào session lúc đăng nhập) |
+| B1.4 | Đăng nhập Google |
+
+### Rủi ro / cần lưu ý
+
+- Chạy `./mvnw test` trong lúc API đang chạy từ IntelliJ (devtools) có thể làm API restart giữa chừng và nạp thiếu `SecurityConfig` (mọi request 401 kiểu Basic). Cách xử lý: chạy lại API hoặc build lại trong IntelliJ.
+- Ô "Ghi nhớ đăng nhập 7 ngày" trên mockup chưa có ở BE (cookie `SESSION` là cookie phiên trình duyệt).
+- Hạn mức đăng nhập chỉ theo email; chưa có hạn mức theo IP.
+- Chưa commit thay đổi của B1.2.
+
+---
+
 ## 29/09/2026 — Đợt 1: B1.1 Đăng ký & xác thực email ✅ (sớm ~2 tuần so với S3)
 
 ### Đã hoàn thành
@@ -42,7 +77,7 @@ Không thêm migration. Map thêm entity `HoSoHocTap`, `CaiDatThongBao` (enum `T
 - FE chưa khởi tạo Next.js, trong khi F0.1–F0.3 hạn 04/10 → FE nên bắt đầu và nối thật F1.1 vì API đã có.
 - Hạn mức gửi lại thư đếm chung theo IP (3/15 phút) → người dùng chung mạng dễ bị 429; xem lại ở B1.3.
 - `api-client` GĐ0 thử lại mọi 403 → khi có B1.2 chỉ thử lại với `code === 'FORBIDDEN'` (đã ghi ở DOT1 §10).
-- Chưa commit thay đổi của kỳ này.
+- Đã commit (B1.1).
 
 ---
 

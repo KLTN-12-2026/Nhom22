@@ -21,7 +21,7 @@
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
-**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8) và B1.1, 33 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `bao-cao-tien-do-BE/BAO_CAO_TIEN_DO_BE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
+**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8), B1.1 và B1.2, 42 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `bao-cao-tien-do-BE/BAO_CAO_TIEN_DO_BE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
 
 ---
 

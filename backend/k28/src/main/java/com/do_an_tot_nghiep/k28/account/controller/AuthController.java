@@ -1,11 +1,11 @@
 package com.do_an_tot_nghiep.k28.account.controller;
 
-import com.do_an_tot_nghiep.k28.account.dto.RegisterRequest;
-import com.do_an_tot_nghiep.k28.account.dto.ResendVerificationRequest;
-import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
-import com.do_an_tot_nghiep.k28.account.dto.VerifyEmailRequest;
+import com.do_an_tot_nghiep.k28.account.dto.*;
+import com.do_an_tot_nghiep.k28.account.service.LoginService;
 import com.do_an_tot_nghiep.k28.account.service.RegistrationService;
+import com.do_an_tot_nghiep.k28.common.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final RegistrationService registrationService;
+    private final LoginService loginService;
+    private final SessionAuthenticator sessionAuthenticator;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,5 +40,18 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void resendVerification(@Valid @RequestBody ResendVerificationRequest request, HttpServletRequest http) {
         registrationService.resendVerification(request.email(), http.getRemoteAddr());
+    }
+
+    @PostMapping("/login")
+    UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http, HttpServletResponse response) {
+        LoginService.LoginResult result = loginService.login(request);
+        sessionAuthenticator.login(result.principal(), http, response);
+        return result.user();
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void logout(HttpServletRequest http, HttpServletResponse response) {
+        sessionAuthenticator.logout(http, response);
     }
 }

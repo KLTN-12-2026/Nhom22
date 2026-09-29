@@ -1,7 +1,7 @@
 (function () {
-  const KEY = "vl-demo-v2";
+  const KEY = "vl-demo-v3";
   const SESSION = "vl-demo-session";
-  const DEMO_PASSWORD = "Hoctap@2026";
+  const DEMO_PASSWORD = "Vocab@12345";
 
   const TOPICS = [
     { id: "1", name: "Văn phòng & công sở", slug: "van-phong" },
@@ -259,14 +259,15 @@
     ["POST", /^\/auth\/login$/, (m, b) => {
       const email = norm(b.email);
       const errors = [];
-      if (!email) errors.push(fe("email", "Nhập email"));
-      if (!b.password) errors.push(fe("password", "Nhập mật khẩu"));
+      if (!email) errors.push(fe("email", "Vui lòng nhập email"));
+      else if (!EMAIL_RE.test(email) || email.length > 255) errors.push(fe("email", "Email không hợp lệ"));
+      if (!b.password) errors.push(fe("password", "Vui lòng nhập mật khẩu"));
       if (errors.length) bad(errors);
       const limiter = rateLimit("login:" + email, 5);
       const u = db.users.find((x) => x.email === email);
-      if (!u || u.password !== b.password) { limiter.fail(); throw new ApiError(401, "INVALID_CREDENTIALS", "Email hoặc mật khẩu chưa đúng"); }
-      if (u.trangThai === "CHUA_XAC_THUC") throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Tài khoản chưa xác thực email. Mở thư xác thực hoặc gửi lại thư.");
-      if (u.trangThai === "BI_KHOA") throw new ApiError(403, "ACCOUNT_LOCKED", "Tài khoản đang bị khóa. Liên hệ quản trị viên để được hỗ trợ.");
+      if (!u || u.password !== b.password) { limiter.fail(); throw new ApiError(401, "INVALID_CREDENTIALS", "Sai email hoặc mật khẩu"); }
+      if (u.trangThai === "CHUA_XAC_THUC") throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Tài khoản chưa xác thực email");
+      if (u.trangThai === "BI_KHOA" || u.trangThai === "DANG_XOA") throw new ApiError(403, "ACCOUNT_LOCKED", "Tài khoản đã bị khóa. Liên hệ với quản trị viên để được hỗ trợ");
       limiter.reset();
       session.set({ userId: u.id }, !!b.remember);
       return publicUser(u);

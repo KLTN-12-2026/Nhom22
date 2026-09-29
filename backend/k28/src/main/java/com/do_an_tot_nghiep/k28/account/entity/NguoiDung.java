@@ -72,4 +72,8 @@ public class NguoiDung extends BaseEntity {
             emailXacThucAt = now;
         }
     }
+
+    public void recordLogin(Instant now) {
+        dangNhapCuoiAt = now;
+    }
 }
