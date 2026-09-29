@@ -1,0 +1,38 @@
+.onb { max-width: 1120px; margin: 0 auto; padding: 0 0 calc(96px + env(safe-area-inset-bottom)); display: grid; gap: var(--space-5); }
+.onbSheet { min-height: 60vh; }
+.onbStep { display: grid; gap: var(--space-5); }
+.onbStep h2 { font-size: var(--font-size-3xl); }
+.summary { display: none; }
+.onbActions {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  background: var(--color-sheet); border-top: 1px solid var(--color-primary-line);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  display: flex; justify-content: space-between; gap: var(--space-3);
+}
+.onbActions button { flex: 1; }
+.minutes { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.minutes label { border: 1px solid var(--color-primary-line); background: var(--color-field); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3); align-items: center; display: flex; gap: 8px; cursor: pointer; border-radius: var(--radius-md); }
+.minutes label:has(input:checked) { border-color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-ink); }
+.starter { display: grid; gap: var(--space-3); }
+.starterItem { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; padding: var(--space-4); border: 1px solid var(--color-primary-line); background: var(--color-field); border-radius: var(--radius-lg); }
+.starterItem h3 { font-size: 1.0625rem; overflow-wrap: anywhere; }
+.sumList { list-style: none; margin: 0; padding: 0; display: grid; }
+.sumList li { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px dashed var(--color-primary-line); }
+.sumList .sumK { font-size: var(--font-size-xs); color: var(--color-primary); font-weight: 650; text-transform: uppercase; letter-spacing: 0.05em; }
+.sumList .sumV { font-weight: 600; overflow-wrap: anywhere; }
+.sumList .sumV.isEmpty { color: var(--color-ink-3); font-weight: 400; }
+
+@media (min-width: 1024px) {
+  .onb { grid-template-columns: minmax(0, 1fr) var(--side-col-w); padding: var(--space-5) var(--space-5) calc(var(--space-7) + 72px); align-items: start; }
+  .summary { display: block; position: sticky; top: calc(var(--header-h) + var(--space-5)); }
+  .onbActions { left: 50%; transform: translateX(-50%); width: min(1120px, 100%); justify-content: flex-end; border: 1px solid var(--color-primary-line); border-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .onbActions button { flex: 0 0 auto; min-width: 160px; }
+}
+
+.steps { display: flex; gap: 4px; list-style: none; padding: 0; margin: 0; }
+.steps li { flex: 1; display: flex; flex-direction: column; gap: 4px; color: var(--color-ink-3); }
+.steps li[data-state="current"] { color: var(--color-primary-strong); font-weight: bold; }
+.steps li[data-state="done"] { color: var(--color-ink); }
+.stepBar { height: 4px; background: var(--color-border); border-radius: 2px; }
+.steps li[data-state="current"] .stepBar, .steps li[data-state="done"] .stepBar { background: var(--color-primary-strong); }
+.stepLabel { font-size: 12px; }
