@@ -3,15 +3,32 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
 import styles from '../layout.module.css';
+import { useMutation } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 
 export default function RegisterPage() {
   const router = useRouter();
 
+  const registerMutation = useMutation({
+    mutationFn: (data) => apiFetch('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+    onSuccess: (data, variables) => {
+      router.push(`/xac-thuc-email?email=${encodeURIComponent(variables.email)}`);
+    },
+    onError: (err) => {
+      alert(err.message || 'Đăng ký thất bại');
+    }
+  });
+
   const handleRegister = (e) => {
     e.preventDefault();
-    // Fake login after register
-    localStorage.setItem('vocab_demo_user', JSON.stringify({ tenHienThi: 'Thảo', vaiTro: ['USER'] }));
-    router.push('/bat-dau');
+    registerMutation.mutate({
+      tenHienThi: e.target.name.value,
+      email: e.target.email.value,
+      password: e.target.password.value,
+    });
   };
 
   return (
@@ -51,8 +68,8 @@ export default function RegisterPage() {
           required 
         />
         
-        <Button type="submit" variant="primary" size="lg" style={{ marginTop: 'var(--space-2)' }}>
-          Tạo tài khoản
+        <Button type="submit" variant="primary" size="lg" style={{ marginTop: 'var(--space-2)' }} disabled={registerMutation.isPending}>
+          {registerMutation.isPending ? 'Đang tạo...' : 'Tạo tài khoản'}
         </Button>
       </form>
 

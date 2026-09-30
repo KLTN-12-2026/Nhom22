@@ -10,6 +10,15 @@ export const handlers = [
   http.post('*/api/v1/auth/login', () => {
     return HttpResponse.json({ message: 'Login success' });
   }),
+  http.post('*/api/v1/auth/register', () => {
+    return HttpResponse.json({ message: 'Register success' });
+  }),
+  http.post('*/api/v1/auth/verify-email', () => {
+    return HttpResponse.json({ message: 'Verify success' });
+  }),
+  http.post('*/api/v1/auth/resend-verification', () => {
+    return HttpResponse.json({ message: 'Resend success' });
+  }),
 
   // Me
   http.get('*/api/v1/me', () => {
