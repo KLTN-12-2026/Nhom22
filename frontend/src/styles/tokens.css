@@ -1,0 +1,263 @@
+/* ===========================================
+   DESIGN TOKENS — VocabFlow
+   Phong cách tương tự mockups/shared/tokens.css
+=========================================== */
+
+:root {
+  /* === SURFACE === */
+  --color-sheet:   #fafaf6;   /* nền trang ấm, không trắng tinh */
+  --color-desk:    #e6e7e1;   /* nền sidebar / vùng xám */
+  --color-field:   #ffffff;   /* nền input */
+  --color-border:  #d4d5cf;
+  --color-border-strong: #b0b1ab;
+
+  /* === INK (text) === */
+  --color-ink:     #24262c;   /* text chính */
+  --color-ink-2:   #474b55;   /* text phụ */
+  --color-ink-3:   #62677a;   /* text muted */
+
+  /* === PRIMARY — Xanh tím đậm === */
+  --color-primary:        #3b47b0;
+  --color-primary-strong: #252e7c;
+  --color-primary-hover:  #323d9c;
+  --color-primary-tint:   #eceef9;
+  --color-primary-tint-2: #dfe2f4;
+  --color-primary-line:   #a4abdc;
+  --color-on-primary:     #ffffff;
+
+  /* === SUCCESS — Xanh lá === */
+  --color-success:      #1e8a5a;
+  --color-success-bg:   #e3f2ea;
+  --color-success-text: #14603f;
+
+  /* === ACCENT / WARNING — Vàng hổ phách === */
+  --color-accent:       #e8a317;
+  --color-accent-hover: #d99513;
+  --color-accent-bg:    #fcf1d6;
+  --color-accent-text:  #6b4a00;
+
+  /* === DANGER — Đỏ === */
+  --color-danger:    #b42318;
+  --color-danger-bg: #fdecea;
+
+  /* === WARNING nhẹ === */
+  --color-warning:    #b07d12;
+  --color-warning-bg: #fbf4e2;
+
+  /* === SEMANTIC aliases (backward compat với ui.css) === */
+  --color-bg:            var(--color-sheet);
+  --color-bg-subtle:     var(--color-desk);
+  --color-bg-muted:      #f0f0eb;
+  --color-text:          var(--color-ink);
+  --color-text-muted:    var(--color-ink-3);
+  --color-text-subtle:   #8a8f9e;
+  --color-error-600:     var(--color-danger);
+  --color-error-100:     var(--color-danger-bg);
+  --color-success-600:   var(--color-success);
+  --color-success-100:   var(--color-success-bg);
+  --color-warning-600:   var(--color-accent);
+  --color-warning-100:   var(--color-accent-bg);
+  --color-primary-500:   var(--color-primary);
+  --color-primary-600:   var(--color-primary);
+  --color-primary-700:   var(--color-primary-strong);
+  --color-primary-200:   var(--color-primary-tint-2);
+  --color-gray-0:        #ffffff;
+  --color-gray-50:       var(--color-sheet);
+  --color-gray-100:      #f0f0eb;
+  --color-gray-200:      var(--color-border);
+  --color-gray-300:      var(--color-border-strong);
+  --color-gray-400:      #9ca3af;
+  --color-gray-500:      var(--color-ink-3);
+  --color-gray-700:      var(--color-ink-2);
+  --color-gray-900:      var(--color-ink);
+
+  /* === TYPOGRAPHY === */
+  --font-sans:  'Archivo', 'Segoe UI', system-ui, sans-serif;
+  --font-word:  'Gentium Book Plus', 'Charis SIL', 'Noto Serif', Georgia, serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+  --stretch-form: 82%;          /* Archivo variable width */
+
+  --font-size-xs:   0.8125rem;  /* 13px */
+  --font-size-sm:   0.875rem;   /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg:   1.125rem;   /* 18px */
+  --font-size-xl:   1.25rem;    /* 20px */
+  --font-size-2xl:  1.5rem;     /* 24px */
+  --font-size-3xl:  clamp(1.75rem, 1.4rem + 1.4vw, 2.375rem);
+  --font-size-4xl:  clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  --font-size-word: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --line-height-tight:  1.15;
+  --line-height-normal: 1.55;
+
+  /* === SPACING === */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.5rem;
+  --space-6:  2rem;
+  --space-8:  3rem;
+  --space-10: 2.5rem;
+  --space-12: 4.5rem;
+  --space-16: 6rem;
+
+  /* === BORDER RADIUS (sắc nét theo mockup) === */
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
+  --radius-xl:   8px;
+  --radius-2xl:  12px;
+  --radius-full: 9999px;
+
+  /* === LAYOUT === */
+  --sidebar-w:     248px;
+  --side-col-w:    320px;
+  --header-h:      60px;
+  --bottom-nav-h:  64px;
+  --tap:           44px;
+  --tap-primary:   48px;
+  --measure:       68ch;
+
+  /* === SHADOWS === */
+  --shadow-xs:    0 1px 2px rgba(21, 22, 26, 0.06);
+  --shadow-sm:    0 1px 2px rgba(21, 22, 26, 0.06), 0 8px 24px -12px rgba(21, 22, 26, 0.18);
+  --shadow-md:    0 2px 6px rgba(21, 22, 26, 0.08), 0 18px 40px -16px rgba(21, 22, 26, 0.28);
+  --shadow-lg:    0 4px 12px rgba(21, 22, 26, 0.12), 0 24px 48px -20px rgba(21, 22, 26, 0.3);
+  --shadow-xl:    0 8px 24px rgba(21, 22, 26, 0.14), 0 32px 64px -24px rgba(21, 22, 26, 0.35);
+  --shadow-focus: 0 0 0 2px var(--color-sheet), 0 0 0 4px var(--color-primary);
+
+  /* === TRANSITIONS === */
+  --transition-fast:   120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  --transition-slow:   320ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* === Z-INDEX === */
+  --z-dropdown: 100;
+  --z-modal:    200;
+  --z-toast:    300;
+  --z-tooltip:  400;
+}
+
+
+:root {
+  /* === PRIMARY — Chàm (Indigo) === */
+  --color-primary-50:  #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  /* === SUCCESS — Xanh lá === */
+  --color-success-50:  #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+
+  /* === WARNING — Hổ phách === */
+  --color-warning-50:  #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  /* === ERROR — Đỏ === */
+  --color-error-50:  #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+
+  /* === NEUTRAL — Xám === */
+  --color-gray-0:   #ffffff;
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* === SEMANTIC === */
+  --color-bg:            var(--color-gray-0);
+  --color-bg-subtle:     var(--color-gray-50);
+  --color-bg-muted:      var(--color-gray-100);
+  --color-border:        var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+  --color-text:          var(--color-gray-900);
+  --color-text-muted:    var(--color-gray-500);
+  --color-text-subtle:   var(--color-gray-400);
+
+  /* === TYPOGRAPHY === */
+  --font-sans:  'Inter', 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+  --font-size-xs:   0.75rem;    /* 12px */
+  --font-size-sm:   0.875rem;   /* 14px */
+  --font-size-base: 1rem;       /* 16px — tối thiểu theo Roadmap */
+  --font-size-lg:   1.125rem;   /* 18px */
+  --font-size-xl:   1.25rem;    /* 20px */
+  --font-size-2xl:  1.5rem;     /* 24px */
+  --font-size-3xl:  1.875rem;   /* 30px */
+  --font-size-4xl:  2.25rem;    /* 36px */
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --line-height-tight:  1.25;
+  --line-height-normal: 1.5;
+  --line-height-loose:  1.75;
+
+  /* === SPACING === */
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+
+  /* === BORDER RADIUS === */
+  --radius-sm:   0.25rem;   /* 4px */
+  --radius-md:   0.5rem;    /* 8px */
+  --radius-lg:   0.75rem;   /* 12px */
+  --radius-xl:   1rem;      /* 16px */
+  --radius-2xl:  1.5rem;    /* 24px */
+  --radius-full: 9999px;
+
+  /* === SHADOWS === */
+  --shadow-xs:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm:  0 1px 3px 0 rgb(0 0 0 / 0.10), 0 1px 2px -1px rgb(0 0 0 / 0.10);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.10);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.10), 0 4px 6px -4px rgb(0 0 0 / 0.10);
+  --shadow-xl:  0 20px 25px -5px rgb(0 0 0 / 0.10), 0 8px 10px -6px rgb(0 0 0 / 0.10);
+  --shadow-focus: 0 0 0 3px var(--color-primary-200);
+
+  /* === TRANSITIONS === */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease;
+
+  /* === Z-INDEX === */
+  --z-dropdown: 100;
+  --z-modal:    200;
+  --z-toast:    300;
+  --z-tooltip:  400;
+}
