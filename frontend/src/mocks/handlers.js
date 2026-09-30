@@ -19,6 +19,12 @@ export const handlers = [
   http.post('*/api/v1/auth/resend-verification', () => {
     return HttpResponse.json({ message: 'Resend success' });
   }),
+  http.post('*/api/v1/auth/forgot-password', () => {
+    return HttpResponse.json({ message: 'Forgot success', demoToken: 'mock-reset-token-123' });
+  }),
+  http.post('*/api/v1/auth/reset-password', () => {
+    return HttpResponse.json({ message: 'Reset success' });
+  }),
 
   // Me
   http.get('*/api/v1/me', () => {
