@@ -68,6 +68,16 @@ export const handlers = [
     });
   }),
 
+  // Add Card
+  http.post('*/api/v1/decks/:id/cards', async ({ request, params }) => {
+    const data = await request.json();
+    return HttpResponse.json({
+      id: 'mock-card-' + Math.floor(Math.random() * 1000),
+      deckId: params.id,
+      ...data
+    });
+  }),
+
   // Topics
   http.get('*/api/v1/public/topics', () => {
     return HttpResponse.json([
