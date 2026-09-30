@@ -40,6 +40,34 @@ export const handlers = [
     ]);
   }),
 
+  // Deck details
+  http.get('*/api/v1/decks/:id', ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      name: `Bộ thẻ demo (${params.id})`,
+      description: 'Mô tả ngắn gọn về bộ thẻ này.',
+      goal: 'GIAO_TIEP',
+      level: 'CO_BAN',
+      visibility: 'RIENG_TU',
+      topicName: 'Giao tiếp',
+      cardCount: 2,
+      updatedAt: '2026-09-30T10:00:00Z',
+      cards: [
+        { id: 'c1', word: 'receipt', ipa: '/rɪˈsiːt/', pos: 'n.', meaningVi: 'biên lai, giấy biên nhận', exampleEn: 'Can I have a receipt, please?' },
+        { id: 'c2', word: 'postpone', ipa: '/pəʊstˈpəʊn/', pos: 'v.', meaningVi: 'hoãn lại', exampleEn: 'The meeting has been postponed until Friday.' },
+      ]
+    });
+  }),
+
+  // Create Deck
+  http.post('*/api/v1/decks', async ({ request }) => {
+    const data = await request.json();
+    return HttpResponse.json({
+      id: 'mock-new-id-' + Math.floor(Math.random() * 1000),
+      ...data
+    });
+  }),
+
   // Topics
   http.get('*/api/v1/public/topics', () => {
     return HttpResponse.json([

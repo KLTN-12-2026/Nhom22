@@ -3,14 +3,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Input, Icon, Badge } from '@/components/ui';
 import styles from './page.module.css';
-
-const MOCK_CARDS = [
-  { id: 'c1', word: 'receipt', ipa: '/rɪˈsiːt/', pos: 'n.', meaningVi: 'biên lai, giấy biên nhận', exampleEn: 'Can I have a receipt, please?' },
-  { id: 'c2', word: 'postpone', ipa: '/pəʊstˈpəʊn/', pos: 'v.', meaningVi: 'hoãn lại', exampleEn: 'The meeting has been postponed until Friday.' },
-];
+import { useDeck } from '@/hooks/useDeck';
 
 export default function DeckDetailPage({ params }) {
   const [search, setSearch] = useState('');
+  
+  const { data: deck, isLoading } = useDeck(params.id);
+
+  if (isLoading) return <div style={{ padding: 'var(--space-8) 0', textAlign: 'center' }}>Đang tải thông tin...</div>;
+  if (!deck) return <div style={{ padding: 'var(--space-8) 0', textAlign: 'center' }}>Không tìm thấy bộ thẻ.</div>;
+
+  const cards = deck.cards || [];
 
   return (
     <div className={`${styles.pageGrid} ${styles.withSide}`}>
@@ -21,11 +24,11 @@ export default function DeckDetailPage({ params }) {
         
         <div>
           <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-            <Badge variant="default"><Icon name="lock" /> Riêng tư</Badge>
-            <Badge variant="primary">Giao tiếp</Badge>
+            <Badge variant="default"><Icon name={deck.visibility === 'RIENG_TU' ? "lock" : "globe"} /> {deck.visibility === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</Badge>
+            <Badge variant="primary">{deck.topicName || deck.goal}</Badge>
           </div>
-          <h1 className={styles.deckTitle}>Bộ thẻ demo ({params.id})</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Mô tả ngắn gọn về bộ thẻ này.</p>
+          <h1 className={styles.deckTitle}>{deck.name}</h1>
+          {deck.description && <p style={{ color: 'var(--color-ink-2)' }}>{deck.description}</p>}
           
           <div className={styles.actions}>
             <Link href={`/bo-the/${params.id}/the-tao`} style={{ textDecoration: 'none' }}>
@@ -40,7 +43,7 @@ export default function DeckDetailPage({ params }) {
         </div>
 
         <div className={styles.listBar}>
-          <h2 style={{ fontSize: 'var(--font-size-xl)' }}>Thẻ trong bộ <span style={{ color: 'var(--color-ink-3)' }}>({MOCK_CARDS.length})</span></h2>
+          <h2 style={{ fontSize: 'var(--font-size-xl)' }}>Thẻ trong bộ <span style={{ color: 'var(--color-ink-3)' }}>({cards.length})</span></h2>
           <div style={{ flex: '1 1 200px', maxWidth: '300px' }}>
             <Input 
               placeholder="Tìm từ hoặc nghĩa" 
@@ -51,8 +54,11 @@ export default function DeckDetailPage({ params }) {
         </div>
 
         <div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {MOCK_CARDS.map((c, i) => (
+          {cards.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 'var(--space-6) 0', color: 'var(--color-ink-2)' }}>Bộ thẻ này chưa có từ nào.</div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {cards.map((c, i) => (
               <li key={c.id} className={styles.cardRow}>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', paddingTop: '4px' }}>{i + 1}</div>
                 <div>
@@ -71,7 +77,8 @@ export default function DeckDetailPage({ params }) {
                 </div>
               </li>
             ))}
-          </ul>
+            </ul>
+          )}
         </div>
       </article>
 
@@ -79,9 +86,9 @@ export default function DeckDetailPage({ params }) {
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>Thông tin bộ thẻ</h2>
           <dl className={styles.kv}>
-            <dt>Chủ đề</dt><dd>Giao tiếp</dd>
-            <dt>Trình độ</dt><dd>Cơ bản</dd>
-            <dt>Số thẻ</dt><dd>2</dd>
+            <dt>Chủ đề</dt><dd>{deck.topicName || '-'}</dd>
+            <dt>Trình độ</dt><dd>{deck.level === 'CO_BAN' ? 'Cơ bản' : deck.level === 'TRUNG_CAP' ? 'Trung cấp' : deck.level === 'NANG_CAO' ? 'Nâng cao' : 'Mới bắt đầu'}</dd>
+            <dt>Số thẻ</dt><dd>{deck.cardCount || cards.length}</dd>
             <dt>Cập nhật</dt><dd>Hôm nay</dd>
           </dl>
         </section>

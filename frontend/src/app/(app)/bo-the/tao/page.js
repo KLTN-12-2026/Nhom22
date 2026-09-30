@@ -4,15 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Select, Textarea, Icon } from '@/components/ui';
 import styles from './page.module.css';
-
-const MOCK_TOPICS = [
-  { value: '1', label: 'Giao tiếp' },
-  { value: '2', label: 'TOEIC' },
-  { value: '3', label: 'Kinh doanh' }
-];
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { useTopics } from '@/hooks/useTopics';
 
 export default function CreateDeckPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: topics = [] } = useTopics();
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [goal, setGoal] = useState('GIAO_TIEP');
@@ -20,9 +19,22 @@ export default function CreateDeckPage() {
   const [level, setLevel] = useState('MOI_BAT_DAU');
   const [visibility, setVisibility] = useState('RIENG_TU');
 
+  const createMutation = useMutation({
+    mutationFn: (data) => apiFetch('/api/v1/decks', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['my-decks'] });
+      router.push(`/bo-the/${res.id}`);
+    },
+    onError: (err) => {
+      alert(err.message || 'Lỗi khi tạo bộ thẻ');
+    }
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    router.push('/bo-the/new-123'); // Redirect to fake new deck
+    createMutation.mutate({
+      name, description: desc, goal, topicId, level, visibility
+    });
   };
 
   return (
@@ -85,7 +97,7 @@ export default function CreateDeckPage() {
             label="Chủ đề" 
             value={topicId} 
             onChange={(e) => setTopicId(e.target.value)} 
-            options={[{ value: '', label: 'Chọn chủ đề' }, ...MOCK_TOPICS]}
+            options={[{ value: '', label: 'Chọn chủ đề' }, ...topics.map(t => ({ value: t.id, label: t.name }))]}
             required
           />
 
@@ -127,7 +139,9 @@ export default function CreateDeckPage() {
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link href="/bo-the"><Button variant="ghost" type="button">Hủy</Button></Link>
-              <Button variant="primary" size="lg" type="submit">Tạo bộ thẻ</Button>
+              <Button variant="primary" size="lg" type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? 'Đang tạo...' : 'Tạo bộ thẻ'}
+              </Button>
             </div>
           </div>
         </form>
