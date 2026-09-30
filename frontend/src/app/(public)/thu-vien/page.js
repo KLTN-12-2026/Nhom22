@@ -3,20 +3,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Input, Select, Badge, Card, CardHeader, CardBody } from '@/components/ui';
 import styles from './page.module.css';
-
-const MOCK_TOPICS = [
-  { id: '1', name: 'Giao tiếp', deckCount: 12 },
-  { id: '2', name: 'TOEIC', deckCount: 5 },
-  { id: '3', name: 'Kinh doanh', deckCount: 3 }
-];
-
-const MOCK_DECKS = [
-  { id: '1', name: 'Giao tiếp cơ bản', description: 'Từ vựng cần thiết cho giao tiếp hàng ngày', kind: 'MAU', topicName: 'Giao tiếp', level: 'CO_BAN', goal: 'GIAO_TIEP', cardCount: 150, updatedAt: '2026-09-29T10:00:00Z' },
-  { id: '2', name: 'TOEIC 600+', description: 'Từ vựng luyện thi TOEIC', kind: 'CHIA_SE', topicName: 'TOEIC', level: 'TRUNG_CAP', goal: 'TOEIC', cardCount: 600, updatedAt: '2026-09-28T10:00:00Z' }
-];
+import { useTopics } from '@/hooks/useTopics';
+import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 
 export default function LibraryPage() {
   const [topicId, setTopicId] = useState('');
+  
+  const { data: topics = [] } = useTopics();
+  const { data: decksData, isLoading } = useLibraryDecks({ topicId });
+  
+  const decks = decksData?.items || [];
+  const total = decksData?.totalElements || 0;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-6) var(--space-4)' }}>
@@ -41,7 +38,7 @@ export default function LibraryPage() {
             </div>
             <div>
               <Select id="topicId" name="topicId" label="Chủ đề" value={topicId} onChange={(e) => setTopicId(e.target.value)} options={[
-                { value: '', label: 'Tất cả' }, ...MOCK_TOPICS.map(t => ({ value: t.id, label: t.name }))
+                { value: '', label: 'Tất cả' }, ...topics.map(t => ({ value: t.id, label: t.name }))
               ]} />
             </div>
             <div>
@@ -57,7 +54,7 @@ export default function LibraryPage() {
           </form>
 
           <div className={styles.resultBar}>
-            <p className="muted" style={{ color: 'var(--color-ink-2)' }}>{MOCK_DECKS.length} bộ thẻ</p>
+            <p className="muted" style={{ color: 'var(--color-ink-2)' }}>{total} bộ thẻ</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <label htmlFor="sort" style={{ fontSize: 'var(--font-size-sm)' }}>Sắp xếp</label>
               <Select id="sort" options={[
@@ -67,7 +64,8 @@ export default function LibraryPage() {
           </div>
 
           <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
-            {MOCK_DECKS.map((deck, i) => (
+            {isLoading ? <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>Đang tải...</div> : 
+             decks.map((deck, i) => (
               <div key={deck.id} style={{ display: 'flex', gap: 'var(--space-4)', padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)' }}>{i + 1}</div>
                 <div style={{ flex: 1 }}>
@@ -98,7 +96,7 @@ export default function LibraryPage() {
                   <span>Tất cả chủ đề</span>
                 </button>
               </li>
-              {MOCK_TOPICS.map(t => (
+              {topics.map(t => (
                 <li key={t.id}>
                   <button aria-current={topicId === t.id ? 'true' : undefined} onClick={() => setTopicId(t.id)}>
                     <span>{t.name}</span>

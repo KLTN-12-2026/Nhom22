@@ -22,4 +22,32 @@ export const handlers = [
       muiGio: 'Asia/Ho_Chi_Minh',
     });
   }),
+
+  // My Decks
+  http.get('*/api/v1/decks/my-decks', () => {
+    return HttpResponse.json([
+      { id: '1', name: '3000 từ vựng Oxford (Mock)', goal: 'GIAO_TIEP', level: 'CO_BAN', cardCount: 3000 },
+      { id: '2', name: 'IT Tiếng Anh (Mock)', goal: 'TOEIC', level: 'TRUNG_CAP', cardCount: 150 },
+    ]);
+  }),
+
+  // Topics
+  http.get('*/api/v1/public/topics', () => {
+    return HttpResponse.json([
+      { id: '1', name: 'Giao tiếp', deckCount: 12 },
+      { id: '2', name: 'TOEIC', deckCount: 5 },
+      { id: '3', name: 'Kinh doanh', deckCount: 3 }
+    ]);
+  }),
+
+  // Library Decks
+  http.get('*/api/v1/library/decks', () => {
+    return HttpResponse.json({
+      items: [
+        { id: '1', name: 'Giao tiếp cơ bản (MSW)', description: 'Từ vựng cần thiết cho giao tiếp hàng ngày', kind: 'MAU', topicName: 'Giao tiếp', level: 'CO_BAN', goal: 'GIAO_TIEP', cardCount: 150, updatedAt: '2026-09-29T10:00:00Z' },
+        { id: '2', name: 'TOEIC 600+ (MSW)', description: 'Từ vựng luyện thi TOEIC', kind: 'CHIA_SE', topicName: 'TOEIC', level: 'TRUNG_CAP', goal: 'TOEIC', cardCount: 600, updatedAt: '2026-09-28T10:00:00Z' }
+      ],
+      totalElements: 2
+    });
+  }),
 ];

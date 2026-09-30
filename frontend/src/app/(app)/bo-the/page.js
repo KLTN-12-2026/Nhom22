@@ -3,15 +3,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Input, Tabs, Badge } from '@/components/ui';
 import styles from './page.module.css';
-
-const MOCK_MY_DECKS = [
-  { id: '1', name: '3000 từ vựng Oxford', goal: 'GIAO_TIEP', level: 'CO_BAN', cardCount: 3000 },
-  { id: '2', name: 'IT Tiếng Anh', goal: 'TOEIC', level: 'TRUNG_CAP', cardCount: 150 },
-];
+import { useDecks } from '@/hooks/useDecks';
 
 export default function DecksPage() {
   const [activeTab, setActiveTab] = useState('mine');
   const [search, setSearch] = useState('');
+  
+  const { data: myDecks = [], isLoading } = useDecks();
 
   return (
     <div className={`${styles.pageGrid} ${styles.withSide}`}>
@@ -19,7 +17,7 @@ export default function DecksPage() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
             <span>Bộ của tôi</span>
-            <span>{MOCK_MY_DECKS.length} bộ</span>
+            <span>{myDecks.length} bộ</span>
           </div>
           <div className={styles.headRow}>
             <h1 style={{ fontSize: 'var(--font-size-3xl)' }}>Bộ thẻ của bạn</h1>
@@ -53,13 +51,15 @@ export default function DecksPage() {
           </div>
         </div>
 
-        {MOCK_MY_DECKS.length > 0 ? (
+        {isLoading ? (
+          <div style={{ padding: 'var(--space-8) 0', textAlign: 'center' }}>Đang tải danh sách bộ thẻ...</div>
+        ) : myDecks.length > 0 ? (
           <div>
             <div className={styles.deckHead} style={{ display: 'none' /* hidden on mobile, handle via CSS later */ }}>
               <span>Số</span><span>Bộ thẻ</span><span>Mục tiêu</span><span>Trình độ</span><span style={{ textAlign: 'right' }}>Số thẻ</span><span></span>
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
-              {MOCK_MY_DECKS.map((deck, i) => (
+              {myDecks.map((deck, i) => (
                 <li key={deck.id} style={{ display: 'flex', gap: 'var(--space-4)', padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', alignItems: 'center' }}>
                   <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', width: '2rem' }}>{i + 1}</div>
                   <div style={{ flex: 1 }}>
