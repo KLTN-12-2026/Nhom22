@@ -196,7 +196,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Chưa xác thực email hoặc bị khóa → từ chối có mã lỗi riêng; sai mật khẩu nhiều lần → 429. Đăng nhập thành công đổi session id (chống fixation). Logout xóa session Redis.
 - **Xong khi:** sau logout, cookie cũ gọi `/me` → 401.
 
-### [ ] B1.3 Quên / đặt lại / đổi mật khẩu — FR-01, TC-01
+### [x] B1.3 Quên / đặt lại / đổi mật khẩu — FR-01, TC-01
 - API: `POST /auth/forgot-password`, `POST /auth/reset-password`, `PUT /me/password`.
 - Quên mật khẩu luôn trả 200 (không lộ email tồn tại). Đặt lại/đổi mật khẩu → **vô hiệu mọi phiên khác** (`FindByIndexNameSessionRepository`).
 

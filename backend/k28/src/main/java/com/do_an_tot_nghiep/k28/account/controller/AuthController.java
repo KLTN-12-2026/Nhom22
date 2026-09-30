@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.account.controller;
 
 import com.do_an_tot_nghiep.k28.account.dto.*;
 import com.do_an_tot_nghiep.k28.account.service.LoginService;
+import com.do_an_tot_nghiep.k28.account.service.PasswordService;
 import com.do_an_tot_nghiep.k28.account.service.RegistrationService;
 import com.do_an_tot_nghiep.k28.common.security.SessionAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ public class AuthController {
     private final RegistrationService registrationService;
     private final LoginService loginService;
     private final SessionAuthenticator sessionAuthenticator;
+    private final PasswordService passwordService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -53,5 +55,16 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void logout(HttpServletRequest http, HttpServletResponse response) {
         sessionAuthenticator.logout(http, response);
+    }
+
+    @PostMapping("/forgot-password")
+    void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest http) {
+        passwordService.forgotPassword(request.email(), http.getRemoteAddr());
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordService.resetPassword(request.token(), request.password());
     }
 }

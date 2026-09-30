@@ -922,19 +922,23 @@
     }],
     ["POST", /^\/auth\/logout$/, () => { session.clear(); return { status: 204 }; }],
     ["POST", /^\/auth\/forgot-password$/, (m, b) => {
-      if (!EMAIL_RE.test(norm(b.email))) bad([fe("email", "Email chưa đúng định dạng, ví dụ: ten@gmail.com")]);
+      if (!norm(b.email)) bad([fe("email", "Vui lòng nhập email")]);
+      if (!EMAIL_RE.test(norm(b.email))) bad([fe("email", "Email không hợp lệ")]);
       rateLimit("forgot:" + norm(b.email), 3).fail();
-      const u = db.users.find((x) => x.email === norm(b.email));
+      const u = db.users.find((x) => x.email === norm(b.email) && (x.trangThai === "HOAT_DONG" || x.trangThai === "CHUA_XAC_THUC"));
       if (u) db.tokens["reset-" + u.id] = { userId: u.id, type: "DAT_LAI_MAT_KHAU", used: false, expiresAt: Date.now() + 1800000 };
-      return { status: 202 };
+      return { status: 200, body: null };
     }],
     ["POST", /^\/auth\/reset-password$/, (m, b) => {
-      if (!validPassword(b.password)) bad([fe("password", "Mật khẩu cần 8–72 ký tự, có cả chữ và số")]);
+      if (!validPassword(b.password)) bad([fe("password", "Mật khẩu 8–72 ký tự, có chữ cái và chữ số")]);
       const t = db.tokens[b.token];
       if (!t || t.type !== "DAT_LAI_MAT_KHAU" || t.used || t.expiresAt < Date.now()) throw new ApiError(400, "TOKEN_INVALID", "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
       t.used = true;
-      const u = db.users.find((x) => x.id === t.userId);
-      if (u) u.password = b.password;
+      const u = db.users.find((x) => x.id === t.userId && (x.trangThai === "HOAT_DONG" || x.trangThai === "CHUA_XAC_THUC"));
+      if (!u) throw new ApiError(400, "TOKEN_INVALID", "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
+      if (u.trangThai === "CHUA_XAC_THUC") u.trangThai = "HOAT_DONG";
+      u.password = b.password;
+      if (session.get() && session.get().userId === u.id) session.clear();
       return { status: 204 };
     }],
 
@@ -954,10 +958,14 @@
     ["PUT", /^\/me\/password$/, (m, b) => {
       const u = requireMe();
       const errors = [];
-      if (b.currentPassword !== u.password) errors.push(fe("currentPassword", "Mật khẩu hiện tại chưa đúng"));
-      if (!validPassword(b.newPassword)) errors.push(fe("newPassword", "Mật khẩu mới cần 8–72 ký tự, có cả chữ và số"));
-      else if (b.newPassword === b.currentPassword) errors.push(fe("newPassword", "Mật khẩu mới phải khác mật khẩu hiện tại"));
+      if (!b.currentPassword) errors.push(fe("currentPassword", "Vui lòng nhập mật khẩu hiện tại"));
+      if (!b.newPassword) errors.push(fe("newPassword", "Vui lòng nhập mật khẩu mới"));
+      else if (!validPassword(b.newPassword)) errors.push(fe("newPassword", "Mật khẩu 8–72 ký tự, có chữ cái và chữ số"));
       if (errors.length) bad(errors);
+      const limit = rateLimit("change-password:" + u.id, 5);
+      if (b.currentPassword !== u.password) { limit.fail(); throw new ApiError(400, "VALIDATION_FAILED", "Mật khẩu hiện tại không đúng", [fe("currentPassword", "Mật khẩu hiện tại không đúng")]); }
+      if (b.newPassword === b.currentPassword) throw new ApiError(400, "VALIDATION_FAILED", "Mật khẩu mới phải khác mật khẩu hiện tại", [fe("newPassword", "Mật khẩu mới phải khác mật khẩu hiện tại")]);
+      limit.reset();
       u.password = b.newPassword;
       return { status: 204 };
     }],
