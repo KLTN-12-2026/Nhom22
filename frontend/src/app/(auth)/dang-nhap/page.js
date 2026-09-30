@@ -3,15 +3,33 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@/components/ui';
 import styles from '../layout.module.css';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch, ApiError } from '@/lib/api-client';
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const loginMutation = useMutation({
+    mutationFn: (credentials) => apiFetch('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      router.push('/bo-the');
+    },
+    onError: (err) => {
+      alert(err.message || 'Đăng nhập thất bại');
+    }
+  });
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Fake login
-    localStorage.setItem('vocab_demo_user', JSON.stringify({ tenHienThi: 'Thảo', vaiTro: ['USER'] }));
-    router.push('/bo-the');
+    loginMutation.mutate({
+      email: e.target.email.value,
+      password: e.target.password.value,
+    });
   };
 
   return (
@@ -48,8 +66,8 @@ export default function LoginPage() {
           required 
         />
         
-        <Button type="submit" variant="primary" size="lg" style={{ marginTop: 'var(--space-2)' }}>
-          Đăng nhập
+        <Button type="submit" variant="primary" size="lg" style={{ marginTop: 'var(--space-2)' }} disabled={loginMutation.isPending}>
+          {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </Button>
       </form>
 
