@@ -3,9 +3,9 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày bàn giao | 29/09/2026 (bản 2 — B1.1 + B1.2; cập nhật tiếp theo từng bước) |
-| Trạng thái BE | 🟡 B1.1, B1.2 xong · 42 test xanh (`FR01RegisterTest` 8, `FR01LoginTest` 9) · B1.3–B1.12 chưa làm |
-| FE làm tương ứng | F1.1, F1.2 (`roadmap/ROADMAP_FE.md` §Đợt 1); F1.3 trở đi dùng MSW theo mục 9 |
+| Ngày bàn giao | 01/10/2026 (bản 3 — B1.1 + B1.2 + B1.3; cập nhật tiếp theo từng bước) |
+| Trạng thái BE | 🟡 B1.1, B1.2, B1.3 xong · 50 test xanh (`FR01RegisterTest` 8, `FR01LoginTest` 9, `FR01PasswordTest` 8) · B1.4–B1.12 chưa làm |
+| FE làm tương ứng | F1.1, F1.2, F1.3 (`roadmap/ROADMAP_FE.md` §Đợt 1); F1.4 trở đi dùng MSW theo mục 9 |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
@@ -13,6 +13,7 @@
 > - **Tên trường JSON = tên field entity** (tiếng Việt không dấu): `tenHienThi`, `trangThai`, `muiGio`, `vaiTro`, `daHoanTatKhoiDau`. FE dùng nguyên tên, không đổi sang tiếng Anh.
 > - Đăng nhập thật đã có: `POST /auth/login`, `POST /auth/logout`, `GET /me` (cookie `SESSION`). Tài khoản seed: `an@vocab.local` / `Vocab@12345`.
 > - **Sửa `api-client.js` trước khi nối đăng nhập:** chỉ thử lại 403 khi `code === 'FORBIDDEN'` (mục 3).
+> - Mật khẩu thật đã có (B1.3): quên mật khẩu, đặt lại từ thư (Mailpit), đổi mật khẩu ở `/ca-nhan/bao-mat`. Đặt lại → đăng xuất **mọi** phiên; đổi → giữ phiên hiện tại, đăng xuất phiên khác.
 
 ---
 
@@ -22,9 +23,10 @@
 |---|---|---|---|
 | B1.1 Đăng ký & xác thực email | ✅ `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`; token một lần, hết hạn 24 giờ, chỉ lưu SHA-256; mật khẩu BCrypt | F1.1 UI06 `/dang-ky`, UI07 `/xac-thuc-email` | Form đăng ký; trang xác thực tự gọi API từ `?token=`; nút gửi lại thư; khóa nút khi 429 |
 | B1.2 Đăng nhập/đăng xuất/phiên | ✅ `POST /auth/login`, `POST /auth/logout`, `GET /me`; phiên Redis, đổi session id khi đăng nhập, logout xóa phiên; lỗi riêng chưa xác thực/bị khóa; 429 khi sai nhiều | F1.2 UI08 `/dang-nhap`, menu người dùng | Form đăng nhập; `useMe()` làm nguồn người dùng; route guard; nút đăng xuất; điều hướng theo `daHoanTatKhoiDau` |
-| B1.3 – B1.12 | ⏳ chưa làm | F1.3 – F1.12 | Mock theo mockup `mockups/dot1/` |
+| B1.3 Quên / đặt lại / đổi mật khẩu | ✅ `POST /auth/forgot-password`, `POST /auth/reset-password`, `PUT /me/password`; link một lần, hết hạn 30 phút; đặt lại hủy mọi phiên, đổi giữ phiên hiện tại | F1.3 UI09 `/quen-mat-khau`, UI10 `/dat-lai-mat-khau`, UI42 `/ca-nhan/bao-mat` | Form email → màn "Kiểm tra hộp thư" (luôn giống nhau); trang đặt lại đọc `?token=`; form đổi mật khẩu có ô nhập lại |
+| B1.4 – B1.12 | ⏳ chưa làm | F1.4 – F1.12 | Mock theo mockup `mockups/dot1/` |
 
-**Chưa có** (dùng MSW): mật khẩu (B1.3), Google (B1.4), hồ sơ/thiết lập (B1.5), tệp (B1.6), nội dung (B1.7–B1.12). Lịch: Đợt 1, 12/10–25/10.
+**Chưa có** (dùng MSW): Google (B1.4), hồ sơ/thiết lập (B1.5), tệp (B1.6), nội dung (B1.7–B1.12). Lịch: Đợt 1, 12/10–25/10.
 
 ## 2. Chạy BE
 
@@ -33,6 +35,7 @@ Không đổi so với GĐ0: `docker compose --profile app up -d --build` trong 
 | Mới | Giá trị |
 |---|---|
 | Link trong thư xác thực | `${APP_FRONTEND_URL}/xac-thuc-email?token=<token>` (mặc định `http://localhost:3000`) → FE phải có route `/xac-thuc-email` đọc `token` |
+| Link trong thư đặt lại mật khẩu | `${APP_FRONTEND_URL}/dat-lai-mat-khau?token=<token>` (hiệu lực 30 phút, dùng 1 lần) → FE phải có route `/dat-lai-mat-khau` đọc `token` |
 | Mailpit | http://localhost:8025 — mọi thư BE gửi nằm ở đây, không ra ngoài |
 
 ## 3. Thay đổi hợp đồng chung
@@ -46,6 +49,8 @@ Không đổi so với GĐ0: `docker compose --profile app up -d --build` trong 
 | Hạn mức mới (429 `RATE_LIMITED`) | Đăng ký: 5 lần/giờ/IP. Gửi lại thư: 3 lần/15 phút theo IP **và** 3 lần/15 phút theo email. Đăng nhập: 5 lần/15 phút theo email (lần 6 bị 429 kể cả khi đúng mật khẩu; đăng nhập đúng trước đó thì bộ đếm về 0) |
 | Mã lỗi mới (B1.2) | `INVALID_CREDENTIALS` 401 · `EMAIL_NOT_VERIFIED` 403 · `ACCOUNT_LOCKED` 403 |
 | **`api-client.js` (GĐ0 §6) phải sửa** | Hiện đang thử lại **mọi** 403 của request ghi. Từ B1.2 có 403 nghiệp vụ → chỉ thử lại khi `code === 'FORBIDDEN'` (code mẫu ở mục 6) |
+| Hạn mức mới (B1.3) | Quên mật khẩu: 3 lần/15 phút theo IP **và** theo email. Đổi mật khẩu: 5 lần/15 phút theo người dùng (đổi thành công thì bộ đếm về 0) |
+| Lỗi nghiệp vụ có `fieldErrors` (từ B1.3) | Một số lỗi không phải lỗi định dạng vẫn kèm 1 phần tử `fieldErrors` để FE hiện dưới ô (ví dụ sai mật khẩu hiện tại → `currentPassword`). `applyServerErrors` xử lý được, không cần code riêng |
 | Cookie phiên | `SESSION` (HttpOnly, SameSite=Lax) chỉ được tạo khi **đăng nhập thành công**; request khách bị 401 không tạo phiên. Logout trả `SESSION=; Max-Age=0` |
 | Hết phiên | Không hoạt động 7 ngày thì phiên hết hạn. Cookie là cookie phiên trình duyệt (không có `Max-Age`) |
 
@@ -294,6 +299,106 @@ Set-Cookie: SESSION=; Max-Age=0; Expires=Thu, 1 Jan 1970 00:00:00 GMT; Path=/; H
 
 Gọi khi chưa đăng nhập vẫn 204. Cần CSRF như mọi POST. Sau logout: `queryClient.clear()` rồi chuyển `/dang-nhap?loggedOut=1`. Cookie cũ gọi `/me` → 401 (đã kiểm thật).
 
+### 5.7 `POST /api/v1/auth/forgot-password` — quên mật khẩu
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| G | F1.3 | UI09 | `/quen-mat-khau` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `email` | string | ✔ | email hợp lệ, ≤ 255; BE tự trim + chữ thường | `"an@vocab.local"` |
+
+**Nhận** (thật): luôn `200` body rỗng, kể cả email không tồn tại hoặc tài khoản bị khóa (không lộ tài khoản).
+
+```http
+HTTP/1.1 200
+```
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `email` "Email không hợp lệ" | Sai định dạng | Lỗi dưới ô email |
+| 429 | `RATE_LIMITED` | > 3 lần/15 phút cùng IP hoặc cùng email | Khóa nút, đếm ngược |
+
+```json
+{"code":"VALIDATION_FAILED","message":"Dữ liệu không hợp lệ","fieldErrors":[{"field":"email","message":"Email không hợp lệ"}],"requestId":"5b724f9c-a26d-4dbc-b77f-03fe66617df0"}
+```
+
+**Tác dụng phụ:** chỉ khi tài khoản `HOAT_DONG` hoặc `CHUA_XAC_THUC`: vô hiệu link đặt lại cũ, gửi thư mới (tiêu đề "Đặt lại mật khẩu VocabLearning"). FE luôn hiện cùng một màn "Kiểm tra hộp thư".
+
+### 5.8 `POST /api/v1/auth/reset-password` — đặt lại mật khẩu
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| G | F1.3 | UI10 | `/dat-lai-mat-khau?token=` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `token` | string | ✔ | lấy từ `?token=` (43 ký tự), ≤ 100 | `"q3Zk…"` |
+| `password` | string | ✔ | 8–72 ký tự, có chữ cái và chữ số | `"matkhaumoi1"` |
+
+Ô "Nhập lại mật khẩu" chỉ kiểm ở FE, không gửi.
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 204
+```
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `password` | Mật khẩu yếu. Link **chưa** bị dùng, sửa rồi gửi lại được | Lỗi dưới ô mật khẩu |
+| 400 | `TOKEN_INVALID` "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn" | Token sai, hết hạn, đã dùng, là token xác thực email, hoặc tài khoản bị khóa | Màn "Liên kết không dùng được" + nút `/quen-mat-khau`, hiện `requestId` |
+
+```json
+{"code":"TOKEN_INVALID","message":"Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn","fieldErrors":[],"requestId":"12432091-14cd-47eb-8ad8-e20729a86c4b"}
+```
+
+**Tác dụng phụ:** đổi mật khẩu; **đăng xuất mọi phiên** của tài khoản; xóa bộ đếm 429 đăng nhập; tài khoản `CHUA_XAC_THUC` được xác thực luôn (đã chứng minh sở hữu email). Sau 204 FE đặt cache `['me']` = `null` và mời đăng nhập lại.
+
+### 5.9 `PUT /api/v1/me/password` — đổi mật khẩu
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.3 | UI42 | `/ca-nhan/bao-mat` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `currentPassword` | string | ✔ | ≤ 72 | `"Vocab@12345"` |
+| `newPassword` | string | ✔ | 8–72 ký tự, có chữ cái và chữ số, khác mật khẩu hiện tại | `"matkhau456"` |
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 204
+```
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `newPassword` "Mật khẩu 8–72 ký tự, có chữ cái và chữ số" | Mật khẩu mới yếu | Lỗi dưới ô |
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `currentPassword` "Mật khẩu hiện tại không đúng" | Sai mật khẩu hiện tại | Lỗi dưới ô mật khẩu hiện tại |
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `newPassword` "Mật khẩu mới phải khác mật khẩu hiện tại" | Trùng mật khẩu cũ | Lỗi dưới ô mật khẩu mới |
+| 401 | `UNAUTHENTICATED` | Chưa đăng nhập hoặc phiên đã bị hủy | `/dang-nhap?next=/ca-nhan/bao-mat` |
+| 429 | `RATE_LIMITED` | > 5 lần/15 phút | Khóa nút, đếm ngược |
+
+```json
+{"code":"VALIDATION_FAILED","message":"Mật khẩu hiện tại không đúng","fieldErrors":[{"field":"currentPassword","message":"Mật khẩu hiện tại không đúng"}],"requestId":"1439d887-8fa9-4ed1-892b-d54054f21902"}
+```
+
+**Tác dụng phụ:** phiên hiện tại **vẫn đăng nhập**; các phiên khác bị đăng xuất (đã kiểm thật: phiên A `/me` 200, phiên B `/me` 401). Thành công → reset form + toast "Đã đổi mật khẩu".
+
 ## 6. Mã FE mẫu
 
 **Zod** (giới hạn = BE):
@@ -444,6 +549,60 @@ export const sessionHandlers = [
 ];
 ```
 
+**Mật khẩu (B1.3)**
+
+```js
+const password = z.string().regex(/^(?=.*[A-Za-z])(?=.*\d).{8,72}$/, 'Mật khẩu 8–72 ký tự, có chữ cái và chữ số');
+
+export const forgotSchema = z.object({ email: z.string().trim().min(1, 'Vui lòng nhập email').email('Email không hợp lệ').max(255) });
+
+export const resetSchema = z.object({ password, confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { path: ['confirm'], message: 'Hai mật khẩu chưa khớp' });
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại').max(72, 'Mật khẩu tối đa 72 ký tự'),
+  newPassword: password,
+  confirm: z.string(),
+}).refine((v) => v.newPassword === v.confirm, { path: ['confirm'], message: 'Hai mật khẩu chưa khớp' });
+
+export const useForgotPassword = () =>
+  useMutation({ mutationFn: (email) => api('/auth/forgot-password', { method: 'POST', body: { email } }) });
+
+export const useResetPassword = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ token, password }) => api('/auth/reset-password', { method: 'POST', body: { token, password } }),
+    onSuccess: () => qc.setQueryData(['me'], null),
+  });
+};
+
+export const useChangePassword = () =>
+  useMutation({
+    mutationFn: ({ currentPassword, newPassword }) => api('/me/password', { method: 'PUT', body: { currentPassword, newPassword } }),
+  });
+```
+
+Trang đặt lại: `TOKEN_INVALID` → màn "Liên kết không dùng được"; lỗi khác → `applyServerErrors`. Không gửi `confirm` lên BE.
+
+MSW:
+
+```js
+export const passwordHandlers = [
+  http.post(`${API}/auth/forgot-password`, () => new HttpResponse(null, { status: 200 })),
+  http.post(`${API}/auth/reset-password`, async ({ request }) => {
+    const { token } = await request.json();
+    return token === 'mock-ok' ? new HttpResponse(null, { status: 204 })
+      : err(400, 'TOKEN_INVALID', 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
+  }),
+  http.put(`${API}/me/password`, async ({ request }) => {
+    const b = await request.json();
+    if (b.currentPassword !== 'Vocab@12345')
+      return err(400, 'VALIDATION_FAILED', 'Mật khẩu hiện tại không đúng', [{ field: 'currentPassword', message: 'Mật khẩu hiện tại không đúng' }]);
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+```
+
 ## 7. Dữ liệu mẫu / tài khoản demo
 
 | Việc | Cách làm |
@@ -453,9 +612,11 @@ export const sessionHandlers = [
 | Thử 403 `ACCOUNT_LOCKED` | Chưa có API khóa (phần quản trị); nhờ BE đổi `trang_thai = 'BI_KHOA'` trong DB dev |
 | Tạo tài khoản test mới | Đăng ký với email bất kỳ `*@vocab.local` → mở http://localhost:8025 → bấm link trong thư |
 | Email trùng để thử 409 | `an@vocab.local` |
+| Thử quên / đặt lại mật khẩu | `/quen-mat-khau` nhập email → http://localhost:8025, thư "Đặt lại mật khẩu VocabLearning" → bấm link. Nên dùng tài khoản tự đăng ký, tránh đổi mật khẩu seed dùng chung |
+| Thử "đăng xuất phiên khác" | Đăng nhập cùng tài khoản ở 2 trình duyệt (hoặc 1 cửa sổ ẩn danh), đổi mật khẩu ở cửa sổ 1 → cửa sổ 2 tải lại bị đưa về `/dang-nhap` |
 | Bị 429 khi dev | Chờ hết cửa sổ (1 giờ / 15 phút) hoặc nhờ BE xóa khóa Redis `rl:*` |
 
-## 8. Checklist FE hoàn thành F1.1, F1.2
+## 8. Checklist FE hoàn thành F1.1, F1.2, F1.3
 
 - [ ] `/dang-ky`: 4 trường + checkbox điều khoản; Zod khớp mục 6; gửi `muiGio` từ trình duyệt
 - [ ] Lỗi server hiện dưới đúng ô theo `fieldErrors[].field` (`tenHienThi`, `email`, `password`, `acceptTerms`)
@@ -471,17 +632,18 @@ export const sessionHandlers = [
 - [ ] F1.2 `useMe()` là nguồn duy nhất cho header/menu; route guard trang cần đăng nhập → `/dang-nhap?next=`
 - [ ] F1.2 Đăng xuất: `POST /auth/logout` → xóa cache → `/dang-nhap?loggedOut=1`; bấm Back không xem lại được dữ liệu cũ
 - [ ] F1.2 Kiểm thử thật: đăng nhập `an@vocab.local` → header có tên; đăng xuất → mở `/ca-nhan` bị đẩy về `/dang-nhap`
+- [ ] F1.3 `/quen-mat-khau`: 200 → màn "Kiểm tra hộp thư" giống hệt cho mọi email; 400 → lỗi dưới ô; 429 → khóa nút đếm ngược
+- [ ] F1.3 `/dat-lai-mat-khau?token=`: không có `token` → màn lỗi + link `/quen-mat-khau`; ô nhập lại kiểm ở FE; 400 `password` → lỗi dưới ô; `TOKEN_INVALID` → màn lỗi có `requestId`; 204 → màn thành công + nút `/dang-nhap`
+- [ ] F1.3 `/ca-nhan/bao-mat`: 3 ô (hiện tại, mới, nhập lại) + gợi ý 8–72/chữ/số; `fieldErrors` `currentPassword`/`newPassword` hiện đúng ô; 204 → reset form + toast "Đã đổi mật khẩu"; 429 → khóa nút
+- [ ] F1.3 Kiểm thử thật: quên → Mailpit → đặt lại → đăng nhập bằng mật khẩu mới; mở lại link lần 2 → màn lỗi; đổi mật khẩu khi đăng nhập ở 2 trình duyệt → trình duyệt kia bị đăng xuất
 
 ## 9. Sắp có ở Đợt 1 — hợp đồng dự kiến
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
-| B1.3 | Đợt 1 | `POST /auth/forgot-password`, `/auth/reset-password`, `PUT /me/password` | F1.3 | UI09, UI10, UI42 |
 | B1.4 | Đợt 1 | `GET /auth/google/start`, `/auth/google/callback` | F1.4 | Nút Google UI06/UI08 |
 | B1.5 | Đợt 1 | `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings` | F1.5 | UI11, UI40, UI41, UI43 |
 | B1.6 – B1.12 | Đợt 1 | tệp, chủ đề, bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.6 – F1.12 | xem `mockups/dot1/` |
-
-**B1.3 — dự kiến** (ROADMAP_BE B1.3): `POST /auth/forgot-password {email}` luôn 200 (không lộ email); `POST /auth/reset-password {token, password}` → 204 hoặc 400 `TOKEN_INVALID`; `PUT /me/password {currentPassword, newPassword}` → 204. Đặt lại/đổi mật khẩu sẽ **đăng xuất mọi phiên khác**.
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -492,8 +654,10 @@ export const sessionHandlers = [
 | Tên seed mockup ≠ BE | Mockup: `an@` tên "Nguyễn An", `chi@` chưa xác thực. BE seed: "Nguyễn Văn An", `chi@` đã xác thực. Dữ liệu thật lấy theo BE |
 | Hạn mức theo IP | Gửi lại thư đếm chung theo IP (3/15 phút) cho mọi email → nhiều người cùng mạng/NAT có thể bị 429 sớm. Dev trên localhost cũng chung 1 IP |
 | `muiGio` sai | Trả 400 không có `fieldErrors` (lỗi chung form), khác các trường khác |
-| Mockup | `mockups/dot1/dang-ky.html`, `xac-thuc-email.html`, `dang-nhap.html` đã khớp BE (tên trường, thông điệp lỗi, mật khẩu demo `Vocab@12345`) (`tenHienThi`, `muiGio`…). Mockup dùng API giả `shared/demo.js`, trả thêm `demoToken` chỉ để demo — **BE thật không trả trường này** |
+| Mockup | `mockups/dot1/dang-ky.html`, `xac-thuc-email.html`, `dang-nhap.html`, `quen-mat-khau.html`, `dat-lai-mat-khau.html`, `ca-nhan-bao-mat.html` đã khớp BE (tên trường, thông điệp lỗi, mật khẩu demo `Vocab@12345`) (`tenHienThi`, `muiGio`…). Mockup dùng API giả `shared/demo.js`, trả thêm `demoToken` chỉ để demo — **BE thật không trả trường này** |
 | Chưa kiểm chứng | Token hết hạn 24 giờ: kiểm bằng test tự động (`tc01_expiredTokenRejected`), không chờ thật. Hạn mức đăng ký 5/giờ: kiểm bằng code, không bấm thật 6 lần. `ACCOUNT_LOCKED`: kiểm bằng test (`tc01_lockedReturns403`), chưa có API khóa để gọi thật |
+| Phiên tạo trước B1.3 | Phiên đăng nhập tạo trước bản BE này chưa có chỉ mục theo người dùng nên không bị hủy khi đặt lại/đổi mật khẩu. Đăng nhập lại một lần là hết |
+| Chưa kiểm chứng (B1.3) | Link hết hạn 30 phút: kiểm bằng test (`tc01_invalidExpiredOrWrongTypeTokenRejected`), không chờ thật. Hạn mức đổi mật khẩu 5/15 phút: kiểm bằng code, không bấm thật 6 lần |
 | Mockups còn tên cũ | Phần thiết lập học tập/thông báo trong mockup (`goal`, `minutesPerDay`, `inApp`…) sẽ đổi theo entity khi xong B1.5 |
 
 ## 11. Báo lỗi cho BE

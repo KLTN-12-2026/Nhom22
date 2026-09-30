@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đối chiếu FE ↔ BE — B1.1 đến B1.3</title>
+  <style>
+    :root{--ink:#172435;--muted:#536579;--line:#dce4ea;--paper:#fff;--bg:#f4f7f9;--navy:#123651;--blue:#185f82;--red:#a52d3a;--red-bg:#fff1f2;--amber:#885b13;--amber-bg:#fff8e7;--green:#176844;--green-bg:#eaf7ee}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:var(--blue)}a:hover{text-decoration-thickness:2px}code,pre{font: .92em/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}code{background:#edf3f6;padding:.1em .3em;border-radius:4px;overflow-wrap:anywhere}
+    .wrap{max-width:1160px;margin:auto;padding:0 24px}.hero{background:linear-gradient(135deg,#0e314b,#1f6276);color:#fff;padding:54px 0 48px}.eyebrow{font-size:.76rem;text-transform:uppercase;letter-spacing:.14em;font-weight:800;color:#bce0e4}.hero h1{font-size:clamp(2rem,4.5vw,3.35rem);line-height:1.13;margin:14px 0 16px;max-width:900px}.hero p{max-width:800px;color:#e0eef1;margin:0}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}.pill{border:1px solid #83b8c5;border-radius:999px;padding:5px 12px;font-size:.82rem;color:#e8f5f7}
+    .layout{display:grid;grid-template-columns:238px minmax(0,1fr);gap:30px;align-items:start;padding-top:30px;padding-bottom:80px}.toc{position:sticky;top:20px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}.toc strong{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:9px}.toc a{display:block;padding:6px 7px;color:var(--navy);text-decoration:none;border-radius:6px;font-size:.91rem}.toc a:hover{background:#eaf2f5}.content{min-width:0}.section{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:30px;margin-bottom:22px;box-shadow:0 5px 20px #183b5109}.section h2{font-size:1.62rem;line-height:1.25;margin:0 0 18px;color:var(--navy)}.section h3{font-size:1.14rem;margin:24px 0 8px;color:var(--navy)}.section p{margin:10px 0}.lead{font-size:1.08rem;color:var(--muted)}.small{font-size:.88rem;color:var(--muted)}
+    .verdict{border-left:5px solid var(--red);background:var(--red-bg);padding:17px 20px;border-radius:0 10px 10px 0}.verdict strong{color:var(--red)}.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.stat{background:#f2f7f9;border:1px solid var(--line);padding:14px;border-radius:11px}.stat b{display:block;font-size:1.5rem;line-height:1.2;color:var(--navy)}.stat span{font-size:.82rem;color:var(--muted)}
+    .scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:720px;font-size:.91rem}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:12px 11px}th{background:#edf3f6;color:var(--navy);font-size:.8rem;letter-spacing:.02em}tr:last-child td{border-bottom:none}.tag{display:inline-block;font-size:.75rem;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap}.bad{background:var(--red-bg);color:var(--red)}.partial{background:var(--amber-bg);color:var(--amber)}.ok{background:var(--green-bg);color:var(--green)}.future{background:#eaf1f6;color:#406176}
+    .issue{border:1px solid var(--line);border-radius:12px;padding:20px;margin:15px 0;scroll-margin-top:18px}.issue.critical{border-left:5px solid var(--red)}.issue.major{border-left:5px solid #ca8832}.issue.minor{border-left:5px solid #5b839a}.issue-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.issue h3{margin:0;font-size:1.15rem}.issue dl{display:grid;grid-template-columns:100px 1fr;gap:5px 14px;margin:13px 0}.issue dt{font-weight:750;color:var(--navy)}.issue dd{margin:0}.issue ol,.section ol,.section ul{padding-left:22px}.issue li,.section li{margin:5px 0}.source{font-size:.84rem;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.source a{margin-right:10px}.check{background:var(--green-bg);border-radius:8px;padding:9px 12px;margin-top:12px;color:#164d35}.note{background:#eef5f8;border-left:4px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0}.warn{background:var(--amber-bg);border-left:4px solid #bc812e;padding:12px 16px;border-radius:0 8px 8px 0}
+    .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:18px 0}.flow span{background:#eaf3f6;border:1px solid #c5dce5;padding:9px 11px;border-radius:8px;font-size:.84rem;font-weight:650}.flow i{align-self:center;color:#6c8797;font-style:normal}.phase{counter-increment:phase;position:relative;padding-left:43px;margin:18px 0}.phase:before{content:counter(phase);position:absolute;left:0;top:0;width:29px;height:29px;background:var(--navy);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.85rem}.phases{counter-reset:phase}.phase h3{margin:0 0 4px}.phase p{margin:3px 0}.footer{color:var(--muted);font-size:.85rem;padding-top:12px}
+    @media(max-width:850px){.layout{display:block}.toc{position:static;margin-bottom:20px;display:flex;gap:3px 10px;flex-wrap:wrap}.toc strong{width:100%}.toc a{display:inline-block}.section{padding:20px}.stat-grid{grid-template-columns:1fr 1fr}.issue dl{grid-template-columns:1fr;gap:0}.issue dt{margin-top:10px}}
+    @media print{body{background:white}.hero{background:white;color:var(--ink);padding:18px 0;border-bottom:2px solid var(--line)}.hero p,.eyebrow,.pill{color:var(--ink)}.pill{border-color:var(--line)}.layout{display:block}.toc{display:none}.section{box-shadow:none;break-inside:avoid}.issue{break-inside:avoid}a{color:inherit;text-decoration:none}}
+  </style>
+</head>
+<body>
+  <header class="hero"><div class="wrap">
+    <div class="eyebrow">Báo cáo đối chiếu mã nguồn · VocabLearning</div>
+    <h1>Frontend ↔ Backend<br>B1.1 đến B1.3</h1>
+    <p>Đường đi thực tế từ giao diện Next.js đến API Spring Boot: phần đã khớp, lỗi đang chặn, nguyên nhân và cách sửa cụ thể.</p>
+    <div class="meta"><span class="pill">Phạm vi chính: đăng ký, xác thực, phiên, mật khẩu</span><span class="pill">Kiểm tra tĩnh từ mã nguồn</span><span class="pill">Không sửa FE hoặc BE</span></div>
+  </div></header>
+  <div class="wrap layout">
+    <nav class="toc" aria-label="Mục lục"><strong>Nội dung</strong><a href="#ket-luan">01 · Kết luận</a><a href="#ma-tran">02 · Ma trận API</a><a href="#loi">03 · Lỗi và cách sửa</a><a href="#ngoai-pham-vi">04 · Các màn hình khác</a><a href="#lo-trinh">05 · Thứ tự xử lý</a><a href="#kiem-thu">06 · Kịch bản kiểm tra</a><a href="#gioi-han">07 · Giới hạn báo cáo</a></nav>
+    <main class="content">
+      <section class="section" id="ket-luan">
+        <h2>01 · Kết luận nhanh</h2>
+        <div class="verdict"><strong>FE chưa dùng được trọn vẹn với BE thật.</strong> Tên và phương thức của nhiều endpoint B1.1–B1.3 đã khớp, nhưng FE chưa gửi CSRF token. Sau khi xử lý CSRF, đăng ký vẫn thiếu trường bắt buộc; quên mật khẩu sẽ báo lỗi giả do phản hồi rỗng; logout và đổi mật khẩu chưa có luồng UI.</div>
+        <div class="stat-grid"><div class="stat"><b>10</b><span>endpoint tài khoản và CSRF của BE đang có</span></div><div class="stat"><b>3</b><span>giai đoạn B1.1–B1.3 cần hoàn thiện tích hợp FE</span></div><div class="stat"><b>0</b><span>file FE/BE được sửa trong báo cáo này</span></div></div>
+        <p class="small">Số lượng ở đây dùng để định hướng, không phải tỷ lệ hoàn thành dự án. Hai endpoint GET <code>/auth/csrf</code> và GET <code>/me</code> cũng được tính trong tổng 10.</p>
+        <div class="flow" aria-label="Luồng cần đạt"><span>FE lấy CSRF</span><i>→</i><span>FE gửi request đúng DTO</span><i>→</i><span>BE kiểm tra và xử lý</span><i>→</i><span>FE đọc đúng status/body</span><i>→</i><span>FE cập nhật phiên và màn hình</span></div>
+      </section>
+
+      <section class="section" id="ma-tran">
+        <h2>02 · Ma trận hợp đồng API</h2>
+        <p class="lead">“Khớp đường dẫn” chỉ có nghĩa là FE gọi đúng URL và method. Nó chưa bảo đảm request vượt qua bảo mật, dữ liệu hợp lệ hoặc FE đọc đúng phản hồi.</p>
+        <div class="scroll"><table><thead><tr><th>BE hiện có</th><th>Hợp đồng chính</th><th>FE hiện tại</th><th>Đánh giá</th></tr></thead><tbody>
+          <tr><td><code>GET /api/v1/auth/csrf</code></td><td>Trả <code>headerName</code>, <code>token</code>; đặt cookie CSRF.</td><td>Không có lời gọi từ FE.</td><td><span class="tag bad">Thiếu</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/register</code></td><td>DTO: <code>tenHienThi</code>, <code>email</code>, <code>password</code>, <code>acceptTerms=true</code>; <code>muiGio</code> tùy chọn. Trả <code>201 UserResponse</code>.</td><td>Đúng URL/method; thiếu <code>acceptTerms</code> và CSRF.</td><td><span class="tag bad">Bị chặn</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/verify-email</code></td><td>Body <code>{token}</code>; thành công <code>204</code>.</td><td>Đúng body/status kỳ vọng; thiếu CSRF.</td><td><span class="tag partial">Một phần</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/resend-verification</code></td><td>Body <code>{email}</code>; thành công <code>204</code>.</td><td>Đúng body/status kỳ vọng; thiếu CSRF.</td><td><span class="tag partial">Một phần</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/login</code></td><td>Body <code>{email,password}</code>; trả <code>200 UserResponse</code> và cookie <code>SESSION</code>.</td><td>Đúng body; có <code>credentials: include</code>; thiếu CSRF.</td><td><span class="tag partial">Một phần</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/logout</code></td><td>Trả <code>204</code>, hủy phiên hiện tại.</td><td>Có nút nhưng chưa gọi endpoint.</td><td><span class="tag bad">Thiếu</span></td></tr>
+          <tr><td><code>GET /api/v1/me</code></td><td>Yêu cầu phiên; trả <code>UserResponse</code>.</td><td>Hook gọi đúng; AppShell hiển thị người dùng từ nguồn demo riêng.</td><td><span class="tag partial">Một phần</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/forgot-password</code></td><td>Body <code>{email}</code>; thành công <code>200</code> không có body.</td><td>Đúng request; thiếu CSRF; client cố parse JSON rỗng.</td><td><span class="tag bad">Bị chặn</span></td></tr>
+          <tr><td><code>POST /api/v1/auth/reset-password</code></td><td>Body <code>{token,password}</code>; thành công <code>204</code>.</td><td>Đúng request; thiếu CSRF; mọi lỗi bị coi là token hỏng.</td><td><span class="tag partial">Một phần</span></td></tr>
+          <tr><td><code>PUT /api/v1/me/password</code></td><td>Body <code>{currentPassword,newPassword}</code>; yêu cầu phiên; trả <code>204</code>.</td><td>Chưa có trang và lời gọi API.</td><td><span class="tag bad">Thiếu</span></td></tr>
+        </tbody></table></div>
+        <p class="small">Nguồn BE: <a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/controller/AuthController.java">AuthController.java</a>, <a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/controller/MeController.java">MeController.java</a>, <a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/common/security/CsrfController.java">CsrfController.java</a>. Nguồn FE: các trang <code>frontend/src/app/(auth)/</code> và <code>frontend/src/lib/api-client.js</code>.</p>
+      </section>
+
+      <section class="section" id="loi">
+        <h2>03 · Lỗi, nguyên nhân và cách xử lý</h2>
+
+        <article class="issue critical" id="csrf"><div class="issue-head"><span class="tag bad">P0 · chặn chung</span><h3>FE không gửi CSRF token cho request ghi</h3></div>
+          <dl><dt>Hiện trạng</dt><dd>BE bật <code>CookieCsrfTokenRepository.withHttpOnlyFalse()</code> cho toàn bộ request thay đổi trạng thái. Dù <code>/auth/**</code> được truy cập khi chưa đăng nhập, POST vẫn phải qua CSRF. FE chỉ đặt <code>credentials: 'include'</code>, không gọi <code>GET /auth/csrf</code> và không có header <code>X-XSRF-TOKEN</code>.</dd><dt>Biểu hiện</dt><dd>Đăng ký, đăng nhập, xác thực email, gửi lại thư, quên/đặt lại mật khẩu đều có thể nhận <code>403</code> trước khi vào controller. GET <code>/me</code> không chịu lỗi này.</dd></dl>
+          <ol><li>Trong API client, thêm hàm lấy CSRF qua <code>GET /api/v1/auth/csrf</code> với <code>credentials: 'include'</code>; giữ token trong bộ nhớ của tab.</li><li>Với POST/PUT/PATCH/DELETE, đính kèm header theo <code>headerName</code> BE trả về (hiện là <code>X-XSRF-TOKEN</code>). Vẫn gửi cookie phiên và cookie CSRF.</li><li>Gộp header cẩn thận: <code>options.headers</code> hiện được trải thêm lần nữa sau object mặc định, nên một tùy chọn <code>headers</code> có thể ghi đè toàn bộ header đã gộp. Chỉ trải <code>options</code> một lần rồi dựng headers cuối cùng.</li><li>Sau login/logout hoặc khi BE từ chối CSRF, lấy token mới rồi thử lại tối đa một lần nếu thực sự cần; tránh vòng lặp thử lại vô hạn.</li></ol>
+          <div class="check"><b>Đạt khi:</b> POST đăng ký và đăng nhập đi qua Spring Security; xóa header CSRF trong thử nghiệm thì BE từ chối, thêm lại thì request đến controller.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/lib/api-client.js">frontend/src/lib/api-client.js:15–23</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/common/security/SecurityConfig.java">SecurityConfig.java:42–46</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/common/security/CsrfController.java">CsrfController.java:13–15</a></div>
+        </article>
+
+        <article class="issue critical" id="register"><div class="issue-head"><span class="tag bad">P0 · B1.1</span><h3>Đăng ký thiếu đồng ý điều khoản; cách đọc ô tên dễ lỗi</h3></div>
+          <dl><dt>Hiện trạng</dt><dd>FE chỉ gửi <code>tenHienThi</code>, <code>email</code>, <code>password</code>. <code>RegisterRequest</code> của BE có <code>@AssertTrue acceptTerms</code>. FE hiển thị câu “bạn đồng ý” nhưng chưa có ô đồng ý. Handler lấy tên bằng <code>e.target.name.value</code>; <code>name</code> cũng là thuộc tính của form nên cách đọc này không chắc chắn.</dd><dt>Biểu hiện</dt><dd>Sau khi CSRF được sửa, BE vẫn trả <code>400 VALIDATION_FAILED</code> vì <code>acceptTerms</code> vắng mặt. Trường tên có thể bị đọc sai tùy cách truy cập DOM.</dd></dl>
+          <ol><li>Thêm checkbox bắt buộc với nhãn và liên kết điều khoản; gửi <code>acceptTerms: true</code> khi người dùng chọn.</li><li>Đặt <code>name</code> cho các input và đọc bằng <code>new FormData(e.currentTarget)</code>, hoặc dùng state của React. Không dựa vào thuộc tính tên trực tiếp trên form.</li><li>Kiểm tra <code>tenHienThi</code> không rỗng/tối đa 100 ký tự, email hợp lệ, mật khẩu 8–72 ký tự có chữ cái và số; BE vẫn là lớp xác thực cuối.</li><li>Sau <code>201</code>, điều hướng đến màn chờ thư; không coi đăng ký là đã đăng nhập vì BE chưa tạo phiên ở bước này.</li></ol>
+          <div class="check"><b>Đạt khi:</b> body có đủ trường; không tích điều khoản thì FE chặn gửi; tích và gửi hợp lệ nhận <code>201</code>, tài khoản ở trạng thái <code>CHUA_XAC_THUC</code>.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/app/(auth)/dang-ky/page.js">dang-ky/page.js:25–31, 47–80</a><a href="../frontend/src/components/ui/Input.js">Input.js:27–39</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/dto/RegisterRequest.java">RegisterRequest.java:9–31</a></div>
+        </article>
+
+        <article class="issue critical" id="empty"><div class="issue-head"><span class="tag bad">P0 · B1.3</span><h3>Quên mật khẩu xử lý thành công ở BE nhưng báo lỗi ở FE</h3></div>
+          <dl><dt>Hiện trạng</dt><dd><code>AuthController.forgotPassword</code> trả <code>void</code> và không đặt <code>@ResponseStatus</code>: thông thường phản hồi là <code>200</code> với body rỗng. <code>apiFetch</code> chỉ tránh parse JSON nếu status là <code>204</code>, còn lại luôn gọi <code>res.json()</code>.</dd><dt>Biểu hiện</dt><dd>FE đi vào nhánh <code>onError</code> do parse body rỗng, dù BE đã nhận yêu cầu và có thể đã gửi thư.</dd></dl>
+          <ol><li>Trong API client, đọc body dưới dạng text một lần. Nếu body rỗng, trả <code>null</code>; nếu có JSON thì parse. Giữ nhánh xử lý lỗi HTTP độc lập.</li><li>Đừng dựa riêng vào <code>Content-Length</code> vì phản hồi truyền theo chunk hoặc proxy có thể không có header này.</li><li>Trang quên mật khẩu chỉ cần thấy request thành công để hiển thị câu trung tính “Nếu email đủ điều kiện, thư sẽ được gửi”. Không kỳ vọng BE trả <code>demoToken</code>.</li></ol>
+          <div class="check"><b>Đạt khi:</b> phản hồi <code>200</code> body rỗng chuyển sang màn “Kiểm tra hộp thư”, không hiện lỗi; <code>429</code> vẫn hiện thông báo giới hạn.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/lib/api-client.js">api-client.js:25–31</a><a href="../frontend/src/app/(auth)/quen-mat-khau/page.js">quen-mat-khau/page.js:14–20, 63–69</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/controller/AuthController.java">AuthController.java:60–63</a></div>
+        </article>
+
+        <article class="issue major" id="logout"><div class="issue-head"><span class="tag partial">P1 · B1.2</span><h3>Nút đăng xuất chưa hủy phiên</h3></div>
+          <dl><dt>Hiện trạng</dt><dd>AppShell có nút và biểu tượng đăng xuất nhưng không có <code>onClick</code>. BE đã có <code>POST /api/v1/auth/logout</code> trả <code>204</code>.</dd><dt>Ảnh hưởng</dt><dd>Người dùng không thể chủ động hủy phiên Redis từ giao diện; nhấn nút không làm gì.</dd></dl>
+          <ol><li>Gắn handler gọi endpoint logout qua API client (có CSRF và cookie).</li><li>Chỉ sau khi BE xác nhận thành công, xóa cache React Query của <code>me</code> và dữ liệu riêng tư, rồi chuyển về <code>/dang-nhap</code>.</li><li>Nếu request thất bại, báo lỗi rõ; không chỉ chuyển trang vì phiên BE có thể vẫn tồn tại.</li></ol>
+          <div class="check"><b>Đạt khi:</b> logout trả <code>204</code>; dùng lại cookie cũ gọi <code>/me</code> nhận <code>401</code>.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/components/layout/AppShell.js">AppShell.js:62–64</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/controller/AuthController.java">AuthController.java:54–58</a></div>
+        </article>
+
+        <article class="issue major" id="session"><div class="issue-head"><span class="tag partial">P1 · B1.2</span><h3>Giao diện và bảo vệ route dùng hai nguồn người dùng khác nhau</h3></div>
+          <dl><dt>Hiện trạng</dt><dd><code>RouteGuard</code> lấy user từ <code>GET /me</code>, nhưng layout của app lấy <code>vocab_demo_user</code> ở localStorage; nếu không có thì dựng “Demo User”. Đăng nhập chỉ invalidate query <code>me</code> rồi chuyển sang <code>/bo-the</code>.</dd><dt>Ảnh hưởng</dt><dd>Trang có thể hiển thị tên/vai trò giả hoặc cũ trong khi phiên BE là người khác. Đích <code>/bo-the</code> hiện còn gọi API chưa có ở BE.</dd></dl>
+          <ol><li>Đưa <code>user</code> từ cùng hook <code>useMe()</code> vào <code>AppShell</code> và kiểm tra quyền; loại nguồn demo khỏi luồng thật.</li><li>Sau login, cập nhật hoặc invalidate cache <code>me</code>; sau logout, xóa cache. Sau khi đổi/đặt lại mật khẩu, làm mới trạng thái phiên theo đúng quy tắc BE.</li><li>Chọn trang đích sau login có dữ liệu BE thật, hoặc hiển thị trạng thái “tính năng bộ thẻ đang phát triển” cho đến B1.8.</li></ol>
+          <div class="check"><b>Đạt khi:</b> tên/vai trò trên header trùng với <code>GET /me</code>; không còn “Demo User” khi kết nối BE thật.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/app/(app)/layout.js">(app)/layout.js:7–22</a><a href="../frontend/src/components/layout/RouteGuard.js">RouteGuard.js:6–25</a><a href="../frontend/src/app/(auth)/dang-nhap/page.js">dang-nhap/page.js:18–20</a></div>
+        </article>
+
+        <article class="issue major" id="change"><div class="issue-head"><span class="tag partial">P1 · B1.3</span><h3>BE có đổi mật khẩu, FE chưa có trang và API call</h3></div>
+          <dl><dt>Hiện trạng</dt><dd>BE hỗ trợ <code>PUT /api/v1/me/password</code> với <code>currentPassword</code>, <code>newPassword</code>. Navigation FE liên kết tới <code>/ca-nhan/bao-mat</code>, nhưng không có file trang tương ứng trong App Router.</dd><dt>Ảnh hưởng</dt><dd>Người dùng nhấn “Bảo mật” gặp trang không tồn tại và không thể đổi mật khẩu.</dd></dl>
+          <ol><li>Tạo trang bảo mật theo giao diện dự kiến với mật khẩu hiện tại, mật khẩu mới, xác nhận mật khẩu mới; không gửi trường xác nhận lên BE.</li><li>Gửi PUT có CSRF và cookie phiên. BE trả <code>204</code>; API client phải nhận đúng phản hồi rỗng.</li><li>Ánh xạ lỗi <code>fieldErrors</code> vào đúng input; <code>401</code> chuyển về đăng nhập; <code>429</code> báo chờ hết giới hạn.</li><li>Thông báo rõ rằng BE giữ phiên hiện tại, thu hồi các phiên khác sau khi đổi thành công.</li></ol>
+          <div class="check"><b>Đạt khi:</b> đổi mật khẩu trả <code>204</code>; mật khẩu cũ không đăng nhập được; phiên khác hết hiệu lực, phiên hiện tại vẫn hoạt động.</div>
+          <div class="source">Bằng chứng: <a href="../frontend/src/app/(app)/ca-nhan/layout.js">ca-nhan/layout.js:13–16</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/controller/MeController.java">MeController.java:29–34</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/dto/ChangePasswordRequest.java">ChangePasswordRequest.java:7–18</a></div>
+        </article>
+
+        <article class="issue major" id="errors"><div class="issue-head"><span class="tag partial">P1 · lỗi hiển thị</span><h3>FE chưa dùng đúng mã lỗi và cấu trúc lỗi của BE</h3></div>
+          <dl><dt>Hiện trạng</dt><dd>BE trả <code>{code,message,fieldErrors:[{field,message}],requestId}</code>. Hàm <code>applyServerErrors</code> của FE lại duyệt <code>Object.entries(errors)</code> như một object map. Các trang auth chủ yếu <code>alert(err.message)</code>; trang reset đưa mọi lỗi về màn “liên kết không dùng được”.</dd><dt>Ảnh hưởng</dt><dd>Người dùng không biết sai trường nào; mật khẩu mới không đạt quy tắc cũng bị báo nhầm là token hết hạn.</dd></dl>
+          <ol><li>Trong <code>ApiError</code>, giữ <code>status</code>, <code>data.code</code>, <code>data.fieldErrors</code>, <code>requestId</code>.</li><li>Đổi hàm ánh xạ để duyệt mảng <code>fieldErrors</code>; với <code>VALIDATION_FAILED</code> hiển thị lỗi ngay dưới input.</li><li>Phân biệt <code>TOKEN_INVALID</code>, <code>INVALID_CREDENTIALS</code>, <code>EMAIL_NOT_VERIFIED</code>, <code>ACCOUNT_LOCKED</code>, <code>RATE_LIMITED</code>, <code>DEPENDENCY_DOWN</code> trong thông báo hoặc chuyển hướng tương ứng.</li><li>Riêng reset: chỉ <code>TOKEN_INVALID</code> mới đưa sang màn “liên kết không dùng được”; lỗi mật khẩu giữ form để người dùng sửa.</li></ol>
+          <div class="check"><b>Đạt khi:</b> gửi mật khẩu không hợp lệ hiển thị lỗi ở trường mật khẩu; token hết hạn mới hiển thị lỗi liên kết.</div>
+          <div class="source">Bằng chứng: <a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/common/exception/ErrorResponse.java">ErrorResponse.java:5–14</a><a href="../frontend/src/lib/api-client.js">api-client.js:5–10, 34–39</a><a href="../frontend/src/app/(auth)/dat-lai-mat-khau/page.js">dat-lai-mat-khau/page.js:18–21</a></div>
+        </article>
+
+        <article class="issue minor" id="copy"><div class="issue-head"><span class="tag future">P2 · nội dung</span><h3>Mô tả phiên khi đặt lại mật khẩu chưa chính xác</h3></div>
+          <p>Trang đặt lại ghi “các phiên đăng nhập khác của bạn sẽ bị đăng xuất”. Trong <code>PasswordService.resetPassword</code>, BE gọi <code>revokeAll(userId, null)</code>, nghĩa là xóa <b>toàn bộ</b> phiên của tài khoản. Cần ghi “Bạn sẽ được đăng xuất khỏi tất cả thiết bị và cần đăng nhập lại”. Luồng đổi mật khẩu thì giữ phiên hiện tại.</p>
+          <div class="source">Bằng chứng: <a href="../frontend/src/app/(auth)/dat-lai-mat-khau/page.js">dat-lai-mat-khau/page.js:37–40</a><a href="../backend/k28/src/main/java/com/do_an_tot_nghiep/k28/account/service/PasswordService.java">PasswordService.java:68, 86</a></div>
+        </article>
+
+        <article class="issue minor" id="mock"><div class="issue-head"><span class="tag future">P2 · kiểm chứng</span><h3>MSW có thể tạo cảm giác đã tích hợp thành công</h3></div>
+          <p>Khi <code>NEXT_PUBLIC_API_MOCKING=enabled</code>, handler giả trả JSON thành công cho login, register, forgot và trả người dùng cho <code>/me</code> mà không cần phiên. Handler forgot còn trả <code>demoToken</code>, trong khi BE thật không trả token. Nên giữ mock cho phát triển UI, nhưng tắt mock trong mọi lần kiểm tra tích hợp FE–BE và làm mock phản ánh đúng status/body của BE.</p>
+          <div class="source">Bằng chứng: <a href="../frontend/src/app/providers.js">providers.js:9–15</a><a href="../frontend/src/mocks/handlers.js">handlers.js:9–39</a></div>
+        </article>
+      </section>
+
+      <section class="section" id="ngoai-pham-vi">
+        <h2>04 · Các màn hình FE ngoài B1.1–B1.3</h2>
+        <p>BE hiện mới có controller cho auth, <code>/me</code>, CSRF và ping. Các API bên dưới được FE gọi hoặc các chức năng tương ứng được hiển thị, nhưng controller nghiệp vụ chưa tồn tại trong mã BE hiện tại. Đây là <b>chưa triển khai theo roadmap</b>, không nên nhầm với lỗi hợp đồng của B1.1–B1.3.</p>
+        <div class="scroll"><table><thead><tr><th>FE</th><th>API/luồng đang kỳ vọng</th><th>Hiện trạng và hướng xử lý</th></tr></thead><tbody>
+          <tr><td>Bộ của tôi, tạo bộ, chi tiết bộ, thêm thẻ</td><td><code>GET /decks/my-decks</code>, <code>GET/POST /decks</code>, <code>POST /decks/{id}/cards</code></td><td>BE B1.8–B1.9 chưa có. Gắn nhãn demo hoặc chờ API thật; sau đó đối chiếu DTO và dạng phân trang trước khi bật tính năng.</td></tr>
+          <tr><td>Chủ đề và thư viện</td><td><code>GET /public/topics</code>, <code>GET /library/decks</code></td><td>BE B1.7 và B1.10 chưa có. MSW đang tạo danh sách mẫu. Khi BE hoàn thành, kiểm tra tên trường và bộ lọc.</td></tr>
+          <tr><td>Hồ sơ và thiết lập học</td><td>Trang có ô nhập và nút lưu</td><td>Trang hồ sơ đang dùng dữ liệu mẫu, nút lưu chưa gọi API; BE B1.5 chưa có. Tránh hiển thị rằng đã lưu khi chưa có request thật.</td></tr>
+          <tr><td>Google login; bảo mật/thông báo; chi tiết thư viện</td><td>Nút hoặc liên kết điều hướng</td><td>Google login chưa có hành động và BE B1.4 chưa có; một số liên kết đến trang FE chưa tồn tại. Ẩn/đánh dấu sắp có hoặc hoàn thiện cùng bước roadmap.</td></tr>
+        </tbody></table></div>
+        <p class="source">Nguồn FE: <a href="../frontend/src/hooks/useDecks.js">useDecks.js</a>, <a href="../frontend/src/hooks/useTopics.js">useTopics.js</a>, <a href="../frontend/src/hooks/useLibraryDecks.js">useLibraryDecks.js</a>, <a href="../frontend/src/app/(app)/ca-nhan/page.js">ca-nhan/page.js</a>, <a href="../frontend/src/components/layout/AppShell.js">AppShell.js</a>. Nguồn kế hoạch: <a href="../roadmap/ROADMAP_BE.md">ROADMAP_BE.md</a>.</p>
+      </section>
+
+      <section class="section" id="lo-trinh">
+        <h2>05 · Thứ tự xử lý đề xuất</h2>
+        <div class="phases">
+          <div class="phase"><h3>Nền giao tiếp FE–BE</h3><p>Sửa <code>apiFetch</code>: CSRF, cookie, phản hồi rỗng và giải mã lỗi. Đây là điều kiện chung trước khi sửa từng trang.</p></div>
+          <div class="phase"><h3>Hoàn tất B1.1</h3><p>Đăng ký gửi đúng DTO và điều khoản; xác thực/gửi lại thư hiển thị đúng <code>204</code>, <code>400 TOKEN_INVALID</code>, <code>429</code>.</p></div>
+          <div class="phase"><h3>Hoàn tất B1.2</h3><p>Login dùng session thật, <code>useMe()</code> là nguồn user duy nhất, logout gọi API và xóa cache. Trang đích sau login không phụ thuộc vào API bộ thẻ chưa triển khai.</p></div>
+          <div class="phase"><h3>Hoàn tất B1.3</h3><p>Forgot chấp nhận <code>200</code> rỗng; reset phân biệt lỗi token và lỗi form; thêm trang đổi mật khẩu với PUT và thông báo thu hồi phiên chính xác.</p></div>
+          <div class="phase"><h3>Chuyển các màn hình nội dung khỏi demo theo roadmap</h3><p>Khi B1.5–B1.10 có API, thay mock từng phần bằng hợp đồng thực, kiểm tra phân trang/bộ lọc và bỏ dữ liệu mẫu hiển thị như dữ liệu thật.</p></div>
+        </div>
+      </section>
+
+      <section class="section" id="kiem-thu">
+        <h2>06 · Kịch bản nghiệm thu FE–BE thật</h2>
+        <div class="warn"><b>Điều kiện kiểm tra:</b> chạy MySQL, Redis, dịch vụ email và BE; FE trỏ tới BE thật; <code>NEXT_PUBLIC_API_MOCKING</code> không bật. Xác nhận request trong Network tab thay vì chỉ nhìn thông báo UI.</div>
+        <ol>
+          <li><b>CSRF:</b> FE gọi <code>GET /auth/csrf</code>; mọi POST/PUT gửi cookie và <code>X-XSRF-TOKEN</code>. Thử thiếu header để xác nhận BE từ chối.</li>
+          <li><b>Đăng ký:</b> thiếu điều khoản không gửi; form hợp lệ gửi <code>acceptTerms=true</code>, nhận <code>201</code>. Email trùng hiển thị <code>409 CONFLICT</code>.</li>
+          <li><b>Xác thực email:</b> mở liên kết trong email, nhận <code>204</code>; dùng lại token nhận <code>400 TOKEN_INVALID</code>. Gửi lại thư nhận <code>204</code>.</li>
+          <li><b>Đăng nhập và phiên:</b> trước login <code>/me</code> nhận <code>401</code>; sau login có cookie <code>SESSION</code> và <code>/me</code> trả đúng người dùng; sai mật khẩu báo <code>401</code>, thử quá giới hạn báo <code>429</code>.</li>
+          <li><b>Đăng xuất:</b> nút gửi POST, nhận <code>204</code>; dùng lại session cũ gọi <code>/me</code> nhận <code>401</code>.</li>
+          <li><b>Quên mật khẩu:</b> BE trả <code>200</code> body rỗng; FE hiện thông báo đã tiếp nhận với cả email tồn tại và không tồn tại, không hiển thị <code>demoToken</code>.</li>
+          <li><b>Đặt lại:</b> token hợp lệ và mật khẩu hợp lệ nhận <code>204</code>, mọi phiên cũ mất hiệu lực. Token hết hạn hiện lỗi liên kết; mật khẩu sai quy tắc giữ form và báo lỗi ở trường.</li>
+          <li><b>Đổi mật khẩu:</b> PUT trả <code>204</code>; phiên hiện tại còn dùng được, phiên ở thiết bị khác bị thu hồi.</li>
+        </ol>
+      </section>
+
+      <section class="section" id="gioi-han">
+        <h2>07 · Phạm vi và giới hạn</h2>
+        <p>Báo cáo được lập bằng cách đọc mã nguồn hiện tại của FE và BE, không chạy build, không mở ứng dụng và không gửi request thực tế. Vì vậy các biểu hiện HTTP được suy ra từ cấu hình và controller, cần xác nhận bằng các kịch bản ở mục 06 sau khi sửa.</p>
+        <p>Chỉ file HTML này được thêm vào project để trình bày kết quả. Mã FE, BE và các tài liệu khác không được sửa trong lượt này.</p>
+        <p class="footer">VocabLearning · Đối chiếu B1.1–B1.3 · Các đường dẫn nguồn trong báo cáo là đường dẫn tương đối từ thư mục <code>report/</code>.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
