@@ -97,4 +97,13 @@ public class NguoiDung extends BaseEntity {
         user.vaiTro.add(defaultRole);
         return user;
     }
+
+    public void updateProfile(String tenHienThi, String muiGio) {
+        if (tenHienThi != null) {
+            this.tenHienThi = tenHienThi;
+        }
+        if (muiGio != null) {
+            this.muiGio = muiGio;
+        }
+    }
 }

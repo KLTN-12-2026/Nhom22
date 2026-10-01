@@ -44,4 +44,12 @@ public class HoSoHocTap extends BaseEntity {
         profile.tuMoiMoiNgay = 10;
         return profile;
     }
+
+    public void updateLearning(TrinhDo trinhDo, MucTieu mucTieu, int phutMoiNgay, int tuMoiMoiNgay) {
+        this.trinhDo = trinhDo;
+        this.mucTieu = mucTieu;
+        this.phutMoiNgay = phutMoiNgay;
+        this.tuMoiMoiNgay = tuMoiMoiNgay;
+        this.daHoanTatKhoiDau = true;
+    }
 }

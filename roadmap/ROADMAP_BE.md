@@ -190,23 +190,32 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `POST /auth/register`, `POST /auth/verify-email`, `POST /auth/resend-verification`.
 - Tạo `nguoi_dung` trạng thái `CHUA_XAC_THUC`; token ngẫu nhiên, **chỉ lưu `token_hash`** (SHA-256), có `het_han_at`, `da_dung_at` (dùng một lần). Email trùng → 409. Rate limit đăng ký/gửi lại.
 - **Xong khi:** token sai/hết hạn/dùng lần 2 bị từ chối; mật khẩu lưu BCrypt.
+- **Đã làm:** `FR01RegisterTest` 8 test xanh.
 
 ### [x] B1.2 Đăng nhập, đăng xuất, thông tin phiên — FR-01
 - API: `POST /auth/login`, `POST /auth/logout`, `GET /me`, `GET /auth/csrf`.
 - Chưa xác thực email hoặc bị khóa → từ chối có mã lỗi riêng; sai mật khẩu nhiều lần → 429. Đăng nhập thành công đổi session id (chống fixation). Logout xóa session Redis.
 - **Xong khi:** sau logout, cookie cũ gọi `/me` → 401.
+- **Đã làm:** `FR01LoginTest` 9 test xanh; mã lỗi `INVALID_CREDENTIALS` 401, `EMAIL_NOT_VERIFIED` 403, `ACCOUNT_LOCKED` 403; khóa 5 lần sai/15 phút theo email.
 
 ### [x] B1.3 Quên / đặt lại / đổi mật khẩu — FR-01, TC-01
 - API: `POST /auth/forgot-password`, `POST /auth/reset-password`, `PUT /me/password`.
 - Quên mật khẩu luôn trả 200 (không lộ email tồn tại). Đặt lại/đổi mật khẩu → **vô hiệu mọi phiên khác** (`FindByIndexNameSessionRepository`).
+- **Xong khi:** link đặt lại dùng 1 lần, hết hạn 30 phút; đặt lại hủy mọi phiên; đổi mật khẩu giữ phiên hiện tại, hủy phiên khác.
+- **Đã làm:** `FR01PasswordTest` 8 test xanh; cần `spring.session.data.redis.repository-type: indexed`; lỗi nghiệp vụ trả `fieldErrors` (`currentPassword`, `newPassword`).
 
-### [ ] B1.4 Đăng nhập Google — FR-01
+### [x] B1.4 Đăng nhập Google — FR-01
 - API: `GET /auth/google/start`, `GET /auth/google/callback` (Spring OAuth2 Client).
 - Lưu `danh_tinh_oauth(nha_cung_cap, subject)` unique; **không tự nối** vào tài khoản có cùng email khi chưa có bằng chứng (TK §6.1) → báo cần đăng nhập mật khẩu rồi liên kết.
+- **Xong khi:** Google mới → tài khoản `HOAT_DONG` không mật khẩu; cùng `subject` → cùng tài khoản; email trùng → `?loi=OAUTH_LINK_REQUIRED`, liên kết sau khi đăng nhập mật khẩu trong 10 phút; bị khóa/email chưa xác minh bị từ chối.
+- **Đã làm:** `FR01GoogleLoginTest` 9 test xanh. Đường dẫn thật: `start` → `/auth/oauth2/google` (Spring) → `/auth/google/callback`; lỗi → `{frontend}/dang-nhap?loi=<MÃ>`. Key Google nằm trong `backend/k28/.env` (không commit), app tự nạp `.env` qua `spring.config.import`. Đã thử thật tới màn chọn tài khoản Google và nhánh `OAUTH_LINK_REQUIRED`; bước liên kết bằng mật khẩu mới kiểm bằng test.
 
-### [ ] B1.5 Hồ sơ, thiết lập học & thông báo — FR-02
+### [x] B1.5 Hồ sơ, thiết lập học & thông báo — FR-02
 - API: `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`.
-- `ho_so_hoc_tap`: trình độ tự đánh giá, mục tiêu (GIAO_TIEP/TOEIC), chủ đề yêu thích, phút/ngày, từ mới/ngày, giờ nhắc. Múi giờ IANA hợp lệ (`ZoneId.of`).
+- `ho_so_hoc_tap`: trình độ tự đánh giá, mục tiêu (GIAO_TIEP/TOEIC), phút/ngày, từ mới/ngày. `cai_dat_thong_bao`: nhận trong ứng dụng, email, nhắc học, giờ nhắc. Múi giờ IANA hợp lệ (có trong `ZoneId.getAvailableZoneIds()`, không nhận `+07:00`).
+- PUT gửi kèm `version` → sai thì 409 `VERSION_CONFLICT`. Lưu thiết lập học lần đầu = hoàn tất khởi đầu (`daHoanTatKhoiDau = true`).
+- **Xong khi:** tài khoản mới đọc được giá trị mặc định; lưu xong `/me` có `daHoanTatKhoiDau = true`; `version` cũ → 409; múi giờ sai, giới hạn sai, bật nhắc học thiếu giờ → 400 có `fieldErrors`.
+- **Đã làm:** `FR02SettingsTest` 7 test xanh; gọi thật đủ các nhánh. **Chuyển sang B1.7:** chủ đề yêu thích (cần bảng `chu_de`).
 
 ### [ ] B1.6 Tệp tin & ảnh đại diện — FR-03
 - Bảng `tep_tin`. API: `POST /files/upload-requests` (trả URL ký + fileId), `POST /files/{id}/complete` (kiểm tra kích thước, MIME thực, checksum), `DELETE /files/{id}`.
@@ -214,6 +223,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ### [ ] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
 - `V2__content.sql`: `chu_de`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich`.
+- Nợ từ B1.5: chủ đề yêu thích của người học (bảng nối `nguoi_dung` ↔ `chu_de`, tối đa 5) + thêm vào `GET/PUT /me/learning-settings`.
 - Public: `GET /public/topics`. Admin: CRUD `/admin/topics`, `/admin/tags`.
 
 ### [ ] B1.8 Bộ thẻ cá nhân — FR-03, TC-02

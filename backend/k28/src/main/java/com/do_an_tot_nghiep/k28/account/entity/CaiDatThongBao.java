@@ -36,4 +36,11 @@ public class CaiDatThongBao extends BaseEntity {
         settings.nhacHoc = true;
         return settings;
     }
+
+    public void update(boolean nhanTrongUngDung, boolean nhanEmail, boolean nhacHoc, LocalTime gioNhac) {
+        this.nhanTrongUngDung = nhanTrongUngDung;
+        this.nhanEmail = nhanEmail;
+        this.nhacHoc = nhacHoc;
+        this.gioNhac = gioNhac;
+    }
 }
