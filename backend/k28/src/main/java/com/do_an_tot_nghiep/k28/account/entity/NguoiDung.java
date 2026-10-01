@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -105,5 +106,9 @@ public class NguoiDung extends BaseEntity {
         if (muiGio != null) {
             this.muiGio = muiGio;
         }
+    }
+
+    public void changeAvatar(Long fileId) {
+        anhDaiDienId = fileId;
     }
 }

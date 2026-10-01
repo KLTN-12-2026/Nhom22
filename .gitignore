@@ -43,3 +43,7 @@ docs/luong-backend
 
 backend/k28/.env
 frontend/.env.local
+
+.codex
+
+report/GIAI_THICH_CODE_COT_LOI_B0_B1_5.md

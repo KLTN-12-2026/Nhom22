@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

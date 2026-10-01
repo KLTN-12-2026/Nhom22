@@ -118,7 +118,7 @@
                 <p class="field-error"></p>
               </div>
               <div class="field" data-field="audio">
-                <span class="field-label">Âm thanh <span class="optional">MP3, M4A, WEBM tối đa 5 MB</span></span>
+                <span class="field-label">Âm thanh <span class="optional">MP3, WAV, FLAC tối đa 5 MB, 300 giây</span></span>
                 <div class="file-box" id="audio-box"></div>
                 <p class="field-error"></p>
               </div>
@@ -211,42 +211,32 @@
   function renderFile(kind) {
     const box = document.getElementById(kind + "-box");
     const url = media[kind + "Url"];
-    const accept = kind === "image" ? "image/jpeg,image/png,image/webp" : "audio/mpeg,audio/mp4,audio/webm,audio/ogg,audio/wav";
+    const accept = kind === "image" ? "image/jpeg,image/png,image/webp" : "audio/mpeg,audio/wav,audio/flac,audio/x-flac";
     box.innerHTML = url
       ? (kind === "image" ? '<img src="' + url + '" alt="Ảnh minh họa của thẻ">' : '<audio controls src="' + url + '"></audio>') + '<div class="row"><label class="btn btn-quiet btn-sm">Đổi tệp<input type="file" class="sr-only" accept="' + accept + '" data-kind="' + kind + '"></label><button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-remove="' + kind + '">Gỡ</button></div>'
       : '<label class="dropzone" style="padding:var(--sp-4)">' + VL.icon(kind === "image" ? "image" : "volume") + '<span>' + (kind === "image" ? "Chọn ảnh" : "Chọn tệp âm thanh") + '</span><span class="muted small">hoặc kéo thả vào đây</span><input type="file" accept="' + accept + '" data-kind="' + kind + '"></label>';
   }
-  function downscale(file) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 640, r = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
-        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        resolve(c.toDataURL("image/jpeg", 0.82));
-        URL.revokeObjectURL(img.src);
-      };
-      img.onerror = () => reject(new Error("Không đọc được ảnh. Hãy chọn tệp JPG, PNG hoặc WEBP khác."));
-      img.src = URL.createObjectURL(file);
-    });
-  }
   async function upload(kind, file) {
+    if (form.dataset.uploading) return;
+    form.dataset.uploading = "true";
+    form.querySelectorAll('button[type="submit"]').forEach((button) => { button.disabled = true; });
     const field = form.querySelector('[data-field="' + kind + '"]');
     field.removeAttribute("data-invalid");
     const box = document.getElementById(kind + "-box");
     box.innerHTML = '<p class="small" aria-live="polite">Đang tải lên ' + VL.esc(file.name) + '…</p><div class="sk sk-line"></div>';
     try {
-      const req = await VL.api("POST", "/files/upload-requests", { fileName: file.name, contentType: file.type, size: file.size, purpose: kind === "image" ? "CARD_IMAGE" : "CARD_AUDIO" });
-      const dataUrl = kind === "image" ? await downscale(file) : URL.createObjectURL(file);
-      const done = await VL.api("POST", "/files/" + req.fileId + "/complete", { dataUrl: kind === "image" ? dataUrl : null });
-      media[kind + "Url"] = kind === "image" ? done.url : dataUrl;
+      const done = await VL.uploadFile(file, kind === "image" ? "ANH" : "AM_THANH");
+      media[kind + "Url"] = done.downloadUrl;
+      media[kind + "Id"] = done.id;
       renderFile(kind);
       preview();
     } catch (err) {
       renderFile(kind);
       field.setAttribute("data-invalid", "");
       field.querySelector(".field-error").innerHTML = VL.icon("alert", "icon-sm") + "<span>" + VL.esc((err.fieldErrors && err.fieldErrors[0] ? err.fieldErrors[0].message : err.message)) + "</span>";
+    } finally {
+      delete form.dataset.uploading;
+      form.querySelectorAll('button[type="submit"]').forEach((button) => { button.disabled = false; });
     }
   }
   form.addEventListener("change", (e) => { if (e.target.matches('input[type="file"]') && e.target.files[0]) upload(e.target.dataset.kind, e.target.files[0]); });
@@ -293,6 +283,7 @@
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (form.dataset.uploading) return;
     const btn = e.submitter || document.getElementById("save");
     const more = !!btn.dataset.more;
     VL.clearErrors(form);

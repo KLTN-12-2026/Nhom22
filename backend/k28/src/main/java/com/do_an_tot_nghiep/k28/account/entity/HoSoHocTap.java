@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

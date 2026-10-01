@@ -43,6 +43,13 @@ spring:
 
 app:
   frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
+  files:
+    max-audio-seconds: ${FILE_MAX_AUDIO_SECONDS:300}
+    max-image-dimension: ${FILE_MAX_IMAGE_DIMENSION:4096}
+    cleanup:
+      enabled: ${FILE_CLEANUP_ENABLED:true}
+      initial-delay-ms: ${FILE_CLEANUP_INITIAL_DELAY_MS:60000}
+      interval-ms: ${FILE_CLEANUP_INTERVAL_MS:60000}
   cookie-secure: ${COOKIE_SECURE:false}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}

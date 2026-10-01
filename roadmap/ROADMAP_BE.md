@@ -217,12 +217,13 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Xong khi:** tài khoản mới đọc được giá trị mặc định; lưu xong `/me` có `daHoanTatKhoiDau = true`; `version` cũ → 409; múi giờ sai, giới hạn sai, bật nhắc học thiếu giờ → 400 có `fieldErrors`.
 - **Đã làm:** `FR02SettingsTest` 7 test xanh; gọi thật đủ các nhánh. **Chuyển sang B1.7:** chủ đề yêu thích (cần bảng `chu_de`).
 
-### [ ] B1.6 Tệp tin & ảnh đại diện — FR-03
+### [x] B1.6 Tệp tin & ảnh đại diện — FR-03
 - Bảng `tep_tin`. API: `POST /files/upload-requests` (trả URL ký + fileId), `POST /files/{id}/complete` (kiểm tra kích thước, MIME thực, checksum), `DELETE /files/{id}`.
 - Giới hạn ảnh ≤ 2 MB (jpg/png/webp), âm thanh ≤ 5 MB. Không cho client chỉ định đường dẫn/URL tùy ý.
+- Đã hoàn tất 02/10/2026: MIME thực, SHA-256, kiểm tra ảnh/âm thanh, ảnh đại diện, xóa và retry/dọn tệp nền, CORS bucket cho browser. 22 test FR-03 + 13 test hồi quy pass. Luồng/API: `docs/luong-backend/B1.6-tep-tin-anh-dai-dien.md`.
 
 ### [ ] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
-- `V2__content.sql`: `chu_de`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich`.
+- `V4__content.sql`: `chu_de`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich`. V2/V3 đã dùng cho tệp và cleanup.
 - Nợ từ B1.5: chủ đề yêu thích của người học (bảng nối `nguoi_dung` ↔ `chu_de`, tối đa 5) + thêm vào `GET/PUT /me/learning-settings`.
 - Public: `GET /public/topics`. Admin: CRUD `/admin/topics`, `/admin/tags`.
 
@@ -253,7 +254,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 2 — Học, luyện tập, thống kê & quản trị (26/10–08/11) · FR-06, 07, 11, 13
 
 ### [ ] B2.1 Bộ tính SRS thuần — FR-06, TC-06, TC-07
-- `V3__learning.sql`: `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
+- `V5__learning.sql`: `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
 - `SrsCalculator` (class thuần, không Spring): nhận trạng thái cũ + mức (QUEN/KHO/NHO/DE) + `Instant now` → trạng thái mới, theo **đúng bảng TK §7.2** (EF 2.5, min 1.3, trần 365 ngày).
 - **Xong khi:** unit test chuỗi Nhớ: mới → 10 phút → 1 ngày → 6 ngày → 15 ngày; Quên ở ON_TAP → HOC_LAI, tăng số lần quên.
 
@@ -277,7 +278,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Trong `/learning/today`: khi quá hạn vượt ngưỡng → trả phương án chia N ngày theo phút/ngày, giảm từ mới, ưu tiên thẻ quên nhiều. **Không** đổi `han_on_at` gốc.
 
 ### [ ] B2.7 Tạo bài luyện — FR-07, TC-11
-- `V4__practice.sql`: `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
+- `V6__practice.sql`: `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
 - API: `POST /practice/sessions` (dạng: chọn nghĩa, chọn từ, ghép, điền chỗ trống, nhập từ theo nghĩa, nghe viết, phân biệt cặp, tổng hợp), `GET /practice/sessions/{id}`.
 - Lưu **bản chụp** câu hỏi + đáp án; response **không chứa đáp án**.
 
@@ -293,7 +294,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Tính từ `lich_su_on`, `tra_loi_bai_luyen` bằng truy vấn tổng hợp; lọc ngày theo múi giờ User.
 
 ### [ ] B2.11 Quản trị nền — FR-13, TC-17
-- `V5__admin.sql`: `nhat_ky_quan_tri`.
+- `V7__admin.sql`: `nhat_ky_quan_tri`.
 - API: `GET /admin/users`, `PATCH /admin/users/{id}/status` (khóa/mở → hủy phiên), `PUT /admin/users/{id}/roles` (**không bỏ quyền Admin cuối cùng**), CRUD `/admin/decks`, `/admin/cards` (bộ mẫu: xuất bản/ẩn), `GET /admin/audit-logs`.
 - Mọi thao tác quan trọng ghi nhật ký: người làm, hành động, đối tượng, lý do, trước/sau (đã lọc dữ liệu nhạy cảm).
 - **Cuối Đợt 2 →** `/fe-report DOT2`.
@@ -303,7 +304,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 3 — AI, phát âm, động lực & vận hành (09/11–29/11) · FR-08, 09, 10, 12, 14
 
 ### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
-- `V6__jobs_ai.sql`: `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
+- `V8__jobs_ai.sql`: `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
 

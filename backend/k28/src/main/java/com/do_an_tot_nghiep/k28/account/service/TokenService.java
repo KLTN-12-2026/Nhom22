@@ -1,6 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.service;
 
-import com.do_an_tot_nghiep.k28.account.entity.LoaiToken;
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import com.do_an_tot_nghiep.k28.account.entity.TokenTaiKhoan;
 import com.do_an_tot_nghiep.k28.account.repository.TokenTaiKhoanRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;

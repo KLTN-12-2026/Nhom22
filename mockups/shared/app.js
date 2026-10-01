@@ -72,6 +72,21 @@
   }
 
   function me() { try { const s = window.VLDemo.session.get(); if (!s) return null; return window.VLDemo.db.users.find((u) => u.id === s.userId) || null; } catch (e) { return null; } }
+  async function put(uploadUrl, file) {
+    return window.VLDemo.put(uploadUrl, file);
+  }
+  async function uploadFile(file, loai) {
+    const allowed = loai === "ANH" ? ["image/jpeg", "image/png", "image/webp"] : ["audio/mpeg", "audio/wav", "audio/vnd.wave", "audio/flac", "audio/x-flac"];
+    const limit = (loai === "ANH" ? 2 : 5) * 1024 * 1024;
+    if (!allowed.includes(file.type) || !file.size || file.size > limit) {
+      throw new Error(loai === "ANH" ? "Chọn ảnh JPG, PNG hoặc WEBP, tối đa 2 MB." : "Chọn âm thanh MP3, WAV hoặc FLAC, tối đa 5 MB và 300 giây.");
+    }
+    const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    const checksum = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+    const intent = await api("POST", "/files/upload-requests", { loai, mimeType: file.type, kichThuoc: file.size, checksum });
+    await put(intent.uploadUrl, file);
+    return api("POST", "/files/" + intent.fileId + "/complete");
+  }
   function onboardingDone(u) { const l = window.VLDemo.db.learning[u.id]; return !!(l && l.onboardingDone); }
 
   function fmtDate(iso) {
@@ -479,6 +494,6 @@
   function fmtDay(ymd, weekday) { return new Date(ymd + "T12:00:00Z").toLocaleDateString("vi-VN", Object.assign({ day: "2-digit", month: "2-digit", timeZone: "UTC" }, weekday ? { weekday: "long" } : {})); }
   function fmtDuration(sec) { const m = Math.floor(sec / 60); const s = Math.round(sec % 60); return m ? m + " phút" + (s ? " " + s + " giây" : "") : s + " giây"; }
 
-  window.VL = { root, url, icon, esc, params, api, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
+  window.VL = { root, url, icon, esc, params, api, put, uploadFile, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
   window.VL.ready = boot();
 })();

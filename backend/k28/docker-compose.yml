@@ -49,7 +49,8 @@ services:
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-s3admin_dev_pw}
       AWS_DEFAULT_REGION: us-east-1
     entrypoint: ["/bin/sh", "-c"]
-    command: ["aws --endpoint-url http://s3:9000 s3api head-bucket --bucket ${S3_BUCKET:-vocab-files} 2>/dev/null || aws --endpoint-url http://s3:9000 s3 mb s3://${S3_BUCKET:-vocab-files}"]
+    volumes: ["./docker/s3-cors.json:/config/s3-cors.json:ro"]
+    command: ["(aws --endpoint-url http://s3:9000 s3api head-bucket --bucket ${S3_BUCKET:-vocab-files} 2>/dev/null || aws --endpoint-url http://s3:9000 s3 mb s3://${S3_BUCKET:-vocab-files}) && aws --endpoint-url http://s3:9000 s3api put-bucket-cors --bucket ${S3_BUCKET:-vocab-files} --cors-configuration file:///config/s3-cors.json"]
 
   mailpit:
     image: axllent/mailpit:latest

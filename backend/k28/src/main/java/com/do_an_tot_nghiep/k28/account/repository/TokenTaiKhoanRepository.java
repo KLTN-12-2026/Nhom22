@@ -1,6 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.repository;
 
-import com.do_an_tot_nghiep.k28.account.entity.LoaiToken;
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import com.do_an_tot_nghiep.k28.account.entity.TokenTaiKhoan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
