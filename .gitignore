@@ -40,3 +40,6 @@ DESIGN.md
 AGENTS.md
 
 docs/luong-backend
+
+backend/k28/.env
+frontend/.env.local

@@ -21,7 +21,8 @@ public enum ErrorCode {
     TOKEN_INVALID(HttpStatus.BAD_REQUEST),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED),
     EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN),
-    ACCOUNT_LOCKED(HttpStatus.FORBIDDEN);
+    ACCOUNT_LOCKED(HttpStatus.FORBIDDEN),
+    OAUTH_LINK_REQUIRED(HttpStatus.CONFLICT);
 
     private final HttpStatus status;
 }

@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.common.security;
 
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +12,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -36,7 +39,9 @@ public class SecurityConfig {
     private boolean cookieSecure;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository contextRepository) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                            SecurityContextRepository contextRepository,
+                                            AuthenticationSuccessHandler googleLoginSuccessHandler) throws Exception {
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
         http
                 .cors(Customizer.withDefaults())
@@ -49,6 +54,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**", "/api/v1/public/**", "/api/v1/library/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/api/v1/auth/google/start")
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/oauth2"))
+                        .redirectionEndpoint(endpoint -> endpoint.baseUri("/api/v1/auth/*/callback"))
+                        .authorizedClientRepository(new HttpSessionOAuth2AuthorizedClientRepository())
+                        .successHandler(googleLoginSuccessHandler)
+                        .failureHandler((request, response, ex) ->
+                                response.sendRedirect(frontendUrl + "/dang-nhap?loi=GOOGLE_THAT_BAI")))
+                .formLogin(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jsonAuthHandlers)
                         .accessDeniedHandler(jsonAuthHandlers))
