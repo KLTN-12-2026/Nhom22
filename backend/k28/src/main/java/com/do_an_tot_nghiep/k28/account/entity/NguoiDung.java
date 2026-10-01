@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -96,5 +97,18 @@ public class NguoiDung extends BaseEntity {
         user.emailXacThucAt = now;
         user.vaiTro.add(defaultRole);
         return user;
+    }
+
+    public void updateProfile(String tenHienThi, String muiGio) {
+        if (tenHienThi != null) {
+            this.tenHienThi = tenHienThi;
+        }
+        if (muiGio != null) {
+            this.muiGio = muiGio;
+        }
+    }
+
+    public void changeAvatar(Long fileId) {
+        anhDaiDienId = fileId;
     }
 }

@@ -1,7 +1,7 @@
 package com.do_an_tot_nghiep.k28.account.service;
 
 import com.do_an_tot_nghiep.k28.account.dto.ChangePasswordRequest;
-import com.do_an_tot_nghiep.k28.account.entity.LoaiToken;
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;

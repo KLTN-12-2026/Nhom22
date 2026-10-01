@@ -245,9 +245,31 @@
     return db.users.find((u) => u.id === s.userId) || null;
   }
   function requireMe() { const u = me(); if (!u) unauth(); return u; }
+  function ownedFile(id, allowDeleted) {
+    const u = requireMe(), f = db.files[id];
+    if (!f || f.ownerId !== u.id || (f.deleted && !allowDeleted)) notFound();
+    return f;
+  }
+  function fileResponse(f) {
+    if (!f.hoanTatAt) throw new ApiError(422, "BUSINESS_RULE", "Tệp chưa hoàn tất tải lên");
+    return { id: f.id, loai: f.loai, mimeType: f.mimeType, kichThuoc: f.kichThuoc, checksum: f.checksum, hoanTatAt: f.hoanTatAt, downloadUrl: f.url, expiresAt: new Date(Date.now() + 600000).toISOString() };
+  }
+  async function put(uploadUrl, file) {
+    if (flags.offline) throw new ApiError(0, "NETWORK_ERROR", "Mất kết nối mạng. Hãy thử lại.");
+    const match = /^demo:\/\/upload\/(\w+)$/.exec(uploadUrl);
+    if (!match) notFound();
+    const f = ownedFile(match[1]);
+    const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    const checksum = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+    if (file.type !== f.mimeType || file.size !== f.kichThuoc || checksum !== f.checksum) bad([fe("file", "Tệp tải lên không khớp yêu cầu")]);
+    f.url = await new Promise((resolve, reject) => {
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file);
+    });
+    save(db);
+  }
   function publicUser(u) {
     const l = db.learning[u.id];
-    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienUrl: u.anhDaiDienUrl, trangThai: u.trangThai, daHoanTatKhoiDau: !!(l && l.onboardingDone) };
+    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienId: u.anhDaiDienId || null, trangThai: u.trangThai, daHoanTatKhoiDau: !!(l && l.onboardingDone) };
   }
   function topicName(id) { const t = db.topics.find((x) => x.id === id); return t ? t.name : "Chưa phân loại"; }
   function deckView(d, uid) {
@@ -952,7 +974,6 @@
         u.tenHienThi = name;
       }
       if (b.muiGio !== undefined) u.muiGio = b.muiGio;
-      if (b.anhDaiDienId !== undefined) { const f = db.files[b.anhDaiDienId]; u.anhDaiDienUrl = f ? f.url : null; }
       return publicUser(u);
     }],
     ["PUT", /^\/me\/password$/, (m, b) => {
@@ -1000,26 +1021,43 @@
     }],
 
     ["POST", /^\/files\/upload-requests$/, (m, b) => {
-      requireMe();
-      const images = ["image/jpeg", "image/png", "image/webp"];
-      const audios = ["audio/mpeg", "audio/mp4", "audio/webm", "audio/ogg", "audio/wav"];
-      const isImg = images.includes(b.contentType);
-      const isAudio = audios.includes(b.contentType);
-      if (!isImg && !isAudio) bad([fe("file", "Chỉ nhận ảnh JPG, PNG, WEBP hoặc âm thanh MP3, M4A, WEBM, OGG, WAV")]);
-      if (isImg && b.size > 2 * 1024 * 1024) bad([fe("file", "Ảnh tối đa 2 MB")]);
-      if (isAudio && b.size > 5 * 1024 * 1024) bad([fe("file", "Âm thanh tối đa 5 MB")]);
+      const u = requireMe();
+      const types = b.loai === "ANH" ? ["image/jpeg", "image/png", "image/webp"] : b.loai === "AM_THANH" ? ["audio/mpeg", "audio/wav", "audio/vnd.wave", "audio/flac", "audio/x-flac"] : [];
+      if (!types.includes(b.mimeType) || !Number.isInteger(b.kichThuoc) || b.kichThuoc <= 0 || !/^[a-fA-F0-9]{64}$/.test(b.checksum || "")) bad([fe("file", "Loại, dung lượng hoặc SHA-256 không hợp lệ")]);
+      if (b.kichThuoc > (b.loai === "ANH" ? 2 : 5) * 1024 * 1024) bad([fe("file", "Tệp vượt dung lượng cho phép")]);
       const id = nextId();
-      db.files[id] = { id, contentType: b.contentType, size: b.size, url: null, done: false };
+      db.files[id] = { id, ownerId: u.id, loai: b.loai, mimeType: b.mimeType, kichThuoc: b.kichThuoc, checksum: b.checksum.toLowerCase(), url: null, hoanTatAt: null };
       return { status: 201, body: { fileId: id, uploadUrl: "demo://upload/" + id, expiresAt: new Date(Date.now() + 600000).toISOString() } };
     }],
-    ["POST", /^\/files\/(\w+)\/complete$/, (m, b) => {
-      requireMe();
-      const f = db.files[m[1]];
-      if (!f) notFound();
-      f.done = true; f.url = b.dataUrl || null;
-      return { fileId: f.id, url: f.url };
+    ["POST", /^\/files\/(\w+)\/complete$/, (m) => {
+      const f = ownedFile(m[1]);
+      if (!f.url) throw new ApiError(422, "BUSINESS_RULE", "Tệp chưa được tải lên");
+      f.hoanTatAt = f.hoanTatAt || new Date().toISOString();
+      return fileResponse(f);
     }],
-    ["DELETE", /^\/files\/(\w+)$/, (m) => { requireMe(); delete db.files[m[1]]; return { status: 204 }; }],
+    ["GET", /^\/files\/(\w+)$/, (m) => fileResponse(ownedFile(m[1]))],
+    ["DELETE", /^\/files\/(\w+)$/, (m) => {
+      const u = requireMe(), f = ownedFile(m[1], true);
+      f.deleted = true;
+      if (u.anhDaiDienId === f.id) { u.anhDaiDienId = null; u.anhDaiDienUrl = null; }
+      return { status: 204 };
+    }],
+    ["PUT", /^\/me\/avatar$/, (m, b) => {
+      const u = requireMe();
+      if (!/^[1-9][0-9]{0,17}$/.test(b.anhDaiDienId || "")) bad([fe("anhDaiDienId", "ID ảnh không hợp lệ")]);
+      const f = ownedFile(b.anhDaiDienId);
+      if (f.loai !== "ANH" || !f.hoanTatAt) throw new ApiError(422, "BUSINESS_RULE", "Ảnh đại diện phải là tệp ảnh đã hoàn tất");
+      u.anhDaiDienId = f.id; u.anhDaiDienUrl = f.url;
+      return fileResponse(f);
+    }],
+    ["GET", /^\/me\/avatar$/, () => {
+      const u = requireMe();
+      return u.anhDaiDienId ? fileResponse(ownedFile(u.anhDaiDienId)) : { status: 204 };
+    }],
+    ["DELETE", /^\/me\/avatar$/, () => {
+      const u = requireMe(); u.anhDaiDienId = null; u.anhDaiDienUrl = null;
+      return { status: 204 };
+    }],
 
     ["GET", /^\/public\/topics$/, () => db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && d.visibility === "CONG_KHAI" && !d.deleted && d.trangThaiKiemDuyet !== "DA_AN").length }))],
     ["GET", /^\/public\/tags$/, () => db.tags],
@@ -1726,6 +1764,7 @@
     ApiError,
     DEMO_PASSWORD,
     handle,
+    put,
     session,
     flags,
     play,

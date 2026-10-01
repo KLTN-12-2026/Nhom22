@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.do_an_tot_nghiep.k28.account.dto.GoogleProfile;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
-import com.do_an_tot_nghiep.k28.account.entity.TrangThaiNguoiDung;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.VaiTro;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;

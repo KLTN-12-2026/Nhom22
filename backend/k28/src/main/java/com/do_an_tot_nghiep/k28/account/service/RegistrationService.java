@@ -4,7 +4,7 @@ import com.do_an_tot_nghiep.k28.account.dto.RegisterRequest;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
 import com.do_an_tot_nghiep.k28.account.entity.CaiDatThongBao;
 import com.do_an_tot_nghiep.k28.account.entity.HoSoHocTap;
-import com.do_an_tot_nghiep.k28.account.entity.LoaiToken;
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.VaiTro;
 import com.do_an_tot_nghiep.k28.account.mapper.UserMapper;

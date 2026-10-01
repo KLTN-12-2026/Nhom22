@@ -1,7 +1,7 @@
 package com.do_an_tot_nghiep.k28.account.repository;
 
 import com.do_an_tot_nghiep.k28.account.entity.DanhTinhOauth;
-import com.do_an_tot_nghiep.k28.account.entity.NhaCungCap;
+import com.do_an_tot_nghiep.k28.account.entity.enums.NhaCungCap;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

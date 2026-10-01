@@ -48,7 +48,7 @@
               <div class="avatar-row">
                 <span id="avatar"></span>
                 <div class="avatar-actions">
-                  <label class="btn btn-secondary" for="avatar-file"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải ảnh lên</label>
+                  <button type="button" class="btn btn-secondary" id="avatar-upload"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải ảnh lên</button>
                   <input type="file" id="avatar-file" class="sr-only" accept="image/jpeg,image/png,image/webp">
                   <button type="button" class="btn btn-quiet" id="avatar-remove" hidden>Gỡ ảnh</button>
                   <p class="field-hint">JPG, PNG hoặc WEBP, tối đa 2 MB.</p>
@@ -58,7 +58,7 @@
             </div>
             <div class="field">
               <label class="field-label" for="tenHienThi">Tên hiển thị</label>
-              <input class="input" id="tenHienThi" name="tenHienThi" maxlength="110" autocomplete="nickname" required>
+              <input class="input" id="tenHienThi" name="tenHienThi" maxlength="100" autocomplete="nickname" required>
               <p class="field-hint">Hiện trên bộ thẻ bạn chia sẻ công khai.</p>
               <p class="field-error"></p>
             </div>
@@ -117,7 +117,11 @@
   }
 
   VL.load(document.getElementById("region"), {
-    fetch: () => VL.api("GET", "/me"),
+    fetch: async () => {
+      const u = await VL.api("GET", "/me");
+      const avatar = await VL.api("GET", "/me/avatar");
+      return Object.assign(u, { anhDaiDienUrl: avatar ? avatar.downloadUrl : null });
+    },
     render: (u) => {
       me = u;
       form.tenHienThi.value = u.tenHienThi;
@@ -129,44 +133,37 @@
     }
   });
 
-  function downscale(file) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const s = 256, c = document.createElement("canvas");
-        const r = Math.min(img.width, img.height);
-        c.width = s; c.height = s;
-        c.getContext("2d").drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s);
-        resolve(c.toDataURL("image/jpeg", 0.85));
-      };
-      img.onerror = () => reject(new Error("Không đọc được ảnh"));
-      img.src = URL.createObjectURL(file);
-    });
-  }
-  document.getElementById("avatar-file").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
-    VL.clearErrors(form);
-    const label = document.querySelector('label[for="avatar-file"]');
-    label.setAttribute("aria-busy", "true");
-    try {
-      const req = await VL.api("POST", "/files/upload-requests", { fileName: file.name, contentType: file.type, size: file.size, purpose: "AVATAR" });
-      const dataUrl = await downscale(file);
-      const done = await VL.api("POST", "/files/" + req.fileId + "/complete", { dataUrl });
-      me = await VL.api("PATCH", "/me", { anhDaiDienId: done.fileId });
-      renderAvatar();
-      VL.toast("Đã đổi ảnh đại diện");
-      document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
-    } catch (err) { VL.showErrors(form, err); }
-    finally { label.removeAttribute("aria-busy"); }
-  });
+  const uploadButton = document.getElementById("avatar-upload");
+  const fileInput = document.getElementById("avatar-file");
   const rm = document.getElementById("avatar-remove");
+  uploadButton.addEventListener("click", () => fileInput.click());
+  function refreshHeader() {
+    const avatar = document.querySelector(".app-header .avatar");
+    if (avatar) avatar.outerHTML = VL.avatarHtml(me);
+  }
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file || uploadButton.disabled) return;
+    VL.clearErrors(form);
+    rm.disabled = true; save.disabled = true;
+    try {
+      await VL.busy(uploadButton, async () => {
+        const done = await VL.uploadFile(file, "ANH");
+        const avatar = await VL.api("PUT", "/me/avatar", { anhDaiDienId: done.id });
+        me = Object.assign(await VL.api("GET", "/me"), { anhDaiDienUrl: avatar.downloadUrl });
+        renderAvatar(); refreshHeader(); VL.toast("Đã đổi ảnh đại diện");
+      });
+    } catch (err) { VL.showErrors(form, err); }
+    finally { rm.disabled = false; save.disabled = false; }
+  });
   rm.addEventListener("click", () => VL.busy(rm, async () => {
-    me = await VL.api("PATCH", "/me", { anhDaiDienId: null });
-    renderAvatar();
-    document.querySelector(".app-header .avatar").outerHTML = VL.avatarHtml(me);
-    VL.toast("Đã gỡ ảnh đại diện");
+    uploadButton.disabled = true; save.disabled = true;
+    try {
+      await VL.api("DELETE", "/me/avatar");
+      me = Object.assign(await VL.api("GET", "/me"), { anhDaiDienUrl: null });
+      renderAvatar(); refreshHeader(); VL.toast("Đã gỡ ảnh đại diện");
+    } catch (err) { VL.showErrors(form, err); }
+    finally { uploadButton.disabled = false; save.disabled = false; }
   }));
 
   form.addEventListener("submit", (e) => {
@@ -174,7 +171,7 @@
     VL.clearErrors(form);
     VL.busy(save, async () => {
       try {
-        me = await VL.api("PATCH", "/me", { tenHienThi: form.tenHienThi.value, muiGio: form.muiGio.value });
+        me = Object.assign(await VL.api("PATCH", "/me", { tenHienThi: form.tenHienThi.value, muiGio: form.muiGio.value }), { anhDaiDienUrl: me.anhDaiDienUrl });
         VL.toast("Đã lưu hồ sơ");
         document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
         const name = document.querySelector(".app-header .user-name");

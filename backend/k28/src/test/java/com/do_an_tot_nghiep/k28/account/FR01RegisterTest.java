@@ -6,10 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.do_an_tot_nghiep.k28.account.entity.LoaiToken;
+import com.do_an_tot_nghiep.k28.account.entity.enums.LoaiToken;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.TokenTaiKhoan;
-import com.do_an_tot_nghiep.k28.account.entity.TrangThaiNguoiDung;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.account.repository.HoSoHocTapRepository;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.TokenTaiKhoanRepository;

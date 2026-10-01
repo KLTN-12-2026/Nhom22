@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,5 +45,13 @@ public class HoSoHocTap extends BaseEntity {
         profile.phutMoiNgay = 10;
         profile.tuMoiMoiNgay = 10;
         return profile;
+    }
+
+    public void updateLearning(TrinhDo trinhDo, MucTieu mucTieu, int phutMoiNgay, int tuMoiMoiNgay) {
+        this.trinhDo = trinhDo;
+        this.mucTieu = mucTieu;
+        this.phutMoiNgay = phutMoiNgay;
+        this.tuMoiMoiNgay = tuMoiMoiNgay;
+        this.daHoanTatKhoiDau = true;
     }
 }

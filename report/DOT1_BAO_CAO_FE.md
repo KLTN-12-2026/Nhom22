@@ -3,9 +3,9 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày bàn giao | 01/10/2026 (bản 4 — B1.1 → B1.4; cập nhật tiếp theo từng bước) |
-| Trạng thái BE | 🟡 B1.1 → B1.4 xong · 59 test xanh (`FR01RegisterTest` 8, `FR01LoginTest` 9, `FR01PasswordTest` 8, `FR01GoogleLoginTest` 9) · B1.5–B1.12 chưa làm |
-| FE làm tương ứng | F1.1 → F1.4 (`roadmap/ROADMAP_FE.md` §Đợt 1); F1.5 trở đi dùng MSW theo mục 9 |
+| Ngày bàn giao | 02/10/2026 (bản 6 — B1.1 → B1.6; cập nhật tiếp theo từng bước) |
+| Trạng thái BE | 🟡 B1.1 → B1.6 xong · 66 test ở lần bàn giao trước; B1.6: 22 test FR-03 + 13 test hồi quy pass (35 test được chạy, không phải toàn bộ suite) · B1.7–B1.12 chưa làm |
+| FE làm tương ứng | F1.1 → F1.5 (`roadmap/ROADMAP_FE.md` §Đợt 1); F1.6 trở đi dùng MSW theo mục 9 |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
@@ -13,6 +13,8 @@
 > - **Tên trường JSON = tên field entity** (tiếng Việt không dấu): `tenHienThi`, `trangThai`, `muiGio`, `vaiTro`, `daHoanTatKhoiDau`. FE dùng nguyên tên, không đổi sang tiếng Anh.
 > - Đăng nhập thật đã có: `POST /auth/login`, `POST /auth/logout`, `GET /me` (cookie `SESSION`). Tài khoản seed: `an@vocab.local` / `Vocab@12345`.
 > - **Sửa `api-client.js` trước khi nối đăng nhập:** chỉ thử lại 403 khi `code === 'FORBIDDEN'` (mục 3).
+> - Tệp và avatar thật đã có (B1.6): SHA-256 → xin URL → PUT bytes → complete → `PUT /me/avatar`. `/me` trả `anhDaiDienId`; URL ảnh lấy ở `GET /me/avatar`.
+> - Hồ sơ & thiết lập thật đã có (B1.5): `PATCH /me`, thiết lập học (lưu lần đầu = hoàn tất `/bat-dau`), thông báo; PUT phải gửi `version` (409 khi cũ) — mục 5.11–5.13.
 > - Google thật đã có (B1.4): nút Google **điều hướng toàn trang** tới `/api/v1/auth/google/start?next=…`; lỗi quay về `/dang-nhap?loi=<MÃ>` (mục 5.10).
 > - Mật khẩu thật đã có (B1.3): quên mật khẩu, đặt lại từ thư (Mailpit), đổi mật khẩu ở `/ca-nhan/bao-mat`. Đặt lại → đăng xuất **mọi** phiên; đổi → giữ phiên hiện tại, đăng xuất phiên khác.
 
@@ -26,9 +28,11 @@
 | B1.2 Đăng nhập/đăng xuất/phiên | ✅ `POST /auth/login`, `POST /auth/logout`, `GET /me`; phiên Redis, đổi session id khi đăng nhập, logout xóa phiên; lỗi riêng chưa xác thực/bị khóa; 429 khi sai nhiều | F1.2 UI08 `/dang-nhap`, menu người dùng | Form đăng nhập; `useMe()` làm nguồn người dùng; route guard; nút đăng xuất; điều hướng theo `daHoanTatKhoiDau` |
 | B1.3 Quên / đặt lại / đổi mật khẩu | ✅ `POST /auth/forgot-password`, `POST /auth/reset-password`, `PUT /me/password`; link một lần, hết hạn 30 phút; đặt lại hủy mọi phiên, đổi giữ phiên hiện tại | F1.3 UI09 `/quen-mat-khau`, UI10 `/dat-lai-mat-khau`, UI42 `/ca-nhan/bao-mat` | Form email → màn "Kiểm tra hộp thư" (luôn giống nhau); trang đặt lại đọc `?token=`; form đổi mật khẩu có ô nhập lại |
 | B1.4 Đăng nhập Google | ✅ `GET /auth/google/start` → Google → `/auth/google/callback`; tạo tài khoản mới đã xác thực, không tự liên kết email trùng (liên kết sau khi đăng nhập mật khẩu) | F1.4 UI06, UI08 | Nút "Tiếp tục với Google" điều hướng toàn trang; `/dang-nhap` đọc `?loi=` |
-| B1.5 – B1.12 | ⏳ chưa làm | F1.5 – F1.12 | Mock theo mockup `mockups/dot1/` |
+| B1.5 Hồ sơ & thiết lập | ✅ `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`; khóa phiên bản (`version` → 409); lưu thiết lập học lần đầu = hoàn tất khởi đầu | F1.5 UI11 `/bat-dau`, UI40 `/ca-nhan`, UI41 `/ca-nhan/hoc-tap`, UI43 `/ca-nhan/thong-bao` | Form theo mục 5.11–5.13; gửi kèm `version`; 409 → tải lại |
+| B1.6 Tệp & ảnh đại diện | ✅ 4 API tệp + 3 API avatar; MIME thực, SHA-256, URL ký, dọn tệp và retry | F1.6 UI40 `/ca-nhan`, UI16 biên tập thẻ | Dùng mục 5.14–5.20; mockup [hồ sơ](../mockups/dot1/ca-nhan.html), [biên tập thẻ](../mockups/dot1/the-tao.html) |
+| B1.7 – B1.12 | ⏳ chưa làm | F1.7 – F1.12 | Nội dung vẫn mock theo `mockups/dot1/` |
 
-**Chưa có** (dùng MSW): hồ sơ/thiết lập (B1.5), tệp (B1.6), nội dung (B1.7–B1.12). Lịch: Đợt 1, 12/10–25/10.
+**Chưa có** (dùng MSW): nội dung (B1.7–B1.12). Lịch: Đợt 1, 12/10–25/10.
 
 ## 2. Chạy BE
 
@@ -39,6 +43,13 @@ Không đổi so với GĐ0: `docker compose --profile app up -d --build` trong 
 | Link trong thư xác thực | `${APP_FRONTEND_URL}/xac-thuc-email?token=<token>` (mặc định `http://localhost:3000`) → FE phải có route `/xac-thuc-email` đọc `token` |
 | Link trong thư đặt lại mật khẩu | `${APP_FRONTEND_URL}/dat-lai-mat-khau?token=<token>` (hiệu lực 30 phút, dùng 1 lần) → FE phải có route `/dat-lai-mat-khau` đọc `token` |
 | Mailpit | http://localhost:8025 — mọi thư BE gửi nằm ở đây, không ra ngoài |
+
+### Cấu hình mới B1.6
+
+- RustFS: `http://localhost:9000`; không gửi tệp qua API JSON/multipart.
+- Bucket CORS: `backend/k28/docker/s3-cors.json`, mặc định cho `localhost:3000` và `127.0.0.1:3000`. Khi đổi origin FE, cập nhật file rồi chạy `docker compose up -d s3-init`.
+- `FILE_MAX_IMAGE_DIMENSION=4096`, `FILE_MAX_AUDIO_SECONDS=300`; cleanup mặc định bật, mỗi 60 giây.
+- URL PUT/GET theo `expiresAt`; pending hết hạn 24 giờ. Khi URL PUT hết hạn, xin yêu cầu mới.
 
 ## 3. Thay đổi hợp đồng chung
 
@@ -55,6 +66,33 @@ Không đổi so với GĐ0: `docker compose --profile app up -d --build` trong 
 | Lỗi nghiệp vụ có `fieldErrors` (từ B1.3) | Một số lỗi không phải lỗi định dạng vẫn kèm 1 phần tử `fieldErrors` để FE hiện dưới ô (ví dụ sai mật khẩu hiện tại → `currentPassword`). `applyServerErrors` xử lý được, không cần code riêng |
 | Cookie phiên | `SESSION` (HttpOnly, SameSite=Lax) chỉ được tạo khi **đăng nhập thành công**; request khách bị 401 không tạo phiên. Logout trả `SESSION=; Max-Age=0` |
 | Hết phiên | Không hoạt động 7 ngày thì phiên hết hạn. Cookie là cookie phiên trình duyệt (không có `Max-Age`) |
+
+### Thay đổi B1.6
+
+- `UserResponse` thêm `anhDaiDienId: string | null`; không trả `anhDaiDienUrl`.
+- `FileResponse`: `id`, `loai`, `mimeType`, `kichThuoc`, `checksum`, `hoanTatAt`, `downloadUrl`, `expiresAt`.
+- `complete` không body; `PUT /me/avatar` trả FileResponse; `GET /me/avatar` trả 204 nếu không có avatar.
+- Upload-request và complete chia sẻ hạn mức 30 lần/phút/người dùng.
+- Ví dụ UserResponse ở mục 5.1–5.13 được thu trước B1.6; từ bản hiện tại có thêm `anhDaiDienId`. Mẫu mới đã gọi thật:
+
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "17",
+  "email": "b16.handoff.1790886576@test.local",
+  "tenHienThi": "Kiểm chứng B1.6",
+  "anhDaiDienId": "2",
+  "trangThai": "HOAT_DONG",
+  "muiGio": "Asia/Ho_Chi_Minh",
+  "emailXacThucAt": "2026-10-01T20:29:38.660Z",
+  "vaiTro": [
+    "USER"
+  ],
+  "daHoanTatKhoiDau": false
+}
+```
 
 ## 4. Luồng chính
 
@@ -79,7 +117,7 @@ sequenceDiagram
   else sai/hết hạn/đã dùng
     BE-->>FE: 400 TOKEN_INVALID
     FE->>U: Form nhập email → POST /auth/resend-verification
-  end
+  end;
 ```
 
 **Đăng nhập / đăng xuất (B1.2):**
@@ -105,6 +143,27 @@ sequenceDiagram
   BE-->>FE: 204 + SESSION=; Max-Age=0
   FE->>BE: GET /me (cookie cũ)
   BE-->>FE: 401 UNAUTHENTICATED
+```
+
+### Upload và avatar B1.6
+
+```mermaid
+sequenceDiagram
+  participant FE
+  participant BE
+  participant S3 as RustFS
+  FE->>FE: SHA-256 của đúng bytes sẽ PUT
+  FE->>BE: POST /files/upload-requests
+  BE-->>FE: 201 fileId, uploadUrl, expiresAt
+  FE->>S3: PUT uploadUrl + Content-Type + bytes
+  S3-->>FE: 200
+  FE->>BE: POST /files/{id}/complete (không body)
+  BE->>S3: Đọc và xác minh, sao chép sang key cuối
+  BE-->>FE: 200 FileResponse
+  FE->>BE: PUT /me/avatar {anhDaiDienId}
+  BE-->>FE: 200 FileResponse
+  FE->>BE: GET /me/avatar (lấy URL mới)
+  BE-->>FE: 200 hoặc 204
 ```
 
 ## 5. API chi tiết (đã kiểm chứng trên BE thật)
@@ -449,6 +508,458 @@ Sau 4a, FE ở trang đích gọi `GET /me` như bình thường (mục 5.5) và
 
 Sau khi hiện, xóa `loi` khỏi URL (`router.replace('/dang-nhap')`) để tải lại trang không hiện lại.
 
+### 5.11 `PATCH /api/v1/me` — sửa hồ sơ
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.5 | UI40 | `/ca-nhan` |
+
+**Gửi** — chỉ trường có gửi mới đổi; bỏ trường hoặc `null` = giữ nguyên.
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `tenHienThi` | string | không | 1–100 ký tự sau khi cắt khoảng trắng | `"Nguyễn Minh Anh"` |
+| `muiGio` | string | không | ID IANA trong danh sách của Java (`Asia/Ho_Chi_Minh`, `Asia/Tokyo`, `UTC`); **không** nhận `+07:00` | `"Asia/Tokyo"` |
+
+**Nhận** (thật) — `UserResponse` như `GET /me`:
+
+```json
+{"id":"14","email":"b15-631@test.local","tenHienThi":"Minh Anh mới","trangThai":"HOAT_DONG","muiGio":"Asia/Tokyo","emailXacThucAt":"2026-10-01T04:06:33.031Z","vaiTro":["USER"],"daHoanTatKhoiDau":true}
+```
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `tenHienThi` "Tên hiển thị 1–100 ký tự" | Rỗng/toàn khoảng trắng hoặc > 100 | Lỗi dưới ô |
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `muiGio` "Múi giờ không hợp lệ" | Không phải ID IANA | Lỗi dưới ô (FE nên dùng select, mặc định `Intl.DateTimeFormat().resolvedOptions().timeZone`) |
+| 401 | `UNAUTHENTICATED` | Chưa đăng nhập | `/dang-nhap?next=/ca-nhan` |
+
+Thành công → `queryClient.setQueryData(['me'], data)` + toast "Đã lưu hồ sơ". Ảnh đại diện dùng API riêng ở mục 5.18–5.20; không gửi `anhDaiDienId` vào `PATCH /me`.
+
+### 5.12 `GET/PUT /api/v1/me/learning-settings` — thiết lập học
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.5 | UI11, UI41 | `/bat-dau`, `/ca-nhan/hoc-tap` |
+
+**GET → 200** (thật, tài khoản mới):
+
+```json
+{"trinhDo":null,"mucTieu":null,"phutMoiNgay":10,"tuMoiMoiNgay":10,"daHoanTatKhoiDau":false,"version":0}
+```
+
+**PUT — gửi** (thay toàn bộ, mọi trường bắt buộc):
+
+| Trường | Kiểu | Giới hạn | Nhãn FE |
+|---|---|---|---|
+| `trinhDo` | enum | `MOI_BAT_DAU`, `CO_BAN`, `TRUNG_CAP`, `NANG_CAO` | "Trình độ tự đánh giá" (FR-02: chỉ là tự đánh giá, không phải điểm) |
+| `mucTieu` | enum | `GIAO_TIEP`, `TOEIC` | "Mục tiêu" |
+| `phutMoiNgay` | int | 1–240 | "Phút học mỗi ngày" |
+| `tuMoiMoiNgay` | int | 0–100 | "Từ mới mỗi ngày" |
+| `version` | number | = `version` của lần GET gần nhất | ẩn |
+
+**PUT → 200** (thật): `{"trinhDo":"CO_BAN","mucTieu":"TOEIC","phutMoiNgay":15,"tuMoiMoiNgay":20,"daHoanTatKhoiDau":true,"version":1}`
+
+**Tác dụng phụ:** lần lưu đầu đặt `daHoanTatKhoiDau = true` → đây là nút "Hoàn tất" của `/bat-dau`. Sau 200 FE cập nhật `['me']` (`daHoanTatKhoiDau: true`) rồi chuyển `/bo-the`.
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `phutMoiNgay` "Thời gian học từ 1 đến 240 phút mỗi ngày", `tuMoiMoiNgay` "Số từ mới từ 0 đến 100 mỗi ngày", `trinhDo` "Chọn trình độ tự đánh giá", `mucTieu` "Chọn mục tiêu học" | Thiếu/sai giới hạn | Lỗi dưới ô |
+| 400 | `VALIDATION_FAILED` không có `fieldErrors` | Enum sai chính tả (`"ABC"`) | Lỗi chung; dùng select để không gặp |
+| 409 | `VERSION_CONFLICT` "Thiết lập đã được thay đổi ở nơi khác, vui lòng tải lại" | `version` cũ (đã lưu ở tab khác) | Notice + nút "Tải lại" (refetch GET) |
+| 401 | `UNAUTHENTICATED` | | `/dang-nhap?next=` |
+
+**Chưa có:** chủ đề yêu thích (mockup gửi `topicIds`) — cần bảng `chu_de` ở B1.7. FE giữ ô chọn chủ đề trên UI11 nhưng **không gửi** `topicIds`, hoặc ẩn đến B1.7.
+
+### 5.13 `GET/PUT /api/v1/me/notification-settings` — thông báo & giờ nhắc
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.5 | UI43 | `/ca-nhan/thong-bao` |
+
+**GET → 200** (thật, mặc định): `{"nhanTrongUngDung":true,"nhanEmail":true,"nhacHoc":true,"gioNhac":null,"version":0}`
+
+**PUT — gửi:**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn |
+|---|---|---|---|
+| `nhanTrongUngDung` | boolean | ✔ | |
+| `nhanEmail` | boolean | ✔ | |
+| `nhacHoc` | boolean | ✔ | |
+| `gioNhac` | string `"HH:mm"` | khi `nhacHoc = true` | giờ địa phương theo `muiGio`; được `null` khi tắt nhắc học |
+| `version` | number | ✔ | = `version` của lần GET gần nhất |
+
+**PUT → 200** (thật): `{"nhanTrongUngDung":true,"nhanEmail":false,"nhacHoc":true,"gioNhac":"20:30","version":1}`
+
+**Lỗi** (thật)
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` + `fieldErrors` `gioNhac` "Chọn giờ nhắc học" | Bật nhắc học mà không có giờ | Lỗi dưới ô giờ (FE nên mặc định `20:00` khi bật) |
+| 409 | `VERSION_CONFLICT` | `version` cũ | Như 5.12 |
+| 401 | `UNAUTHENTICATED` | | `/dang-nhap?next=` |
+
+Lưu ý: mặc định `nhacHoc = true` nhưng `gioNhac = null` → FE hiện công tắc bật và ô giờ trống; khi lưu phải có giờ. Gửi nhắc thật làm ở module thông báo (Đợt 3).
+
+### Hợp đồng chung cho API tệp B1.6
+
+Các phản hồi dưới đây đã gọi trên backend thật ngày 02/10/2026 bằng tài khoản `*@test.local`, có cookie SESSION và CSRF. URL đã lược bỏ query chữ ký, không dùng URL mẫu để tải tệp.
+
+| Loại | MIME nhận | Giới hạn |
+|---|---|---|
+| ANH | image/jpeg, image/png, image/webp | ≤2 MiB (2097152 byte), mỗi chiều ≤4096 px |
+| AM_THANH | audio/mpeg, audio/wav, audio/vnd.wave, audio/flac, audio/x-flac | ≤5 MiB (5242880 byte), ≤300 giây |
+
+BE cũng chuẩn hóa alias `image/jpg` → `image/jpeg`, `audio/wave`/`audio/x-wav` → `audio/vnd.wave`. `FileResponse.mimeType` trả MIME chuẩn hóa.
+
+MIME, checksum và kích thước được BE xác minh trên bytes thực. Không nhận M4A/MP4, WEBM, OGG. FE chỉ đổi preview sau khi server xác nhận.
+
+### 5.14 `POST /api/v1/files/upload-requests` — Xin URL tải tệp
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+|loai|enum|có|ANH hoặc AM_THANH|ANH|
+|mimeType|string|có|không rỗng, ≤50 ký tự, MIME ở bảng trên|image/png|
+|kichThuoc|number|có|>0, byte size đúng giới hạn loại|69|
+|checksum|string|có|64 ký tự hex SHA-256|xem JSON bên dưới|
+
+```json
+{
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 69,
+  "checksum": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640"
+}
+```
+
+Sau201, PUT trực tiếp uploadUrl với binary bytes; đã kiểm chứng PUT200. Không gắn SESSION hay X-XSRF-TOKEN khi PUT sang S3.
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 201
+```
+```json
+{
+  "fileId": "2",
+  "uploadUrl": "http://localhost:9000/vocab-files/pending/17/257f336f-e33e-4a36-806f-22bfd2054fc8?[chu-ky-da-luoc-bo]",
+  "expiresAt": "2026-10-01T20:39:38.888277500Z"
+}
+```
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
+|422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
+|429|RATE_LIMITED|30 lần/phút chung request+complete|khóa nút, thử lại sau|
+
+**Tác dụng phụ:** Tạo pending; chưa có tệp dùng được. URL PUT phải giữ nguyên và dùng đúng Content-Type.
+
+### 5.15 `POST /api/v1/files/{id}/complete` — Hoàn tất tải tệp
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| O | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+|id|path ID|có|ID số của chính người dùng|2|
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "2",
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 69,
+  "checksum": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+  "hoanTatAt": "2026-10-01T20:29:39.019019600Z",
+  "downloadUrl": "http://localhost:9000/vocab-files/files/17/f8165697-050c-4f08-ad7f-6dc2789fdc8a?[chu-ky-da-luoc-bo]",
+  "expiresAt": "2026-10-01T20:39:39.069360900Z"
+}
+```
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
+|422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
+|429|RATE_LIMITED|30 lần/phút chung request+complete|khóa nút, thử lại sau|
+|409|CONFLICT|trạng thái tệp thay đổi|đọc lại tệp|
+
+**Tác dụng phụ:** Không có body. BE kiểm bytes thực và chuyển sang key cuối; gọi lại trả cùng tệp, URL ký có thể khác.
+
+### 5.16 `GET /api/v1/files/{id}` — Đọc tệp / làm mới URL
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| O | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+|id|path ID|có|ID tệp đã complete|2|
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "2",
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 69,
+  "checksum": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+  "hoanTatAt": "2026-10-01T20:29:39.019Z",
+  "downloadUrl": "http://localhost:9000/vocab-files/files/17/f8165697-050c-4f08-ad7f-6dc2789fdc8a?[chu-ky-da-luoc-bo]",
+  "expiresAt": "2026-10-01T20:39:39.102771600Z"
+}
+```
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
+|422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
+
+**Tác dụng phụ:** Tạo downloadUrl mới; không lưu URL ký như dữ liệu lâu dài.
+
+### 5.17 `DELETE /api/v1/files/{id}` — Xóa tệp
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| O | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+|id|path ID|có|ID tệp của chính người dùng|2|
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 204
+```
+Không có body.
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
+
+**Tác dụng phụ:** Ghi tombstone, gỡ avatar nếu đang dùng, xóa object. Nếu S3 lỗi503, tệp vẫn bị ẩn trong DB và worker retry. Gọi lại DELETE cùng tệp vẫn204 khi S3 hoạt động.
+
+### 5.18 `PUT /api/v1/me/avatar` — Gắn ảnh đại diện
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| O | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+|anhDaiDienId|string|có|không rỗng, ≤18 ký tự, regex [1-9][0-9]*; ảnh đã complete của chính mình|"2"|
+
+```json
+{"anhDaiDienId":"2"}
+```
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "2",
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 69,
+  "checksum": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+  "hoanTatAt": "2026-10-01T20:29:39.019Z",
+  "downloadUrl": "http://localhost:9000/vocab-files/files/17/f8165697-050c-4f08-ad7f-6dc2789fdc8a?[chu-ky-da-luoc-bo]",
+  "expiresAt": "2026-10-01T20:39:39.202707700Z"
+}
+```
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
+|400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
+|422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
+
+**Tác dụng phụ:** Gắn liên kết avatar; không xóa ảnh cũ khi thay ảnh.
+
+### 5.19 `GET /api/v1/me/avatar` — Đọc ảnh đại diện
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+Không có body/query.
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "2",
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 69,
+  "checksum": "b1ff9c8ea3a780bad09b346c423d2d0e46815926879b18e841d928376a946640",
+  "hoanTatAt": "2026-10-01T20:29:39.019Z",
+  "downloadUrl": "http://localhost:9000/vocab-files/files/17/f8165697-050c-4f08-ad7f-6dc2789fdc8a?[chu-ky-da-luoc-bo]",
+  "expiresAt": "2026-10-01T20:39:39.232876700Z"
+}
+```
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+
+**Tác dụng phụ:** 200 khi có avatar;204 không có body khi chưa gắn/gỡ ảnh. URL tải được ký lại mỗi lần GET.
+
+### 5.20 `DELETE /api/v1/me/avatar` — Gỡ ảnh đại diện
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L | F1.6 | UI40; tệp dùng thêm UI16 | `/ca-nhan`, biên tập thẻ |
+
+**Gửi**
+
+Không có body/query.
+
+**Nhận** (thật)
+
+```http
+HTTP/1.1 204
+```
+Không có body.
+
+**Lỗi**
+
+| HTTP | code | Khi nào | FE xử lý |
+|---|---|---|---|
+|401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+
+**Tác dụng phụ:** Chỉ bỏ liên kết avatar, giữ tệp; sau gỡ GET /files/{id} vẫn200. Nếu muốn xóa bytes, gọi DELETE /files/{id} riêng.
+
+### B1.6 — mẫu lỗi đã gọi thật
+
+**Body upload sai:**
+
+```http
+HTTP/1.1 400
+```
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "message": "Yêu cầu không đúng định dạng",
+  "fieldErrors": [],
+  "requestId": "b56f65a3-7587-4a44-a91a-a4beb4f433fb"
+}
+```
+
+**ID avatar sai:**
+
+```http
+HTTP/1.1 400
+```
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "message": "Dữ liệu không hợp lệ",
+  "fieldErrors": [
+    {
+      "field": "anhDaiDienId",
+      "message": "must match \"[1-9][0-9]*\""
+    }
+  ],
+  "requestId": "654ba80b-bd7d-4be5-8ea6-82e0b64d7cf2"
+}
+```
+
+**GET tệp pending:**
+
+```http
+HTTP/1.1 422
+```
+```json
+{
+  "code": "BUSINESS_RULE",
+  "message": "Tệp chưa hoàn tất tải lên",
+  "fieldErrors": [],
+  "requestId": "cf93c8fe-0b56-4679-90f4-153b7b2c84a6"
+}
+```
+
+**GET tệp đã xóa:**
+
+```http
+HTTP/1.1 404
+```
+```json
+{
+  "code": "NOT_FOUND",
+  "message": "Không tìm thấy tệp",
+  "fieldErrors": [],
+  "requestId": "a461e68c-b7d8-4566-ac5a-7f7ab7550438"
+}
+```
+
+**Không có avatar:**
+
+```http
+HTTP/1.1 204
+```
+Không có body.
+
 ## 6. Mã FE mẫu
 
 **Zod** (giới hạn = BE):
@@ -653,6 +1164,32 @@ export const passwordHandlers = [
 ];
 ```
 
+### B1.6 — upload đúng bytes và gắn avatar
+
+`api(method, path, data)` bên dưới là wrapper api-client ở GĐ0, giữ SESSION và nạp CSRF cho API ghi.
+
+```javascript
+async function uploadAvatar(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+      || file.size <= 0 || file.size > 2097152) throw new Error('Ảnh JPG/PNG/WEBP tối đa 2 MB');
+  const bytes = await file.arrayBuffer();
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  const checksum = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const intent = await api('POST', '/files/upload-requests', {
+    loai: 'ANH', mimeType: file.type, kichThuoc: file.size, checksum
+  });
+  const put = await fetch(intent.uploadUrl, {
+    method: 'PUT', headers: { 'Content-Type': file.type }, body: bytes, credentials: 'omit'
+  });
+  if (!put.ok) throw new Error('Không tải được tệp. Hãy thử lại.');
+  const done = await api('POST', `/files/${intent.fileId}/complete`);
+  const avatar = await api('PUT', '/me/avatar', { anhDaiDienId: done.id });
+  return avatar;
+}
+```
+
+Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; PUT chính bytes đã tính hash. Sau mutation invalidate `['me']` và `['me','avatar']`. Khi `expiresAt` đến, GET avatar để lấy URL mới;204 → chữ cái tên người dùng. Zod avatar: `z.string().max(18).regex(/^[1-9][0-9]*$/)`.
+
 ## 7. Dữ liệu mẫu / tài khoản demo
 
 | Việc | Cách làm |
@@ -666,7 +1203,7 @@ export const passwordHandlers = [
 | Thử "đăng xuất phiên khác" | Đăng nhập cùng tài khoản ở 2 trình duyệt (hoặc 1 cửa sổ ẩn danh), đổi mật khẩu ở cửa sổ 1 → cửa sổ 2 tải lại bị đưa về `/dang-nhap` |
 | Bị 429 khi dev | Chờ hết cửa sổ (1 giờ / 15 phút) hoặc nhờ BE xóa khóa Redis `rl:*` |
 
-## 8. Checklist FE hoàn thành F1.1 → F1.4
+## 8. Checklist FE hoàn thành F1.1 → F1.6
 
 - [ ] `/dang-ky`: 4 trường + checkbox điều khoản; Zod khớp mục 6; gửi `muiGio` từ trình duyệt
 - [ ] Lỗi server hiện dưới đúng ô theo `fieldErrors[].field` (`tenHienThi`, `email`, `password`, `acceptTerms`)
@@ -689,14 +1226,23 @@ export const passwordHandlers = [
 - [ ] F1.4 `/dang-nhap?loi=`: hiện đúng thông điệp 4 mã ở mục 5.10, mã lạ dùng thông điệp chung; xóa `loi` khỏi URL sau khi hiện
 - [ ] F1.4 `OAUTH_LINK_REQUIRED` → đăng nhập mật khẩu ngay trên trang đó → lần sau bấm Google vào thẳng
 - [ ] F1.4 Kiểm thử thật: Gmail mới → `/bat-dau`, `/me` có email Gmail; bấm Hủy trên Google → `?loi=GOOGLE_THAT_BAI`
+- [ ] F1.5 `/bat-dau`: GET thiết lập học → form mục tiêu, trình độ, phút/ngày, từ mới/ngày; "Hoàn tất" = PUT kèm `version` → cập nhật `['me']` → `/bo-the`
+- [ ] F1.5 `/ca-nhan`: sửa `tenHienThi`, chọn `muiGio` (mặc định múi giờ trình duyệt); 200 → cập nhật `['me']` + toast "Đã lưu hồ sơ"
+- [ ] F1.5 `/ca-nhan/hoc-tap` và `/ca-nhan/thong-bao`: luôn gửi `version` vừa đọc; 409 `VERSION_CONFLICT` → notice + "Tải lại"; `fieldErrors` hiện dưới đúng ô
+- [ ] F1.5 Bật nhắc học → ô `gioNhac` bắt buộc (`HH:mm`), mặc định `20:00`
+- [ ] F1.5 Kiểm thử thật: tài khoản mới → `/bat-dau` → hoàn tất → đăng nhập lại vào thẳng `/bo-the`; mở 2 tab cùng sửa thiết lập học → tab lưu sau bị 409
 - [ ] F1.3 Kiểm thử thật: quên → Mailpit → đặt lại → đăng nhập bằng mật khẩu mới; mở lại link lần 2 → màn lỗi; đổi mật khẩu khi đăng nhập ở 2 trình duyệt → trình duyệt kia bị đăng xuất
+
+- [ ] F1.6 Tính SHA-256 sau mọi biến đổi ảnh; PUT đúng MIME và bytes, complete không body.
+- [ ] F1.6 Dùng `PUT/GET/DELETE /me/avatar`; 204 → chữ cái; GET lấy lại URL khi hết hạn.
+- [ ] F1.6 Hiện lỗi 400/401/404/422/429/503; khóa upload/gỡ/lưu trong khi pending; giữ preview cũ khi upload lỗi.
+- [ ] F1.6 Gỡ avatar giữ tệp; xóa tệp đang dùng tự gỡ avatar.
 
 ## 9. Sắp có ở Đợt 1 — hợp đồng dự kiến
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
-| B1.5 | Đợt 1 | `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings` | F1.5 | UI11, UI40, UI41, UI43 |
-| B1.6 – B1.12 | Đợt 1 | tệp, chủ đề, bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.6 – F1.12 | xem `mockups/dot1/` |
+| B1.7 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** chủ đề, bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.7 – F1.12 | xem `mockups/dot1/` |
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -714,7 +1260,21 @@ export const passwordHandlers = [
 | Google chỉ cho tài khoản test (B1.4) | OAuth client ở chế độ *Testing*: chỉ Gmail có trong *Test users* của project Google Cloud đăng nhập được, người khác gặp `access_denied` → `?loi=GOOGLE_THAT_BAI`. Cần thêm Gmail của bạn: báo BE |
 | Google cần key thật (B1.4) | BE chạy với `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` trong `backend/k28/.env` (không commit). Thiếu key → Google báo `invalid_client`; MSW không giả được bước Google |
 | Tài khoản Google không có mật khẩu (B1.4) | Tài khoản tạo bằng Google chưa đặt được mật khẩu ở `/ca-nhan/bao-mat` (`PUT /me/password` cần mật khẩu hiện tại); muốn có mật khẩu thì dùng "Quên mật khẩu" |
-| Mockups còn tên cũ | Phần thiết lập học tập/thông báo trong mockup (`goal`, `minutesPerDay`, `inApp`…) sẽ đổi theo entity khi xong B1.5 |
+| Mockups còn tên cũ (B1.5, ngoài phạm vi sửa upload) | Mockup + `shared/demo.js` vẫn dùng `goal`, `level`, `minutesPerDay`, `newCardsPerDay`, `onboardingDone`, `inApp`, `email`, `studyReminder`, `reminderTime`. Tên thật: `mucTieu`, `trinhDo`, `phutMoiNgay`, `tuMoiMoiNgay`, `daHoanTatKhoiDau`, `nhanTrongUngDung`, `nhanEmail`, `nhacHoc`, `gioNhac`. FE dùng tên thật theo mục 5.12–5.13 |
+| Chủ đề yêu thích (B1.5) | Chưa lưu được (`topicIds`) — chờ bảng `chu_de` ở B1.7 |
+| Chưa kiểm chứng (B1.5) | Hai tab lưu đúng cùng một khoảnh khắc: kiểm bằng `@Version` của Hibernate (trả 409), không bấm thật đồng thời |
+
+### Kiểm tra mockups và giới hạn B1.6
+
+| Mục | Kết quả |
+|---|---|
+| Hồ sơ | [ca-nhan.html](../mockups/dot1/ca-nhan.html): body upload đúng; PUT bytes → complete không body; GET/PUT/DELETE avatar; tên hiển thị maxlength100; nút tải ảnh dùng bàn phím |
+| Biên tập thẻ | [the-tao.html](../mockups/dot1/the-tao.html): dùng chung upload B1.6; âm thanh chỉ MP3/WAV/FLAC. Lưu thẻ/nội dung vẫn dự kiến B1.9 |
+| Demo | `shared/demo.js` mô phỏng hợp đồng mới và quyền sở hữu; `downloadUrl` là data URL chỉ cho demo. BE thật dùng URL ký RustFS; demo không thay kiểm chứng MIME/duration trên server |
+| Chưa kiểm chứng thủ công B1.6 | Concurrent complete, URL PUT cũ, WebP, giới hạn duration/dimensions, TTL24h và retry outage kiểm bằng 22 test FR-03; không đợi24h/bấm đồng thời trên backend đang chạy |
+| Thiết kế | `frontend/design/YEU_CAU_GIAO_DIEN.md` không có trong workspace; giữ tokens/layout hiện tại, không xác nhận toàn bộ GT01–GT12 |
+| Postman | 7 API B1.6 + PUT S3 + 3 request lỗi; fixture [avatar.png](../postman/avatar.png) khớp fileChecksum/fileSize mặc định; thứ tự chạy ở [postman/README.md](../postman/README.md) |
+| Kiểm chứng mockup | Hồ sơ: upload ảnh fixture → hiển thị ảnh → gỡ ảnh → chữ cái; không có console error. Đã xem desktop1280 và mobile390; mobile không tràn ngang. Inline JS của hai trang và shared JS qua `node --check` |
 
 ## 11. Báo lỗi cho BE
 
