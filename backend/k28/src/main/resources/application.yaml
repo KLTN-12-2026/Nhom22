@@ -1,6 +1,10 @@
 spring:
   application:
     name: k28
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:backend/k28/.env[.properties]
   profiles:
     default: dev
   flyway:
@@ -27,7 +31,15 @@ spring:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
     default-encoding: UTF-8
-
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dev-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dev-google-client-secret}
+            scope: openid,profile,email
+            redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/api/v1/auth/{registrationId}/callback}
 
 app:
   frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
@@ -38,7 +50,7 @@ app:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}
     access-key: ${S3_ACCESS_KEY:s3admin}
-    secret-key: ${S3_SECRET_KEY:Dk!JD{6UhC2Je!8m}
+    secret-key: ${S3_SECRET_KEY:s3admin_dev_pw}
     bucket: ${S3_BUCKET:vocab-files}
     region: ${S3_REGION:us-east-1}
     presign-ttl: ${S3_PRESIGN_TTL:10m}
@@ -66,7 +78,10 @@ management:
     health:
       probes:
         enabled: true
+
 server:
   servlet:
     session:
       timeout: 7d
+  tomcat:
+    use-relative-redirects: true

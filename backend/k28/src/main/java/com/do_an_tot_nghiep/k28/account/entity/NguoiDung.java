@@ -84,4 +84,17 @@ public class NguoiDung extends BaseEntity {
     public void changePassword(String newHash) {
         passwordHash = newHash;
     }
+
+    public static NguoiDung registerOAuth(String email, String tenHienThi, String muiGio,
+                                          VaiTro defaultRole, Instant now) {
+        String name = tenHienThi == null || tenHienThi.isBlank() ? email.substring(0, email.indexOf('@')) : tenHienThi.strip();
+        NguoiDung user = new NguoiDung();
+        user.email = email;
+        user.tenHienThi = name.length() > 100 ? name.substring(0, 100) : name;
+        user.muiGio = muiGio;
+        user.trangThai = TrangThaiNguoiDung.HOAT_DONG;
+        user.emailXacThucAt = now;
+        user.vaiTro.add(defaultRole);
+        return user;
+    }
 }

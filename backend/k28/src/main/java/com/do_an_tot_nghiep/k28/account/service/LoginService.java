@@ -51,15 +51,16 @@ public class LoginService {
             case CHUA_XAC_THUC -> throw new ApiException(ErrorCode.EMAIL_NOT_VERIFIED, "Tài khoản chưa xác thực email");
             case BI_KHOA, DANG_XOA -> throw new ApiException(ErrorCode.ACCOUNT_LOCKED, "Tài khoản đã bị khóa. Liên hệ với quản trị viên để được hỗ trợ");
             case HOAT_DONG -> {
-
             }
         }
 
         rateLimiter.reset(RateLimiter.Policy.LOGIN, limitKey);
         user.recordLogin(clock.instant());
-        AuthUser principal = new AuthUser(user.getId(), user.getEmail(),
-                user.getVaiTro().stream().map(VaiTro::getMa).collect(Collectors.toSet()));
+        return new LoginResult(principalOf(user), accountService.toResponse(user));
+    }
 
-        return new LoginResult(principal, accountService.toResponse(user));
+    static AuthUser principalOf(NguoiDung user) {
+        return new AuthUser(user.getId(), user.getEmail(),
+                user.getVaiTro().stream().map(VaiTro::getMa).collect(Collectors.toSet()));
     }
 }
