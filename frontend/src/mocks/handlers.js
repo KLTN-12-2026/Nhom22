@@ -309,5 +309,80 @@ export const handlers = [
   http.post('*/api/v1/practice/mistakes/retry', () => {
     mockPracticeStatus = 'DANG_LAM';
     return HttpResponse.json({ id: 'practice-retry-123' });
+  }),
+
+  // Notebook List
+  http.get('*/api/v1/notebook', ({ request }) => {
+    const url = new URL(request.url);
+    const nhomLoi = url.searchParams.get('nhomLoi');
+    
+    return HttpResponse.json({
+      items: [
+        {
+          theId: 'c1',
+          boTheId: 'b1',
+          boTheTen: '3000 từ vựng Oxford',
+          tu: 'receipt',
+          phienAm: '/rɪˈsiːt/',
+          tuLoai: 'n.',
+          nghiaVi: 'biên lai, giấy biên nhận',
+          lyDo: ['QUEN_NHIEU', 'SAI_CHINH_TA'],
+          nhomLoi: [{ nhomLoi: 'CHINH_TA', soLan: 2 }],
+          soLanQuen: 3,
+          danhDauThuCong: false,
+          ghiChu: 'Hay quên cách viết ei/ie',
+          lanGanNhatAt: new Date().toISOString(),
+          bangChung: [
+            { nhomLoi: 'CHINH_TA', traLoi: 'recept', dapAn: 'receipt', createdAt: new Date().toISOString() }
+          ]
+        },
+        {
+          theId: 'c2',
+          boTheId: 'b1',
+          boTheTen: '3000 từ vựng Oxford',
+          tu: 'postpone',
+          tuLoai: 'v.',
+          nghiaVi: 'hoãn lại',
+          lyDo: ['DANH_DAU_THU_CONG'],
+          nhomLoi: [],
+          danhDauThuCong: true,
+          ghiChu: '',
+          lanGanNhatAt: new Date().toISOString(),
+          bangChung: []
+        }
+      ].filter(x => !nhomLoi || (nhomLoi === 'DANH_DAU' && x.danhDauThuCong) || x.nhomLoi.some(n => n.nhomLoi === nhomLoi)),
+      tongHop: {
+        TAT_CA: 2,
+        CHINH_TA: 1,
+        DANH_DAU: 1
+      },
+      totalElements: 2,
+      totalPages: 1,
+      page: 0,
+      size: 20
+    });
+  }),
+
+  // Notebook Update
+  http.put('*/api/v1/notebook/:id', async ({ request, params }) => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Notebook Delete
+  http.delete('*/api/v1/notebook/:id', () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Confusing Pairs
+  http.get('*/api/v1/learning/confusing-pairs', () => {
+    return HttpResponse.json([
+      {
+        loaiNham: 'HINH_THUC_GAN_GIONG',
+        soLan: 3,
+        ganNhatAt: new Date().toISOString(),
+        the1: { id: 'c1', tu: 'receipt', nghiaVi: 'biên lai' },
+        the2: { id: 'c3', tu: 'recipe', nghiaVi: 'công thức' }
+      }
+    ]);
   })
 ];
