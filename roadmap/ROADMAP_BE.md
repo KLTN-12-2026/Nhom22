@@ -222,10 +222,13 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Giới hạn ảnh ≤ 2 MB (jpg/png/webp), âm thanh ≤ 5 MB. Không cho client chỉ định đường dẫn/URL tùy ý.
 - Đã hoàn tất 02/10/2026: MIME thực, SHA-256, kiểm tra ảnh/âm thanh, ảnh đại diện, xóa và retry/dọn tệp nền, CORS bucket cho browser. 22 test FR-03 + 13 test hồi quy pass. Luồng/API: `docs/luong-backend/B1.6-tep-tin-anh-dai-dien.md`.
 
-### [ ] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
+### [x] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
 - `V4__content.sql`: `chu_de`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich`. V2/V3 đã dùng cho tệp và cleanup.
 - Nợ từ B1.5: chủ đề yêu thích của người học (bảng nối `nguoi_dung` ↔ `chu_de`, tối đa 5) + thêm vào `GET/PUT /me/learning-settings`.
 - Public: `GET /public/topics`. Admin: CRUD `/admin/topics`, `/admin/tags`.
+- **Đã làm 03/10/2026:** 11 API danh mục; cập nhật `GET/PUT /me/learning-settings` với `chuDeIds` bắt buộc, tối đa 5 ID tồn tại và không trùng. PUT danh mục kèm `version`; xóa danh mục đang được tham chiếu trả 409, không cascade. Trình độ dùng enum hiện có, không có API CRUD trình độ.
+- **Kiểm chứng:** `FR03CatalogTest` 10/10 pass; 62 lượt HTTP thật pass trên localhost:8080, gồm đổi riêng chủ đề tăng version và chặn xóa chủ đề yêu thích. Chưa thử đồng thời hai transaction hoặc nhãn gắn thẻ/bộ thẻ gắn chủ đề. Không tuyên bố toàn bộ suite pass; FR-13 audit log chưa có ở bước này.
+- **Bàn giao:** `report/DOT1_BAO_CAO_FE.md` mục 5.12, 5.21–5.31; `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md`; Postman thêm 15, cập nhật 3 request. Mockup B1.7 đã đối chiếu, còn lệch hợp đồng theo mục 10 báo cáo.
 
 ### [ ] B1.8 Bộ thẻ cá nhân — FR-03, TC-02
 - API: `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `PUT/DELETE /decks/{id}/favorite`.

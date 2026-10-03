@@ -1,9 +1,12 @@
 package com.do_an_tot_nghiep.k28.common.exception;
 
 import com.do_an_tot_nghiep.k28.common.web.RequestIdFilter;
+
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -64,5 +67,53 @@ public class GlobalExceptionHandler {
                                                 List<ErrorResponse.FieldErrorItem> fields) {
         ErrorResponse body = new ErrorResponse(code.name(), message, fields, MDC.get(RequestIdFilter.MDC_KEY));
         return ResponseEntity.status(code.getStatus()).body(body);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<ErrorResponse> handleIntegrity(DataIntegrityViolationException ex) {
+        if (mentionsConstraint(ex, "uk_chu_de_ten")) {
+            return build(
+                    ErrorCode.CONFLICT,
+                    "Tên chủ đề đã tồn tại",
+                    List.of(new ErrorResponse.FieldErrorItem(
+                            "ten", "Tên chủ đề đã tồn tại"
+                    ))
+            );
+        }
+        if (mentionsConstraint(ex, "fk_bo_the_chu_de")
+                || mentionsConstraint(ex, "fk_chu_de_yeu_thich_chu_de")) {
+            return build(
+                    ErrorCode.CONFLICT,
+                    "Liên kết chủ đề đã thay đổi hoặc chủ đề đang được sử dụng",
+                    List.of()
+            );
+        }
+
+        if (mentionsConstraint(ex, "uk_nhan_ten")) {
+            return build(
+                    ErrorCode.CONFLICT,
+                    "Tên nhãn đã tồn tại",
+                    List.of(new ErrorResponse.FieldErrorItem(
+                            "ten", "Tên nhãn đã tồn tại"
+                    ))
+            );
+        }
+        if (mentionsConstraint(ex, "fk_the_nhan_nhan")) {
+            return build(
+                    ErrorCode.CONFLICT,
+                    "Liên kết nhãn đã thay đổi hoặc nhãn đang được sử dụng",
+                    List.of()
+            );
+        }
+        return handleUnexpected(ex);
+    }
+
+    private boolean mentionsConstraint(Throwable error, String name) {
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            if (cause.getMessage() != null && cause.getMessage().contains(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

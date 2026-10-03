@@ -16,7 +16,10 @@ import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Objects;
+
+import com.do_an_tot_nghiep.k28.content.service.TopicService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,7 @@ public class SettingsService {
     private final CaiDatThongBaoRepository notificationSettings;
     private final SettingsMapper settingsMapper;
     private final AccountService accountService;
+    private final TopicService topicService;
 
     @Transactional
     public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
@@ -45,10 +49,24 @@ public class SettingsService {
     }
 
     @Transactional
-    public LearningSettingsResponse updateLearning(Long userId, LearningSettingsRequest request) {
+    public LearningSettingsResponse updateLearning(
+            Long userId,
+            LearningSettingsRequest request
+    ) {
         HoSoHocTap hoSo = profileOf(userId);
         checkVersion(hoSo.getVersion(), request.version());
-        hoSo.updateLearning(request.trinhDo(), request.mucTieu(), request.phutMoiNgay(), request.tuMoiMoiNgay());
+
+        List<Long> topicIds =
+                topicService.validateSelectedTopics(request.chuDeIds());
+
+        hoSo.updateLearning(
+                request.trinhDo(),
+                request.mucTieu(),
+                request.phutMoiNgay(),
+                request.tuMoiMoiNgay()
+        );
+        hoSo.replaceTopics(topicIds);
+
         return settingsMapper.toResponse(profiles.saveAndFlush(hoSo));
     }
 
@@ -67,6 +85,7 @@ public class SettingsService {
         caiDat.update(request.nhanTrongUngDung(), request.nhanEmail(), request.nhacHoc(), request.gioNhac());
         return settingsMapper.toResponse(notificationSettings.saveAndFlush(caiDat));
     }
+
 
     private HoSoHocTap profileOf(Long userId) {
         return profiles.findById(userId)
