@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+let mockSessionStatus = 'DANG_HOC';
 
 export const handlers = [
   // Ping
@@ -136,13 +136,13 @@ export const handlers = [
 
   // Get Learning Session Details
   http.get('*/api/v1/learning/sessions/:id', ({ params }) => {
-    const futureTime = new Date(Date.now() + 10 * 60000).toISOString(); // 10 mins later
+    const futureTime = new Date(Date.now() + 10 * 60000).toISOString();
     return HttpResponse.json({
       id: params.id,
       boTheTen: '3000 từ vựng Oxford (Mock)',
       chieuHoc: 'EN_VI',
       cheDo: 'THUONG',
-      trangThai: 'DANG_HOC',
+      trangThai: mockSessionStatus,
       quyThoiGian: 10,
       hetGioAt: futureTime,
       hangDoi: [
@@ -153,16 +153,27 @@ export const handlers = [
           tienDo: { trangThai: 'MOI', hanOnAt: null, version: 1 },
           duKien: { QUEN: '1 phút', KHO: '5 phút', NHO: '1 ngày', DE: '4 ngày' },
           the: { tu: 'receipt', phienAm: '/rɪˈsiːt/', tuLoai: 'n.', nghiaVi: 'biên lai, giấy biên nhận', viDuEn: 'Can I have a receipt, please?' }
-        },
-        {
-          theId: 'c2',
-          thuTu: 2,
-          trangThai: 'CHO',
-          tienDo: { trangThai: 'ON_TAP', hanOnAt: null, version: 1 },
-          duKien: { QUEN: '1 phút', KHO: '5 phút', NHO: '2 ngày', DE: '5 ngày' },
-          the: { tu: 'postpone', phienAm: '/pəʊstˈpəʊn/', tuLoai: 'v.', nghiaVi: 'hoãn lại', viDuEn: 'The meeting has been postponed.' }
         }
-      ]
+      ],
+      tongKet: mockSessionStatus === 'KET_THUC' ? {
+        boTheTen: '3000 từ vựng Oxford (Mock)',
+        chieuHoc: 'EN_VI',
+        soLuot: 12,
+        soThe: 10,
+        soTheMoi: 2,
+        quyThoiGian: 10,
+        thoiGianGiay: 125,
+        theoDanhGia: { QUEN: 1, KHO: 2, NHO: 5, DE: 4 },
+        tuCanLuyen: [
+          { theId: 'c1', tu: 'receipt', nghiaVi: 'biên lai, giấy biên nhận', danhGia: ['QUEN'] }
+        ],
+        lichTiepTheo: [
+          { theId: 'c2', tu: 'postpone', trangThai: 'ON_TAP', hanOnAt: futureTime, khoangHienThi: '1 ngày' }
+        ],
+        chuoiNgay: 3,
+        homNayDaTinhChuoi: true,
+        luotToiThieuChuoi: 15
+      } : null
     });
   }),
 
@@ -179,6 +190,17 @@ export const handlers = [
 
   // Finish Session
   http.post('*/api/v1/learning/sessions/:id/finish', () => {
+    mockSessionStatus = 'KET_THUC';
     return HttpResponse.json({ message: 'Session finished' });
+  }),
+
+  // Get Learning History
+  http.get('*/api/v1/learning/history', () => {
+    return HttpResponse.json({
+      items: [
+        { tu: 'receipt', danhGia: 'QUEN', sau: { trangThai: 'DANG_HOC' }, createdAt: new Date().toISOString() },
+        { tu: 'postpone', danhGia: 'NHO', sau: { trangThai: 'ON_TAP' }, createdAt: new Date(Date.now() - 60000).toISOString() }
+      ]
+    });
   })
 ];
