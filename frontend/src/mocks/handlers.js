@@ -1,4 +1,5 @@
 let mockSessionStatus = 'DANG_HOC';
+let mockPracticeStatus = 'DANG_LAM';
 
 export const handlers = [
   // Ping
@@ -205,12 +206,19 @@ export const handlers = [
   }),
 
   // Practice History
-  http.get('*/api/v1/practice/history', () => {
+  http.get('*/api/v1/practice/history', ({ request }) => {
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '0', 10);
+    const size = parseInt(url.searchParams.get('size') || '10', 10);
     return HttpResponse.json({
       items: [
-        { baiLuyenId: 'p1', loaiBai: 'CHON_NGHIA', tongSoCau: 10, soCauDung: 8, laLuyenLai: false, nopAt: new Date().toISOString() },
-        { baiLuyenId: 'p2', loaiBai: 'NGHE_VIET', tongSoCau: 5, soCauDung: 5, laLuyenLai: true, nopAt: new Date(Date.now() - 86400000).toISOString() }
-      ]
+        { baiLuyenId: '123', loaiBai: 'TONG_HOP', boTheTen: '3000 từ vựng Oxford (Mock)', diem: 80, tongSoCau: 2, soCauDung: 1, soCauSai: 1, thoiGianMs: 120000, laLuyenLai: false, nopAt: new Date().toISOString() },
+        { baiLuyenId: 'p2', loaiBai: 'NGHE_VIET', boTheTen: 'Từ vựng Ielts', diem: 100, tongSoCau: 5, soCauDung: 5, soCauSai: 0, thoiGianMs: 45000, laLuyenLai: true, nopAt: new Date(Date.now() - 86400000).toISOString() }
+      ],
+      totalElements: 2,
+      totalPages: 1,
+      page,
+      size
     });
   }),
 
@@ -221,5 +229,85 @@ export const handlers = [
       id: 'practice-session-' + Math.floor(Math.random() * 1000),
       ...data
     });
+  }),
+
+  // Get Practice Session
+  http.get('*/api/v1/practice/sessions/:id', ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      loaiBai: 'TONG_HOP',
+      laLuyenLai: false,
+      boTheTen: '3000 từ vựng Oxford (Mock)',
+      soCau: 3,
+      soCauYeuCau: 10,
+      daNop: mockPracticeStatus === 'DA_NOP',
+      cauHoi: mockPracticeStatus === 'DANG_LAM' ? [
+        {
+          id: 'q1',
+          thuTu: 1,
+          loaiCau: 'CHON_NGHIA',
+          deBai: { tu: 'receipt', phienAm: '/rɪˈsiːt/', tuLoai: 'n.' },
+          phuongAn: [
+            { id: 'o1', noiDung: 'biên lai' },
+            { id: 'o2', noiDung: 'hoá đơn' },
+            { id: 'o3', noiDung: 'đơn hàng' },
+            { id: 'o4', noiDung: 'thẻ' }
+          ]
+        },
+        {
+          id: 'q2',
+          thuTu: 2,
+          loaiCau: 'DIEN_CHO_TRONG',
+          deBai: { cau: 'Can I have a _____, please?', goiY: 'biên lai', tuLoai: 'n.' }
+        }
+      ] : [],
+      ketQua: mockPracticeStatus === 'DA_NOP' ? {
+        lanLamId: '123',
+        loaiBai: 'TONG_HOP',
+        laLuyenLai: false,
+        boTheTen: '3000 từ vựng Oxford (Mock)',
+        nopAt: new Date().toISOString(),
+        diem: 80,
+        thoiGianMs: 120000,
+        tongSoCau: 2,
+        soCauDung: 1,
+        theoKyNang: [
+          { kyNang: 'DOC_HIEU', tong: 2, dung: 1 }
+        ],
+        ketQua: [
+          {
+            thuTu: 1,
+            loaiCau: 'CHON_NGHIA',
+            dung: true,
+            deBai: { tu: 'receipt' },
+            traLoi: { noiDung: 'biên lai' },
+            dapAn: { noiDung: 'biên lai' },
+            giaiThich: { tu: 'receipt', nghiaVi: 'biên lai', phienAm: '/rɪˈsiːt/' }
+          },
+          {
+            thuTu: 2,
+            loaiCau: 'DIEN_CHO_TRONG',
+            dung: false,
+            nhomLoi: 'CHINH_TA',
+            deBai: { cau: 'Can I have a _____, please?', goiY: 'biên lai' },
+            traLoi: { noiDung: 'recept' },
+            dapAn: { noiDung: 'receipt' },
+            giaiThich: { tu: 'receipt', nghiaVi: 'biên lai', phienAm: '/rɪˈsiːt/' }
+          }
+        ]
+      } : null
+    });
+  }),
+
+  // Submit Practice Session
+  http.post('*/api/v1/practice/sessions/:id/submissions', () => {
+    mockPracticeStatus = 'DA_NOP';
+    return HttpResponse.json({ message: 'Success' });
+  }),
+  
+  // Retry Practice Mistakes
+  http.post('*/api/v1/practice/mistakes/retry', () => {
+    mockPracticeStatus = 'DANG_LAM';
+    return HttpResponse.json({ id: 'practice-retry-123' });
   })
 ];
