@@ -202,5 +202,24 @@ export const handlers = [
         { tu: 'postpone', danhGia: 'NHO', sau: { trangThai: 'ON_TAP' }, createdAt: new Date(Date.now() - 60000).toISOString() }
       ]
     });
+  }),
+
+  // Practice History
+  http.get('*/api/v1/practice/history', () => {
+    return HttpResponse.json({
+      items: [
+        { baiLuyenId: 'p1', loaiBai: 'CHON_NGHIA', tongSoCau: 10, soCauDung: 8, laLuyenLai: false, nopAt: new Date().toISOString() },
+        { baiLuyenId: 'p2', loaiBai: 'NGHE_VIET', tongSoCau: 5, soCauDung: 5, laLuyenLai: true, nopAt: new Date(Date.now() - 86400000).toISOString() }
+      ]
+    });
+  }),
+
+  // Create Practice Session
+  http.post('*/api/v1/practice/sessions', async ({ request }) => {
+    const data = await request.json();
+    return HttpResponse.json({
+      id: 'practice-session-' + Math.floor(Math.random() * 1000),
+      ...data
+    });
   })
 ];
