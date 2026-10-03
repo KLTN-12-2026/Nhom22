@@ -130,7 +130,55 @@ export const handlers = [
   // Create Learning Session
   http.post('*/api/v1/learning/sessions', async () => {
     return HttpResponse.json({
-      id: 'session-' + Math.floor(Math.random() * 1000)
+      id: 'session-123'
     });
+  }),
+
+  // Get Learning Session Details
+  http.get('*/api/v1/learning/sessions/:id', ({ params }) => {
+    const futureTime = new Date(Date.now() + 10 * 60000).toISOString(); // 10 mins later
+    return HttpResponse.json({
+      id: params.id,
+      boTheTen: '3000 từ vựng Oxford (Mock)',
+      chieuHoc: 'EN_VI',
+      cheDo: 'THUONG',
+      trangThai: 'DANG_HOC',
+      quyThoiGian: 10,
+      hetGioAt: futureTime,
+      hangDoi: [
+        {
+          theId: 'c1',
+          thuTu: 1,
+          trangThai: 'CHO',
+          tienDo: { trangThai: 'MOI', hanOnAt: null, version: 1 },
+          duKien: { QUEN: '1 phút', KHO: '5 phút', NHO: '1 ngày', DE: '4 ngày' },
+          the: { tu: 'receipt', phienAm: '/rɪˈsiːt/', tuLoai: 'n.', nghiaVi: 'biên lai, giấy biên nhận', viDuEn: 'Can I have a receipt, please?' }
+        },
+        {
+          theId: 'c2',
+          thuTu: 2,
+          trangThai: 'CHO',
+          tienDo: { trangThai: 'ON_TAP', hanOnAt: null, version: 1 },
+          duKien: { QUEN: '1 phút', KHO: '5 phút', NHO: '2 ngày', DE: '5 ngày' },
+          the: { tu: 'postpone', phienAm: '/pəʊstˈpəʊn/', tuLoai: 'v.', nghiaVi: 'hoãn lại', viDuEn: 'The meeting has been postponed.' }
+        }
+      ]
+    });
+  }),
+
+  // Submit Review
+  http.post('*/api/v1/learning/sessions/:id/reviews', async ({ request }) => {
+    const data = await request.json();
+    return HttpResponse.json({
+      tienDo: { trangThai: 'DA_ON', hanOnAt: new Date(Date.now() + 60000).toISOString(), version: 2 },
+      duKien: { QUEN: '1 phút', KHO: '5 phút', NHO: '2 ngày', DE: '5 ngày' },
+      laiTrongPhien: data.danhGia === 'QUEN' || data.danhGia === 'KHO',
+      khoangHienThi: data.danhGia === 'NHO' ? '1 ngày' : '1 phút'
+    });
+  }),
+
+  // Finish Session
+  http.post('*/api/v1/learning/sessions/:id/finish', () => {
+    return HttpResponse.json({ message: 'Session finished' });
   })
 ];
