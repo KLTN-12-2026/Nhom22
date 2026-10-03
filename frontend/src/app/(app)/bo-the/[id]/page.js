@@ -34,6 +34,9 @@ export default function DeckDetailPage({ params }) {
             <Link href={`/bo-the/${params.id}/the-tao`} style={{ textDecoration: 'none' }}>
               <Button variant="primary"><Icon name="plus" /> Thêm thẻ</Button>
             </Link>
+            <Link href={`/bo-the/${params.id}/tien-do`} style={{ textDecoration: 'none' }}>
+              <Button variant="secondary"><Icon name="chart" /> Tiến độ</Button>
+            </Link>
             <Button variant="secondary"><Icon name="upload" /> Nhập CSV</Button>
             <Button variant="ghost"><Icon name="download" /> Xuất CSV</Button>
             <Link href={`/bo-the/${params.id}/sua`} style={{ textDecoration: 'none' }}>
@@ -91,6 +94,11 @@ export default function DeckDetailPage({ params }) {
             <dt>Số thẻ</dt><dd>{deck.cardCount || cards.length}</dd>
             <dt>Cập nhật</dt><dd>Hôm nay</dd>
           </dl>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <Link href={`/hoc?boTheId=${params.id}`} style={{ textDecoration: 'none' }}>
+              <Button variant="primary" style={{ width: '100%' }}>Học bộ này</Button>
+            </Link>
+          </div>
         </section>
       </aside>
     </div>
