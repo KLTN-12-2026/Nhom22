@@ -103,4 +103,34 @@ export const handlers = [
       totalElements: 2
     });
   }),
+
+  // Learning Today
+  http.get('*/api/v1/learning/today', () => {
+    return HttpResponse.json({
+      tongSoThe: 150,
+      cuuLichOn: null,
+      soQuaHan: 12,
+      soDenHan: 5,
+      soMoiConLai: 10,
+      uocTinhPhut: 8,
+      soTheMoiDaHoc: 0,
+      tuMoiMoiNgay: 10,
+      giayMoiLuot: 12,
+      chuoiNgay: 3,
+      homNayDaTinhChuoi: false,
+      luotToiThieuChuoi: 15,
+      daHocHomNay: { soPhut: 0, soLuot: 0 },
+      phutMoiNgay: 10,
+      boThe: [
+        { boTheId: '1', ten: '3000 từ vựng Oxford', soCanOn: 17, soMoi: 10 }
+      ]
+    });
+  }),
+
+  // Create Learning Session
+  http.post('*/api/v1/learning/sessions', async () => {
+    return HttpResponse.json({
+      id: 'session-' + Math.floor(Math.random() * 1000)
+    });
+  })
 ];
