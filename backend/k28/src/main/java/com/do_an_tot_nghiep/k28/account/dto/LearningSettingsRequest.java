@@ -2,9 +2,9 @@ package com.do_an_tot_nghiep.k28.account.dto;
 
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
+
+import java.util.List;
 
 public record LearningSettingsRequest(
         @NotNull(message = "Chọn trình độ tự đánh giá")
@@ -22,6 +22,17 @@ public record LearningSettingsRequest(
         @Min(value = 0, message = "Số từ mới từ 0 đến 100 mỗi ngày")
         @Max(value = 100, message = "Số từ mới từ 0 đến 100 mỗi ngày")
         Integer tuMoiMoiNgay,
+
+        @NotNull(message = "Gửi danh sách chủ đề, dùng [] nếu không chọn")
+        @Size(max = 5, message = "Chọn tối đa 5 chủ đề")
+        List<
+                @NotNull(message = "ID chủ đề không được null")
+                @Pattern(
+                        regexp = "[1-9][0-9]{0,18}",
+                        message = "ID chủ đề phải là số nguyên dương"
+                )
+                        String
+                > chuDeIds,
 
         @NotNull(message = "Thiếu phiên bản, vui lòng tải lại")
         Long version

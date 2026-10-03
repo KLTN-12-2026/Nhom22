@@ -3,9 +3,9 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày bàn giao | 02/10/2026 (bản 6 — B1.1 → B1.6; cập nhật tiếp theo từng bước) |
-| Trạng thái BE | 🟡 B1.1 → B1.6 xong · 66 test ở lần bàn giao trước; B1.6: 22 test FR-03 + 13 test hồi quy pass (35 test được chạy, không phải toàn bộ suite) · B1.7–B1.12 chưa làm |
-| FE làm tương ứng | F1.1 → F1.5 (`roadmap/ROADMAP_FE.md` §Đợt 1); F1.6 trở đi dùng MSW theo mục 9 |
+| Ngày bàn giao | 03/10/2026 (bản 7 — bổ sung B1.7) |
+| Trạng thái BE | 🟡 B1.1 → B1.7 xong · B1.7: FR03CatalogTest 10/10 pass; 62 lượt HTTP thật pass ngày 03/10/2026 · B1.6: 35 test pass ở lần trước; không cộng thành kết quả toàn bộ suite · B1.8–B1.12 chưa làm |
+| FE làm tương ứng | F1.1–F1.6, phần chủ đề của F1.7 và quản trị F1.12 (`roadmap/ROADMAP_FE.md` §Đợt 1); bộ/thẻ/thư viện/CSV vẫn dự kiến |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
@@ -30,9 +30,10 @@
 | B1.4 Đăng nhập Google | ✅ `GET /auth/google/start` → Google → `/auth/google/callback`; tạo tài khoản mới đã xác thực, không tự liên kết email trùng (liên kết sau khi đăng nhập mật khẩu) | F1.4 UI06, UI08 | Nút "Tiếp tục với Google" điều hướng toàn trang; `/dang-nhap` đọc `?loi=` |
 | B1.5 Hồ sơ & thiết lập | ✅ `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`; khóa phiên bản (`version` → 409); lưu thiết lập học lần đầu = hoàn tất khởi đầu | F1.5 UI11 `/bat-dau`, UI40 `/ca-nhan`, UI41 `/ca-nhan/hoc-tap`, UI43 `/ca-nhan/thong-bao` | Form theo mục 5.11–5.13; gửi kèm `version`; 409 → tải lại |
 | B1.6 Tệp & ảnh đại diện | ✅ 4 API tệp + 3 API avatar; MIME thực, SHA-256, URL ký, dọn tệp và retry | F1.6 UI40 `/ca-nhan`, UI16 biên tập thẻ | Dùng mục 5.14–5.20; mockup [hồ sơ](../mockups/dot1/ca-nhan.html), [biên tập thẻ](../mockups/dot1/the-tao.html) |
-| B1.7 – B1.12 | ⏳ chưa làm | F1.7 – F1.12 | Nội dung vẫn mock theo `mockups/dot1/` |
+| B1.7 Chủ đề, nhãn, trình độ | ✅ 11 API danh mục; `chuDeIds` trong thiết lập học; version và chặn xóa khi đang dùng | F1.5 UI11/UI41, F1.7 UI02/UI03, F1.12 UI48 | Mục 5.12, 5.21–5.31; GET danh sách đọc `items`; PUT dùng `ten`, `version`; chủ đề tối đa 5 |
+| B1.8 – B1.12 | ⏳ chưa làm | F1.7–F1.11, phần nội dung tương ứng | Bộ/thẻ/thư viện/sao chép/CSV vẫn mock theo `mockups/dot1/` |
 
-**Chưa có** (dùng MSW): nội dung (B1.7–B1.12). Lịch: Đợt 1, 12/10–25/10.
+**Chưa có** (dùng MSW): bộ thẻ, thẻ, thư viện, sao chép và CSV (B1.8–B1.12). Lịch: Đợt 1, 12/10–25/10.
 
 ## 2. Chạy BE
 
@@ -50,6 +51,12 @@ Không đổi so với GĐ0: `docker compose --profile app up -d --build` trong 
 - Bucket CORS: `backend/k28/docker/s3-cors.json`, mặc định cho `localhost:3000` và `127.0.0.1:3000`. Khi đổi origin FE, cập nhật file rồi chạy `docker compose up -d s3-init`.
 - `FILE_MAX_IMAGE_DIMENSION=4096`, `FILE_MAX_AUDIO_SECONDS=300`; cleanup mặc định bật, mỗi 60 giây.
 - URL PUT/GET theo `expiresAt`; pending hết hạn 24 giờ. Khi URL PUT hết hạn, xin yêu cầu mới.
+
+### Kiểm chứng B1.7 ngày 03/10/2026
+
+Backend thật tại `http://localhost:8080`, MySQL/Redis/RustFS/Mailpit cục bộ. 62 lượt HTTP đạt kỳ vọng; 11 API danh mục và 2 API thiết lập học được gọi lại. Tài khoản thử mới `handoff-b17-<timestamp>@test.local` được đăng ký, xác thực qua Mailpit và đăng nhập. CRUD dùng danh mục thử, sau kiểm chứng đã bỏ chọn và xóa chính các danh mục thử đó. Không có seed chủ đề/nhãn; khi chưa tạo danh mục, `items` rỗng là hợp lệ.
+
+Postman: thêm 15 request (11 API + 4 lỗi), cập nhật 3 request thiết lập học; bổ sung 6 biến vào cả hai environment. Xem [hướng dẫn chạy](../postman/README.md).
 
 ## 3. Thay đổi hợp đồng chung
 
@@ -93,6 +100,14 @@ HTTP/1.1 200
   "daHoanTatKhoiDau": false
 }
 ```
+
+### Thay đổi B1.7
+
+- `GET /public/topics`, `GET /admin/topics`, `GET /admin/tags` trả `{items,page,size,totalElements,totalPages}`. Mặc định `page=0,size=20`, `size` tối đa 100; sắp xếp `ten ASC,id ASC`.
+- Topic: `{id,ten,moTa,version}`; tag: `{id,ten,version}`. ID là string; version là number. Không có `name`, `deckCount` hoặc `cardCount`.
+- Sửa danh mục dùng **PUT**, không dùng PATCH; version bắt buộc ≥0. PUT topic bỏ `moTa` đặt mô tả về null.
+- PUT thiết lập học bắt buộc thêm `chuDeIds: []` hoặc tối đa 5 ID string tồn tại, không trùng. Thiếu trường trả 400. Không đảm bảo thứ tự danh sách; gửi toàn bộ lựa chọn khi lưu.
+- Trình độ vẫn là enum ở mục 5.12; không có API CRUD trình độ hoặc `/public/tags`.
 
 ## 4. Luồng chính
 
@@ -165,6 +180,30 @@ sequenceDiagram
   FE->>BE: GET /me/avatar (lấy URL mới)
   BE-->>FE: 200 hoặc 204
 ```
+
+### Danh mục và chủ đề yêu thích B1.7
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as MySQL
+    A->>BE: POST /admin/topics (SESSION + CSRF)
+    BE->>DB: Lưu chủ đề, unique ten
+    BE-->>A: 201 + Location + version
+    FE->>BE: GET /public/topics?page=0&size=20
+    BE-->>FE: PageResponse, items có id string
+    FE->>BE: GET /me/learning-settings
+    BE-->>FE: chuDeIds + version
+    FE->>BE: PUT thiết lập + chuDeIds + version
+    BE->>DB: Kiểm tra phiên bản, ID tồn tại; lưu profile và collection
+    BE-->>FE: 200, version hiện tại
+    A->>BE: DELETE chủ đề đang được chọn
+    BE-->>A: 409 CONFLICT
+```
+
+Chi tiết transaction và nhánh lỗi: [Luồng B1.7](../docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md).
 
 ## 5. API chi tiết (đã kiểm chứng trên BE thật)
 
@@ -546,7 +585,7 @@ Thành công → `queryClient.setQueryData(['me'], data)` + toast "Đã lưu h�
 **GET → 200** (thật, tài khoản mới):
 
 ```json
-{"trinhDo":null,"mucTieu":null,"phutMoiNgay":10,"tuMoiMoiNgay":10,"daHoanTatKhoiDau":false,"version":0}
+{"trinhDo":null,"mucTieu":null,"phutMoiNgay":10,"tuMoiMoiNgay":10,"daHoanTatKhoiDau":false,"chuDeIds":[],"version":0}
 ```
 
 **PUT — gửi** (thay toàn bộ, mọi trường bắt buộc):
@@ -557,9 +596,14 @@ Thành công → `queryClient.setQueryData(['me'], data)` + toast "Đã lưu h�
 | `mucTieu` | enum | `GIAO_TIEP`, `TOEIC` | "Mục tiêu" |
 | `phutMoiNgay` | int | 1–240 | "Phút học mỗi ngày" |
 | `tuMoiMoiNgay` | int | 0–100 | "Từ mới mỗi ngày" |
+| `chuDeIds` | array<string> | Bắt buộc, tối đa 5, không trùng, ID dương tồn tại; `[]` bỏ chọn | "Chủ đề yêu thích" |
 | `version` | number | = `version` của lần GET gần nhất | ẩn |
 
-**PUT → 200** (thật): `{"trinhDo":"CO_BAN","mucTieu":"TOEIC","phutMoiNgay":15,"tuMoiMoiNgay":20,"daHoanTatKhoiDau":true,"version":1}`
+**PUT → 200** (thật, chọn chủ đề thử): `{"trinhDo":"CO_BAN","mucTieu":"TOEIC","phutMoiNgay":15,"tuMoiMoiNgay":20,"daHoanTatKhoiDau":true,"chuDeIds":["1"],"version":1}`
+
+**Body đã gọi:** `{"trinhDo":"CO_BAN","mucTieu":"TOEIC","phutMoiNgay":15,"tuMoiMoiNgay":20,"chuDeIds":["1"],"version":0}`. ID `1` là bản ghi thử đã xóa sau kiểm chứng; FE chọn ID từ public topics.
+
+**Chỉ đổi chủ đề:** giữ nguyên bốn thiết lập, gửi `chuDeIds: []`, `version: 1` → 200, version tăng lên 2. Đã gọi thật. Nếu không có thay đổi dữ liệu, không yêu cầu version luôn tăng.
 
 **Tác dụng phụ:** lần lưu đầu đặt `daHoanTatKhoiDau = true` → đây là nút "Hoàn tất" của `/bat-dau`. Sau 200 FE cập nhật `['me']` (`daHoanTatKhoiDau: true`) rồi chuyển `/bo-the`.
 
@@ -572,7 +616,15 @@ Thành công → `queryClient.setQueryData(['me'], data)` + toast "Đã lưu h�
 | 409 | `VERSION_CONFLICT` "Thiết lập đã được thay đổi ở nơi khác, vui lòng tải lại" | `version` cũ (đã lưu ở tab khác) | Notice + nút "Tải lại" (refetch GET) |
 | 401 | `UNAUTHENTICATED` | | `/dang-nhap?next=` |
 
-**Chưa có:** chủ đề yêu thích (mockup gửi `topicIds`) — cần bảng `chu_de` ở B1.7. FE giữ ô chọn chủ đề trên UI11 nhưng **không gửi** `topicIds`, hoặc ẩn đến B1.7.
+**B1.7 đã có chủ đề yêu thích:** GET danh mục public, đọc `items`; hiển thị `ten`; đối chiếu `chuDeIds` với ID string. ID đúng mẫu `[1-9][0-9]{0,18}` và trong phạm vi Long. PUT thay thế toàn bộ tập lựa chọn, không gửi `topicIds`. Không chọn vẫn phải gửi `chuDeIds: []`.
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Thiếu/null, >5, ID sai/null/quá Long hoặc trùng; `fieldErrors` thuộc `chuDeIds` hoặc phần tử | Lỗi dưới vùng chọn chủ đề |
+| 422 | `BUSINESS_RULE` | Chủ đề không tồn tại; field `chuDeIds` | Tải lại danh mục, giữ lựa chọn còn hợp lệ |
+| 409 | `CONFLICT` | FK bị thay đổi trong lúc lưu; nhánh race đọc từ code, chưa thử đồng thời | Tải lại danh mục và thiết lập |
+
+Gọi thật đã kiểm tra thiếu trường, >5, trùng, ID không tồn tại và version cũ; không ghi thay đổi khi bị từ chối.
 
 ### 5.13 `GET/PUT /api/v1/me/notification-settings` — thông báo & giờ nhắc
 
@@ -960,6 +1012,543 @@ HTTP/1.1 204
 ```
 Không có body.
 
+### Hợp đồng chung danh mục B1.7
+
+11 endpoint dưới đây đã gọi thật trên backend, gồm happy path. Tất cả 10 route admin đã thử khách →401 và USER →403; request ghi có CSRF hợp lệ để kiểm tra đúng quyền. Không có `deckCount`/`cardCount`. ID/version trong ví dụ lấy từ danh mục thử, đã xóa sau kiểm chứng.
+
+### 5.21 `GET /api/v1/public/topics` — Danh sách chủ đề công khai
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| G | F1.5/F1.7 | UI11/UI41/UI02/UI03 | `/bat-dau`, `/ca-nhan/hoc-tap`, `/thu-vien` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `page` (query) | int | Không | ≥0, mặc định 0 | 0 |
+| `size` (query) | int | Không | 1–100, mặc định 20 | 20 |
+
+Sắp xếp `ten ASC,id ASC`; FE dùng `items`, xử lý danh sách rỗng và chuyển trang bằng `totalPages`.
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "items": [
+    {
+      "id": "1",
+      "ten": "Giao tiếp 1790999821418",
+      "moTa": "Từ vựng giao tiếp hằng ngày",
+      "version": 0
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | page/size sai | Dùng tham số hợp lệ |
+
+**Tác dụng phụ:** Không ghi danh mục hoặc gửi email.
+
+
+### 5.22 `GET /api/v1/admin/topics` — Danh sách chủ đề
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `page` (query) | int | Không | ≥0, mặc định 0 | 0 |
+| `size` (query) | int | Không | 1–100, mặc định 20 | 20 |
+
+Sắp xếp `ten ASC,id ASC`; FE dùng `items`, xử lý danh sách rỗng và chuyển trang bằng `totalPages`.
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "items": [
+    {
+      "id": "1",
+      "ten": "Giao tiếp 1790999821418",
+      "moTa": "Từ vựng giao tiếp hằng ngày",
+      "version": 0
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | page/size sai | Dùng tham số hợp lệ |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+
+**Tác dụng phụ:** Không ghi danh mục hoặc gửi email.
+
+
+### 5.23 `GET /api/v1/admin/topics/{id}` — Chi tiết chủ đề
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "1",
+  "ten": "Giao tiếp 1790999821418",
+  "moTa": "Từ vựng giao tiếp hằng ngày",
+  "version": 0
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+
+**Tác dụng phụ:** Không ghi danh mục hoặc gửi email.
+
+
+### 5.24 `POST /api/v1/admin/topics` — Tạo chủ đề
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `ten` | string | Có | Không trắng, strip; ≤100 | "Giao tiếp" |
+| `moTa` | string/null | Không | Strip, ≤500; PUT bỏ trường đặt về null | "Từ vựng giao tiếp" |
+
+**Body đã gửi:**
+```json
+{
+  "ten": "Giao tiếp 1790999821418",
+  "moTa": "Từ vựng giao tiếp hằng ngày"
+}
+```
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 201
+Location: /api/v1/admin/topics/1
+```
+```json
+{
+  "id": "1",
+  "ten": "Giao tiếp 1790999821418",
+  "moTa": "Từ vựng giao tiếp hằng ngày",
+  "version": 0
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 409 | `CONFLICT` | Tên đã có; field `ten` | Giữ form, báo tên trùng |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+
+### 5.25 `PUT /api/v1/admin/topics/{id}` — Cập nhật chủ đề
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+| `ten` | string | Có | Không trắng, strip; ≤100 | "Giao tiếp" |
+| `moTa` | string/null | Không | Strip, ≤500; PUT bỏ trường đặt về null | "Từ vựng giao tiếp" |
+| `version` | number | Có | ≥0; bản GET/POST/PUT mới nhất | 0 |
+
+**Body đã gửi:**
+```json
+{
+  "ten": "Giao tiếp 1790999821418 cập nhật",
+  "version": 0
+}
+```
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "1",
+  "ten": "Giao tiếp 1790999821418 cập nhật",
+  "moTa": null,
+  "version": 1
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+| 409 | `CONFLICT` | Tên đã có; field `ten` | Giữ form, báo tên trùng |
+| 409 | `VERSION_CONFLICT` | Bản ghi đã thay đổi | GET lại rồi cho người dùng sửa |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+
+### 5.26 `DELETE /api/v1/admin/topics/{id}` — Xóa chủ đề
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+
+Không gửi body hoặc version. Backend chặn xóa chủ đề được bộ thẻ/chủ đề yêu thích tham chiếu; nhãn được `the_nhan` tham chiếu. Không gỡ tham chiếu tự động.
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 204
+```
+Không có body.
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+| 409 | `CONFLICT` | Danh mục đang được sử dụng | Giữ dòng, hiện thông báo |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+
+### 5.27 `GET /api/v1/admin/tags` — Danh sách nhãn
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `page` (query) | int | Không | ≥0, mặc định 0 | 0 |
+| `size` (query) | int | Không | 1–100, mặc định 20 | 20 |
+
+Sắp xếp `ten ASC,id ASC`; FE dùng `items`, xử lý danh sách rỗng và chuyển trang bằng `totalPages`.
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "items": [
+    {
+      "id": "1",
+      "ten": "TOEIC 1790999821418",
+      "version": 0
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | page/size sai | Dùng tham số hợp lệ |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+
+**Tác dụng phụ:** Không ghi danh mục hoặc gửi email.
+
+
+### 5.28 `GET /api/v1/admin/tags/{id}` — Chi tiết nhãn
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "1",
+  "ten": "TOEIC 1790999821418",
+  "version": 0
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+
+**Tác dụng phụ:** Không ghi danh mục hoặc gửi email.
+
+
+### 5.29 `POST /api/v1/admin/tags` — Tạo nhãn
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `ten` | string | Có | Không trắng, strip; ≤50 | "Giao tiếp" |
+
+**Body đã gửi:**
+```json
+{
+  "ten": "TOEIC 1790999821418"
+}
+```
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 201
+Location: /api/v1/admin/tags/1
+```
+```json
+{
+  "id": "1",
+  "ten": "TOEIC 1790999821418",
+  "version": 0
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 409 | `CONFLICT` | Tên đã có; field `ten` | Giữ form, báo tên trùng |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+
+### 5.30 `PUT /api/v1/admin/tags/{id}` — Cập nhật nhãn
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+| `ten` | string | Có | Không trắng, strip; ≤50 | "Giao tiếp" |
+| `version` | number | Có | ≥0; bản GET/POST/PUT mới nhất | 0 |
+
+**Body đã gửi:**
+```json
+{
+  "ten": "TOEIC 1790999821418 cập nhật",
+  "version": 0
+}
+```
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 200
+```
+```json
+{
+  "id": "1",
+  "ten": "TOEIC 1790999821418 cập nhật",
+  "version": 1
+}
+```
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 400 | `VALIDATION_FAILED` | Path sai kiểu hoặc DTO sai | Hiển thị lỗi trường/form |
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+| 409 | `CONFLICT` | Tên đã có; field `ten` | Giữ form, báo tên trùng |
+| 409 | `VERSION_CONFLICT` | Bản ghi đã thay đổi | GET lại rồi cho người dùng sửa |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+
+### 5.31 `DELETE /api/v1/admin/tags/{id}` — Xóa nhãn
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| A | F1.12 | UI48 | `/quan-tri/chu-de` |
+
+**Gửi**
+
+| Trường | Kiểu | Bắt buộc | Giới hạn | Ví dụ |
+|---|---|---|---|---|
+| `id` (path) | string số | Có | ID bản ghi trong phạm vi Long | "1" |
+
+Không gửi body hoặc version. Backend chặn xóa chủ đề được bộ thẻ/chủ đề yêu thích tham chiếu; nhãn được `the_nhan` tham chiếu. Không gỡ tham chiếu tự động.
+
+**Nhận thật ngày 03/10/2026:**
+```http
+HTTP/1.1 204
+```
+Không có body.
+
+**Lỗi**
+
+| HTTP | `code` | Khi nào | FE xử lý |
+|---|---|---|---|
+| 401 | `UNAUTHENTICATED` | Chưa có phiên | Đăng nhập |
+| 403 | `FORBIDDEN` | USER không có ADMIN; request ghi thiếu CSRF | Kiểm tra quyền và CSRF |
+| 404 | `NOT_FOUND` | Không có bản ghi | Tải lại danh sách |
+| 409 | `CONFLICT` | Danh mục đang được sử dụng | Giữ dòng, hiện thông báo |
+
+**Tác dụng phụ:** Ghi MySQL; không gửi email, không tạo tác vụ nền. Sau thành công invalidate danh sách/chi tiết liên quan.
+
+### B1.7 — lỗi đã gọi thật
+
+**Tên chủ đề trống**
+```http
+HTTP/1.1 400
+```
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "message": "Dữ liệu không hợp lệ",
+  "fieldErrors": [
+    {
+      "field": "ten",
+      "message": "Nhập tên chủ đề"
+    }
+  ],
+  "requestId": "d5c85e56-6ed2-42ad-bb57-4fa94d3de9c9"
+}
+```
+
+**Xóa chủ đề đang được chọn**
+```http
+HTTP/1.1 409
+```
+```json
+{
+  "code": "CONFLICT",
+  "message": "Chủ đề đang được sử dụng, chưa thể xóa",
+  "fieldErrors": [],
+  "requestId": "7d485c39-1815-45d8-b9cb-5ae8d9598fd0"
+}
+```
+
+**Chọn quá 5 chủ đề**
+```http
+HTTP/1.1 400
+```
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "message": "Dữ liệu không hợp lệ",
+  "fieldErrors": [
+    {
+      "field": "chuDeIds",
+      "message": "Chọn tối đa 5 chủ đề"
+    }
+  ],
+  "requestId": "b2493e69-fa79-4242-8aa3-0c754722148e"
+}
+```
+
+**Chủ đề không tồn tại**
+```http
+HTTP/1.1 422
+```
+```json
+{
+  "code": "BUSINESS_RULE",
+  "message": "Có chủ đề không còn tồn tại, vui lòng chọn lại",
+  "fieldErrors": [
+    {
+      "field": "chuDeIds",
+      "message": "Có chủ đề không còn tồn tại, vui lòng chọn lại"
+    }
+  ],
+  "requestId": "f09d6d0e-e8a4-4701-9b24-8258f4a6242d"
+}
+```
+
+
 ## 6. Mã FE mẫu
 
 **Zod** (giới hạn = BE):
@@ -1190,6 +1779,39 @@ async function uploadAvatar(file) {
 
 Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; PUT chính bytes đã tính hash. Sau mutation invalidate `['me']` và `['me','avatar']`. Khi `expiresAt` đến, GET avatar để lấy URL mới;204 → chữ cái tên người dùng. Zod avatar: `z.string().max(18).regex(/^[1-9][0-9]*$/)`.
 
+### B1.7 — dữ liệu form và danh mục
+
+Mọi body thiết lập học ở các ví dụ B1.5 phải bổ sung `chuDeIds`. Với form hiện tại không chọn chủ đề, dùng `[]`; nếu sửa một trường khác, gửi lại tập lựa chọn đang có để tránh vô tình bỏ chọn.
+
+```javascript
+const selectedTopicsSchema = z.array(z.string()
+  .regex(/^[1-9][0-9]{0,18}$/)
+  .refine(id => BigInt(id) <= 9223372036854775807n))
+  .max(5)
+  .refine(ids => new Set(ids).size === ids.length);
+
+const learningSchemaB17 = z.object({
+  trinhDo: z.enum(['MOI_BAT_DAU', 'CO_BAN', 'TRUNG_CAP', 'NANG_CAO']),
+  mucTieu: z.enum(['GIAO_TIEP', 'TOEIC']),
+  phutMoiNgay: z.number().int().min(1).max(240),
+  tuMoiMoiNgay: z.number().int().min(0).max(100),
+  chuDeIds: selectedTopicsSchema,
+  version: z.number().int()
+});
+```
+
+Version thiết lập học chỉ bắt buộc khác null trong DTO; stale version trả 409. Version PUT danh mục phải ≥0.
+
+```javascript
+const topicsQuery = useQuery({
+  queryKey: ['topics', page, size],
+  queryFn: () => api(`/public/topics?page=${page}&size=${size}`)
+});
+const topics = topicsQuery.data?.items ?? [];
+```
+
+Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic; sau CRUD tag invalidate `['admin-tags']` và chi tiết tag. Sau lưu thiết lập cập nhật `['learning-settings']` bằng response và invalidate `['me']`. Không bỏ `version` khỏi dữ liệu mỗi dòng quản trị.
+
 ## 7. Dữ liệu mẫu / tài khoản demo
 
 | Việc | Cách làm |
@@ -1203,7 +1825,7 @@ Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; P
 | Thử "đăng xuất phiên khác" | Đăng nhập cùng tài khoản ở 2 trình duyệt (hoặc 1 cửa sổ ẩn danh), đổi mật khẩu ở cửa sổ 1 → cửa sổ 2 tải lại bị đưa về `/dang-nhap` |
 | Bị 429 khi dev | Chờ hết cửa sổ (1 giờ / 15 phút) hoặc nhờ BE xóa khóa Redis `rl:*` |
 
-## 8. Checklist FE hoàn thành F1.1 → F1.6
+## 8. Checklist FE cho phần đã bàn giao B1.1 → B1.7
 
 - [ ] `/dang-ky`: 4 trường + checkbox điều khoản; Zod khớp mục 6; gửi `muiGio` từ trình duyệt
 - [ ] Lỗi server hiện dưới đúng ô theo `fieldErrors[].field` (`tenHienThi`, `email`, `password`, `acceptTerms`)
@@ -1238,11 +1860,19 @@ Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; P
 - [ ] F1.6 Hiện lỗi 400/401/404/422/429/503; khóa upload/gỡ/lưu trong khi pending; giữ preview cũ khi upload lỗi.
 - [ ] F1.6 Gỡ avatar giữ tệp; xóa tệp đang dùng tự gỡ avatar.
 
+### B1.7
+
+- [ ] UI11/UI41: tải toàn bộ trang chủ đề cần hiển thị; dùng `items`/`ten`, ID string, chọn tối đa 5; giữ và gửi lại `chuDeIds`.
+- [ ] PUT thiết lập gửi đủ các trường và version vừa đọc; 400/422 hiển thị ở vùng chọn, 409 cho tải lại.
+- [ ] UI48: ADMIN guard; GET danh sách phân trang; POST/PUT `ten`, `moTa` theo giới hạn; PUT kèm version; nhãn có thể chỉnh sửa.
+- [ ] UI48: 409 khi xóa giữ dòng và thông báo; không hứa tự gỡ nhãn khỏi thẻ.
+- [ ] F1.7: dùng public topics cho bộ lọc; thư viện/bộ thẻ thật vẫn chờ B1.8–B1.10.
+
 ## 9. Sắp có ở Đợt 1 — hợp đồng dự kiến
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
-| B1.7 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** chủ đề, bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.7 – F1.12 | xem `mockups/dot1/` |
+| B1.8 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.7–F1.11 | xem `mockups/dot1/` |
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -1261,7 +1891,7 @@ Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; P
 | Google cần key thật (B1.4) | BE chạy với `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` trong `backend/k28/.env` (không commit). Thiếu key → Google báo `invalid_client`; MSW không giả được bước Google |
 | Tài khoản Google không có mật khẩu (B1.4) | Tài khoản tạo bằng Google chưa đặt được mật khẩu ở `/ca-nhan/bao-mat` (`PUT /me/password` cần mật khẩu hiện tại); muốn có mật khẩu thì dùng "Quên mật khẩu" |
 | Mockups còn tên cũ (B1.5, ngoài phạm vi sửa upload) | Mockup + `shared/demo.js` vẫn dùng `goal`, `level`, `minutesPerDay`, `newCardsPerDay`, `onboardingDone`, `inApp`, `email`, `studyReminder`, `reminderTime`. Tên thật: `mucTieu`, `trinhDo`, `phutMoiNgay`, `tuMoiMoiNgay`, `daHoanTatKhoiDau`, `nhanTrongUngDung`, `nhanEmail`, `nhacHoc`, `gioNhac`. FE dùng tên thật theo mục 5.12–5.13 |
-| Chủ đề yêu thích (B1.5) | Chưa lưu được (`topicIds`) — chờ bảng `chu_de` ở B1.7 |
+| Chủ đề yêu thích (B1.7) | Đã lưu được bằng `chuDeIds`, không dùng `topicIds`; bắt buộc gửi cả khi rỗng |
 | Chưa kiểm chứng (B1.5) | Hai tab lưu đúng cùng một khoảnh khắc: kiểm bằng `@Version` của Hibernate (trả 409), không bấm thật đồng thời |
 
 ### Kiểm tra mockups và giới hạn B1.6
@@ -1275,6 +1905,33 @@ Nếu crop/nén ảnh: làm trước khi tính checksum, MIME, kích thước; P
 | Thiết kế | `frontend/design/YEU_CAU_GIAO_DIEN.md` không có trong workspace; giữ tokens/layout hiện tại, không xác nhận toàn bộ GT01–GT12 |
 | Postman | 7 API B1.6 + PUT S3 + 3 request lỗi; fixture [avatar.png](../postman/avatar.png) khớp fileChecksum/fileSize mặc định; thứ tự chạy ở [postman/README.md](../postman/README.md) |
 | Kiểm chứng mockup | Hồ sơ: upload ảnh fixture → hiển thị ảnh → gỡ ảnh → chữ cái; không có console error. Đã xem desktop1280 và mobile390; mobile không tràn ngang. Inline JS của hai trang và shared JS qua `node --check` |
+
+### Kiểm tra mockup B1.7 ngày 03/10/2026
+
+Đã đối chiếu mã HTML/JS của ba trang, `shared/app.js` và `shared/demo.js` với controller/DTO/backend thật. Trình duyệt đã kiểm tra chuyển tới đăng nhập khi mở trang quản trị chưa có phiên và hiển thị trang quản trị bằng tài khoản demo. Đây là kiểm tra mockup dùng VLDemo, chưa xác nhận ba trang nối backend thật hoặc kiểm thử toàn bộ kích thước màn hình.
+
+| Trang / mã | Hiện trạng | Hợp đồng BE / việc FE cần sửa |
+|---|---|---|
+| [bat-dau.html](../mockups/dot1/bat-dau.html) UI11 | `list.map`, `t.name`; PUT `goal`,`level`,`topicIds`,`minutesPerDay`,`newCardsPerDay`, thiếu version | GET public dùng `items`,`ten`; ánh xạ `mucTieu`,`trinhDo`,`chuDeIds`,`phutMoiNgay`,`tuMoiMoiNgay`; giữ version từ GET. Không gửi `onboardingDone` |
+| [ca-nhan-hoc-tap.html](../mockups/dot1/ca-nhan-hoc-tap.html) UI41 | Có version/notice409, giới hạn phút1–240/từ0–100 và tối đa5 đúng; còn `topics.map`, tên JSON cũ | Giữ UX này, dùng PageResponse và tên DTO thật; GET đọc `chuDeIds`, PUT gửi cả `[]` |
+| [quan-tri-chu-de.html](../mockups/dot1/quan-tri-chu-de.html) UI48 | POST `name`; PATCH topic; không version; maxlength90 cho cả loại; danh sách mảng với số bộ/thẻ | Dùng `ten`, PUT+version, maxlength100 topic/50 tag; `items`; bỏ cột đếm chưa có hoặc ghi chưa cung cấp; bổ sung sửa nhãn |
+| UI48 xóa | Thông báo nhãn sẽ gỡ khỏi mọi thẻ | Backend trả409 nếu nhãn đang dùng; chủ đề bị chặn khi có bộ thẻ **hoặc người học đang chọn**. Sửa lời xác nhận khi triển khai FE |
+| `shared/demo.js` | Mô phỏng mảng, `name`, PATCH và gỡ nhãn; có `/public/tags` | Demo thành công không chứng minh hợp đồng BE đúng. Backend không có `/public/tags` |
+| `shared/app.js` | `VL.api` gọi `VLDemo.handle`, không fetch backend | Kiểm tra hiện tại là mockup; FE dùng API client thật theo GĐ0 |
+| [thu-vien.html](../mockups/dot1/thu-vien.html) UI02 | Chủ đề lấy bằng `topics.map`, `t.name`, `t.deckCount` | Dùng `items`, `ten`; BE không trả số bộ theo chủ đề. API thư viện vẫn chờ B1.10 |
+| [bo-the-tao.html](../mockups/dot1/bo-the-tao.html) UI14 | GET chủ đề dùng mảng và `t.name` | Chuyển sang PageResponse/ten khi nối bộ thẻ B1.8 |
+| [the-tao.html](../mockups/dot1/the-tao.html) UI16 | Gọi GET `/public/tags` trong lúc tải form | Backend chưa có route này; ghi nhận nhu cầu đọc nhãn cho người học khi làm B1.9. Không dùng admin tags cho USER |
+| Các trang bộ/thẻ/thư viện/CSV | Còn hợp đồng dự kiến | Chờ B1.8–B1.12; chưa bàn giao các API này |
+
+### Giới hạn kiểm chứng B1.7
+
+| Mục | Chi tiết |
+|---|---|
+| Kiểm thử | FR03CatalogTest10/10 pass ở lượt sửa; 62 lượt HTTP bổ sung13 route happy path và nhánh lỗi. Không chạy toàn bộ suite ở lượt bàn giao này |
+| Race / FK | Đã thử chủ đề được người học chọn → DELETE409. Chưa tạo bộ/thẻ để thử FK `bo_the`/`the_nhan`, chưa thử concurrent unique/update/delete; có kiểm tra tham chiếu + FK + @Version trong code |
+| FR-13 nhật ký | Quyền ADMIN đã kiểm chứng; chưa có audit log quản trị hoặc lý do sửa/xóa trong contract B1.7 |
+| Runtime | API cục bộ8080 healthy, đã gọi được B1.7. Compose build image thành công nhưng container api không chiếm được8080 do tiến trình BE cục bộ đang dùng; không dừng tiến trình đó |
+| Dữ liệu | Không seed topic/tag. Danh mục ID1 trong ví dụ chỉ tồn tại trong lúc kiểm chứng và đã được xóa; dùng POST hoặc chọn ID thật từ GET |
 
 ## 11. Báo lỗi cho BE
 

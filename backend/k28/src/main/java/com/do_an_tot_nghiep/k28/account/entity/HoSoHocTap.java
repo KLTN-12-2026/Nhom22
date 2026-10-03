@@ -3,16 +3,16 @@ package com.do_an_tot_nghiep.k28.account.entity;
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -38,6 +38,21 @@ public class HoSoHocTap extends BaseEntity {
 
     @Version
     private Long version;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "chu_de_yeu_thich",
+            joinColumns = @JoinColumn(name = "nguoi_dung_id")
+    )
+    @Column(name = "chu_de_id", nullable = false)
+    private Set<Long> chuDeIds = new LinkedHashSet<>();
+
+    public void replaceTopics(Collection<Long> topicIds) {
+        if (!chuDeIds.equals(new LinkedHashSet<>(topicIds))) {
+            chuDeIds.clear();
+            chuDeIds.addAll(topicIds);
+        }
+    }
 
     public static HoSoHocTap defaultFor(Long nguoiDungId) {
         HoSoHocTap profile = new HoSoHocTap();
