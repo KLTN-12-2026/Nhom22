@@ -1,4 +1,12 @@
-# Báo cáo bàn giao BE → FE
+# Báo cáo backend và bàn giao BE → FE
+
+## Báo cáo backend
+
+| Giai đoạn | Cập nhật | Báo cáo | Trạng thái |
+|---|---|---|---|
+| Đợt 1 — Tài khoản & nội dung | 04/10/2026 | [DOT1_BAO_CAO_BE.md](DOT1_BAO_CAO_BE.md) | B1.1–B1.7 hoàn thành theo roadmap; B1.8 triển khai7 API, HTTP34/34, còn thiếu kiểm chứng; B1.9–B1.12 chưa triển khai |
+
+## Báo cáo bàn giao frontend
 
 | Giai đoạn | Ngày | Báo cáo | Trạng thái |
 |---|---|---|---|
