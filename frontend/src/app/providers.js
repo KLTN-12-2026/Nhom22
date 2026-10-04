@@ -3,22 +3,31 @@ import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
 
+// Thêm biến global này ở ngoài để giữ Promise khởi động MSW
+let mockingPromise;
+
 export function Providers({ children }) {
   const [mswReady, setMswReady] = useState(false);
 
   useEffect(() => {
-    async function enableMocking() {
+    // Chỉ gọi start() nếu chưa có mockingPromise nào được tạo
+    if (!mockingPromise) {
       if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
-        const { worker } = await import('@/mocks/browser');
-        await worker.start({ onUnhandledRequest: 'bypass' });
+        mockingPromise = import('@/mocks/browser').then(({ worker }) => {
+          return worker.start({ onUnhandledRequest: 'bypass' }).catch(() => { });
+        });
+      } else {
+        mockingPromise = Promise.resolve();
       }
-      setMswReady(true);
     }
-    enableMocking();
+
+    mockingPromise.then(() => {
+      setMswReady(true);
+    });
   }, []);
 
   if (!mswReady) {
-    return null; // Tránh render children trước khi msw sẳn sàng
+    return null;
   }
 
   return (

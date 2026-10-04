@@ -1,0 +1,24 @@
+.nbRow { grid-template-columns: 2.25rem minmax(0, 1fr); }
+.nbRow:hover { background: none; }
+.nbWord { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.nbWord strong { font-size: 1.25rem; overflow-wrap: anywhere; }
+.nbIpa { font-family: var(--font-body); color: var(--ink-2); }
+.nbMean { overflow-wrap: anywhere; }
+.nbStamps { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
+.nbNote { padding: var(--sp-2) var(--sp-3); background: var(--accent-bg); border-left: var(--rule-strong) solid var(--accent); font-size: var(--fs-small); overflow-wrap: anywhere; white-space: pre-line; }
+.nbProof { font-size: var(--fs-small); color: var(--ink-2); }
+.nbProof summary { cursor: pointer; color: var(--primary); font-weight: 600; min-height: var(--tap); display: inline-flex; align-items: center; }
+.nbProof ol { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); }
+.nbProof del { color: var(--danger); }
+.nbTools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-left: -12px; }
+.nbEdit { display: grid; gap: var(--sp-2); }
+.toolbarRow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-3); margin: var(--sp-4) 0 var(--sp-3); }
+.pagerWrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+.pairs { list-style: none; margin: 0; padding: 0; display: grid; }
+.pairs li { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+.pairs li:first-child { padding-top: 0; }
+.pairWords { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
+.pairWords b { display: block; overflow-wrap: anywhere; }
+.pairWords span { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.pairVs { font-family: var(--font-form); font-stretch: 80%; font-weight: 700; color: var(--ink-3); padding-top: 2px; }
+.rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-2); }

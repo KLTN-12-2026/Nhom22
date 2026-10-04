@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Icon } from '@/components/ui';
+import Link from 'next/link';
+import { Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function OnboardingPage() {
@@ -12,6 +13,11 @@ export default function OnboardingPage() {
   const [topics, setTopics] = useState([]);
   const [mins, setMins] = useState('10');
   const [cards, setCards] = useState('10');
+
+  useEffect(() => {
+    document.body.classList.add('no-bottom-nav');
+    return () => document.body.classList.remove('no-bottom-nav');
+  }, []);
 
   const handleNext = () => {
     if (step < 5) setStep(step + 1);
@@ -30,157 +36,196 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className={styles.onb}>
-      <section className={`sheet ${styles.onbSheet}`} style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
-            <span>Phiếu khởi đầu</span>
-            <span>Bước {step}/5</span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-3xl)' }}>Thiết lập việc học của bạn</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Mất khoảng một phút. Bạn có thể đổi mọi lựa chọn sau trong phần Thiết lập học.</p>
+    <>
+      <header className={styles.onbHeader}>
+        <div className={styles.onbHeaderInner}>
+          <Link className="brand" href="/bo-the">
+            <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+            <span>Vocab<span className="brand-accent">Learning</span></span>
+          </Link>
+          <button type="button" className="btn btn-quiet" onClick={() => router.push('/dang-nhap?loggedOut=1')}>
+            Đăng xuất
+          </button>
         </div>
+      </header>
 
-        <ul className={styles.steps} style={{ marginBottom: 'var(--space-6)' }}>
-          {['Mục tiêu', 'Trình độ', 'Chủ đề', 'Thời gian', 'Bộ gợi ý'].map((lbl, i) => (
-            <li key={i} data-state={step === i + 1 ? 'current' : step > i + 1 ? 'done' : ''}>
-              <span className={styles.stepBar}></span>
-              <span className={styles.stepLabel}>{lbl}</span>
-            </li>
-          ))}
-        </ul>
-
-        {step === 1 && (
-          <div className={styles.onbStep}>
-            <h2>Bạn học tiếng Anh để làm gì?</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-              <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: goal === 'GIAO_TIEP' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} />
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: 'var(--font-size-lg)' }}>Giao tiếp</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px' }}>Nói chuyện hằng ngày, công sở, du lịch. Ưu tiên cụm từ dùng được ngay.</div>
-                </div>
-              </label>
-              <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: goal === 'TOEIC' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} />
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: 'var(--font-size-lg)' }}>Thi TOEIC</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px' }}>Từ vựng Part 5–7: email, hóa đơn, thông báo, hợp đồng.</div>
-                </div>
-              </label>
+      <main id="main" className={styles.onb}>
+        <section className={`sheet ${styles.onbSheet}`} aria-labelledby="onb-title">
+          <div className="form-head">
+            <div className="form-code">
+              <span>Phiếu khởi đầu</span>
+              <span id="step-code">Bước {step}/5</span>
             </div>
+            <h1 id="onb-title">Thiết lập việc học của bạn</h1>
+            <p>Mất khoảng một phút. Bạn có thể đổi mọi lựa chọn sau trong phần Thiết lập học.</p>
           </div>
-        )}
 
-        {step === 2 && (
-          <div className={styles.onbStep}>
-            <h2>Bạn tự thấy mình đang ở mức nào?</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Đây là bạn tự đánh giá, không phải kết quả kiểm tra. Hệ thống dùng nó để gợi ý bộ thẻ phù hợp.</p>
-            <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-              {[
-                { v: 'MOI_BAT_DAU', t: 'Mới bắt đầu', d: 'Biết chào hỏi, đọc được câu rất ngắn.' },
-                { v: 'CO_BAN', t: 'Cơ bản', d: 'Hiểu đoạn hội thoại đơn giản, còn thiếu nhiều từ.' },
-                { v: 'TRUNG_CAP', t: 'Trung cấp', d: 'Đọc email công việc, cần từ chuyên đề để lên điểm.' },
-                { v: 'NANG_CAO', t: 'Nâng cao', d: 'Đọc tốt, muốn dùng từ chính xác và tự nhiên hơn.' }
-              ].map(lv => (
-                <label key={lv.v} style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: level === lv.v ? 'var(--color-primary-tint)' : 'transparent' }}>
-                  <input type="radio" name="level" value={lv.v} checked={level === lv.v} onChange={() => setLevel(lv.v)} />
+          <ol className="steps" aria-label="Các bước" id="steps">
+            {['Mục tiêu', 'Trình độ', 'Chủ đề', 'Thời gian', 'Bộ khởi động'].map((lbl, i) => (
+              <li key={i} data-state={step === i + 1 ? 'current' : step > i + 1 ? 'done' : undefined}>
+                <span className="bubble">{i + 1}</span>
+                <span className="step-bar"></span>
+                <span className="step-label">{lbl}</span>
+              </li>
+            ))}
+          </ol>
+
+          <form id="form" noValidate style={{ marginTop: 'var(--sp-6)' }} onSubmit={(e) => e.preventDefault()}>
+            <fieldset className={`fieldset field ${styles.onbStep}`} data-step="1" data-field="goal" hidden={step !== 1}>
+              <legend><h2 tabIndex="-1">Bạn học tiếng Anh để làm gì?</h2></legend>
+              <div className="choice-grid cols-2">
+                <label className="choice choice-card">
+                  <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} />
+                  <span className="bubble" aria-hidden="true">A</span>
+                  <span className="choice-body">
+                    <span className="choice-title">Giao tiếp</span>
+                    <span className="choice-desc">Nói chuyện hằng ngày, công sở, du lịch. Ưu tiên cụm từ dùng được ngay.</span>
+                  </span>
+                </label>
+                <label className="choice choice-card">
+                  <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} />
+                  <span className="bubble" aria-hidden="true">B</span>
+                  <span className="choice-body">
+                    <span className="choice-title">Thi TOEIC</span>
+                    <span className="choice-desc">Từ vựng Part 5–7: email, hóa đơn, thông báo, hợp đồng.</span>
+                  </span>
+                </label>
+              </div>
+              <p className="field-error"></p>
+            </fieldset>
+
+            <fieldset className={`fieldset field ${styles.onbStep}`} data-step="2" data-field="level" hidden={step !== 2}>
+              <legend><h2 tabIndex="-1">Bạn tự thấy mình đang ở mức nào?</h2></legend>
+              <p className="muted">Đây là bạn tự đánh giá, không phải kết quả kiểm tra. Hệ thống dùng nó để gợi ý bộ thẻ phù hợp.</p>
+              <div className="choice-grid">
+                {[
+                  { v: 'MOI_BAT_DAU', c: 'A', t: 'Mới bắt đầu', d: 'Biết chào hỏi, đọc được câu rất ngắn.' },
+                  { v: 'CO_BAN', c: 'B', t: 'Cơ bản', d: 'Hiểu đoạn hội thoại đơn giản, còn thiếu nhiều từ.' },
+                  { v: 'TRUNG_CAP', c: 'C', t: 'Trung cấp', d: 'Đọc email công việc, cần từ chuyên đề để lên điểm.' },
+                  { v: 'NANG_CAO', c: 'D', t: 'Nâng cao', d: 'Đọc tốt, muốn dùng từ chính xác và tự nhiên hơn.' }
+                ].map(lv => (
+                  <label key={lv.v} className="choice choice-card">
+                    <input type="radio" name="level" value={lv.v} checked={level === lv.v} onChange={() => setLevel(lv.v)} />
+                    <span className="bubble" aria-hidden="true">{lv.c}</span>
+                    <span className="choice-body">
+                      <span className="choice-title">{lv.t}</span>
+                      <span className="choice-desc">{lv.d}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="field-error"></p>
+            </fieldset>
+
+            <fieldset className={`fieldset field ${styles.onbStep}`} data-step="3" data-field="topicIds" hidden={step !== 3}>
+              <legend><h2 tabIndex="-1">Chọn chủ đề bạn quan tâm</h2></legend>
+              <p className="muted">Chọn tối đa 5. Có thể bỏ trống.</p>
+              <div className="choice-grid cols-2" id="topics" aria-live="polite">
+                {['Kinh doanh', 'Đời sống', 'Du lịch', 'Công nghệ', 'Tài chính', 'Sức khoẻ'].map(t => (
+                  <label key={t} className="choice choice-card">
+                    <input type="checkbox" checked={topics.includes(t)} onChange={() => toggleTopic(t)} />
+                    <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
+                    <span className="choice-body"><span className="choice-title">{t}</span></span>
+                  </label>
+                ))}
+              </div>
+              <p className="field-error"></p>
+            </fieldset>
+
+            <div className={styles.onbStep} data-step="4" hidden={step !== 4}>
+              <h2 tabIndex="-1">Mỗi ngày bạn học bao lâu?</h2>
+
+              <fieldset className="fieldset field" data-field="minutesPerDay">
+                <legend>Thời gian học mỗi ngày</legend>
+                <div className={styles.minutes}>
+                  {['5', '10', '15', '20', '30'].map(m => (
+                    <label key={m} className="choice">
+                      <input type="radio" name="minutesPerDay" value={m} checked={mins === m} onChange={() => setMins(m)} />
+                      <span className="bubble" aria-hidden="true"></span>
+                      <span>{m} phút</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="field-error"></p>
+              </fieldset>
+
+              <fieldset className="fieldset field" data-field="newCardsPerDay">
+                <legend>Số từ mới mỗi ngày</legend>
+                <div className={styles.minutes}>
+                  {['5', '10', '15', '20'].map(c => (
+                    <label key={c} className="choice">
+                      <input type="radio" name="newCardsPerDay" value={c} checked={cards === c} onChange={() => setCards(c)} />
+                      <span className="bubble" aria-hidden="true"></span>
+                      <span>{c} từ</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="field-hint">Từ đến hạn ôn vẫn được đưa vào phiên học, không bị giới hạn bởi con số này.</p>
+                <p className="field-error"></p>
+              </fieldset>
+
+              <div className="choice-grid cols-2">
+                <div className="field">
+                  <label className="field-label" htmlFor="reminderTime"><span>Giờ nhắc học</span><span className="optional">Không bắt buộc</span></label>
+                  <input className="input" type="time" id="reminderTime" name="reminderTime" defaultValue="20:30" />
+                  <p className="field-error"></p>
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="muiGio">Múi giờ</label>
+                  <select className="select" id="muiGio" name="muiGio" defaultValue="Asia/Ho_Chi_Minh">
+                    <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
+                    <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
+                    <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+                    <option value="Europe/Berlin">Berlin (GMT+1)</option>
+                    <option value="America/New_York">New York (GMT−5)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.onbStep} data-step="5" hidden={step !== 5}>
+              <h2 tabIndex="-1">Chọn bộ thẻ để bắt đầu</h2>
+              <p className="muted">Gợi ý theo mục tiêu và chủ đề bạn vừa chọn. Bản sao là của riêng bạn, sửa thoải mái. Bạn có thể bỏ qua bước này.</p>
+              <div className={styles.starter}>
+                <div className={styles.starterItem}>
                   <div>
-                    <div style={{ fontWeight: 'bold' }}>{lv.t}</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{lv.d}</div>
+                    <h3 style={{ margin: 0, marginBottom: '4px' }}>3000 Từ Vựng Giao Tiếp</h3>
+                    <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--ink-2)' }}>
+                      <span>Bộ mẫu</span> • <span>Giao tiếp</span> • <span>Cơ bản</span>
+                    </div>
                   </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className={styles.onbStep}>
-            <h2>Chọn chủ đề bạn quan tâm</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Chọn tối đa 5. Có thể bỏ trống.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-              {['Kinh doanh', 'Đời sống', 'Du lịch', 'Công nghệ', 'Tài chính'].map(t => (
-                <label key={t} style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: topics.includes(t) ? 'var(--color-primary-tint)' : 'transparent' }}>
-                  <input type="checkbox" checked={topics.includes(t)} onChange={() => toggleTopic(t)} />
-                  <span style={{ fontWeight: 'bold' }}>{t}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className={styles.onbStep}>
-            <h2>Mỗi ngày bạn học bao lâu?</h2>
-            
-            <div style={{ marginTop: 'var(--space-4)' }}>
-              <strong style={{ display: 'block', marginBottom: 'var(--space-2)' }}>Thời gian học mỗi ngày</strong>
-              <div className={styles.minutes}>
-                {['5', '10', '15', '20', '30'].map(m => (
-                  <label key={m}><input type="radio" name="mins" value={m} checked={mins === m} onChange={() => setMins(m)} /> <span>{m} phút</span></label>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginTop: 'var(--space-4)' }}>
-              <strong style={{ display: 'block', marginBottom: 'var(--space-2)' }}>Số từ mới mỗi ngày</strong>
-              <div className={styles.minutes}>
-                {['5', '10', '15', '20'].map(c => (
-                  <label key={c}><input type="radio" name="cards" value={c} checked={cards === c} onChange={() => setCards(c)} /> <span>{c} từ</span></label>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div className={styles.onbStep}>
-            <h2>Chọn bộ thẻ để bắt đầu</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Gợi ý theo mục tiêu và chủ đề bạn vừa chọn. Bản sao là của riêng bạn, sửa thoải mái.</p>
-            <div className={styles.starter}>
-              <div className={styles.starterItem}>
-                <div>
-                  <h3 style={{ margin: 0, marginBottom: '4px' }}>3000 Từ Vựng Giao Tiếp</h3>
-                  <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--color-ink-2)' }}>
-                    <span>Bộ mẫu</span> • <span>Giao tiếp</span> • <span>Cơ bản</span>
-                  </div>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => alert('Đã chép vào bộ của bạn')}>
+                    <Icon name="copy" /> Sao chép
+                  </button>
                 </div>
-                <Button variant="secondary" size="sm"><Icon name="copy" /> Sao chép</Button>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          </form>
+        </section>
 
-      <aside className={styles.summary} style={{ backgroundColor: 'var(--color-desk)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--color-border)' }}>
-        <p style={{ fontWeight: 'bold', fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Phiếu của bạn</p>
-        <ul className={styles.sumList}>
-          <li>
-            <div>
-              <p className={styles.sumK}>Mục tiêu</p>
-              <p className={`${styles.sumV} ${!goal ? styles.isEmpty : ''}`}>{goal === 'GIAO_TIEP' ? 'Giao tiếp' : goal === 'TOEIC' ? 'Thi TOEIC' : 'Chưa chọn'}</p>
-            </div>
-          </li>
-          <li>
-            <div>
-              <p className={styles.sumK}>Trình độ</p>
-              <p className={`${styles.sumV} ${!level ? styles.isEmpty : ''}`}>{level || 'Chưa chọn'}</p>
-            </div>
-          </li>
-          <li>
-            <div>
-              <p className={styles.sumK}>Chủ đề</p>
-              <p className={`${styles.sumV} ${topics.length === 0 ? styles.isEmpty : ''}`}>{topics.length > 0 ? topics.join(', ') : 'Chưa chọn'}</p>
-            </div>
-          </li>
-        </ul>
-      </aside>
+        <aside className={`panel ${styles.summary}`} aria-labelledby="sum-title">
+          <h2 className="panel-title" id="sum-title">Phiếu của bạn</h2>
+          <ul className={styles.sumList}>
+            <li>
+              <span className={styles.sumK}>Mục tiêu</span>
+              <span className={`${styles.sumV} ${!goal ? styles.isEmpty : ''}`}>{goal === 'GIAO_TIEP' ? 'Giao tiếp' : goal === 'TOEIC' ? 'Thi TOEIC' : 'Chưa chọn'}</span>
+            </li>
+            <li>
+              <span className={styles.sumK}>Trình độ</span>
+              <span className={`${styles.sumV} ${!level ? styles.isEmpty : ''}`}>{level === 'MOI_BAT_DAU' ? 'Mới bắt đầu' : level === 'CO_BAN' ? 'Cơ bản' : level === 'TRUNG_CAP' ? 'Trung cấp' : level === 'NANG_CAO' ? 'Nâng cao' : 'Chưa chọn'}</span>
+            </li>
+            <li>
+              <span className={styles.sumK}>Chủ đề</span>
+              <span className={`${styles.sumV} ${topics.length === 0 ? styles.isEmpty : ''}`}>{topics.length > 0 ? topics.join(', ') : 'Chưa chọn'}</span>
+            </li>
+          </ul>
+        </aside>
 
-      <div className={styles.onbActions}>
-        <Button variant="secondary" onClick={handleBack} disabled={step === 1}>Quay lại</Button>
-        <Button variant="primary" onClick={handleNext}>{step === 5 ? 'Hoàn tất' : 'Tiếp tục'}</Button>
-      </div>
-    </div>
+        <div className={styles.onbActions}>
+          <button type="button" className="btn btn-secondary" onClick={handleBack} disabled={step === 1}>Quay lại</button>
+          <button type="button" className="btn btn-primary" onClick={handleNext}>{step === 5 ? 'Hoàn tất' : 'Tiếp tục'}</button>
+        </div>
+      </main>
+    </>
   );
 }

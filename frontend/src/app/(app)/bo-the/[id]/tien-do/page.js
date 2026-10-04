@@ -31,7 +31,7 @@ const RATING = { QUEN: 'Quên', KHO: 'Khó', NHO: 'Nhớ', DE: 'Dễ' };
 function HistoryLog({ theId }) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['learning-history', theId],
-    queryFn: () => apiFetch(\`/api/v1/learning/history?theId=\${theId}&size=10\`)
+    queryFn: () => apiFetch(`/api/v1/learning/history?theId=${theId}&size=10`)
   });
 
   if (isLoading) return <div style={{ padding: 'var(--space-2)', fontSize: 'var(--font-size-sm)' }}>Đang tải lịch sử...</div>;
@@ -69,15 +69,13 @@ function HistoryLog({ theId }) {
   );
 }
 
-function ProgressContent({ params }) {
+function ProgressContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
   const queryClient = useQueryClient();
   const { me } = useMe();
   
-  // Use React.use() style unwrap for params since it might be a Promise in newer NextJS versions
-  // However, Next 13/14 App Router allows direct access in Client Components typically.
-  // We'll wrap in a hook if needed, but it's passed safely.
   const id = params.id;
 
   const defaultNhom = searchParams.get('nhom') || '';
@@ -96,7 +94,7 @@ function ProgressContent({ params }) {
       if (q) urlParams.set('q', q);
       urlParams.set('page', page.toString());
       urlParams.set('size', '20');
-      return apiFetch(\`/api/v1/decks/\${encodeURIComponent(id)}/progress?\${urlParams.toString()}\`);
+      return apiFetch(`/api/v1/decks/${encodeURIComponent(id)}/progress?${urlParams.toString()}`);
     }
   });
 
@@ -110,7 +108,7 @@ function ProgressContent({ params }) {
     const urlParams = new URLSearchParams(searchParams);
     if (groupId) urlParams.set('nhom', groupId); else urlParams.delete('nhom');
     urlParams.set('page', '0');
-    router.push(\`/bo-the/\${id}/tien-do?\${urlParams.toString()}\`, { scroll: false });
+    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
   };
 
   const handleSearch = (val) => {
@@ -118,21 +116,21 @@ function ProgressContent({ params }) {
     const urlParams = new URLSearchParams(searchParams);
     if (val) urlParams.set('q', val); else urlParams.delete('q');
     urlParams.set('page', '0');
-    router.push(\`/bo-the/\${id}/tien-do?\${urlParams.toString()}\`, { scroll: false });
+    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
   };
 
   const handlePageChange = (newPage) => {
     const urlParams = new URLSearchParams(searchParams);
     urlParams.set('page', newPage.toString());
-    router.push(\`/bo-the/\${id}/tien-do?\${urlParams.toString()}\`, { scroll: false });
+    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
   };
 
   const getWhenStr = (c) => {
     if (c.nhom === 'MOI') return 'Chưa học';
     if (c.nhom === 'TAM_NGUNG') return 'Không vào phiên học';
-    if (c.nhom === 'QUA_HAN') return \`Đến hạn từ \${new Date(c.hanOnAt).toLocaleDateString('vi-VN')}, đang trễ\`;
-    if (c.nhom === 'DEN_HAN') return \`Đến hạn \${new Date(c.hanOnAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} hôm nay\`;
-    return \`Ôn lại sau \${c.khoangHienThi}\`;
+    if (c.nhom === 'QUA_HAN') return `Đến hạn từ ${new Date(c.hanOnAt).toLocaleDateString('vi-VN')}, đang trễ`;
+    if (c.nhom === 'DEN_HAN') return `Đến hạn ${new Date(c.hanOnAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} hôm nay`;
+    return `Ôn lại sau ${c.khoangHienThi}`;
   };
 
   const renderDir = (dirCode, c) => {
@@ -149,19 +147,19 @@ function ProgressContent({ params }) {
   };
 
   const handleSuspend = (theId, word, suspend) => {
-    if (!window.confirm(\`\${suspend ? 'Tạm ngưng' : 'Khôi phục'} thẻ "\${word}"?\`)) return;
+    if (!window.confirm(`${suspend ? 'Tạm ngưng' : 'Khôi phục'} thẻ "${word}"?`)) return;
     actionMutation.mutate({
       method: 'PUT',
-      url: \`/api/v1/cards/\${theId}/progress/suspend\`,
+      url: `/api/v1/cards/${theId}/progress/suspend`,
       body: { tamNgung: suspend }
     });
   };
 
   const handleReset = (theId, word) => {
-    if (!window.confirm(\`Đặt lại tiến độ thẻ "\${word}"? Cả hai chiều sẽ quay về trạng thái Mới.\`)) return;
+    if (!window.confirm(`Đặt lại tiến độ thẻ "${word}"? Cả hai chiều sẽ quay về trạng thái Mới.`)) return;
     actionMutation.mutate({
       method: 'POST',
-      url: \`/api/v1/cards/\${theId}/progress/reset\`
+      url: `/api/v1/cards/${theId}/progress/reset`
     });
   };
 
@@ -172,7 +170,7 @@ function ProgressContent({ params }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <Button variant="ghost" onClick={() => router.push(\`/bo-the/\${id}\`)} style={{ marginLeft: '-12px', marginBottom: 'var(--space-3)' }}>
+        <Button variant="ghost" onClick={() => router.push(`/bo-the/${id}`)} style={{ marginLeft: '-12px', marginBottom: 'var(--space-3)' }}>
           <Icon name="arrow-left" /> Về bộ thẻ
         </Button>
         
@@ -274,7 +272,7 @@ function ProgressContent({ params }) {
               ))}
             </div>
           )}
-          <Button variant="primary" onClick={() => router.push(\`/hoc?boTheId=\${id}\`)} style={{ width: '100%' }}>Học bộ này</Button>
+          <Button variant="primary" onClick={() => router.push(`/hoc?boTheId=${id}`)} style={{ width: '100%' }}>Học bộ này</Button>
         </section>
 
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
@@ -289,10 +287,10 @@ function ProgressContent({ params }) {
   );
 }
 
-export default function DeckProgressPage({ params }) {
+export default function DeckProgressPage() {
   return (
     <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
-      <ProgressContent params={params} />
+      <ProgressContent />
     </Suspense>
   );
 }

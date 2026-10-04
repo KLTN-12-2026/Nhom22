@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import styles from './page.module.css';
 
 export default function TodayPage() {
   const router = useRouter();
@@ -34,123 +35,272 @@ export default function TodayPage() {
     });
   };
 
-  if (isLoading) return <div style={{ padding: 'var(--space-6)', textAlign: 'center' }}>Đang tải kế hoạch...</div>;
-  if (error) return <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--color-danger)' }}>Lỗi tải kế hoạch</div>;
+  const handleRescueStart = (e) => {
+    e.preventDefault();
+    const r = plan?.cuuLichOn;
+    sessionMutation.mutate({
+      boTheId: null,
+      chieuHoc,
+      quyThoiGian: r?.phutMoiNgay || 10,
+      cheDo: 'CUU_LICH'
+    });
+  };
 
-  const canOn = (plan?.soQuaHan || 0) + (plan?.soDenHan || 0);
-  const nothing = canOn + (plan?.soMoiConLai || 0) === 0;
+  const todayStr = new Date().toLocaleDateString('vi-VN');
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
-            <span>Hôm nay</span>
-            <span>{new Date().toLocaleDateString('vi-VN')}</span>
+    <div className="page page-grid with-side" data-view={isLoading ? 'loading' : error ? 'error' : 'ready'}>
+      {isLoading && (
+        <div data-when="loading">
+          <div className="sheet">
+            <div className="skeleton">
+              <div className="sk sk-title"></div>
+              <div className="sk sk-line"></div>
+              <div className="sk sk-row"></div>
+              <div className="sk sk-row"></div>
+            </div>
           </div>
-          <h1 style={{ fontSize: 'var(--font-size-3xl)', marginBottom: 'var(--space-2)' }}>Hôm nay học gì?</h1>
-          {nothing ? (
-            <p style={{ color: 'var(--color-ink-2)' }}>Không còn thẻ nào cần học hôm nay.</p>
-          ) : (
-            <p style={{ color: 'var(--color-ink-2)' }}>Có {canOn} thẻ cần ôn và {plan?.soMoiConLai} từ mới, cần khoảng {plan?.uocTinhPhut} phút.</p>
-          )}
         </div>
+      )}
+      
+      {error && <div data-when="error">Lỗi tải kế hoạch</div>}
 
-        {!nothing && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
-            <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Quá hạn</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{plan?.soQuaHan} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>thẻ</span></div>
-            </div>
-            <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Đến hạn hôm nay</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{plan?.soDenHan} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>thẻ</span></div>
-            </div>
-            <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Từ mới còn lại</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{plan?.soMoiConLai} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>từ</span></div>
-            </div>
-            <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thời gian cần</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{plan?.uocTinhPhut} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>phút</span></div>
+      {!isLoading && !error && (plan?.tongSoThe === 0) && (
+        <section className="sheet" data-when="empty" aria-labelledby="empty-title">
+          <div className="form-head">
+            <div className="form-code"><span>Hôm nay</span><span>{todayStr}</span></div>
+            <h1 id="empty-title">Hôm nay học gì?</h1>
+          </div>
+          <div className="empty">
+            <div className="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span><span data-n="3"><i></i><i></i><i></i><i></i></span></div>
+            <h2>Bạn chưa có thẻ nào để học</h2>
+            <p>Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ thẻ. Kế hoạch hôm nay sẽ hiện ở đây.</p>
+            <div className="row">
+              <Link className="btn btn-primary" href="/thu-vien">Xem thư viện</Link>
+              <Link className="btn btn-secondary" href="/bo-the/tao">Tạo bộ thẻ</Link>
             </div>
           </div>
-        )}
+        </section>
+      )}
 
-        {nothing ? (
-          <div style={{ padding: 'var(--space-5)', background: 'var(--color-success-bg)', color: 'var(--color-success-text)', borderRadius: 'var(--radius-lg)', display: 'flex', gap: 'var(--space-3)' }}>
-            <Icon name="check" style={{ marginTop: '2px' }} />
-            <div>
-              <strong style={{ display: 'block', marginBottom: 'var(--space-1)' }}>Hôm nay đã ôn xong.</strong>
-              Không còn thẻ đến hạn và đã đủ từ mới. Thẻ tiếp theo sẽ đến hạn vào ngày mai.
+      {!isLoading && !error && (plan?.tongSoThe > 0 || plan === null) && (
+        <>
+          <section className="sheet" data-when="ready" aria-labelledby="page-title">
+            <div className="form-head">
+              <div className="form-code"><span>Hôm nay</span><span>{todayStr}</span></div>
+              <h1 id="page-title" tabIndex="-1">Hôm nay học gì?</h1>
+              <p id="lead">
+                {plan?.cuuLichOn ? "Bạn nghỉ một thời gian nên có nhiều thẻ trễ hạn. Không cần ôn hết trong một ngày." : 
+                 (plan?.soQuaHan + plan?.soDenHan + plan?.soMoiConLai === 0) ? "Không còn thẻ nào cần học hôm nay." : 
+                 `Có ${plan?.soQuaHan + plan?.soDenHan} thẻ cần ôn và ${plan?.soMoiConLai} từ mới, cần khoảng ${plan?.uocTinhPhut} phút (ước tính).`}
+              </p>
             </div>
-          </div>
-        ) : (
-          <form onSubmit={handleStart} style={{ display: 'grid', gap: 'var(--space-5)' }}>
-            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-              <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Hôm nay bạn có bao nhiêu phút?</legend>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
-                {[5, 10, 20].map(m => (
-                  <label key={m} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: minutes === m ? 'var(--color-primary-tint)' : 'transparent', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input type="radio" name="minutes" value={m} checked={minutes === m} onChange={() => setMinutes(m)} />
-                    <span style={{ fontWeight: 'bold' }}>{m} phút</span>
+
+            {plan?.cuuLichOn ? (
+              <section className={styles.rescue} aria-labelledby="rescue-title">
+                <h2 id="rescue-title" style={{ fontSize: 'var(--fs-h3)' }}>Kế hoạch học lại sau thời gian nghỉ</h2>
+                <p className={styles.rescueLead} id="rescue-lead">
+                  Có <strong>{plan.cuuLichOn.soTheCanOn}</strong> thẻ cần ôn; hôm nay bạn có <strong>{plan.cuuLichOn.phutMoiNgay}</strong> phút. Chia thành {plan.cuuLichOn.soNgay} ngày là vừa sức.
+                </p>
+                <form className="stack" onSubmit={handleRescueStart}>
+                  <fieldset className="fieldset">
+                    <legend>Mỗi ngày bạn dành được bao nhiêu phút?</legend>
+                    <div className="choice-grid cols-3">
+                      {[5, 10, 20].map(v => (
+                        <label key={v} className="choice choice-card">
+                          <input type="radio" name="rescueMin" value={v} checked={minutes === v} onChange={() => setMinutes(v)} />
+                          <span className="bubble" aria-hidden="true"></span>
+                          <span className="choice-body">
+                            <span className="choice-title">{v} phút mỗi ngày</span>
+                            <span className="choice-desc">khoảng {Math.floor(v * 60 / plan.giayMoiLuot)} lượt</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <fieldset className="fieldset">
+                    <legend>Ôn chiều nào trước?</legend>
+                    <div className="choice-grid cols-2">
+                      <label className="choice choice-card">
+                        <input type="radio" name="rescueDir" value="EN_VI" checked={chieuHoc === 'EN_VI'} onChange={() => setChieuHoc('EN_VI')} />
+                        <span className="bubble" aria-hidden="true"></span>
+                        <span className="choice-body"><span className="choice-title">Anh → Việt</span></span>
+                      </label>
+                      <label className="choice choice-card">
+                        <input type="radio" name="rescueDir" value="VI_EN" checked={chieuHoc === 'VI_EN'} onChange={() => setChieuHoc('VI_EN')} />
+                        <span className="bubble" aria-hidden="true"></span>
+                        <span className="choice-body"><span className="choice-title">Việt → Anh</span></span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <label className="choice" style={{ marginLeft: 'calc(var(--sp-2) * -1)' }}>
+                    <input type="checkbox" name="pauseNew" defaultChecked />
+                    <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
+                    <span className="choice-body"><span className="choice-title">Tạm dừng từ mới cho đến khi ôn hết thẻ tồn</span><span className="choice-desc">Thẻ quên nhiều và quá hạn lâu nhất được ôn trước.</span></span>
                   </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-              <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Chiều học</legend>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)' }}>
-                <label style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: chieuHoc === 'EN_VI' ? 'var(--color-primary-tint)' : 'transparent', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input type="radio" name="chieuHoc" value="EN_VI" checked={chieuHoc === 'EN_VI'} onChange={() => setChieuHoc('EN_VI')} />
+                </form>
+                <div aria-live="polite">
+                  <ol className={`answer-list ${styles.planList}`} role="list">
+                    {plan.cuuLichOn.keHoach.map((d, i) => (
+                      <li key={i} className="answer-row">
+                        <span className="answer-no">{i + 1}</span>
+                        <div className="answer-main">
+                          <span className="answer-title">{i === 0 ? "Hôm nay" : i === 1 ? "Ngày mai" : new Date(d.ngay).toLocaleDateString('vi-VN')}</span>
+                          <span className="answer-meta"><span>{new Date(d.ngay).toLocaleDateString('vi-VN')}</span></span>
+                        </div>
+                        <span className={styles.when}>{d.soThe} thẻ, khoảng {d.phut} phút</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                <p className="notice">
+                  <Icon name="info" />
+                  <span>Đây là ước tính, tính theo khoảng {plan.giayMoiLuot} giây mỗi lượt và sẽ chỉnh theo tốc độ làm bài thực tế. Ngày đến hạn gốc của thẻ vẫn được giữ, nên thống kê vẫn cho thấy đúng số thẻ đang trễ.</span>
+                </p>
+                <div className={styles.startFoot}>
+                  <Button type="button" onClick={handleRescueStart} variant="accent" size="lg" disabled={sessionMutation.isPending}>
+                    {sessionMutation.isPending ? 'Đang tải...' : 'Bắt đầu phiên hôm nay'}
+                  </Button>
+                  <Link className="btn btn-quiet" href="/hoc">Tự chọn bộ và thời gian</Link>
+                </div>
+              </section>
+            ) : (
+              <div id="normal">
+                <dl className="tally cols-2" id="tally">
                   <div>
-                    <div style={{ fontWeight: 'bold' }}>Anh → Việt</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thấy từ tiếng Anh, nhớ lại nghĩa</div>
+                    <dt>Quá hạn<small>trễ từ hôm trước</small></dt>
+                    <dd><span className="tally-n">{plan?.soQuaHan || 0}</span>thẻ</dd>
                   </div>
-                </label>
-                <label style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: chieuHoc === 'VI_EN' ? 'var(--color-primary-tint)' : 'transparent', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input type="radio" name="chieuHoc" value="VI_EN" checked={chieuHoc === 'VI_EN'} onChange={() => setChieuHoc('VI_EN')} />
                   <div>
-                    <div style={{ fontWeight: 'bold' }}>Việt → Anh</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thấy nghĩa, nhớ lại từ tiếng Anh</div>
+                    <dt>Đến hạn hôm nay</dt>
+                    <dd><span className="tally-n">{plan?.soDenHan || 0}</span>thẻ</dd>
                   </div>
-                </label>
+                  <div>
+                    <dt>Từ mới còn lại<small>đã học {plan?.soTheMoiDaHoc || 0}/{plan?.tuMoiMoiNgay || 0} từ mới hôm nay</small></dt>
+                    <dd><span className="tally-n">{plan?.soMoiConLai || 0}</span>từ</dd>
+                  </div>
+                  <div>
+                    <dt>Thời gian cần<small>ước tính {plan?.giayMoiLuot || 0} giây mỗi lượt</small></dt>
+                    <dd><span className="tally-n">{plan?.uocTinhPhut || 0}</span>phút</dd>
+                  </div>
+                </dl>
+
+                {(plan?.soQuaHan || 0) + (plan?.soDenHan || 0) + (plan?.soMoiConLai || 0) === 0 ? (
+                  <div className={styles.done}>
+                    <p className="notice notice-success">
+                      <Icon name="check" />
+                      <span><strong>Hôm nay đã ôn xong.</strong> Không còn thẻ đến hạn và đã đủ từ mới theo thiết lập. Thẻ tiếp theo sẽ đến hạn vào ngày mai.</span>
+                    </p>
+                    <div className="row">
+                      <Link className="btn btn-primary" href="/luyen-tap">Làm một bài luyện</Link>
+                      <Link className="btn btn-secondary" href="/so-tay">Xem sổ tay từ khó</Link>
+                    </div>
+                  </div>
+                ) : (
+                  <form className={styles.start} onSubmit={handleStart} noValidate>
+                    <fieldset className="fieldset">
+                      <legend>Hôm nay bạn có bao nhiêu phút?</legend>
+                      <div className="choice-grid cols-3">
+                        {[5, 10, 20].map((v) => (
+                          <label key={v} className="choice choice-card">
+                            <input type="radio" name="minutes" value={v} checked={minutes === v} onChange={() => setMinutes(v)} />
+                            <span className="bubble" aria-hidden="true"></span>
+                            <span className="choice-body">
+                              <span className="choice-title">{v} phút</span>
+                              <span className="choice-desc">khoảng {Math.floor(v * 60 / (plan?.giayMoiLuot || 10))} lượt</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <fieldset className="fieldset">
+                      <legend>Chiều học</legend>
+                      <div className="choice-grid cols-2">
+                        <label className="choice choice-card">
+                          <input type="radio" name="chieuHoc" value="EN_VI" checked={chieuHoc === 'EN_VI'} onChange={() => setChieuHoc('EN_VI')} />
+                          <span className="bubble" aria-hidden="true"></span>
+                          <span className="choice-body">
+                            <span className="choice-title">Anh → Việt</span>
+                            <span className="choice-desc">Thấy từ tiếng Anh, nhớ lại nghĩa</span>
+                          </span>
+                        </label>
+                        <label className="choice choice-card">
+                          <input type="radio" name="chieuHoc" value="VI_EN" checked={chieuHoc === 'VI_EN'} onChange={() => setChieuHoc('VI_EN')} />
+                          <span className="bubble" aria-hidden="true"></span>
+                          <span className="choice-body">
+                            <span className="choice-title">Việt → Anh</span>
+                            <span className="choice-desc">Thấy nghĩa, nhớ lại từ tiếng Anh</span>
+                          </span>
+                        </label>
+                      </div>
+                    </fieldset>
+                    <div className={styles.startFoot}>
+                      <Button type="submit" variant="accent" size="lg" disabled={sessionMutation.isPending}>
+                        {sessionMutation.isPending ? 'Đang tải...' : 'Bắt đầu học'}
+                      </Button>
+                      <Link className="btn btn-quiet" href="/hoc">Chọn bộ khác</Link>
+                    </div>
+                  </form>
+                )}
               </div>
-            </fieldset>
+            )}
+          </section>
 
-            <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
-              <Button type="submit" variant="primary" size="lg" disabled={sessionMutation.isPending}>
-                {sessionMutation.isPending ? 'Đang tạo...' : 'Bắt đầu học'}
-              </Button>
-            </div>
-          </form>
-        )}
-      </section>
+          <aside className="side-col" data-when="ready">
+            <section className="panel" aria-labelledby="streak-title">
+              <h2 className="panel-title" id="streak-title">Chuỗi ngày học</h2>
+              <p className={styles.streak}><span className={styles.tallyN}>{plan?.chuoiNgay || 0}</span><span>ngày liên tiếp</span></p>
+              <p className="small muted">
+                {plan?.homNayDaTinhChuoi ? 'Hôm nay đã được tính. ' : 'Hôm nay chưa được tính. '}
+                Một ngày được tính khi bạn hoàn thành một phiên có ít nhất {plan?.luotToiThieuChuoi || 5} lượt ôn.
+              </p>
+            </section>
+            
+            <section className="panel" aria-labelledby="goal-title">
+              <h2 className="panel-title" id="goal-title">Mục tiêu mỗi ngày</h2>
+              <p className={styles.goalLine}>
+                <span>Đã học {plan?.daHocHomNay?.soLuot || 0} lượt hôm nay</span>
+                <span className="num">{plan?.daHocHomNay?.soPhut || 0}/{plan?.phutMoiNgay || 10} phút</span>
+              </p>
+              <div 
+                className="meter is-progress" 
+                role="img" 
+                aria-label={`Đã học ${plan?.daHocHomNay?.soPhut || 0} trên ${plan?.phutMoiNgay || 10} phút mục tiêu`}
+                style={{ '--v': Math.min(1, (plan?.daHocHomNay?.soPhut || 0) / (plan?.phutMoiNgay || 10)) }}
+              >
+                <span></span>
+              </div>
+              <Link className="btn btn-quiet" href="/ca-nhan/hoc-tap" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Đổi thiết lập học</Link>
+            </section>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Chuỗi ngày học</h2>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', color: 'var(--color-primary-strong)' }}>
-            <span style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{plan?.chuoiNgay || 0}</span>
-            <span style={{ fontWeight: '600' }}>ngày liên tiếp</span>
-          </div>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>
-            {plan?.homNayDaTinhChuoi ? 'Hôm nay đã được tính.' : 'Hôm nay chưa được tính.'}
-          </p>
-        </section>
+            {plan?.boThe?.length > 0 && (
+              <section className="panel" aria-labelledby="decks-title">
+                <h2 className="panel-title" id="decks-title">Theo bộ thẻ</h2>
+                <ul className={styles.deckMini} role="list">
+                  {plan.boThe.map(b => (
+                    <li key={b.boTheId}>
+                      <span className={styles.name}>{b.ten}</span>
+                      <span className={styles.meta}>
+                        <span>{b.soCanOn} thẻ cần ôn</span>
+                        <span>{b.soMoi} từ chưa học</span>
+                      </span>
+                      <span className="row" style={{ gap: 'var(--sp-2)' }}>
+                        <Link className="btn btn-secondary btn-sm" href={`/hoc?boTheId=${b.boTheId}`}>Học bộ này</Link>
+                        <Link className="btn btn-quiet btn-sm" href={`/bo-the-tien-do?id=${b.boTheId}`}>Tiến độ</Link>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Mục tiêu mỗi ngày</h2>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-2)' }}>
-            <span>Đã học {plan?.daHocHomNay?.soLuot || 0} lượt</span>
-            <span style={{ fontWeight: 'bold' }}>{plan?.daHocHomNay?.soPhut || 0}/{plan?.phutMoiNgay || 10} phút</span>
-          </div>
-          <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: 'var(--color-primary)', width: `${Math.min(100, ((plan?.daHocHomNay?.soPhut || 0) / (plan?.phutMoiNgay || 10)) * 100)}%` }} />
-          </div>
-        </section>
-      </aside>
+            <nav className={`panel ${styles.links}`} aria-label="Liên kết nhanh">
+              <Link className="btn btn-quiet" href="/thong-ke">Xem thống kê học tập</Link>
+              <Link className="btn btn-quiet" href="/bo-the">Bộ của tôi</Link>
+            </nav>
+          </aside>
+        </>
+      )}
     </div>
   );
 }

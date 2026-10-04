@@ -1,34 +1,53 @@
 'use client';
 import Link from 'next/link';
 import { RouteGuard } from '@/components/layout/RouteGuard';
-import styles from './layout.module.css';
+import { useEffect, useState } from 'react';
 
 export default function AuthLayout({ children }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    document.body.classList.add('no-bottom-nav');
+    return () => document.body.classList.remove('no-bottom-nav');
+  }, []);
+
   return (
     <RouteGuard requireAuth={false}>
-      <div className={styles.auth}>
-        <aside className={styles.authAside}>
-          <Link href="/" className={styles.brand} style={{ color: 'white' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'white', color: 'var(--color-primary)', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold' }}>V</span>
-            <span>Vocab<span style={{ color: 'var(--color-accent)' }}>Learning</span></span>
+      <div className="auth">
+        <aside className="auth-aside">
+          <Link className="brand" href="/">
+            <img className="brand-mark" src="/shared/assets/logo-mark-inverse.svg" alt="" width="28" height="28" />
+            <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
-          <div style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-            <h2 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-4)', lineHeight: 1.3 }}>Bắt đầu hành trình chinh phục từ vựng</h2>
-            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', color: 'var(--color-primary-tint)' }}>
-              <li>✓ Bộ mẫu Giao tiếp và TOEIC để bắt đầu ngay</li>
-              <li>✓ Ôn đúng lúc bằng thuật toán lặp lại ngắt quãng (SRS)</li>
-              <li>✓ Tự tạo bộ thẻ, nhập từ tệp CSV</li>
-            </ul>
-          </div>
+          <figure className="aside-sheet" aria-label="Ví dụ một câu hỏi từ vựng">
+            <div className="aside-q"><span className="aside-no">Câu 14</span><span className="aside-dir">Anh → Việt</span></div>
+            <p className="aside-word" lang="en">receipt</p><p className="aside-ipa" lang="en">/rɪˈsiːt/ <em>n.</em></p>
+            <ol className="aside-options" role="list">
+              <li><span className="bubble">A</span>lời mời</li>
+              <li><span className={`bubble aside-pick ${mounted ? 'is-filled' : ''}`}>B</span>biên lai, giấy biên nhận</li>
+              <li><span className="bubble">C</span>công thức nấu ăn</li>
+              <li><span className="bubble">D</span>người nhận</li>
+            </ol>
+            <figcaption>Mỗi từ có hai chiều học, mỗi chiều một lịch ôn riêng.</figcaption>
+          </figure>
+          <ul className="aside-facts" role="list">
+            <li>Bộ mẫu Giao tiếp và TOEIC để bắt đầu ngay</li>
+            <li>Ôn đúng lúc bằng lịch lặp lại ngắt quãng</li>
+            <li>Tự tạo bộ thẻ, nhập từ tệp CSV</li>
+          </ul>
         </aside>
-        <main className={styles.authMain}>
-          <Link href="/" className={styles.brand}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary)', color: 'white', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold' }}>V</span>
-            <span>Vocab<span style={{ color: 'var(--color-accent)' }}>Learning</span></span>
+        
+        <main className="auth-main" id="main">
+          <Link className="brand" href="/">
+            <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+            <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
-          <div className={styles.authForm}>
+          
+          <div className="auth-form">
             {children}
           </div>
+          
+          <p className="auth-foot"><Link href="/">Về trang chủ</Link></p>
         </main>
       </div>
     </RouteGuard>

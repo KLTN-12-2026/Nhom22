@@ -1,27 +1,27 @@
-import { Inter, Be_Vietnam_Pro } from 'next/font/google';
-import '@/styles/globals.css';
-import '@/styles/ui.css';
+import '@/styles/mockup-tokens.css';
+import '@/styles/mockup-base.css';
+import '@/styles/mockup-components.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const beVietnam = Be_Vietnam_Pro({
-  subsets: ['latin', 'vietnamese'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-be-vietnam',
-});
-
 export const metadata = {
-  title: { default: 'VocabFlow', template: '%s — VocabFlow' },
-  description: 'Học từ vựng tiếng Anh thông minh với hệ thống SRS và AI',
+  title: { default: 'VocabLearning', template: '%s — VocabLearning' },
+  description: 'Học từ vựng tiếng Anh thông minh với hệ thống SRS',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${beVietnam.variable}`}>
+    <html lang="vi">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap"
+        />
+      </head>
       <body>
-        <a href="#main-content" className="skip-link">Chuyển đến nội dung chính</a>
         <Providers>
-          <main id="main-content">{children}</main>
+          {children}
         </Providers>
       </body>
     </html>

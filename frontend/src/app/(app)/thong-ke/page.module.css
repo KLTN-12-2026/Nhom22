@@ -1,0 +1,28 @@
+.filters { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: var(--rule-strong) solid var(--primary); }
+.filters .choiceGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.filters .dates { display: grid; gap: var(--sp-3); grid-template-columns: 1fr 1fr; }
+.filters .foot { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-3); }
+.filters .foot .field { flex: 1 1 260px; }
+.secTitle { font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: 1.125rem; font-weight: 700; margin: var(--sp-6) 0 var(--sp-3); }
+.secHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-2); margin: var(--sp-6) 0 var(--sp-3); }
+.secHead .secTitle { margin: 0; }
+.chart { position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-2); }
+.chartAxis { display: flex; flex-direction: column; justify-content: space-between; height: 180px; font-size: var(--fs-caption); color: var(--ink-3); text-align: right; }
+.chartPlot { position: relative; height: 180px; border-left: var(--rule) solid var(--primary-line); border-bottom: var(--rule) solid var(--primary); display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); align-items: end; gap: 3px; padding: 0 3px; background: repeating-linear-gradient(to top, transparent 0 44px, var(--primary-tint) 44px 45px); }
+.chartBar { height: 100%; display: flex; align-items: flex-end; }
+.chartBar i { display: block; width: 100%; height: 100%; background: var(--graphite); transform-origin: bottom; transform: scaleY(var(--v, 0)); transition: transform var(--dur-3) var(--ease-out); }
+.chartBar[data-goal] i { background: var(--secondary); }
+.chartGoal { position: absolute; left: 0; right: 0; bottom: var(--g); border-top: 1.5px dashed var(--accent-text); pointer-events: none; }
+.chartGoal span { position: absolute; right: 0; bottom: 2px; font-size: var(--fs-caption); font-weight: 650; color: var(--accent-text); background: var(--sheet); padding: 0 4px; }
+.chartX { grid-column: 2; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; padding: 0 3px; font-size: var(--fs-caption); color: var(--ink-3); }
+.chartX span { text-align: center; white-space: nowrap; overflow: visible; }
+.legend { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); margin-top: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+.legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--graphite); }
+.legend i.ok { background: var(--secondary); }
+.legend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.skillCell { min-width: 9rem; }
+.skillCell .meter { margin-top: 6px; }
+.skillPct { font-family: var(--font-form); font-stretch: 80%; font-weight: 800; font-size: 1.125rem; }
+.notes { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
+@media (prefers-reduced-motion: reduce) { .chartBar i { transition: none; } }

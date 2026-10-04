@@ -97,7 +97,7 @@ function SummaryContent() {
               <div key={r} style={{ display: 'grid', gridTemplateColumns: '4rem 1fr 2rem', gap: 'var(--space-3)', alignItems: 'center' }}>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>{r === 'QUEN' ? 'Quên' : r === 'KHO' ? 'Khó' : r === 'NHO' ? 'Nhớ' : 'Dễ'}</div>
                 <div style={{ height: '8px', background: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: 'var(--color-primary)', width: \`\${(t.theoDanhGia[r] / maxRate) * 100}%\` }} />
+                  <div style={{ height: '100%', background: 'var(--color-primary)', width: `${(t.theoDanhGia[r] / maxRate) * 100}%` }} />
                 </div>
                 <div style={{ textAlign: 'right', fontWeight: 'bold' }}>{t.theoDanhGia[r]}</div>
               </div>

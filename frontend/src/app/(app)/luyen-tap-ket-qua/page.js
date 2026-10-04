@@ -150,7 +150,7 @@ function PracticeResultContent() {
         <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
           {wrongCount > 0 && (
             <Button variant="primary" size="lg" onClick={() => retryMutation.mutate(A.lanLamId)} disabled={retryMutation.isPending}>
-              {retryMutation.isPending ? 'Đang tạo bài...' : \`Luyện lại \${wrongCount} câu sai\`}
+              {retryMutation.isPending ? 'Đang tạo bài...' : `Luyện lại ${wrongCount} câu sai`}
             </Button>
           )}
           <Button variant="secondary" onClick={() => router.push('/luyen-tap')}>Làm bài khác</Button>
@@ -169,7 +169,7 @@ function PracticeResultContent() {
                   <span style={{ fontWeight: 'bold' }}>{k.dung}/{k.tong}</span>
                 </div>
                 <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: 'var(--color-primary)', width: \`\${(k.dung / k.tong) * 100}%\` }} />
+                  <div style={{ height: '100%', background: 'var(--color-primary)', width: `${(k.dung / k.tong) * 100}%` }} />
                 </div>
               </div>
             ))}

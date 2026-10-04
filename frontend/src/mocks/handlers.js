@@ -1,5 +1,8 @@
+import { http, HttpResponse, delay } from 'msw';
+
 let mockSessionStatus = 'DANG_HOC';
 let mockPracticeStatus = 'DANG_LAM';
+let mockCurrentUser = null;
 
 export const handlers = [
   // Ping
@@ -8,8 +11,26 @@ export const handlers = [
   }),
   
   // Auth
-  http.post('*/api/v1/auth/login', () => {
+  http.post('*/api/v1/auth/login', async ({ request }) => {
+    const body = await request.json().catch(() => ({}));
+    if (body.email === 'admin@vocab.local') {
+      mockCurrentUser = { id: 'admin1', email: 'admin@vocab.local', tenHienThi: 'Admin', vaiTro: ['USER', 'ADMIN'] };
+    } else if (body.email === 'binh@vocab.local') {
+      mockCurrentUser = { id: 'u2', email: 'binh@vocab.local', tenHienThi: 'Bình', vaiTro: ['USER'] };
+    } else {
+      mockCurrentUser = { id: 'u1', email: 'an@vocab.local', tenHienThi: 'An', vaiTro: ['USER'] };
+    }
     return HttpResponse.json({ message: 'Login success' });
+  }),
+  http.post('*/api/v1/auth/logout', () => {
+    mockCurrentUser = null;
+    return HttpResponse.json({ success: true });
+  }),
+  http.get('*/api/v1/me', () => {
+    if (!mockCurrentUser) {
+      return new HttpResponse(null, { status: 401 });
+    }
+    return HttpResponse.json(mockCurrentUser);
   }),
   http.post('*/api/v1/auth/register', () => {
     return HttpResponse.json({ message: 'Register success' });
