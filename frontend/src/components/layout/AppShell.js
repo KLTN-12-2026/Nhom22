@@ -5,11 +5,12 @@ import { Icon } from '@/components/ui';
 
 const NAV = [
   { group: "Học tập", items: [
-    { key: "today", label: "Hôm nay", icon: "today", soon: "Đợt 2" },
+    { key: "today", label: "Hôm nay", icon: "today", href: "/hom-nay" },
     { key: "decks", label: "Bộ của tôi", icon: "decks", href: "/bo-the" },
     { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
-    { key: "practice", label: "Luyện tập", icon: "practice", soon: "Đợt 2" },
-    { key: "notebook", label: "Sổ tay", icon: "notebook", soon: "Đợt 2" }
+    { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
+    { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
+    { key: "stats", label: "Thống kê", icon: "chart", href: "/thong-ke" }
   ] },
   { group: "Tài khoản", items: [
     { key: "profile", label: "Hồ sơ", icon: "user", href: "/ca-nhan" },
@@ -22,7 +23,10 @@ const NAV = [
 const ADMIN_NAV = [
   ...NAV,
   { group: "Quản trị", admin: true, items: [
-    { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" }
+    { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
+    { key: "admin-users", label: "Tài khoản", icon: "users", href: "/quan-tri/tai-khoan" },
+    { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
+    { key: "admin-audit", label: "Nhật ký", icon: "activity", href: "/quan-tri/nhat-ky" }
   ] }
 ];
 
