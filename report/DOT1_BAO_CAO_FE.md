@@ -3,9 +3,9 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày bàn giao | 03/10/2026 (bản 7 — bổ sung B1.7) |
-| Trạng thái BE | 🟡 B1.1 → B1.7 xong · B1.7: FR03CatalogTest 10/10 pass; 62 lượt HTTP thật pass ngày 03/10/2026 · B1.6: 35 test pass ở lần trước; không cộng thành kết quả toàn bộ suite · B1.8–B1.12 chưa làm |
-| FE làm tương ứng | F1.1–F1.6, phần chủ đề của F1.7 và quản trị F1.12 (`roadmap/ROADMAP_FE.md` §Đợt 1); bộ/thẻ/thư viện/CSV vẫn dự kiến |
+| Ngày bàn giao | 04/10/2026 (bản 8 — bổ sung B1.8, ghi rõ giới hạn kiểm chứng) |
+| Trạng thái BE | 🟡 B1.1 → B1.7 xong; B1.8 đã triển khai 7 API, HTTP 6a–6b đạt 34/34; chưa xác nhận test tự động và HTTP xóa mềm thành công. B1.7: FR03CatalogTest 10/10, HTTP 62 lượt; B1.6: 35 test ở lần trước; không cộng thành kết quả suite. B1.9–B1.12 chưa làm |
+| FE làm tương ứng | F1.1–F1.6, phần chủ đề F1.7, bộ cá nhân F1.8 UI13/UI14, quản trị F1.12; thẻ/thư viện/sao chép/CSV vẫn dự kiến |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
@@ -31,9 +31,10 @@
 | B1.5 Hồ sơ & thiết lập | ✅ `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`; khóa phiên bản (`version` → 409); lưu thiết lập học lần đầu = hoàn tất khởi đầu | F1.5 UI11 `/bat-dau`, UI40 `/ca-nhan`, UI41 `/ca-nhan/hoc-tap`, UI43 `/ca-nhan/thong-bao` | Form theo mục 5.11–5.13; gửi kèm `version`; 409 → tải lại |
 | B1.6 Tệp & ảnh đại diện | ✅ 4 API tệp + 3 API avatar; MIME thực, SHA-256, URL ký, dọn tệp và retry | F1.6 UI40 `/ca-nhan`, UI16 biên tập thẻ | Dùng mục 5.14–5.20; mockup [hồ sơ](../mockups/dot1/ca-nhan.html), [biên tập thẻ](../mockups/dot1/the-tao.html) |
 | B1.7 Chủ đề, nhãn, trình độ | ✅ 11 API danh mục; `chuDeIds` trong thiết lập học; version và chặn xóa khi đang dùng | F1.5 UI11/UI41, F1.7 UI02/UI03, F1.12 UI48 | Mục 5.12, 5.21–5.31; GET danh sách đọc `items`; PUT dùng `ten`, `version`; chủ đề tối đa 5 |
-| B1.8 – B1.12 | ⏳ chưa làm | F1.7–F1.11, phần nội dung tương ứng | Bộ/thẻ/thư viện/sao chép/CSV vẫn mock theo `mockups/dot1/` |
+| B1.8 Bộ thẻ cá nhân | 🟡 7 API đã triển khai; 34/34 lượt HTTP đạt kỳ vọng; DELETE thành công và kết quả test tự động chưa xác nhận | F1.8 UI13 `/bo-the`, UI14 `/bo-the/tao` | Mục5.32–5.38; tên trường tiếng Việt, PATCH/DELETE kèm version, xử lý404/409; giới hạn mockup tại mục10 |
+| B1.9 – B1.12 | ⏳ chưa làm | F1.7, F1.9–F1.11 | Thẻ/thư viện/sao chép/CSV vẫn mock theo `mockups/dot1/` |
 
-**Chưa có** (dùng MSW): bộ thẻ, thẻ, thư viện, sao chép và CSV (B1.8–B1.12). Lịch: Đợt 1, 12/10–25/10.
+**Chưa có** (dùng MSW): thẻ, thư viện, sao chép và CSV (B1.9–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. Lịch: Đợt 1, 12/10–25/10. B1.8 chưa hoàn tất kiểm chứng.
 
 ## 2. Chạy BE
 
@@ -1549,6 +1550,113 @@ HTTP/1.1 422
 ```
 
 
+### Hợp đồng chung bộ cá nhân B1.8
+
+Ngày04/10/2026: HTTP6a đạt8/8, 6b đạt26/26; tổng34/34 lượt API bộ thẻ, không tính chuẩn bị phiên. Sáu API có happy path đã gọi thật; DELETE bộ mới kiểm tra nhánh404/409. Các JSON bên dưới rút gọn từ dữ liệu đã kiểm chứng, không phải response đầy đủ. Quyền/validation chưa gọi thật được ghi là hợp đồng theo source.
+
+Mọi endpoint cần SESSION; request ghi cần CSRF theo hợp đồng chung GĐ0. Đọc/lưu JSON đúng tên field; ID là string, version là number.
+
+| Field DeckResponse | Kiểu / ý nghĩa |
+|---|---|
+| id, chuSoHuuId | string ID |
+| chuDeId, boNguonId | string ID hoặc null |
+| ten, moTa | string; moTa có thể null |
+| trinhDo | MOI_BAT_DAU / CO_BAN / TRUNG_CAP / NANG_CAO |
+| quyenTruyCap | RIENG_TU / CONG_KHAI |
+| trangThaiKiemDuyet | BINH_THUONG / DA_AN |
+| yeuThich | boolean riêng cho người đang đăng nhập |
+| createdAt, updatedAt | chuỗi Instant |
+| version | number; dùng response mới nhất khi sửa/xóa |
+
+Không có goal, cardCount, ownerName, visibility, favorite trong DTO. GET /decks chỉ trả bộ của mình chưa xóa; yêu thích bộ người khác không làm bộ đó xuất hiện trong danh sách này.
+
+| HTTP / code | Tình huống | Kiểm chứng B1.8 | FE xử lý |
+|---|---|---|---|
+| 400 VALIDATION_FAILED | PATCH thiếu version | Có | fieldErrors vào đúng ô |
+| 400 VALIDATION_FAILED | tên/mô tả/ID/chọn chủ đề/size/version xóa sai | Theo source, chưa gọi hết | Giữ form và hiển thị lỗi |
+| 401 UNAUTHENTICATED | Chưa đăng nhập | Theo security, chưa gọi riêng B1.8 | Về đăng nhập |
+| 403 FORBIDDEN | CSRF không hợp lệ | Theo security | Làm mới CSRF theo hợp đồng chung |
+| 404 NOT_FOUND | Quản lý bộ người khác, kể cả công khai | Có | Màn không tìm thấy; không suy luận bộ có tồn tại |
+| 404 NOT_FOUND | Yêu thích bộ riêng tư người khác | Có | Gỡ hành động không còn khả dụng |
+| 404 NOT_FOUND | Bộ đã xóa; người khác yêu thích bộ DA_AN | Theo source, chưa gọi | Tải lại danh sách |
+| 409 VERSION_CONFLICT | PATCH/DELETE version cũ | Có | Giữ nội dung đang nhập; yêu cầu tải lại, không tự gửi đè |
+| 422 BUSINESS_RULE | chuDeId không tồn tại | Theo source, chưa gọi | Chọn lại chủ đề |
+
+### 5.32 `GET /api/v1/decks` — Bộ của tôi
+
+Quyền L, dữ liệu chỉ chủ sở hữu; F1.8 UI13 `/bo-the`, [mockup](../mockups/dot1/bo-the.html).
+
+| Query | Kiểu | Bắt buộc | Giới hạn / mặc định |
+|---|---|---|---|
+| page | integer | Không | ≥0, mặc định0 |
+| size | integer | Không | 1–100, mặc định20 |
+
+200 PageResponse `{items,page,size,totalElements,totalPages}`, sắp xếp createdAt DESC rồi id DESC. HTTP đã xác nhận danh sách chủ bộ có bộ vừa tạo, tài khoản khác có totalElements=0. Không hỗ trợ q/tab/favorites; FE không gửi các tham số này để suy ra lọc trên BE. Lỗi theo bảng chung; không có tác dụng ghi.
+
+### 5.33 `POST /api/v1/decks` — Tạo bộ
+
+Quyền L; F1.8 UI14 `/bo-the/tao`, [mockup](../mockups/dot1/bo-the-tao.html).
+
+| Field | Kiểu | Bắt buộc | Giới hạn / mặc định |
+|---|---|---|---|
+| ten | string | Có | strip, không trống, ≤150 |
+| moTa | string | Không | strip, ≤1000; rỗng →null |
+| chuDeId | string | Không | [1-9][0-9]{0,18}, ≤9223372036854775807, tồn tại |
+| trinhDo | enum | Có | 4 giá trị ở bảng DTO |
+| quyenTruyCap | enum | Không | RIENG_TU mặc định; hoặc CONG_KHAI |
+
+Body đã gọi thật: `{"ten":"  Bo kiem chung B1.8  ","moTa":"  Tu vung cong viec  ","trinhDo":"CO_BAN"}`.
+
+```http
+HTTP/1.1 201 Created
+Location: /api/v1/decks/1
+```
+
+JSON rút gọn: `{"id":"1","ten":"Bo kiem chung B1.8","moTa":"Tu vung cong viec","trinhDo":"CO_BAN","quyenTruyCap":"RIENG_TU","yeuThich":false,"version":0}`.
+
+Tác dụng phụ: thêm dòng bo_the của CurrentUser, BINH_THUONG, chưa xóa; không tạo thẻ. Lỗi theo bảng chung; validation POST và chủ đề không tồn tại chưa gọi riêng.
+
+### 5.34 `GET /api/v1/decks/{id}` — Chi tiết bộ của mình
+
+Quyền O; F1.8 UI13/UI14 `/bo-the/{id}` và `/bo-the/tao?id={id}`. ID path là số nguyên dương. 200 DeckResponse như bảng chung.
+
+HTTP đã gọi thật bộ1 sau sửa: `{"id":"1","ten":"Bo cong viec da sua","moTa":"Tu vung cong viec","quyenTruyCap":"RIENG_TU","version":1}` (rút gọn). GET của người khác trả404 cho cả riêng tư/công khai; không dùng endpoint này làm link chia sẻ. Link công khai chờ B1.10. Không có tác dụng ghi; lỗi theo bảng chung.
+
+### 5.35 `PATCH /api/v1/decks/{id}` — Sửa một phần
+
+Quyền O; F1.8 UI14. Field tùy chọn có giới hạn như POST; ten nếu gửi phải dài1–150 sau strip; thêm version bắt buộc≥0 và boChuDe boolean tùy chọn.
+
+| Cách gửi | Kết quả theo source |
+|---|---|
+| Field thiếu/null | Giữ giá trị cũ |
+| moTa="" | Xóa mô tả |
+| boChuDe=true | Bỏ chủ đề; không gửi cùng chuDeId |
+| Chỉ chuDeId | Kiểm chủ đề tồn tại rồi thay chủ đề |
+
+Body thật: `{"ten":"Bo cong viec da sua","version":0}` →200, JSON rút gọn ở5.34, version1; các trường khác giữ nguyên. Gửi tiếp version0 trả409 VERSION_CONFLICT; thiếu version trả400 với fieldErrors của version. Các nhánh xóa mô tả/bỏ chủ đề chưa gọi HTTP.
+
+Tác dụng phụ: cập nhật entity trong transaction; @Version chặn thay đổi cùng phiên bản khi flush. PATCH không làm thay đổi thực sự có thể giữ version; FE dùng version response, không tự cộng1. Không đổi trangThaiKiemDuyet/boNguonId qua endpoint này. Lỗi theo bảng chung.
+
+### 5.36 `DELETE /api/v1/decks/{id}` — Xóa mềm bộ
+
+Quyền O; F1.8 UI13/UI14. Query version bắt buộc, integer≥0, ví dụ `/decks/1?version=1`.
+
+**Hợp đồng theo code, chưa kiểm chứng happy path:** 204, body rỗng; đặt xoa_at, tăng version khi ghi; giữ dòng bộ, thẻ, liên kết yêu thích và boNguonId của bộ tham chiếu. GET/list/PATCH quản lý không còn thấy bộ đã xóa. Không hứa bảo toàn lịch sử học bằng bằng chứng hiện tại vì lịch sử chưa triển khai.
+
+HTTP đã gọi thật: version cũ→409 VERSION_CONFLICT; chủ sở hữu khác→404 NOT_FOUND. Lỗi thiếu/âm version theo code→400. FE xác nhận trước xóa, gửi version hiện tại và invalidate danh sách khi204.
+
+### 5.37 `PUT /api/v1/decks/{id}/favorite` — Thêm yêu thích
+
+Quyền L: chủ sở hữu hoặc CONG_KHAI + BINH_THUONG; F1.8 UI13/UI14, sau này F1.7 thư viện. Không body/version. 204, body rỗng đã gọi thật, gửi2 lần đều204.
+
+GET/list của chủ sở hữu phản ánh yeuThich=true khi chính chủ thêm; người khác thêm không làm yeuThich của chủ thành true. Không tăng version bộ. Bộ riêng tư của người khác→404; đổi công khai về riêng tư rồi thêm lại→404. Nhánh DA_AN và bộ đã xóa theo code, chưa kiểm chứng HTTP. Composite PK và INSERT ON DUPLICATE KEY bảo đảm một liên kết theo source/schema; chưa đếm dòng trực tiếp trong HTTP6b.
+
+### 5.38 `DELETE /api/v1/decks/{id}/favorite` — Gỡ yêu thích
+
+Quyền L; F1.8 UI13/UI14. Không body/version. 204, body rỗng; HTTP gửi2 lần đều204. Chỉ xóa liên kết của CurrentUser; người khác gỡ không ảnh hưởng yêu thích chủ bộ. Đã gọi thật sau bộ chuyển riêng tư; gỡ bộ đã xóa theo code, chưa gọi HTTP.
+
+Tác dụng phụ: xóa liên kết bo_yeu_thich, không thay version của bộ. Lỗi auth/CSRF/ID theo bảng chung; thiếu liên kết vẫn204.
+
 ## 6. Mã FE mẫu
 
 **Zod** (giới hạn = BE):
@@ -1825,7 +1933,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | Thử "đăng xuất phiên khác" | Đăng nhập cùng tài khoản ở 2 trình duyệt (hoặc 1 cửa sổ ẩn danh), đổi mật khẩu ở cửa sổ 1 → cửa sổ 2 tải lại bị đưa về `/dang-nhap` |
 | Bị 429 khi dev | Chờ hết cửa sổ (1 giờ / 15 phút) hoặc nhờ BE xóa khóa Redis `rl:*` |
 
-## 8. Checklist FE cho phần đã bàn giao B1.1 → B1.7
+## 8. Checklist FE cho phần đã bàn giao B1.1 → B1.8
 
 - [ ] `/dang-ky`: 4 trường + checkbox điều khoản; Zod khớp mục 6; gửi `muiGio` từ trình duyệt
 - [ ] Lỗi server hiện dưới đúng ô theo `fieldErrors[].field` (`tenHienThi`, `email`, `password`, `acceptTerms`)
@@ -1866,13 +1974,22 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 - [ ] PUT thiết lập gửi đủ các trường và version vừa đọc; 400/422 hiển thị ở vùng chọn, 409 cho tải lại.
 - [ ] UI48: ADMIN guard; GET danh sách phân trang; POST/PUT `ten`, `moTa` theo giới hạn; PUT kèm version; nhãn có thể chỉnh sửa.
 - [ ] UI48: 409 khi xóa giữ dòng và thông báo; không hứa tự gỡ nhãn khỏi thẻ.
-- [ ] F1.7: dùng public topics cho bộ lọc; thư viện/bộ thẻ thật vẫn chờ B1.8–B1.10.
+- [ ] F1.7: dùng public topics cho bộ lọc; bộ cá nhân đã có B1.8 (mục5.32–5.38), thẻ/thư viện thật vẫn chờ B1.9–B1.10.
+
+### B1.8
+
+- [ ] F1.8 dùng ten/moTa/chuDeId/trinhDo/quyenTruyCap/yeuThich; không gửi ownerId/goal/cardCount.
+- [ ] GET /decks phân trang page/size; không mô phỏng q/tab thành tính năng BE đã có.
+- [ ] Sửa giữ version response; DELETE gửi query version;409 giữ form và hiện tải lại,404 không tiết lộ chủ sở hữu khác.
+- [ ] PUT/DELETE favorite không body; làm mới cache danh sách và chi tiết, không tự tăng version.
+- [ ] Bỏ chủ đề dùng boChuDe=true; xóa mô tả dùng chuỗi rỗng; chủ đề đọc items/ten từ public topics.
+- [ ] Kiểm chứng thêm xóa mềm thành công/bảo toàn tham chiếu trước khi đóng B1.8; chưa xem test source là bằng chứng pass.
 
 ## 9. Sắp có ở Đợt 1 — hợp đồng dự kiến
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
-| B1.8 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** bộ thẻ, thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.7–F1.11 | xem `mockups/dot1/` |
+| B1.9 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** thẻ, thư viện, sao chép, CSV (TK §13.2) | F1.7, F1.9–F1.11 | xem `mockups/dot1/` |
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -1921,7 +2038,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | [thu-vien.html](../mockups/dot1/thu-vien.html) UI02 | Chủ đề lấy bằng `topics.map`, `t.name`, `t.deckCount` | Dùng `items`, `ten`; BE không trả số bộ theo chủ đề. API thư viện vẫn chờ B1.10 |
 | [bo-the-tao.html](../mockups/dot1/bo-the-tao.html) UI14 | GET chủ đề dùng mảng và `t.name` | Chuyển sang PageResponse/ten khi nối bộ thẻ B1.8 |
 | [the-tao.html](../mockups/dot1/the-tao.html) UI16 | Gọi GET `/public/tags` trong lúc tải form | Backend chưa có route này; ghi nhận nhu cầu đọc nhãn cho người học khi làm B1.9. Không dùng admin tags cho USER |
-| Các trang bộ/thẻ/thư viện/CSV | Còn hợp đồng dự kiến | Chờ B1.8–B1.12; chưa bàn giao các API này |
+| Các trang bộ/thẻ/thư viện/CSV | Bộ cá nhân đã có hợp đồng B1.8 ở mục5.32–5.38; mockup còn lệch | Thẻ/thư viện/sao chép/CSV chờ B1.9–B1.12; xem cập nhật B1.8 phía dưới |
 
 ### Giới hạn kiểm chứng B1.7
 
@@ -1932,6 +2049,17 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | FR-13 nhật ký | Quyền ADMIN đã kiểm chứng; chưa có audit log quản trị hoặc lý do sửa/xóa trong contract B1.7 |
 | Runtime | API cục bộ8080 healthy, đã gọi được B1.7. Compose build image thành công nhưng container api không chiếm được8080 do tiến trình BE cục bộ đang dùng; không dừng tiến trình đó |
 | Dữ liệu | Không seed topic/tag. Danh mục ID1 trong ví dụ chỉ tồn tại trong lúc kiểm chứng và đã được xóa; dùng POST hoặc chọn ID thật từ GET |
+
+### B1.8 — kiểm chứng và lệch mockup ngày 04/10/2026
+
+- Đã triển khai7 API;34/34 lượt HTTP6a–6b đạt kỳ vọng (bộ thử ID1,2). Chưa xác nhận kết quả FR03DeckTest (source có11 lượt dự kiến); không chạy build/test trong phiên này.
+- 6c chưa tạo fixture/xóa bộ: đăng ký bị429; người dùng yêu cầu bỏ qua phần6 còn lại. DELETE thành công, bảo toàn thẻ/yêu thích/bộ nguồn, DA_AN và hai transaction đồng thời chưa có bằng chứng pass.
+- Hợp đồng JSON lấy từ code; không gọi lại các ca6 đã bỏ qua để bổ sung báo cáo. Postman đã thêm12 request; DELETE thành công và một số ca lỗi là request chuẩn bị theo source, không phải kết quả chạy.
+- [bo-the.html](../mockups/dot1/bo-the.html): còn tab/q, name/visibility/favorite/ownerName/goal/cardCount. BE hiện chỉ có danh sách bộ sở hữu; trường đúng xem5.32–5.38. Không có truy vấn danh sách yêu thích ngoài bộ sở hữu.
+- [bo-the-tao.html](../mockups/dot1/bo-the-tao.html): còn name/description/topicId/level/visibility/goal, tên maxlength160; cần giới hạn150, đổi JSON đúng DTO, chủ đề là tùy chọn, đọc public topics.items và ten. DELETE cần query version. Chưa sửa mockup trong lần bàn giao này.
+- [bo-the-chi-tiet.html](../mockups/dot1/bo-the-chi-tiet.html): phần bộ cá nhân dùng hợp đồng B1.8; nội dung thẻ vẫn chờ B1.9. Thư viện/link chia sẻ chờ B1.10.
+- Các ghi chú B1.7 phía trên là kết quả ngày03/10; B1.8 bổ sung ở mục này, không còn xem toàn bộ API bộ cá nhân là dự kiến.
+- Roadmap giữ B1.8 chưa đánh dấu xong vì còn thiếu kiểm chứng. Không sửa migration V4 đã áp dụng.
 
 ## 11. Báo lỗi cho BE
 

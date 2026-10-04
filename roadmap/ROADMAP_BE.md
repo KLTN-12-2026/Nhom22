@@ -233,6 +233,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B1.8 Bộ thẻ cá nhân — FR-03, TC-02
 - API: `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `PUT/DELETE /decks/{id}/favorite`.
 - Quyền `RIENG_TU/CONG_KHAI`; chỉ chủ sở hữu sửa; bộ người khác → 404. Xóa bộ đã có lịch sử học → xóa mềm. `@Version` chống ghi đè.
+- **Đã triển khai 04/10/2026:** 7 API; quản lý chỉ bộ của mình; yêu thích bộ của mình hoặc bộ công khai `BINH_THUONG`. PATCH nhận `version` trong body; DELETE bộ nhận query `version`. Dùng schema V4 hiện có, không thêm/sửa migration; xóa mềm mọi bộ bằng `xoa_at`.
+- **Kiểm chứng:** 6a đạt 8/8 và 6b đạt 26/26 lượt HTTP trên localhost:8080 (tổng 34/34, không tính bước đăng nhập). Đã kiểm tra phiên bản cũ, thiếu version, phân quyền cả bộ riêng tư/công khai và thao tác yêu thích lặp lại. `FR03DeckTest` có 11 lượt dự kiến nhưng chưa xác nhận kết quả chạy; không tuyên bố suite pass.
+- **Còn thiếu kiểm chứng:** HTTP xóa mềm thành công/bảo toàn thẻ và tham chiếu bộ nguồn (6c bị 429 khi đăng ký, sau đó người dùng yêu cầu bỏ qua); hai transaction đồng thời và bộ bị kiểm duyệt ẩn. Vì vậy chưa đánh dấu hoàn tất B1.8.
+- **Báo cáo và bàn giao:** [báo cáo BE Đợt1](../report/DOT1_BAO_CAO_BE.md); báo cáo FE mục 5.32–5.38; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
 
 ### [ ] B1.9 Thẻ từ vựng — FR-03, TC-02
 - API: `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`.
