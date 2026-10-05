@@ -1,0 +1,2 @@
+.timeField { max-width: 220px; }
+.timeField[data-disabled] { opacity: 0.5; }

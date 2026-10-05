@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Icon } from '@/components/ui';
+import styles from './page.module.css';
 
 const GROUPS = [
   { id: '', name: 'Tất cả', key: 'TAT_CA' },
@@ -50,7 +51,7 @@ function NotebookContent() {
 
   const { data: notebook, isLoading: nbLoading } = useQuery({
     queryKey: ['notebook', page, nhomLoi],
-    queryFn: () => apiFetch(\`/api/v1/notebook?page=\${page}&size=20\${nhomLoi ? \`&nhomLoi=\${nhomLoi}\` : ''}\`)
+    queryFn: () => apiFetch(`/api/v1/notebook?page=${page}&size=20${nhomLoi ? `&nhomLoi=${nhomLoi}` : ''}`)
   });
 
   const { data: pairs, isLoading: pairsLoading } = useQuery({
@@ -59,7 +60,7 @@ function NotebookContent() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(\`/api/v1/notebook/\${id}\`, { method: 'PUT', body: JSON.stringify(body) }),
+    mutationFn: ({ id, body }) => apiFetch(`/api/v1/notebook/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries(['notebook']);
       setEditingNote(null);
@@ -67,13 +68,13 @@ function NotebookContent() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => apiFetch(\`/api/v1/notebook/\${id}\`, { method: 'DELETE' }),
+    mutationFn: (id) => apiFetch(`/api/v1/notebook/${id}`, { method: 'DELETE' }),
     onSuccess: () => queryClient.invalidateQueries(['notebook'])
   });
 
   const practiceMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: (res) => router.push(\`/luyen-tap-lam-bai?id=\${res.id}\`)
+    onSuccess: (res) => router.push(`/luyen-tap-lam-bai?id=${res.id}`)
   });
 
   const handleTabClick = (groupId) => {
@@ -81,7 +82,7 @@ function NotebookContent() {
     if (groupId) params.set('nhomLoi', groupId);
     else params.delete('nhomLoi');
     params.set('page', '0');
-    router.push(\`/so-tay?\${params.toString()}\`, { scroll: false });
+    router.push(`/so-tay?${params.toString()}`, { scroll: false });
   };
 
   const saveNote = (id) => {
@@ -106,176 +107,219 @@ function NotebookContent() {
     practiceMutation.mutate({ loaiBai: 'PHAN_BIET_CAP', theIds: [id1, id2], soCau: 5 });
   };
 
+  const totalCount = notebook?.tongHop?.TAT_CA || 0;
+  const anyItems = totalCount > 0;
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-4)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
+    <div className="page page-grid with-side">
+      <section className="sheet" aria-labelledby="page-title">
+        <div className="form-head">
+          <div className="form-code">
             <span>Sổ tay từ khó</span>
-            <span>{notebook?.tongHop?.TAT_CA || 0} từ</span>
+            <span id="total">{totalCount > 0 ? `${totalCount} từ` : '—'}</span>
           </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Sổ tay từ khó</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Từ tự vào sổ khi bạn làm sai trong bài luyện, quên nhiều lần khi ôn hoặc hay nhầm với từ khác.</p>
+          <h1 id="page-title">Sổ tay từ khó</h1>
+          <p>Từ tự vào sổ khi bạn làm sai trong bài luyện, quên nhiều lần khi ôn hoặc hay nhầm với từ khác. Bạn cũng có thể tự đánh dấu và ghi chú.</p>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
+        <div className="tabs" role="tablist" aria-label="Lọc theo nhóm lỗi" id="tabs">
           {GROUPS.map(g => {
             const count = notebook?.tongHop?.[g.key || g.id] || 0;
             const active = nhomLoi === g.id;
             return (
               <button 
                 key={g.id} 
+                type="button" 
+                className="tab" 
+                role="tab" 
+                aria-selected={active}
                 onClick={() => handleTabClick(g.id)}
-                style={{ padding: '6px 12px', border: active ? 'none' : '1px solid var(--color-border)', background: active ? 'var(--color-primary)' : 'transparent', color: active ? 'white' : 'inherit', borderRadius: 'var(--radius-full)', whiteSpace: 'nowrap', cursor: 'pointer', fontWeight: 'bold' }}
               >
-                {g.name} {count > 0 && <span style={{ opacity: 0.8, fontSize: '0.9em', marginLeft: '4px' }}>{count}</span>}
+                {g.name} <span className="count">{count}</span>
               </button>
             );
           })}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-5)' }}>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-            {notebook?.totalElements || 0} từ {nhomLoi && \`trong nhóm \${GROUPS.find(g => g.id === nhomLoi)?.name.toLowerCase()}\`}
-          </div>
-          <Button variant="primary" onClick={startPracticeNotebook} disabled={!notebook?.tongHop?.TAT_CA || practiceMutation.isPending}>
-            Luyện các từ trong sổ
-          </Button>
+        <div className={styles.toolbarRow}>
+          <p className="small muted" id="filter-note" aria-live="polite"></p>
+          <button type="button" className="btn btn-accent btn-lg" id="practice" onClick={startPracticeNotebook} disabled={!totalCount || practiceMutation.isPending}>
+            Luyện các từ trong sổ tay
+          </button>
         </div>
 
-        {nbLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
-        ) : notebook?.items?.length > 0 ? (
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-            {notebook.items.map((it, i) => (
-              <li key={it.theId} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * notebook.size + i + 1}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', marginBottom: 'var(--space-1)' }}>
-                    <strong style={{ fontSize: '1.25rem', fontFamily: 'var(--font-word)' }}>{it.tu}</strong>
-                    {it.phienAm && <span style={{ color: 'var(--color-ink-2)' }}>{it.phienAm}</span>}
-                    {it.tuLoai && <span style={{ color: 'var(--color-primary)' }}>{it.tuLoai}</span>}
-                  </div>
-                  
-                  <div style={{ marginBottom: 'var(--space-2)' }}>{it.nghiaVi}</div>
-                  
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                    {it.lyDo?.map(r => (
-                      <span key={r} style={{ padding: '2px 8px', background: r === 'DANH_DAU_THU_CONG' ? 'var(--color-border)' : 'var(--color-danger-bg)', color: r === 'DANH_DAU_THU_CONG' ? 'inherit' : 'var(--color-danger-text)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold' }}>
-                        {REASON[r]}
-                      </span>
-                    ))}
-                    {it.nhomLoi?.map(g => (
-                      <span key={g.nhomLoi} style={{ padding: '2px 8px', background: 'var(--color-border)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold' }}>
-                        {ERROR_GROUP[g.nhomLoi] || g.nhomLoi} &times; {g.soLan}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>
-                    <Link href={\`/bo-the/\${it.boTheId}\`} style={{ color: 'var(--color-primary-strong)' }}>{it.boTheTen}</Link>
-                    {it.soLanQuen > 0 && <span style={{ marginLeft: '12px' }}>Quên {it.soLanQuen} lần khi ôn</span>}
-                    {it.lanGanNhatAt && <span style={{ marginLeft: '12px' }}>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
-                  </div>
-
-                  {it.ghiChu && editingNote !== it.theId && (
-                    <div style={{ padding: 'var(--space-3)', background: 'var(--color-primary-tint)', borderLeft: '4px solid var(--color-primary)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-3)', whiteSpace: 'pre-line' }}>
-                      {it.ghiChu}
-                    </div>
-                  )}
-
-                  {editingNote === it.theId && (
-                    <div style={{ marginBottom: 'var(--space-3)', display: 'grid', gap: 'var(--space-2)' }}>
-                      <textarea 
-                        value={noteContent} 
-                        onChange={(e) => setNoteContent(e.target.value)}
-                        placeholder="Ghi chú..." 
-                        rows={3} 
-                        style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
-                        maxLength={500}
-                      />
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button variant="primary" size="sm" onClick={() => saveNote(it.theId)} disabled={updateMutation.isPending}>Lưu</Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingNote(null)}>Huỷ</Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {it.bangChung?.length > 0 && (
-                    <details style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>
-                      <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: 'var(--color-primary)' }}>Lần sai gần nhất ({it.bangChung.length})</summary>
-                      <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                        {it.bangChung.map((b, idx) => (
-                          <li key={idx} style={{ marginBottom: '4px' }}>
-                            {ERROR_GROUP[b.nhomLoi]}: bạn trả lời <del style={{ color: 'var(--color-danger)' }}>{b.traLoi || '(trống)'}</del>, đáp án <strong>{b.dapAn}</strong>.
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
-                  )}
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    <Button variant="ghost" size="sm"><Icon name="play" size={14} /> Nghe</Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>{it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}</Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleMark(it)} disabled={updateMutation.isPending}>{it.danhDauThuCong ? 'Bỏ đánh dấu' : 'Đánh dấu'}</Button>
-                    <Button variant="ghost" size="sm" onClick={() => removeEntry(it.theId)} disabled={deleteMutation.isPending}>Bỏ khỏi sổ</Button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>{nhomLoi ? 'Không có từ nào trong nhóm này' : 'Sổ tay đang trống'}</h2>
-            <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-              {nhomLoi ? 'Chọn Tất cả để xem mọi từ.' : 'Từ sẽ vào sổ khi bạn làm sai trong bài luyện hoặc quên nhiều lần khi ôn.'}
-            </p>
-            {!nhomLoi && <Button variant="primary" onClick={() => router.push('/luyen-tap')}>Làm một bài luyện</Button>}
+        <div data-view={nbLoading ? "loading" : (notebook?.items?.length > 0 ? "ready" : "empty")} id="region" aria-live="polite">
+          <div data-when="loading">
+            <div className="skeleton">
+              <div className="sk sk-row"></div>
+              <div className="sk sk-row"></div>
+              <div className="sk sk-row"></div>
+            </div>
           </div>
-        )}
-      </section>
+          <div data-when="ready">
+            <ol className="answer-list" id="list" role="list">
+              {notebook?.items?.map((it, i) => (
+                <li key={it.theId} className={`answer-row ${styles.nbRow}`}>
+                  <span className="answer-no">{page * (notebook?.size || 20) + i + 1}</span>
+                  <div className="answer-main">
+                    <div className={styles.nbWord}>
+                      <strong lang="en">{it.tu}</strong>
+                      {it.phienAm && <span className={styles.nbIpa}>{it.phienAm}</span>}
+                      {it.tuLoai && <span className="small muted">{it.tuLoai}</span>}
+                    </div>
+                    
+                    <div className={styles.nbMean}>{it.nghiaVi}</div>
+                    
+                    <div className={styles.nbStamps}>
+                      {it.lyDo?.map(r => (
+                        <span key={r} className={`stamp${r === 'DANH_DAU_THU_CONG' ? '' : ' stamp-warning'}`}>
+                          {REASON[r]}
+                        </span>
+                      ))}
+                      {it.nhomLoi?.map(g => (
+                        <span key={g.nhomLoi} className="stamp stamp-quiet">
+                          {ERROR_GROUP[g.nhomLoi] || g.nhomLoi} &times; {g.soLan}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <div className="answer-meta">
+                      <Link href={`/bo-the-tien-do?id=${it.boTheId}`}>
+                        {it.boTheTen.length > 60 ? it.boTheTen.slice(0, 60) + '…' : it.boTheTen}
+                      </Link>
+                      {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
+                      {it.lanGanNhatAt && <span>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
+                    </div>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Cặp dễ nhầm</h2>
-          {pairsLoading ? (
-            <div>Đang tải...</div>
-          ) : pairs?.length > 0 ? (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-              {pairs.map((pr, i) => (
-                <li key={i} style={{ borderBottom: '1px dashed var(--color-border)', paddingBottom: 'var(--space-3)' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ display: 'block' }}>{pr.the1.tu}</strong>
-                      <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)' }}>{pr.the1.nghiaVi}</span>
-                    </div>
-                    <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>/</div>
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ display: 'block' }}>{pr.the2.tu}</strong>
-                      <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)' }}>{pr.the2.nghiaVi}</span>
+                    {it.ghiChu && editingNote !== it.theId && (
+                      <div className={styles.nbNote} data-note>{it.ghiChu}</div>
+                    )}
+
+                    {editingNote === it.theId && (
+                      <div className={styles.nbEdit}>
+                        <textarea 
+                          value={noteContent} 
+                          onChange={(e) => setNoteContent(e.target.value)}
+                          placeholder="Ghi chú..." 
+                          className="input" 
+                          rows={3} 
+                          maxLength={500}
+                        />
+                        <div className="row">
+                          <button type="button" className="btn btn-primary btn-sm" onClick={() => saveNote(it.theId)} disabled={updateMutation.isPending}>Lưu</button>
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingNote(null)}>Huỷ</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {it.bangChung?.length > 0 && (
+                      <details className={styles.nbProof}>
+                        <summary>Lần sai gần nhất ({it.bangChung.length})</summary>
+                        <ol>
+                          {it.bangChung.map((b, idx) => (
+                            <li key={idx}>
+                              {ERROR_GROUP[b.nhomLoi] || b.nhomLoi}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
+                              {b.baiLuyenId && (
+                                <>
+                                  . <Link href={`/luyen-tap-ket-qua?id=${b.baiLuyenId}`}>Xem bài</Link>
+                                </>
+                              )}
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                    )}
+
+                    <div className={styles.nbTools}>
+                      <button type="button" className="btn btn-quiet" data-act="play">
+                        <Icon name="play" />Nghe
+                      </button>
+                      <button type="button" className="btn btn-quiet" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
+                        {it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}
+                      </button>
+                      <button type="button" className="btn btn-quiet" data-act="mark" aria-pressed={it.danhDauThuCong} onClick={() => toggleMark(it)} disabled={updateMutation.isPending}>
+                        {it.danhDauThuCong ? 'Bỏ đánh dấu' : 'Đánh dấu từ khó'}
+                      </button>
+                      <button type="button" className="btn btn-quiet" data-act="remove" onClick={() => removeEntry(it.theId)} disabled={deleteMutation.isPending}>
+                        Bỏ khỏi sổ tay
+                      </button>
                     </div>
                   </div>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', display: 'flex', gap: '12px', marginBottom: 'var(--space-3)' }}>
-                    <span style={{ fontWeight: 'bold' }}>{MIX[pr.loaiNham] || 'Dễ nhầm'}</span>
-                    <span>Nhầm {pr.soLan} lần</span>
-                  </div>
-                  <Button variant="secondary" size="sm" onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>Luyện phân biệt</Button>
                 </li>
               ))}
-            </ul>
-          ) : (
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Chưa có cặp nào. Cặp được ghi lại khi bạn chọn nhầm giữa hai từ trong bài luyện.</p>
-          )}
+            </ol>
+            <div className={styles.pagerWrap}>
+              <nav className="pager" id="pager" aria-label="Phân trang">
+                {/* Phân trang tĩnh để UI ko lỗi, có thể implement pager linh hoạt sau nếu API hỗ trợ totalPages */}
+              </nav>
+            </div>
+          </div>
+          <div data-when="empty">
+            <div className="empty">
+              <div className="empty-sheet" aria-hidden="true">
+                <span data-n="1"><i></i><i></i><i></i><i></i></span>
+                <span data-n="2"><i></i><i></i><i></i><i></i></span>
+              </div>
+              <h2 id="empty-title">{nhomLoi && anyItems ? "Không có từ nào trong nhóm này" : "Sổ tay đang trống"}</h2>
+              <p id="empty-text">
+                {nhomLoi && anyItems ? "Chọn Tất cả để xem mọi từ trong sổ." : "Từ sẽ vào sổ khi bạn làm sai trong bài luyện hoặc quên nhiều lần khi ôn. Trong lúc học, bấm \"Đánh dấu từ khó\" để tự thêm."}
+              </p>
+              <Link className="btn btn-primary" href="/luyen-tap" id="empty-action">Làm một bài luyện</Link>
+            </div>
+          </div>
+          <div data-when="error"></div>
+        </div>
+      </section>
+
+      <aside className="side-col">
+        <section className="panel" aria-labelledby="pairs-title">
+          <h2 className="panel-title" id="pairs-title">Cặp dễ nhầm</h2>
+          <div data-view={pairsLoading ? "loading" : (pairs?.length > 0 ? "ready" : "empty")} id="pairs-region" aria-live="polite">
+            <div data-when="loading">
+              <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
+            </div>
+            <div data-when="ready">
+              <ul className={styles.pairs} id="pairs" role="list">
+                {pairs?.map((pr, i) => (
+                  <li key={i}>
+                    <div className={styles.pairWords}>
+                      <div>
+                        <b>{pr.the1.tu}</b>
+                        <span>{pr.the1.nghiaVi}</span>
+                      </div>
+                      <div className={styles.pairVs}>/</div>
+                      <div>
+                        <b>{pr.the2.tu}</b>
+                        <span>{pr.the2.nghiaVi}</span>
+                      </div>
+                    </div>
+                    <div className="row small muted">
+                      <strong>{MIX[pr.loaiNham] || 'Dễ nhầm'}</strong>
+                      <span>Nhầm {pr.soLan} lần</span>
+                    </div>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>
+                      Luyện phân biệt
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div data-when="empty">
+              <p className="small muted">Chưa có cặp nào. Cặp được ghi lại khi bạn chọn nhầm giữa hai từ trong bài luyện.</p>
+            </div>
+            <div data-when="error"></div>
+          </div>
         </section>
 
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Khi nào từ vào sổ?</h2>
-          <ul style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0 }}>
-            <li>Làm sai trong bài luyện.</li>
+        <section className="panel" aria-labelledby="rules-title">
+          <h2 className="panel-title" id="rules-title">Khi nào từ vào sổ</h2>
+          <ul className={styles.rules}>
+            <li>Làm sai trong bài luyện. Lỗi được xếp theo nhóm: nghĩa, chính tả, nghe, dùng từ trong câu, cặp dễ nhầm.</li>
             <li>Quên từ 3 lần trở lên khi ôn.</li>
             <li>Chọn nhầm với một từ khác trong bài luyện.</li>
             <li>Bạn tự đánh dấu khi học.</li>
           </ul>
+          <p className="small muted" style={{ marginTop: 'var(--sp-2)' }}>Bỏ một từ khỏi sổ không xóa lịch sử. Nếu sau đó bạn sai lại, từ sẽ quay lại sổ.</p>
         </section>
       </aside>
     </div>
@@ -284,7 +328,7 @@ function NotebookContent() {
 
 export default function NotebookPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div className="skeleton" style={{ padding: 'var(--sp-6)' }}><div className="sk sk-row"></div></div>}>
       <NotebookContent />
     </Suspense>
   );

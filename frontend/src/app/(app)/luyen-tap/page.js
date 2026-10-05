@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button } from '@/components/ui';
+import styles from './page.module.css';
 
 const TYPES = [
   { id: 'CHON_NGHIA', name: 'Chọn nghĩa', desc: 'Thấy từ tiếng Anh, chọn nghĩa đúng trong 4 phương án', skill: 'Nhận nghĩa' },
@@ -26,127 +26,147 @@ function PracticeForm() {
 
   const [loaiBai, setLoaiBai] = useState(TYPES.find(t => t.id === defaultType) ? defaultType : 'CHON_NGHIA');
   const [soCau, setSoCau] = useState(10);
-  const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? \`deck:\${defaultDeckId}\` : ''));
+  const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
+  const [errorMsg, setErrorMsg] = useState('');
 
   const { data: myDecks } = useQuery({
     queryKey: ['my-decks'],
-    queryFn: () => apiFetch('/api/v1/decks/my-decks')
+    queryFn: () => apiFetch('/api/v1/decks?tab=mine').catch(() => ({ items: [] }))
   });
 
-  const { data: history } = useQuery({
+  const { data: history, isLoading: isHistoryLoading } = useQuery({
     queryKey: ['practice-history'],
-    queryFn: () => apiFetch('/api/v1/practice/history?size=3')
+    queryFn: () => apiFetch('/api/v1/practice/history?size=3').catch(() => ({ items: [] }))
   });
 
   const sessionMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: (res) => {
-      router.push(\`/luyen-tap-lam-bai?id=\${res.id}\`);
+      router.push(`/luyen-tap-lam-bai?id=${res.id}`);
     },
-    onError: (err) => alert(err.message || 'Lỗi khi tạo phiên luyện tập')
+    onError: (err) => setErrorMsg(err.message || 'Lỗi khi tạo phiên luyện tập')
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrorMsg('');
     const boTheId = source.startsWith('deck:') ? source.slice(5) : null;
     const nguon = source === 'SO_TAY' ? 'SO_TAY' : 'BO_THE';
-    sessionMutation.mutate({ loaiBai, soCau, boTheId, nguon });
+    sessionMutation.mutate({ loaiBai, soCau: Number(soCau), boTheId, nguon });
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
-            <span>Luyện tập</span> <span>&bull;</span> <span>Bài cố định, chấm tại máy chủ</span>
+    <div className="page page-grid with-side">
+      <section className="sheet" aria-labelledby="page-title">
+        <div className="form-head">
+          <div className="form-code">
+            <span>Luyện tập</span>
+            <span>Bài cố định, chấm tại máy chủ</span>
           </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Chọn dạng bài</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Đề không kèm đáp án. Bạn nộp một lần, máy chủ chấm và giải thích từng câu. Câu sai được ghi vào sổ tay.</p>
+          <h1 id="page-title">Chọn dạng bài</h1>
+          <p>Đề không kèm đáp án. Bạn nộp một lần, máy chủ chấm và giải thích từng câu. Câu sai được ghi vào sổ tay.</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--space-6)' }}>
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Dạng bài</legend>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)' }}>
+        <form id="form" className="stack-lg" noValidate onSubmit={handleSubmit}>
+          <fieldset className="fieldset field" data-field="loaiBai">
+            <legend>Dạng bài</legend>
+            <div className={styles.typeGrid} id="types">
               {TYPES.map(t => (
-                <label key={t.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: loaiBai === t.id ? 'var(--color-primary-tint)' : 'transparent', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <input type="radio" name="loaiBai" value={t.id} checked={loaiBai === t.id} onChange={() => setLoaiBai(t.id)} style={{ marginTop: '4px' }} />
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{t.name}</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: '4px' }}>{t.desc}</div>
-                    <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary)' }}>{t.skill}</div>
-                  </div>
+                <label key={t.id} className="choice choice-card">
+                  <input type="radio" name="loaiBai" value={t.id} checked={loaiBai === t.id} onChange={() => setLoaiBai(t.id)} />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">{t.name}</span>
+                    <span className="choice-desc">{t.desc}</span>
+                    <span className={styles.typeSkill}>{t.skill}</span>
+                  </span>
                 </label>
               ))}
             </div>
+            <p className="field-error"></p>
           </fieldset>
 
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Lấy từ</legend>
-            <select style={{ width: '100%', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }} value={source} onChange={(e) => setSource(e.target.value)}>
+          <div className="field">
+            <label className="field-label" htmlFor="source">Lấy từ</label>
+            <select className="select" id="source" name="source" value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="">Tất cả bộ của tôi</option>
               <option value="SO_TAY">Sổ tay từ khó</option>
-              {myDecks?.map(deck => (
-                <option key={deck.id} value={\`deck:\${deck.id}\`}>{deck.name} ({deck.cardCount} thẻ)</option>
+              {myDecks?.items?.map(deck => (
+                <option key={deck.id} value={`deck:${deck.id}`}>
+                  {deck.name.length > 80 ? deck.name.slice(0, 80) + '…' : deck.name} ({deck.cardCount} thẻ)
+                </option>
               ))}
             </select>
-            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginTop: 'var(--space-1)' }}>Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
-          </fieldset>
+            <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
+          </div>
 
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Số câu</legend>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
+          <fieldset className="fieldset field" data-field="soCau">
+            <legend>Số câu</legend>
+            <div className="choice-grid cols-3">
               {[5, 10, 20].map(m => (
-                <label key={m} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: soCau === m ? 'var(--color-primary-tint)' : 'transparent', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <input type="radio" name="soCau" value={m} checked={soCau === m} onChange={() => setSoCau(m)} style={{ marginTop: '2px' }} />
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{m} câu</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>khoảng {m === 5 ? 3 : m === 10 ? 6 : 12} phút</div>
-                  </div>
+                <label key={m} className="choice choice-card">
+                  <input type="radio" name="soCau" value={m} checked={soCau === m} onChange={() => setSoCau(m)} />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">{m} câu</span>
+                    <span className="choice-desc">khoảng {m === 5 ? 3 : m === 10 ? 6 : 12} phút</span>
+                  </span>
                 </label>
               ))}
             </div>
-            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
+            <p className="field-hint">Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
+            <p className="field-error"></p>
           </fieldset>
 
-          <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
-            <Button type="submit" variant="primary" size="lg" disabled={sessionMutation.isPending}>
-              {sessionMutation.isPending ? 'Đang tạo đề...' : 'Làm bài'}
-            </Button>
-            <Button variant="secondary" type="button" onClick={() => router.push('/luyen-tap-lich-su')}>Xem lịch sử bài làm</Button>
+          <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
+
+          <div className={styles.formFoot}>
+            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending}>
+              {sessionMutation.isPending ? 'Đang tạo...' : 'Làm bài'}
+            </button>
+            <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>
           </div>
         </form>
       </section>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Bài gần đây</h2>
-          {history?.items?.length > 0 ? (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-3)' }}>
-              {history.items.map(h => (
-                <li key={h.baiLuyenId} style={{ borderBottom: '1px dashed var(--color-border)', paddingBottom: 'var(--space-3)' }}>
-                  <Link href={\`/luyen-tap-ket-qua?id=\${h.baiLuyenId}\`} style={{ fontWeight: 'bold', color: 'var(--color-primary-strong)', textDecoration: 'none' }}>
-                    {TYPES.find(t => t.id === h.loaiBai)?.name || h.loaiBai} {h.laLuyenLai && '(luyện lại)'}
-                  </Link>
-                  <div style={{ display: 'flex', gap: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px' }}>
-                    <span>Đúng {h.soCauDung}/{h.tongSoCau}</span>
-                    <span>{new Date(h.nopAt).toLocaleDateString('vi-VN')}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Bạn chưa làm bài nào.</p>
-          )}
-          <Link href="/luyen-tap-lich-su" style={{ display: 'inline-block', marginTop: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--color-primary-strong)' }}>Tất cả bài làm &rarr;</Link>
+      <aside className="side-col">
+        <section className="panel" aria-labelledby="recent-title">
+          <h2 className="panel-title" id="recent-title">Bài gần đây</h2>
+          <div data-view={isHistoryLoading ? "loading" : (history?.items?.length > 0 ? "ready" : "empty")} id="recent-region">
+            <div data-when="loading">
+              <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
+            </div>
+            <div data-when="ready">
+              <ul className={styles.recent} id="recent" role="list">
+                {history?.items?.map(a => (
+                  <li key={a.baiLuyenId}>
+                    <Link href={`/luyen-tap-ket-qua?id=${a.baiLuyenId}`}>
+                      {TYPES.find(t => t.id === a.loaiBai)?.name || a.loaiBai} {a.laLuyenLai && "(luyện lại)"}
+                    </Link>
+                    <span className={styles.meta}>
+                      <span>Đúng {a.soCauDung}/{a.tongSoCau}</span>
+                      <span>{new Date(a.nopAt).toLocaleDateString('vi-VN')}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div data-when="empty">
+              <p className="small muted">Bạn chưa làm bài nào.</p>
+            </div>
+            <div data-when="error"></div>
+          </div>
+          <Link className="btn btn-quiet" href="/luyen-tap-lich-su" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
+            Tất cả bài làm
+          </Link>
         </section>
 
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Luyện từ hay sai</h2>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-            Chọn nguồn <strong>Sổ tay từ khó</strong> để luyện các từ bạn sai nhiều hoặc tự đánh dấu.
-          </p>
-          <Link href="/so-tay" style={{ display: 'inline-block', marginTop: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--color-primary-strong)' }}>Mở sổ tay &rarr;</Link>
+        <section className="panel" aria-labelledby="nb-title">
+          <h2 className="panel-title" id="nb-title">Luyện từ hay sai</h2>
+          <p className="small muted">Chọn nguồn <strong>Sổ tay từ khó</strong> để luyện các từ bạn sai nhiều hoặc tự đánh dấu.</p>
+          <Link className="btn btn-quiet" href="/so-tay" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
+            Mở sổ tay
+          </Link>
         </section>
       </aside>
     </div>
@@ -155,7 +175,7 @@ function PracticeForm() {
 
 export default function PracticePage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div className="skeleton" style={{ padding: 'var(--sp-6)' }}><div className="sk sk-row"></div></div>}>
       <PracticeForm />
     </Suspense>
   );

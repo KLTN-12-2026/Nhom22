@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button, Input, Icon } from '@/components/ui';
-import styles from '../layout.module.css';
+import { Icon } from '@/components/ui';
 import { useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
@@ -40,27 +39,27 @@ export default function VerifyEmailPage() {
   return (
     <>
       {view === 'loading' && (
-        <div style={{ textAlign: 'center', padding: 'var(--space-6) 0' }}>
-          <div style={{ margin: '0 auto var(--space-4)', width: '64px', height: '64px', border: '2px solid var(--color-border)', borderRadius: '50%', borderTopColor: 'var(--color-primary-strong)', animation: 'spin 1s linear infinite' }} />
+        <div style={{ textAlign: 'center', padding: 'var(--sp-6) 0' }}>
+          <div style={{ margin: '0 auto var(--sp-4)', width: '64px', height: '64px', border: '2px solid var(--border)', borderRadius: '50%', borderTopColor: 'var(--primary-strong)', animation: 'spin 1s linear infinite' }} />
           <h1>Đang xác thực email…</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Vui lòng chờ vài giây.</p>
+          <p style={{ color: 'var(--ink-2)' }}>Vui lòng chờ vài giây.</p>
         </div>
       )}
 
       {view === 'ok' && (
-        <div style={{ textAlign: 'center', padding: 'var(--space-6) 0' }}>
-          <div style={{ margin: '0 auto var(--space-4)', width: '64px', height: '64px', border: '2px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success-text)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>✓</div>
+        <div style={{ textAlign: 'center', padding: 'var(--sp-6) 0' }}>
+          <div style={{ margin: '0 auto var(--sp-4)', width: '64px', height: '64px', border: '2px solid var(--success)', background: 'var(--success-bg)', color: 'var(--success-text)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>✓</div>
           <h1>Email đã được xác thực</h1>
-          <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-6)' }}>Tài khoản của bạn đã sẵn sàng. Đăng nhập để bắt đầu.</p>
-          <Link href={`/dang-nhap${email ? `?email=${encodeURIComponent(email)}` : ''}`} style={{ textDecoration: 'none' }}>
-            <Button variant="primary" size="lg" style={{ width: '100%' }}>Đăng nhập</Button>
+          <p style={{ color: 'var(--ink-2)', marginBottom: 'var(--sp-6)' }}>Tài khoản của bạn đã sẵn sàng. Đăng nhập để bắt đầu.</p>
+          <Link href={`/dang-nhap${email ? `?email=${encodeURIComponent(email)}` : ''}`} className="btn btn-primary btn-lg btn-block">
+            Đăng nhập
           </Link>
         </div>
       )}
 
       {(view === 'bad' || view === 'wait') && (
         <>
-          <div className={styles.authTitle}>
+          <div className="auth-title">
             {view === 'bad' ? (
               <>
                 <h1>Liên kết không hợp lệ</h1>
@@ -74,27 +73,38 @@ export default function VerifyEmailPage() {
             )}
           </div>
 
-          <form onSubmit={handleResend} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <Input 
-              id="email" 
-              type="email" 
-              label="Email đã đăng ký" 
-              placeholder="ten@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
-            />
+          <form onSubmit={handleResend} noValidate>
+            <div className="field">
+              <label className="field-label" htmlFor="email">Email đã đăng ký</label>
+              <input 
+                className="input" 
+                id="email" 
+                name="email" 
+                type="email" 
+                autoComplete="email" 
+                inputMode="email" 
+                required 
+                placeholder="ten@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <p className="field-error"></p>
+            </div>
             
-            <Button type="submit" variant="primary" size="lg" disabled={resendMutation.isPending}>
+            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={resendMutation.isPending}>
               {resendMutation.isPending ? 'Đang gửi...' : 'Gửi lại thư xác thực'}
-            </Button>
+            </button>
 
             {resendMutation.isSuccess && (
-              <div style={{ background: 'var(--color-success-bg)', color: 'var(--color-success-text)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', fontSize: 'var(--font-size-sm)' }}>
-                Nếu email này đã đăng ký và chưa xác thực, thư mới sẽ tới trong vài phút.
-              </div>
+              <p className="notice notice-success" style={{ marginTop: 'var(--sp-4)' }}>
+                <Icon name="check" />
+                <span>Nếu email này đã đăng ký và chưa xác thực, thư mới sẽ tới trong vài phút.</span>
+              </p>
             )}
           </form>
+          <p className="auth-foot">
+            <Link href="/dang-nhap">Quay lại đăng nhập</Link>
+          </p>
         </>
       )}
     </>

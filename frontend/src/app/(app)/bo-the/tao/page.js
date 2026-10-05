@@ -2,16 +2,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Select, Textarea, Icon } from '@/components/ui';
-import styles from './page.module.css';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { useTopics } from '@/hooks/useTopics';
+import { Icon } from '@/components/ui';
+import styles from './page.module.css';
 
 export default function CreateDeckPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: topics = [] } = useTopics();
+  
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
   const [goal, setGoal] = useState('GIAO_TIEP');
@@ -37,118 +38,178 @@ export default function CreateDeckPage() {
     });
   };
 
+  const currentTopic = topics.find(t => t.id === topicId);
+  const GOAL_LABEL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
+  const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
+
   return (
-    <div className="page-grid with-side" style={{ display: 'grid', gap: 'var(--space-5)' }}>
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
-            <span>Phiếu tạo bộ thẻ</span>
-          </div>
-          <Link href="/bo-the" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--color-ink-2)', textDecoration: 'none', marginBottom: 'var(--space-2)' }}>
-            <Icon name="arrow-left" /> <span>Bộ của tôi</span>
+    <div className="page page-grid with-side" data-view="ready">
+      <section className="sheet" aria-labelledby="page-title">
+        <div className="form-head">
+          <div className="form-code"><span id="mode-code">Phiếu tạo bộ thẻ</span></div>
+          <Link className="btn btn-quiet" id="back" href="/bo-the" style={{ margin: '0 0 var(--sp-2) -12px', justifySelf: 'start' }}>
+            <Icon name="arrow-left" /><span>Bộ của tôi</span>
           </Link>
-          <h1 style={{ fontSize: 'var(--font-size-3xl)' }}>Tạo bộ thẻ</h1>
+          <h1 id="page-title">Tạo bộ thẻ</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.formGrid}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-            <Input 
-              label="Tên bộ thẻ" 
-              placeholder="Ví dụ: TOEIC Part 5 — từ hay sai" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
+        <form id="form" className={styles.formGrid} onSubmit={handleSubmit} noValidate>
+          <div className="field">
+            <label className="field-label" htmlFor="name">Tên bộ thẻ</label>
+            <input 
+              className="input" 
+              id="name" 
+              name="name" 
+              maxLength="160" 
               required 
-              maxLength={160}
+              placeholder="Ví dụ: TOEIC Part 5 — từ hay sai"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-            <p style={{ textAlign: 'right', fontSize: 'var(--font-size-xs)', color: name.length > 150 ? 'var(--color-danger)' : 'var(--color-ink-3)' }}>
+            <p className="field-counter" id="name-count" aria-live="polite" data-over={name.length > 150 ? "" : undefined}>
               {name.length}/150
             </p>
+            <p className="field-error"></p>
           </div>
 
-          <Textarea 
-            label={
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Mô tả</span><span style={{ color: 'var(--color-ink-3)', fontWeight: 'normal' }}>Không bắt buộc</span>
-              </div>
-            }
-            placeholder="Bộ này dùng để làm gì, lấy từ đâu" 
-            value={desc} 
-            onChange={(e) => setDesc(e.target.value)} 
-            maxLength={1000}
-          />
+          <div className="field">
+            <label className="field-label" htmlFor="description">
+              <span>Mô tả</span><span className="optional">Không bắt buộc</span>
+            </label>
+            <textarea 
+              className="textarea" 
+              id="description" 
+              name="description" 
+              maxLength="1000" 
+              placeholder="Bộ này dùng để làm gì, lấy từ đâu"
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+            />
+            <p className="field-error"></p>
+          </div>
 
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>Mục tiêu</legend>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: goal === 'GIAO_TIEP' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} /> 
-                <span style={{ background: 'var(--color-ink-3)', color: 'white', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '12px' }}>A</span>
-                <span style={{ fontWeight: 'bold' }}>Giao tiếp</span>
+          <fieldset className="fieldset field" data-field="goal">
+            <legend>Mục tiêu</legend>
+            <div className="choice-grid cols-2">
+              <label className="choice choice-card">
+                <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} />
+                <span className="bubble" aria-hidden="true">A</span>
+                <span className="choice-body"><span className="choice-title">Giao tiếp</span></span>
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: goal === 'TOEIC' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} /> 
-                <span style={{ background: 'var(--color-ink-3)', color: 'white', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '12px' }}>B</span>
-                <span style={{ fontWeight: 'bold' }}>TOEIC</span>
+              <label className="choice choice-card">
+                <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} />
+                <span className="bubble" aria-hidden="true">B</span>
+                <span className="choice-body"><span className="choice-title">TOEIC</span></span>
               </label>
             </div>
+            <p className="field-error"></p>
           </fieldset>
 
-          <Select 
-            label="Chủ đề" 
-            value={topicId} 
-            onChange={(e) => setTopicId(e.target.value)} 
-            options={[{ value: '', label: 'Chọn chủ đề' }, ...topics.map(t => ({ value: t.id, label: t.name }))]}
-            required
-          />
-
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>Trình độ</legend>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-              {['MOI_BAT_DAU', 'CO_BAN', 'TRUNG_CAP', 'NANG_CAO'].map((lv, i) => (
-                <label key={lv} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: 'var(--space-2)', cursor: 'pointer' }}>
-                  <input type="radio" name="level" value={lv} checked={level === lv} onChange={() => setLevel(lv)} /> 
-                  <span style={{ background: 'var(--color-ink-3)', color: 'white', width: '20px', height: '20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '10px' }}>{['A','B','C','D'][i]}</span>
-                  <span>{{ MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' }[lv]}</span>
-                </label>
+          <div className="field">
+            <label className="field-label" htmlFor="topicId">Chủ đề</label>
+            <select className="select" id="topicId" name="topicId" required value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+              <option value="">Chọn chủ đề</option>
+              {topics.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
+            </select>
+            <p className="field-error"></p>
+          </div>
+
+          <fieldset className="fieldset field" data-field="level">
+            <legend>Trình độ</legend>
+            <div className="choice-grid cols-2">
+              <label className="choice">
+                <input type="radio" name="level" value="MOI_BAT_DAU" checked={level === 'MOI_BAT_DAU'} onChange={() => setLevel('MOI_BAT_DAU')} />
+                <span className="bubble" aria-hidden="true">A</span>
+                <span className="choice-body"><span className="choice-title">Mới bắt đầu</span></span>
+              </label>
+              <label className="choice">
+                <input type="radio" name="level" value="CO_BAN" checked={level === 'CO_BAN'} onChange={() => setLevel('CO_BAN')} />
+                <span className="bubble" aria-hidden="true">B</span>
+                <span className="choice-body"><span className="choice-title">Cơ bản</span></span>
+              </label>
+              <label className="choice">
+                <input type="radio" name="level" value="TRUNG_CAP" checked={level === 'TRUNG_CAP'} onChange={() => setLevel('TRUNG_CAP')} />
+                <span className="bubble" aria-hidden="true">C</span>
+                <span className="choice-body"><span className="choice-title">Trung cấp</span></span>
+              </label>
+              <label className="choice">
+                <input type="radio" name="level" value="NANG_CAO" checked={level === 'NANG_CAO'} onChange={() => setLevel('NANG_CAO')} />
+                <span className="bubble" aria-hidden="true">D</span>
+                <span className="choice-body"><span className="choice-title">Nâng cao</span></span>
+              </label>
             </div>
+            <p className="field-error"></p>
           </fieldset>
 
-          <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-            <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>Ai xem được bộ này?</legend>
-            <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-              <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: visibility === 'RIENG_TU' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="visibility" value="RIENG_TU" checked={visibility === 'RIENG_TU'} onChange={() => setVisibility('RIENG_TU')} /> 
-                <span style={{ background: 'var(--color-ink-3)', color: 'white', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '12px', flexShrink: 0 }}>A</span>
-                <div>
-                  <div style={{ fontWeight: 'bold' }}>Riêng tư</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Chỉ bạn thấy. Không xuất hiện trong thư viện.</div>
-                </div>
+          <fieldset className="fieldset field" data-field="visibility">
+            <legend>Ai xem được bộ này?</legend>
+            <div className="choice-grid">
+              <label className="choice choice-card">
+                <input type="radio" name="visibility" value="RIENG_TU" checked={visibility === 'RIENG_TU'} onChange={() => setVisibility('RIENG_TU')} />
+                <span className="bubble" aria-hidden="true">A</span>
+                <span className="choice-body">
+                  <span className="choice-title">Riêng tư</span>
+                  <span className="choice-desc">Chỉ bạn thấy. Không xuất hiện trong thư viện.</span>
+                </span>
               </label>
-              <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: visibility === 'CONG_KHAI' ? 'var(--color-primary-tint)' : 'transparent' }}>
-                <input type="radio" name="visibility" value="CONG_KHAI" checked={visibility === 'CONG_KHAI'} onChange={() => setVisibility('CONG_KHAI')} /> 
-                <span style={{ background: 'var(--color-ink-3)', color: 'white', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '12px', flexShrink: 0 }}>B</span>
-                <div>
-                  <div style={{ fontWeight: 'bold' }}>Công khai</div>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Hiện trong thư viện. Người khác có thể sao chép.</div>
-                </div>
+              <label className="choice choice-card">
+                <input type="radio" name="visibility" value="CONG_KHAI" checked={visibility === 'CONG_KHAI'} onChange={() => setVisibility('CONG_KHAI')} />
+                <span className="bubble" aria-hidden="true">B</span>
+                <span className="choice-body">
+                  <span className="choice-title">Công khai</span>
+                  <span className="choice-desc">Hiện trong thư viện với nhãn “Người học chia sẻ”. Người khác sao chép được nội dung, không thấy tiến độ học của bạn.</span>
+                </span>
               </label>
             </div>
           </fieldset>
 
           <div className={styles.formFoot}>
             <div className={styles.row}>
-              <Link href="/bo-the"><Button variant="ghost" type="button">Hủy</Button></Link>
-              <Button variant="primary" size="lg" type="submit" disabled={createMutation.isPending}>
+              <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>
+              <button type="submit" className="btn btn-primary btn-lg" id="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending ? 'Đang tạo...' : 'Tạo bộ thẻ'}
-              </Button>
+              </button>
             </div>
           </div>
         </form>
       </section>
 
-      <aside style={{ display: 'none' /* hidden on mobile, will grid on desktop */ }}>
-        {/* Xem trước */}
+      <aside className="side-col" data-when="ready">
+        <section className="panel" aria-labelledby="pv-title">
+          <h2 className="panel-title" id="pv-title">Xem trước trong danh sách</h2>
+          <ol className={`answer-list ${styles.previewRow}`} role="list">
+            <li className="answer-row">
+              <span className="answer-no">1</span>
+              <div className="answer-main">
+                <span className="answer-title" id="pv-name" style={{ position: 'static' }}>
+                  {name.trim() || 'Tên bộ thẻ'}
+                </span>
+                <div className="answer-meta" id="pv-meta">
+                  {visibility === 'CONG_KHAI' ? (
+                    <span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>
+                  ) : (
+                    <span className="stamp stamp-quiet"><Icon name="lock" />Riêng tư</span>
+                  )}
+                  {goal && <span>{GOAL_LABEL[goal]}</span>}
+                  {currentTopic && <span>{currentTopic.name}</span>}
+                  {level && (
+                    <span className="level" title="Trình độ tự đánh giá">
+                      <span className="bubble-row" aria-hidden="true">
+                        {[1, 2, 3, 4].map(n => {
+                          const lvlMap = { MOI_BAT_DAU: 1, CO_BAN: 2, TRUNG_CAP: 3, NANG_CAO: 4 };
+                          return <span key={n} className={`bubble${lvlMap[level] >= n ? ' is-filled' : ''}`}></span>;
+                        })}
+                      </span>
+                      {LEVEL_LABEL[level]}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
       </aside>
     </div>
   );

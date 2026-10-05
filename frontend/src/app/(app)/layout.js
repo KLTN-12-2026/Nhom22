@@ -1,24 +1,16 @@
 'use client';
 import { AppShell } from '@/components/layout';
 import { RouteGuard } from '@/components/layout/RouteGuard';
-import { useEffect, useState } from 'react';
+import { useMe } from '@/hooks/useMe';
 
 export default function AppRouteLayout({ children }) {
-  const [user, setUser] = useState(null);
+  const { data: user, isLoading } = useMe();
 
-  useEffect(() => {
-    const userStr = localStorage.getItem('vocab_demo_user');
-    if (userStr) {
-      try { setUser(JSON.parse(userStr)); } catch (e) {}
-    } else {
-      // Dummy user for testing if no user is set, remove later.
-      setUser({ tenHienThi: 'Demo User', vaiTro: ['USER'] });
-    }
-  }, []);
+  if (isLoading) return null;
 
   return (
     <RouteGuard requireAuth={true}>
-      <AppShell user={user}>
+      <AppShell user={user} isAdmin={user?.vaiTro?.includes('ADMIN')}>
         {children}
       </AppShell>
     </RouteGuard>

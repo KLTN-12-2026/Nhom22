@@ -69,7 +69,7 @@ function PracticeSessionContent() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (answeredCount < session.cauHoi.length) {
-      if (!window.confirm(\`Còn \${session.cauHoi.length - answeredCount} câu trống. Bạn có chắc chắn muốn nộp?\`)) return;
+      if (!window.confirm(`Còn ${session.cauHoi.length - answeredCount} câu trống. Bạn có chắc chắn muốn nộp?`)) return;
     }
     
     const traLoi = session.cauHoi.map(q => {
@@ -174,7 +174,7 @@ function PracticeSessionContent() {
         </div>
       </header>
       <div style={{ height: '4px', background: 'var(--color-border)' }}>
-        <div style={{ height: '100%', background: 'var(--color-primary)', width: \`\${progressPercent}%\`, transition: 'width 0.3s ease' }} />
+        <div style={{ height: '100%', background: 'var(--color-primary)', width: `${progressPercent}%`, transition: 'width 0.3s ease' }} />
       </div>
 
       <main style={{ flex: 1, padding: 'var(--space-5)', display: 'flex', justifyContent: 'center' }}>

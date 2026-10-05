@@ -28,7 +28,7 @@ function PracticeHistoryContent() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['practice-history', page, loaiBai],
-    queryFn: () => apiFetch(\`/api/v1/practice/history?page=\${page}&size=10\${loaiBai ? \`&loaiBai=\${loaiBai}\` : ''}\`)
+    queryFn: () => apiFetch(`/api/v1/practice/history?page=${page}&size=10${loaiBai ? `&loaiBai=${loaiBai}` : ''}`)
   });
 
   const handleTypeChange = (e) => {
@@ -39,14 +39,14 @@ function PracticeHistoryContent() {
     newParams.set('page', '0');
     if (val) newParams.set('loaiBai', val);
     else newParams.delete('loaiBai');
-    router.push(\`/luyen-tap-lich-su?\${newParams.toString()}\`, { scroll: false });
+    router.push(`/luyen-tap-lich-su?${newParams.toString()}`, { scroll: false });
   };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
     const newParams = new URLSearchParams(searchParams);
     newParams.set('page', newPage.toString());
-    router.push(\`/luyen-tap-lich-su?\${newParams.toString()}\`, { scroll: false });
+    router.push(`/luyen-tap-lich-su?${newParams.toString()}`, { scroll: false });
   };
 
   return (
@@ -58,7 +58,7 @@ function PracticeHistoryContent() {
               <Icon name="arrow-left" /> Chọn dạng bài
             </Button>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-              {data?.totalElements !== undefined ? \`\${data.totalElements} bài\` : '—'}
+              {data?.totalElements !== undefined ? `${data.totalElements} bài` : '—'}
             </div>
           </div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Lịch sử bài luyện</h1>
@@ -90,7 +90,7 @@ function PracticeHistoryContent() {
                     {data.page * data.size + index + 1}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <Link href={\`/luyen-tap-ket-qua?id=\${item.baiLuyenId}\`} style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-primary-strong)', textDecoration: 'none', display: 'inline-block', marginBottom: 'var(--space-2)' }}>
+                    <Link href={`/luyen-tap-ket-qua?id=${item.baiLuyenId}`} style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-primary-strong)', textDecoration: 'none', display: 'inline-block', marginBottom: 'var(--space-2)' }}>
                       {TYPES[item.loaiBai] || item.loaiBai}
                     </Link>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
@@ -130,7 +130,7 @@ function PracticeHistoryContent() {
         ) : (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
             <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>
-              {loaiBai ? \`Chưa có bài \${TYPES[loaiBai].toLowerCase()}\` : 'Bạn chưa làm bài luyện nào'}
+              {loaiBai ? `Chưa có bài ${TYPES[loaiBai].toLowerCase()}` : 'Bạn chưa làm bài luyện nào'}
             </h2>
             <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Làm một bài ngắn 5 câu để biết mình hay sai ở đâu.</p>
             <Button variant="primary" onClick={() => router.push('/luyen-tap')}>Chọn dạng bài</Button>

@@ -1,0 +1,89 @@
+:root {
+  --sheet: #fafaf6;
+  --desk: #e6e7e1;
+  --field: #ffffff;
+  --ink: #24262c;
+  --ink-2: #474b55;
+  --ink-3: #62677a;
+  --graphite: #2b2d33;
+  --graphite-soft: #55585f;
+  --timing: #15161a;
+
+  --primary: #3b47b0;
+  --primary-strong: #252e7c;
+  --primary-hover: #323d9c;
+  --primary-tint: #eceef9;
+  --primary-tint-2: #dfe2f4;
+  --primary-line: #a4abdc;
+  --on-primary: #ffffff;
+  --on-primary-soft: #c9cdf0;
+
+  --secondary: #1e8a5a;
+  --secondary-bg: #e3f2ea;
+  --secondary-text: #14603f;
+
+  --accent: #e8a317;
+  --accent-hover: #d99513;
+  --accent-bg: #fcf1d6;
+  --accent-text: #6b4a00;
+  --on-accent: #24262c;
+
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --warning: #b07d12;
+  --warning-bg: #fbf4e2;
+  --warning-text: #6e4600;
+
+  --font-form: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-word: "Gentium Book Plus", "Gentium Plus", "Charis SIL", "Noto Serif", Georgia, serif;
+  --stretch-form: 82%;
+
+  --fs-caption: 0.8125rem;
+  --fs-small: 0.875rem;
+  --fs-body: 1rem;
+  --fs-lead: 1.125rem;
+  --fs-h3: 1.25rem;
+  --fs-h2: 1.5rem;
+  --fs-h1: clamp(1.75rem, 1.4rem + 1.4vw, 2.375rem);
+  --fs-word: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+  --fs-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  --lh-tight: 1.15;
+  --lh-body: 1.55;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4.5rem;
+
+  --rule: 1px;
+  --rule-strong: 2px;
+  --radius-field: 2px;
+  --radius-btn: 4px;
+  --bubble: 1.375rem;
+  --bubble-lg: 2.75rem;
+
+  --tap: 44px;
+  --tap-primary: 48px;
+  --sidebar-w: 248px;
+  --side-col: 320px;
+  --header-h: 60px;
+  --bottom-nav-h: 64px;
+  --measure: 68ch;
+
+  --shadow-sheet: 0 1px 2px rgba(21, 22, 26, 0.06), 0 8px 24px -12px rgba(21, 22, 26, 0.18);
+  --shadow-pop: 0 2px 6px rgba(21, 22, 26, 0.08), 0 18px 40px -16px rgba(21, 22, 26, 0.28);
+  --shadow-press: inset 0 2px 0 rgba(21, 22, 26, 0.18);
+
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --focus: 0 0 0 2px var(--sheet), 0 0 0 4px var(--primary);
+}

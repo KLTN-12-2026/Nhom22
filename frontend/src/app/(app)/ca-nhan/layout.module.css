@@ -1,20 +1,4 @@
-.pageGrid { display: grid; gap: var(--space-5); }
-@media (min-width: 1024px) {
-  .pageGrid.withSide { grid-template-columns: 1fr var(--side-col-w); align-items: start; }
-}
-.accountTabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-primary-line); overflow-x: auto; }
-.tab { padding: var(--space-3) var(--space-4); color: var(--color-ink-2); text-decoration: none; border-bottom: 2px solid transparent; font-weight: 500; white-space: nowrap; }
-.tab:hover { color: var(--color-ink); }
-.tab[aria-current="page"] { color: var(--color-primary-strong); border-bottom-color: var(--color-primary-strong); font-weight: bold; }
-.formHead { margin-bottom: var(--space-6); }
-
-.avatarRow { display: flex; align-items: center; gap: var(--space-5); flex-wrap: wrap; }
-.avatarActions { display: grid; gap: var(--space-2); }
-.settingsFoot { margin-top: var(--space-6); display: flex; align-items: center; gap: var(--space-4); }
-
-.sideCol { display: grid; gap: var(--space-5); }
-.panel { background: var(--color-desk); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); }
-.panelTitle { font-size: var(--font-size-md); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary-tint); }
-.kv { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); font-size: var(--font-size-sm); }
-.kv dt { color: var(--color-ink-3); }
-.kv dd { font-weight: bold; margin: 0; }
+.avatarRow { display: flex; align-items: center; gap: var(--sp-5); flex-wrap: wrap; }
+.avatarActions { display: grid; gap: var(--sp-2); }
+.mobileOnly { display: grid; gap: var(--sp-2); }
+@media (min-width: 1024px) { .mobileOnly { display: none; } }

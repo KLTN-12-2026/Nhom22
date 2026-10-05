@@ -37,16 +37,16 @@ function AdminUsersContent() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-users', q, trangThai, vaiTro, page],
-    queryFn: () => apiFetch(\`/api/v1/admin/users?q=\${encodeURIComponent(q)}&trangThai=\${trangThai}&vaiTro=\${vaiTro}&page=\${page}&size=20\`)
+    queryFn: () => apiFetch(`/api/v1/admin/users?q=${encodeURIComponent(q)}&trangThai=${trangThai}&vaiTro=${vaiTro}&page=${page}&size=20`)
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(\`/api/v1/admin/users/\${id}/status\`, { method: 'PATCH', body: JSON.stringify(body) }),
+    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries(['admin-users'])
   });
 
   const roleMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(\`/api/v1/admin/users/\${id}/roles\`, { method: 'PUT', body: JSON.stringify(body) }),
+    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(body) }),
     onSuccess: (res, vars) => {
       queryClient.invalidateQueries(['admin-users']);
       if (vars.isSelfRevoke) {
@@ -62,7 +62,7 @@ function AdminUsersContent() {
     if (trangThai) params.set('trangThai', trangThai); else params.delete('trangThai');
     if (vaiTro) params.set('vaiTro', vaiTro); else params.delete('vaiTro');
     params.set('page', '0');
-    router.push(\`/quan-tri/tai-khoan?\${params.toString()}\`, { scroll: false });
+    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
   };
 
   const handleClear = () => {
@@ -75,7 +75,7 @@ function AdminUsersContent() {
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams(searchParams);
     params.set('page', newPage.toString());
-    router.push(\`/quan-tri/tai-khoan?\${params.toString()}\`, { scroll: false });
+    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
   };
 
   const promptReason = () => {
@@ -85,19 +85,19 @@ function AdminUsersContent() {
 
   const handleLock = (user) => {
     if (user.id === me?.id) return alert('Không tự khóa tài khoản của mình');
-    if (!window.confirm(\`Khóa tài khoản \${user.tenHienThi}? Người này sẽ bị đăng xuất khỏi mọi thiết bị.\`)) return;
+    if (!window.confirm(`Khóa tài khoản ${user.tenHienThi}? Người này sẽ bị đăng xuất khỏi mọi thiết bị.`)) return;
     const lyDo = promptReason();
     if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'BI_KHOA', lyDo } });
   };
 
   const handleUnlock = (user) => {
-    if (!window.confirm(\`Mở khóa tài khoản \${user.tenHienThi}?\`)) return;
+    if (!window.confirm(`Mở khóa tài khoản ${user.tenHienThi}?`)) return;
     const lyDo = promptReason();
     if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'HOAT_DONG', lyDo } });
   };
 
   const handleGrant = (user) => {
-    if (!window.confirm(\`Cấp quyền quản trị cho \${user.tenHienThi}?\`)) return;
+    if (!window.confirm(`Cấp quyền quản trị cho ${user.tenHienThi}?`)) return;
     const lyDo = promptReason();
     if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER', 'ADMIN'], lyDo } });
   };
@@ -106,7 +106,7 @@ function AdminUsersContent() {
     const isSelf = user.id === me?.id;
     const msg = isSelf 
       ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được trang quản trị nữa. Tiếp tục?' 
-      : \`Thu quyền quản trị của \${user.tenHienThi}?\`;
+      : `Thu quyền quản trị của ${user.tenHienThi}?`;
     if (!window.confirm(msg)) return;
     const lyDo = promptReason();
     if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER'], lyDo }, isSelfRevoke: isSelf });
@@ -122,7 +122,7 @@ function AdminUsersContent() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
             <span>Quản trị</span>
-            <span>{data?.totalElements !== undefined ? \`\${data.totalElements} tài khoản\` : '—'}</span>
+            <span>{data?.totalElements !== undefined ? `${data.totalElements} tài khoản` : '—'}</span>
           </div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Tài khoản và vai trò</h1>
           <p style={{ color: 'var(--color-ink-2)' }}>Tìm người dùng, khóa hoặc mở khóa tài khoản, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi vào nhật ký.</p>
@@ -193,7 +193,7 @@ function AdminUsersContent() {
                         <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
                         <span>Tạo {new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
                         <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>{u.dangNhapCuoiAt ? \`Đăng nhập \${new Date(u.dangNhapCuoiAt).toLocaleString('vi-VN')}\` : 'Chưa đăng nhập'}</span>
+                        <span>{u.dangNhapCuoiAt ? `Đăng nhập ${new Date(u.dangNhapCuoiAt).toLocaleString('vi-VN')}` : 'Chưa đăng nhập'}</span>
                       </div>
 
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

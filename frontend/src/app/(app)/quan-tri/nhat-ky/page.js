@@ -50,7 +50,7 @@ function AdminAuditContent() {
       if (denNgay) params.set('denNgay', denNgay);
       params.set('page', page.toString());
       params.set('size', '20');
-      return apiFetch(\`/api/v1/admin/audit-logs?\${params.toString()}\`);
+      return apiFetch(`/api/v1/admin/audit-logs?${params.toString()}`);
     }
   });
 
@@ -67,7 +67,7 @@ function AdminAuditContent() {
     if (tuNgay) params.set('tuNgay', tuNgay); else params.delete('tuNgay');
     if (denNgay) params.set('denNgay', denNgay); else params.delete('denNgay');
     params.set('page', '0');
-    router.push(\`/quan-tri/nhat-ky?\${params.toString()}\`, { scroll: false });
+    router.push(`/quan-tri/nhat-ky?${params.toString()}`, { scroll: false });
   };
 
   const handleClear = () => {
@@ -93,7 +93,7 @@ function AdminAuditContent() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
             <span>Quản trị</span>
-            <span>{data?.totalElements !== undefined ? \`\${data.totalElements} mục\` : '—'}</span>
+            <span>{data?.totalElements !== undefined ? `${data.totalElements} mục` : '—'}</span>
           </div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Nhật ký quản trị</h1>
           <p style={{ color: 'var(--color-ink-2)' }}>Mọi thao tác quản trị quan trọng: ai làm, làm gì, trên đối tượng nào, vì sao, và giá trị trước, sau. Nhật ký chỉ đọc, không sửa hay xóa được.</p>
@@ -153,9 +153,9 @@ function AdminAuditContent() {
                       <strong style={{ fontSize: '1.125rem' }}>{ACTION[l.hanhDong] || l.hanhDong}</strong>
                       <span>
                         {KIND[l.doiTuong.loai]}: {l.doiTuong.loai === 'NGUOI_DUNG' ? (
-                          <Link href={\`/quan-tri/tai-khoan?q=\${encodeURIComponent(l.doiTuong.ten)}\`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
+                          <Link href={`/quan-tri/tai-khoan?q=${encodeURIComponent(l.doiTuong.ten)}`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
                         ) : l.doiTuong.loai === 'BO_THE' ? (
-                          <Link href={\`/quan-tri/bo-mau?id=\${l.doiTuong.id}\`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
+                          <Link href={`/quan-tri/bo-mau?id=${l.doiTuong.id}`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
                         ) : (
                           l.doiTuong.ten
                         )}

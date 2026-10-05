@@ -40,7 +40,7 @@ function HocContent() {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      router.push(\`/hoc-phien/\${res.id}\`);
+      router.push(`/hoc-phien/${res.id}`);
     } catch (err) {
       alert(err.message || 'Lỗi khi bắt đầu phiên học');
       setIsSubmitting(false);

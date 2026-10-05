@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
 import { Button, Input, Icon, Badge } from '@/components/ui';
 import styles from './page.module.css';
 import { useDeck } from '@/hooks/useDeck';
 
-export default function DeckDetailPage({ params }) {
+export default function DeckDetailPage() {
+  const params = useParams();
   const [search, setSearch] = useState('');
   
   const { data: deck, isLoading } = useDeck(params.id);

@@ -30,7 +30,7 @@ function DeckDialog({ deck, topics, onClose, onSave }) {
     try {
       const body = { ...formData };
       if (deck) body.version = deck.version;
-      const res = await apiFetch(\`/api/v1/admin/decks\${deck ? \`/\${deck.id}\` : ''}\`, {
+      const res = await apiFetch(`/api/v1/admin/decks${deck ? `/${deck.id}` : ''}`, {
         method: deck ? 'PATCH' : 'POST',
         body: JSON.stringify(body)
       });
@@ -115,7 +115,7 @@ function CardDialog({ card, deckId, onClose, onSave }) {
       if (card) body.version = card.version;
       else body.boTheId = deckId;
       
-      const res = await apiFetch(\`/api/v1/admin/cards\${card ? \`/\${card.id}\` : ''}\`, {
+      const res = await apiFetch(`/api/v1/admin/cards${card ? `/${card.id}` : ''}`, {
         method: card ? 'PATCH' : 'POST',
         body: JSON.stringify(body)
       });
@@ -130,7 +130,7 @@ function CardDialog({ card, deckId, onClose, onSave }) {
   return (
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 'var(--space-4)' }}>
       <form onSubmit={handleSubmit} style={{ background: 'var(--color-bg)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)' }}>{card ? \`Sửa thẻ \${card.tu}\` : 'Thêm thẻ'}</h2>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)' }}>{card ? `Sửa thẻ ${card.tu}` : 'Thêm thẻ'}</h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
           {[
@@ -181,19 +181,19 @@ function AdminDecksContent() {
 
   const { data: listData, isLoading: listLoading } = useQuery({
     queryKey: ['admin-decks', q, trangThai, page],
-    queryFn: () => apiFetch(\`/api/v1/admin/decks?q=\${encodeURIComponent(q)}&trangThai=\${trangThai}&page=\${page}&size=20\`),
+    queryFn: () => apiFetch(`/api/v1/admin/decks?q=${encodeURIComponent(q)}&trangThai=${trangThai}&page=${page}&size=20`),
     enabled: !id
   });
 
   const { data: deckDetail, isLoading: deckLoading } = useQuery({
     queryKey: ['admin-deck', id],
-    queryFn: () => apiFetch(\`/api/v1/admin/decks/\${id}\`),
+    queryFn: () => apiFetch(`/api/v1/admin/decks/${id}`),
     enabled: !!id
   });
 
   const { data: cards, isLoading: cardsLoading } = useQuery({
     queryKey: ['admin-cards', id],
-    queryFn: () => apiFetch(\`/api/v1/admin/cards?boTheId=\${id}\`),
+    queryFn: () => apiFetch(`/api/v1/admin/cards?boTheId=${id}`),
     enabled: !!id
   });
 
@@ -217,28 +217,28 @@ function AdminDecksContent() {
 
   const handleDeckAction = (act, d) => {
     let method, url, body;
-    url = \`/api/v1/admin/decks/\${d.id}\`;
+    url = `/api/v1/admin/decks/${d.id}`;
     
     if (act === 'publish') {
-      if (!window.confirm(\`Xuất bản \${d.ten}?\`)) return;
+      if (!window.confirm(`Xuất bản ${d.ten}?`)) return;
       method = 'PATCH'; body = { quyenTruyCap: 'CONG_KHAI', version: d.version };
     } else if (act === 'draft') {
-      if (!window.confirm(\`Chuyển \${d.ten} về nháp?\`)) return;
+      if (!window.confirm(`Chuyển ${d.ten} về nháp?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
       method = 'PATCH'; body = { quyenTruyCap: 'RIENG_TU', lyDo, version: d.version };
     } else if (act === 'hide') {
-      if (!window.confirm(\`Ẩn \${d.ten} khỏi thư viện?\`)) return;
+      if (!window.confirm(`Ẩn ${d.ten} khỏi thư viện?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
       method = 'PATCH'; body = { trangThaiKiemDuyet: 'DA_AN', lyDo, version: d.version };
     } else if (act === 'show') {
-      if (!window.confirm(\`Hiện lại \${d.ten}?\`)) return;
+      if (!window.confirm(`Hiện lại ${d.ten}?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
       method = 'PATCH'; body = { trangThaiKiemDuyet: 'BINH_THUONG', lyDo, version: d.version };
     } else if (act === 'delete') {
-      if (!window.confirm(\`Xóa \${d.ten}?\`)) return;
+      if (!window.confirm(`Xóa ${d.ten}?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
       method = 'DELETE'; body = { lyDo };
@@ -256,8 +256,8 @@ function AdminDecksContent() {
   };
 
   const handleDeleteCard = (c) => {
-    if (!window.confirm(\`Xóa thẻ \${c.tu}?\`)) return;
-    actionMutation.mutate({ method: 'DELETE', url: \`/api/v1/admin/cards/\${c.id}\` });
+    if (!window.confirm(`Xóa thẻ ${c.tu}?`)) return;
+    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}` });
   };
 
   if (!me?.vaiTro?.includes('ADMIN')) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
@@ -285,7 +285,7 @@ function AdminDecksContent() {
   const renderDeckTools = (d, isList) => {
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: 'var(--space-3)' }}>
-        {isList && <Button variant="ghost" size="sm" onClick={() => router.push(\`/quan-tri/bo-mau?id=\${d.id}\`)}>Quản lý thẻ</Button>}
+        {isList && <Button variant="ghost" size="sm" onClick={() => router.push(`/quan-tri/bo-mau?id=${d.id}`)}>Quản lý thẻ</Button>}
         <Button variant="ghost" size="sm" onClick={() => { setEditingDeck(d); setShowDeckDialog(true); }}>Sửa thông tin</Button>
         {d.trangThaiKiemDuyet !== 'DA_AN' && (
           <Button variant="ghost" size="sm" onClick={() => handleDeckAction(d.quyenTruyCap === 'CONG_KHAI' ? 'draft' : 'publish', d)} disabled={actionMutation.isPending}>
@@ -392,7 +392,7 @@ function AdminDecksContent() {
     const params = new URLSearchParams(searchParams);
     if (st) params.set('trangThai', st); else params.delete('trangThai');
     params.set('page', '0');
-    router.push(\`/quan-tri/bo-mau?\${params.toString()}\`, { scroll: false });
+    router.push(`/quan-tri/bo-mau?${params.toString()}`, { scroll: false });
   };
 
   const handleSearch = (e) => {
@@ -400,7 +400,7 @@ function AdminDecksContent() {
     const params = new URLSearchParams(searchParams);
     if (q) params.set('q', q); else params.delete('q');
     params.set('page', '0');
-    router.push(\`/quan-tri/bo-mau?\${params.toString()}\`, { scroll: false });
+    router.push(`/quan-tri/bo-mau?${params.toString()}`, { scroll: false });
   };
 
   return (
@@ -409,7 +409,7 @@ function AdminDecksContent() {
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
             <span>Quản trị</span>
-            <span>{listData?.totalElements !== undefined ? \`\${listData.totalElements} bộ\` : '—'}</span>
+            <span>{listData?.totalElements !== undefined ? `${listData.totalElements} bộ` : '—'}</span>
           </div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Bộ và thẻ mẫu</h1>
           <p style={{ color: 'var(--color-ink-2)' }}>Bộ mẫu là nội dung của nhóm biên soạn, hiện trong thư viện khi đã xuất bản. Người học sao chép về để học.</p>
@@ -444,7 +444,7 @@ function AdminDecksContent() {
               <li key={d.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * listData.size + i + 1}</div>
                 <div style={{ flex: 1 }}>
-                  <Link href={\`/quan-tri/bo-mau?id=\${d.id}\`} style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'none' }}>{d.ten}</Link>
+                  <Link href={`/quan-tri/bo-mau?id=${d.id}`} style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'none' }}>{d.ten}</Link>
                   {d.moTa && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px', marginBottom: '8px' }}>{d.moTa}</div>}
                   <div style={{ marginTop: '8px' }}>{renderDeckMeta(d)}</div>
                   {renderDeckTools(d, true)}
@@ -468,7 +468,7 @@ function AdminDecksContent() {
       </aside>
 
       {showDeckDialog && (
-        <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={(d) => { setShowDeckDialog(false); setEditingDeck(null); if (!editingDeck) { router.push(\`/quan-tri/bo-mau?id=\${d.id}\`); } else { queryClient.invalidateQueries(['admin-decks']); } }} />
+        <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={(d) => { setShowDeckDialog(false); setEditingDeck(null); if (!editingDeck) { router.push(`/quan-tri/bo-mau?id=${d.id}`); } else { queryClient.invalidateQueries(['admin-decks']); } }} />
       )}
     </div>
   );

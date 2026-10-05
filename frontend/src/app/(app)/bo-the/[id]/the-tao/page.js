@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button, Input, Select, Textarea, Icon } from '@/components/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
@@ -9,8 +9,9 @@ import { useDeck } from '@/hooks/useDeck';
 
 const IPA_CHARS = ["ə", "ɪ", "iː", "æ", "ʌ", "ɑː", "ɒ", "ɔː", "ʊ", "uː", "ɜː", "eɪ", "aɪ", "ɔɪ", "aʊ", "oʊ", "θ", "ð", "ʃ", "ʒ", "tʃ", "dʒ", "ŋ", "ˈ", "ˌ", "ː"];
 
-export default function AddCardPage({ params }) {
+export default function AddCardPage() {
   const router = useRouter();
+  const params = useParams();
   const queryClient = useQueryClient();
   const deckId = params.id;
   

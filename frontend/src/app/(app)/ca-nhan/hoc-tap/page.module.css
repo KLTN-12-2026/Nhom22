@@ -1,0 +1,7 @@
+.numRow { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.numRow .input { width: 7.5rem; text-align: center; font-family: var(--font-form); font-stretch: 85%; font-weight: 700; font-size: 1.125rem; }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick button { min-width: var(--tap); min-height: var(--tap); border-radius: 22px; border: 1.5px solid var(--primary-line); background: var(--field); font-family: var(--font-form); font-stretch: 85%; font-weight: 700; color: var(--primary); }
+.quick button:hover { border-color: var(--primary); background: var(--primary-tint); }
+.quick button[aria-pressed="true"] { background: var(--graphite); border-color: var(--graphite); color: #fff; }
+.estimate { font-size: var(--fs-small); color: var(--ink-2); }

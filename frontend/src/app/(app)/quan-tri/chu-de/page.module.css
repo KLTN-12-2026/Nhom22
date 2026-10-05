@@ -1,0 +1,6 @@
+.addForm { display: flex; gap: var(--sp-3); align-items: flex-start; flex-wrap: wrap; margin: var(--sp-5) 0; }
+.addForm .field { flex: 1 1 260px; }
+.addForm .btn { margin-top: 26px; }
+.adminTable td:last-child { text-align: right; white-space: nowrap; }
+.adminTable td { vertical-align: middle; }
+.adminTable .name { font-weight: 650; font-size: 1rem; }
