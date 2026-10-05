@@ -22,7 +22,16 @@ const NAV = [
 
 const ADMIN_NAV = [
   ...NAV,
-  { group: "Quản trị", admin: true, items: [
+  { group: "Quản trị", items: [
+    { key: "admin-dashboard", label: "Vào trang Quản trị", icon: "settings", href: "/quan-tri/chu-de" }
+  ] }
+];
+
+const ADMIN_NAV_ONLY = [
+  { group: "Ứng dụng", items: [
+    { key: "back", label: "Trở về ứng dụng", icon: "arrow-left", href: "/hom-nay" }
+  ] },
+  { group: "Quản trị", items: [
     { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
     { key: "admin-users", label: "Tài khoản", icon: "users", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
@@ -40,7 +49,10 @@ const BOTTOM = [
 
 export function AppShell({ children, user, isAdmin = false }) {
   const pathname = usePathname();
-  const navList = isAdmin ? ADMIN_NAV : NAV;
+  
+  // Decide which sidebar to show based on the current URL
+  const inAdminArea = pathname.startsWith('/quan-tri');
+  const navList = (isAdmin && inAdminArea) ? ADMIN_NAV_ONLY : (isAdmin ? ADMIN_NAV : NAV);
 
   const isActive = (href) => pathname.startsWith(href);
 
@@ -68,7 +80,15 @@ export function AppShell({ children, user, isAdmin = false }) {
               <span className="user-name">{user.tenHienThi || 'User'}</span>
             </Link>
           )}
-          <button className="btn btn-quiet btn-icon" aria-label="Đăng xuất" title="Đăng xuất">
+          <button 
+            className="btn btn-quiet btn-icon" 
+            aria-label="Đăng xuất" 
+            title="Đăng xuất"
+            onClick={() => {
+              // Basic logout logic: redirect to login
+              window.location.href = '/dang-nhap?loggedOut=1';
+            }}
+          >
             <Icon name="logout" />
           </button>
         </div>

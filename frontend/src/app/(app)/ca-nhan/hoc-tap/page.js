@@ -1,79 +1,237 @@
 'use client';
-import { useState } from 'react';
-import { Button, Input } from '@/components/ui';
-import styles from '../layout.module.css';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import styles from './page.module.css';
+import { Icon } from '@/components/ui';
 
 export default function LearningSettingsPage() {
-  const [goal, setGoal] = useState('TOEIC');
-  const [level, setLevel] = useState('CO_BAN');
-  const [mins, setMins] = useState('10');
-  const [cards, setCards] = useState('10');
+  const queryClient = useQueryClient();
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  
+  const { data: settings } = useQuery({
+    queryKey: ['learning-settings'],
+    queryFn: () => apiFetch('/api/v1/me/learning-settings')
+  });
+
+  const { data: topics } = useQuery({
+    queryKey: ['public-topics'],
+    queryFn: () => apiFetch('/api/v1/public/topics').catch(() => [])
+  });
+
+  const [formState, setFormState] = useState({
+    goal: 'TOEIC',
+    level: 'CO_BAN',
+    topicIds: [],
+    minutesPerDay: 10,
+    newCardsPerDay: 10,
+    version: null
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormState({
+        goal: settings.goal || 'TOEIC',
+        level: settings.level || 'CO_BAN',
+        topicIds: settings.topicIds || [],
+        minutesPerDay: settings.minutesPerDay || 10,
+        newCardsPerDay: settings.newCardsPerDay || 10,
+        version: settings.version || null
+      });
+    }
+  }, [settings]);
+
+  const updateMutation = useMutation({
+    mutationFn: (body) => apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({...body, onboardingDone: true}) }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['learning-settings']);
+      if (data && data.version) {
+        setFormState(prev => ({ ...prev, version: data.version }));
+      }
+      setSuccessMsg(`Lưu lúc ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`);
+      setErrorMsg('');
+    },
+    onError: (err) => {
+      setErrorMsg(err.message || 'Có lỗi xảy ra');
+      setSuccessMsg('');
+    }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateMutation.mutate(formState);
+  };
+
+  const handleTopicChange = (e, topicId) => {
+    const checked = e.target.checked;
+    let newTopicIds = [...formState.topicIds];
+    
+    if (checked) {
+      if (newTopicIds.length >= 5) {
+        e.preventDefault();
+        setErrorMsg('Chọn tối đa 5 chủ đề');
+        return;
+      }
+      newTopicIds.push(topicId);
+    } else {
+      newTopicIds = newTopicIds.filter(id => id !== topicId);
+    }
+    
+    setFormState({...formState, topicIds: newTopicIds});
+    setErrorMsg('');
+  };
+
+  const m = Number(formState.minutesPerDay);
+  const n = Number(formState.newCardsPerDay);
+  const estimateWarning = m && n > m ? "Số từ mới đang nhiều hơn số phút mỗi ngày. Bạn có thể không kịp ôn." : "";
 
   return (
     <>
-      <div className={styles.formHead}>
-        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>Tài khoản &gt; Thiết lập học</div>
-        <h1 style={{ fontSize: 'var(--font-size-3xl)' }}>Thiết lập học</h1>
-        <p style={{ color: 'var(--color-ink-2)' }}>Kế hoạch mỗi ngày dùng các con số dưới đây. Thay đổi có hiệu lực từ phiên học tiếp theo.</p>
+      <div className="form-head">
+        <div className="form-code"><span>Tài khoản</span><span>Thiết lập học</span></div>
+        <h1 id="page-title">Thiết lập học</h1>
+        <p>Kế hoạch mỗi ngày dùng các con số dưới đây. Thay đổi có hiệu lực từ phiên học tiếp theo.</p>
       </div>
 
-      <form style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-          <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>Mục tiêu</legend>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-            <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: goal === 'GIAO_TIEP' ? 'var(--color-primary-tint)' : 'transparent' }}>
-              <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} />
-              <div>
-                <div style={{ fontWeight: 'bold' }}>Giao tiếp</div>
-              </div>
+      <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
+        <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
+        
+        <fieldset className="fieldset field" data-field="goal">
+          <legend>Mục tiêu</legend>
+          <div className="choice-grid cols-2">
+            <label className="choice choice-card">
+              <input type="radio" name="goal" value="GIAO_TIEP" checked={formState.goal === 'GIAO_TIEP'} onChange={() => setFormState({...formState, goal: 'GIAO_TIEP'})} />
+              <span className="bubble" aria-hidden="true">A</span>
+              <span className="choice-body">
+                <span className="choice-title">Giao tiếp</span>
+                <span className="choice-desc">Hằng ngày, công sở, du lịch</span>
+              </span>
             </label>
-            <label style={{ display: 'flex', gap: '12px', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: goal === 'TOEIC' ? 'var(--color-primary-tint)' : 'transparent' }}>
-              <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} />
-              <div>
-                <div style={{ fontWeight: 'bold' }}>Thi TOEIC</div>
-              </div>
+            <label className="choice choice-card">
+              <input type="radio" name="goal" value="TOEIC" checked={formState.goal === 'TOEIC'} onChange={() => setFormState({...formState, goal: 'TOEIC'})} />
+              <span className="bubble" aria-hidden="true">B</span>
+              <span className="choice-body">
+                <span className="choice-title">Thi TOEIC</span>
+                <span className="choice-desc">Part 5–7, email và văn bản công việc</span>
+              </span>
             </label>
           </div>
+          <p className="field-error"></p>
         </fieldset>
 
-        <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-          <legend style={{ fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>Trình độ tự đánh giá</legend>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-            {['MOI_BAT_DAU', 'CO_BAN', 'TRUNG_CAP', 'NANG_CAO'].map(lv => (
-              <label key={lv} style={{ display: 'flex', gap: '8px', padding: 'var(--space-2)', cursor: 'pointer' }}>
-                <input type="radio" name="level" value={lv} checked={level === lv} onChange={() => setLevel(lv)} />
-                <span>{{ MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' }[lv]}</span>
+        <fieldset className="fieldset field" data-field="level">
+          <legend>Trình độ tự đánh giá</legend>
+          <div className="choice-grid cols-2">
+            <label className="choice">
+              <input type="radio" name="level" value="MOI_BAT_DAU" checked={formState.level === 'MOI_BAT_DAU'} onChange={() => setFormState({...formState, level: 'MOI_BAT_DAU'})} />
+              <span className="bubble" aria-hidden="true">A</span>
+              <span className="choice-body"><span className="choice-title">Mới bắt đầu</span></span>
+            </label>
+            <label className="choice">
+              <input type="radio" name="level" value="CO_BAN" checked={formState.level === 'CO_BAN'} onChange={() => setFormState({...formState, level: 'CO_BAN'})} />
+              <span className="bubble" aria-hidden="true">B</span>
+              <span className="choice-body"><span className="choice-title">Cơ bản</span></span>
+            </label>
+            <label className="choice">
+              <input type="radio" name="level" value="TRUNG_CAP" checked={formState.level === 'TRUNG_CAP'} onChange={() => setFormState({...formState, level: 'TRUNG_CAP'})} />
+              <span className="bubble" aria-hidden="true">C</span>
+              <span className="choice-body"><span className="choice-title">Trung cấp</span></span>
+            </label>
+            <label className="choice">
+              <input type="radio" name="level" value="NANG_CAO" checked={formState.level === 'NANG_CAO'} onChange={() => setFormState({...formState, level: 'NANG_CAO'})} />
+              <span className="bubble" aria-hidden="true">D</span>
+              <span className="choice-body"><span className="choice-title">Nâng cao</span></span>
+            </label>
+          </div>
+          <p className="field-hint">Chỉ dùng để gợi ý bộ thẻ, không phải kết quả kiểm tra.</p>
+          <p className="field-error"></p>
+        </fieldset>
+
+        <fieldset className="fieldset field" data-field="topicIds">
+          <legend>Chủ đề quan tâm <span className="muted" style={{ fontWeight: 500 }}>(tối đa 5)</span></legend>
+          <div className="choice-grid cols-2" id="topics">
+            {topics?.map(t => (
+              <label className="choice" key={t.id}>
+                <input 
+                  type="checkbox" 
+                  name="topicIds" 
+                  value={t.id}
+                  checked={formState.topicIds.includes(t.id)}
+                  onChange={(e) => handleTopicChange(e, t.id)}
+                />
+                <span className="bubble box" aria-hidden="true"><Icon name="check" size={16} /></span>
+                <span>{t.name}</span>
               </label>
             ))}
           </div>
+          <p className="field-error"></p>
         </fieldset>
 
-        <div>
-          <strong style={{ display: 'block', marginBottom: 'var(--space-2)' }}>Thời gian học mỗi ngày (phút)</strong>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
-            <Input type="number" value={mins} onChange={(e) => setMins(e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
-            <div style={{ display: 'flex', gap: '6px' }}>
+        <div className="field">
+          <label className="field-label" htmlFor="minutesPerDay">Thời gian học mỗi ngày (phút)</label>
+          <div className={styles.numRow}>
+            <input 
+              className={`input ${styles.input}`} 
+              id="minutesPerDay" 
+              name="minutesPerDay" 
+              type="number" 
+              min="1" max="240" 
+              inputMode="numeric" 
+              required
+              value={formState.minutesPerDay}
+              onChange={e => setFormState({...formState, minutesPerDay: e.target.value})}
+            />
+            <div className={styles.quick} aria-label="Chọn nhanh">
               {['5', '10', '15', '20', '30'].map(v => (
-                <button key={v} type="button" onClick={() => setMins(v)} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--color-border)', background: mins === v ? 'var(--color-primary)' : 'var(--color-field)', color: mins === v ? 'white' : 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer' }}>{v}</button>
+                <button 
+                  type="button" 
+                  key={v} 
+                  aria-pressed={String(formState.minutesPerDay) === v}
+                  onClick={() => setFormState({...formState, minutesPerDay: v})}
+                >{v}</button>
               ))}
             </div>
           </div>
+          <p className="field-hint">Từ 1 đến 240 phút.</p>
+          <p className="field-error"></p>
         </div>
 
-        <div>
-          <strong style={{ display: 'block', marginBottom: 'var(--space-2)' }}>Số từ mới mỗi ngày</strong>
-          <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
-            <Input type="number" value={cards} onChange={(e) => setCards(e.target.value)} style={{ width: '80px', textAlign: 'center' }} />
-            <div style={{ display: 'flex', gap: '6px' }}>
+        <div className="field">
+          <label className="field-label" htmlFor="newCardsPerDay">Số từ mới mỗi ngày</label>
+          <div className={styles.numRow}>
+            <input 
+              className={`input ${styles.input}`} 
+              id="newCardsPerDay" 
+              name="newCardsPerDay" 
+              type="number" 
+              min="0" max="100" 
+              inputMode="numeric" 
+              required
+              value={formState.newCardsPerDay}
+              onChange={e => setFormState({...formState, newCardsPerDay: e.target.value})}
+            />
+            <div className={styles.quick} aria-label="Chọn nhanh">
               {['0', '5', '10', '20'].map(v => (
-                <button key={v} type="button" onClick={() => setCards(v)} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid var(--color-border)', background: cards === v ? 'var(--color-primary)' : 'var(--color-field)', color: cards === v ? 'white' : 'var(--color-primary)', fontWeight: 'bold', cursor: 'pointer' }}>{v}</button>
+                <button 
+                  type="button" 
+                  key={v} 
+                  aria-pressed={String(formState.newCardsPerDay) === v}
+                  onClick={() => setFormState({...formState, newCardsPerDay: v})}
+                >{v}</button>
               ))}
             </div>
           </div>
+          <p className="field-hint">Đặt 0 để chỉ ôn từ đã học. Thẻ đến hạn ôn luôn được đưa vào phiên học.</p>
+          <p className={styles.estimate} aria-live="polite">{estimateWarning}</p>
+          <p className="field-error"></p>
         </div>
 
-        <div className={styles.settingsFoot}>
-          <Button variant="primary" size="lg" type="button">Lưu thiết lập</Button>
+        <div className="settings-foot">
+          <button type="submit" className="btn btn-primary btn-lg" id="save" disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? 'Đang lưu...' : 'Lưu thiết lập'}
+          </button>
+          <span className="saved-at" id="saved-at" aria-live="polite">{successMsg}</span>
         </div>
       </form>
     </>

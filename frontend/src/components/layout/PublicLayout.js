@@ -1,16 +1,36 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button, Icon } from '@/components/ui';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { Button } from '@/components/ui';
+import { AppShell } from './AppShell';
 
 export function PublicLayout({ children }) {
   const pathname = usePathname();
+
+  const { data: me, isLoading } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => apiFetch('/api/v1/me'),
+    retry: false,
+    staleTime: 60000
+  });
 
   const navLinks = [
     { href: '/thu-vien', label: 'Thư viện', key: 'library' },
     { href: '/huong-dan', label: 'Cách học', key: 'guide' },
     { href: '/chinh-sach', label: 'Chính sách', key: 'policy' },
   ];
+
+  if (isLoading) return <div style={{ height: '100vh', background: 'var(--color-bg)' }}></div>;
+
+  if (me) {
+    return (
+      <AppShell user={me} isAdmin={me.vaiTro?.includes('ADMIN')}>
+        {children}
+      </AppShell>
+    );
+  }
 
   return (
     <div className="public-layout">
