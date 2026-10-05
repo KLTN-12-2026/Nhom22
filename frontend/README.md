@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VocabLearning frontend
 
-## Getting Started
+## Chạy với backend thật
 
-First, run the development server:
+- Cần Node.js và backend ở `http://localhost:8080`.
+- Trong thư mục `frontend`: chạy `npm ci`, sau đó `npm run dev`.
+- Mở `http://localhost:3000`. Frontend gọi `/api/v1/*` qua proxy cùng miền; cookie phiên và CSRF được giữ tự động.
+- Nếu backend dùng địa chỉ khác, tạo `.env.local` từ `.env.example` và sửa `API_URL`, rồi khởi động lại frontend.
+- Dùng email thật để đăng ký và mở thư xác thực. Tài khoản demo của mockups không tự tồn tại trong MySQL.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Chức năng khớp backend hiện tại
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tài khoản, đăng nhập/đăng xuất, xác thực email, Google, hồ sơ/ảnh đại diện, thiết lập học/thông báo, danh mục quản trị, tạo/sửa/xóa/yêu thích bộ thẻ. Danh sách dùng PageResponse và phiên bản từ máy chủ khi lưu.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Thẻ, CSV, thư viện, học, luyện tập, sổ tay, thống kê và các phần quản trị Đợt 2 chưa có controller backend; frontend hiển thị trạng thái chưa hỗ trợ thay vì gọi endpoint chưa tồn tại. Các trang dự kiến được giữ để tiếp tục triển khai.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Kiểm tra
 
-## Learn More
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
-To learn more about Next.js, take a look at the following resources:
+Các bài kiểm tra bao phủ CSRF, cookie, xoay token khi đăng nhập, phản hồi rỗng, lỗi phiên bản/validation và lỗi mạng.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Có thể kiểm tra giao diện riêng với fixture: chạy `node tests/contract-server.mjs`, sau đó đặt `API_URL=http://127.0.0.1:43127`, `NEXT_DIST_DIR=.next-contract` và chạy `npm run dev -- --port 3001`. Fixture chỉ dùng cho kiểm thử, không thay thế backend thật.

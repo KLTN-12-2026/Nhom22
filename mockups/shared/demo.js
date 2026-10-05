@@ -298,7 +298,7 @@
     else if (name.length > 150) errors.push(fe("name", "Tên bộ thẻ tối đa 150 ký tự"));
     if ((b.description || "").length > 1000) errors.push(fe("description", "Mô tả tối đa 1000 ký tự"));
     if (!["GIAO_TIEP", "TOEIC"].includes(b.goal)) errors.push(fe("goal", "Chọn mục tiêu của bộ thẻ"));
-    if (!b.topicId) errors.push(fe("topicId", "Chọn chủ đề"));
+    if (b.topicId && !db.topics.some(t => t.id === b.topicId)) errors.push(fe("topicId", "Chủ đề không tồn tại"));
     if (!["MOI_BAT_DAU", "CO_BAN", "TRUNG_CAP", "NANG_CAO"].includes(b.level)) errors.push(fe("level", "Chọn trình độ"));
     if (errors.length) bad(errors);
   }
@@ -1010,7 +1010,7 @@
     }],
     ["GET", /^\/me\/notification-settings$/, () => {
       const u = requireMe();
-      return db.notify[u.id] || { inApp: true, email: true, studyReminder: false, reminderTime: "20:00", version: 0 };
+      return db.notify[u.id] || { inApp: true, email: true, studyReminder: true, reminderTime: null, version: 0 };
     }],
     ["PUT", /^\/me\/notification-settings$/, (m, b) => {
       const u = requireMe();

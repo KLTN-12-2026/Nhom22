@@ -42,13 +42,13 @@ function AdminUsersContent() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
-    onSuccess: () => queryClient.invalidateQueries(['admin-users'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] })
   });
 
   const roleMutation = useMutation({
     mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(body) }),
     onSuccess: (res, vars) => {
-      queryClient.invalidateQueries(['admin-users']);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       if (vars.isSelfRevoke) {
         window.location.href = '/hom-nay';
       }
@@ -104,8 +104,8 @@ function AdminUsersContent() {
 
   const handleRevoke = (user) => {
     const isSelf = user.id === me?.id;
-    const msg = isSelf 
-      ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được trang quản trị nữa. Tiếp tục?' 
+    const msg = isSelf
+      ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được trang quản trị nữa. Tiếp tục?'
       : `Thu quyền quản trị của ${user.tenHienThi}?`;
     if (!window.confirm(msg)) return;
     const lyDo = promptReason();
@@ -220,8 +220,8 @@ function AdminUsersContent() {
             {data.totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-6)' }}>
                 {Array.from({ length: data.totalPages }).map((_, i) => (
-                  <button 
-                    key={i} 
+                  <button
+                    key={i}
                     onClick={() => handlePageChange(i)}
                     style={{ padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: page === i ? 'var(--color-primary)' : 'var(--color-bg)', color: page === i ? 'white' : 'var(--color-ink)', cursor: 'pointer', fontWeight: 'bold' }}
                   >

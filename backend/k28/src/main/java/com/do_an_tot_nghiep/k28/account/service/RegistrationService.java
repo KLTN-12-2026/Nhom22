@@ -19,7 +19,6 @@ import com.do_an_tot_nghiep.k28.common.security.RateLimiter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
@@ -105,11 +104,11 @@ public class RegistrationService {
         if (muiGio == null || muiGio.isBlank()) {
             return DEFAULT_TIME_ZONE;
         }
-        try {
-            return ZoneId.of(muiGio.strip()).getId();
-        } catch (DateTimeException e) {
-            throw new ApiException(ErrorCode.VALIDATION_FAILED, "Múi giờ không hợp lệ");
+        String normalized = muiGio.strip();
+        if (!ZoneId.getAvailableZoneIds().contains(normalized)) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "muiGio", "Múi giờ không hợp lệ");
         }
+        return normalized;
     }
 
     private static ApiException emailTaken() {

@@ -44,15 +44,15 @@
             <div data-form-error hidden></div>
             <fieldset class="fieldset">
               <legend>Kênh nhận thông báo</legend>
-              <label class="choice choice-card"><input type="checkbox" name="inApp"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Trong ứng dụng</span><span class="choice-desc">Hiện ở biểu tượng chuông khi bạn đăng nhập.</span></span></label>
-              <label class="choice choice-card"><input type="checkbox" name="email"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Email</span><span class="choice-desc">Tổng kết tuần và nhắc học. Mỗi email có liên kết ngừng nhận.</span></span></label>
+              <label class="choice choice-card"><input type="checkbox" name="nhanTrongUngDung"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Trong ứng dụng</span><span class="choice-desc">Hiện ở biểu tượng chuông khi bạn đăng nhập.</span></span></label>
+              <label class="choice choice-card"><input type="checkbox" name="nhanEmail"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Email</span><span class="choice-desc">Tổng kết tuần và nhắc học. Mỗi email có liên kết ngừng nhận.</span></span></label>
             </fieldset>
             <fieldset class="fieldset">
               <legend>Nhắc học mỗi ngày</legend>
-              <label class="choice choice-card"><input type="checkbox" name="studyReminder" id="studyReminder"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Nhắc tôi học</span><span class="choice-desc">Không nhắc nếu hôm đó bạn đã học xong.</span></span></label>
+              <label class="choice choice-card"><input type="checkbox" name="nhacHoc" id="nhacHoc"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">Nhắc tôi học</span><span class="choice-desc">Không nhắc nếu hôm đó bạn đã học xong.</span></span></label>
               <div class="field time-field" id="time-field">
-                <label class="field-label" for="reminderTime">Giờ nhắc</label>
-                <input class="input" id="reminderTime" name="reminderTime" type="time">
+                <label class="field-label" for="gioNhac">Giờ nhắc</label>
+                <input class="input" id="gioNhac" name="gioNhac" type="time">
                 <p class="field-hint" id="tz-hint"></p>
                 <p class="field-error"></p>
               </div>
@@ -76,21 +76,24 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
   if (!VL.ready) return;
   const form = document.getElementById("form");
+  let version;
   const save = document.getElementById("save");
   const tf = document.getElementById("time-field");
-  const sync = () => { const on = form.studyReminder.checked; form.reminderTime.disabled = !on; tf.toggleAttribute("data-disabled", !on); };
-  form.studyReminder.addEventListener("change", sync);
+  const sync = () => { const on = form.nhacHoc.checked; form.gioNhac.disabled = !on; tf.toggleAttribute("data-disabled", !on); };
+  form.nhacHoc.addEventListener("change", sync);
   document.getElementById("tz-hint").textContent = "Theo múi giờ " + (VL.me().muiGio || "Asia/Ho_Chi_Minh");
 
   VL.load(document.getElementById("region"), {
     fetch: () => VL.api("GET", "/me/notification-settings"),
     render: (s) => {
-      form.inApp.checked = s.inApp; form.email.checked = s.email; form.studyReminder.checked = s.studyReminder; form.reminderTime.value = s.reminderTime;
+      version = s.version;
+      form.nhanTrongUngDung.checked = s.nhanTrongUngDung; form.nhanEmail.checked = s.nhanEmail; form.nhacHoc.checked = s.nhacHoc; form.gioNhac.value = s.gioNhac;
       sync();
     }
   });
@@ -99,7 +102,8 @@
     VL.clearErrors(form);
     VL.busy(save, async () => {
       try {
-        await VL.api("PUT", "/me/notification-settings", { inApp: form.inApp.checked, email: form.email.checked, studyReminder: form.studyReminder.checked, reminderTime: form.reminderTime.value });
+        const updated = await VL.api("PUT", "/me/notification-settings", { nhanTrongUngDung: form.nhanTrongUngDung.checked, nhanEmail: form.nhanEmail.checked, nhacHoc: form.nhacHoc.checked, gioNhac: form.gioNhac.value || null, version });
+        version = updated.version;
         VL.toast("Đã lưu cài đặt");
         document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
       } catch (err) { VL.showErrors(form, err); }

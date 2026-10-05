@@ -1,15 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { RouteGuard } from '@/components/layout/RouteGuard';
-import { useEffect, useState } from 'react';
+
 
 export default function AuthLayout({ children }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    document.body.classList.add('no-bottom-nav');
-    return () => document.body.classList.remove('no-bottom-nav');
-  }, []);
 
   return (
     <RouteGuard requireAuth={false}>
@@ -24,7 +18,7 @@ export default function AuthLayout({ children }) {
             <p className="aside-word" lang="en">receipt</p><p className="aside-ipa" lang="en">/rɪˈsiːt/ <em>n.</em></p>
             <ol className="aside-options" role="list">
               <li><span className="bubble">A</span>lời mời</li>
-              <li><span className={`bubble aside-pick ${mounted ? 'is-filled' : ''}`}>B</span>biên lai, giấy biên nhận</li>
+              <li><span className="bubble aside-pick is-filled">B</span>biên lai, giấy biên nhận</li>
               <li><span className="bubble">C</span>công thức nấu ăn</li>
               <li><span className="bubble">D</span>người nhận</li>
             </ol>
@@ -36,17 +30,17 @@ export default function AuthLayout({ children }) {
             <li>Tự tạo bộ thẻ, nhập từ tệp CSV</li>
           </ul>
         </aside>
-        
+
         <main className="auth-main" id="main">
           <Link className="brand" href="/">
             <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
             <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
-          
+
           <div className="auth-form">
             {children}
           </div>
-          
+
           <p className="auth-foot"><Link href="/">Về trang chủ</Link></p>
         </main>
       </div>

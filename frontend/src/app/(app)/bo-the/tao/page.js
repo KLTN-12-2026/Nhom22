@@ -1,45 +1,55 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
-import { Icon } from '@/components/ui';
+import { ErrorState, Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function CreateDeckPage() {
+  const id = useSearchParams().get('id');
+  const { data, isLoading, error, refetch } = useDeck(id);
+  if (id && isLoading) return <div className="page sheet skeleton"><div className="sk sk-row" /></div>;
+  if (id && error) return <div className="page sheet"><ErrorState description={error.message} onRetry={refetch} /></div>;
+  return <DeckForm key={id || 'new'} deck={data} />;
+}
+function DeckForm({ deck }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: topics = [] } = useTopics();
-  
-  const [name, setName] = useState('');
-  const [desc, setDesc] = useState('');
-  const [goal, setGoal] = useState('GIAO_TIEP');
-  const [topicId, setTopicId] = useState('');
-  const [level, setLevel] = useState('MOI_BAT_DAU');
-  const [visibility, setVisibility] = useState('RIENG_TU');
+
+  const [name, setName] = useState(deck?.ten || '');
+  const [desc, setDesc] = useState(deck?.moTa || '');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [topicId, setTopicId] = useState(deck?.chuDeId || '');
+  const [level, setLevel] = useState(deck?.trinhDo || 'MOI_BAT_DAU');
+  const [visibility, setVisibility] = useState(deck?.quyenTruyCap || 'RIENG_TU');
 
   const createMutation = useMutation({
-    mutationFn: (data) => apiFetch('/api/v1/decks', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data) => apiFetch(deck ? `/api/v1/decks/${deck.id}` : '/api/v1/decks', { method: deck ? 'PATCH' : 'POST', body: JSON.stringify(data) }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-decks'] });
+      queryClient.setQueryData(['deck', res.id], res);
       router.push(`/bo-the/${res.id}`);
     },
     onError: (err) => {
-      alert(err.message || 'Lỗi khi tạo bộ thẻ');
+      setErrorMsg(err.message);
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     createMutation.mutate({
-      name, description: desc, goal, topicId, level, visibility
+      ten: name, moTa: desc, trinhDo: level, quyenTruyCap: visibility,
+      ...(topicId ? { chuDeId: topicId } : deck ? { boChuDe: true } : {}),
+      ...(deck ? { version: deck.version } : {})
     });
   };
 
   const currentTopic = topics.find(t => t.id === topicId);
-  const GOAL_LABEL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
   const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 
   return (
@@ -50,18 +60,18 @@ export default function CreateDeckPage() {
           <Link className="btn btn-quiet" id="back" href="/bo-the" style={{ margin: '0 0 var(--sp-2) -12px', justifySelf: 'start' }}>
             <Icon name="arrow-left" /><span>Bộ của tôi</span>
           </Link>
-          <h1 id="page-title">Tạo bộ thẻ</h1>
+          <h1 id="page-title">{deck ? 'Sửa bộ thẻ' : 'Tạo bộ thẻ'}</h1>
         </div>
 
-        <form id="form" className={styles.formGrid} onSubmit={handleSubmit} noValidate>
+        <form id="form" className={styles.formGrid} onSubmit={handleSubmit}>
           <div className="field">
             <label className="field-label" htmlFor="name">Tên bộ thẻ</label>
-            <input 
-              className="input" 
-              id="name" 
-              name="name" 
-              maxLength="160" 
-              required 
+            <input
+              className="input"
+              id="name"
+              name="name"
+              maxLength="150"
+              required
               placeholder="Ví dụ: TOEIC Part 5 — từ hay sai"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -76,11 +86,11 @@ export default function CreateDeckPage() {
             <label className="field-label" htmlFor="description">
               <span>Mô tả</span><span className="optional">Không bắt buộc</span>
             </label>
-            <textarea 
-              className="textarea" 
-              id="description" 
-              name="description" 
-              maxLength="1000" 
+            <textarea
+              className="textarea"
+              id="description"
+              name="description"
+              maxLength="1000"
               placeholder="Bộ này dùng để làm gì, lấy từ đâu"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
@@ -88,29 +98,13 @@ export default function CreateDeckPage() {
             <p className="field-error"></p>
           </div>
 
-          <fieldset className="fieldset field" data-field="goal">
-            <legend>Mục tiêu</legend>
-            <div className="choice-grid cols-2">
-              <label className="choice choice-card">
-                <input type="radio" name="goal" value="GIAO_TIEP" checked={goal === 'GIAO_TIEP'} onChange={() => setGoal('GIAO_TIEP')} />
-                <span className="bubble" aria-hidden="true">A</span>
-                <span className="choice-body"><span className="choice-title">Giao tiếp</span></span>
-              </label>
-              <label className="choice choice-card">
-                <input type="radio" name="goal" value="TOEIC" checked={goal === 'TOEIC'} onChange={() => setGoal('TOEIC')} />
-                <span className="bubble" aria-hidden="true">B</span>
-                <span className="choice-body"><span className="choice-title">TOEIC</span></span>
-              </label>
-            </div>
-            <p className="field-error"></p>
-          </fieldset>
 
           <div className="field">
             <label className="field-label" htmlFor="topicId">Chủ đề</label>
-            <select className="select" id="topicId" name="topicId" required value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+            <select className="select" id="topicId" name="topicId" value={topicId} onChange={(e) => setTopicId(e.target.value)}>
               <option value="">Chọn chủ đề</option>
               {topics.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>{t.ten}</option>
               ))}
             </select>
             <p className="field-error"></p>
@@ -159,17 +153,18 @@ export default function CreateDeckPage() {
                 <span className="bubble" aria-hidden="true">B</span>
                 <span className="choice-body">
                   <span className="choice-title">Công khai</span>
-                  <span className="choice-desc">Hiện trong thư viện với nhãn “Người học chia sẻ”. Người khác sao chép được nội dung, không thấy tiến độ học của bạn.</span>
+                  <span className="choice-desc">Đánh dấu bộ là công khai. Tính năng chia sẻ trong thư viện sẽ mở khi sẵn sàng.</span>
                 </span>
               </label>
             </div>
           </fieldset>
 
+          {errorMsg && <p role="alert" className="notice notice-error">{errorMsg}</p>}
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>
               <button type="submit" className="btn btn-primary btn-lg" id="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Đang tạo...' : 'Tạo bộ thẻ'}
+                {createMutation.isPending ? 'Đang lưu...' : deck ? 'Lưu bộ thẻ' : 'Tạo bộ thẻ'}
               </button>
             </div>
           </div>
@@ -192,8 +187,7 @@ export default function CreateDeckPage() {
                   ) : (
                     <span className="stamp stamp-quiet"><Icon name="lock" />Riêng tư</span>
                   )}
-                  {goal && <span>{GOAL_LABEL[goal]}</span>}
-                  {currentTopic && <span>{currentTopic.name}</span>}
+                  {currentTopic && <span>{currentTopic.ten}</span>}
                   {level && (
                     <span className="level" title="Trình độ tự đánh giá">
                       <span className="bubble-row" aria-hidden="true">

@@ -1,6 +1,7 @@
 import '@/styles/mockup-tokens.css';
 import '@/styles/mockup-base.css';
 import '@/styles/mockup-components.css';
+import '@/styles/compat.css';
 import { Providers } from './providers';
 
 export const metadata = {

@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/ui';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
 export default function VerifyEmailPage() {
@@ -11,24 +11,18 @@ export default function VerifyEmailPage() {
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email') || '';
   const [email, setEmail] = useState(emailParam);
-  
-  const [view, setView] = useState(token ? 'loading' : 'wait'); // loading, ok, bad, wait
 
-  const verifyMutation = useMutation({
-    mutationFn: (t) => apiFetch('/api/v1/auth/verify-email', { method: 'POST', body: JSON.stringify({ token: t }) }),
-    onSuccess: () => setView('ok'),
-    onError: () => setView('bad')
+  const verify = useQuery({
+    queryKey: ['verify-email', token],
+    queryFn: () => apiFetch('/api/v1/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) }),
+    enabled: !!token, retry: false, staleTime: Infinity,
+    refetchOnMount: false, refetchOnWindowFocus: false, refetchOnReconnect: false
   });
+  const view = !token ? 'wait' : verify.isPending ? 'loading' : verify.error ? 'bad' : 'ok';
 
   const resendMutation = useMutation({
     mutationFn: (e) => apiFetch('/api/v1/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email: e }) })
   });
-
-  useEffect(() => {
-    if (token) {
-      verifyMutation.mutate(token);
-    }
-  }, [token]);
 
   const handleResend = (e) => {
     e.preventDefault();
@@ -63,6 +57,7 @@ export default function VerifyEmailPage() {
             {view === 'bad' ? (
               <>
                 <h1>Liên kết không hợp lệ</h1>
+                <p role="alert">{verify.error?.message}</p>
                 <p>Liên kết có thể đã hết hạn hoặc bị lỗi. Nhập email để nhận liên kết mới.</p>
               </>
             ) : (
@@ -76,21 +71,21 @@ export default function VerifyEmailPage() {
           <form onSubmit={handleResend} noValidate>
             <div className="field">
               <label className="field-label" htmlFor="email">Email đã đăng ký</label>
-              <input 
-                className="input" 
-                id="email" 
-                name="email" 
-                type="email" 
-                autoComplete="email" 
-                inputMode="email" 
-                required 
+              <input
+                className="input"
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                required
                 placeholder="ten@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <p className="field-error"></p>
             </div>
-            
+
             <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={resendMutation.isPending}>
               {resendMutation.isPending ? 'Đang gửi...' : 'Gửi lại thư xác thực'}
             </button>

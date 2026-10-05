@@ -12,8 +12,8 @@ function FlashcardSessionContent() {
   const queryClient = useQueryClient();
 
   const [flipped, setFlipped] = useState(false);
-  const [queue, setQueue] = useState([]);
-  const [session, setSession] = useState(null);
+  const [queueDraft, setQueue] = useState(null);
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['session', id],
@@ -21,12 +21,9 @@ function FlashcardSessionContent() {
     enabled: !!id
   });
 
-  useEffect(() => {
-    if (data && data.hangDoi) {
-      setSession(data);
-      setQueue(data.hangDoi);
-    }
-  }, [data]);
+  const session = data;
+  const queue = queueDraft ?? data?.hangDoi ?? [];
+
 
   const reviewMutation = useMutation({
     mutationFn: (body) => apiFetch(`/api/v1/learning/sessions/${id}/reviews`, { method: 'POST', body: JSON.stringify(body) }),
@@ -62,14 +59,14 @@ function FlashcardSessionContent() {
         expectedVersion: currentItem.tienDo.version,
         thoiGianTraLoiMs: 1500
       });
-      
+
       const newQueue = [...queue];
       const index = newQueue.findIndex(q => q.theId === currentItem.theId && q.trangThai === 'CHO');
       if (index !== -1) {
         newQueue[index].trangThai = 'DA_ON';
         newQueue[index].tienDo = res.tienDo;
       }
-      
+
       if (res.laiTrongPhien) {
         newQueue.push({
           theId: currentItem.theId,
@@ -80,10 +77,10 @@ function FlashcardSessionContent() {
           the: currentItem.the
         });
       }
-      
+
       setQueue(newQueue);
       setFlipped(false);
-      
+
       const remaining = newQueue.filter(q => q.trangThai === 'CHO');
       if (remaining.length === 0) {
         finishMutation.mutate();
@@ -124,7 +121,7 @@ function FlashcardSessionContent() {
         <div style={{ textAlign: 'center', padding: 'var(--space-6) 0', borderTop: '1px dashed var(--color-primary-line)', marginTop: 'var(--space-4)', animation: 'reveal 0.3s ease-out' }}>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: 'var(--space-4)' }}>Mặt sau</div>
           <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{the.nghiaVi}</div>
-          {the.viDuEn && <div style={{ marginTop: 'var(--space-4)', fontStyle: 'italic' }}>"{the.viDuEn}"</div>}
+          {the.viDuEn && <div style={{ marginTop: 'var(--space-4)', fontStyle: 'italic' }}>“{the.viDuEn}”</div>}
         </div>
       );
     } else {
@@ -133,7 +130,7 @@ function FlashcardSessionContent() {
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: 'var(--space-4)' }}>Mặt sau</div>
           <div style={{ fontSize: '2.5rem', fontWeight: 'bold', fontFamily: 'var(--font-word)' }}>{the.tu}</div>
           {the.phienAm && <div style={{ fontSize: '1.2rem', color: 'var(--color-ink-2)', fontFamily: 'var(--font-word)' }}>{the.phienAm}</div>}
-          {the.viDuEn && <div style={{ marginTop: 'var(--space-4)', fontStyle: 'italic' }}>"{the.viDuEn}"</div>}
+          {the.viDuEn && <div style={{ marginTop: 'var(--space-4)', fontStyle: 'italic' }}>“{the.viDuEn}”</div>}
         </div>
       );
     }

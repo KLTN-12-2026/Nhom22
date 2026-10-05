@@ -1,4 +1,5 @@
 'use client';
+import { FeatureGate } from '@/components/layout/FeatureGate';
 import { AppShell } from '@/components/layout';
 import { RouteGuard } from '@/components/layout/RouteGuard';
 import { useMe } from '@/hooks/useMe';
@@ -11,7 +12,7 @@ export default function AppRouteLayout({ children }) {
   return (
     <RouteGuard requireAuth={true}>
       <AppShell user={user} isAdmin={user?.vaiTro?.includes('ADMIN')}>
-        {children}
+        <FeatureGate>{children}</FeatureGate>
       </AppShell>
     </RouteGuard>
   );

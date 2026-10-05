@@ -3,7 +3,7 @@
   .pageGrid.withSide { grid-template-columns: 1fr var(--side-col-w); align-items: start; }
 }
 .withSide { grid-template-columns: 1fr; }
-@media (min-width: 1024px) { .withSide { grid-template-columns: 1fr 280px; align-items: start; } }
+@media (min-width: 1024px) { .withSide { grid-template-columns: minmax(0, 1fr) var(--side-col); align-items: start; } }
 
 .filterRow { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
 .searchWrap { flex: 1 1 220px; max-width: 320px; }

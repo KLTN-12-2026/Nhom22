@@ -13,10 +13,10 @@ export default function LoginPage() {
   const nextParam = searchParams.get('next');
   const loggedOutParam = searchParams.get('loggedOut');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(searchParams.get('email') || '');
+  const [errorMsg, setErrorMsg] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(true);
 
   const loginMutation = useMutation({
     mutationFn: (credentials) => apiFetch('/api/v1/auth/login', {
@@ -25,11 +25,13 @@ export default function LoginPage() {
     }),
     onSuccess: (user) => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      const dest = !user.daHoanTatKhoiDau ? "/bat-dau" : (nextParam ? nextParam : "/hom-nay");
+      queryClient.setQueryData(['me'], user);
+      const safeNext = nextParam?.startsWith('/') && !nextParam.startsWith('//') && !nextParam.includes('\\') ? nextParam : '/bo-the';
+      const dest = !user.daHoanTatKhoiDau ? '/bat-dau' : safeNext;
       router.push(dest);
     },
     onError: (err) => {
-      alert(err.message || 'Đăng nhập thất bại');
+      setErrorMsg(err.message);
     }
   });
 
@@ -38,7 +40,6 @@ export default function LoginPage() {
     loginMutation.mutate({
       email,
       password,
-      remember
     });
   };
 
@@ -68,7 +69,7 @@ export default function LoginPage() {
         </p>
       )}
 
-      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => alert('Chức năng Google đang được phát triển')}>
+      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => window.location.assign('/api/v1/auth/google/start')}>
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.8 6.1C12.3 13.6 17.6 9.5 24 9.5Z" />
           <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5Z" />
@@ -80,44 +81,45 @@ export default function LoginPage() {
 
       <p className="or-divider">hoặc dùng email</p>
 
-      <form id="form" noValidate onSubmit={handleLogin}>
+      {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
+      <form id="form" onSubmit={handleLogin}>
         <div className="field">
           <label className="field-label" htmlFor="email">Email</label>
-          <input 
-            className="input" 
-            id="email" 
-            name="email" 
-            type="email" 
-            autoComplete="username" 
-            inputMode="email" 
-            required 
-            placeholder="ten@gmail.com" 
+          <input
+            className="input"
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="username"
+            inputMode="email"
+            required
+            placeholder="ten@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <p className="field-error"></p>
         </div>
-        
+
         <div className="field">
           <label className="field-label" htmlFor="password">
             <span>Mật khẩu</span>
             <Link href="/quen-mat-khau" className="small" style={{ fontWeight: 550 }}>Quên mật khẩu?</Link>
           </label>
           <div className="input-group">
-            <input 
-              className="input" 
-              id="password" 
-              name="password" 
-              type={showPassword ? "text" : "password"} 
-              autoComplete="current-password" 
-              required 
+            <input
+              className="input"
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button 
-              type="button" 
-              className="input-action" 
-              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} 
+            <button
+              type="button"
+              className="input-action"
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               aria-pressed={showPassword}
               onClick={() => setShowPassword(!showPassword)}
             >
@@ -127,18 +129,14 @@ export default function LoginPage() {
           <p className="field-error"></p>
         </div>
 
-        <label className="choice">
-          <input type="checkbox" name="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
-          <span className="choice-body"><span>Ghi nhớ đăng nhập trên thiết bị này (7 ngày)</span></span>
-        </label>
-        
+
+        <p className="field-hint">Dùng cookie phiên; chưa hỗ trợ ghi nhớ đăng nhập 7 ngày.</p>
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loginMutation.isPending}>
           {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
       </form>
 
-      <details className="demo-accounts">
+      <details className="demo-accounts" hidden={process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled'}>
         <summary>Tài khoản dùng thử (mockup)</summary>
         <p className="muted" style={{ marginTop: '4px' }}>Mật khẩu chung: <code>12345678</code>. Bấm để điền.</p>
         <ul id="demo-list">

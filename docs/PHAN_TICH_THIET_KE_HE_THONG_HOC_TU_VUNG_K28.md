@@ -1,5 +1,7 @@
 # PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG HỌC TỪ VỰNG TIẾNG ANH
 
+> Đối chiếu triển khai 05/10/2026: hợp đồng GĐ0–B1.8 theo controller/DTO, migration và báo cáo Đợt 1. API từ B1.9 trở đi vẫn là kế hoạch. Mô hình logic ánh xạ sang schema vật lý: nguoi_dung.anh_dai_dien_id, ho_so_hoc_tap.da_hoan_tat_khoi_dau, bảng chu_de_yeu_thich, cai_dat_thong_bao.gio_nhac, bo_the.xoa_at/the_tu_vung.xoa_at. URL ký không lưu lâu dài. Mục tiêu bộ, số thẻ, favorite listing và thư viện phải chốt ở B1.9/B1.10; mục tiêu hồ sơ không tự trở thành mục tiêu bộ. Phân trang hiện hành trả items/page/size/totalElements/totalPages.
+
 ## 1. Thông tin tài liệu và cơ sở phân tích
 
 | Nội dung | Thông tin |
@@ -142,7 +144,7 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Quản lý hồ sơ quản trị và xem thông báo vận hành.
 - Tìm kiếm, xem, khóa/mở khóa tài khoản User và xử lý yêu cầu hỗ trợ.
 - Cấp/thu hồi quyền theo quyền hạn; bảo vệ quản trị viên cuối cùng.
-- Quản lý chủ đề, nhãn, trình độ và danh mục thư viện.
+- Quản lý chủ đề, nhãn và danh mục thư viện; phân loại theo enum trình độ. B1.7 không có CRUD trình độ.
 - Tạo, sửa, xuất bản, ẩn và quản lý bộ/thẻ mẫu giao tiếp/TOEIC.
 - Quản lý nguồn nội dung, ảnh, âm thanh và chất lượng thẻ mẫu.
 - Xem hàng đợi báo cáo, kiểm tra nội dung và xử lý vi phạm.
@@ -447,7 +449,7 @@ flowchart LR
     API --> GOOGLE[Google OAuth]
 ```
 
-Worker là tiến trình xử lý của ứng dụng, có thể chạy riêng khi cần nhưng dùng chung mã nguồn/module. MySQL lưu tác vụ bền vững; Redis không phải nguồn duy nhất của kết quả học hoặc hạn mức.
+Worker là tiến trình xử lý của ứng dụng, có thể chạy riêng khi cần nhưng dùng chung mã nguồn/module. MySQL lưu tác vụ bền vững trong thiết kế B3.1; Redis không phải nguồn duy nhất của kết quả học hoặc hạn mức. Hiện GĐ0–B1.8, email là event sau commit xử lý bất đồng bộ best effort, chưa có outbox/retry bền vững; có luồng gửi lại. Dọn tệp dùng tombstone ngay trong tep_tin.
 
 ### 11.2. Module backend
 
@@ -494,7 +496,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `vai_tro`, `nguoi_dung_vai_tro` | Danh mục vai trò và gán quyền |
 | `danh_tinh_oauth` | nguoi_dung_id, nha_cung_cap, subject; unique(nha_cung_cap, subject) |
 | `token_tai_khoan` | token_hash, loai, het_han_at, da_dung_at; không lưu token rõ |
-| `ho_so_hoc_tap` | trình độ tự đánh giá, mục tiêu, phút/ngày, từ mới/ngày, giờ nhắc |
+| `ho_so_hoc_tap` | trình độ tự đánh giá, mục tiêu, phút/ngày, từ mới/ngày, cờ hoàn tất khởi đầu; giờ nhắc lưu ở cai_dat_thong_bao |
 | `chu_de`, `nhan` | Danh mục chủ đề và nhãn |
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, version |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
@@ -567,7 +569,7 @@ erDiagram
 - Tiền tố `/api/v1`; JSON UTF-8; timestamp ISO 8601 UTC.
 - Phân trang và giới hạn kích thước truy vấn; lọc/sắp xếp bằng trường cho phép.
 - Yêu cầu tạo kết quả học, nộp bài, lưu thẻ AI và nhận thưởng có khóa chống trùng.
-- Trả lỗi có `code`, `message`, `field_errors` khi phù hợp và `request_id`; không trả stack trace.
+- Trả lỗi có `code`, `message`, `fieldErrors` là mảng {field,message} và `requestId`; không trả stack trace.
 - Dùng 401 cho chưa xác thực; 403 cho không đủ quyền; 404 để không lộ tài nguyên riêng; 409 cho xung đột; 422 cho dữ liệu nghiệp vụ sai; 429 cho quá hạn mức.
 - Tác vụ dài trả 202 kèm ID và endpoint trạng thái; không giữ kết nối học chờ AI lâu.
 
@@ -661,7 +663,7 @@ Các con số sau là **mục tiêu nghiệm thu đề xuất**, chưa phải k�
 | Khả dụng | Lỗi AI/phát âm không chặn chức năng học nội bộ; Redis/DB lỗi được báo rõ thay vì ghi nhận giả |
 | Bảo mật | Băm mật khẩu bằng thư viện chuẩn, HTTPS khi triển khai, xác thực/quyền/sở hữu tại máy chủ |
 | Tiếp cận | Bàn phím dùng được, nhãn form, focus rõ, tương phản đủ, không chỉ dựa vào màu |
-| Vận hành | Log có request_id; giám sát lỗi API/tác vụ/hàng đợi; không log token, mật khẩu hoặc khóa dịch vụ |
+| Vận hành | Log có requestId; giám sát lỗi API/tác vụ/hàng đợi; không log token, mật khẩu hoặc khóa dịch vụ |
 | Sao lưu | Mục tiêu sao lưu hàng ngày; RPO 24 giờ và RTO 4 giờ cho bản minh họa, phải chứng minh bằng phục hồi thử |
 
 **Các kiểm soát cần triển khai:**
@@ -696,6 +698,8 @@ Các con số sau là **mục tiêu nghiệm thu đề xuất**, chưa phải k�
 - Không bắt buộc Kafka, MongoDB, microservices hay mô hình AI tự huấn luyện.
 
 ### 17.2. Cấu trúc mã nguồn đề xuất
+
+Ánh xạ triển khai 05/10/2026: BE ở backend/k28; module account/content/common ánh xạ module logic tài khoản/nội dung/dùng chung; migration ở src/main/resources/db/migration, test ở src/test/java. Cây bên dưới là đề xuất tổng thể, không phải thư mục bắt buộc hiện có.
 
 ```text
 vocabflow/

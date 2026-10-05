@@ -42,7 +42,7 @@ function NotebookContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  
+
   const page = parseInt(searchParams.get('page') || '0', 10);
   const nhomLoi = searchParams.get('nhomLoi') || '';
 
@@ -62,14 +62,14 @@ function NotebookContent() {
   const updateMutation = useMutation({
     mutationFn: ({ id, body }) => apiFetch(`/api/v1/notebook/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notebook']);
+      queryClient.invalidateQueries({ queryKey: ['notebook'] });
       setEditingNote(null);
     }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => apiFetch(`/api/v1/notebook/${id}`, { method: 'DELETE' }),
-    onSuccess: () => queryClient.invalidateQueries(['notebook'])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notebook'] })
   });
 
   const practiceMutation = useMutation({
@@ -127,11 +127,11 @@ function NotebookContent() {
             const count = notebook?.tongHop?.[g.key || g.id] || 0;
             const active = nhomLoi === g.id;
             return (
-              <button 
-                key={g.id} 
-                type="button" 
-                className="tab" 
-                role="tab" 
+              <button
+                key={g.id}
+                type="button"
+                className="tab"
+                role="tab"
                 aria-selected={active}
                 onClick={() => handleTabClick(g.id)}
               >
@@ -167,9 +167,9 @@ function NotebookContent() {
                       {it.phienAm && <span className={styles.nbIpa}>{it.phienAm}</span>}
                       {it.tuLoai && <span className="small muted">{it.tuLoai}</span>}
                     </div>
-                    
+
                     <div className={styles.nbMean}>{it.nghiaVi}</div>
-                    
+
                     <div className={styles.nbStamps}>
                       {it.lyDo?.map(r => (
                         <span key={r} className={`stamp${r === 'DANH_DAU_THU_CONG' ? '' : ' stamp-warning'}`}>
@@ -182,7 +182,7 @@ function NotebookContent() {
                         </span>
                       ))}
                     </div>
-                    
+
                     <div className="answer-meta">
                       <Link href={`/bo-the-tien-do?id=${it.boTheId}`}>
                         {it.boTheTen.length > 60 ? it.boTheTen.slice(0, 60) + '…' : it.boTheTen}
@@ -197,12 +197,12 @@ function NotebookContent() {
 
                     {editingNote === it.theId && (
                       <div className={styles.nbEdit}>
-                        <textarea 
-                          value={noteContent} 
+                        <textarea
+                          value={noteContent}
                           onChange={(e) => setNoteContent(e.target.value)}
-                          placeholder="Ghi chú..." 
-                          className="input" 
-                          rows={3} 
+                          placeholder="Ghi chú..."
+                          className="input"
+                          rows={3}
                           maxLength={500}
                         />
                         <div className="row">

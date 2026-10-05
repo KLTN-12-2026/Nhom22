@@ -46,7 +46,7 @@
             <div class="input-with-icon" style="flex:1 1 220px;max-width:320px">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
               <label class="sr-only" for="q">Tìm trong bộ của tôi</label>
-              <input class="input" id="q" type="search" placeholder="Tìm theo tên bộ" autocomplete="off">
+              <input class="input" id="q" type="search" placeholder="Tìm trong trang: theo tên bộ" autocomplete="off">
             </div>
           </div>
 
@@ -60,7 +60,7 @@
               <div class="empty" id="empty-box">
                 <div class="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span><span data-n="3"><i></i><i></i><i></i><i></i></span></div>
                 <h2 id="empty-title">Bạn chưa có bộ thẻ nào</h2>
-                <p id="empty-text">Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ đầu tiên.</p>
+                <p id="empty-text">Tự tạo bộ đầu tiên. Thư viện sẽ có ở B1.10.</p>
                 <div class="row"><a class="btn btn-primary" href="thu-vien.html">Xem thư viện</a><a class="btn btn-secondary" href="bo-the-tao.html">Tạo bộ thẻ</a></div>
               </div>
             </div>
@@ -86,6 +86,7 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -98,10 +99,10 @@
 
   VL.api("GET", "/me/learning-settings").then((s) => {
     document.getElementById("plan").innerHTML =
-      '<p class="plan-line"><span>Mục tiêu</span><span>' + VL.esc(s.goal ? VL.GOAL[s.goal] : "Chưa chọn") + "</span></p>" +
-      '<p class="plan-line"><span>Trình độ</span><span>' + VL.levelHtml(s.level) + "</span></p>" +
-      '<p class="plan-line"><span>Thời gian</span><span>' + s.minutesPerDay + " phút/ngày</span></p>" +
-      '<p class="plan-line"><span>Từ mới</span><span>' + s.newCardsPerDay + " từ/ngày</span></p>";
+      '<p class="plan-line"><span>Mục tiêu</span><span>' + VL.esc(s.mucTieu ? VL.GOAL[s.mucTieu] : "Chưa chọn") + "</span></p>" +
+      '<p class="plan-line"><span>Trình độ</span><span>' + VL.levelHtml(s.trinhDo) + "</span></p>" +
+      '<p class="plan-line"><span>Thời gian</span><span>' + s.phutMoiNgay + " phút/ngày</span></p>" +
+      '<p class="plan-line"><span>Từ mới</span><span>' + s.tuMoiMoiNgay + " từ/ngày</span></p>";
   });
 
   function load() {
@@ -109,25 +110,25 @@
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     region.setAttribute("aria-labelledby", tab === "mine" ? "tab-mine" : "tab-fav");
     VL.load(region, {
-      fetch: () => VL.api("GET", "/decks?tab=" + tab + (q ? "&q=" + encodeURIComponent(q) : "")),
+      fetch: async () => { const d = await VL.api("GET", "/decks?size=100"); d.items = d.items.filter(x => (tab !== "favorites" || x.yeuThich) && (!q || x.ten.toLocaleLowerCase().includes(q.toLocaleLowerCase()))); return d; },
       isEmpty: (d) => !d.items.length,
       empty: () => {
         document.getElementById("count-code").textContent = "0 bộ";
         const fav = tab === "favorites";
         document.getElementById("empty-title").textContent = q ? "Không có bộ nào tên chứa “" + q + "”" : fav ? "Chưa có bộ yêu thích" : "Bạn chưa có bộ thẻ nào";
-        document.getElementById("empty-text").textContent = q ? "Thử từ khóa khác." : fav ? "Bấm Yêu thích ở một bộ trong thư viện để lưu lại xem sau." : "Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ đầu tiên.";
+        document.getElementById("empty-text").textContent = q ? "Thử từ khóa khác." : fav ? "Chỉ lọc các bộ bạn sở hữu trong trang đang tải." : "Tự tạo bộ đầu tiên. Thư viện sẽ có ở B1.10.";
       },
       render: (d) => {
         document.getElementById("count-code").textContent = d.totalElements + " bộ";
         document.getElementById("list").innerHTML = d.items.map((deck, i) => {
-          const mine = deck.ownerId === VL.me().id;
+          const mine = deck.chuSoHuuId === VL.me().id;
           const href = mine ? "bo-the-chi-tiet.html?id=" + deck.id : "thu-vien-chi-tiet.html?id=" + deck.id;
           return '<li class="answer-row deck-row has-actions">' +
             '<span class="answer-no">' + (i + 1) + "</span>" +
-            '<div class="answer-main"><a class="answer-title" href="' + href + '">' + VL.esc(deck.name) + "</a>" +
-            '<div class="answer-meta">' + (deck.visibility === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
-            (deck.sourceDeckId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
-            '<div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + VL.levelHtml(deck.level) + '</span><span class="col-count">' + deck.cardCount + " thẻ</span></div>" +
+            '<div class="answer-main"><a class="answer-title" href="' + href + '">' + VL.esc(deck.ten) + "</a>" +
+            '<div class="answer-meta">' + (deck.quyenTruyCap === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
+            (deck.boNguonId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
+            '<div class="deck-cols">' + VL.levelHtml(deck.trinhDo) + '</div>' +
             '<div class="deck-actions">' + (mine ? '<a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + deck.id + '">Mở</a><a class="btn btn-quiet btn-sm" href="bo-the-tao.html?id=' + deck.id + '">Sửa</a>' : '<a class="btn btn-secondary btn-sm" href="' + href + '">Xem</a>') + "</div></li>";
         }).join("");
       }

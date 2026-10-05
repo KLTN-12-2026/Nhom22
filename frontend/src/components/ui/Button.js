@@ -23,9 +23,9 @@ export function Button({
       type={type}
       className={[
         'btn',
-        `btn--${variant}`,
-        `btn--${size}`,
-        fullWidth && 'btn--full',
+        `btn-${variant === 'ghost' || variant === 'link' ? 'quiet' : variant}`,
+        `btn-${size}`,
+        fullWidth && 'btn-block',
         className,
       ].filter(Boolean).join(' ')}
       disabled={disabled || loading}

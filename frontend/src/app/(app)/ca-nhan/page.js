@@ -1,13 +1,21 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useAvatar } from '@/hooks/useAvatar';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, logout } from '@/lib/api-client';
+import { uploadAvatar } from '@/lib/upload-avatar';
 import { Icon } from '@/components/ui';
 import styles from './layout.module.css';
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const fileRef = useRef(null);
+  const avatarMutation = useMutation({
+    mutationFn: file => file ? uploadAvatar(file) : apiFetch('/api/v1/me/avatar', { method: 'DELETE' }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['me'] }); setSuccessMsg('Đã lưu ảnh đại diện'); setErrorMsg(''); },
+    onError: error => setErrorMsg(error.message)
+  });
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -16,26 +24,20 @@ export default function ProfilePage() {
     queryFn: () => apiFetch('/api/v1/me')
   });
 
-  const [formState, setFormState] = useState({
+  const { data: avatar } = useAvatar(me);
+  const [draft, setFormState] = useState(null);
+  const formState = draft ?? me ?? {
     tenHienThi: '',
     email: '',
     muiGio: 'Asia/Ho_Chi_Minh'
-  });
+  };
 
-  useEffect(() => {
-    if (me) {
-      setFormState({
-        tenHienThi: me.tenHienThi || '',
-        email: me.email || '',
-        muiGio: me.muiGio || 'Asia/Ho_Chi_Minh'
-      });
-    }
-  }, [me]);
+
 
   const updateMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['me']);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       setSuccessMsg(`Đã lưu lúc ${new Date().toLocaleTimeString('vi-VN')}`);
       setErrorMsg('');
     },
@@ -55,7 +57,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     // Basic logout handling
-    window.location.href = '/dang-nhap?loggedOut=1';
+    logout(queryClient).catch(error => alert(error.message));
   };
 
   const getInitial = (name) => {
@@ -75,25 +77,25 @@ export default function ProfilePage() {
 
       <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
-        
+
         <div className="field" data-field="file">
           <span className="field-label">Ảnh đại diện</span>
           <div className={styles.avatarRow}>
             <span id="avatar">
               <span className="avatar avatar-xl">
-                {me?.anhDaiDienUrl ? (
-                  <img src={me.anhDaiDienUrl} alt="" />
+                {avatar?.downloadUrl ? (
+                  <img src={avatar?.downloadUrl} alt="" />
                 ) : (
                   getInitial(me?.tenHienThi)
                 )}
               </span>
             </span>
             <div className={styles.avatarActions}>
-              <button type="button" className="btn btn-secondary" id="avatar-upload" onClick={() => alert('Tính năng tải ảnh lên đang được phát triển')}>
+              <button type="button" className="btn btn-secondary" id="avatar-upload" disabled={avatarMutation.isPending} onClick={() => fileRef.current.click()}>
                 <Icon name="upload" />Tải ảnh lên
               </button>
-              <input type="file" id="avatar-file" className="sr-only" accept="image/jpeg,image/png,image/webp" />
-              <button type="button" className="btn btn-quiet" id="avatar-remove" hidden={!me?.anhDaiDienUrl}>Gỡ ảnh</button>
+              <input ref={fileRef} onChange={event => { const file = event.target.files[0]; if (file) avatarMutation.mutate(file); event.target.value = ''; }} type="file" id="avatar-file" className="sr-only" accept="image/jpeg,image/png,image/webp" />
+              <button type="button" className="btn btn-quiet" id="avatar-remove" disabled={avatarMutation.isPending} onClick={() => avatarMutation.mutate(null)} hidden={!avatar?.downloadUrl}>Gỡ ảnh</button>
               <p className="field-hint">JPG, PNG hoặc WEBP, tối đa 2 MB.</p>
             </div>
           </div>
@@ -102,13 +104,13 @@ export default function ProfilePage() {
 
         <div className="field">
           <label className="field-label" htmlFor="tenHienThi">Tên hiển thị</label>
-          <input 
-            className="input" 
-            id="tenHienThi" 
-            name="tenHienThi" 
-            maxLength="100" 
-            autoComplete="nickname" 
-            required 
+          <input
+            className="input"
+            id="tenHienThi"
+            name="tenHienThi"
+            maxLength="100"
+            autoComplete="nickname"
+            required
             value={formState.tenHienThi}
             onChange={e => setFormState({...formState, tenHienThi: e.target.value})}
           />
@@ -118,12 +120,12 @@ export default function ProfilePage() {
 
         <div className="field">
           <label className="field-label" htmlFor="email">Email đăng nhập</label>
-          <input 
-            className="input" 
-            id="email" 
-            type="email" 
-            readOnly 
-            aria-describedby="email-hint" 
+          <input
+            className="input"
+            id="email"
+            type="email"
+            readOnly
+            aria-describedby="email-hint"
             value={formState.email}
           />
           <p className="field-hint" id="email-hint">Không đổi được email ở bản này.</p>
@@ -131,9 +133,9 @@ export default function ProfilePage() {
 
         <div className="field">
           <label className="field-label" htmlFor="muiGio">Múi giờ</label>
-          <select 
-            className="select" 
-            id="muiGio" 
+          <select
+            className="select"
+            id="muiGio"
             name="muiGio"
             value={formState.muiGio}
             onChange={e => setFormState({...formState, muiGio: e.target.value})}

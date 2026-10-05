@@ -46,12 +46,12 @@ function DeckDialog({ deck, topics, onClose, onSave }) {
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 'var(--space-4)' }}>
       <form onSubmit={handleSubmit} style={{ background: 'var(--color-bg)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)' }}>{deck ? 'Sửa thông tin bộ' : 'Tạo bộ mẫu'}</h2>
-        
+
         <div style={{ marginBottom: 'var(--space-4)' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Tên bộ *</label>
           <input required type="text" value={formData.ten} onChange={e => setFormData({ ...formData, ten: e.target.value })} maxLength={170} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
         </div>
-        
+
         <div style={{ marginBottom: 'var(--space-4)' }}>
           <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Mô tả</label>
           <textarea value={formData.moTa} onChange={e => setFormData({ ...formData, moTa: e.target.value })} rows={3} maxLength={1100} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px' }} />
@@ -114,7 +114,7 @@ function CardDialog({ card, deckId, onClose, onSave }) {
       const body = { ...formData };
       if (card) body.version = card.version;
       else body.boTheId = deckId;
-      
+
       const res = await apiFetch(`/api/v1/admin/cards${card ? `/${card.id}` : ''}`, {
         method: card ? 'PATCH' : 'POST',
         body: JSON.stringify(body)
@@ -131,7 +131,7 @@ function CardDialog({ card, deckId, onClose, onSave }) {
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 'var(--space-4)' }}>
       <form onSubmit={handleSubmit} style={{ background: 'var(--color-bg)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-4)' }}>{card ? `Sửa thẻ ${card.tu}` : 'Thêm thẻ'}</h2>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
           {[
             { key: 'tu', label: 'Từ hoặc cụm từ *', max: 120 },
@@ -201,10 +201,10 @@ function AdminDecksContent() {
     mutationFn: ({ method, url, body }) => apiFetch(url, { method, body: body ? JSON.stringify(body) : undefined }),
     onSuccess: (res, vars) => {
       if (vars.url.includes('/admin/cards')) {
-        queryClient.invalidateQueries(['admin-cards', id]);
+        queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
       } else {
-        queryClient.invalidateQueries(['admin-decks']);
-        if (id) queryClient.invalidateQueries(['admin-deck', id]);
+        queryClient.invalidateQueries({ queryKey: ['admin-decks'] });
+        if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
       }
     },
     onError: (err) => alert(err.message || 'Lỗi')
@@ -218,7 +218,7 @@ function AdminDecksContent() {
   const handleDeckAction = (act, d) => {
     let method, url, body;
     url = `/api/v1/admin/decks/${d.id}`;
-    
+
     if (act === 'publish') {
       if (!window.confirm(`Xuất bản ${d.ten}?`)) return;
       method = 'PATCH'; body = { quyenTruyCap: 'CONG_KHAI', version: d.version };
@@ -358,7 +358,7 @@ function AdminDecksContent() {
             </div>
           )}
         </section>
-        
+
         <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
           <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
             <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
@@ -370,17 +370,17 @@ function AdminDecksContent() {
             </ul>
           </section>
         </aside>
-        
+
         {editingCard !== null && (
-          <CardDialog 
-            card={Object.keys(editingCard).length === 0 ? null : editingCard} 
-            deckId={id} 
-            onClose={() => setEditingCard(null)} 
-            onSave={() => { setEditingCard(null); queryClient.invalidateQueries(['admin-cards', id]); queryClient.invalidateQueries(['admin-deck', id]); }} 
+          <CardDialog
+            card={Object.keys(editingCard).length === 0 ? null : editingCard}
+            deckId={id}
+            onClose={() => setEditingCard(null)}
+            onSave={() => { setEditingCard(null); queryClient.invalidateQueries({ queryKey: ['admin-cards', id] }); queryClient.invalidateQueries({ queryKey: ['admin-deck', id] }); }}
           />
         )}
         {showDeckDialog && (
-          <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={() => { setShowDeckDialog(false); setEditingDeck(null); queryClient.invalidateQueries(['admin-deck', id]); }} />
+          <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={() => { setShowDeckDialog(false); setEditingDeck(null); queryClient.invalidateQueries({ queryKey: ['admin-deck', id] }); }} />
         )}
       </div>
     );
@@ -468,7 +468,7 @@ function AdminDecksContent() {
       </aside>
 
       {showDeckDialog && (
-        <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={(d) => { setShowDeckDialog(false); setEditingDeck(null); if (!editingDeck) { router.push(`/quan-tri/bo-mau?id=${d.id}`); } else { queryClient.invalidateQueries(['admin-decks']); } }} />
+        <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={(d) => { setShowDeckDialog(false); setEditingDeck(null); if (!editingDeck) { router.push(`/quan-tri/bo-mau?id=${d.id}`); } else { queryClient.invalidateQueries({ queryKey: ['admin-decks'] }); } }} />
       )}
     </div>
   );

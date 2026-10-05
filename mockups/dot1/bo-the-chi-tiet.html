@@ -90,101 +90,28 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
-(function () {
-  if (!VL.ready) return;
-  const p = VL.params();
-  const id = p.id || "21";
-  if (p.created) VL.toast("Đã tạo bộ thẻ");
-  if (p.saved) VL.toast("Đã lưu thẻ");
-  if (p.imported) VL.toast("Đã nhập " + p.imported + " thẻ");
-  let deck;
-
-  function speak(text) {
-    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text); u.lang = "en-US"; u.rate = 0.9; speechSynthesis.speak(u);
+(function(){
+ if(!VL.ready)return;
+ const id=VL.params().id || '21';
+ ['study','progress','add','import','export'].forEach(id=>document.getElementById(id).hidden=true);
+ document.querySelector('.list-bar').hidden=true;
+ document.getElementById('cards-region').innerHTML='<p>Thẻ, tiến độ học và CSV thuộc B1.9 trở đi, chưa có trong B1.8.</p>';
+ document.getElementById('dup-title').parentElement.hidden=true;
+ VL.load(document.getElementById('deck-region'),{
+  fetch:async()=>({deck:await VL.api('GET','/decks/'+encodeURIComponent(id)),topics:(await VL.api('GET','/public/topics?size=100')).items}),
+  render:({deck:d,topics})=>{
+   document.title=d.ten+' – VocabLearning';
+   document.getElementById('deck-title').textContent=d.ten;
+   document.getElementById('deck-desc').textContent=d.moTa || 'Chưa có mô tả.';
+   document.getElementById('stamps').textContent=d.quyenTruyCap==='CONG_KHAI'?'Công khai — thư viện thuộc B1.10':'Riêng tư';
+   document.getElementById('edit').href='bo-the-tao.html?id='+d.id;
+   const topic=topics.find(t=>t.id===d.chuDeId);
+   document.getElementById('kv').innerHTML='<dt>Chủ đề</dt><dd>'+VL.esc(topic?.ten || 'Không chọn')+'</dd><dt>Trình độ</dt><dd>'+VL.levelHtml(d.trinhDo)+'</dd><dt>Phiên bản</dt><dd>'+d.version+'</dd>';
   }
-
-  VL.load(document.getElementById("deck-region"), {
-    errorTitle: "Không mở được bộ thẻ",
-    fetch: () => VL.api("GET", "/decks/" + encodeURIComponent(id)),
-    render: (d) => {
-      deck = d;
-      document.title = d.name + " – VocabLearning";
-      document.getElementById("stamps").innerHTML = (d.visibility === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") + '<span class="stamp">' + VL.esc(VL.GOAL[d.goal]) + "</span>";
-      document.getElementById("deck-title").textContent = d.name;
-      document.getElementById("deck-desc").textContent = d.description || "Chưa có mô tả.";
-      document.getElementById("add").href = "the-tao.html?deckId=" + d.id;
-      document.getElementById("study").href = "../dot2/hoc.html?boTheId=" + d.id;
-      document.getElementById("progress").href = "../dot2/bo-the-tien-do.html?id=" + d.id;
-      document.getElementById("import").href = "nhap-csv.html?deckId=" + d.id;
-      document.getElementById("edit").href = "bo-the-tao.html?id=" + d.id;
-      document.getElementById("empty-actions").innerHTML = '<a class="btn btn-primary" href="the-tao.html?deckId=' + d.id + '">Thêm thẻ</a><a class="btn btn-secondary" href="nhap-csv.html?deckId=' + d.id + '">Nhập CSV</a>';
-      document.getElementById("kv").innerHTML =
-        "<dt>Chủ đề</dt><dd>" + VL.esc(d.topicName) + "</dd><dt>Trình độ</dt><dd>" + VL.levelHtml(d.level) + "</dd><dt>Số thẻ</dt><dd>" + d.cardCount + "</dd>" +
-        "<dt>Nguồn</dt><dd>" + (d.sourceDeckId ? '<a href="thu-vien-chi-tiet.html?id=' + d.sourceDeckId + '">Bộ gốc trong thư viện</a>' : VL.esc(d.source)) + "</dd><dt>Cập nhật</dt><dd>" + VL.fmtDate(d.updatedAt) + "</dd>";
-      loadCards();
-    }
-  });
-
-  function loadCards() {
-    const q = document.getElementById("q").value.trim();
-    VL.load(document.getElementById("cards-region"), {
-      fetch: () => VL.api("GET", "/decks/" + id + "/cards" + (q ? "?q=" + encodeURIComponent(q) : "")),
-      isEmpty: (d) => !d.items.length,
-      empty: () => {
-        document.getElementById("card-count").textContent = "";
-        document.getElementById("empty-title").textContent = q ? "Không có thẻ nào khớp “" + q + "”" : "Bộ này chưa có thẻ";
-        document.getElementById("empty-text").textContent = q ? "Thử tìm bằng nghĩa tiếng Việt hoặc từ khác." : "Thêm từng thẻ hoặc nhập nhiều thẻ từ tệp CSV.";
-      },
-      render: (d) => {
-        document.getElementById("card-count").textContent = "(" + d.totalElements + ")";
-        const noById = {};
-        d.items.forEach((c, i) => { noById[c.id] = i + 1; });
-        document.getElementById("cards").innerHTML = d.items.map((c, i) =>
-          '<li class="answer-row card-row"><span class="answer-no">' + (i + 1) + "</span>" +
-          '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + "</span>" + (c.ipa ? '<span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + "</span>" : "") + (c.pos ? '<span class="pos" lang="en">' + VL.esc(c.pos) + "</span>" : "") + "</div>" +
-          '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
-          (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + "</p>" : "") +
-          '<div class="card-flags">' + (c.duplicateOf.length ? '<span class="stamp stamp-warning">' + VL.icon("alert") + "Có thể trùng với thẻ " + c.duplicateOf.map((x) => noById[x] || "khác").join(", ") + "</span>" : "") +
-          (c.imageUrl ? '<span class="stamp stamp-quiet">' + VL.icon("image") + "Có ảnh</span>" : "") + (c.audioUrl ? '<span class="stamp stamp-quiet">' + VL.icon("volume") + "Có âm thanh</span>" : "") +
-          (c.tagIds || []).map((t) => { const tag = VLDemo.db.tags.find((x) => x.id === t); return tag ? '<span class="stamp stamp-quiet">' + VL.esc(tag.name) + "</span>" : ""; }).join("") + "</div></div>" +
-          '<div class="card-tools"><button type="button" class="btn btn-quiet btn-sm" data-say="' + VL.esc(c.word) + '" aria-label="Nghe ' + VL.esc(c.word) + '">' + VL.icon("volume") + '<span>Nghe</span></button><a class="btn btn-quiet btn-sm" href="the-tao.html?deckId=' + id + "&id=" + c.id + '" aria-label="Sửa thẻ ' + VL.esc(c.word) + '">' + VL.icon("edit") + '<span>Sửa</span></a><button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + c.id + '" data-word="' + VL.esc(c.word) + '">' + VL.icon("trash") + "<span>Xóa</span></button></div></li>").join("");
-      }
-    });
-  }
-
-  document.getElementById("cards").addEventListener("click", async (e) => {
-    const s = e.target.closest("[data-say]");
-    if (s) { speak(s.dataset.say); return; }
-    const b = e.target.closest("[data-del]");
-    if (!b) return;
-    const ok = await VL.confirm({ title: "Xóa thẻ “" + b.dataset.word + "”?", message: "Thẻ sẽ bị xóa khỏi bộ này.", confirmText: "Xóa thẻ", danger: true });
-    if (!ok) return;
-    VL.busy(b, async () => {
-      try { await VL.api("DELETE", "/cards/" + b.dataset.del); VL.toast("Đã xóa thẻ"); loadCards(); }
-      catch (err) { VL.toast(err.message, "error"); }
-    });
-  });
-
-  let t;
-  document.getElementById("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(loadCards, 300); });
-
-  const exp = document.getElementById("export");
-  exp.addEventListener("click", () => VL.busy(exp, async () => {
-    try {
-      const res = await VL.api("GET", "/decks/" + id + "/export");
-      const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = (deck ? deck.name : "bo-the").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60).toLowerCase() + ".csv";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      VL.toast("Đã xuất tệp CSV");
-    } catch (err) { VL.toast(err.message, "error"); }
-  }));
+ });
 })();
 </script>
 </body>

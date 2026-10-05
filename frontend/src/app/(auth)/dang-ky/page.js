@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
@@ -7,6 +8,7 @@ import { Icon } from '@/components/ui';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState('');
 
   const registerMutation = useMutation({
     mutationFn: (data) => apiFetch('/api/v1/auth/register', {
@@ -17,16 +19,20 @@ export default function RegisterPage() {
       router.push(`/xac-thuc-email?email=${encodeURIComponent(variables.email)}`);
     },
     onError: (err) => {
-      alert(err.message || 'Đăng ký thất bại');
+      setErrorMsg(err.message);
     }
   });
 
   const handleRegister = (e) => {
     e.preventDefault();
+    if (!e.currentTarget.reportValidity()) return;
+    if (e.target.password.value !== e.target.confirm.value) { setErrorMsg('Hai mật khẩu chưa khớp.'); return; }
     registerMutation.mutate({
-      tenHienThi: e.target.name.value,
+      tenHienThi: e.target.elements.namedItem('name').value,
       email: e.target.email.value,
       password: e.target.password.value,
+      acceptTerms: e.target.querySelector('input[type=checkbox]').checked,
+      muiGio: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
   };
 
@@ -37,7 +43,7 @@ export default function RegisterPage() {
         <p>Bắt đầu hành trình cải thiện vốn từ.</p>
       </div>
 
-      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => alert('Chức năng Google đang được phát triển')}>
+      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => window.location.assign('/api/v1/auth/google/start')}>
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.8 6.1C12.3 13.6 17.6 9.5 24 9.5Z" />
           <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5Z" />
@@ -49,16 +55,17 @@ export default function RegisterPage() {
 
       <p className="or-divider">hoặc dùng email</p>
 
-      <form onSubmit={handleRegister} noValidate>
+      {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
+      <form onSubmit={handleRegister}>
         <div className="field">
           <label className="field-label" htmlFor="name">Tên hiển thị</label>
-          <input 
-            className="input" 
-            id="name" 
-            name="name" 
-            type="text" 
-            autoComplete="name" 
-            required 
+          <input
+            className="input"
+            id="name"
+            name="name" maxLength={100}
+            type="text"
+            autoComplete="name"
+            required
             placeholder="Ví dụ: Hoàng Anh"
           />
           <p className="field-error"></p>
@@ -66,32 +73,34 @@ export default function RegisterPage() {
 
         <div className="field">
           <label className="field-label" htmlFor="email">Email</label>
-          <input 
-            className="input" 
-            id="email" 
-            name="email" 
-            type="email" 
-            autoComplete="email" 
-            inputMode="email" 
-            required 
+          <input
+            className="input"
+            id="email"
+            name="email" maxLength={255}
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            required
             placeholder="ten@gmail.com"
           />
           <p className="field-error"></p>
         </div>
-        
+
         <div className="field">
           <label className="field-label" htmlFor="password">Mật khẩu</label>
-          <input 
-            className="input" 
-            id="password" 
-            name="password" 
-            type="password" 
-            autoComplete="new-password" 
-            required 
+          <input
+            className="input"
+            id="password"
+            name="password" minLength={8} maxLength={72} pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,72}" title="Mật khẩu 8–72 ký tự, có chữ cái và chữ số"
+            type="password"
+            autoComplete="new-password"
+            required
           />
           <p className="field-error"></p>
         </div>
-        
+
+        <div className="field"><label className="field-label" htmlFor="confirm">Nhập lại mật khẩu</label><input className="input" id="confirm" name="confirm" type="password" autoComplete="new-password" required maxLength={72} /></div>
+        <label className="choice"><input name="acceptTerms" type="checkbox" required /><span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span><span>Tôi đồng ý với <Link href="/chinh-sach">Điều khoản sử dụng</Link></span></label>
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={registerMutation.isPending}>
           {registerMutation.isPending ? 'Đang tạo...' : 'Tạo tài khoản'}
         </button>

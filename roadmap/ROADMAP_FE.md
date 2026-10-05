@@ -1,5 +1,7 @@
 # ROADMAP FRONTEND — VocabLearning (VocabFlow)
 
+> Trạng thái05/10/2026: theo yêu cầu mới nhất, toàn bộ thay đổi trong frontend đã hoàn tác. GĐ0–B1.8 đã sửa/kiểm chứng BE và cập nhật hợp đồng bàn giao; các mục tích hợp FE còn cần làm trong lượt riêng. Build/lint/browser trước hoàn tác không chứng minh mã FE hiện tại. Mockup ngoài frontend là demo; công nghệ/form/kiểm thử trong roadmap là định hướng.
+
 > Nguồn: TK (`docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` §4, §6, §9, §10, §16), lịch sprint `roadmap/SPRINT_PLAN.md`, API từ `report/<PHASE>_BAO_CAO_FE.md`.
 > Mỗi bước `Fx.y` ghép với bước BE cùng số giai đoạn. Màn hình `UIxx` và route: `SPRINT_PLAN.md` §5.
 > Quy trình một màn hình: `/ui-brief` → `/ui-mockup <UI>` → `/fe-from-mockup mockups/<phase>/<file>.html` → nối API thật.

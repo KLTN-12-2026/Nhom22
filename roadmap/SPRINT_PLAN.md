@@ -1,5 +1,7 @@
 # KẾ HOẠCH SPRINT — VocabLearning (VocabFlow) · BE + FE thống nhất
 
+> Phần dưới có ảnh chụp tiến độ29/09. Trạng thái hiện hành theo ROADMAP_BE và báo cáo Đợt1 cập nhật05/10; FE đã khởi tạo và tích hợp GĐ0–B1.8.
+
 > Nguồn: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (**TK**: §3 quyền, §4 chức năng, §5 FR, §6 luồng, §7 SRS, §8 luyện tập, §9 trải nghiệm, §10 màn hình, §13 API, §18 mốc, §19 TC, §20 demo), `docs/– Chức năng đối với User.txt`, `roadmap/ROADMAP_BE.md` (bước **B**), `roadmap/ROADMAP_FE.md` (bước **F**).
 > Thời gian: **28/09/2026 – 14/12/2026**, 11 sprint × 1 tuần (thứ Hai → Chủ nhật). Mốc giai đoạn giữ đúng TK §18.1.
 
@@ -21,7 +23,7 @@
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
-**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8), B1.1 và B1.2, 42 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `bao-cao-tien-do-BE/BAO_CAO_TIEN_DO_BE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
+**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8), B1.1 và B1.2, 42 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `report/DOT1_BAO_CAO_FE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
 
 ---
 

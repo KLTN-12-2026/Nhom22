@@ -1,34 +1,39 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Icon } from '@/components/ui';
+import { ErrorState, Pagination, Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function AdminTopicsPage() {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
+  const dialogRef = useRef(null);
   const [kind, setKind] = useState('topics'); // 'topics' or 'tags'
   const [nameInput, setNameInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  
+
   // For renaming topics
   const [renamingId, setRenamingId] = useState(null);
   const [newName, setNewName] = useState('');
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin', kind],
-    queryFn: () => apiFetch(`/api/v1/admin/${kind}`)
+  useEffect(() => { if (renamingId && dialogRef.current && !dialogRef.current.open) dialogRef.current.showModal(); }, [renamingId]);
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['admin', kind, page],
+    queryFn: () => apiFetch(`/api/v1/admin/${kind}?page=${page}&size=20`)
   });
 
-  const list = data || [];
+  const list = data?.items || [];
 
   const addMutation = useMutation({
     mutationFn: (name) => apiFetch(`/api/v1/admin/${kind}`, {
       method: 'POST',
-      body: JSON.stringify({ name })
+      body: JSON.stringify({ ten: name })
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin', kind]);
+      queryClient.invalidateQueries({ queryKey: ['admin', kind] });
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['public-topics'] });
       setNameInput('');
       setErrorMsg('');
       alert(kind === 'topics' ? 'Đã thêm chủ đề' : 'Đã thêm nhãn');
@@ -41,7 +46,9 @@ export default function AdminTopicsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => apiFetch(`/api/v1/admin/${kind}/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin', kind]);
+      queryClient.invalidateQueries({ queryKey: ['admin', kind] });
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['public-topics'] });
       alert('Đã xóa');
     },
     onError: (err) => {
@@ -50,12 +57,14 @@ export default function AdminTopicsPage() {
   });
 
   const renameMutation = useMutation({
-    mutationFn: ({ id, name }) => apiFetch(`/api/v1/admin/topics/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ name })
+    mutationFn: ({ id, name, version }) => apiFetch(`/api/v1/admin/${kind}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ten: name, version, ...(kind === 'topics' ? { moTa: list.find(item => item.id === id)?.moTa } : {}) })
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'topics']);
+      queryClient.invalidateQueries({ queryKey: ['admin', kind] });
+      queryClient.invalidateQueries({ queryKey: ['topics'] });
+      queryClient.invalidateQueries({ queryKey: ['public-topics'] });
       setRenamingId(null);
       alert('Đã lưu tên');
     },
@@ -71,9 +80,9 @@ export default function AdminTopicsPage() {
   };
 
   const handleDelete = (item) => {
-    const msg = kind === "topics" 
-      ? `Xóa “${item.name}”? Chủ đề sẽ biến khỏi bộ lọc thư viện.` 
-      : `Xóa “${item.name}”? Nhãn sẽ được gỡ khỏi mọi thẻ đang gắn.`;
+    const msg = kind === "topics"
+      ? `Xóa “${item.ten}”? Chủ đề sẽ biến khỏi bộ lọc thư viện.`
+      : `Xóa “${item.ten}”? Nhãn sẽ được gỡ khỏi mọi thẻ đang gắn.`;
     if (confirm(msg)) {
       deleteMutation.mutate(item.id);
     }
@@ -81,18 +90,18 @@ export default function AdminTopicsPage() {
 
   const openRename = (item) => {
     setRenamingId(item.id);
-    setNewName(item.name);
+    setNewName(item.ten);
   };
 
   const handleRename = (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    renameMutation.mutate({ id: renamingId, name: newName });
+    renameMutation.mutate({ id: renamingId, name: newName, version: list.find(item => item.id === renamingId)?.version });
   };
 
-  const LABEL = { 
-    topics: ["Tên chủ đề mới", "Thêm chủ đề", "Số bộ thẻ", "Ví dụ: Y tế và sức khỏe", "Danh sách chủ đề"], 
-    tags: ["Tên nhãn mới", "Thêm nhãn", "Số thẻ", "Ví dụ: Part 6", "Danh sách nhãn"] 
+  const LABEL = {
+    topics: ["Tên chủ đề mới", "Thêm chủ đề", "Số bộ thẻ", "Ví dụ: Y tế và sức khỏe", "Danh sách chủ đề"],
+    tags: ["Tên nhãn mới", "Thêm nhãn", "Số thẻ", "Ví dụ: Part 6", "Danh sách nhãn"]
   };
   const L = LABEL[kind];
 
@@ -107,19 +116,19 @@ export default function AdminTopicsPage() {
           </div>
 
           <div className="tabs" role="tablist" aria-label="Danh mục">
-            <button 
-              className="tab" 
-              role="tab" 
-              aria-selected={kind === 'topics'} 
-              onClick={() => { setKind('topics'); setErrorMsg(''); }}
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={kind === 'topics'}
+              onClick={() => { setKind('topics'); setPage(0); setRenamingId(null); setErrorMsg(''); }}
             >
               Chủ đề
             </button>
-            <button 
-              className="tab" 
-              role="tab" 
-              aria-selected={kind === 'tags'} 
-              onClick={() => { setKind('tags'); setErrorMsg(''); }}
+            <button
+              className="tab"
+              role="tab"
+              aria-selected={kind === 'tags'}
+              onClick={() => { setKind('tags'); setPage(0); setRenamingId(null); setErrorMsg(''); }}
             >
               Nhãn
             </button>
@@ -128,25 +137,25 @@ export default function AdminTopicsPage() {
           <form className={styles.addForm} id="add" noValidate onSubmit={handleAdd}>
             <div className="field" style={{ flex: '1 1 260px' }}>
               <label className="field-label" htmlFor="name">{L[0]}</label>
-              <input 
-                className="input" 
-                id="name" 
-                name="name" 
-                maxLength="90" 
-                autoComplete="off" 
+              <input
+                className="input"
+                id="name"
+                name="name"
+                maxLength={kind === 'topics' ? 100 : 50}
+                autoComplete="off"
                 placeholder={L[3]}
                 value={nameInput}
                 onChange={e => setNameInput(e.target.value)}
               />
               <p className="field-error" style={{ display: errorMsg ? 'block' : 'none' }}>{errorMsg}</p>
             </div>
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
+            <button
+              type="submit"
+              className="btn btn-primary"
               disabled={addMutation.isPending}
               style={{ marginTop: '26px' }}
             >
-              <Icon name={kind === 'topics' ? 'folder' : 'tag'} /> 
+              <Icon name={kind === 'topics' ? 'folder' : 'tag'} />
               <span>{addMutation.isPending ? 'Đang thêm...' : L[1]}</span>
             </button>
           </form>
@@ -158,7 +167,7 @@ export default function AdminTopicsPage() {
                 <div className="sk sk-row"></div>
               </div>
             </div>
-            
+
             <div data-when="ready">
               <div className="table-wrap">
                 <table className={`data-table ${styles.adminTable}`}>
@@ -175,15 +184,15 @@ export default function AdminTopicsPage() {
                     {list.map((item, i) => (
                       <tr key={item.id}>
                         <td className="num">{i + 1}</td>
-                        <td className={styles.name}>{item.name}</td>
-                        <td>{kind === 'topics' ? item.deckCount : item.cardCount}</td>
+                        <td className={styles.name}>{item.ten}</td>
+                        <td>{'—'}</td>
                         <td>
-                          {kind === 'topics' && (
-                            <button type="button" className="btn btn-quiet btn-sm" onClick={() => openRename(item)}>
+                          {(
+                            <button type="button" className="btn btn-quiet btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => openRename(item)}>
                               <Icon name="edit" /> Đổi tên
                             </button>
                           )}
-                          <button type="button" className="btn btn-quiet btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => handleDelete(item)}>
+                          <button type="button" className="btn btn-quiet btn-sm" style={{ color: 'var(--color-danger)' }} disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => handleDelete(item)}>
                             <Icon name="trash" /> Xóa
                           </button>
                         </td>
@@ -200,11 +209,12 @@ export default function AdminTopicsPage() {
                 <p>Thêm mục đầu tiên bằng ô phía trên.</p>
               </div>
             </div>
-            
+
             <div data-when="error">
-              <div className="notice notice-error">Lỗi khi tải dữ liệu</div>
+              <ErrorState description={error?.message} onRetry={refetch} />
             </div>
           </div>
+          <Pagination page={page + 1} totalPages={data?.totalPages || 0} onPageChange={n => setPage(n - 1)} />
         </section>
 
         <aside className="side-col">
@@ -221,20 +231,20 @@ export default function AdminTopicsPage() {
 
       {/* Rename Dialog */}
       {renamingId && (
-        <dialog className="dialog" open>
+        <dialog ref={dialogRef} className="dialog" onCancel={() => setRenamingId(null)}>
           <form className="dialog-body" noValidate onSubmit={handleRename}>
             <div className="dialog-head">
-              <h2 id="rn-title">Đổi tên chủ đề</h2>
+              <h2 id="rn-title">{kind === 'topics' ? 'Đổi tên chủ đề' : 'Đổi tên nhãn'}</h2>
             </div>
             <div className="field">
               <label className="field-label" htmlFor="rn">Tên mới</label>
-              <input 
-                className="input" 
-                id="rn" 
-                name="name" 
-                maxLength="90" 
-                value={newName} 
-                onChange={e => setNewName(e.target.value)} 
+              <input
+                className="input"
+                id="rn"
+                name="name"
+                maxLength={kind === 'topics' ? 100 : 50}
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
                 autoFocus
               />
             </div>

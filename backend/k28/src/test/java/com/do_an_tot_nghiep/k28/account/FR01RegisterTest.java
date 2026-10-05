@@ -54,6 +54,17 @@ class FR01RegisterTest extends AbstractIntegrationTest {
     PasswordEncoder passwordEncoder;
 
     @Test
+    void tc01_registerRejectsOffsetTimezoneWithFieldError() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/register").with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(Map.of("tenHienThi", "Minh Anh",
+                                "email", newEmail(), "password", PASSWORD, "acceptTerms", true,
+                                "muiGio", "+07:00"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("muiGio"));
+    }
+
+    @Test
     void tc01_registerCreatesUnverifiedUserWithBcryptPassword() throws Exception {
         String email = newEmail();
 

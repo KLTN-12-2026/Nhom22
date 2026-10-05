@@ -186,6 +186,7 @@ class FR02SettingsTest extends AbstractIntegrationTest {
         body.put("phutMoiNgay", phut);
         body.put("tuMoiMoiNgay", tuMoi);
         body.put("version", version);
+        body.put("chuDeIds", java.util.List.of());
         return body;
     }
 
