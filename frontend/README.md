@@ -1,25 +1,70 @@
-# VocabLearning frontend
+# VocabLearning — Frontend
 
-## Chạy với backend thật
+Ứng dụng web tiếng Việt của VocabLearning, xây dựng bằng Next.js và React. Giao diện cung cấp không gian quản lý bộ thẻ từ vựng, tài khoản cá nhân và thiết lập học tập.
 
-- Cần Node.js và backend ở `http://localhost:8080`.
-- Trong thư mục `frontend`: chạy `npm ci`, sau đó `npm run dev`.
-- Mở `http://localhost:3000`. Frontend gọi `/api/v1/*` qua proxy cùng miền; cookie phiên và CSRF được giữ tự động.
-- Nếu backend dùng địa chỉ khác, tạo `.env.local` từ `.env.example` và sửa `API_URL`, rồi khởi động lại frontend.
-- Dùng email thật để đăng ký và mở thư xác thực. Tài khoản demo của mockups không tự tồn tại trong MySQL.
+## Yêu cầu
 
-## Chức năng khớp backend hiện tại
+- Node.js 22 LTS và npm.
+- Backend VocabLearning đang chạy, mặc định tại `http://localhost:8080`.
 
-Tài khoản, đăng nhập/đăng xuất, xác thực email, Google, hồ sơ/ảnh đại diện, thiết lập học/thông báo, danh mục quản trị, tạo/sửa/xóa/yêu thích bộ thẻ. Danh sách dùng PageResponse và phiên bản từ máy chủ khi lưu.
+## Chạy frontend
 
-Thẻ, CSV, thư viện, học, luyện tập, sổ tay, thống kê và các phần quản trị Đợt 2 chưa có controller backend; frontend hiển thị trạng thái chưa hỗ trợ thay vì gọi endpoint chưa tồn tại. Các trang dự kiến được giữ để tiếp tục triển khai.
+Mở terminal trong thư mục `frontend` và thực hiện:
 
-## Kiểm tra
+```powershell
+Copy-Item .env.example .env.local
+npm ci
+npm run dev
+```
 
-- `npm run lint`
-- `npm test`
-- `npm run build`
+Chỉ cần sao chép file môi trường trong lần thiết lập đầu tiên.
 
-Các bài kiểm tra bao phủ CSRF, cookie, xoay token khi đăng nhập, phản hồi rỗng, lỗi phiên bản/validation và lỗi mạng.
+Mở **[VocabLearning](http://localhost:3000)** trên trình duyệt. Khi đăng ký tài khoản trên máy cá nhân, mở [Mailpit](http://localhost:8025) để đọc email xác thực.
 
-Có thể kiểm tra giao diện riêng với fixture: chạy `node tests/contract-server.mjs`, sau đó đặt `API_URL=http://127.0.0.1:43127`, `NEXT_DIST_DIR=.next-contract` và chạy `npm run dev -- --port 3001`. Fixture chỉ dùng cho kiểm thử, không thay thế backend thật.
+## Kết nối backend
+
+File `.env.local` sử dụng các giá trị:
+
+```dotenv
+API_URL=http://localhost:8080
+NEXT_PUBLIC_API_MOCKING=disabled
+```
+
+| Biến | Ý nghĩa |
+|---|---|
+| `API_URL` | Địa chỉ gốc của backend, không bao gồm `/api/v1` |
+| `NEXT_PUBLIC_API_MOCKING` | Đặt `disabled` để sử dụng backend thật |
+
+Frontend gọi `/api/*` trên cùng địa chỉ website. Next.js chuyển tiếp yêu cầu tới backend, giữ cookie phiên đăng nhập và cơ chế CSRF.
+
+Nếu backend chạy ở địa chỉ khác, cập nhật `API_URL` rồi khởi động lại frontend. Khi đổi cổng hoặc địa chỉ website, cập nhật `APP_FRONTEND_URL` ở backend tương ứng.
+
+## Build và chạy
+
+Thiết lập `API_URL` trước khi build, sau đó chạy:
+
+```powershell
+npm run build
+npm run start
+```
+
+Truy cập [localhost:3000](http://localhost:3000). Backend cần tiếp tục chạy để sử dụng các chức năng có dữ liệu và đăng nhập.
+
+## Lệnh thường dùng
+
+| Lệnh | Chức năng |
+|---|---|
+| `npm ci` | Cài đặt thư viện theo file khóa phiên bản |
+| `npm run dev` | Chạy môi trường phát triển |
+| `npm run build` | Tạo bản build |
+| `npm run start` | Chạy bản build |
+| `npm run lint` | Kiểm tra quy tắc mã nguồn |
+| `npm test` | Chạy kiểm thử |
+
+## Xử lý lỗi kết nối
+
+- **Không tải được dữ liệu:** kiểm tra backend đã chạy và `API_URL` trỏ đúng địa chỉ; mở [Health check](http://localhost:8080/actuator/health/readiness) nếu dùng cổng mặc định.
+- **Cổng 3000 đang được sử dụng:** dừng ứng dụng đang chiếm cổng hoặc chạy `npm run dev -- --port 3001`, đồng thời đổi `APP_FRONTEND_URL` của backend thành `http://localhost:3001`.
+- **Thay đổi cấu hình chưa có hiệu lực:** dừng frontend bằng `Ctrl+C` rồi chạy lại; nếu dùng bản build, build lại trước khi chạy.
+
+Để dừng frontend, nhấn `Ctrl+C` trong terminal đang chạy.
