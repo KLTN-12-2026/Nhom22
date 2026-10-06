@@ -243,9 +243,15 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 - **Phạm vi bước sau:** mục tiêu bộ, số thẻ, tìm kiếm toàn bộ thư viện và favorite listing phải chốt trước B1.9/B1.10. Mục tiêu hồ sơ không tự trở thành mục tiêu bộ.
 
-### [ ] B1.9 Thẻ từ vựng — FR-03, TC-02
+### [x] B1.9 Thẻ từ vựng — FR-03, TC-02
 - API: `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`.
 - Trường: từ, từ loại, nghĩa, IPA, ví dụ EN, bản dịch, độ khó, nguồn, ảnh/âm (`the_tep`). Kiểm tra quyền **cả bộ cha**. Cảnh báo trùng theo từ + từ loại đã chuẩn hóa (không chặn).
+- **Triển khai 06/10/2026:** đã có controller/service bốn API thẻ; nhãn qua `the_nhan`, tệp qua `the_tep`; khóa bộ cha khi ghi, xóa mềm giữ liên kết, PATCH tăng version cả khi chỉ sửa liên kết. Bổ sung `GET /public/tags` phân trang để đọc nhãn và chuẩn hóa khoảng trắng Unicode. Dùng schema V4 hiện có, không sửa migration.
+- **Kiểm chứng 06/10/2026:** người dùng xác nhận build/test đã pass, chưa cung cấp log hoặc số lượng. Lượt HTTP riêng B1.9 tại localhost:8080 đạt 77/77 lượt HTTP và 19/19 assertion dữ liệu/kết quả; không cộng thành số test JUnit. Bằng chứng: [HTTP B1.9](../report/evidence/B1.9-http-603099a05ed3.json). Đã kiểm tra CRUD, quyền USER, Unicode/trùng, nhãn/tệp, rollback, version/no-op, xóa mềm giữ liên kết và hai PATCH đồng thời cùng version. Bộ cha xóa mềm được chuẩn bị bằng SQL trên bộ thử mới; không gọi lại HTTP xóa bộ B1.8.
+- **Suite bổ sung 06/10/2026:** Sau sửa baseline, người dùng xác nhận FR03CardTest đã pass toàn bộ; agent không chạy JUnit và chưa có log để xác nhận số lượt thực chạy. Source có16 phương thức/22 lượt dự kiến, không ghi thành22/22 quan sát được. Bao phủ CRUD/validation/Unicode/trùng, USER/ADMIN/guest/CSRF, bộ cha xóa mềm, nhãn/tệp/version, rollback JPA+JDBC, bảo toàn liên kết/avatar/S3 và hai PATCH đồng thời.
+- **HTTP ADMIN 06/10/2026:** đạt9/9 kiểm tra riêng (own CRUD4, foreign public404 cả4 API, xác nhận role1). [Evidence](../report/evidence/B1.9-http-ec263badc3c9.json). Quyền ADMIN thử đã thu hồi và logout. Chờ hạn mức hết tự nhiên, không sửa/xóa rate limit; không chạy lại B1.8 đã bỏ qua. Postman đã bàn giao theo ghi nhận bên dưới; B1.9 hoàn tất trong phạm vi BE, kiểm chứng và đồng bộ.
+- **Bàn giao:** báo cáo Đợt 1 mục5.39 và mục10 đối chiếu06/10; [luồng B1.9](../docs/luong-backend/B1.9-the-tu-vung.md). Postman thêm28 request cho5 API, collection108 request; cả hai environment thêm12 biến, giữ biến cũ. Đã khôi phục registry/export và [README](../postman/README.md). [Evidence đồng bộ](../report/evidence/B1.9-postman-sync-20261006.json), [HTTP mẫu5/5](../report/evidence/B1.9-http-edc71d632f85.json); chưa chạy script Postman/Newman mới. Không sửa FE/mockup.
+- **Đối chiếu bổ sung06/10:** DTO/entity khớp V4; giữ4 API quản lý thẻ (không có GET riêng /cards/{id}), ownership cả bộ cha, cảnh báo trùng không chặn, PATCH thẻ tăng version kể cả no-op. Suite CRUD đã pass theo người dùng; HTTP ADMIN9/9 đã kiểm chứng; Postman đã đồng bộ, đủ đóng bước B1.9; quét trùng toàn bộ bộ là điểm tối ưu sau khi đo.
 
 ### [ ] B1.10 Thư viện công khai — FR-04
 - API: `GET /library/decks` (q, chủ đề, trình độ, mục tiêu, nguồn, sắp xếp, phân trang), `GET /library/decks/{id}`.

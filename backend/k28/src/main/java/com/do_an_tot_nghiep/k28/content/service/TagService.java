@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@PreAuthorize("hasRole('ADMIN')")
 public class TagService {
     private final NhanRepository tags;
     private final CatalogMapper mapper;
@@ -36,11 +35,13 @@ public class TagService {
                 .map(mapper::toResponse));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public TagResponse get(Long id) {
         return mapper.toResponse(tagOf(id));
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public TagResponse create(CreateTagRequest request) {
         if (tags.existsByTen(request.ten())) {
             throw duplicateName();
@@ -50,6 +51,7 @@ public class TagService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public TagResponse update(Long id, UpdateTagRequest request) {
         Nhan tag = tagOf(id);
         if (!Objects.equals(tag.getVersion(), request.version())) {
@@ -66,6 +68,7 @@ public class TagService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long id) {
         Nhan tag = tagOf(id);
         if (tags.countReferences(id) > 0) {
