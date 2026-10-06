@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.dto;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
 import jakarta.validation.constraints.*;
@@ -25,7 +26,9 @@ public record CreateDeckRequest(
         @NotNull(message = "Chọn trình độ")
         TrinhDo trinhDo,
 
-        QuyenTruyCap quyenTruyCap
+        QuyenTruyCap quyenTruyCap,
+
+        MucTieu mucTieu
 ) {
     public CreateDeckRequest {
         ten = ten == null ? null : ten.strip();

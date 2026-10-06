@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.dto;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
 import jakarta.validation.constraints.*;
@@ -27,6 +28,10 @@ public record UpdateDeckRequest(
 
         QuyenTruyCap quyenTruyCap,
 
+        MucTieu mucTieu,
+
+        boolean boMucTieu,
+
         @NotNull(message = "Thiếu phiên bản, vui lòng tải lại")
         @PositiveOrZero(message = "Phiên bản không hợp lệ")
         Long version
@@ -35,10 +40,15 @@ public record UpdateDeckRequest(
         ten = ten == null ? null : ten.strip();
         moTa = moTa == null ? null : moTa.strip();
         boChuDe = Boolean.TRUE.equals(boChuDe);
+        boMucTieu = Boolean.TRUE.equals(boMucTieu);
     }
 
     @AssertTrue(message = "Không gửi chuDeId khi yêu cầu bỏ chủ đề")
     public boolean isTopicSelectionValid() {
         return !boChuDe || chuDeId == null;
+    }
+
+    public boolean isGoalSelectionValid() {
+        return !boMucTieu || mucTieu == null;
     }
 }

@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
@@ -47,6 +48,14 @@ public class BoThe extends BaseEntity {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
     private TrangThaiKiemDuyet trangThaiKiemDuyet;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(length = 20)
+    private MucTieu mucTieu;
+
+    @Column(nullable = false)
+    private boolean boMau;
 
     private Long boNguonId;
 
@@ -96,5 +105,9 @@ public class BoThe extends BaseEntity {
         if (xoaAt == null) {
             xoaAt = deletedAt;
         }
+    }
+
+    public void updateGoal(MucTieu mucTieu) {
+        this.mucTieu = mucTieu;
     }
 }
