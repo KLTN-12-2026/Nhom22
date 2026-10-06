@@ -17,7 +17,7 @@
   .add-form .btn { margin-top: 26px; }
   .admin-table td:last-child { text-align: right; white-space: nowrap; }
   .admin-table td { vertical-align: middle; }
-  .admin-table .name { font-weight: 650; font-size: 1rem; }
+  .admin-table .ten { font-weight: 650; font-size: 1rem; }
 </style>
 </head>
 <body data-root=".." data-nav="admin-topics" data-auth="required" data-role="ADMIN">
@@ -42,8 +42,8 @@
 
           <form class="add-form" id="add" novalidate>
             <div class="field">
-              <label class="field-label" for="name" id="add-label">Tên chủ đề mới</label>
-              <input class="input" id="name" name="name" maxlength="90" autocomplete="off" placeholder="Ví dụ: Y tế và sức khỏe">
+              <label class="field-label" for="ten" id="add-label">Tên chủ đề mới</label>
+              <input class="input" id="ten" name="ten" maxlength="100" autocomplete="off" placeholder="Ví dụ: Y tế và sức khỏe">
               <p class="field-error"></p>
             </div>
             <button type="submit" class="btn btn-primary" id="add-btn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span id="add-text">Thêm chủ đề</span></button>
@@ -81,6 +81,7 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -97,18 +98,20 @@
     document.getElementById("add-label").textContent = L[0];
     document.getElementById("add-text").textContent = L[1];
     document.getElementById("col-use").textContent = L[2];
-    form.name.placeholder = L[3];
+    form.ten.placeholder = L[3];
+    form.ten.maxLength = kind === "topics" ? 100 : 50;
     document.getElementById("cap").textContent = L[4];
     document.querySelectorAll("[data-kind]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.kind === kind)));
     region.setAttribute("aria-labelledby", kind === "topics" ? "t-topics" : "t-tags");
     VL.load(region, {
       fetch: () => VL.api("GET", "/admin/" + kind),
-      isEmpty: (d) => !d.length,
-      render: (list) => {
+      isEmpty: (d) => !d.items.length,
+      render: (response) => {
+        const list = response.items;
         document.getElementById("rows").innerHTML = list.map((x, i) =>
-          '<tr><td class="num">' + (i + 1) + '</td><td class="name">' + VL.esc(x.name) + "</td><td>" + (kind === "topics" ? x.deckCount : x.cardCount) + "</td><td>" +
-          (kind === "topics" ? '<button type="button" class="btn btn-quiet btn-sm" data-rename="' + x.id + '" data-name="' + VL.esc(x.name) + '">' + VL.icon("edit") + "Đổi tên</button>" : "") +
-          '<button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + x.id + '" data-name="' + VL.esc(x.name) + '">' + VL.icon("trash") + "Xóa</button></td></tr>").join("");
+          '<tr><td class="num">' + (i + 1) + '</td><td class="ten">' + VL.esc(x.ten) + "</td><td>" + "—" + "</td><td>" +
+          (true ? '<button type="button" class="btn btn-quiet btn-sm" data-version="' + x.version + '" data-rename="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("edit") + "Đổi tên</button>" : "") +
+          '<button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("trash") + "Xóa</button></td></tr>").join("");
       }
     });
   }
@@ -120,7 +123,7 @@
     VL.clearErrors(form);
     VL.busy(addBtn, async () => {
       try {
-        await VL.api("POST", "/admin/" + kind, { name: form.name.value });
+        await VL.api("POST", "/admin/" + kind, { ten: form.ten.value });
         VL.toast(kind === "topics" ? "Đã thêm chủ đề" : "Đã thêm nhãn");
         form.reset();
         load();
@@ -132,7 +135,7 @@
     const del = e.target.closest("[data-del]");
     const ren = e.target.closest("[data-rename]");
     if (del) {
-      const ok = await VL.confirm({ title: "Xóa “" + del.dataset.name + "”?", message: kind === "topics" ? "Chủ đề sẽ biến khỏi bộ lọc thư viện." : "Nhãn sẽ được gỡ khỏi mọi thẻ đang gắn.", confirmText: "Xóa", danger: true });
+      const ok = await VL.confirm({ title: "Xóa “" + del.dataset.ten + "”?", message: kind === "topics" ? "Chủ đề sẽ biến khỏi bộ lọc thư viện." : "Nhãn đang được sử dụng sẽ được giữ lại và trả lỗi 409.", confirmText: "Xóa", danger: true });
       if (!ok) return;
       VL.busy(del, async () => {
         try { await VL.api("DELETE", "/admin/" + kind + "/" + del.dataset.del); VL.toast("Đã xóa"); load(); }
@@ -143,21 +146,22 @@
       const d = document.createElement("dialog");
       d.className = "dialog";
       d.setAttribute("aria-labelledby", "rn-title");
-      d.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="rn-title">Đổi tên chủ đề</h2></div><div class="field"><label class="field-label" for="rn">Tên mới</label><input class="input" id="rn" name="name" maxlength="90"><p class="field-error"></p></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">Lưu tên</button></div></form>';
+      d.innerHTML = '<form class="dialog-body" novalidate><div class="dialog-head"><h2 id="rn-title">Đổi tên chủ đề</h2></div><div class="field"><label class="field-label" for="rn">Tên mới</label><input class="input" id="rn" name="ten" maxlength="100"><p class="field-error"></p></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">Lưu tên</button></div></form>';
       document.body.appendChild(d);
       const f = d.querySelector("form");
-      f.name.value = ren.dataset.name;
+      f.ten.maxLength = kind === "topics" ? 100 : 50;
+      f.ten.value = ren.dataset.ten;
       d.addEventListener("close", () => d.remove());
       d.querySelector("[data-close]").addEventListener("click", () => d.close());
       f.addEventListener("submit", (ev) => {
         ev.preventDefault();
         VL.busy(f.querySelector('[type="submit"]'), async () => {
-          try { await VL.api("PATCH", "/admin/topics/" + ren.dataset.rename, { name: f.name.value }); d.close(); VL.toast("Đã lưu tên"); load(); }
+          try { await VL.api("PUT", "/admin/" + kind + "/" + ren.dataset.rename, { ten: f.ten.value, version: Number(ren.dataset.version) }); d.close(); VL.toast("Đã lưu tên"); load(); }
           catch (err) { VL.showErrors(f, err); }
         });
       });
       d.showModal();
-      f.name.select();
+      f.ten.select();
     }
   });
   load();

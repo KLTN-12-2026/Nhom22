@@ -49,11 +49,7 @@
           </div>
           <p class="field-error"></p>
         </div>
-        <label class="choice">
-          <input type="checkbox" name="remember" checked>
-          <span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
-          <span class="choice-body"><span>Ghi nhớ đăng nhập trên thiết bị này (7 ngày)</span></span>
-        </label>
+        <p class="small muted">Dùng cookie phiên; chưa hỗ trợ ghi nhớ đăng nhập 7 ngày.</p>
         <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit">Đăng nhập</button>
       </form>
 
@@ -104,7 +100,7 @@
     VL.clearErrors(form);
     VL.busy(submit, async () => {
       try {
-        const user = await VL.api("POST", "/auth/login", { email: form.email.value, password: form.password.value, remember: form.remember.checked });
+        const user = await VL.api("POST", "/auth/login", { email: form.email.value, password: form.password.value });
         const dest = !user.daHoanTatKhoiDau ? "bat-dau.html" : (p.next ? "../" + p.next : "../dot2/hom-nay.html");
         location.href = dest;
       } catch (err) {

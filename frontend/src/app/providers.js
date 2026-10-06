@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { ToastProvider } from '@/components/ui/Toast';
 import { queryClient } from '@/lib/query-client';
 
 // Thêm biến global này ở ngoài để giữ Promise khởi động MSW
@@ -32,7 +33,7 @@ export function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </QueryClientProvider>
   );
 }

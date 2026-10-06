@@ -1,5 +1,7 @@
 # VocabLearning
 
+> Backend .env.example có Google placeholder không rỗng để boot; Google thật cần client ID/secret/callback hợp lệ. Theo yêu cầu mới nhất, các thay đổi trong frontend đã hoàn tác; còn các việc tích hợp API ghi trong báo cáo đối chiếu. Hướng dẫn proxy là hợp đồng bàn giao cần áp dụng, chưa xác nhận client FE hiện tại. Mockup là demo, không thay thế kiểm thử HTTP.
+
 Website học từ vựng tiếng Anh cho người Việt: bộ thẻ, ôn tập lặp lại ngắt quãng (SRS), luyện tập, phát âm và thống kê tiến độ. Khóa luận tốt nghiệp K28.
 
 | Thành phần | Công nghệ |
@@ -7,7 +9,7 @@ Website học từ vựng tiếng Anh cho người Việt: bộ thẻ, ôn tập
 | Backend (`backend/k28`) | Java 21, Spring Boot 4, Spring Security + Spring Session (Redis), JPA/Hibernate, Flyway, Lombok, MapStruct |
 | Hạ tầng dev | MySQL 8.4, Redis 7.4, RustFS (S3), Mailpit, Docker Compose |
 | Frontend (`frontend`) | Next.js (JavaScript, App Router), React Query, React Hook Form, Zod |
-| Mockup (`mockups`) | HTML/CSS/JS tĩnh, gọi API thật hoặc chạy chế độ demo |
+| Mockup (`mockups`) | HTML/CSS/JS demo; yêu cầu tích hợp Next.js theo báo cáo bàn giao |
 
 ## Yêu cầu
 
@@ -88,7 +90,7 @@ report/        Báo cáo bàn giao API từ backend cho frontend
 
 ## Tiến độ
 
-Tiến độ backend được theo dõi bằng các bước đã tick trong [roadmap/ROADMAP_BE.md](roadmap/ROADMAP_BE.md). Hiện đã xong GĐ0 (nền tảng) và B1.1–B1.5 (tài khoản, đăng nhập Google, hồ sơ và thiết lập).
+Tiến độ backend được theo dõi bằng các bước đã tick trong [roadmap/ROADMAP_BE.md](roadmap/ROADMAP_BE.md). Đợt sửa 05/10/2026 bao phủ GĐ0–B1.8: tài khoản, thiết lập, tệp, danh mục và bộ cá nhân. B1.9 đang triển khai; kiểm chứng và giới hạn theo báo cáo Đợt 1.
 
 ## Tài liệu
 

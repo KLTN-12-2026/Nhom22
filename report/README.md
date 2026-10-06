@@ -1,19 +1,15 @@
-# Báo cáo backend và bàn giao BE → FE
+# Báo cáo giai đoạn và bàn giao BE → FE
 
-## Báo cáo backend
+- [Đối chiếu và kết quả khắc phục 05/10/2026](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md): 54 mục, cách xử lý và bằng chứng cuối đợt.
 
-| Giai đoạn | Cập nhật | Báo cáo | Trạng thái |
-|---|---|---|---|
-| Đợt 1 — Tài khoản & nội dung | 04/10/2026 | [DOT1_BAO_CAO_BE.md](DOT1_BAO_CAO_BE.md) | B1.1–B1.7 hoàn thành theo roadmap; B1.8 triển khai7 API, HTTP34/34, còn thiếu kiểm chứng; B1.9–B1.12 chưa triển khai |
-
-## Báo cáo bàn giao frontend
+Mỗi báo cáo FE ghi cả trạng thái triển khai BE, bằng chứng kiểm chứng và hợp đồng bàn giao frontend. Đợt1 dùng `DOT1_BAO_CAO_FE.md`; luồng chi tiết nằm trong `docs/luong-backend/`, tiến độ theo `roadmap/ROADMAP_BE.md`.
 
 | Giai đoạn | Ngày | Báo cáo | Trạng thái |
 |---|---|---|---|
 | GĐ0 — Khởi tạo & nền tảng | 28/09/2026 | [GD0_BAO_CAO_FE.md](GD0_BAO_CAO_FE.md) | ✅ Đã bàn giao (hợp đồng chung) |
-| Đợt 1 — Tài khoản & nội dung | 04/10/2026 | [DOT1_BAO_CAO_FE.md](DOT1_BAO_CAO_FE.md) | 🟡 B1.1–B1.7 đã bàn giao; B1.8 đã triển khai, HTTP 34/34, còn thiếu kiểm chứng xóa mềm/test tự động; B1.9–B1.12 chưa hoàn thành |
+| Đợt 1 — Tài khoản & nội dung | 05/10/2026 | [DOT1_BAO_CAO_FE.md](DOT1_BAO_CAO_FE.md) | ✅ BE GĐ0–B1.8 đã kiểm chứng; FE đã hoàn tác theo yêu cầu; B1.9–B1.12 chưa hoàn thành |
 
 ## Đối chiếu FE ↔ BE
 
 - [Báo cáo bàn giao Đợt 1](DOT1_BAO_CAO_FE.md): bổ sung 7 API bộ cá nhân B1.8 (mục 5.32–5.38), phân biệt các nhánh HTTP đã kiểm chứng và hợp đồng theo code chưa kiểm chứng; giới hạn và lệch mockup ở mục 10.
-- [Giải thích mã nguồn cốt lõi B0.1–B1.5](GIAI_THICH_CODE_COT_LOI_B0_B1_5.md): các hàm, service, luồng dữ liệu, nhánh lỗi và điểm mấu chốt để đọc code.
+- [Luồng mã nguồn backend](../docs/luong-backend/README.md): các hàm, service, luồng dữ liệu, nhánh lỗi và điểm mấu chốt để đọc code.

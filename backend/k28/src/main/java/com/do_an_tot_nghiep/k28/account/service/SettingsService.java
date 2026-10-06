@@ -104,9 +104,10 @@ public class SettingsService {
     }
 
     private static String timeZone(String muiGio) {
-        if (!ZoneId.getAvailableZoneIds().contains(muiGio)) {
+        String normalized = muiGio.strip();
+        if (!ZoneId.getAvailableZoneIds().contains(normalized)) {
             throw new ApiException(ErrorCode.VALIDATION_FAILED, "muiGio", "Múi giờ không hợp lệ");
         }
-        return muiGio;
+        return normalized;
     }
 }

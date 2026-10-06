@@ -14,6 +14,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -33,6 +36,74 @@ class FR03CatalogTest extends AbstractIntegrationTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JdbcTemplate jdbc;
+
+    @ParameterizedTest
+    @ValueSource(strings = {"topics", "tags"})
+    void fr03_referencedCatalogCannotBeDeleted(String resource) throws Exception {
+        String catalogId = create(path(resource), "Referenced " + UUID.randomUUID());
+        String userBody = mockMvc.perform(get("/api/v1/me").cookie(learner))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        long ownerId = Long.parseLong(jsonMapper.readTree(userBody).get("id").asString());
+        jdbc.update("insert into bo_the(chu_so_huu_id,ten,trinh_do,chu_de_id) values (?,?,?,?)",
+                ownerId, "Catalog FK", "CO_BAN", resource.equals("topics") ? Long.valueOf(catalogId) : null);
+        Long deckId = jdbc.queryForObject("select max(id) from bo_the where chu_so_huu_id=?", Long.class, ownerId);
+        if (resource.equals("tags")) {
+            jdbc.update("insert into the_tu_vung(bo_the_id,tu,nghia_vi) values (?,?,?)", deckId, "word", "tu");
+            Long cardId = jdbc.queryForObject("select max(id) from the_tu_vung where bo_the_id=?", Long.class, deckId);
+            jdbc.update("insert into the_nhan(the_id,nhan_id) values (?,?)", cardId, Long.valueOf(catalogId));
+        }
+        mockMvc.perform(delete(path(resource) + "/" + catalogId).cookie(admin).with(xsrf()))
+                .andExpect(status().isConflict());
+        mockMvc.perform(get(path(resource) + "/" + catalogId).cookie(admin)).andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"topics", "tags"})
+    void fr03_concurrentDuplicateAndVersionUpdatesPreserveData(String resource) throws Exception {
+        String name = "Concurrent " + UUID.randomUUID();
+        CountDownLatch start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> createTask = () -> {
+                start.await();
+                return send(post(path(resource)), Map.of("ten", name)).andReturn().getResponse().getStatus();
+            };
+            var first = pool.submit(createTask);
+            var second = pool.submit(createTask);
+            start.countDown();
+            assertThat(List.of(first.get(), second.get())).containsExactlyInAnyOrder(201, 409);
+        }
+        String id = create(path(resource), "Version race " + UUID.randomUUID());
+        CountDownLatch updateStart = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> updateTask = () -> {
+                updateStart.await();
+                return send(put(path(resource) + "/" + id), Map.of("ten", "Changed " + UUID.randomUUID(), "version", 0))
+                        .andReturn().getResponse().getStatus();
+            };
+            var first = pool.submit(updateTask);
+            var second = pool.submit(updateTask);
+            updateStart.countDown();
+            assertThat(List.of(first.get(), second.get())).containsExactlyInAnyOrder(200, 409);
+        }
+        CountDownLatch deleteStart = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> deleteTask = () -> {
+                deleteStart.await();
+                return mockMvc.perform(delete(path(resource) + "/" + id).cookie(admin).with(xsrf()))
+                        .andReturn().getResponse().getStatus();
+            };
+            var first = pool.submit(deleteTask);
+            var second = pool.submit(deleteTask);
+            deleteStart.countDown();
+            var results = List.of(first.get(), second.get());
+            assertThat(results).contains(204);
+            assertThat(results).allMatch(code -> code == 204 || code == 404 || code == 409);
+        }
+        mockMvc.perform(get(path(resource) + "/" + id).cookie(admin)).andExpect(status().isNotFound());
+    }
 
     Cookie admin;
     Cookie learner;

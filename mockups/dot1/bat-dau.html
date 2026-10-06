@@ -74,28 +74,28 @@
     <form id="form" novalidate style="margin-top:var(--sp-6)">
       <div data-form-error hidden></div>
 
-      <fieldset class="onb-step fieldset field" data-step="1" data-field="goal">
+      <fieldset class="onb-step fieldset field" data-step="1" data-field="mucTieu">
         <legend><h2 tabindex="-1">Bạn học tiếng Anh để làm gì?</h2></legend>
         <div class="choice-grid cols-2">
-          <label class="choice choice-card"><input type="radio" name="goal" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span><span class="choice-desc">Nói chuyện hằng ngày, công sở, du lịch. Ưu tiên cụm từ dùng được ngay.</span></span></label>
-          <label class="choice choice-card"><input type="radio" name="goal" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Thi TOEIC</span><span class="choice-desc">Từ vựng Part 5–7: email, hóa đơn, thông báo, hợp đồng.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="mucTieu" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span><span class="choice-desc">Nói chuyện hằng ngày, công sở, du lịch. Ưu tiên cụm từ dùng được ngay.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="mucTieu" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Thi TOEIC</span><span class="choice-desc">Từ vựng Part 5–7: email, hóa đơn, thông báo, hợp đồng.</span></span></label>
         </div>
         <p class="field-error"></p>
       </fieldset>
 
-      <fieldset class="onb-step fieldset field" data-step="2" data-field="level" hidden>
+      <fieldset class="onb-step fieldset field" data-step="2" data-field="trinhDo" hidden>
         <legend><h2 tabindex="-1">Bạn tự thấy mình đang ở mức nào?</h2></legend>
         <p class="muted">Đây là bạn tự đánh giá, không phải kết quả kiểm tra. Hệ thống dùng nó để gợi ý bộ thẻ phù hợp.</p>
         <div class="choice-grid">
-          <label class="choice choice-card"><input type="radio" name="level" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span><span class="choice-desc">Biết chào hỏi, đọc được câu rất ngắn.</span></span></label>
-          <label class="choice choice-card"><input type="radio" name="level" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span><span class="choice-desc">Hiểu đoạn hội thoại đơn giản, còn thiếu nhiều từ.</span></span></label>
-          <label class="choice choice-card"><input type="radio" name="level" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span><span class="choice-desc">Đọc email công việc, cần từ chuyên đề để lên điểm.</span></span></label>
-          <label class="choice choice-card"><input type="radio" name="level" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span><span class="choice-desc">Đọc tốt, muốn dùng từ chính xác và tự nhiên hơn.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="trinhDo" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span><span class="choice-desc">Biết chào hỏi, đọc được câu rất ngắn.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="trinhDo" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span><span class="choice-desc">Hiểu đoạn hội thoại đơn giản, còn thiếu nhiều từ.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="trinhDo" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span><span class="choice-desc">Đọc email công việc, cần từ chuyên đề để lên điểm.</span></span></label>
+          <label class="choice choice-card"><input type="radio" name="trinhDo" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span><span class="choice-desc">Đọc tốt, muốn dùng từ chính xác và tự nhiên hơn.</span></span></label>
         </div>
         <p class="field-error"></p>
       </fieldset>
 
-      <fieldset class="onb-step fieldset field" data-step="3" data-field="topicIds" hidden>
+      <fieldset class="onb-step fieldset field" data-step="3" data-field="chuDeIds" hidden>
         <legend><h2 tabindex="-1">Chọn chủ đề bạn quan tâm</h2></legend>
         <p class="muted">Chọn tối đa 5. Có thể bỏ trống.</p>
         <div class="choice-grid cols-2" id="topics" aria-live="polite"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div></div>
@@ -104,32 +104,32 @@
 
       <div class="onb-step" data-step="4" hidden>
         <h2 tabindex="-1">Mỗi ngày bạn học bao lâu?</h2>
-        <fieldset class="fieldset field" data-field="minutesPerDay">
+        <fieldset class="fieldset field" data-field="phutMoiNgay">
           <legend>Thời gian học mỗi ngày</legend>
           <div class="minutes">
-            <label class="choice"><input type="radio" name="minutesPerDay" value="5"><span class="bubble" aria-hidden="true"></span><span>5 phút</span></label>
-            <label class="choice"><input type="radio" name="minutesPerDay" value="10" checked><span class="bubble" aria-hidden="true"></span><span>10 phút</span></label>
-            <label class="choice"><input type="radio" name="minutesPerDay" value="15"><span class="bubble" aria-hidden="true"></span><span>15 phút</span></label>
-            <label class="choice"><input type="radio" name="minutesPerDay" value="20"><span class="bubble" aria-hidden="true"></span><span>20 phút</span></label>
-            <label class="choice"><input type="radio" name="minutesPerDay" value="30"><span class="bubble" aria-hidden="true"></span><span>30 phút</span></label>
+            <label class="choice"><input type="radio" name="phutMoiNgay" value="5"><span class="bubble" aria-hidden="true"></span><span>5 phút</span></label>
+            <label class="choice"><input type="radio" name="phutMoiNgay" value="10" checked><span class="bubble" aria-hidden="true"></span><span>10 phút</span></label>
+            <label class="choice"><input type="radio" name="phutMoiNgay" value="15"><span class="bubble" aria-hidden="true"></span><span>15 phút</span></label>
+            <label class="choice"><input type="radio" name="phutMoiNgay" value="20"><span class="bubble" aria-hidden="true"></span><span>20 phút</span></label>
+            <label class="choice"><input type="radio" name="phutMoiNgay" value="30"><span class="bubble" aria-hidden="true"></span><span>30 phút</span></label>
           </div>
           <p class="field-error"></p>
         </fieldset>
-        <fieldset class="fieldset field" data-field="newCardsPerDay">
+        <fieldset class="fieldset field" data-field="tuMoiMoiNgay">
           <legend>Số từ mới mỗi ngày</legend>
           <div class="minutes">
-            <label class="choice"><input type="radio" name="newCardsPerDay" value="5"><span class="bubble" aria-hidden="true"></span><span>5 từ</span></label>
-            <label class="choice"><input type="radio" name="newCardsPerDay" value="10" checked><span class="bubble" aria-hidden="true"></span><span>10 từ</span></label>
-            <label class="choice"><input type="radio" name="newCardsPerDay" value="15"><span class="bubble" aria-hidden="true"></span><span>15 từ</span></label>
-            <label class="choice"><input type="radio" name="newCardsPerDay" value="20"><span class="bubble" aria-hidden="true"></span><span>20 từ</span></label>
+            <label class="choice"><input type="radio" name="tuMoiMoiNgay" value="5"><span class="bubble" aria-hidden="true"></span><span>5 từ</span></label>
+            <label class="choice"><input type="radio" name="tuMoiMoiNgay" value="10" checked><span class="bubble" aria-hidden="true"></span><span>10 từ</span></label>
+            <label class="choice"><input type="radio" name="tuMoiMoiNgay" value="15"><span class="bubble" aria-hidden="true"></span><span>15 từ</span></label>
+            <label class="choice"><input type="radio" name="tuMoiMoiNgay" value="20"><span class="bubble" aria-hidden="true"></span><span>20 từ</span></label>
           </div>
           <p class="field-hint">Từ đến hạn ôn vẫn được đưa vào phiên học, không bị giới hạn bởi con số này.</p>
           <p class="field-error"></p>
         </fieldset>
         <div class="choice-grid cols-2">
           <div class="field">
-            <label class="field-label" for="reminderTime"><span>Giờ nhắc học</span><span class="optional">Không bắt buộc</span></label>
-            <input class="input" type="time" id="reminderTime" name="reminderTime" value="20:30">
+            <label class="field-label" for="gioNhac"><span>Giờ nhắc học</span><span class="optional">Không bắt buộc</span></label>
+            <input class="input" type="time" id="gioNhac" name="gioNhac" value="20:30">
             <p class="field-error"></p>
           </div>
           <div class="field">
@@ -170,6 +170,7 @@
 </main>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -184,10 +185,11 @@
   let topics = [];
   const copied = new Set();
 
-  VL.api("GET", "/public/topics").then((list) => {
+  VL.api("GET", "/public/topics").then((response) => {
+    const list = response.items;
     topics = list;
     document.getElementById("topics").innerHTML = list.map((t) =>
-      '<label class="choice choice-card"><input type="checkbox" name="topicIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">' + VL.esc(t.name) + '</span></span></label>').join("");
+      '<label class="choice choice-card"><input type="checkbox" name="chuDeIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span class="choice-body"><span class="choice-title">' + VL.esc(t.ten) + '</span></span></label>').join("");
   });
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   if ([...form.muiGio.options].some((o) => o.value === tz)) form.muiGio.value = tz;
@@ -195,31 +197,31 @@
   function values() {
     const fd = new FormData(form);
     return {
-      goal: fd.get("goal"),
-      level: fd.get("level"),
-      topicIds: fd.getAll("topicIds"),
-      minutesPerDay: Number(fd.get("minutesPerDay")),
-      newCardsPerDay: Number(fd.get("newCardsPerDay")),
-      reminderTime: fd.get("reminderTime"),
+      mucTieu: fd.get("mucTieu"),
+      trinhDo: fd.get("trinhDo"),
+      chuDeIds: fd.getAll("chuDeIds"),
+      phutMoiNgay: Number(fd.get("phutMoiNgay")),
+      tuMoiMoiNgay: Number(fd.get("tuMoiMoiNgay")),
+      gioNhac: fd.get("gioNhac"),
       muiGio: fd.get("muiGio")
     };
   }
   function summary() {
     const v = values();
     const rows = [
-      ["Mục tiêu", v.goal ? VL.GOAL[v.goal] : null],
-      ["Trình độ", v.level ? VL.LEVEL[v.level] + " (tự đánh giá)" : null],
-      ["Chủ đề", v.topicIds.length ? v.topicIds.map((id) => (topics.find((t) => t.id === id) || {}).name).join(", ") : null],
-      ["Mỗi ngày", step >= 4 ? v.minutesPerDay + " phút, " + v.newCardsPerDay + " từ mới" : null],
-      ["Nhắc học", step >= 4 ? (v.reminderTime ? "lúc " + v.reminderTime : "Không nhắc") : null],
+      ["Mục tiêu", v.mucTieu ? VL.GOAL[v.mucTieu] : null],
+      ["Trình độ", v.trinhDo ? VL.LEVEL[v.trinhDo] + " (tự đánh giá)" : null],
+      ["Chủ đề", v.chuDeIds.length ? v.chuDeIds.map((id) => (topics.find((t) => t.id === id) || {}).ten).join(", ") : null],
+      ["Mỗi ngày", step >= 4 ? v.phutMoiNgay + " phút, " + v.tuMoiMoiNgay + " từ mới" : null],
+      ["Nhắc học", step >= 4 ? (v.gioNhac ? "lúc " + v.gioNhac : "Không nhắc") : null],
       ["Bộ khởi động", copied.size ? copied.size + " bộ đã sao chép" : null]
     ];
     document.getElementById("sum").innerHTML = rows.map((r, i) => '<li><span class="bubble' + (r[1] ? " is-filled" : "") + '" aria-hidden="true"></span><div><p class="sum-k">' + r[0] + '</p><p class="sum-v' + (r[1] ? "" : " is-empty") + '">' + VL.esc(r[1] || "Chưa chọn") + "</p></div></li>").join("");
   }
   form.addEventListener("change", (e) => {
-    if (e.target.name === "topicIds") {
-      const n = form.querySelectorAll('[name="topicIds"]:checked').length;
-      if (n > 5) { e.target.checked = false; VL.setFieldError(form, "topicIds", "Chọn tối đa 5 chủ đề"); }
+    if (e.target.ten === "chuDeIds") {
+      const n = form.querySelectorAll('[name="chuDeIds"]:checked').length;
+      if (n > 5) { e.target.checked = false; VL.setFieldError(form, "chuDeIds", "Chọn tối đa 5 chủ đề"); }
       else VL.clearErrors(form);
     } else VL.clearErrors(form);
     summary();
@@ -244,8 +246,8 @@
   function validate(n) {
     VL.clearErrors(form);
     const v = values();
-    if (n === 1 && !v.goal) { VL.setFieldError(form, "goal", "Chọn một mục tiêu để tiếp tục"); return false; }
-    if (n === 2 && !v.level) { VL.setFieldError(form, "level", "Chọn mức gần đúng nhất với bạn"); return false; }
+    if (n === 1 && !v.mucTieu) { VL.setFieldError(form, "mucTieu", "Chọn một mục tiêu để tiếp tục"); return false; }
+    if (n === 2 && !v.trinhDo) { VL.setFieldError(form, "trinhDo", "Chọn mức gần đúng nhất với bạn"); return false; }
     return true;
   }
 
@@ -256,7 +258,7 @@
       isEmpty: (d) => !d.items.length,
       render: (d) => {
         document.getElementById("starter").innerHTML = d.items.map((deck) =>
-          '<div class="starter-item"><div class="stack-sm" style="gap:6px;min-width:0"><h3>' + VL.esc(deck.name) + '</h3><div class="answer-meta"><span class="stamp' + (deck.kind === "MAU" ? " stamp-solid" : " stamp-graphite") + '">' + (deck.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span><span>" + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + deck.cardCount + " thẻ</span>" + VL.levelHtml(deck.level) + '</div></div><button type="button" class="btn btn-secondary" data-copy="' + deck.id + '">' + VL.icon("copy") + "Sao chép</button></div>").join("");
+          '<div class="starter-item"><div class="stack-sm" style="gap:6px;min-width:0"><h3>' + VL.esc(deck.name) + '</h3><div class="answer-meta"><span class="stamp' + (deck.kind === "MAU" ? " stamp-solid" : " stamp-graphite") + '">' + (deck.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span><span>" + VL.esc(VL.GOAL[deck.mucTieu]) + "</span><span>" + deck.cardCount + " thẻ</span>" + VL.levelHtml(deck.trinhDo) + '</div></div><button type="button" class="btn btn-secondary" data-copy="' + deck.id + '">' + VL.icon("copy") + "Sao chép</button></div>").join("");
       }
     });
   }
@@ -284,14 +286,16 @@
       const v = values();
       VL.busy(next, async () => {
         try {
-          await VL.api("PUT", "/me/learning-settings", { goal: v.goal, level: v.level, topicIds: v.topicIds, minutesPerDay: v.minutesPerDay, newCardsPerDay: v.newCardsPerDay, onboardingDone: true });
-          await VL.api("PUT", "/me/notification-settings", { inApp: true, email: true, studyReminder: !!v.reminderTime, reminderTime: v.reminderTime || "20:00" });
+          const current = await VL.api("GET", "/me/learning-settings");
+          const notification = await VL.api("GET", "/me/notification-settings");
+          await VL.api("PUT", "/me/learning-settings", { mucTieu: v.mucTieu, trinhDo: v.trinhDo, chuDeIds: v.chuDeIds, phutMoiNgay: v.phutMoiNgay, tuMoiMoiNgay: v.tuMoiMoiNgay, version: current.version });
+          await VL.api("PUT", "/me/notification-settings", { nhanTrongUngDung: true, email: true, nhacHoc: !!v.gioNhac, gioNhac: v.gioNhac || null, version: notification.version });
           await VL.api("PATCH", "/me", { muiGio: v.muiGio });
-          go(5);
+          location.href = "bo-the.html?welcome=1";
         } catch (err) {
           VL.showErrors(form, err);
           const first = (err.fieldErrors || [])[0];
-          const map = { goal: 1, level: 2, topicIds: 3 };
+          const map = { mucTieu: 1, trinhDo: 2, chuDeIds: 3 };
           if (first && map[first.field]) go(map[first.field]);
         }
       });
@@ -303,10 +307,10 @@
   VL.api("GET", "/me/learning-settings").then((s) => {
     let plan = {};
     try { plan = JSON.parse(sessionStorage.getItem("vl-plan") || "{}"); } catch (e) {}
-    const goal = s.goal || plan.goal;
-    if (goal) form.querySelector('[name="goal"][value="' + goal + '"]').checked = true;
-    if (s.level) form.querySelector('[name="level"][value="' + s.level + '"]').checked = true;
-    const m = form.querySelector('[name="minutesPerDay"][value="' + (plan.minutes || "") + '"]');
+    const goal = s.mucTieu || plan.mucTieu;
+    if (goal) form.querySelector('[name="mucTieu"][value="' + goal + '"]').checked = true;
+    if (s.trinhDo) form.querySelector('[name="trinhDo"][value="' + s.trinhDo + '"]').checked = true;
+    const m = form.querySelector('[name="phutMoiNgay"][value="' + (plan.minutes || "") + '"]');
     if (m) m.checked = true;
     summary();
   });

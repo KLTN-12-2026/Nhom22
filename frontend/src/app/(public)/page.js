@@ -37,12 +37,12 @@ export default function HomePage() {
               <strong>Phiếu học từ vựng tiếng Anh</strong>
               <span>Mẫu dành cho người học Giao tiếp và TOEIC</span>
             </div>
-            
+
             <div className={styles.heroGrid}>
               <div>
                 <h1 className={styles.hero}>Học từ vựng tiếng Anh, ôn đúng lúc sắp quên.</h1>
                 <p className={styles.lead}>Chọn bộ Giao tiếp hoặc TOEIC, học vài phút mỗi ngày. Mỗi từ có hai lịch ôn riêng: Anh → Việt và Việt → Anh, để bạn vừa hiểu nghĩa vừa nhớ được cách dùng.</p>
-                
+
                 <form className={styles.fillGrid} id="plan" aria-label="Điền thử kế hoạch của bạn">
                   <div className={styles.fillRow}>
                     <span>Mục tiêu</span>
@@ -62,7 +62,7 @@ export default function HomePage() {
                     </fieldset>
                   </div>
                 </form>
-                <p className="muted small" id="plan-note" aria-live="polite" style={{ marginTop: 'var(--sp-2)' }}>Tô thử hai ô trên. Lựa chọn sẽ được điền sẵn khi bạn tạo tài khoản.</p>
+                <p className="muted small" id="plan-note" aria-live="polite" style={{ marginTop: 'var(--sp-2)' }}>Tô thử hai ô trên. Bạn có thể lưu kế hoạch trong phần thiết lập học sau khi đăng nhập.</p>
 
                 <div className={styles.ctaRow}>
                   <Link href="/dang-ky" className="btn btn-accent btn-lg">Bắt đầu học miễn phí</Link>
@@ -88,13 +88,13 @@ export default function HomePage() {
                       }
                       return (
                         <li key={i}>
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => handleQuizSelect(i)} 
+                            onClick={() => handleQuizSelect(i)}
                             disabled={quizState !== null}
                             data-result={dataResult}
                           >
-                            <span className="bubble" aria-hidden="true">{['A','B','C','D'][i]}</span> 
+                            <span className="bubble" aria-hidden="true">{['A','B','C','D'][i]}</span>
                             <span className={q.en ? '' : 'en'}>{opt}</span>
                           </button>
                         </li>
@@ -162,7 +162,7 @@ export default function HomePage() {
       <section className={`${styles.section} ${styles.close}`}>
         <div className={styles.wrap}>
           <h2>Bắt đầu từ số 0</h2>
-          <p>Tài khoản dùng thử đã có sẵn tiến trình. Bạn có thể tự tạo tài khoản mới (không cần mail thật) để xem từ đầu VocabLearning tính toán lịch học cho bạn như thế nào.</p>
+          <p>Tạo tài khoản bằng email của bạn và xác thực qua liên kết trong thư để lưu thiết lập học và quản lý bộ thẻ.</p>
           <div><Link href="/dang-ky" className={`btn btn-lg ${styles.btnOnDark}`}>Tạo tài khoản học thử</Link></div>
         </div>
       </section>

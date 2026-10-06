@@ -6,6 +6,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,10 +32,23 @@ public class OpenApiConfig {
                         .addSecuritySchemes(CSRF_SCHEME, new SecurityScheme()
                                 .type(SecurityScheme.Type.APIKEY)
                                 .in(SecurityScheme.In.HEADER)
-                                .name("X-XSRF-TOKEN")))
-                .addSecurityItem(new SecurityRequirement()
-                        .addList(SESSION_SCHEME)
-                        .addList(CSRF_SCHEME));
+                                .name("X-XSRF-TOKEN")));
+    }
+
+    @Bean
+    GlobalOpenApiCustomizer operationSecurity() {
+        return api -> api.getPaths().forEach((path, item) -> item.readOperationsMap().forEach((method, operation) -> {
+            SecurityRequirement requirement = new SecurityRequirement();
+            boolean publicPath = path.startsWith("/api/v1/auth/")
+                    || path.startsWith("/api/v1/public/") || path.startsWith("/api/v1/library/");
+            if (!publicPath) {
+                requirement.addList(SESSION_SCHEME);
+            }
+            if (!List.of("GET", "HEAD", "OPTIONS", "TRACE").contains(method.name())) {
+                requirement.addList(CSRF_SCHEME);
+            }
+            operation.setSecurity(requirement.isEmpty() ? List.of() : List.of(requirement));
+        }));
     }
 
     @Bean

@@ -1,4 +1,7 @@
 'use client';
+import { useAvatar } from '@/hooks/useAvatar';
+import { useQueryClient } from '@tanstack/react-query';
+import { logout } from '@/lib/api-client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/ui';
@@ -42,19 +45,21 @@ const ADMIN_NAV_ONLY = [
 const BOTTOM = [
   { key: "decks", label: "Học", icon: "decks", href: "/bo-the", also: ["deck-new"] },
   { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
-  { key: "practice", label: "Luyện tập", icon: "practice", soon: "Đợt 2" },
-  { key: "notebook", label: "Sổ tay", icon: "notebook", soon: "Đợt 2" },
+  { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
+  { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
   { key: "me", label: "Tôi", icon: "user", href: "/ca-nhan", also: ["profile", "learning", "security", "notify", "admin-topics"] }
 ];
 
 export function AppShell({ children, user, isAdmin = false }) {
+  const queryClient = useQueryClient();
+  const { data: avatar } = useAvatar(user);
   const pathname = usePathname();
-  
+
   // Decide which sidebar to show based on the current URL
   const inAdminArea = pathname.startsWith('/quan-tri');
   const navList = (isAdmin && inAdminArea) ? ADMIN_NAV_ONLY : (isAdmin ? ADMIN_NAV : NAV);
 
-  const isActive = (href) => pathname.startsWith(href);
+  const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
   if (pathname === '/bat-dau') {
     return <>{children}</>;
@@ -63,7 +68,7 @@ export function AppShell({ children, user, isAdmin = false }) {
   return (
     <div className="app">
       <header className="app-header">
-        <Link href="/hom-nay" className="brand">
+        <Link href="/bo-the" className="brand">
           <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
@@ -71,8 +76,8 @@ export function AppShell({ children, user, isAdmin = false }) {
           {user && (
             <Link href="/ca-nhan" className="user-chip" aria-label={`Hồ sơ của ${user.tenHienThi || 'User'}`}>
               <span className="avatar">
-                {user.anhDaiDienUrl ? (
-                  <img src={user.anhDaiDienUrl} alt="" />
+                {avatar?.downloadUrl ? (
+                  <img src={avatar?.downloadUrl} alt="" />
                 ) : (
                   (user.tenHienThi || 'U').split(/\s+/).pop()[0].toUpperCase()
                 )}
@@ -80,13 +85,13 @@ export function AppShell({ children, user, isAdmin = false }) {
               <span className="user-name">{user.tenHienThi || 'User'}</span>
             </Link>
           )}
-          <button 
-            className="btn btn-quiet btn-icon" 
-            aria-label="Đăng xuất" 
+          <button
+            className="btn btn-quiet btn-icon"
+            aria-label="Đăng xuất"
             title="Đăng xuất"
             onClick={() => {
               // Basic logout logic: redirect to login
-              window.location.href = '/dang-nhap?loggedOut=1';
+              logout(queryClient).catch(error => alert(error.message));
             }}
           >
             <Icon name="logout" />
@@ -126,7 +131,7 @@ export function AppShell({ children, user, isAdmin = false }) {
         </main>
       </div>
 
-      <nav className="bottom-nav" aria-label="Điều hướng chính">
+      <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
         {BOTTOM.map(it => {
           const cur = isActive(it.href || '/--not-found');
           if (it.soon) {

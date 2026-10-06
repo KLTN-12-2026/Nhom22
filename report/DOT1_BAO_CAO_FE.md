@@ -1,5 +1,9 @@
 # Báo cáo bàn giao BE → FE — DOT1 Tài khoản & nội dung
 
+> **Đợt khắc phục 05/10/2026 — GĐ0–B1.8:** BE thống nhất IANA, reset CSRF custom login/logout, OpenAPI security theo operation, log requestId và mẫu boot. **Toàn bộ thay đổi trong frontend đã hoàn tác theo yêu cầu mới nhất; các chênh lệch FE còn cần tích hợp riêng.** Giữ BE/Postman/tài liệu và mockup ngoài frontend; mockup là demo có lớp hợp đồng riêng; trạng thái hiện tại theo [báo cáo đối chiếu](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md).
+>
+> SESSION tạm được tạo trước xác thực trong Google-start. Mail lỗi nền không đổi response đã trả. DELETE files thêm409 khi còn liên kết the_tep, không đổi avatar/trạng thái xóa/S3 khi bị chặn. Hợp đồng hiện hành JSON camelCase, PageResponse đủ5 trường; PUT thiết lập/danh mục và PATCH bộ dùng version; DELETE bộ dùng query version.
+
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
@@ -12,13 +16,31 @@
 > - Dùng được thật ngay: `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`. Thư xác thực xem ở Mailpit http://localhost:8025.
 > - **Tên trường JSON = tên field entity** (tiếng Việt không dấu): `tenHienThi`, `trangThai`, `muiGio`, `vaiTro`, `daHoanTatKhoiDau`. FE dùng nguyên tên, không đổi sang tiếng Anh.
 > - Đăng nhập thật đã có: `POST /auth/login`, `POST /auth/logout`, `GET /me` (cookie `SESSION`). Tài khoản seed: `an@vocab.local` / `Vocab@12345`.
-> - **Sửa `api-client.js` trước khi nối đăng nhập:** chỉ thử lại 403 khi `code === 'FORBIDDEN'` (mục 3).
+> - **FE cần áp dụng (mã frontend đã hoàn tác):** chỉ thử lại 403 khi `code === 'FORBIDDEN'` (mục 3).
 > - Tệp và avatar thật đã có (B1.6): SHA-256 → xin URL → PUT bytes → complete → `PUT /me/avatar`. `/me` trả `anhDaiDienId`; URL ảnh lấy ở `GET /me/avatar`.
 > - Hồ sơ & thiết lập thật đã có (B1.5): `PATCH /me`, thiết lập học (lưu lần đầu = hoàn tất `/bat-dau`), thông báo; PUT phải gửi `version` (409 khi cũ) — mục 5.11–5.13.
 > - Google thật đã có (B1.4): nút Google **điều hướng toàn trang** tới `/api/v1/auth/google/start?next=…`; lỗi quay về `/dang-nhap?loi=<MÃ>` (mục 5.10).
 > - Mật khẩu thật đã có (B1.3): quên mật khẩu, đặt lại từ thư (Mailpit), đổi mật khẩu ở `/ca-nhan/bao-mat`. Đặt lại → đăng xuất **mọi** phiên; đổi → giữ phiên hiện tại, đăng xuất phiên khác.
 
 ---
+
+### Kiểm chứng và bàn giao mới — 05/10/2026
+
+| Nhóm | Kết quả mới | Giới hạn |
+|---|---|---|
+| BE toàn bộ checkout | Compile đạt;117 test,0 failure/error/skipped | Chạy backend/k28 thực; không tạo bản sao dự án |
+| B1.7 | FR03CatalogTest14/14 | Có FK bo_the/the_nhan và race create/update/delete |
+| B1.8 | FR03DeckTest11/11; Newman CRUD/version/favorite/delete đạt | Không triển khai API thẻ/library |
+| B1.6 | Guard tệp có liên kết409 không thay avatar/trạng thái/S3; kiểm chứng bằng test BE | linkedFileId cần fixture; không có CardController B1.9 |
+| CSRF | 6 kiểm tra HTTP login/logout/refresh/old-header mismatch đạt | CookieCsrfTokenRepository không thu hồi server-side mọi cặp cookie/header cũ; token cũ+cookie mới trả403 |
+| RequestId | Header/body/log khớp ở lỗi muiGio | Không bảo đảm mọi lỗi nghiệp vụ đều được ghi log trong mọi môi trường |
+| Postman | Cloud80 request;2 environment; local export/registry/fixture; smoke31 request chính,49 HTTP,67 assertion đạt | Chưa chạy toàn bộ80 như một suite; Google/mail/file cần chuẩn bị theo README |
+| FE | Đã hoàn tác toàn bộ thay đổi trong frontend; build/lint/client trước hoàn tác chỉ là lịch sử | Chưa kiểm thử mã FE sau hoàn tác |
+| Mockup ngoài frontend |14 kiểm tra hợp đồng demo đạt | Demo không thay kiểm thử HTTP BE |
+| UI trước hoàn tác | Kết quả browser chỉ là lịch sử của phiên bản FE đã hoàn tác; ảnh/JSON không còn trong checkout | Không nghiệm thu frontend hiện tại; OAuth provider thật chưa E2E |
+
+Các file bàn giao: [báo cáo54 mục](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md), [Postman](../postman/README.md), [hướng dẫn chạy](../huong-dan/CHAY_GD0_B1_8.md). Không dùng bảng lịch sử03–04/10 để kết luận thiếu test hiện tại.
+
 
 ## 1. BE đã giao gì (đối chiếu 2 roadmap)
 
@@ -34,7 +56,7 @@
 | B1.8 Bộ thẻ cá nhân | 🟡 7 API đã triển khai; 34/34 lượt HTTP đạt kỳ vọng; DELETE thành công và kết quả test tự động chưa xác nhận | F1.8 UI13 `/bo-the`, UI14 `/bo-the/tao` | Mục5.32–5.38; tên trường tiếng Việt, PATCH/DELETE kèm version, xử lý404/409; giới hạn mockup tại mục10 |
 | B1.9 – B1.12 | ⏳ chưa làm | F1.7, F1.9–F1.11 | Thẻ/thư viện/sao chép/CSV vẫn mock theo `mockups/dot1/` |
 
-**Chưa có** (dùng MSW): thẻ, thư viện, sao chép và CSV (B1.9–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. Lịch: Đợt 1, 12/10–25/10. B1.8 chưa hoàn tất kiểm chứng.
+**Chưa có API BE:** thẻ, thư viện, sao chép và CSV (B1.9–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. Lịch: Đợt 1, 12/10–25/10. B1.8 đã hoàn tất kiểm chứng BE ngày05/10; FE đã hoàn tác.
 
 ## 2. Chạy BE
 
@@ -69,10 +91,10 @@ Postman: thêm 15 request (11 API + 4 lỗi), cập nhật 3 request thiết l�
 | Enum `vaiTro` | `USER`, `ADMIN` |
 | Hạn mức mới (429 `RATE_LIMITED`) | Đăng ký: 5 lần/giờ/IP. Gửi lại thư: 3 lần/15 phút theo IP **và** 3 lần/15 phút theo email. Đăng nhập: 5 lần/15 phút theo email (lần 6 bị 429 kể cả khi đúng mật khẩu; đăng nhập đúng trước đó thì bộ đếm về 0) |
 | Mã lỗi mới (B1.2) | `INVALID_CREDENTIALS` 401 · `EMAIL_NOT_VERIFIED` 403 · `ACCOUNT_LOCKED` 403 |
-| **`api-client.js` (GĐ0 §6) phải sửa** | Hiện đang thử lại **mọi** 403 của request ghi. Từ B1.2 có 403 nghiệp vụ → chỉ thử lại khi `code === 'FORBIDDEN'` (code mẫu ở mục 6) |
+| **`api-client.js` (GĐ0 §6) phải sửa** | FE còn cần cập nhật client: thử lại tối đa một lần khi `code === 'FORBIDDEN'` (code mẫu ở mục 6) |
 | Hạn mức mới (B1.3) | Quên mật khẩu: 3 lần/15 phút theo IP **và** theo email. Đổi mật khẩu: 5 lần/15 phút theo người dùng (đổi thành công thì bộ đếm về 0) |
 | Lỗi nghiệp vụ có `fieldErrors` (từ B1.3) | Một số lỗi không phải lỗi định dạng vẫn kèm 1 phần tử `fieldErrors` để FE hiện dưới ô (ví dụ sai mật khẩu hiện tại → `currentPassword`). `applyServerErrors` xử lý được, không cần code riêng |
-| Cookie phiên | `SESSION` (HttpOnly, SameSite=Lax) chỉ được tạo khi **đăng nhập thành công**; request khách bị 401 không tạo phiên. Logout trả `SESSION=; Max-Age=0` |
+| Cookie phiên | `SESSION` (HttpOnly, SameSite=Lax) có principal sau **đăng nhập thành công**; Google-start có thể tạo session tạm trước xác thực; request khách bị 401 không tạo phiên. Logout trả `SESSION=; Max-Age=0` |
 | Hết phiên | Không hoạt động 7 ngày thì phiên hết hạn. Cookie là cookie phiên trình duyệt (không có `Max-Age`) |
 
 ### Thay đổi B1.6
@@ -1993,13 +2015,33 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
+### Tổng hợp bằng chứng triển khai BE Đợt1
+
+Báo cáo này là nơi ghi chung trạng thái triển khai BE, bằng chứng kiểm chứng và hợp đồng bàn giao FE. Không ghi tiếp báo cáo tiến độ BE cũ hoặc tạo báo cáo BAO_CAO_BE song song. Trạng thái từng bước đối chiếu mục1 và [roadmap BE](../roadmap/ROADMAP_BE.md); đường đi trong code xem [mục lục luồng backend](../docs/luong-backend/README.md).
+
+| Phạm vi | Bằng chứng đã ghi nhận | Giới hạn |
+|---|---|---|
+| B1.1 | FR01RegisterTest:8 test xanh theo roadmap | Kết quả lần trước, không chạy lại khi cập nhật báo cáo |
+| B1.2 | FR01LoginTest:9 test xanh theo roadmap | Kết quả lần trước |
+| B1.3 | FR01PasswordTest:8 test xanh theo roadmap | Kết quả lần trước |
+| B1.4 | FR01GoogleLoginTest:9 test xanh; thử thật đến màn chọn tài khoản và OAUTH_LINK_REQUIRED | Liên kết bằng mật khẩu mới ghi nhận bằng test, chưa xác nhận toàn luồng Google thật |
+| B1.5 | FR02SettingsTest:7 test xanh, các nhánh HTTP theo ghi nhận trước | Chủ đề yêu thích bổ sung ở B1.7 |
+| B1.6,02/10/2026 | 22 test FR-03 và13 hồi quy,35 pass ở lần đó | Không xem là toàn suite tại mã nguồn hiện tại |
+| B1.7,03/10/2026 | FR03CatalogTest10/10;62 lượt HTTP đạt kỳ vọng | Race đồng thời và một số tham chiếu nội dung chưa kiểm chứng |
+| B1.8,04/10/2026 (lịch sử) | 6a8/8 và6b26/26 HTTP, tổng34/34 | Các nhánh còn thiếu ở lần này đã được bổ sung bằng kiểm thử05/10 |
+| B1.9–B1.12 | Chưa triển khai | Thẻ, thư viện, sao chép vàCSV còn theo kế hoạch |
+
+Không cộng số test/HTTP giữa các ngày. Các dòng lịch sử ở bảng trên giữ mốc cũ; ngày05/10 đã chạy toàn suite117/117, trong đó FR03DeckTest11/11. Nhánh xóa mềm/bảo toàn tham chiếu, bộ ẩn và cập nhật đồng thời đã kiểm chứng tự động; Newman xác nhận DELETE204 và GET sau xóa404. B1.8 được đánh dấu hoàn tất.
+
+Postman B1.8 đã được đồng bộ và kiểm tra12 request cùng3 biến môi trường trong hai environment ở bước trước; đây là bằng chứng đồng bộ, không phải bằng chứng các script đã chạy. Ngày05/10 đã khôi phục registry từ ID thật trên cloud: `postman/postman.json`. Collection chính hiện80 request, giữ các ID/test script cũ; có export local, fixture ảnh và collection smoke31 request.
+
 | Mục | Chi tiết |
 |---|---|
-| `api-client` retry 403 | Đã có 403 nghiệp vụ (`EMAIL_NOT_VERIFIED`, `ACCOUNT_LOCKED`) → bắt buộc sửa như mục 6, nếu không form đăng nhập sẽ gửi 2 lần |
+| `api-client` retry 403 | Đã có 403 nghiệp vụ (`EMAIL_NOT_VERIFIED`, `ACCOUNT_LOCKED`) → FE cần chỉ retry tối đa1 lần với FORBIDDEN; không retry lỗi nghiệp vụ |
 | "Ghi nhớ đăng nhập (7 ngày)" | Mockup có ô này nhưng BE **chưa hỗ trợ**: `remember` bị bỏ qua, cookie `SESSION` luôn là cookie phiên trình duyệt. FE ẩn ô này hoặc để nguyên nhưng không hứa 7 ngày; cần thì báo BE bổ sung |
 | Tên seed mockup ≠ BE | Mockup: `an@` tên "Nguyễn An", `chi@` chưa xác thực. BE seed: "Nguyễn Văn An", `chi@` đã xác thực. Dữ liệu thật lấy theo BE |
 | Hạn mức theo IP | Gửi lại thư đếm chung theo IP (3/15 phút) cho mọi email → nhiều người cùng mạng/NAT có thể bị 429 sớm. Dev trên localhost cũng chung 1 IP |
-| `muiGio` sai | Trả 400 không có `fieldErrors` (lỗi chung form), khác các trường khác |
+| `muiGio` sai | Đăng ký và PATCH hồ sơ cùng kiểm tra IANA; sai múi giờ trả400 với fieldErrors cho muiGio (05/10) |
 | Mockup | `mockups/dot1/dang-ky.html`, `xac-thuc-email.html`, `dang-nhap.html`, `quen-mat-khau.html`, `dat-lai-mat-khau.html`, `ca-nhan-bao-mat.html` đã khớp BE (tên trường, thông điệp lỗi, mật khẩu demo `Vocab@12345`) (`tenHienThi`, `muiGio`…). Mockup dùng API giả `shared/demo.js`, trả thêm `demoToken` chỉ để demo — **BE thật không trả trường này** |
 | Chưa kiểm chứng | Token hết hạn 24 giờ: kiểm bằng test tự động (`tc01_expiredTokenRejected`), không chờ thật. Hạn mức đăng ký 5/giờ: kiểm bằng code, không bấm thật 6 lần. `ACCOUNT_LOCKED`: kiểm bằng test (`tc01_lockedReturns403`), chưa có API khóa để gọi thật |
 | Phiên tạo trước B1.3 | Phiên đăng nhập tạo trước bản BE này chưa có chỉ mục theo người dùng nên không bị hủy khi đặt lại/đổi mật khẩu. Đăng nhập lại một lần là hết |
@@ -2007,7 +2049,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | Google chỉ cho tài khoản test (B1.4) | OAuth client ở chế độ *Testing*: chỉ Gmail có trong *Test users* của project Google Cloud đăng nhập được, người khác gặp `access_denied` → `?loi=GOOGLE_THAT_BAI`. Cần thêm Gmail của bạn: báo BE |
 | Google cần key thật (B1.4) | BE chạy với `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` trong `backend/k28/.env` (không commit). Thiếu key → Google báo `invalid_client`; MSW không giả được bước Google |
 | Tài khoản Google không có mật khẩu (B1.4) | Tài khoản tạo bằng Google chưa đặt được mật khẩu ở `/ca-nhan/bao-mat` (`PUT /me/password` cần mật khẩu hiện tại); muốn có mật khẩu thì dùng "Quên mật khẩu" |
-| Mockups còn tên cũ (B1.5, ngoài phạm vi sửa upload) | Mockup + `shared/demo.js` vẫn dùng `goal`, `level`, `minutesPerDay`, `newCardsPerDay`, `onboardingDone`, `inApp`, `email`, `studyReminder`, `reminderTime`. Tên thật: `mucTieu`, `trinhDo`, `phutMoiNgay`, `tuMoiMoiNgay`, `daHoanTatKhoiDau`, `nhanTrongUngDung`, `nhanEmail`, `nhacHoc`, `gioNhac`. FE dùng tên thật theo mục 5.12–5.13 |
+| Mockup B1.5/B1.7/B1.8 (05/10) | Các trang trong phạm vi gửi/nhận DTO BE; shared/contract-demo.js ánh xạ bộ dữ liệu demo cũ ở nội bộ. Không gửi cờ hoàn tất onboarding. Có kiểm tra version, tham chiếu409 và tên trường thật. Demo không thay kiểm thử HTTP. |
 | Chủ đề yêu thích (B1.7) | Đã lưu được bằng `chuDeIds`, không dùng `topicIds`; bắt buộc gửi cả khi rỗng |
 | Chưa kiểm chứng (B1.5) | Hai tab lưu đúng cùng một khoảnh khắc: kiểm bằng `@Version` của Hibernate (trả 409), không bấm thật đồng thời |
 
@@ -2019,8 +2061,8 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | Biên tập thẻ | [the-tao.html](../mockups/dot1/the-tao.html): dùng chung upload B1.6; âm thanh chỉ MP3/WAV/FLAC. Lưu thẻ/nội dung vẫn dự kiến B1.9 |
 | Demo | `shared/demo.js` mô phỏng hợp đồng mới và quyền sở hữu; `downloadUrl` là data URL chỉ cho demo. BE thật dùng URL ký RustFS; demo không thay kiểm chứng MIME/duration trên server |
 | Chưa kiểm chứng thủ công B1.6 | Concurrent complete, URL PUT cũ, WebP, giới hạn duration/dimensions, TTL24h và retry outage kiểm bằng 22 test FR-03; không đợi24h/bấm đồng thời trên backend đang chạy |
-| Thiết kế | `frontend/design/YEU_CAU_GIAO_DIEN.md` không có trong workspace; giữ tokens/layout hiện tại, không xác nhận toàn bộ GT01–GT12 |
-| Postman | 7 API B1.6 + PUT S3 + 3 request lỗi; fixture [avatar.png](../postman/avatar.png) khớp fileChecksum/fileSize mặc định; thứ tự chạy ở [postman/README.md](../postman/README.md) |
+| Thiết kế | UI brief thêm trong frontend đã xóa khi hoàn tác; tham chiếu DESIGN.md và mockups/shared/tokens.css ngoài frontend. Ảnh FE trước hoàn tác chỉ là lịch sử |
+| Postman | 7 API B1.6 + PUT S3 + 3 request lỗi; fixture [avatar.png](../postman/avatar.png) 32×32 PNG; fileChecksum/fileSize đã đồng bộ ở cả hai environment; thứ tự chạy ở [postman/README.md](../postman/README.md) |
 | Kiểm chứng mockup | Hồ sơ: upload ảnh fixture → hiển thị ảnh → gỡ ảnh → chữ cái; không có console error. Đã xem desktop1280 và mobile390; mobile không tràn ngang. Inline JS của hai trang và shared JS qua `node --check` |
 
 ### Kiểm tra mockup B1.7 ngày 03/10/2026

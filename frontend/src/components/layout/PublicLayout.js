@@ -22,7 +22,7 @@ export function PublicLayout({ children }) {
     { href: '/chinh-sach', label: 'Chính sách', key: 'policy' },
   ];
 
-  if (isLoading) return <div style={{ height: '100vh', background: 'var(--color-bg)' }}></div>;
+
 
   if (me) {
     return (
@@ -40,20 +40,17 @@ export function PublicLayout({ children }) {
           padding: '0 var(--space-4)', height: 'var(--header-h)', margin: '0 auto', maxWidth: '1200px'
         }}>
           <Link href="/" className="brand" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--color-ink)', fontWeight: 'bold', fontSize: '1.25rem' }}>
-            <span style={{ 
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--color-primary)', color: 'white', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold'
-            }}>V</span>
-            <span>Vocab<span style={{ color: 'var(--color-accent)' }}>Learning</span></span>
+            <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+            <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
 
           <nav className="site-nav" aria-label="Trang công khai" style={{ display: 'flex', gap: 'var(--space-6)' }}>
             {navLinks.map(link => (
-              <Link 
-                key={link.key} 
+              <Link
+                key={link.key}
                 href={link.href}
                 aria-current={pathname.startsWith(link.href) ? 'page' : undefined}
-                style={{ 
+                style={{
                   color: pathname.startsWith(link.href) ? 'var(--color-primary)' : 'var(--color-ink-2)',
                   fontWeight: pathname.startsWith(link.href) ? '600' : '500',
                   textDecoration: 'none'
@@ -74,7 +71,7 @@ export function PublicLayout({ children }) {
           </div>
         </div>
       </header>
-      
+
       <main className="app-main" id="main" style={{ paddingBottom: 'var(--space-7)', minHeight: 'calc(100vh - var(--header-h))' }}>
         {children}
       </main>

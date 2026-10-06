@@ -1,5 +1,7 @@
 # Báo cáo bàn giao BE → FE — GĐ0 Khởi tạo & nền tảng
 
+> Cập nhật hợp đồng 05/10/2026: lỗi camelCase, fieldErrors là mảng. Chỉ retry tối đa1 lần khi request ghi trả403 FORBIDDEN; không retry lỗi nghiệp vụ. Đây là yêu cầu bàn giao cho FE. Mã frontend đã hoàn tác theo yêu cầu mới nhất, chưa áp dụng sửa client trong lượt này. Log đã có requestId; email sau commit là best effort.
+
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | GĐ0 — Khởi tạo & nền tảng (28/09 – 11/10/2026) |
@@ -91,7 +93,7 @@ Dừng: `docker compose --profile app down`. **Không** dùng `-v`, vì lệnh �
 | 409 | `VERSION_CONFLICT` | Dữ liệu đã bị sửa ở nơi khác | Báo "Dữ liệu đã thay đổi", tải lại |
 | 422 | `BUSINESS_RULE` | Vi phạm quy tắc nghiệp vụ | Hiện `message` |
 | 429 | `RATE_LIMITED` | Gọi quá nhiều | Hiện `message`, khóa nút một lúc |
-| 503 | `DEPENDENCY_DOWN` | Lưu trữ, mail hoặc AI tạm lỗi | "Thử lại sau" |
+| 503 | `DEPENDENCY_DOWN` | Dependency gọi đồng bộ như Redis/storage; mail lỗi nền không bảo đảm trả503, AI thuộc kế hoạch sau | "Thử lại sau" |
 | 500 | `INTERNAL_ERROR` | Lỗi hệ thống | Toast chung, kèm `requestId` để báo BE |
 
 **Giới hạn tần suất đã cấu hình** (dùng từ Đợt 1)
@@ -152,7 +154,7 @@ Set-Cookie: XSRF-TOKEN=b8d12c7f-0031-4869-bfa5-f23057218374; Path=/
 
 **Lỗi:** không có.
 
-**Tác dụng phụ:** tạo cookie `XSRF-TOKEN`. Token giữ nguyên đến khi đăng nhập hoặc đăng xuất (từ B1.2 sẽ đổi token, FE gọi lại endpoint này).
+**Tác dụng phụ:** tạo cookie `XSRF-TOKEN`. Cookie CSRF được reset sau login/logout thành công. FE gọi lại để lấy token mới; header token cũ không khớp cookie mới trả403.
 
 ### 5.2 `GET /api/v1/public/ping` — kiểm tra BE còn sống
 
@@ -260,7 +262,7 @@ export async function api(path, { method = 'GET', body, headers = {}, retried = 
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (res.ok) return data;
-  if (res.status === 403 && WRITE.has(method) && !retried) {
+  if (res.status === 403 && data?.code === 'FORBIDDEN' && WRITE.has(method) && !retried) {
     document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
     return api(path, { method, body, headers, retried: true });
   }
@@ -327,7 +329,7 @@ Email do BE gửi (xác thực, quên mật khẩu, từ B1.1) xem tại http://
 ## 8. Checklist FE hoàn thành GĐ0
 
 - [ ] `api-client.js` gửi `credentials: 'include'` cho mọi request
-- [ ] POST/PUT/PATCH/DELETE tự gắn `X-XSRF-TOKEN`. Gặp 403 thì lấy token mới và thử lại đúng 1 lần
+- [ ] POST/PUT/PATCH/DELETE tự gắn `X-XSRF-TOKEN`. Gặp 403 FORBIDDEN thì lấy token mới và thử lại tối đa 1 lần; không retry EMAIL_NOT_VERIFIED/ACCOUNT_LOCKED
 - [ ] `ApiError` có đủ `status`, `code`, `fieldErrors`, `requestId`. Lỗi form hiện đúng dưới ô nhập
 - [ ] 401 toàn cục → chuyển `/dang-nhap?next=...`
 - [ ] Toast lỗi 5xx có hiện `requestId`
@@ -383,7 +385,7 @@ sequenceDiagram
 |---|---|
 | Chưa có `roadmap/ROADMAP_FE.md` và `mockups/` | Cột "FE bước / UI" ghi theo tên màn hình dự kiến. Cần tạo roadmap FE (`/ui-mockup` cho Đợt 1) |
 | Lỗi validation (400 có `fieldErrors`) | Chưa có endpoint nhận body để kiểm chứng trên BE thật. Định dạng đã kiểm chứng bằng test `GlobalExceptionHandlerTest` |
-| Tên trường lỗi | TK §13.1 viết `field_errors`/`request_id`, nhưng BE dùng camelCase **`fieldErrors`/`requestId`** theo quy ước JSON camelCase. FE theo BE |
+| Tên trường lỗi | TK §13.1 đã đồng bộ với BE dùng camelCase **`fieldErrors`/`requestId`** theo quy ước JSON camelCase. FE theo BE |
 | Sai method | Trả **404** `NOT_FOUND` chứ không phải 405 |
 | Upload trực tiếp từ trình duyệt lên RustFS | Cần CORS ở phía bucket. Sẽ cấu hình và kiểm chứng ở B1.6 |
 | Ví dụ trong mục 5 | Lấy từ API chạy bằng `spring-boot:run` với profile `dev` trên máy BE, ngày 28/09/2026 |

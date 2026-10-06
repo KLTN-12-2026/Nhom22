@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.List;
 import java.time.Instant;
+
 import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiXoaTep;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,4 +42,11 @@ public interface TepTinRepository extends JpaRepository<TepTin, Long> {
     @Query("update TepTin f set f.trangThaiXoa = :deleted, f.xoaAt = :now, f.updatedAt = :now where f.hoanTatAt is null and f.createdAt < :cutoff and f.trangThaiXoa = :active")
     int expirePending(@Param("cutoff") Instant cutoff, @Param("now") Instant now,
                       @Param("active") TrangThaiXoaTep active, @Param("deleted") TrangThaiXoaTep deleted);
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM the_tep
+            WHERE tep_id = :fileId
+            """, nativeQuery = true)
+    long countCardReferences(@Param("fileId") Long fileId);
 }

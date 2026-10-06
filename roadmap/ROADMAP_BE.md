@@ -1,5 +1,7 @@
 # ROADMAP BACKEND — VocabLearning (VocabFlow)
 
+> Cập nhật 05/10/2026: đợt sửa bao phủ GĐ0–B1.8; B1.9 đang triển khai. Host trong cấu hình có default/Compose override, không phải tất cả cần khai báo trong .env.example. Google placeholder dev dùng để boot; OAuth thật cần credentials hợp lệ. Kết quả kiểm chứng cuối đợt theo DOT1_BAO_CAO_FE và báo cáo đối chiếu.
+
 > Nguồn yêu cầu: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (viết tắt **TK**). Mã yêu cầu `FR-xx` (TK §5), mã kiểm thử `TC-xx` (TK §19).
 > Mỗi bước `Bx.y` là một đơn vị giao việc: chạy `/be-code B1.1` (viết code) hoặc `/be-chat B1.1` (học và tự gõ).
 > Nguyên tắc: **đơn giản, chạy được, đúng quy tắc nghiệp vụ**. Không microservices, không Kafka, không MongoDB (TK §11.1).
@@ -73,7 +75,7 @@ backend/k28/
     │   └── admin/           # quan_tri: người dùng, vai trò, kiểm duyệt, nhật ký
     │       (mỗi module) controller/ service/ repository/ entity/ dto/ mapper/
     ├── main/resources/
-    │   ├── application.yml  application-dev.yml  application-docker.yml
+    │   ├── application.yaml  application-dev.yml  application-docker.yml
     │   └── db/migration/V1__account.sql …   db/seed/R__seed_dev.sql
     └── test/java/com/do_an_tot_nghiep/k28/…
 ```
@@ -144,11 +146,11 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ```
-- Profile: `dev` (chạy app từ IDE, kết nối `localhost:3307`), `docker` (host là tên service `mysql`, `redis`…), `test`.
-- **Xong khi:** `docker compose up -d` → 4 service healthy; `docker compose --profile app up -d --build` → `GET /actuator/health` trả `UP`.
+- Profile mặc định dev kết nối localhost:3307; Compose truyền DB_HOST/REDIS_HOST/S3_ENDPOINT/MAIL_HOST, không có profile docker riêng. Test dùng profile test và Testcontainers.
+- **Xong khi:** `docker compose up -d` → các service có healthcheck healthy, Mailpit chạy và s3-init hoàn tất thành công; `docker compose --profile app up -d --build` → `GET /actuator/health` trả `UP`.
 
 ### [x] B0.3 Cấu hình ứng dụng & Flyway
-- `application.yml`: datasource, `spring.jpa.hibernate.ddl-auto=validate`, `open-in-view=false`, `hibernate.jdbc.time_zone=UTC`, naming snake_case mặc định, Flyway bật, `spring.session.data.redis`, multipart giới hạn, Jackson ISO-8601.
+- `application.yaml`: datasource, `spring.jpa.hibernate.ddl-auto=validate`, `open-in-view=false`, `hibernate.jdbc.time_zone=UTC`, naming snake_case mặc định, Flyway bật, `spring.session.data.redis`, multipart giới hạn, Jackson ISO-8601.
 - `V1__account.sql`: `nguoi_dung`, `vai_tro`, `nguoi_dung_vai_tro`, `danh_tinh_oauth`, `token_tai_khoan`, `ho_so_hoc_tap`, `cai_dat_thong_bao` (TK §12.2). Seed 2 vai trò `USER`, `ADMIN`.
 - Dev seed tách riêng `db/seed/` (chỉ bật ở profile dev): 1 Admin, 3 User mẫu.
 - **Xong khi:** app khởi động, Flyway áp V1, `validate` không báo lỗi.
@@ -157,7 +159,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `ErrorCode` (enum: `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, VERSION_CONFLICT, BUSINESS_RULE, RATE_LIMITED, DEPENDENCY_DOWN`) → HTTP 400/401/403/404/409/409/422/429/503.
 - `ApiException(ErrorCode, message)`; `GlobalExceptionHandler` trả `{code, message, fieldErrors, requestId}` (TK §13.1), **không** trả stack trace.
 - `RequestIdFilter`: sinh `X-Request-Id`, đưa vào MDC log.
-- `PageResponse<T>(items, page, size, totalElements)`; `BaseEntity` với `createdAt`, `updatedAt` (JPA Auditing).
+- `PageResponse<T>(items, page, size, totalElements, totalPages)`; `BaseEntity` với `createdAt`, `updatedAt` (JPA Auditing).
 - Bean `Clock` UTC.
 - **Xong khi:** test MockMvc: body sai → 400 có `fieldErrors`; id không tồn tại → 404 có `requestId`.
 
@@ -227,16 +229,19 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Nợ từ B1.5: chủ đề yêu thích của người học (bảng nối `nguoi_dung` ↔ `chu_de`, tối đa 5) + thêm vào `GET/PUT /me/learning-settings`.
 - Public: `GET /public/topics`. Admin: CRUD `/admin/topics`, `/admin/tags`.
 - **Đã làm 03/10/2026:** 11 API danh mục; cập nhật `GET/PUT /me/learning-settings` với `chuDeIds` bắt buộc, tối đa 5 ID tồn tại và không trùng. PUT danh mục kèm `version`; xóa danh mục đang được tham chiếu trả 409, không cascade. Trình độ dùng enum hiện có, không có API CRUD trình độ.
-- **Kiểm chứng:** `FR03CatalogTest` 10/10 pass; 62 lượt HTTP thật pass trên localhost:8080, gồm đổi riêng chủ đề tăng version và chặn xóa chủ đề yêu thích. Chưa thử đồng thời hai transaction hoặc nhãn gắn thẻ/bộ thẻ gắn chủ đề. Không tuyên bố toàn bộ suite pass; FR-13 audit log chưa có ở bước này.
-- **Bàn giao:** `report/DOT1_BAO_CAO_FE.md` mục 5.12, 5.21–5.31; `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md`; Postman thêm 15, cập nhật 3 request. Mockup B1.7 đã đối chiếu, còn lệch hợp đồng theo mục 10 báo cáo.
+- **Kiểm chứng 05/10/2026:** FR03CatalogTest 14/14 pass trong toàn suite 117/117. Có kiểm thử tạo trùng đồng thời, sửa cùng version, xóa đồng thời cho cả topics/tags; fixture FK bo_the/the_nhan và chủ đề người học. 62 lượt HTTP ngày03/10 là bằng chứng lịch sử. FR-13 audit log thuộc giai đoạn sau.
+- **Bàn giao:** `report/DOT1_BAO_CAO_FE.md` mục 5.12, 5.21–5.31; `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md`; Postman thêm 15, cập nhật 3 request. Mockup B1.7 và Next.js đã đồng bộ DTO/method/version/409; mockup vẫn là demo.
 
-### [ ] B1.8 Bộ thẻ cá nhân — FR-03, TC-02
+### [x] B1.8 Bộ thẻ cá nhân — FR-03, TC-02
 - API: `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `PUT/DELETE /decks/{id}/favorite`.
 - Quyền `RIENG_TU/CONG_KHAI`; chỉ chủ sở hữu sửa; bộ người khác → 404. Xóa bộ đã có lịch sử học → xóa mềm. `@Version` chống ghi đè.
 - **Đã triển khai 04/10/2026:** 7 API; quản lý chỉ bộ của mình; yêu thích bộ của mình hoặc bộ công khai `BINH_THUONG`. PATCH nhận `version` trong body; DELETE bộ nhận query `version`. Dùng schema V4 hiện có, không thêm/sửa migration; xóa mềm mọi bộ bằng `xoa_at`.
-- **Kiểm chứng:** 6a đạt 8/8 và 6b đạt 26/26 lượt HTTP trên localhost:8080 (tổng 34/34, không tính bước đăng nhập). Đã kiểm tra phiên bản cũ, thiếu version, phân quyền cả bộ riêng tư/công khai và thao tác yêu thích lặp lại. `FR03DeckTest` có 11 lượt dự kiến nhưng chưa xác nhận kết quả chạy; không tuyên bố suite pass.
-- **Còn thiếu kiểm chứng:** HTTP xóa mềm thành công/bảo toàn thẻ và tham chiếu bộ nguồn (6c bị 429 khi đăng ký, sau đó người dùng yêu cầu bỏ qua); hai transaction đồng thời và bộ bị kiểm duyệt ẩn. Vì vậy chưa đánh dấu hoàn tất B1.8.
-- **Báo cáo và bàn giao:** [báo cáo BE Đợt1](../report/DOT1_BAO_CAO_BE.md); báo cáo FE mục 5.32–5.38; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
+- **Kiểm chứng lịch sử 04/10:** 6a đạt 8/8 và 6b đạt 26/26 lượt HTTP trên localhost:8080 (tổng 34/34, không tính bước đăng nhập). Đã kiểm tra phiên bản cũ, thiếu version, phân quyền cả bộ riêng tư/công khai và thao tác yêu thích lặp lại. `FR03DeckTest` có 11 lượt dự kiến nhưng chưa xác nhận kết quả chạy; không tuyên bố suite pass.
+- **Đã bổ sung 05/10/2026:** FR03DeckTest 11/11 pass: xóa mềm bảo toàn thẻ/favorite/bộ nguồn, version cũ, sai chủ sở hữu, bộ ẩn và hai transaction cập nhật. Newman trên BE8081 xác nhận DELETE204, GET sau xóa404 và version cũ409. B1.8 đã đủ bằng chứng để đánh dấu hoàn tất; lịch sử bị429 không còn là trạng thái hiện tại.
+- **Báo cáo và bàn giao:** [báo cáo Đợt1](../report/DOT1_BAO_CAO_FE.md) mục 5.32–5.38 và mục10; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
+
+
+- **Phạm vi bước sau:** mục tiêu bộ, số thẻ, tìm kiếm toàn bộ thư viện và favorite listing phải chốt trước B1.9/B1.10. Mục tiêu hồ sơ không tự trở thành mục tiêu bộ.
 
 ### [ ] B1.9 Thẻ từ vựng — FR-03, TC-02
 - API: `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`.
@@ -330,7 +335,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Interface `SpeechClient` + Azure Speech adapter + Fake (gắn nhãn "Mô phỏng"). Chỉ số thiếu → `null`, không sinh điểm giả.
 
 ### [ ] B3.5 Gợi ý có lý do — FR-08
-- API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, PHAT_AM_THAP, QUA_HAN_NHIEU (TK §8.3). Ngưỡng trong `application.yml`.
+- API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, PHAT_AM_THAP, QUA_HAN_NHIEU (TK §8.3). Ngưỡng trong `application.yaml`.
 
 ### [ ] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
 - `V8__engagement.sql`: `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.

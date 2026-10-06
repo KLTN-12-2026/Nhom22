@@ -47,44 +47,44 @@
 
           <form id="form" class="settings-form" novalidate>
             <div data-form-error hidden></div>
-            <fieldset class="fieldset field" data-field="goal">
+            <fieldset class="fieldset field" data-field="mucTieu">
               <legend>Mục tiêu</legend>
               <div class="choice-grid cols-2">
-                <label class="choice choice-card"><input type="radio" name="goal" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span><span class="choice-desc">Hằng ngày, công sở, du lịch</span></span></label>
-                <label class="choice choice-card"><input type="radio" name="goal" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Thi TOEIC</span><span class="choice-desc">Part 5–7, email và văn bản công việc</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="mucTieu" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Giao tiếp</span><span class="choice-desc">Hằng ngày, công sở, du lịch</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="mucTieu" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Thi TOEIC</span><span class="choice-desc">Part 5–7, email và văn bản công việc</span></span></label>
               </div>
               <p class="field-error"></p>
             </fieldset>
-            <fieldset class="fieldset field" data-field="level">
+            <fieldset class="fieldset field" data-field="trinhDo">
               <legend>Trình độ tự đánh giá</legend>
               <div class="choice-grid cols-2">
-                <label class="choice"><input type="radio" name="level" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span></span></label>
-                <label class="choice"><input type="radio" name="level" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span></span></label>
-                <label class="choice"><input type="radio" name="level" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span></span></label>
-                <label class="choice"><input type="radio" name="level" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span></span></label>
+                <label class="choice"><input type="radio" name="trinhDo" value="MOI_BAT_DAU"><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Mới bắt đầu</span></span></label>
+                <label class="choice"><input type="radio" name="trinhDo" value="CO_BAN"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Cơ bản</span></span></label>
+                <label class="choice"><input type="radio" name="trinhDo" value="TRUNG_CAP"><span class="bubble" aria-hidden="true">C</span><span class="choice-body"><span class="choice-title">Trung cấp</span></span></label>
+                <label class="choice"><input type="radio" name="trinhDo" value="NANG_CAO"><span class="bubble" aria-hidden="true">D</span><span class="choice-body"><span class="choice-title">Nâng cao</span></span></label>
               </div>
               <p class="field-hint">Chỉ dùng để gợi ý bộ thẻ, không phải kết quả kiểm tra.</p>
               <p class="field-error"></p>
             </fieldset>
-            <fieldset class="fieldset field" data-field="topicIds">
+            <fieldset class="fieldset field" data-field="chuDeIds">
               <legend>Chủ đề quan tâm <span class="muted" style="font-weight:500">(tối đa 5)</span></legend>
               <div class="choice-grid cols-2" id="topics"></div>
               <p class="field-error"></p>
             </fieldset>
             <div class="field">
-              <label class="field-label" for="minutesPerDay">Thời gian học mỗi ngày (phút)</label>
+              <label class="field-label" for="phutMoiNgay">Thời gian học mỗi ngày (phút)</label>
               <div class="num-row">
-                <input class="input" id="minutesPerDay" name="minutesPerDay" type="number" min="1" max="240" inputmode="numeric" required>
-                <div class="quick" data-for="minutesPerDay" aria-label="Chọn nhanh"><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div>
+                <input class="input" id="phutMoiNgay" name="phutMoiNgay" type="number" min="1" max="240" inputmode="numeric" required>
+                <div class="quick" data-for="phutMoiNgay" aria-label="Chọn nhanh"><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="20">20</button><button type="button" data-v="30">30</button></div>
               </div>
               <p class="field-hint">Từ 1 đến 240 phút.</p>
               <p class="field-error"></p>
             </div>
             <div class="field">
-              <label class="field-label" for="newCardsPerDay">Số từ mới mỗi ngày</label>
+              <label class="field-label" for="tuMoiMoiNgay">Số từ mới mỗi ngày</label>
               <div class="num-row">
-                <input class="input" id="newCardsPerDay" name="newCardsPerDay" type="number" min="0" max="100" inputmode="numeric" required>
-                <div class="quick" data-for="newCardsPerDay" aria-label="Chọn nhanh"><button type="button" data-v="0">0</button><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="20">20</button></div>
+                <input class="input" id="tuMoiMoiNgay" name="tuMoiMoiNgay" type="number" min="0" max="100" inputmode="numeric" required>
+                <div class="quick" data-for="tuMoiMoiNgay" aria-label="Chọn nhanh"><button type="button" data-v="0">0</button><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button><button type="button" data-v="20">20</button></div>
               </div>
               <p class="field-hint">Đặt 0 để chỉ ôn từ đã học. Thẻ đến hạn ôn luôn được đưa vào phiên học.</p>
               <p class="estimate" id="estimate" aria-live="polite"></p>
@@ -109,6 +109,7 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -119,24 +120,24 @@
 
   function sync() {
     document.querySelectorAll(".quick").forEach((q) => { const v = form[q.dataset.for].value; q.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v))); });
-    const m = Number(form.minutesPerDay.value), n = Number(form.newCardsPerDay.value);
+    const m = Number(form.phutMoiNgay.value), n = Number(form.tuMoiMoiNgay.value);
     document.getElementById("estimate").textContent = m && n > m ? "Số từ mới đang nhiều hơn số phút mỗi ngày. Bạn có thể không kịp ôn." : "";
   }
   document.querySelectorAll(".quick").forEach((q) => q.addEventListener("click", (e) => { const b = e.target.closest("[data-v]"); if (b) { form[q.dataset.for].value = b.dataset.v; sync(); } }));
   form.addEventListener("input", sync);
   form.addEventListener("change", (e) => {
-    if (e.target.name === "topicIds" && form.querySelectorAll('[name="topicIds"]:checked').length > 5) { e.target.checked = false; VL.setFieldError(form, "topicIds", "Chọn tối đa 5 chủ đề"); }
+    if (e.target.ten === "chuDeIds" && form.querySelectorAll('[name="chuDeIds"]:checked').length > 5) { e.target.checked = false; VL.setFieldError(form, "chuDeIds", "Chọn tối đa 5 chủ đề"); }
   });
 
   VL.load(document.getElementById("region"), {
     fetch: async () => ({ s: await VL.api("GET", "/me/learning-settings"), topics: await VL.api("GET", "/public/topics") }),
     render: ({ s, topics }) => {
       version = s.version;
-      document.getElementById("topics").innerHTML = topics.map((t) => '<label class="choice"><input type="checkbox" name="topicIds" value="' + t.id + '"' + ((s.topicIds || []).includes(t.id) ? " checked" : "") + '><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.name) + "</span></label>").join("");
-      if (s.goal) form.querySelector('[name="goal"][value="' + s.goal + '"]').checked = true;
-      if (s.level) form.querySelector('[name="level"][value="' + s.level + '"]').checked = true;
-      form.minutesPerDay.value = s.minutesPerDay;
-      form.newCardsPerDay.value = s.newCardsPerDay;
+      document.getElementById("topics").innerHTML = topics.items.map((t) => '<label class="choice"><input type="checkbox" name="chuDeIds" value="' + t.id + '"' + ((s.chuDeIds || []).includes(t.id) ? " checked" : "") + '><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.ten) + "</span></label>").join("");
+      if (s.mucTieu) form.querySelector('[name="mucTieu"][value="' + s.mucTieu + '"]').checked = true;
+      if (s.trinhDo) form.querySelector('[name="trinhDo"][value="' + s.trinhDo + '"]').checked = true;
+      form.phutMoiNgay.value = s.phutMoiNgay;
+      form.tuMoiMoiNgay.value = s.tuMoiMoiNgay;
       sync();
     }
   });
@@ -145,7 +146,7 @@
     e.preventDefault();
     VL.clearErrors(form);
     const fd = new FormData(form);
-    const data = { goal: fd.get("goal"), level: fd.get("level"), topicIds: fd.getAll("topicIds"), minutesPerDay: Number(fd.get("minutesPerDay")), newCardsPerDay: Number(fd.get("newCardsPerDay")), onboardingDone: true, version };
+    const data = { mucTieu: fd.get("mucTieu"), trinhDo: fd.get("trinhDo"), chuDeIds: fd.getAll("chuDeIds"), phutMoiNgay: Number(fd.get("phutMoiNgay")), tuMoiMoiNgay: Number(fd.get("tuMoiMoiNgay")), version };
     VL.busy(save, async () => {
       try {
         const s = await VL.api("PUT", "/me/learning-settings", data);

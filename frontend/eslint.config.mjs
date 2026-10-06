@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-*/**",
+    "public/mockServiceWorker.js",
     "out/**",
     "build/**",
     "next-env.d.ts",

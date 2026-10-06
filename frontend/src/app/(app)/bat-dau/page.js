@@ -1,16 +1,26 @@
 'use client';
+import { useQueryClient } from '@tanstack/react-query';
+import { logout } from '@/lib/api-client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Icon } from '@/components/ui';
+import { ErrorState, Icon } from '@/components/ui';
+import { useTopics } from '@/hooks/useTopics';
+import { apiFetch } from '@/lib/api-client';
 import styles from './page.module.css';
 
 export default function OnboardingPage() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const { data: topicList = [], error: topicsError, refetch: reloadTopics } = useTopics();
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [goal, setGoal] = useState('');
   const [level, setLevel] = useState('');
   const [topics, setTopics] = useState([]);
+  const [muiGio, setMuiGio] = useState('Asia/Ho_Chi_Minh');
+  const [gioNhac, setGioNhac] = useState('20:30');
   const [mins, setMins] = useState('10');
   const [cards, setCards] = useState('10');
 
@@ -19,9 +29,23 @@ export default function OnboardingPage() {
     return () => document.body.classList.remove('no-bottom-nav');
   }, []);
 
-  const handleNext = () => {
-    if (step < 5) setStep(step + 1);
-    else router.push('/bo-the');
+  const handleNext = async () => {
+    if ((step === 1 && !goal) || (step === 2 && !level)) { setErrorMsg('Chọn một mục để tiếp tục.'); return; }
+    setErrorMsg('');
+    if (step < 4) { setStep(step + 1); return; }
+    if (step === 5) { router.push('/bo-the'); return; }
+    setSaving(true);
+    try {
+      const current = await apiFetch('/api/v1/me/learning-settings');
+      const notification = await apiFetch('/api/v1/me/notification-settings');
+      await apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify({ muiGio }) });
+      await apiFetch('/api/v1/me/notification-settings', { method: 'PUT', body: JSON.stringify({ nhanTrongUngDung: notification.nhanTrongUngDung, nhanEmail: notification.nhanEmail, nhacHoc: !!gioNhac, gioNhac: gioNhac || null, version: notification.version }) });
+      await apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({ mucTieu: goal, trinhDo: level, chuDeIds: topics, phutMoiNgay: Number(mins), tuMoiMoiNgay: Number(cards), version: current.version }) });
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      await queryClient.invalidateQueries({ queryKey: ['learning-settings'] });
+      setStep(5);
+    } catch (error) { setErrorMsg(error.message); }
+    finally { setSaving(false); }
   };
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
@@ -43,7 +67,7 @@ export default function OnboardingPage() {
             <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
             <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
-          <button type="button" className="btn btn-quiet" onClick={() => router.push('/dang-nhap?loggedOut=1')}>
+          <button type="button" className="btn btn-quiet" onClick={() => logout(queryClient).catch(error => alert(error.message))}>
             Đăng xuất
           </button>
         </div>
@@ -121,11 +145,11 @@ export default function OnboardingPage() {
               <legend><h2 tabIndex="-1">Chọn chủ đề bạn quan tâm</h2></legend>
               <p className="muted">Chọn tối đa 5. Có thể bỏ trống.</p>
               <div className="choice-grid cols-2" id="topics" aria-live="polite">
-                {['Kinh doanh', 'Đời sống', 'Du lịch', 'Công nghệ', 'Tài chính', 'Sức khoẻ'].map(t => (
-                  <label key={t} className="choice choice-card">
-                    <input type="checkbox" checked={topics.includes(t)} onChange={() => toggleTopic(t)} />
+                {topicList.map(t => (
+                  <label key={t.id} className="choice choice-card">
+                    <input type="checkbox" checked={topics.includes(t.id)} onChange={() => toggleTopic(t.id)} />
                     <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
-                    <span className="choice-body"><span className="choice-title">{t}</span></span>
+                    <span className="choice-body"><span className="choice-title">{t.ten}</span></span>
                   </label>
                 ))}
               </div>
@@ -167,12 +191,12 @@ export default function OnboardingPage() {
               <div className="choice-grid cols-2">
                 <div className="field">
                   <label className="field-label" htmlFor="reminderTime"><span>Giờ nhắc học</span><span className="optional">Không bắt buộc</span></label>
-                  <input className="input" type="time" id="reminderTime" name="reminderTime" defaultValue="20:30" />
+                  <input className="input" type="time" id="reminderTime" name="reminderTime" value={gioNhac} onChange={e => setGioNhac(e.target.value)} />
                   <p className="field-error"></p>
                 </div>
                 <div className="field">
                   <label className="field-label" htmlFor="muiGio">Múi giờ</label>
-                  <select className="select" id="muiGio" name="muiGio" defaultValue="Asia/Ho_Chi_Minh">
+                  <select className="select" id="muiGio" name="muiGio" value={muiGio} onChange={e => setMuiGio(e.target.value)}>
                     <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
                     <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
                     <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
@@ -183,23 +207,10 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <div className={styles.onbStep} data-step="5" hidden={step !== 5}>
-              <h2 tabIndex="-1">Chọn bộ thẻ để bắt đầu</h2>
-              <p className="muted">Gợi ý theo mục tiêu và chủ đề bạn vừa chọn. Bản sao là của riêng bạn, sửa thoải mái. Bạn có thể bỏ qua bước này.</p>
-              <div className={styles.starter}>
-                <div className={styles.starterItem}>
-                  <div>
-                    <h3 style={{ margin: 0, marginBottom: '4px' }}>3000 Từ Vựng Giao Tiếp</h3>
-                    <div style={{ display: 'flex', gap: '8px', fontSize: '12px', color: 'var(--ink-2)' }}>
-                      <span>Bộ mẫu</span> • <span>Giao tiếp</span> • <span>Cơ bản</span>
-                    </div>
-                  </div>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => alert('Đã chép vào bộ của bạn')}>
-                    <Icon name="copy" /> Sao chép
-                  </button>
-                </div>
-              </div>
-            </div>
+            <div className={styles.onbStep} data-step="5" hidden={step !== 5}><h2>Đã lưu phiếu của bạn</h2><p>Bạn có thể tạo bộ thẻ đầu tiên. Bộ mẫu sẽ mở khi thư viện sẵn sàng.</p></div>
+            {topicsError && <ErrorState description={topicsError.message} onRetry={reloadTopics} />}
+            {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
+
           </form>
         </section>
 
@@ -216,14 +227,14 @@ export default function OnboardingPage() {
             </li>
             <li>
               <span className={styles.sumK}>Chủ đề</span>
-              <span className={`${styles.sumV} ${topics.length === 0 ? styles.isEmpty : ''}`}>{topics.length > 0 ? topics.join(', ') : 'Chưa chọn'}</span>
+              <span className={`${styles.sumV} ${topics.length === 0 ? styles.isEmpty : ''}`}>{topics.length > 0 ? topics.map(id => topicList.find(t => t.id === id)?.ten || id).join(', ') : 'Chưa chọn'}</span>
             </li>
           </ul>
         </aside>
 
         <div className={styles.onbActions}>
-          <button type="button" className="btn btn-secondary" onClick={handleBack} disabled={step === 1}>Quay lại</button>
-          <button type="button" className="btn btn-primary" onClick={handleNext}>{step === 5 ? 'Hoàn tất' : 'Tiếp tục'}</button>
+          <button type="button" className="btn btn-secondary" onClick={handleBack} disabled={step === 1 || saving}>Quay lại</button>
+          <button type="button" className="btn btn-primary" onClick={handleNext} disabled={saving}>{saving ? 'Đang lưu...' : step === 5 ? 'Hoàn tất' : step === 4 ? 'Lưu thiết lập' : 'Tiếp tục'}</button>
         </div>
       </main>
     </>

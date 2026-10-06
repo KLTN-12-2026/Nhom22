@@ -17,7 +17,7 @@ function PracticeSessionContent() {
   });
 
   const [answers, setAnswers] = useState({});
-  const [startTime] = useState(Date.now());
+  const [startTime] = useState(() => Date.now());
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ function PracticeSessionContent() {
     if (answeredCount < session.cauHoi.length) {
       if (!window.confirm(`Còn ${session.cauHoi.length - answeredCount} câu trống. Bạn có chắc chắn muốn nộp?`)) return;
     }
-    
+
     const traLoi = session.cauHoi.map(q => {
       if (q.loaiCau === 'GHEP_TU') {
         const cap = q.deBai.cotTrai.map(l => ({ traiId: l.id, phaiId: answers[q.id]?.[l.id] || null })).filter(c => c.phaiId);
@@ -127,7 +127,7 @@ function PracticeSessionContent() {
               {q.deBai.cotTrai.map(left => (
                 <div key={left.id} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 'var(--space-3)', alignItems: 'center' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
-                  <select 
+                  <select
                     style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
                     value={answers[q.id]?.[left.id] || ''}
                     onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}

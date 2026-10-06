@@ -12,6 +12,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfLogoutHandler;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class SessionAuthenticator {
 
     private final SecurityContextRepository contextRepository;
+    private final CsrfTokenRepository csrfTokenRepository;
     private final ChangeSessionIdAuthenticationStrategy fixation = new ChangeSessionIdAuthenticationStrategy();
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
@@ -28,6 +32,7 @@ public class SessionAuthenticator {
                 .toList();
         Authentication auth = UsernamePasswordAuthenticationToken.authenticated(principal, null, authorities);
         fixation.onAuthentication(auth, request, response);
+        new CsrfAuthenticationStrategy(csrfTokenRepository).onAuthentication(auth, request, response);
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
@@ -35,6 +40,8 @@ public class SessionAuthenticator {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
+        new CsrfLogoutHandler(csrfTokenRepository).logout(request, response,
+                SecurityContextHolder.getContext().getAuthentication());
         logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
     }
 }

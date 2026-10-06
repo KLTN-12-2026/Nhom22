@@ -75,7 +75,7 @@ function ProgressContent() {
   const params = useParams();
   const queryClient = useQueryClient();
   const { me } = useMe();
-  
+
   const id = params.id;
 
   const defaultNhom = searchParams.get('nhom') || '';
@@ -100,7 +100,7 @@ function ProgressContent() {
 
   const actionMutation = useMutation({
     mutationFn: ({ method, url, body }) => apiFetch(url, { method, body: body ? JSON.stringify(body) : undefined }),
-    onSuccess: () => queryClient.invalidateQueries(['deck-progress', id])
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['deck-progress', id] })
   });
 
   const handleTabClick = (groupId) => {
@@ -173,7 +173,7 @@ function ProgressContent() {
         <Button variant="ghost" onClick={() => router.push(`/bo-the/${id}`)} style={{ marginLeft: '-12px', marginBottom: 'var(--space-3)' }}>
           <Icon name="arrow-left" /> Về bộ thẻ
         </Button>
-        
+
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
             <span>Tiến độ bộ thẻ</span>
@@ -187,9 +187,9 @@ function ProgressContent() {
           {GROUPS.map(g => {
             const count = data?.tongHop?.[g.id] || 0;
             return (
-              <button 
-                key={g.id} 
-                onClick={() => handleTabClick(g.id)} 
+              <button
+                key={g.id}
+                onClick={() => handleTabClick(g.id)}
                 style={{ padding: '6px 12px', border: nhom === g.id ? 'none' : '1px solid var(--color-border)', background: nhom === g.id ? 'var(--color-primary)' : 'transparent', color: nhom === g.id ? 'white' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center' }}
               >
                 {g.label}
@@ -204,12 +204,12 @@ function ProgressContent() {
             <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-3)', pointerEvents: 'none' }}>
               <Icon name="search" />
             </div>
-            <input 
-              type="search" 
-              placeholder="Tìm từ hoặc nghĩa" 
-              value={q} 
-              onChange={e => handleSearch(e.target.value)} 
-              style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} 
+            <input
+              type="search"
+              placeholder="Tìm từ hoặc nghĩa"
+              value={q}
+              onChange={e => handleSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
             />
           </div>
         </div>
@@ -228,7 +228,7 @@ function ProgressContent() {
                     {it.tuLoai && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{it.tuLoai}</span>}
                   </div>
                   <div style={{ marginBottom: '12px' }}>{it.nghiaVi}</div>
-                  
+
                   <div style={{ display: 'grid', gap: '8px' }}>
                     {renderDir('EN_VI', it.chieu.EN_VI)}
                     {renderDir('VI_EN', it.chieu.VI_EN)}
@@ -245,7 +245,7 @@ function ProgressContent() {
                       {openHistory[it.theId] ? 'Ẩn lịch sử' : 'Lịch sử ôn'}
                     </Button>
                   </div>
-                  
+
                   {openHistory[it.theId] && <HistoryLog theId={it.theId} />}
                 </div>
               </li>

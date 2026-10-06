@@ -76,6 +76,10 @@ springdoc:
     csrf:
       enabled: true
 
+logging:
+  pattern:
+    level: "%5p [requestId=%X{requestId}]"
+
 management:
   endpoints:
     web:

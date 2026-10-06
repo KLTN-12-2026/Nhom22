@@ -13,8 +13,10 @@ import com.do_an_tot_nghiep.k28.content.entity.TepTin;
 import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiXoaTep;
 import com.do_an_tot_nghiep.k28.content.mapper.FileMapper;
 import com.do_an_tot_nghiep.k28.content.repository.TepTinRepository;
+
 import java.time.Clock;
 import java.time.Duration;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -134,16 +136,31 @@ public class FileService {
 
     public void delete(Long userId, Long fileId) {
         TepTin deleted = new TransactionTemplate(txManager).execute(status -> {
-            TepTin file = files.findOwnedForUpdate(fileId, userId).orElseThrow(this::notFound);
+            TepTin file = files.findOwnedForUpdate(fileId, userId)
+                    .orElseThrow(this::notFound);
+
+            if (files.countCardReferences(fileId) > 0) {
+                throw new ApiException(
+                        ErrorCode.CONFLICT,
+                        "Tệp đang được thẻ từ vựng sử dụng"
+                );
+            }
+
             accountService.clearAvatarIfMatches(userId, fileId);
+
             if (file.getTrangThaiXoa() != TrangThaiXoaTep.DA_XOA) {
                 file.markDeleted(clock.instant());
             }
+
             return file;
         });
+
         storage.delete(deleted.getObjectKey());
-        files.recordDeletion(fileId, TrangThaiXoaTep.DA_XOA, clock.instant());
+        files.recordDeletion(
+                fileId, TrangThaiXoaTep.DA_XOA, clock.instant()
+        );
     }
+
 
     private void requireUnexpired(TepTin file) {
         if (!clock.instant().isBefore(file.getCreatedAt().plus(PENDING_TTL))) {

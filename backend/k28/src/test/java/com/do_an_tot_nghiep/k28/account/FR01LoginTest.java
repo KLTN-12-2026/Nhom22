@@ -41,6 +41,25 @@ class FR01LoginTest extends AbstractIntegrationTest {
     JdbcTemplate jdbc;
 
     @Test
+    void tc01_loginAndLogoutClearCsrfCookie() throws Exception {
+        Cookie csrf = mockMvc.perform(get("/api/v1/auth/csrf")).andReturn().getResponse().getCookie("XSRF-TOKEN");
+        var response = mockMvc.perform(post("/api/v1/auth/login").cookie(csrf)
+                        .header("X-XSRF-TOKEN", csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(Map.of("email", newUser(true), "password", PASSWORD))))
+                .andExpect(status().isOk()).andExpect(cookie().maxAge("XSRF-TOKEN", 0))
+                .andReturn().getResponse();
+        Cookie session = response.getCookie("SESSION");
+        Cookie refreshed = mockMvc.perform(get("/api/v1/auth/csrf").cookie(session))
+                .andReturn().getResponse().getCookie("XSRF-TOKEN");
+        assertThat(refreshed.getValue()).isNotEqualTo(csrf.getValue());
+        mockMvc.perform(post("/api/v1/auth/logout").cookie(session, refreshed)
+                        .header("X-XSRF-TOKEN", csrf.getValue())).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/auth/logout").cookie(session, refreshed)
+                        .header("X-XSRF-TOKEN", refreshed.getValue()))
+                .andExpect(status().isNoContent()).andExpect(cookie().maxAge("XSRF-TOKEN", 0));
+    }
+
+    @Test
     void tc01_loginReturnsUserAndHttpOnlySessionCookie() throws Exception {
         String email = newUser(true);
 

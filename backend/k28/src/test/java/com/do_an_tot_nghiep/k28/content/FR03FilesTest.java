@@ -273,6 +273,28 @@ class FR03FilesTest extends AbstractIntegrationTest {
         complete(request.fileId(), 200);
     }
 
+    @Test
+    void fr03_linkedFileDeleteDoesNotChangeAvatarOrStorage() throws Exception {
+        byte[] png = FileFixtures.image("png");
+        var intent = request(png, "ANH", "image/png", sha(png));
+        upload(intent, png, "image/png");
+        complete(intent.fileId(), 200);
+        Long fileId = Long.valueOf(intent.fileId());
+        fileService.setAvatar(userId, fileId);
+        jdbc.update("insert into bo_the(chu_so_huu_id,ten,trinh_do) values (?,?,?)", userId, "Linked file", "CO_BAN");
+        Long deckId = jdbc.queryForObject("select max(id) from bo_the where chu_so_huu_id=?", Long.class, userId);
+        jdbc.update("insert into the_tu_vung(bo_the_id,tu,nghia_vi) values (?,?,?)", deckId, "word", "tu");
+        Long cardId = jdbc.queryForObject("select max(id) from the_tu_vung where bo_the_id=?", Long.class, deckId);
+        jdbc.update("insert into the_tep(the_id,tep_id,vai_tro) values (?,?,?)", cardId, fileId, "ANH");
+        clearInvocations(storage);
+        mockMvc.perform(delete("/api/v1/files/" + fileId).cookie(session).with(xsrf()))
+                .andExpect(status().isConflict());
+        assertThat(fileService.avatar(userId).id()).isEqualTo(intent.fileId());
+        assertThat(files.findById(fileId).orElseThrow().getXoaAt()).isNull();
+        assertThat(files.findById(fileId).orElseThrow().getDaXoaObjectAt()).isNull();
+        verify(storage, never()).delete(anyString());
+    }
+
     private UploadRequestResponse request(byte[] bytes, String type, String mime, String checksum) throws Exception {
         String body = mockMvc.perform(post("/api/v1/files/upload-requests").cookie(session).with(xsrf())
                         .contentType(MediaType.APPLICATION_JSON).content(toJson(Map.of(
