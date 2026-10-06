@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.content.service;
 
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CreateCardRequest;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateCardRequest;
@@ -24,8 +25,11 @@ import jakarta.persistence.LockModeType;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +47,98 @@ public class CardService {
     private final EntityManager entityManager;
     private final Clock clock;
 
+    public PageResponse<CardResponse> list(
+            Long userId,
+            Long deckId,
+            int page,
+            int size
+    ) {
+        BoThe deck = ownedDeck(userId, deckId);
+
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ApiException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "page phải không âm, size từ 1 đến 100"
+            );
+        }
+
+        Page<TheTuVung> result =
+                cards.findByBoTheIdAndXoaAtIsNullOrderByIdDesc(
+                        deck.getId(), PageRequest.of(page, size)
+                );
+
+        if (result.isEmpty()) {
+            return PageResponse.of(
+                    result.map(card -> toResponse(card))
+            );
+        }
+
+        List<Long> cardIds = result.getContent().stream()
+                .map(TheTuVung::getId)
+                .toList();
+
+        Map<Long, List<String>> tagsByCard =
+                links.findTags(cardIds).stream()
+                        .collect(Collectors.groupingBy(
+                                CardLinkRepository.TagLink::theId,
+                                Collectors.mapping(
+                                        link -> link.nhanId().toString(),
+                                        Collectors.toList()
+                                )
+                        ));
+
+        Map<Long, List<CardLinkRepository.FileLink>> filesByCard =
+                links.findFiles(cardIds).stream()
+                        .collect(Collectors.groupingBy(
+                                CardLinkRepository.FileLink::theId
+                        ));
+
+        Map<CardText.DuplicateKey, List<Long>> duplicateGroups =
+                cards.findDuplicateCandidates(deck.getId()).stream()
+                        .collect(Collectors.groupingBy(
+                                candidate -> CardText.duplicateKey(
+                                        candidate.getTu(),
+                                        candidate.getTuLoai()
+                                ),
+                                Collectors.mapping(
+                                        TheTuVungRepository.DuplicateCandidate::getId,
+                                        Collectors.toList()
+                                )
+                        ));
+
+        return PageResponse.of(result.map(card -> {
+            List<String> tagIds = tagsByCard.getOrDefault(
+                    card.getId(), List.of()
+            );
+
+            List<CardLinkRepository.FileLink> fileLinks = filesByCard.getOrDefault(
+                    card.getId(), List.of()
+            );
+
+            CardText.DuplicateKey key = CardText.duplicateKey(
+                    card.getTu(), card.getTuLoai()
+            );
+
+            List<String> duplicates = duplicateGroups
+                    .getOrDefault(key, List.of())
+                    .stream()
+                    .filter(id -> !Objects.equals(id, card.getId()))
+                    .map(String::valueOf)
+                    .toList();
+
+            return mapper.toResponse(
+                    card,
+                    tagIds,
+                    fileId(fileLinks, VaiTroTep.ANH),
+                    fileId(fileLinks, VaiTroTep.AM_TU),
+                    fileId(fileLinks, VaiTroTep.AM_CAU),
+                    !duplicates.isEmpty(),
+                    duplicates
+            );
+        }));
+    }
+
+    @Transactional
     public CardResponse create(Long userId, Long deckId, CreateCardRequest request) {
         BoThe deck = writableDeck(userId, deckId);
 
@@ -74,17 +170,149 @@ public class CardService {
 
     }
 
-//    public CardResponse uddate(Long userId, Long cardId, UpdateCardRequest request) {
-//        TheTuVung card = ownedCardForUpdate(userId, cardId);
-//        checkVersion(card, request.version());
-//
-//        List<Long> tagIds = request.nhanIds() == null ? null :
-//                validatedTagIds(request.nhanIds())
-//
-//
-//
-//        return toResponse(card);
-//    }
+    @Transactional
+    public CardResponse update(Long userId, Long cardId, UpdateCardRequest request) {
+        TheTuVung card = ownedCardForUpdate(userId, cardId);
+        checkVersion(card, request.version());
+
+        List<Long> tagIds = request.nhanIds() == null ? null :
+                validatedTagIds(request.nhanIds());
+
+        boolean changeFiles = hasFileChanges(request);
+
+        List<FileSelection> selections = changeFiles ? updatedFileSelections(cardId, request)
+                : List.of();
+
+        if (changeFiles) {
+            validateFiles(userId, selections);
+        }
+
+        applyDetails(card, request);
+
+        Instant now = clock.instant();
+
+        if (tagIds != null) {
+            links.replaceTags(cardId, tagIds, now);
+        }
+
+        if (changeFiles) {
+            links.replaceFiles(cardId, selections, now);
+        }
+
+        cards.flush();
+
+        if (Objects.equals(card.getVersion(), request.version())) {
+            int affected = cards.touchVersion(
+                    cardId, request.version(), now
+            );
+
+            if (affected != 1) {
+                throw new ApiException(
+                        ErrorCode.VERSION_CONFLICT,
+                        "Thẻ đã thay đổi, vui lòng tải lại"
+                );
+            }
+
+            card = cards.findByIdAndXoaAtIsNull(cardId)
+                    .orElseThrow(this::cardNotFound);
+        }
+
+        return toResponse(card);
+    }
+
+    @Transactional
+    public void delete(Long userId, Long cardId, Long version) {
+        TheTuVung card = ownedCardForUpdate(userId, cardId);
+        checkVersion(card, version);
+
+        card.markDeleted(clock.instant());
+        cards.flush();
+    }
+
+    private void applyDetails(
+            TheTuVung card,
+            UpdateCardRequest request
+    ) {
+        card.updateDetails(
+                request.tu() == null
+                        ? card.getTu()
+                        : request.tu(),
+                optionalValue(request.tuLoai(), card.getTuLoai()),
+                request.nghiaVi() == null
+                        ? card.getNghiaVi()
+                        : request.nghiaVi(),
+                optionalValue(request.phienAm(), card.getPhienAm()),
+                optionalValue(request.viDuEn(), card.getViDuEn()),
+                optionalValue(request.dichVi(), card.getDichVi()),
+                request.doKho() == null
+                        ? card.getDoKho()
+                        : request.doKho(),
+                optionalValue(request.nguon(), card.getNguon())
+        );
+    }
+
+    private String optionalValue(
+            String requested,
+            String current
+    ) {
+        return requested == null
+                ? current
+                : CardText.nullable(requested);
+    }
+
+    private boolean hasFileChanges(UpdateCardRequest request) {
+        return request.anhId() != null
+                || request.boAnh()
+                || request.amTuId() != null
+                || request.boAmTu()
+                || request.amCauId() != null
+                || request.boAmCau();
+    }
+
+    private List<FileSelection> updatedFileSelections(
+            Long cardId,
+            UpdateCardRequest request
+    ) {
+        Map<VaiTroTep, Long> selected = new EnumMap<>(
+                VaiTroTep.class
+        );
+
+        for (CardLinkRepository.FileLink link : links.findFiles(List.of(cardId))) {
+            selected.put(link.vaiTro(), link.tepId());
+        }
+
+        applyFileSelection(
+                selected, VaiTroTep.ANH,
+                request.anhId(), request.boAnh()
+        );
+        applyFileSelection(
+                selected, VaiTroTep.AM_TU,
+                request.amTuId(), request.boAmTu()
+        );
+        applyFileSelection(
+                selected, VaiTroTep.AM_CAU,
+                request.amCauId(), request.boAmCau()
+        );
+
+        return selected.entrySet().stream()
+                .map(entry -> new FileSelection(
+                        entry.getValue(), entry.getKey()
+                ))
+                .toList();
+    }
+
+    private void applyFileSelection(
+            Map<VaiTroTep, Long> selected,
+            VaiTroTep role,
+            String fileId,
+            boolean remove
+    ) {
+        if (remove) {
+            selected.remove(role);
+        } else if (fileId != null) {
+            selected.put(role, Long.valueOf(fileId));
+        }
+    }
 
     private CardResponse toResponse(TheTuVung card) {
         List<Long> cardIds = List.of(card.getId());

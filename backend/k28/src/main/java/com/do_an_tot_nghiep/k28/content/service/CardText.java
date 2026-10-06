@@ -11,6 +11,11 @@ public final class CardText {
             Pattern.UNICODE_CHARACTER_CLASS
     );
 
+    private static final Pattern EDGE_WHITESPACE = Pattern.compile(
+            "^\\s+|\\s+$",
+            Pattern.UNICODE_CHARACTER_CLASS
+    );
+
     private CardText() {
     }
 
@@ -19,9 +24,11 @@ public final class CardText {
             return null;
         }
 
-        return Normalizer.normalize(
+        String normalized = Normalizer.normalize(
                 value, Normalizer.Form.NFC
         ).strip();
+
+        return EDGE_WHITESPACE.matcher(normalized).replaceAll("");
     }
 
     public static String term(String value) {

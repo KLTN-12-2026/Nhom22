@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -230,6 +231,37 @@ class FR03CatalogTest extends AbstractIntegrationTest {
             mockMvc.perform(request.cookie(learner).with(xsrf())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void fr03_publicTagsCanBeReadByGuestAndLearner() throws Exception {
+        create(path("tags"), "Public tag " + UUID.randomUUID());
+
+        for (var request : List.of(
+                get("/api/v1/public/tags"),
+                get("/api/v1/public/tags").cookie(learner)
+        )) {
+            mockMvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.page").value(0))
+                    .andExpect(jsonPath("$.size").value(20))
+                    .andExpect(jsonPath("$.items[0].id").isString())
+                    .andExpect(jsonPath("$.items[0].ten").isString())
+                    .andExpect(jsonPath("$.items[0].version").isNumber());
+        }
+    }
+
+    @Test
+    void fr03_publicTagsRejectInvalidPagination() throws Exception {
+        for (var request : List.of(
+                get("/api/v1/public/tags").param("page", "-1"),
+                get("/api/v1/public/tags").param("size", "0"),
+                get("/api/v1/public/tags").param("size", "101")
+        )) {
+            mockMvc.perform(request)
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
         }
     }
 
