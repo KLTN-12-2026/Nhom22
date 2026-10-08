@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.do-an-tot-nghiep</groupId>
-	<artifactId>k28</artifactId>
+	<artifactId>vocab_learning</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>k28</name>
 	<description>VocabLearning backend</description>

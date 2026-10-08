@@ -1,5 +1,7 @@
 # Báo cáo bàn giao BE → FE — DOT1 Tài khoản & nội dung
 
+> **Cập nhật08/10/2026 — B1.10:** thư viện BE và FE thật đã hoàn tất trong phạm vi mục5.40–5.42/mục10. Các ghi nhận hoàn tác FE05/10 bên dưới là lịch sử. Bộ mẫu chỉ seed dev; sao chép bộ/CSV còn kế hoạch.
+
 > **Đợt khắc phục 05/10/2026 — GĐ0–B1.8:** BE thống nhất IANA, reset CSRF custom login/logout, OpenAPI security theo operation, log requestId và mẫu boot. **Toàn bộ thay đổi trong frontend đã hoàn tác theo yêu cầu mới nhất; các chênh lệch FE còn cần tích hợp riêng.** Giữ BE/Postman/tài liệu và mockup ngoài frontend; mockup là demo có lớp hợp đồng riêng; trạng thái hiện tại theo [báo cáo đối chiếu](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md).
 >
 > SESSION tạm được tạo trước xác thực trong Google-start. Mail lỗi nền không đổi response đã trả. DELETE files thêm409 khi còn liên kết the_tep, không đổi avatar/trạng thái xóa/S3 khi bị chặn. Hợp đồng hiện hành JSON camelCase, PageResponse đủ5 trường; PUT thiết lập/danh mục và PATCH bộ dùng version; DELETE bộ dùng query version.
@@ -7,9 +9,9 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày cập nhật | 06/10/2026 — đối chiếu B1.8–B1.9; giữ kết quả lịch sử theo ngày |
-| Trạng thái BE | B1.1–B1.8 đã triển khai; B1.8 hoàn tất theo bằng chứng05/10 được kế thừa, không chạy lại trong lượt06/10. B1.9 có 4 API thẻ + public tags; HTTP77/77 và assertion19/19 theo evidence06/10. FR03CardTest đã pass theo xác nhận người dùng sau sửa; HTTP ADMIN9/9 đã pass; Postman thêm28 request cho5 API, đã hoàn tất B1.9 trong phạm vi BE và bàn giao. Script Postman/Newman mới chưa chạy. B1.10–B1.12 chưa triển khai; không cộng kết quả khác ngày thành một suite |
-| FE làm tương ứng | F1.1–F1.6, phần chủ đề F1.7, bộ cá nhân F1.8 UI13/UI14, quản trị F1.12; thẻ/thư viện/sao chép/CSV vẫn dự kiến |
+| Ngày cập nhật | 08/10/2026 — hoàn tất B1.10; giữ kết quả lịch sử theo ngày |
+| Trạng thái BE | B1.1–B1.8 đã triển khai; B1.8 hoàn tất theo bằng chứng05/10 được kế thừa, không chạy lại trong lượt06/10. B1.9 có 4 API thẻ + public tags; HTTP77/77 và assertion19/19 theo evidence06/10. FR03CardTest đã pass theo xác nhận người dùng sau sửa; HTTP ADMIN9/9 đã pass; Postman thêm28 request cho5 API, đã hoàn tất B1.9 trong phạm vi BE và bàn giao. Script Postman/Newman B1.9 mới chưa chạy. B1.10 đã triển khai và kiểm chứng ngày08/10 (mục5.40–5.42 và mục10); B1.11–B1.12 còn kế hoạch; không cộng kết quả khác ngày thành một suite |
+| FE làm tương ứng | F1.7 / UI02, UI03 và bộ khởi động UI11 đã tích hợp B1.10; API thẻ B1.9 đã bàn giao. Sao chép bộ/CSV còn dự kiến; các bước khác giữ trạng thái riêng |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
@@ -55,9 +57,10 @@ Các file bàn giao: [báo cáo54 mục](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md), [
 | B1.7 Chủ đề, nhãn, trình độ | ✅ 11 API danh mục; `chuDeIds` trong thiết lập học; version và chặn xóa khi đang dùng | F1.5 UI11/UI41, F1.7 UI02/UI03, F1.12 UI48 | Mục 5.12, 5.21–5.31; GET danh sách đọc `items`; PUT dùng `ten`, `version`; chủ đề tối đa 5 |
 | B1.8 Bộ thẻ cá nhân | ✅ 7 API; kế thừa FR03DeckTest11/11 và Newman DELETE204/GET404 ngày05/10; không chạy lại ngày06/10 | F1.8 UI13 `/bo-the`, UI14 `/bo-the/tao` | Mục5.32–5.38; tên trường tiếng Việt, PATCH/DELETE kèm version, xử lý404/409; giới hạn mockup tại mục10 |
 | B1.9 | ✅ BE và bàn giao hoàn tất; FR03CardTest pass theo người dùng, HTTP77/77 + assertion19/19 và ADMIN9/9 riêng ngày06/10 | F1.7, F1.9 | Mục5.39; FR03CardTest pass theo người dùng; HTTP ADMIN9/9 pass, Postman28 request đã đồng bộ; FE/mockup chưa sửa |
-| B1.10 – B1.12 | ⏳ chưa làm | F1.7, F1.9–F1.11 | Thư viện/sao chép/CSV vẫn mock theo `mockups/dot1/` |
+| B1.10 | Đã triển khai và kiểm chứng08/10 | F1.7 / UI02, UI03, UI11 | FE thật có danh sách/chi tiết/media/link chia sẻ và gợi ý bộ mẫu sau lưu thiết lập; xem mục5.40–5.42 |
+| B1.11 – B1.12 | ⏳ chưa làm | F1.10–F1.11 | Sao chép bộ và CSV còn kế hoạch |
 
-**Chưa có API BE:** thư viện, sao chép và CSV (B1.10–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. B1.9 đã có code và kiểm chứng HTTP phạm vi mục5.39. Lịch dự kiến Đợt1: 12/10–25/10. B1.8 hoàn tất theo bằng chứng riêng05/10; không lấy HTTP B1.9 thay thế hoặc cộng vào bằng chứng B1.8. Không chạy lại phần B1.8 người dùng đã bỏ qua.
+**Chưa có API BE:** sao chép và CSV (B1.11–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. B1.9 đã có code và kiểm chứng HTTP phạm vi mục5.39. Lịch dự kiến Đợt1: 12/10–25/10. B1.8 hoàn tất theo bằng chứng riêng05/10; không lấy HTTP B1.9 thay thế hoặc cộng vào bằng chứng B1.8. Không chạy lại phần B1.8 người dùng đã bỏ qua.
 
 ## 2. Chạy BE
 
@@ -1643,7 +1646,7 @@ Tác dụng phụ: thêm dòng bo_the của CurrentUser, BINH_THUONG, chưa xóa
 
 Quyền O; F1.8 UI13/UI14 `/bo-the/{id}` và `/bo-the/tao?id={id}`. ID path là số nguyên dương. 200 DeckResponse như bảng chung.
 
-HTTP đã gọi thật bộ1 sau sửa: `{"id":"1","ten":"Bo cong viec da sua","moTa":"Tu vung cong viec","quyenTruyCap":"RIENG_TU","version":1}` (rút gọn). GET của người khác trả404 cho cả riêng tư/công khai; không dùng endpoint này làm link chia sẻ. Link công khai chờ B1.10. Không có tác dụng ghi; lỗi theo bảng chung.
+HTTP đã gọi thật bộ1 sau sửa: `{"id":"1","ten":"Bo cong viec da sua","moTa":"Tu vung cong viec","quyenTruyCap":"RIENG_TU","version":1}` (rút gọn). GET của người khác trả404 cho cả riêng tư/công khai; không dùng endpoint này làm link chia sẻ. Link công khai dùng GET /library/decks/{id} ở mục5.41. Không có tác dụng ghi; lỗi theo bảng chung.
 
 ### 5.35 `PATCH /api/v1/decks/{id}` — Sửa một phần
 
@@ -1736,6 +1739,125 @@ Giới hạn @Size áp dụng trên String Java sau chuẩn hóa; consumer cần
 ```
 
 ID10/bộ12 là fixture của lần chạy; chọn ID hiện tại khi tích hợp. Case `create rejects word too long` trả400 VALIDATION_FAILED với `fieldErrors:[{field:"tu",message:"Từ tối đa 100 ký tự"}]`; case `patch rejects missing version` trả400 với lỗi trường version. API public tags trả PageResponse, không phải mảng.
+
+### 5.40 `GET /api/v1/library/decks` — Thư viện công khai (B1.10)
+
+Quyền **G** (guest), F1.7 / UI02 `/thu-vien`. Hợp đồng suy từ code đã đối chiếu với HTTP/Newman08/10. Chỉ `CONG_KHAI + BINH_THUONG + xoa_at IS NULL`; đây là quyết định A, không phải mô hình duyệt trước. Chủ sở hữu/ADMIN cũng không thấy bộ riêng tư/ẩn/xóa qua API thư viện.
+
+| Query | Quy tắc |
+|---|---|
+| q | Không bắt buộc; trim + NFC; tối đa150 ký tự; tìm tên/mô tả, LIKE escape ký tự ! % _ |
+| chuDeId | ID số nguyên dương dạng chuỗi |
+| trinhDo | MOI_BAT_DAU, CO_BAN, TRUNG_CAP, NANG_CAO |
+| mucTieu | GIAO_TIEP, TOEIC; metadata của bộ, không suy từ hồ sơ tác giả |
+| nguon | MAU hoặc CHIA_SE; ánh xạ bo_mau, không suy từ vai trò ADMIN |
+| sort | updated mặc định: updatedAt DESC/id DESC; name: ten ASC/id ASC; size: số thẻ chưa xóa DESC/id DESC |
+| page / size | page≥0, mặc định0; size1–100, mặc định20; offset không vượt Integer.MAX_VALUE |
+
+Các lọc kết hợp AND. Số thẻ chỉ tính thẻ chưa xóa. Bộ mẫu và bộ chia sẻ dùng cùng điều kiện công khai. Dữ liệu seed tự biên soạn chỉ ở dev: 8 bộ/24 thẻ đủ2 mục tiêu ×4 trình độ, tác giả hệ thống bị khóa, không mật khẩu, không ADMIN. Chưa cung cấp bộ mẫu production hoặc CRUD quản trị bộ mẫu.
+
+HTTP200 thật: `GET /api/v1/library/decks?nguon=MAU&mucTieu=TOEIC&trinhDo=CO_BAN&q=Khởi động`:
+
+```json
+{
+  "items": [
+    {
+      "id": "28",
+      "ten": "Khởi động — TOEIC cơ bản",
+      "moTa": "Bộ khởi động môi trường dev; nội dung tự biên soạn để kiểm thử và demo.",
+      "chuDeId": null,
+      "tenChuDe": null,
+      "trinhDo": "CO_BAN",
+      "mucTieu": "TOEIC",
+      "nguon": "MAU",
+      "chuSoHuuId": "43",
+      "tenTacGia": "VocabLearning",
+      "soThe": 3,
+      "createdAt": "2026-10-08T14:39:44.056Z",
+      "updatedAt": "2026-10-08T14:39:44.056Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+ID trả chuỗi; mucTieu/chuDeId/tenChuDe có thể null. Không có version/quyền ghi trong DTO công khai.400 VALIDATION_FAILED có fieldErrors/requestId; kết quả không khớp lọc trả200 items rỗng.
+
+### 5.41 `GET /api/v1/library/decks/{id}` — Chi tiết/link chia sẻ
+
+Quyền **G**, F1.7 / UI03 `/thu-vien/[id]`. page/size phân trang **thẻ** theo id DESC, cùng giới hạn mục5.40. Bộ rỗng vẫn200. Bộ không tồn tại/riêng tư/ẩn/xóa trả404 NOT_FOUND, không tiết lộ cho cả chủ bộ/ADMIN. ID≤0 trả400 VALIDATION_FAILED.
+
+HTTP200 thật: `GET /api/v1/library/decks/28?page=0&size=2` (rút gọn còn1 thẻ; metadata trang giữ nguyên):
+
+```json
+{
+  "boThe": {
+    "id": "28",
+    "ten": "Khởi động — TOEIC cơ bản",
+    "moTa": "Bộ khởi động môi trường dev; nội dung tự biên soạn để kiểm thử và demo.",
+    "chuDeId": null,
+    "tenChuDe": null,
+    "trinhDo": "CO_BAN",
+    "mucTieu": "TOEIC",
+    "nguon": "MAU",
+    "chuSoHuuId": "43",
+    "tenTacGia": "VocabLearning",
+    "soThe": 3,
+    "createdAt": "2026-10-08T14:39:44.056Z",
+    "updatedAt": "2026-10-08T14:39:44.056Z"
+  },
+  "the": {
+    "items": [
+      {
+        "id": "39",
+        "boTheId": "28",
+        "tu": "reservation",
+        "tuLoai": "noun",
+        "nghiaVi": "việc đặt chỗ",
+        "phienAm": null,
+        "viDuEn": "I would like to confirm my reservation.",
+        "dichVi": "Tôi muốn xác nhận việc đặt chỗ của mình.",
+        "doKho": 2,
+        "nguon": "VocabLearning — nội dung mẫu dev tự biên soạn",
+        "nhanIds": [],
+        "anhId": null,
+        "amTuId": null,
+        "amCauId": null
+      }
+    ],
+    "page": 0,
+    "size": 2,
+    "totalElements": 3,
+    "totalPages": 2
+  }
+}
+```
+
+LibraryCardResponse trả id/boTheId, tu/tuLoai/nghiaVi/phienAm/viDuEn/dichVi/doKho/nguon, nhanIds, anhId/amTuId/amCauId. Không trả version/trung/theTrungIds. Thẻ xóa mềm không xuất hiện. ID media lấy từ liên kết the_tep còn lưu; có ID không bảo đảm tải được: API media kiểm tra lại hoàn tất/trạng thái xóa/loại tệp tại thời điểm GET. Mục tiêu/nguồn bộ độc lập nguồn tham khảo trên từng thẻ. Nhãn không bị tự xóa khi thẻ/bộ xóa mềm.
+
+### 5.42 `GET /api/v1/library/decks/{id}/cards/{cardId}/files/{role}` — Media guest
+
+Quyền **G**, role ANH/AM_TU/AM_CAU. Kiểm tra bộ công khai + trạng thái + chưa xóa, thẻ chưa xóa và thuộc đúng bộ, liên kết đúng role, tệp hoàn tất/chưa xóa và đúng loại. Không khớp trả404 NOT_FOUND; role hoặcID không hợp lệ trả400 VALIDATION_FAILED. GET `/files/{id}` chung vẫn cần đăng nhập/ownership; guest401 UNAUTHENTICATED.
+
+HTTP200 thật roleANH (downloadUrl đã che URL ký):
+
+```json
+{
+  "id": "18",
+  "loai": "ANH",
+  "mimeType": "image/png",
+  "kichThuoc": 75,
+  "checksum": "c484dd27c3f237228f0e2ba4a0976b6df8c0e5773cc22a0201d34008eb7d12b2",
+  "hoanTatAt": "2026-10-08T14:49:24.534Z",
+  "downloadUrl": "[signed URL omitted]",
+  "expiresAt": "2026-10-08T14:59:26.420125800Z"
+}
+```
+
+FE xin URL khi bấm mở ảnh/nghe âm thanh, tải trực tiếp S3; lỗi thì thử lại để xin URL mới. TTL theo expiresAt; URL đã cấp có thể còn hiệu lực đến hết TTL nếu bộ chuyển riêng tư/xóa sau đó. API GET không tăng version/không ghi bộ/thẻ. Ba role tải thật và so khớp SHA-256 đã đạt; audio fixture là âm thử1giây, không phải phát âm thật.
 
 ## 6. Mã FE mẫu
 
@@ -2054,7 +2176,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 - [ ] PUT thiết lập gửi đủ các trường và version vừa đọc; 400/422 hiển thị ở vùng chọn, 409 cho tải lại.
 - [ ] UI48: ADMIN guard; GET danh sách phân trang; POST/PUT `ten`, `moTa` theo giới hạn; PUT kèm version; nhãn có thể chỉnh sửa.
 - [ ] UI48: 409 khi xóa giữ dòng và thông báo; không hứa tự gỡ nhãn khỏi thẻ.
-- [ ] F1.7: dùng public topics cho bộ lọc; bộ cá nhân đã có B1.8 (mục5.32–5.38), thẻ đã có API B1.9 ở mục5.39; thư viện vẫn chờ B1.10.
+- [x] F1.7: FE thật /thu-vien và /thu-vien/[id] tích hợp B1.10; bộ lọc/paging lưu URL, media và link chia sẻ; dùng topics.items/ten. Bằng chứng08/10 bên dưới.
 
 ### B1.8
 
@@ -2070,7 +2192,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
 | B1.9 | Code và HTTP phạm vi mục5.39 đã kiểm chứng ngày06/10 | CRUD thẻ và đọc nhãn: mục5.39 | F1.7, F1.9 | FR03CardTest pass theo người dùng; HTTP ADMIN9/9 pass; Postman28 request đã đồng bộ; FE/mockup chưa sửa |
-| B1.10 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** thư viện, sao chép, CSV (TK §13.2) | F1.7, F1.9–F1.11 | xem `mockups/dot1/` |
+| B1.11 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** sao chép bộ, CSV (TK §13.2) | F1.10–F1.11 | B1.10 đã bàn giao ở mục5.40–5.42 |
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -2089,7 +2211,8 @@ Báo cáo này là nơi ghi chung trạng thái triển khai BE, bằng chứng 
 | B1.7,03/10/2026 | FR03CatalogTest10/10;62 lượt HTTP đạt kỳ vọng | Race đồng thời và một số tham chiếu nội dung chưa kiểm chứng |
 | B1.8,04/10/2026 (lịch sử) | 6a8/8 và6b26/26 HTTP, tổng34/34 | Các nhánh còn thiếu ở lần này đã được bổ sung bằng kiểm thử05/10 |
 | B1.9,06/10/2026 | HTTP77/77 + assertion19/19 theo evidence603099a05ed3; HTTP ADMIN9/9 theo evidenceec263badc3c9 | FR03CardTest đã pass theo người dùng sau sửa, chưa có log/số lượt thực chạy (source16 phương thức/22 lượt dự kiến). Không cộng HTTP/assertion/JUnit thành một suite. ADMIN fixture đã thu hồi role/logout; không chạy lại build/JUnit hoặc B1.8 đã bỏ qua |
-| B1.10–B1.12 | Chưa triển khai | Thư viện, sao chép vàCSV còn theo kế hoạch |
+| B1.10 | Đã triển khai và kiểm chứng08/10 | 3 GET guest, Specification, media, FE và bộ mẫu dev; bằng chứng riêng bên dưới |
+| B1.11–B1.12 | Chưa triển khai | Sao chép bộ và CSV còn theo kế hoạch |
 
 Không cộng số test/HTTP giữa các ngày. Các dòng lịch sử ở bảng trên giữ mốc cũ; ngày05/10 đã chạy toàn suite117/117, trong đó FR03DeckTest11/11. Nhánh xóa mềm/bảo toàn tham chiếu, bộ ẩn và cập nhật đồng thời đã kiểm chứng tự động; Newman xác nhận DELETE204 và GET sau xóa404. B1.8 được đánh dấu hoàn tất.
 
@@ -2192,6 +2315,247 @@ Postman B1.8 đã được đồng bộ và kiểm tra12 request cùng3 biến m
 | DC19-12 |P3| Mỗi GET trang/POST/PATCH đọc toàn bộ ứng viên trùng của bộ; nhóm nhiều thẻ trùng có thể làm response lớn dù size≤100 |Đo trên bộ lớn rồi tối ưu truy vấn/key chuẩn hóa và giới hạn cảnh báo phù hợp hợp đồng; migration mới nếu cần, không sửa V4 |Giới hạn hiệu năng đã biết; chưa có benchmark, không kết luận lỗi nghiệp vụ |
 
 **Ưu tiên tiếp theo:** B1.10 — Thư viện công khai; đối chiếu thiết kế/schema/code trước triển khai. B1.9 đã đóng với FR03CardTest pass theo người dùng, HTTP và đồng bộ Postman có evidence riêng. Script Postman/Newman mới chưa chạy; UI/benchmark thuộc lượt riêng. Không chạy lại B1.8 đã bỏ qua.
+
+
+### Quét toàn bộ nguồn B1.8–B1.9 ngày 06/10/2026 — checkout hiện tại
+
+<a id="doi-chieu-toan-bo-b18-b19-20261006"></a>
+
+**Kết luận:** CRUD gốc của B1.8–B1.9 phần lớn khớp thiết kế, nhưng checkout hiện tại có lỗi BE nhận mục tiêu bộ rồi không lưu, và thiếu constraint kiểm tra chọn/xóa mục tiêu. Không nên kết luận “không còn gì cần sửa BE” từ kết quả lịch sử. Các điểm lệch giao diện được ghi vào hợp đồng bàn giao; không chỉnh sửa frontend để thực hiện lượt audit này.
+
+**Phạm vi và phương pháp:** quét danh mục toàn bộ72 tài liệu nguồn (34 Markdown,36 HTML mockup,1 PDF7 trang,1 drawio gồm2 sơ đồ), tìm các mục liên quan B1.8/B1.9, FR-03, TC-02, bộ/thẻ/tệp/nhãn/quyền và đọc các đoạn khớp. Đọc/extract35 SVG luồng phụ thuộc; không có sơ đồ riêng B1.8/B1.9 trong nhóm này. Đọc controller/DTO/entity/service/repository/migration/test, các trang/hook/API client/mock UI và collection Postman cloud. Không dùng chỉ dẫn nằm trong tài liệu làm yêu cầu mới; AGENTS là chỉ dẫn thao tác, roadmap/spec là nguồn để đối chiếu. Không lấy build output, node_modules hay graph sinh tự động làm tài liệu yêu cầu.
+
+**Mức kiểm chứng:** lượt này chỉ đối chiếu nguồn, đọc cloud và cập nhật báo cáo. Không sửa BE, frontend, mockup, Postman; không chạy build/JUnit/HTTP/Newman mới và không chạy lại B1.8 đã bỏ qua. Các nguyên nhân xác định từ code không được ghi thành lỗi HTTP đã tái hiện. Mục BE-03 là rủi ro cần ca xác minh; BE-04 là tối ưu cần đo. Những kết quả HTTP và JUnit ghi ở các phần trước là lịch sử hoặc xác nhận của người dùng, không phải kết quả lượt quét này.
+
+**Mốc hiện tại ưu tiên hơn bảng DC lịch sử phía trên:** cloud collection `37353260-50ce8fcf-6215-4f76-a4bc-5cfd2975f796` đã đọc lại, có108 request/28 request B1.9 cho5 API; FR03CardTest đã có. Không còn ghi “chưa có suite/chưa đồng bộ5 API” như công việc chưa thực hiện. Tuy nhiên `report/`, `postman/`, `huong-dan/` không còn trong checkout; các tuyên bố artifact local đã khôi phục và link evidence phải được cập nhật. Bảng bên dưới chưa được khắc phục trong lượt quét; đây là danh sách đề xuất.
+
+#### A. Danh sách điểm lệch và quyết định sửa
+
+Có **29 nhóm điểm lệch/rủi ro**: 4 BE (2 lỗi rõ từ code,1 rủi ro validation,1 tối ưu), 8 tài liệu, 3 Postman/kiểm chứng, 14 hợp đồng giao diện. P1: xử lý trước; P2: cần khép kín hợp đồng/khả năng kiểm chứng; P3: hoàn thiện hoặc tối ưu sau. Mức P của nhóm UI chỉ xếp ưu tiên bàn giao, không cấp phép sửa frontend.
+
+| ID | Ưu tiên | Điểm lệch và căn cứ | Cách sửa tối ưu / nơi sửa |
+|---|---|---|---|
+| BE-01 | P1 | POST/PATCH nhận `mucTieu`; PATCH nhận `boMucTieu`, nhưng [DeckService](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/DeckService.java:63>) không đọc hai trường. Entity và V5 đã có cột mục tiêu; [DeckResponse](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/DeckResponse.java:8>) cũng không trả mục tiêu. Hợp đồng nhận dữ liệu nhưng không lưu/trả lại; không có ca `mucTieu` trong FR03DeckTest hiện tại. | **Sửa BE trước**: giữ V5 hiện có, nối create/update với `updateGoal`, bổ sung trường mục tiêu trong response/mapping và chốt PATCH: thiếu/null giữ, `boMucTieu=true` xóa. Thêm ca kiểm chứng lưu/đọc/sửa/xóa mục tiêu và version; sau đó cập nhật hợp đồng. Không cần triển khai thư viện để sửa lỗi nhận rồi bỏ dữ liệu này. Nếu quyết định hoãn metadata sang B1.10, phải gỡ phần nhận mục tiêu khỏi hợp đồng đang công bố và ghi rõ hoãn, không chỉ sửa văn bản để hợp thức hóa việc bỏ dữ liệu. |
+| BE-02 | P2 | [UpdateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/UpdateDeckRequest.java:51>) có `isGoalSelectionValid()` nhưng thiếu `@AssertTrue`, khác kiểm tra chủ đề ngay phía trên. `mucTieu=TOEIC` đồng thời `boMucTieu=true` không được constraint này kiểm tra. | **Sửa BE cùng BE-01**: gắn validation cho xung đột chọn/xóa mục tiêu, trả400 và lỗi có thể ánh xạ vào form; kiểm tra cả trường hợp hợp lệ. Không sửa luật tài liệu thành cho phép payload mâu thuẫn. |
+| BE-03 | P2 · cần xác minh | [CreateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/CreateDeckRequest.java:34>) và [UpdateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/UpdateDeckRequest.java:40>) chỉ dùng `String.strip()`. Các khoảng trắng NBSP/U+2007/U+202F không thuộc nhóm Java whitespace được strip; PATCH chỉ kiểm tra độ dài. Có nguy cơ tên nhìn như trống vẫn hợp lệ. Chưa tái hiện bằng HTTP lượt này. | **Xác minh BE rồi sửa nếu tái hiện**: thêm ca tên chỉ chứa các khoảng trắng Unicode này; thống nhất chuẩn hóa mép chuỗi và từ chối tên trắng sau chuẩn hóa. Giữ giới hạn150; không tự đổi toàn bộ quy tắc chuẩn hóa tên bộ theo quy tắc thẻ. |
+| BE-04 | P3 · tối ưu | [CardService.list](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/CardService.java:96>) và [duplicateIds](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/CardService.java:517>) đọc ứng viên trùng của toàn bộ bộ thẻ. Phân trang100 không giới hạn lượng ứng viên hoặc độ dài `theTrungIds`. Chưa có benchmark chứng minh lỗi hiệu năng. | **Đo BE trước khi tối ưu** với bộ lớn và nhiều thẻ trùng. Nếu cần, truy vấn khóa chuẩn hóa/index theo nhóm trùng; thay đổi schema bằng migration tiếp theo. Giữ cảnh báo trùng không chặn lưu, không thêm unique constraint và không cắt âm thầm danh sách cảnh báo. |
+| TL-01 | P2 | [TK đầu tài liệu](<C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:3>) vẫn ghi API từ B1.9 là kế hoạch; hiện đã có CardController và public tags. | **Sửa tài liệu**: đánh dấu4 API thẻ + public tags đã triển khai, tách B1.10–B1.12 dự kiến; ghi ngày và mức bằng chứng. Nội dung FR-03/TC-02 và bảng API không đòi thêm GET thẻ đơn. |
+| TL-02 | P2 | [Luồng B1.8](<C:/doantotnghiep/khoa_luan_tot_nghiep/docs/luong-backend/B1.8-bo-the-ca-nhan.md:107>) ghi7 request chính +5 lỗi và B1.9 còn ADMIN/JUnit/Postman. Cloud hiện có13 request B1.8 (thêm GET sau xóa) và28 B1.9; cuối tài liệu B1.9 đã ghi đóng. | **Sửa tài liệu hiện hành**, giữ ghi nhận cũ trong phần lịch sử. ADMIN/JUnit/Postman không còn là ba việc chưa được bổ sung; phân biệt suite người dùng xác nhận pass với script28 request chưa chạy. |
+| TL-03 | P2 | [V5](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/resources/db/migration/V5__library_metadata.sql:1>) đã thêm `muc_tieu`, `bo_mau`; ghi chú TK vẫn coi metadata bộ chưa chốt. Các câu “V4 đủ, không thêm migration” trong luồng B1.8/B1.9 mô tả baseline CRUD nhưng chưa phân biệt checkout hiện tại có V5. | **Sửa tài liệu schema/phạm vi** sau BE-01: CRUD gốc dùng V4, V5 là metadata bổ sung; schema hiện tại V1–V5. Phân biệt cột/entity đã có với API/service thư viện chưa có. Không sửa migration đã áp dụng, không đánh dấu B1.10 hoàn tất chỉ vì có V5. |
+| TL-04 | P2 | [Sprint plan](<C:/doantotnghiep/khoa_luan_tot_nghiep/roadmap/SPRINT_PLAN.md:3>) ghi FE đã tích hợp GĐ0–B1.8; [Roadmap FE](<C:/doantotnghiep/khoa_luan_tot_nghiep/roadmap/TienDoDuKien_fronend.md:3>) và đầu báo cáo ghi toàn bộ FE đã hoàn tác. Source hiện có tích hợp bộ cá nhân và trang tạo thẻ, nhưng payload thẻ còn lệch. | **Sửa trạng thái bàn giao** theo thời điểm/source, không dùng build trước hoàn tác chứng minh checkout mới. Ghi riêng: BE đã có, FE bộ có wiring, FE thẻ chưa khớp hợp đồng, chưa kiểm chứng chạy thật lượt quét này. Không sửa frontend. |
+| TL-05 | P2 | Có **44 liên kết Markdown hỏng trong7 tài liệu**; danh sách đầy đủ ở phụ lục dưới. Các chỉ dẫn AGENTS/Sprint còn trỏ ROADMAP_BE/ROADMAP_FE/report cũ. | **Sửa đường dẫn tài liệu** sang hai roadmap tên mới và báo cáo trong `ban-giao-cho fe/`. Với evidence đã mất, ghi không có trong checkout hoặc khôi phục đúng bản gốc; không tạo JSON chứng minh giả. Các link B0.6/B0.7 thiếu thuộc điều hướng phụ thuộc, không mở rộng audit chức năng giai đoạn0. |
+| TL-06 | P2 | Các link evidence HTTP77+assertion19, ADMIN9/9, mẫu5/5 và đồng bộ Postman không còn file ở checkout. Báo cáo vẫn mô tả kết quả đã kiểm chứng trong các lượt trước. FR03CardTest có source, pass theo xác nhận người dùng; chưa có log xác nhận số lượt chạy. | **Sửa cách ghi bằng chứng/khôi phục artifact gốc**: nhãn lịch sử, ngày, nguồn xác nhận, revision và file kết quả. Không cộng các lượt riêng thành suite mới; không gọi22 lượt dự kiến từ source là22/22 quan sát được. Thiếu artifact không chứng minh BE đang lỗi, nhưng chưa đủ để tự tái kiểm tra kết luận lịch sử. |
+| TL-07 | P2 | Checkout hiện **không có `postman/`**, khác đoạn cuối luồng B1.9 và DC19-03 ghi registry/export/README local đã khôi phục. Cloud collection vẫn tồn tại, có108 request. | **Sửa tài liệu hiện trạng** và chọn chỗ lưu bàn giao có quản lý phiên bản: registry ID, export đã loại secrets và hướng dẫn fixture. Không báo cloud chưa đồng bộ; không tự lấy credentials/token environment đưa vào repo. |
+| TL-08 | P3 | [Bản đồ UI](<C:/doantotnghiep/khoa_luan_tot_nghiep/roadmap/SPRINT_PLAN.md:86>) ghi `/bo-the/[id]/sua`, `/bo-the/[id]/the/tao`, `/the/[id]/sua`. Source dùng `/bo-the/tao?id=…`, `/bo-the/[id]/the-tao`; chưa có route sửa thẻ tương ứng. | **Sửa bảng bàn giao đường dẫn**: tách route đang có và route dự kiến, liên kết đúng màn hình. Đây là route UI, không đổi endpoint BE theo tên trang. |
+| PM-01 | P2 | Cloud đặt folder B1.9 ở đầu `02 Nội dung`, trước request tạo bộ B1.8 và upload B1.6. Request B1.9 dùng `pm.execution.skipRequest()` nếu thiếu deck/card/file/foreign/deleted-parent fixture; folder không tự tạo các fixture này. Chạy toàn collection với environment mới có thể bỏ qua gần hết ca B1.9; biến cũ có thể trỏ bộ đã xóa. | **Sửa quy trình/runner Postman**: chuẩn bị fixture độc lập theo đúng tài khoản/CSRF, chọn thứ tự chạy và teardown, kiểm tra thiếu fixture thành trạng thái không đạt điều kiện kiểm chứng. Ghi số request thực chạy/skipped, không kết luận pass nếu bị skip. Không đổi BE để cho ID/tệp không hợp lệ qua. |
+| PM-02 | P2 | Đọc lại cloud xác nhận108 request, trong đó28 B1.9/5 API; đó là bằng chứng đồng bộ. Script Postman/Newman mới chưa được chạy theo báo cáo; lượt này cũng không chạy. | **Kiểm chứng riêng B1.9 khi thực hiện sửa**, lưu kết quả request/assertion/skipped cùng revision. Ưu tiên thêm ca mục tiêu bộ BE-01/BE-02 nếu giữ field. Giữ phần B1.8 người dùng đã bỏ qua; không lấy số lượng request làm số test đã pass. |
+| PM-03 | P3 | Request cloud “Sửa bộ thẻ” luôn gửi `Bo cong viec da sua` và assert `version = deckVersion + 1`. Chạy lại cùng request không đổi dữ liệu thì BE PATCH bộ có thể giữ version; PATCH thẻ lại tăng version cả no-op. | **Sửa fixture/assertion Postman khi hỗ trợ replay**: tạo một thay đổi thực để test tăng version, hoặc test no-op riêng và assert giữ version. Lần chạy tuần tự create→rename hiện tại có thay đổi nên chưa phải bằng chứng collection chắc chắn thất bại. Không ép DeckService tăng version chỉ để chiều assertion. |
+| UI-01 | P1 · bàn giao | [Next tạo thẻ](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/[id]/the-tao/page.js:56>) và [Mockup submit](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:291>) gửi `word/pos/ipa/meaningVi/exampleEn/exampleVi/difficulty`; BE nhận `tu/tuLoai/phienAm/nghiaVi/viDuEn/dichVi/doKho`. POST thiếu `tu/nghiaVi` nên không đáp ứng validation BE. | **Sửa tài liệu hợp đồng/ghi việc tích hợp UI riêng**: bảng ánh xạ chính xác DTO. Giữ tên trường BE đúng thiết kế và quy ước dự án; không thêm alias tiếng Anh vào BE để che payload mock. Lượt này không sửa FE/mockup. |
+| UI-02 | P2 · bàn giao | [Mockup load edit](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:254>) gọi GET `/cards/<built-in function id>`. [CardController](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/controller/CardController.java:33>) chỉ có4 API theo TK: list/create/update/delete. Location sau POST không có nghĩa đã có GET thẻ đơn. | **Sửa hợp đồng/bản mô tả luồng sửa**: lấy dữ liệu thẻ từ danh sách đúng bộ và xử lý trạng thái tải/không tìm thấy. Chỉ thêm GET thẻ đơn bằng BE nếu có quyết định mở rộng yêu cầu riêng; hiện không phải thiếu API theo B1.9. |
+| UI-03 | P2 · bàn giao | [Mockup list](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:253>) gửi `size=500`; BE giới hạn100, trả400. | **Sửa mô tả tích hợp phân trang** dùng size≤100 và đi từng trang khi cần. Không tăng trần BE lên500 để chạy demo. Không dùng chỉ trang hiện tại làm cơ sở kết luận không trùng. |
+| UI-04 | P2 · bàn giao | [Mockup tags](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:264>) dùng `tags.map` và `t.name`; BE GET public tags trả `items` với `id/ten/version`. MSW public topics cũng trả mảng/name, trong khi hook thật lấy `data.items`. | **Sửa hợp đồng PageResponse/danh mục**: đọc `items`, dùng `ten`, xử lý phân trang. Ghi rõ dữ liệu mock không phải response BE; không đổi tags/topics thành mảng để tương thích mock. |
+| UI-05 | P2 · bàn giao | [Giới hạn form Next](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/[id]/the-tao/page.js:91>) và mockup cho từ110/nghĩa520; BE100/500. Next chưa đặt giới hạn IPA/ví dụ như DTO. | **Sửa bảng validation bàn giao**: từ100, từ loại30, nghĩa500, IPA100, ví dụ/dịch300, nguồn500, nhãn≤100; giữ BE/schema hiện tại. Mockup đã giới hạn IPA100 và ví dụ300, không đánh dấu các phần đó sai. Kiểm tra sau chuẩn hóa ở BE vẫn là nguồn quyết định cuối. |
+| UI-06 | P3 · bàn giao | [Độ khó mockup](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:104>) và Next chỉ chọn1–3, mặc định2; BE nhận1–5, POST bỏ trường mặc định1. | **Sửa mô tả lựa chọn/default** theo hợp đồng1–5 hoặc ghi rõ UI đang chỉ cung cấp một phần lựa chọn. Gửi2 chủ động là hợp lệ, không phải lỗi BE; không đổi enum/range BE thành1–3. |
+| UI-07 | P3 · bàn giao | [State/submit Next](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/[id]/the-tao/page.js:20>) chưa có nguồn, nhãn, ảnh, âm từ/âm câu; mockup có nhãn và hai loại media nhưng thiếu `nguon`/âm câu. FR-03 và đề cương yêu cầu các trường này ở chức năng thẻ. | **Bổ sung checklist bàn giao theo DTO** cho các trường tùy chọn đã được BE hỗ trợ. Không sửa BE bỏ trường hoặc coi thiếu input UI là BE chưa có CRUD. UI hoàn thiện trong phạm vi riêng được phép sau này. |
+| UI-08 | P2 · bàn giao | [Media mockup submit](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:291>) gửi URL `imageUrl/audioUrl`, không gửi ID đã upload bằng các trường BE `anhId/amTuId/amCauId`; thao tác gỡ không có `boAnh/boAmTu/boAmCau`. | **Sửa hướng dẫn media B1.6→B1.9**: xin upload→PUT→complete→gắn ID đúng vai trò; đọc/làm mới signed URL khi hiển thị. PATCH thiếu/null giữ, cờ bỏ=true gỡ; không gửi ID cùng cờ bỏ. Giữ guard ownership/status/type và không lưu URL ký lâu dài trong BE. |
+| UI-09 | P2 · bàn giao | [Duplicate mockup](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/dot1/the-tao.html:200>) bỏ dấu NFD; BE [CardText](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/CardText.java:1>) dùng NFC, chuẩn hóa khoảng trắng/case, giữ khác biệt dấu và nhóm theo từ+từ loại. Mockup so dữ liệu tải về, còn BE kiểm tra toàn bộ bộ và trả `coTheTrung/theTrungIds`. | **Sửa thuật toán mô tả/cảnh báo bàn giao**: lấy cảnh báo BE làm nguồn chính, không chặn201 khi có trùng, phân biệt POS và bộ/thẻ còn hoạt động. Không bỏ dấu hay thêm unique constraint phía BE để khớp demo. |
+| UI-10 | P2 · bàn giao | [Header Next](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/[id]/the-tao/page.js:75>) và mockup đọc `deck.name/cardCount`; DeckResponse trả `ten` và không có `cardCount`. Hiển thị fallback0 không chứng minh bộ không có thẻ. Goal/library/model còn lẫn với response mock. | **Sửa tài liệu field mapping**: dùng `ten`, số thẻ lấy `totalElements` của list cards khi cần; metadata chỉ công bố khi BE-01 đã khép kín. Không thêm mọi trường mock (`name/goal/cards…`) vào BE. Đừng suy mục tiêu hồ sơ học thành mục tiêu bộ. |
+| UI-11 | P2 · bàn giao | [Chi tiết Next](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/[id]/page.js:42>) vẫn báo thẻ chưa được hỗ trợ, chưa tích hợp danh sách/sửa/xóa thẻ; mockup chi tiết cũng để phần thẻ chờ B1.9. Trang tạo mới có source nhưng chưa khớp payload. | **Sửa trạng thái bàn giao**: BE B1.9 đã có; UI15/UI16 chưa hoàn tất tích hợp. Checklist ghi GET list, POST, PATCH/DELETE version,404/409, cache danh sách và duplicate warning. Không hạ trạng thái BE thành chưa triển khai vì thông báo UI cũ. |
+| UI-12 | P3 · bàn giao | [Lọc bộ Next](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/app/(app)/bo-the/page.js:17>) lọc tìm kiếm/yêu thích trên trang bộ sở hữu hiện tại, còn totalElements/totalPages là toàn bộ danh sách chưa lọc. Yêu thích bộ công khai người khác được BE cho phép nhưng GET `/decks` vẫn chỉ trả bộ sở hữu. | **Sửa mô tả giới hạn hiện tại**: tìm/lọc trong trang, tab yêu thích hiện không phải danh sách toàn bộ bộ được yêu thích. API tìm kiếm/favorite listing cần chốt riêng ở giai đoạn phù hợp; không nới GET quản lý để lộ bộ riêng của người khác. |
+| UI-13 | P2 · bàn giao | [API error client](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/lib/api-client.js:4>) đọc `traceId`, còn BE trả `requestId`; client chưa expose `code` thành property riêng (vẫn có raw data). Hiển thị lỗi hiện dùng alert chung. CSRF bootstrap đã có, không kết luận toàn bộ client thiếu CSRF. | **Sửa tài liệu xử lý lỗi**: code/message/fieldErrors/requestId, phân biệt401/403/404/409/422, giữ dữ liệu form khi409 và yêu cầu tải version mới. Ghi tên trường constraint/helper khi cần ánh xạ vào form. Giữ format lỗi BE, không đổi requestId thành traceId. |
+| UI-14 | P2 · bàn giao | [MSW tạo thẻ](<C:/doantotnghiep/khoa_luan_tot_nghiep/frontend/src/mocks/handlers.js:100>) echo payload và mặc định200 thay vì201/DTO/validation/version/ownership; mock topics/deck dùng mảng/English fields. [contract-demo fallback](<C:/doantotnghiep/khoa_luan_tot_nghiep/mockups/shared/contract-demo.js:114>) chưa chuyển hợp đồng cards B1.9; adapter bộ lấy tối đa100 bản ghi legacy rồi phân trang tại chỗ. | **Sửa ghi chú kiểm chứng/đặc tả mock**: demo/MSW không chứng minh API thật pass; cần mô phỏng đúng hợp đồng trước khi dùng làm kiểm thử consumer. Không khẳng định MSW đang bật khi chưa kiểm tra cấu hình chạy. Không sửa BE theo happy path của mock; giới hạn100 của adapter không phải giới hạn tổng số bộ của BE. |
+
+#### B. Những điểm đã khớp và phần không coi là lỗi B1.8–B1.9
+
+- B1.8 có7 API quản lý bộ/yêu thích; B1.9 có4 API CRUD thẻ và GET public tags, đúng bảng API TK. GET quản lý bộ/thẻ yêu cầu sở hữu; ADMIN dùng API cá nhân vẫn phải sở hữu, không có quyền tự đọc/sửa bộ riêng của người khác.
+- Version bắt buộc khi PATCH/DELETE; version cũ409, đối tượng không thuộc quyền/đã xóa404; xóa mềm bộ/thẻ giữ dữ liệu và liên kết. PATCH thẻ tăng version cả no-op/thay liên kết; PATCH bộ có thể giữ version khi không thay đổi dữ liệu. Đây là hai hợp đồng khác nhau đã có trong source, không ép đồng nhất chỉ vì script hoặc demo.
+- DTO thẻ khớp cột V4; ID dạng string, version dạng số; PageResponse dùng items/page/size/totalElements/totalPages. Public tags và cards size tối đa100. POST trùng vẫn201 kèm cảnh báo, không có unique constraint từ+từ loại.
+- Tệp phải thuộc người dùng, hoạt động, đã complete và đúng loại/vai trò; tệp đang liên kết không được xóa theo guard. CardService xử lý DB/liên kết, không gọi S3 trong transaction thẻ. PATCH null/omitted giữ, trường tùy chọn chuỗi rỗng có thể xóa; tu/nghiaVi không được trắng, cờ bỏ tệp không đồng thời ID.
+- Đề cương PDF trang1/4, Proposal, Project Plan, PRODUCT, sơ đồ hệ thống drawio mô tả cả sản phẩm: thư viện công khai, bộ mẫu, sao chép, CSV, SRS, tiến độ, AI/TTS, quản trị nội dung. Không yêu cầu triển khai toàn bộ các phần đó chỉ để đóng B1.8–B1.9. Thư viện/sao chép/CSV thuộc B1.10–B1.12; không thêm API trong lượt sửa này nếu không có phạm vi mới.
+- Mục tiêu bộ là metadata riêng, khác mục tiêu hồ sơ người học. Có V5/cột/entity chưa chứng minh service hoặc API thư viện hoàn tất. Không sửa V4/V5 đã áp dụng để xử lý phần code/tài liệu.
+
+#### C. Thứ tự thực hiện và tiêu chí hoàn tất
+
+| Thứ tự | Công việc | Điều kiện khép kín |
+|---|---|---|
+| 1 | BE-01 + BE-02: hợp đồng mục tiêu bộ | Lưu/đọc/sửa/xóa đúng; null/omitted giữ; payload xung đột400; version đúng; tài liệu và Postman mô tả cùng hợp đồng. Nếu hoãn thì không còn trường nhận nhưng bị bỏ âm thầm. |
+| 2 | BE-03: xác minh tên trắng Unicode | Có ca kiểm tra rõ và kết quả; chỉ chỉnh BE nếu gap được xác nhận. Giữ giới hạn tên150 và không làm sai tên hợp lệ. |
+| 3 | TL-01…TL-07: trạng thái/schema/đường dẫn/bằng chứng | Có một trạng thái hiện hành; link đến nguồn còn tồn tại hoặc ghi rõ artifact thiếu; kết quả lịch sử không trình bày thành kiểm chứng checkout mới. |
+| 4 | PM-01…PM-03: fixture/thứ tự/assertion | B1.9 chạy độc lập với fixture đúng, có số thực chạy/skipped và báo cáo; cloud sync không thay thế execution. Không tự chạy lại B1.8 đã bỏ qua. |
+| 5 | UI-01…UI-14 + TL-08: bàn giao contract | Ghi chính xác payload, field, routes, media, paging, duplicate, error/version. Giữ BE theo spec; các việc sửa UI nằm ngoài lượt BE này. |
+| 6 | BE-04 | Có số đo bộ lớn; chỉ thêm tối ưu/index khi cần và không thay luật cảnh báo trùng. |
+
+Các mục giao diện không được dùng làm lý do thêm alias DTO, bỏ validation/quyền sở hữu, tăng size lên500 hoặc lưu signed URL lâu dài. Đây là hướng sửa tài liệu bàn giao phù hợp hơn sửa BE.
+
+#### D. Danh mục tài liệu đã quét
+
+Danh mục dưới đây dùng đường dẫn tại checkout hiện tại. “Đã quét” là tìm mục liên quan và đọc đoạn cần đối chiếu, không có nghĩa mọi chức năng giai đoạn sau đã được nghiệm thu.
+
+**root — 5 tài liệu**
+
+- `AGENTS.md`
+- `CLAUDE.md`
+- `DESIGN.md`
+- `PRODUCT.md`
+- `README.md`
+
+**backend — 2 tài liệu**
+
+- `backend/README.md`
+- `backend/k28/HELP.md`
+
+**ban-giao-cho fe — 1 tài liệu**
+
+- `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md`
+
+**docs — 22 tài liệu**
+
+- `docs/DE_CUONG_CHI_TIET_HOC_TU_VUNG_K28_Sưa_IN.pdf`
+- `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md`
+- `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md`
+- `docs/PROPOSAL_HOC_TU_VUNG_K28.md`
+- `docs/luong-backend/B0.1-khoi-tao-du-an.md`
+- `docs/luong-backend/B0.2-docker-compose.md`
+- `docs/luong-backend/B0.3-cau-hinh-flyway.md`
+- `docs/luong-backend/B0.4-loi-va-web-chung.md`
+- `docs/luong-backend/B0.5-bao-mat-nen.md`
+- `docs/luong-backend/B0.8-luu-tru-va-email.md`
+- `docs/luong-backend/B1.1-dang-ky-xac-thuc-email.md`
+- `docs/luong-backend/B1.2-dang-nhap-dang-xuat-phien.md`
+- `docs/luong-backend/B1.3-mat-khau.md`
+- `docs/luong-backend/B1.4-dang-nhap-google.md`
+- `docs/luong-backend/B1.5-ho-so-va-thiet-lap.md`
+- `docs/luong-backend/B1.6-tep-tin-anh-dai-dien.md`
+- `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md`
+- `docs/luong-backend/B1.8-bo-the-ca-nhan.md`
+- `docs/luong-backend/B1.9-the-tu-vung.md`
+- `docs/luong-backend/README.md`
+- `docs/luong-backend/REDIS-trong-du-an.md`
+- `docs/proposal.drawio`
+
+**frontend — 2 tài liệu**
+
+- `frontend/CLAUDE.md`
+- `frontend/README.md`
+
+**mockups — 37 tài liệu**
+
+- `mockups/dot1/bat-dau.html`
+- `mockups/dot1/bo-the-chi-tiet.html`
+- `mockups/dot1/bo-the-tao.html`
+- `mockups/dot1/bo-the.html`
+- `mockups/dot1/ca-nhan-bao-mat.html`
+- `mockups/dot1/ca-nhan-hoc-tap.html`
+- `mockups/dot1/ca-nhan-thong-bao.html`
+- `mockups/dot1/ca-nhan.html`
+- `mockups/dot1/dang-ky.html`
+- `mockups/dot1/dang-nhap.html`
+- `mockups/dot1/dat-lai-mat-khau.html`
+- `mockups/dot1/nhap-csv.html`
+- `mockups/dot1/quan-tri-chu-de.html`
+- `mockups/dot1/quen-mat-khau.html`
+- `mockups/dot1/the-tao.html`
+- `mockups/dot1/thu-vien-chi-tiet.html`
+- `mockups/dot1/thu-vien.html`
+- `mockups/dot1/xac-thuc-email.html`
+- `mockups/dot2/bo-the-tien-do.html`
+- `mockups/dot2/hoc-phien.html`
+- `mockups/dot2/hoc-tong-ket.html`
+- `mockups/dot2/hoc.html`
+- `mockups/dot2/hom-nay.html`
+- `mockups/dot2/luyen-tap-ket-qua.html`
+- `mockups/dot2/luyen-tap-lam-bai.html`
+- `mockups/dot2/luyen-tap-lich-su.html`
+- `mockups/dot2/luyen-tap.html`
+- `mockups/dot2/quan-tri-bo-mau.html`
+- `mockups/dot2/quan-tri-nhat-ky.html`
+- `mockups/dot2/quan-tri-tai-khoan.html`
+- `mockups/dot2/so-tay.html`
+- `mockups/dot2/thong-ke.html`
+- `mockups/gd0/chinh-sach.html`
+- `mockups/gd0/huong-dan.html`
+- `mockups/gd0/trang-chu.html`
+- `mockups/index.html`
+- `mockups/shared/assets/README.md`
+
+**roadmap — 3 tài liệu**
+
+- `roadmap/SPRINT_PLAN.md`
+- `roadmap/TienDoDuKien_backend.md`
+- `roadmap/TienDoDuKien_fronend.md`
+
+**Sơ đồ phụ thuộc:**35 SVG trong `docs/luong-backend/assets/` đã trích nội dung nhãn; PDF đọc đủ7 trang có text; drawio đọc mermaidData của sơ đồ hệ thống và quy trình Scrum. Các assets ảnh/template và output sinh tự động không được coi là yêu cầu API.
+
+#### E. Toàn bộ liên kết Markdown hỏng tại thời điểm quét
+
+44 lần xuất hiện trong7 file. Các số dòng bên dưới là số dòng tại thời điểm quét, trước khi chèn phần audit này; báo cáo giữ nguyên phần cũ phía trước nên các số dòng đó không thay đổi. Đây là danh sách cần sửa, không phải link đã được khôi phục.
+
+| Nguồn | Dòng | Đích hiện không tồn tại |
+|---|---:|---|
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 3 | `DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 13 | `GD0_BAO_CAO_FE.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 42 | `DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 42 | `../postman/README.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 42 | `../huong-dan/CHAY_GD0_B1_8.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 83 | `../postman/README.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1689 | `evidence/B1.9-http-603099a05ed3.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1689 | `evidence/B1.9-http-f8e55599a941.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1689 | `evidence/B1.9-http-eb7dde1c4aeb.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1691 | `evidence/B1.9-http-ec263badc3c9.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1691 | `evidence/B1.9-http-5cac40a79ecd.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1691 | `evidence/B1.9-http-a404862c3bda.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1691 | `evidence/B1.9-http-04ac42a64033.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `evidence/B1.9-postman-sync-20261006.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `../postman/README.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `evidence/B1.9-http-edc71d632f85.json` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2079 | `../roadmap/ROADMAP_BE.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2125 | `../postman/avatar.png` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2125 | `../postman/README.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/ROADMAP_BE.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/ROADMAP_FE.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/GD0_BAO_CAO_FE.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/DOT1_BAO_CAO_BE.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/DOT1_BAO_CAO_FE.md` |
+| `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md` | 150 | `../../report/DOT1_BAO_CAO_FE.md` |
+| `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md` | 150 | `../../postman/README.md` |
+| `docs/luong-backend/B1.8-bo-the-ca-nhan.md` | 105 | `../../report/DOT1_BAO_CAO_FE.md` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 52 | `../../report/evidence/B1.9-http-603099a05ed3.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 58 | `../../report/evidence/B1.9-http-ec263badc3c9.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 58 | `../../report/evidence/B1.9-http-5cac40a79ecd.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 58 | `../../report/evidence/B1.9-http-a404862c3bda.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 58 | `../../report/evidence/B1.9-http-04ac42a64033.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 72 | `../../report/DOT1_BAO_CAO_FE.md#đối-chiếu-b18b19-ngày06102026` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 82 | `../../report/evidence/B1.9-postman-sync-20261006.json` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 82 | `../../postman/README.md` |
+| `docs/luong-backend/B1.9-the-tu-vung.md` | 82 | `../../report/evidence/B1.9-http-edc71d632f85.json` |
+| `docs/luong-backend/README.md` | 12 | `B0.6-openapi-va-quy-uoc-api.md` |
+| `docs/luong-backend/README.md` | 13 | `B0.7-nen-kiem-thu.md` |
+| `roadmap/TienDoDuKien_backend.md` | 241 | `../report/DOT1_BAO_CAO_FE.md` |
+| `roadmap/TienDoDuKien_backend.md` | 250 | `../report/evidence/B1.9-http-603099a05ed3.json` |
+| `roadmap/TienDoDuKien_backend.md` | 252 | `../report/evidence/B1.9-http-ec263badc3c9.json` |
+| `roadmap/TienDoDuKien_backend.md` | 253 | `../postman/README.md` |
+| `roadmap/TienDoDuKien_backend.md` | 253 | `../report/evidence/B1.9-postman-sync-20261006.json` |
+| `roadmap/TienDoDuKien_backend.md` | 253 | `../report/evidence/B1.9-http-edc71d632f85.json` |
+
+Các đường dẫn viết dạng inline (AGENTS, Sprint/README/skills) cũng cần đổi theo vị trí mới khi chỉnh tài liệu điều hướng;44 là số link Markdown hỏng, không phải tổng số mọi chuỗi nhắc đường dẫn cũ.
+
+### B1.10 — kết quả08/10/2026, tách khỏi lịch sử B1.8/B1.9
+
+| Kiểm chứng thực chạy | Kết quả |
+|---|---|
+| Compile BE | Thành công; kế thừa V5, không sửa migration áp dụng |
+| FR04LibraryTest / Media / Onboarding / Seed | 19 +11 +2 +9 =41 lượt trong **một** lần chạy cuối;0 failure/error/skipped |
+| FE node tests | 9/9; gồm query whitelist/phân trang và requestId |
+| ESLint phạm vi sửa | 0 error,3 warning (ảnh và cách điều hướng logout) |
+| FE production build | Thành công, có /thu-vien và /thu-vien/[id] |
+| Newman trực tiếp BE8081 | 28 request,79 assertion,0 thất bại/skip |
+| Newman qua Next3000 | Lượt riêng:28 request,79 assertion,0 thất bại/skip; không cộng với lượtBE |
+| HTTP media riêng | 6 kiểm tra đạt;3 lượt download so SHA-256 đạt |
+| Giao diện browser | 18 kiểm tra đạt; desktop1440, mobile360/390, URL/paging, dữ liệu dài, media, 404/retry và onboarding. Sau sửa class hàng đã xác nhận grid5 cột/wrap mobile và build/lint lại đạt |
+
+Bằng chứng: [tổng hợp](../report/evidence/B1.10-verification-20261008.json), [UI](../report/evidence/B1.10-ui-20261008.json), [HTTP/media](../report/evidence/B1.10-http-media-20261008.json), [Newman BE](../report/evidence/B1.10-newman-20261008.json), [Newman Next](../report/evidence/B1.10-newman-next-20261008.json), [Postman](../report/evidence/B1.10-postman-sync-20261008.json), [luồng](../docs/luong-backend/B1.10-thu-vien-cong-khai.md), [runner/registry](../postman/README.md).
+
+Các phát hiện06/10 được giữ như lịch sử. Trong phạm vi B1.10 đã nối mucTieu/boMucTieu vào DeckService/DeckResponse và kiểm chứng bằng FR04LibraryOnboardingTest; đã sửa @Param publicDisplayNames, mở FeatureGate thư viện, dùng DTO thật và bổ sung trang chi tiết. B1.8/HTTP6 không chạy lại hoặc thay trạng thái. B1.11 sao chép bộ, CSV, quản trị duyệt/bộ mẫu, benchmark lớn và seed production còn ngoài phạm vi.
 
 ## 11. Báo lỗi cho BE
 

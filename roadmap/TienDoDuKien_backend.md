@@ -253,10 +253,16 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Bàn giao:** báo cáo Đợt 1 mục5.39 và mục10 đối chiếu06/10; [luồng B1.9](../docs/luong-backend/B1.9-the-tu-vung.md). Postman thêm28 request cho5 API, collection108 request; cả hai environment thêm12 biến, giữ biến cũ. Đã khôi phục registry/export và [README](../postman/README.md). [Evidence đồng bộ](../report/evidence/B1.9-postman-sync-20261006.json), [HTTP mẫu5/5](../report/evidence/B1.9-http-edc71d632f85.json); chưa chạy script Postman/Newman mới. Không sửa FE/mockup.
 - **Đối chiếu bổ sung06/10:** DTO/entity khớp V4; giữ4 API quản lý thẻ (không có GET riêng /cards/{id}), ownership cả bộ cha, cảnh báo trùng không chặn, PATCH thẻ tăng version kể cả no-op. Suite CRUD đã pass theo người dùng; HTTP ADMIN9/9 đã kiểm chứng; Postman đã đồng bộ, đủ đóng bước B1.9; quét trùng toàn bộ bộ là điểm tối ưu sau khi đo.
 
-### [ ] B1.10 Thư viện công khai — FR-04
+### [x] B1.10 Thư viện công khai — FR-04
 - API: `GET /library/decks` (q, chủ đề, trình độ, mục tiêu, nguồn, sắp xếp, phân trang), `GET /library/decks/{id}`.
-- Chỉ bộ `CONG_KHAI` + đã duyệt; nhãn "Bộ mẫu" hoặc "Người học chia sẻ". Dùng JPA `Specification`.
+- Quyết định A: chỉ `CONG_KHAI` + `BINH_THUONG` + `xoa_at IS NULL`; schema không có pending/approved, không triển khai duyệt trước. Nhãn "Bộ mẫu"/"Người học chia sẻ" ánh xạ `bo_mau` theo V5. Dùng JPA `Specification`.
 - Bộ khởi động sau onboarding (TK §6.1 bước 5): lọc theo mục tiêu/trình độ trong `ho_so_hoc_tap`. `GET /library/decks/{id}` là link chia sẻ công khai.
+- Media guest: `GET /library/decks/{id}/cards/{cardId}/files/{role}` cho ANH/AM_TU/AM_CAU; kiểm tra bộ/thẻ/tệp/liên kết, không mở quyền endpoint files chung.
+- Hoàn tất08/10/2026: compile BE, FR04 Library/Media/Onboarding/Seed41/41 (19+11+2+9 trong lượt cuối), FE9/9, build thành công, lint0 error/3 warning. Newman BE8081 đạt28 request/79 assertion; Next3000 đạt28/79 ở lượt riêng. HTTP media6 kiểm tra và3 download/hash đạt. Không cộng các lượt riêng, không chạy lại HTTP6 B1.8.
+- FE thật: danh sách/chi tiết/link/media, URL filter/paging; onboarding lấy bộ mẫu từ mục tiêu/trình độ đã lưu. Seed dev8 bộ/24 thẻ tự biên soạn, đủ2×4; production không tự seed. Không kéo sao chép/admin sang B1.10.
+- Postman cloud thêm28 request, tổng136; giữ108 cũ và collection events. Hai environment52 biến, giữ45 cũ, thêm7 B1.10. [Runner/registry](../postman/README.md), [evidence](../report/evidence/B1.10-postman-sync-20261008.json).
+- [Luồng B1.10](../docs/luong-backend/B1.10-thu-vien-cong-khai.md), [báo cáo bàn giao hiện có](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>), [kiểm chứng tổng hợp](../report/evidence/B1.10-verification-20261008.json), [UI](../report/evidence/B1.10-ui-20261008.json).
+
 
 ### [ ] B1.11 Sao chép bộ — FR-04, TC-03
 - API: `POST /decks/{id}/copy` với header `Idempotency-Key`.

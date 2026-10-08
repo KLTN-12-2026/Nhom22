@@ -69,6 +69,7 @@ public class DeckService {
                 request.trinhDo(),
                 request.quyenTruyCap()
         );
+        deck.updateGoal(request.mucTieu());
         return mapper.toResponse(decks.saveAndFlush(deck), false);
     }
 
@@ -101,6 +102,13 @@ public class DeckService {
                         ? deck.getQuyenTruyCap()
                         : request.quyenTruyCap()
         );
+
+        if (request.boMucTieu()) {
+            deck.updateGoal(null);
+        } else if (request.mucTieu() != null) {
+            deck.updateGoal(request.mucTieu());
+        }
+
         decks.flush();
         return response(userId, deck);
     }

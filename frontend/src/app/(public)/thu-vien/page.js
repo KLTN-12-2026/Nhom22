@@ -1,21 +1,44 @@
 'use client';
-import { useState } from 'react';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Icon } from '@/components/ui';
+import { ErrorState, Icon, Pagination } from '@/components/ui';
+import { libraryPage } from '@/lib/library-query.mjs';
 import styles from './page.module.css';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 
 export default function LibraryPage() {
-  const [topicId, setTopicId] = useState('');
-  const [q, setQ] = useState('');
-  const [goal, setGoal] = useState('');
-  const [level, setLevel] = useState('');
-  const [source, setSource] = useState('');
-  const [sort, setSort] = useState('updated');
+  return <Suspense fallback={<p className="page" role="status">Đang tải thư viện…</p>}><LibraryContent /></Suspense>;
+}
+
+function LibraryContent() {
+  const router = useRouter();
+  const search = useSearchParams();
+  const topicId = search.get('chuDeId') || '';
+  const q = search.get('q') || '';
+  const goal = search.get('mucTieu') || '';
+  const level = search.get('trinhDo') || '';
+  const source = search.get('nguon') || '';
+  const sort = search.get('sort') || 'updated';
+  const page = libraryPage(search.get('page'));
+  const requestedSize = Number(search.get('size') || 20);
+  const size = Number.isInteger(requestedSize) && requestedSize >= 1 && requestedSize <= 100 ? requestedSize : 20;
+  const change = (key, value) => {
+    const next = new URLSearchParams(window.location.search);
+    if (value) next.set(key, value); else next.delete(key);
+    if (key !== 'page') next.delete('page');
+    window.history.replaceState(null, '', `/thu-vien?${next}`);
+  };
+  const setTopicId = value => change('chuDeId', value);
+  const setQ = value => change('q', value);
+  const setGoal = value => change('mucTieu', value);
+  const setLevel = value => change('trinhDo', value);
+  const setSource = value => change('nguon', value);
+  const setSort = value => change('sort', value);
   
-  const { data: topics = [] } = useTopics();
-  const { data: decksData, isLoading } = useLibraryDecks({ topicId, q, goal, level, source, sort });
+  const { data: topics = [], error: topicsError, refetch: reloadTopics } = useTopics();
+  const { data: decksData, isLoading, error, refetch } = useLibraryDecks({ chuDeId: topicId, q, mucTieu: goal, trinhDo: level, nguon: source, sort, page, size });
   
   const decks = decksData?.items || [];
   const total = decksData?.totalElements || 0;
@@ -30,12 +53,12 @@ export default function LibraryPage() {
             <span>Thư viện công khai</span><span>Giao tiếp và TOEIC</span>
           </div>
           <h1 id="page-title">Thư viện bộ thẻ</h1>
-          <p>Sao chép một bộ về tài khoản để học. Bộ mẫu do nhóm biên soạn kiểm tra nội dung; bộ chia sẻ do người học đăng công khai.</p>
+          <p>Xem nội dung bộ mẫu và bộ do người học chia sẻ trước khi chọn tài liệu học.</p>
         </div>
 
         <form className={styles.filters} id="filters" role="search" aria-label="Lọc thư viện" onSubmit={(e) => e.preventDefault()}>
           <div className={`field ${styles.search}`}>
-            <label className="field-label" htmlFor="q">Tìm bộ thẻ hoặc từ</label>
+            <label className="field-label" htmlFor="q">Tìm tên hoặc mô tả bộ thẻ</label>
             <div className="input-with-icon">
               <Icon name="search" />
               <input 
@@ -45,6 +68,7 @@ export default function LibraryPage() {
                 type="search" 
                 placeholder="Ví dụ: invoice, sân bay…" 
                 autoComplete="off" 
+                maxLength={150}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -65,7 +89,7 @@ export default function LibraryPage() {
             <select className="select" id="topicId" name="topicId" value={topicId} onChange={e => setTopicId(e.target.value)}>
               <option value="">Tất cả</option>
               {topics.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>{t.ten}</option>
               ))}
             </select>
           </div>
@@ -95,17 +119,27 @@ export default function LibraryPage() {
           <p id="result-count" className="muted" aria-live="polite">
             {total} bộ thẻ
           </p>
-          <div className="row">
+          <div className={styles.resultControls}>
+            <div className={styles.resultControl}>
+            <label htmlFor="size" className="caption">Mỗi trang</label>
+            <select className="select" id="size" value={size} onChange={e => change('size', e.target.value)}>
+              {[5, 10, 20, 50, 100].map(value => <option key={value} value={value}>{value} bộ</option>)}
+            </select>
+            </div>
+            <div className={styles.resultControl}>
             <label htmlFor="sort" className="caption">Sắp xếp</label>
-            <select className="select" id="sort" value={sort} onChange={e => setSort(e.target.value)} style={{ width: 'auto', minHeight: '40px' }}>
+            <select className="select" id="sort" value={sort} onChange={e => setSort(e.target.value)}>
               <option value="updated">Mới cập nhật</option>
               <option value="name">Tên A–Z</option>
               <option value="size">Nhiều thẻ nhất</option>
             </select>
+            </div>
           </div>
         </div>
 
-        <div data-view={isLoading ? "loading" : (decks.length > 0 ? "ready" : "empty")} id="region">
+        {error && <ErrorState description={error.message} onRetry={refetch} />}
+        {topicsError && <ErrorState title="Không tải được chủ đề" description={topicsError.message} onRetry={reloadTopics} />}
+        <div data-view={error ? "error" : isLoading ? "loading" : (decks.length > 0 ? "ready" : "empty")} id="region">
           <div data-when="loading">
             <div className="skeleton" aria-label="Đang tải thư viện">
               <div className="sk sk-row"></div>
@@ -125,36 +159,38 @@ export default function LibraryPage() {
             </div>
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
-                <li key={deck.id} className="deck-row">
-                  <span className="deck-no">{i + 1}</span>
-                  <div className="deck-main">
-                    <Link className="deck-title" href={`/thu-vien/${deck.id}`}>{deck.name}</Link>
-                    <p className="deck-desc">{deck.description}</p>
-                    <div className="deck-meta">
-                      {deck.kind === 'MAU' ? (
+                <li key={deck.id} className="answer-row deck-row">
+                  <span className="answer-no">{page * size + i + 1}</span>
+                  <div className="answer-main">
+                    <Link className="answer-title" href={`/thu-vien/${deck.id}`}>{deck.ten}</Link>
+                    <p className="muted clamp-2">{deck.moTa}</p>
+                    <div className="answer-meta">
+                      {deck.nguon === 'MAU' ? (
                         <span className="stamp stamp-solid">Bộ mẫu</span>
                       ) : (
                         <span className="stamp stamp-graphite">Người học chia sẻ</span>
                       )}
-                      <span>{deck.topicName}</span>
-                      <span className="muted">Cập nhật 29/09/2026</span>
+                      <span>{deck.tenChuDe || 'Chưa phân chủ đề'}</span>
+                      <span className="muted">Cập nhật {new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</span>
                     </div>
                   </div>
-                  <span className="deck-goal">{deck.goal === 'GIAO_TIEP' ? 'Giao tiếp' : 'TOEIC'}</span>
+                  <div className="deck-cols">
+                  <span className="deck-goal">{deck.mucTieu === 'GIAO_TIEP' ? 'Giao tiếp' : deck.mucTieu === 'TOEIC' ? 'TOEIC' : 'Chưa đặt mục tiêu'}</span>
                   <span className="deck-level">
                     <span className="level" title="Trình độ tự đánh giá">
                       <span className="bubble-row" aria-hidden="true">
                         {[1, 2, 3, 4].map(n => {
                           const lvlMap = { MOI_BAT_DAU: 1, CO_BAN: 2, TRUNG_CAP: 3, NANG_CAO: 4 };
-                          return <span key={n} className={`bubble${lvlMap[deck.level] >= n ? ' is-filled' : ''}`}></span>;
+                          return <span key={n} className={`bubble${lvlMap[deck.trinhDo] >= n ? ' is-filled' : ''}`}></span>;
                         })}
                       </span>
-                      {LEVEL_LABEL[deck.level]}
+                      {LEVEL_LABEL[deck.trinhDo]}
                     </span>
                   </span>
                   <span className="deck-size">
-                    <span className="stat">{deck.cardCount} <span className="stat-unit">thẻ</span></span>
+                    <span className="col-count">{deck.soThe} thẻ</span>
                   </span>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -173,13 +209,14 @@ export default function LibraryPage() {
                 type="button" 
                 className="btn btn-secondary" 
                 id="clear"
-                onClick={() => { setQ(''); setGoal(''); setTopicId(''); setLevel(''); setSource(''); }}
+                onClick={() => router.replace('/thu-vien', { scroll: false })}
               >
                 Xóa bộ lọc
               </button>
             </div>
           </div>
         </div>
+        <Pagination page={page + 1} totalPages={decksData?.totalPages || 0} onPageChange={value => change('page', String(value - 1))} />
       </section>
 
       <aside className="side-col">
@@ -194,8 +231,7 @@ export default function LibraryPage() {
             {topics.map(t => (
               <li key={t.id}>
                 <button aria-current={topicId === t.id ? 'true' : undefined} onClick={() => setTopicId(t.id)}>
-                  <span>{t.name}</span>
-                  <span className={styles.num}>{t.deckCount}</span>
+                  <span>{t.ten}</span>
                 </button>
               </li>
             ))}
@@ -207,7 +243,7 @@ export default function LibraryPage() {
           <div className={styles.legend}>
             <div>
               <span><span className="stamp stamp-solid">Bộ mẫu</span></span>
-              <p className="muted">Nhóm biên soạn soạn và kiểm tra nghĩa, ví dụ, nguồn.</p>
+              <p className="muted">Bộ khởi động do dự án cung cấp. Đọc nghĩa và ví dụ trước khi học.</p>
             </div>
             <div>
               <span><span className="stamp stamp-graphite">Người học chia sẻ</span></span>

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-const FUTURE = ['/thu-vien', '/hom-nay', '/hoc', '/luyen-tap', '/so-tay', '/thong-ke', '/quan-tri/tai-khoan', '/quan-tri/bo-mau', '/quan-tri/nhat-ky'];
+const FUTURE = ['/hom-nay', '/hoc', '/luyen-tap', '/so-tay', '/thong-ke', '/quan-tri/tai-khoan', '/quan-tri/bo-mau', '/quan-tri/nhat-ky'];
 export function FeatureGate({ children }) {
   const path = usePathname();
   const pending = FUTURE.some(route => path === route || path.startsWith(route + '/') || path.startsWith(route + '-')) || /^\/bo-the\/[^/]+\/(the-tao|tien-do|nhap-csv)$/.test(path);

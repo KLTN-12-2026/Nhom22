@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
@@ -18,4 +20,20 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from NguoiDung u where u.id = :id")
     Optional<NguoiDung> findForUpdate(@Param("id") Long id);
+
+    @Query("""
+            select u.id as id,
+                   u.tenHienThi as tenHienThi
+            from NguoiDung u
+            where u.id in :ids
+            """)
+    List<PublicDisplayName> findPublicDisplayName(
+            @Param("ids") Collection<Long> ids
+    );
+
+    interface PublicDisplayName {
+        Long getId();
+
+        String getTenHienThi();
+    }
 }
