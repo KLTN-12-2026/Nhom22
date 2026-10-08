@@ -1,11 +1,11 @@
 export class ApiError extends Error {
   constructor(status, data = {}) {
     const fields = Array.isArray(data.fieldErrors) ? data.fieldErrors.map(e => e.message).join('; ') : '';
-    super([data.message || (!fields && 'Không thể kết nối. Vui lòng thử lại.'), fields, data.traceId && `Mã lỗi: ${data.traceId}`].filter(Boolean).join(' '));
+    super([data.message || (!fields && 'Không thể kết nối. Vui lòng thử lại.'), fields, (data.requestId || data.traceId) && `Mã lỗi: ${data.requestId || data.traceId}`].filter(Boolean).join(' '));
     this.status = status;
     this.data = data;
     this.fieldErrors = data.fieldErrors || [];
-    this.traceId = data.traceId;
+    this.traceId = data.requestId || data.traceId;
   }
 }
 let csrfPromise;

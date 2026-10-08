@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ErrorState, Icon } from '@/components/ui';
 import { useTopics } from '@/hooks/useTopics';
+import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { apiFetch } from '@/lib/api-client';
 import styles from './page.module.css';
 
@@ -23,6 +24,8 @@ export default function OnboardingPage() {
   const [gioNhac, setGioNhac] = useState('20:30');
   const [mins, setMins] = useState('10');
   const [cards, setCards] = useState('10');
+  const [savedSettings, setSavedSettings] = useState(null);
+  const starters = useLibraryDecks({ nguon: 'MAU', mucTieu: savedSettings?.mucTieu, trinhDo: savedSettings?.trinhDo, size: 4 }, { enabled: step === 5 && !!savedSettings });
 
   useEffect(() => {
     document.body.classList.add('no-bottom-nav');
@@ -40,7 +43,8 @@ export default function OnboardingPage() {
       const notification = await apiFetch('/api/v1/me/notification-settings');
       await apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify({ muiGio }) });
       await apiFetch('/api/v1/me/notification-settings', { method: 'PUT', body: JSON.stringify({ nhanTrongUngDung: notification.nhanTrongUngDung, nhanEmail: notification.nhanEmail, nhacHoc: !!gioNhac, gioNhac: gioNhac || null, version: notification.version }) });
-      await apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({ mucTieu: goal, trinhDo: level, chuDeIds: topics, phutMoiNgay: Number(mins), tuMoiMoiNgay: Number(cards), version: current.version }) });
+      const saved = await apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({ mucTieu: goal, trinhDo: level, chuDeIds: topics, phutMoiNgay: Number(mins), tuMoiMoiNgay: Number(cards), version: current.version }) });
+      setSavedSettings(saved);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       await queryClient.invalidateQueries({ queryKey: ['learning-settings'] });
       setStep(5);
@@ -207,7 +211,15 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <div className={styles.onbStep} data-step="5" hidden={step !== 5}><h2>Đã lưu phiếu của bạn</h2><p>Bạn có thể tạo bộ thẻ đầu tiên. Bộ mẫu sẽ mở khi thư viện sẵn sàng.</p></div>
+            <div className={styles.onbStep} data-step="5" hidden={step !== 5}>
+              <h2>Đã lưu phiếu của bạn</h2>
+              <p>Xem bộ mẫu phù hợp với mục tiêu và trình độ đã lưu.</p>
+              {starters.isLoading && <p role="status">Đang tìm bộ mẫu…</p>}
+              {starters.error && <ErrorState description={starters.error.message} onRetry={starters.refetch} />}
+              {starters.data?.items.length === 0 && <p>Chưa có bộ mẫu phù hợp. Bạn có thể xem toàn bộ thư viện hoặc tạo bộ đầu tiên.</p>}
+              <ul>{starters.data?.items.map(deck => <li key={deck.id}><Link href={`/thu-vien/${deck.id}`}>{deck.ten}</Link> — {deck.soThe} thẻ</li>)}</ul>
+              <Link href="/thu-vien" className="btn btn-secondary">Xem thư viện</Link>
+            </div>
             {topicsError && <ErrorState description={topicsError.message} onRetry={reloadTopics} />}
             {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
 

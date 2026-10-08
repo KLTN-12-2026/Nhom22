@@ -48,6 +48,7 @@ public record UpdateDeckRequest(
         return !boChuDe || chuDeId == null;
     }
 
+    @AssertTrue(message = "Không gửi mucTieu khi yêu cầu bỏ mục tiêu")
     public boolean isGoalSelectionValid() {
         return !boMucTieu || mucTieu == null;
     }

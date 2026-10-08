@@ -109,8 +109,9 @@ frontend/
 ### [ ] F1.6 Tải tệp & ảnh đại diện ← B1.6
 - Component `FileUpload`: xin URL ký → PUT trực tiếp lên S3 (đúng `Content-Type`) → `complete`; kiểm tra loại/dung lượng trước khi gửi (ảnh ≤ 2 MB, âm thanh ≤ 5 MB).
 
-### [ ] F1.7 Thư viện & chi tiết bộ công khai — UI02, UI03 ← B1.7, B1.10
+### [x] F1.7 Thư viện & chi tiết bộ công khai — UI02, UI03 ← B1.7, B1.10
 - Tìm, lọc (chủ đề, trình độ, mục tiêu, nguồn), sắp xếp, phân trang lưu trên URL; nhãn "Bộ mẫu"/"Người học chia sẻ"; nút "Sao chép liên kết"; bộ khởi động gợi ý ở cuối UI11.
+- Kiểm chứng08/10: FE thật có danh sách/chi tiết/media, loading/empty/error requestId/retry; URL filter/paging, 360/390 không tràn ngang, onboarding TOEIC/CO_BAN có bộ mẫu đúng. FE tests9/9, build thành công, lint0 error/3 warning. [Evidence UI](../report/evidence/B1.10-ui-20261008.json); sao chép bộ chờ B1.11.
 
 ### [ ] F1.8 Bộ của tôi — UI13, UI14 ← B1.8
 - Danh sách, yêu thích, tạo/sửa (công khai/riêng tư), xóa có xác nhận; 409 `VERSION_CONFLICT` → tải lại.

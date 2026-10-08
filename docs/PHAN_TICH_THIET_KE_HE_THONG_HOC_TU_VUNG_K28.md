@@ -1,6 +1,6 @@
 # PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG HỌC TỪ VỰNG TIẾNG ANH
 
-> Đối chiếu triển khai 05/10/2026: hợp đồng GĐ0–B1.8 theo controller/DTO, migration và báo cáo Đợt 1. API từ B1.9 trở đi vẫn là kế hoạch. Mô hình logic ánh xạ sang schema vật lý: nguoi_dung.anh_dai_dien_id, ho_so_hoc_tap.da_hoan_tat_khoi_dau, bảng chu_de_yeu_thich, cai_dat_thong_bao.gio_nhac, bo_the.xoa_at/the_tu_vung.xoa_at. URL ký không lưu lâu dài. Mục tiêu bộ, số thẻ, favorite listing và thư viện phải chốt ở B1.9/B1.10; mục tiêu hồ sơ không tự trở thành mục tiêu bộ. Phân trang hiện hành trả items/page/size/totalElements/totalPages.
+> Đối chiếu triển khai 08/10/2026: API quản lý thẻ/public tags B1.9 và thư viện B1.10 đã triển khai; sao chép B1.11 và CSV B1.12 còn kế hoạch. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 hiện có bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Bằng chứng và hợp đồng chi tiết: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
 
 ## 1. Thông tin tài liệu và cơ sở phân tích
 
@@ -194,16 +194,16 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 2. Máy chủ kiểm tra dữ liệu, tạo tài khoản chưa xác thực và gửi email.
 3. Người dùng xác thực bằng token một lần; token sai/hết hạn có thông báo và khả năng gửi lại.
 4. Người học chọn mục tiêu giao tiếp/TOEIC, trình độ tự đánh giá, chủ đề, thời gian/ngày, số từ mới và giờ nhắc.
-5. Hệ thống đề xuất bộ mẫu theo thiết lập; người học có thể bỏ qua.
+5. Hệ thống đề xuất bộ mẫu theo mục tiêu/trình độ đã lưu trong ho_so_hoc_tap: GET /library/decks?nguon=MAU&mucTieu={mucTieu}&trinhDo={trinhDo}. B1.10 chỉ gợi ý và xem bộ, người học có thể bỏ qua; không tự sao chép.
 6. Chuyển đến bảng điều khiển với một hành động rõ ràng: “Bắt đầu phiên học đầu tiên”.
 
 Đăng nhập Google xác minh danh tính từ nhà cung cấp; không tự nối tài khoản chỉ vì email trùng khi chưa có bằng chứng và quy trình liên kết an toàn.
 
 ### 6.2. Chọn và sao chép bộ thẻ
 
-1. User tìm bộ theo mục tiêu, chủ đề, trình độ và nguồn.
+1. Visitor/User tìm bộ theo tên/mô tả, mục tiêu, chủ đề, trình độ và nguồn. B1.10 chỉ hiển thị CONG_KHAI + BINH_THUONG + chưa xóa, bằng JPA Specification.
 2. Xem số thẻ, mẫu nội dung, tác giả, nguồn và nhãn “Bộ mẫu” hoặc “Người học chia sẻ”.
-3. Chọn sao chép; hệ thống tạo bộ cá nhân và thẻ mới, giữ tham chiếu nguồn.
+3. Dự kiến B1.11: chọn sao chép; hệ thống tạo bộ cá nhân và thẻ mới, giữ tham chiếu nguồn. B1.10 chỉ có sao chép liên kết công khai.
 4. Không sao chép tiến độ, điểm thưởng hoặc lịch sử học.
 5. Người học sửa bản sao độc lập; cập nhật bộ nguồn không tự ghi đè bản sao.
 
@@ -498,7 +498,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `token_tai_khoan` | token_hash, loai, het_han_at, da_dung_at; không lưu token rõ |
 | `ho_so_hoc_tap` | trình độ tự đánh giá, mục tiêu, phút/ngày, từ mới/ngày, cờ hoàn tất khởi đầu; giờ nhắc lưu ở cai_dat_thong_bao |
 | `chu_de`, `nhan` | Danh mục chủ đề và nhãn |
-| `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, version |
+| `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
 | `tep_tin` | chu_so_huu_id, object_key, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa |
@@ -579,7 +579,7 @@ erDiagram
 |---|---|
 | Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback` |
 | Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `POST /me/deletion-requests` |
-| Thư viện | `GET /library/decks`, `GET /library/decks/{id}` |
+| Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
 | Bộ/thẻ | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}` |
 | CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `DELETE /files/{id}` |
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |

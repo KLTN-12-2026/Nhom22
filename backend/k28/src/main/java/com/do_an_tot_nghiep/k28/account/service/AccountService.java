@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -61,5 +65,16 @@ public class AccountService {
         return userMapper.toResponse(user, profile.findById(user.getId()).orElse(null));
     }
 
+    @Transactional(readOnly = true)
+    public Map<Long, String> publicDisplayNames(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
 
+        return users.findPublicDisplayName(ids).stream()
+                .collect(Collectors.toMap(
+                        NguoiDungRepository.PublicDisplayName::getId,
+                        NguoiDungRepository.PublicDisplayName::getTenHienThi
+                ));
+    }
 }
