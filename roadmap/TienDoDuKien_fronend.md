@@ -1,6 +1,6 @@
 # ROADMAP FRONTEND — VocabLearning (VocabFlow)
 
-> Trạng thái05/10/2026: theo yêu cầu mới nhất, toàn bộ thay đổi trong frontend đã hoàn tác. GĐ0–B1.8 đã sửa/kiểm chứng BE và cập nhật hợp đồng bàn giao; các mục tích hợp FE còn cần làm trong lượt riêng. Build/lint/browser trước hoàn tác không chứng minh mã FE hiện tại. Mockup ngoài frontend là demo; công nghệ/form/kiểm thử trong roadmap là định hướng.
+> Trạng thái10/10/2026: đã tích hợp FE từ GĐ0 đến hợp đồng BE B1.11, sửa lỗi DTO/phiên/upload/form, đối chiếu mockup desktop/mobile. F1.11 trong roadmap FE là CSV B1.12 và vẫn chưa mở. OAuth provider cần credentials để kiểm thử trao đổi Google thật; không tuyên bố luồng provider đã chạy. Bằng chứng và giới hạn nằm trong báo cáo bàn giao hiện có, không thay số liệu lịch sử BE.
 
 > Nguồn: TK (`docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` §4, §6, §9, §10, §16), lịch sprint `roadmap/SPRINT_PLAN.md`, API từ `report/<PHASE>_BAO_CAO_FE.md`.
 > Mỗi bước `Fx.y` ghép với bước BE cùng số giai đoạn. Màn hình `UIxx` và route: `SPRINT_PLAN.md` §5.
@@ -13,9 +13,9 @@
 | Framework | Next.js (App Router), JavaScript, React |
 | Gọi API | `src/lib/api-client.js` (GĐ0 report §6), TanStack Query |
 | Form & validate | react-hook-form + Zod (giới hạn = BE) |
-| Mock | MSW, bật bằng `NEXT_PUBLIC_API_MOCKING=enabled` |
+| Mock | MSW chỉ endpoint ping nền; auth/nội dung dùng BE thật. Mockup HTML dùng demo riêng |
 | Giao diện | Design tokens `mockups/shared/tokens.css`, font hỗ trợ tiếng Việt + IPA, tối thiểu 16px |
-| Kiểm thử | Vitest (logic), Playwright (E2E luồng demo) |
+| Kiểm thử | Node test runner (logic/hợp đồng), Playwright trên Edge (UI thật và demo tách riêng) |
 | Kết nối BE | `rewrites` `/api/:path*` → `http://localhost:8080/api/:path*` (cùng site, cookie SameSite=Lax) |
 
 ## 0.1. Lịch theo đề cương (khớp `ROADMAP_BE.md` §0.2)
@@ -63,17 +63,17 @@ frontend/
 
 ## GĐ0 — Nền tảng (S1–S2 · 28/09–11/10)
 
-### [ ] F0.1 Khởi tạo dự án
-- `frontend/` Next.js App Router, ESLint + Prettier, alias `@/`, `.env.example` (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_MOCKING`).
+### [x] F0.1 Khởi tạo dự án
+- `frontend/` Next.js App Router, ESLint, alias `@/`, `.env.example` (`API_URL`, `NEXT_PUBLIC_API_MOCKING`); giữ cấu hình formatter hiện có, không ghi nhận Prettier chưa cài là đã kiểm chứng.
 - Thư mục: `app/(public)`, `app/(auth)`, `app/(app)`, `app/quan-tri`, `components/ui`, `components/<module>`, `lib`, `mocks`.
 - **Xong khi:** `npm run dev` chạy, trang `/` hiển thị.
 
-### [ ] F0.2 Design system & UI kit — TK §9.8
+### [x] F0.2 Design system & UI kit — TK §9.8
 - Token màu (chàm chủ đạo, xanh lá thành công, hổ phách cảnh báo, đỏ lỗi), font, khoảng cách, bo góc, bóng.
 - Thành phần: Button, Input, Select, Checkbox, Textarea, Card, Modal, Drawer, Toast, Tabs, Badge, Skeleton, EmptyState, ErrorState (có nút thử lại), Pagination, ConfirmDialog.
 - **Xong khi:** trang `/_ui` liệt kê đủ thành phần; tương phản đạt; điều hướng được bằng bàn phím.
 
-### [ ] F0.3 api-client, Query, MSW
+### [x] F0.3 api-client, Query, MSW
 - `api-client.js`, `ApiError`, `applyServerErrors`, `QueryClient` xử lý 401 toàn cục (GĐ0 report §6). MSW handlers nền.
 - **Xong khi:** `GET /public/ping` chạy với cả MSW và BE thật.
 
@@ -85,48 +85,55 @@ frontend/
 ### [x] F0.5 Trang công khai tĩnh — UI01, UI04, UI05
 - Giới thiệu, cách học, hướng dẫn, FAQ, chính sách quyền riêng tư, điều khoản.
 
-### [x] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48 (ko cần thiết)
+### [x] F0.6 Mockup Đợt 1 — UI02–UI17, UI40–UI43, UI48
 - `/ui-mockup` cho từng màn, nối API thật khi đã có.
 
 ## Đợt 1 — Tài khoản & nội dung (S3–S4 · 12/10–25/10) · FR-01…05
 
-### [ ] F1.1 Đăng ký & xác thực email — UI06, UI07 ← B1.1
+### [x] F1.1 Đăng ký & xác thực email — UI06, UI07 ← B1.1
 - Form email, mật khẩu, tên hiển thị, chấp nhận điều khoản; 409 hiện lỗi dưới ô email; 429 khóa nút.
 - `/xac-thuc-email?token=` tự gọi xác thực; `TOKEN_INVALID` → nút "Gửi lại email".
 
-### [ ] F1.2 Đăng nhập, đăng xuất, phiên — UI08 ← B1.2
+### [x] F1.2 Đăng nhập, đăng xuất, phiên — UI08 ← B1.2
 - Sau đăng nhập gọi lại `/auth/csrf`, `useMe()` làm nguồn thông tin người dùng; lỗi chưa xác thực email / bị khóa có thông báo riêng.
 
-### [ ] F1.3 Mật khẩu — UI09, UI10, UI42 ← B1.3
-- Quên mật khẩu luôn hiện cùng một thông báo; đặt lại xong chuyển `/dang-nhap`.
+### [x] F1.3 Mật khẩu — UI09, UI10, UI42 ← B1.3
+- Quên mật khẩu luôn hiện cùng một thông báo; đặt lại xong hiện thành công và nút tới `/dang-nhap`.
 
-### [ ] F1.4 Đăng nhập Google ← B1.4
-- Nút Google trên UI06/UI08; trường hợp email trùng chưa liên kết → hướng dẫn đăng nhập mật khẩu rồi liên kết.
+### [x] F1.4 Đăng nhập Google ← B1.4
+- Nút Google trên UI06/UI08 đi qua `/auth/google/start?next=`; đích quay lại an toàn. Email trùng chưa liên kết → hướng dẫn đăng nhập mật khẩu rồi liên kết. Đã kiểm tra giao diện/hợp đồng; chưa kiểm chứng trao đổi token với provider Google thật.
 
-### [ ] F1.5 Khởi đầu, hồ sơ, thiết lập — UI11, UI40, UI41, UI43 ← B1.5
+### [x] F1.5 Khởi đầu, hồ sơ, thiết lập — UI11, UI40, UI41, UI43 ← B1.5
 - Onboarding nhiều bước: mục tiêu (Giao tiếp/TOEIC), trình độ **tự đánh giá**, chủ đề, phút/ngày, từ mới/ngày, giờ nhắc, múi giờ (mặc định theo trình duyệt).
 
-### [ ] F1.6 Tải tệp & ảnh đại diện ← B1.6
+### [x] F1.6 Tải tệp & ảnh đại diện ← B1.6
 - Component `FileUpload`: xin URL ký → PUT trực tiếp lên S3 (đúng `Content-Type`) → `complete`; kiểm tra loại/dung lượng trước khi gửi (ảnh ≤ 2 MB, âm thanh ≤ 5 MB).
 
 ### [x] F1.7 Thư viện & chi tiết bộ công khai — UI02, UI03 ← B1.7, B1.10
 - Tìm, lọc (chủ đề, trình độ, mục tiêu, nguồn), sắp xếp, phân trang lưu trên URL; nhãn "Bộ mẫu"/"Người học chia sẻ"; nút "Sao chép liên kết"; bộ khởi động gợi ý ở cuối UI11.
-- Kiểm chứng08/10: FE thật có danh sách/chi tiết/media, loading/empty/error requestId/retry; URL filter/paging, 360/390 không tràn ngang, onboarding TOEIC/CO_BAN có bộ mẫu đúng. FE tests9/9, build thành công, lint0 error/3 warning. [Evidence UI](../report/evidence/B1.10-ui-20261008.json); sao chép bộ chờ B1.11.
+- Kiểm chứng08/10: FE thật có danh sách/chi tiết/media, loading/empty/error requestId/retry; URL filter/paging, 360/390 không tràn ngang, onboarding TOEIC/CO_BAN có bộ mẫu đúng. FE tests9/9, build thành công, lint0 error/3 warning. [Evidence UI](../report/evidence/B1.10-ui-20261008.json); đây là số liệu lịch sử B1.10. Sao chép B1.11 đã tích hợp/kiểm chứng trong lượt10/10 riêng.
 
-### [ ] F1.8 Bộ của tôi — UI13, UI14 ← B1.8
+### [x] F1.8 Bộ của tôi — UI13, UI14 ← B1.8
 - Danh sách, yêu thích, tạo/sửa (công khai/riêng tư), xóa có xác nhận; 409 `VERSION_CONFLICT` → tải lại.
 
-### [ ] F1.9 Thẻ & biên tập thẻ — UI15, UI16 ← B1.9, B1.6
+### [x] F1.9 Thẻ & biên tập thẻ — UI15, UI16 ← B1.9, B1.6
 - Trường: từ, từ loại, nghĩa, IPA, ví dụ, bản dịch, độ khó, nguồn, nhãn, ảnh, âm thanh; cảnh báo trùng (không chặn); xem trước thẻ.
 
-### [ ] F1.10 Sao chép bộ ← B1.11
-- Gửi `Idempotency-Key` sinh một lần cho mỗi lần bấm; chuyển tới bộ mới.
+### [x] F1.10 Sao chép bộ ← B1.11
+- Gửi POST không body với `Idempotency-Key` giữ theo người dùng/bộ nguồn khi retry/reload; dùng `DeckResponse.id`, hiển thị thành công và mở bộ mới. Không tự tạo key khác khi mất phản hồi.
 
 ### [ ] F1.11 CSV — UI17 ← B1.12
 - Chọn tệp (≤ 1 MB, ≤ 1000 dòng) → xem trước → bảng lỗi từng dòng, đánh dấu trùng → chọn dòng → commit → kết quả; nút xuất CSV.
 
-### [ ] F1.12 Quản trị chủ đề & nhãn — UI48 ← B1.7
-- **Cuối Đợt 1:** demo vòng quản lý nội dung; nhận `report/DOT1_BAO_CAO_FE.md`.
+### [x] F1.12 Quản trị chủ đề & nhãn — UI48 ← B1.7
+- Chủ đề/nhãn: CRUD dùng DTO native và version; ADMIN được phép, learner thấy trang403; nhãn còn liên kết trả409. Bàn giao bổ sung trong `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md`, không tạo báo cáo BE song song.
+
+### Hoàn thiện giao diện10/10/2026
+
+- Thu gọn/mở rộng thanh bên desktop; SVG có nhãn truy cập, mobile giữ icon/tên và vùng chạm44px.
+- FE/mockup cùng màu hành động theo yêu cầu mới: xanh dương lưu/tạo/sao chép, cam sửa, xanh ngọc nghe, đỏ xóa, trung tính hủy/điều hướng. Đây là điều chỉnh có chủ đích so với quy tắc màu cũ của skill, không thêm green completion làm nút.
+- Đọc từ/câu bằng trình duyệt khi không có tệp; upload vẫn tùy chọn, giữ quyền media và DTO BE. Hiển thị ảnh mặc định bật, có lựa chọn ghi nhớ trên trình duyệt; khi tắt có nút Xem ảnh. Hàng nút tự xuống dòng trong thẻ.
+- [Bằng chứng FE](../report/evidence/FE-B0-B1.11-verification-20261010.json). CSV/SRS/quản trị ngoài B1.7 không được đánh dấu hoàn tất.
 
 ## Đợt 2 — Học & luyện (S5–S6 · 26/10–08/11) · FR-06, 07, 08, 11, 13
 

@@ -2,7 +2,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { safeNext } from '@/lib/content-contract.mjs';
 import Link from 'next/link';
 import { ErrorState, Icon } from '@/components/ui';
 import { useTopics } from '@/hooks/useTopics';
@@ -13,6 +14,7 @@ import styles from './page.module.css';
 export default function OnboardingPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const next = safeNext(useSearchParams().get('next'));
   const [step, setStep] = useState(1);
   const { data: topicList = [], error: topicsError, refetch: reloadTopics } = useTopics();
   const [saving, setSaving] = useState(false);
@@ -28,15 +30,18 @@ export default function OnboardingPage() {
   const starters = useLibraryDecks({ nguon: 'MAU', mucTieu: savedSettings?.mucTieu, trinhDo: savedSettings?.trinhDo, size: 4 }, { enabled: step === 5 && !!savedSettings });
 
   useEffect(() => {
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timer = setTimeout(() => setMuiGio(detected || 'Asia/Ho_Chi_Minh'), 0);
     document.body.classList.add('no-bottom-nav');
-    return () => document.body.classList.remove('no-bottom-nav');
+    return () => { clearTimeout(timer); document.body.classList.remove('no-bottom-nav'); };
   }, []);
 
   const handleNext = async () => {
+    if (saving) return;
     if ((step === 1 && !goal) || (step === 2 && !level)) { setErrorMsg('Chọn một mục để tiếp tục.'); return; }
     setErrorMsg('');
     if (step < 4) { setStep(step + 1); return; }
-    if (step === 5) { router.push('/bo-the'); return; }
+    if (step === 5) { router.push(next === '/bat-dau' ? '/bo-the' : next); return; }
     setSaving(true);
     try {
       const current = await apiFetch('/api/v1/me/learning-settings');
@@ -47,6 +52,7 @@ export default function OnboardingPage() {
       setSavedSettings(saved);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       await queryClient.invalidateQueries({ queryKey: ['learning-settings'] });
+      await queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
       setStep(5);
     } catch (error) { setErrorMsg(error.message); }
     finally { setSaving(false); }
@@ -201,6 +207,7 @@ export default function OnboardingPage() {
                 <div className="field">
                   <label className="field-label" htmlFor="muiGio">Múi giờ</label>
                   <select className="select" id="muiGio" name="muiGio" value={muiGio} onChange={e => setMuiGio(e.target.value)}>
+                    {!['Asia/Ho_Chi_Minh', 'Asia/Tokyo', 'Europe/Berlin', 'America/New_York'].includes(muiGio) && <option value={muiGio}>{muiGio}</option>}
                     <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
                     <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
                     <option value="Asia/Tokyo">Tokyo (GMT+9)</option>

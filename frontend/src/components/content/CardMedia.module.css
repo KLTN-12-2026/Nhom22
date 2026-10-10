@@ -1,0 +1,9 @@
+.media { max-width: 100%; }
+.media button { min-height: var(--tap); }
+.media audio { display: block; max-width: 100%; margin-top: var(--sp-3); }
+.image { display: block; max-width: 100%; height: auto; max-height: var(--side-col); object-fit: contain; margin-top: var(--sp-3); }
+
+.media { min-width:0; }
+.media button { max-width:100%; white-space:normal; text-align:left; }
+.imageMedia { flex-basis:100%; width:100%; }
+.image { border:var(--rule) solid var(--primary-line); background:var(--field); margin-top:0; }

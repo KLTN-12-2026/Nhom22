@@ -16,7 +16,7 @@
   .two { display: grid; gap: var(--sp-4); }
   @media (min-width: 720px) { .two { grid-template-columns: 2fr 1fr; } .two.even { grid-template-columns: 1fr 1fr; } }
   .ipa-keys { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-  .ipa-keys button { min-width: 36px; min-height: 36px; border: var(--rule) solid var(--primary-line); background: var(--field); border-radius: var(--radius-field); font-family: var(--font-word); font-size: 1.0625rem; color: var(--ink); }
+  .ipa-keys button { min-width: var(--tap); min-height: var(--tap); border: var(--rule) solid var(--primary-line); background: var(--field); border-radius: var(--radius-field); font-family: var(--font-word); font-size: 1.0625rem; color: var(--ink); }
   .ipa-keys button:hover { border-color: var(--primary); background: var(--primary-tint); }
   .media { display: grid; gap: var(--sp-4); }
   @media (min-width: 720px) { .media { grid-template-columns: 1fr 1fr; } }
@@ -55,7 +55,7 @@
             <div class="two">
               <div class="field">
                 <label class="field-label" for="word">Từ hoặc cụm từ tiếng Anh</label>
-                <input class="input en" id="word" name="word" lang="en" maxlength="110" required autocomplete="off" spellcheck="false" placeholder="receipt">
+                <input class="input en" id="word" name="word" lang="en" maxlength="100" required autocomplete="off" spellcheck="false" placeholder="receipt">
                 <p class="field-error"></p>
               </div>
               <div class="field">
@@ -82,7 +82,7 @@
             </div>
             <div class="field">
               <label class="field-label" for="meaningVi">Nghĩa tiếng Việt</label>
-              <textarea class="textarea" id="meaningVi" name="meaningVi" maxlength="520" required rows="2" placeholder="biên lai, giấy biên nhận"></textarea>
+              <textarea class="textarea" id="meaningVi" name="meaningVi" maxlength="500" required rows="2" placeholder="biên lai, giấy biên nhận"></textarea>
               <p class="field-counter" id="mean-count">0/500</p>
               <p class="field-error"></p>
             </div>
@@ -103,7 +103,7 @@
               <div class="row">
                 <label class="choice"><input type="radio" name="difficulty" value="1"><span class="bubble" aria-hidden="true">1</span><span>Dễ</span></label>
                 <label class="choice"><input type="radio" name="difficulty" value="2" checked><span class="bubble" aria-hidden="true">2</span><span>Vừa</span></label>
-                <label class="choice"><input type="radio" name="difficulty" value="3"><span class="bubble" aria-hidden="true">3</span><span>Khó</span></label>
+                <label class="choice"><input type="radio" name="difficulty" value="3"><span class="bubble" aria-hidden="true">3</span><span>Khó</span></label><label class="choice"><input type="radio" name="difficulty" value="4"><span class="bubble" aria-hidden="true">4</span><span>Rất khó</span></label><label class="choice"><input type="radio" name="difficulty" value="5"><span class="bubble" aria-hidden="true">5</span><span>Thử thách</span></label>
               </div>
             </fieldset>
             <fieldset class="fieldset field">
@@ -111,17 +111,19 @@
               <div class="choice-grid cols-3" id="tags"></div>
             </fieldset>
 
-            <div class="media">
+            <div class="field"><label class="field-label" for="nguon">Nguồn nội dung</label><textarea class="textarea" id="nguon" name="nguon" maxlength="500" rows="3"></textarea></div>
+            <p class="field-help">Không cần tải âm thanh: dùng giọng đọc tiếng Anh của trình duyệt. Tệp âm thanh riêng vẫn là tùy chọn.</p><div class="row"><button type="button" class="btn btn-media btn-sm" data-read="word">Đọc từ bằng trình duyệt</button><button type="button" class="btn btn-media btn-sm" data-read="exampleEn">Đọc câu bằng trình duyệt</button></div><p id="speech-error" class="field-error" role="alert" hidden></p><div class="media">
               <div class="field" data-field="image">
                 <span class="field-label">Ảnh minh họa <span class="optional">JPG, PNG, WEBP tối đa 2 MB</span></span>
                 <div class="file-box" id="image-box"></div>
                 <p class="field-error"></p>
               </div>
               <div class="field" data-field="audio">
-                <span class="field-label">Âm thanh <span class="optional">MP3, WAV, FLAC tối đa 5 MB, 300 giây</span></span>
+                <span class="field-label">Âm thanh từ <span class="optional">MP3, WAV, FLAC tối đa 5 MB, 300 giây</span></span>
                 <div class="file-box" id="audio-box"></div>
                 <p class="field-error"></p>
               </div>
+              <div class="field" data-field="sentence"><span class="field-label">Âm thanh câu <span class="optional">MP3, WAV, FLAC tối đa 5 MB, 300 giây</span></span><div class="file-box" id="sentence-box"></div><p class="field-error"></p></div>
             </div>
 
             <div class="form-foot">
@@ -155,6 +157,7 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -164,6 +167,22 @@
   const cardId = p.id;
   const form = document.getElementById("form");
   const region = document.getElementById("region");
+  form.addEventListener('click', event => {
+    const button = event.target.closest('[data-read]');
+    if (!button) return;
+    const error = document.getElementById('speech-error');
+    error.hidden = true;
+    const text = document.getElementById(button.dataset.read).value.trim();
+    if (!text) return;
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) { error.hidden = false; error.textContent = 'Trình duyệt này chưa hỗ trợ giọng đọc.'; return; }
+    const voice = speechSynthesis.getVoices().find(voice => /^en(?:-|_)/i.test(voice.lang));
+    if (!voice) { error.hidden = false; error.textContent = 'Chưa tìm thấy giọng tiếng Anh. Hãy bật giọng tiếng Anh trong cài đặt thiết bị hoặc dùng tệp âm thanh.'; return; }
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voice; utterance.lang = voice.lang; utterance.rate = 0.85;
+    utterance.onerror = event => { if (!['canceled','interrupted'].includes(event.error)) { error.hidden = false; error.textContent = 'Chưa phát được giọng đọc. Bạn có thể thử lại hoặc dùng tệp âm thanh.'; } };
+    speechSynthesis.speak(utterance);
+  });
   let version, existing = [], media = { imageUrl: null, audioUrl: null };
   if (p.added) VL.toast("Đã lưu thẻ");
 
@@ -197,13 +216,13 @@
   form.addEventListener("input", preview);
   form.addEventListener("change", preview);
 
-  const strip = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+  const strip = (s) => (s || "").normalize("NFC").trim().toLowerCase().replace(/\s+/g, " ");
   function checkDup() {
     const w = strip(form.word.value), pos = form.pos.value;
-    const hit = w && existing.find((c) => c.id !== cardId && strip(c.word) === w && (c.pos || "") === pos);
+    const hit = w && existing.find((c) => c.id !== cardId && strip(c.tu) === w && (c.tuLoai || "") === pos);
     const box = document.getElementById("dup");
     box.hidden = !hit;
-    if (hit) box.innerHTML = VL.icon("alert") + '<div><p class="notice-title">Bộ này đã có “' + VL.esc(hit.word) + "”" + (hit.pos ? " (" + VL.esc(hit.pos) + ")" : "") + '</p><p class="small">Nghĩa đã lưu: ' + VL.esc(hit.meaningVi) + ". Bạn vẫn lưu được nếu đây là nghĩa khác.</p></div>";
+    if (hit) box.innerHTML = VL.icon("alert") + '<div><p class="notice-title">Bộ này đã có “' + VL.esc(hit.tu) + "”" + (hit.tuLoai ? " (" + VL.esc(hit.tuLoai) + ")" : "") + '</p><p class="small">Nghĩa đã lưu: ' + VL.esc(hit.nghiaVi) + ". Bạn vẫn lưu được nếu đây là nghĩa khác.</p></div>";
   }
   form.word.addEventListener("blur", checkDup);
   form.pos.addEventListener("change", checkDup);
@@ -240,7 +259,7 @@
     }
   }
   form.addEventListener("change", (e) => { if (e.target.matches('input[type="file"]') && e.target.files[0]) upload(e.target.dataset.kind, e.target.files[0]); });
-  form.addEventListener("click", (e) => { const r = e.target.closest("[data-remove]"); if (r) { media[r.dataset.remove + "Url"] = null; renderFile(r.dataset.remove); preview(); } });
+  form.addEventListener("click", (e) => { const r = e.target.closest("[data-remove]"); if (r) { media[r.dataset.remove + "Url"] = null; media[r.dataset.remove + "Id"]=null; renderFile(r.dataset.remove); preview(); } });
   form.addEventListener("dragover", (e) => { const z = e.target.closest(".dropzone"); if (z) { e.preventDefault(); z.setAttribute("data-over", ""); } });
   form.addEventListener("dragleave", (e) => { const z = e.target.closest(".dropzone"); if (z) z.removeAttribute("data-over"); });
   form.addEventListener("drop", (e) => { const z = e.target.closest(".dropzone"); if (!z) return; e.preventDefault(); z.removeAttribute("data-over"); const f = e.dataTransfer.files[0]; if (f) upload(z.querySelector("input").dataset.kind, f); });
@@ -250,8 +269,8 @@
     fetch: async () => {
       const deck = await VL.api("GET", "/decks/" + encodeURIComponent(deckId));
       const tags = await VL.api("GET", "/public/tags");
-      const cards = await VL.api("GET", "/decks/" + deckId + "/cards?size=500");
-      const card = cardId ? await VL.api("GET", "/cards/" + encodeURIComponent(cardId)) : null;
+      const cards = await VL.api("GET", "/decks/" + deckId + "/cards?size=100");
+      const card = cardId ? cards.items.find(item=>item.id===cardId) : null;
       return { deck, tags, cards: cards.items, card };
     },
     render: ({ deck, tags, cards, card }) => {
@@ -259,23 +278,23 @@
       const back = "bo-the-chi-tiet.html?id=" + deck.id;
       document.getElementById("back").href = back;
       document.getElementById("cancel").href = back;
-      document.getElementById("back-label").textContent = deck.name.length > 40 ? deck.name.slice(0, 40) + "…" : deck.name;
-      document.getElementById("deck-code").textContent = deck.cardCount + " thẻ trong bộ";
-      document.getElementById("tags").innerHTML = tags.map((t) => '<label class="choice"><input type="checkbox" name="tagIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.name) + "</span></label>").join("");
+      document.getElementById("back-label").textContent = deck.ten;
+      document.getElementById("deck-code").textContent = cards.length + " thẻ ở trang này";
+      document.getElementById("tags").innerHTML = tags.items.map((t) => '<label class="choice"><input type="checkbox" name="tagIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.ten) + "</span></label>").join("");
       if (card) {
         version = card.version;
         document.title = "Sửa thẻ – VocabLearning";
-        document.getElementById("page-title").textContent = "Sửa thẻ “" + card.word + "”";
+        document.getElementById("page-title").textContent = "Sửa thẻ “" + card.tu + "”";
         document.getElementById("mode-code").textContent = "Phiếu sửa thẻ";
         document.getElementById("save-more").hidden = true;
         document.getElementById("save").textContent = "Lưu thay đổi";
-        ["word", "pos", "ipa", "meaningVi", "exampleEn", "exampleVi"].forEach((k) => { form[k].value = card[k] || ""; });
-        const d = form.querySelector('[name="difficulty"][value="' + (card.difficulty || 2) + '"]');
+        Object.entries({word:"tu",pos:"tuLoai",ipa:"phienAm",meaningVi:"nghiaVi",exampleEn:"viDuEn",exampleVi:"dichVi",nguon:"nguon"}).forEach(([field,key])=>{form[field].value=card[key] || "";});
+        const d = form.querySelector('[name="difficulty"][value="' + (card.doKho || 2) + '"]');
         if (d) d.checked = true;
-        (card.tagIds || []).forEach((t) => { const x = form.querySelector('[name="tagIds"][value="' + t + '"]'); if (x) x.checked = true; });
-        media.imageUrl = card.imageUrl; media.audioUrl = card.audioUrl;
+        (card.nhanIds || []).forEach((t) => { const x = form.querySelector('[name="tagIds"][value="' + t + '"]'); if (x) x.checked = true; });
+        media.imageId=card.anhId;media.audioId=card.amTuId;media.sentenceId=card.amCauId;
       }
-      renderFile("image"); renderFile("audio");
+      renderFile("image"); renderFile("audio"); renderFile("sentence");
       preview();
       form.word.focus();
     }
@@ -288,7 +307,9 @@
     const more = !!btn.dataset.more;
     VL.clearErrors(form);
     const fd = new FormData(form);
-    const data = { word: fd.get("word"), pos: fd.get("pos"), ipa: fd.get("ipa"), meaningVi: fd.get("meaningVi"), exampleEn: fd.get("exampleEn"), exampleVi: fd.get("exampleVi"), difficulty: Number(fd.get("difficulty")), tagIds: fd.getAll("tagIds"), imageUrl: media.imageUrl, audioUrl: media.audioUrl };
+    const data = {tu:fd.get("word"),tuLoai:fd.get("pos"),phienAm:fd.get("ipa"),nghiaVi:fd.get("meaningVi"),viDuEn:fd.get("exampleEn"),dichVi:fd.get("exampleVi"),doKho:Number(fd.get("difficulty")),nguon:fd.get("nguon"),nhanIds:fd.getAll("tagIds")};
+    for(const [kind,field,flag] of [["image","anhId","boAnh"],["audio","amTuId","boAmTu"],["sentence","amCauId","boAmCau"]]) {if(media[kind+"Id"])data[field]=media[kind+"Id"];else if(cardId)data[flag]=true;}
+
     VL.busy(btn, async () => {
       try {
         if (cardId) await VL.api("PATCH", "/cards/" + cardId, Object.assign(data, { version }));

@@ -1,29 +1,17 @@
-// query-client.js
-// TanStack Query client — xử lý 401 toàn cục
-// Cài: npm install @tanstack/react-query
-
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { ApiError } from './api-client';
 
+function expiredSession(error) {
+  if (!(error instanceof ApiError) || error.status !== 401 || typeof window === 'undefined') return;
+  if (/^\/(bo-the|ca-nhan|bat-dau|quan-tri)(\/|$)/.test(window.location.pathname)) {
+    window.location.assign(`/dang-nhap?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+  }
+}
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: expiredSession }),
+  mutationCache: new MutationCache({ onError: expiredSession }),
   defaultOptions: {
-    queries: {
-      retry: (failureCount, error) => {
-        // Không retry khi 401 (unauthorized) hoặc 404
-        if (error instanceof ApiError && [401, 404].includes(error.status)) return false;
-        return failureCount < 2;
-      },
-      staleTime: 1000 * 60, // 1 phút
-    },
-    mutations: {
-      onError: (error) => {
-        if (error instanceof ApiError && error.status === 401) {
-          // Redirect về trang đăng nhập khi hết phiên
-          if (typeof window !== 'undefined') {
-            window.location.href = '/dang-nhap';
-          }
-        }
-      },
-    },
+    queries: { retry: (count, error) => !(error instanceof ApiError && error.status >= 400 && error.status < 500) && count < 2, staleTime: 60000 },
+    mutations: { retry: false },
   },
 });

@@ -20,6 +20,10 @@ public interface TepTinRepository extends JpaRepository<TepTin, Long> {
 
     Optional<TepTin> findByIdAndChuSoHuuId(Long id, Long chuSoHuuId);
 
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select f from TepTin f where f.id = :id")
+    Optional<TepTin> findForCopy(@Param("id") Long id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select f from TepTin f where f.id = :id and f.chuSoHuuId = :ownerId")
     Optional<TepTin> findOwnedForUpdate(

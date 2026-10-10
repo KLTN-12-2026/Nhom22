@@ -45,11 +45,11 @@
               <a class="btn btn-primary" id="add" href="the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Thêm thẻ</a>
               <a class="btn btn-secondary" id="import" href="nhap-csv.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Nhập CSV</a>
               <button type="button" class="btn btn-quiet" id="export"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Xuất CSV</button>
-              <a class="btn btn-quiet" id="edit" href="bo-the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg>Sửa bộ</a>
+              <a class="btn btn-edit" id="edit" href="bo-the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg>Sửa bộ</a>
             </div>
           </div>
 
-          <div class="list-bar">
+          <div class="list-bar"><label class="card-image-preference"><input type="checkbox" data-image-preference checked>Hiển thị ảnh</label>
             <h2 style="font-size:var(--fs-h3)">Thẻ trong bộ <span class="muted num" id="card-count"></span></h2>
             <div class="input-with-icon" style="flex:1 1 200px;max-width:300px">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
@@ -96,18 +96,30 @@
 (function(){
  if(!VL.ready)return;
  const id=VL.params().id || '21';
- ['study','progress','add','import','export'].forEach(id=>document.getElementById(id).hidden=true);
- document.querySelector('.list-bar').hidden=true;
- document.getElementById('cards-region').innerHTML='<p>Thẻ, tiến độ học và CSV thuộc B1.9 trở đi, chưa có trong B1.8.</p>';
- document.getElementById('dup-title').parentElement.hidden=true;
+ document.addEventListener('click',async event=>{
+  const speech=event.target.closest('[data-say]');
+  if(speech)VL.speak(speech.dataset.say);
+  const button=event.target.closest('[data-delete-card]');
+  if(!button)return;
+  if(await VL.confirm({title:'Xóa thẻ',message:'Xóa thẻ này khỏi bộ của bạn?',confirmText:'Xóa thẻ',danger:true})){
+   await VL.busy(button,async()=>{try{await VL.api('DELETE','/cards/'+button.dataset.deleteCard+'?version='+button.dataset.version);button.closest('li').remove();document.getElementById('card-count').textContent=Number(document.getElementById('card-count').textContent)-1;}catch(error){VL.toast(error.message,'error');}});
+  }
+ });
+ ['study','progress','import','export'].forEach(id=>document.getElementById(id).hidden=true);
+ document.querySelector('.input-with-icon').hidden=true;
+ document.getElementById('cards-region').innerHTML='<ol class="answer-list" id="active-cards"></ol>';
  VL.load(document.getElementById('deck-region'),{
-  fetch:async()=>({deck:await VL.api('GET','/decks/'+encodeURIComponent(id)),topics:(await VL.api('GET','/public/topics?size=100')).items}),
-  render:({deck:d,topics})=>{
+  fetch:async()=>({deck:await VL.api('GET','/decks/'+encodeURIComponent(id)),topics:(await VL.api('GET','/public/topics?size=100')).items,cards:await VL.api('GET','/decks/'+encodeURIComponent(id)+'/cards?size=20')}),
+  render:({deck:d,topics,cards})=>{
    document.title=d.ten+' – VocabLearning';
    document.getElementById('deck-title').textContent=d.ten;
    document.getElementById('deck-desc').textContent=d.moTa || 'Chưa có mô tả.';
-   document.getElementById('stamps').textContent=d.quyenTruyCap==='CONG_KHAI'?'Công khai — thư viện thuộc B1.10':'Riêng tư';
+   document.getElementById('stamps').textContent=d.quyenTruyCap==='CONG_KHAI'?'Công khai':'Riêng tư';
    document.getElementById('edit').href='bo-the-tao.html?id='+d.id;
+   document.getElementById('add').href='the-tao.html?deckId='+d.id;
+   document.getElementById('card-count').textContent=cards.totalElements;
+   document.getElementById('active-cards').innerHTML=cards.items.map((card,index)=>'<li class="answer-row card-row"><span class="answer-no">'+(index+1)+'</span><div class="entry"><div class="entry-head"><span class="entry-word" lang="en">'+VL.esc(card.tu)+'</span><span class="entry-ipa">'+VL.esc(card.phienAm)+'</span><span class="pos">'+VL.esc(card.tuLoai)+'</span></div><p class="entry-mean">'+VL.esc(card.nghiaVi)+'</p>'+(card.viDuEn?'<p class="entry-example" lang="en">'+VL.esc(card.viDuEn)+'</p><p class="small muted">'+VL.esc(card.dichVi)+'</p>':'')+'<div class="card-inline-media">'+VL.cardImage(card.id)+'<button type="button" class="btn btn-media btn-sm" data-say="'+VL.esc(card.tu)+'">'+VL.icon('volume')+'Đọc từ bằng trình duyệt</button></div></div><div class="card-tools"><a class="btn btn-edit btn-sm" href="the-tao.html?deckId='+d.id+'&id='+card.id+'">'+VL.icon('edit')+'Sửa thẻ</a><button type="button" class="btn btn-danger btn-sm" data-delete-card="'+card.id+'" data-version="'+card.version+'">'+VL.icon('trash')+'Xóa thẻ</button></div></li>').join('');
+   VL.syncCardImages();
    const topic=topics.find(t=>t.id===d.chuDeId);
    document.getElementById('kv').innerHTML='<dt>Chủ đề</dt><dd>'+VL.esc(topic?.ten || 'Không chọn')+'</dd><dt>Trình độ</dt><dd>'+VL.levelHtml(d.trinhDo)+'</dd><dt>Phiên bản</dt><dd>'+d.version+'</dd>';
   }

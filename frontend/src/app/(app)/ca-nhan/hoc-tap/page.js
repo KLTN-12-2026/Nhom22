@@ -38,7 +38,7 @@ export default function LearningSettingsPage() {
       queryClient.setQueryData(['learning-settings'], data);
       queryClient.invalidateQueries({ queryKey: ['learning-settings'] });
       if (data && data.version !== undefined) {
-        setFormState({ ...formState, version: data.version });
+        setFormState(data);
       }
       setSuccessMsg(`Lưu lúc ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`);
       setErrorMsg('');
@@ -51,7 +51,7 @@ export default function LearningSettingsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateMutation.mutate(formState);
+    if (!updateMutation.isPending) updateMutation.mutate({ mucTieu: formState.mucTieu, trinhDo: formState.trinhDo, chuDeIds: formState.chuDeIds, phutMoiNgay: formState.phutMoiNgay, tuMoiMoiNgay: formState.tuMoiMoiNgay, version: formState.version });
   };
 
   const handleTopicChange = (e, topicId) => {
@@ -88,8 +88,9 @@ export default function LearningSettingsPage() {
         <p>Kế hoạch mỗi ngày dùng các con số dưới đây. Thay đổi có hiệu lực từ phiên học tiếp theo.</p>
       </div>
 
-      <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
+      <form id="form" className="settings-form" onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
+        {updateMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={async () => { const result = await refetch(); if (result.data) { setFormState(null); setErrorMsg(''); updateMutation.reset(); } }}>Tải lại thiết lập</button>}
 
         <fieldset className="fieldset field" data-field="mucTieu">
           <legend>Mục tiêu</legend>

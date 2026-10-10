@@ -129,7 +129,7 @@
             '<div class="answer-meta">' + (deck.quyenTruyCap === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
             (deck.boNguonId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
             '<div class="deck-cols">' + VL.levelHtml(deck.trinhDo) + '</div>' +
-            '<div class="deck-actions">' + (mine ? '<a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + deck.id + '">Mở</a><a class="btn btn-quiet btn-sm" href="bo-the-tao.html?id=' + deck.id + '">Sửa</a>' : '<a class="btn btn-secondary btn-sm" href="' + href + '">Xem</a>') + "</div></li>";
+            '<div class="deck-actions">' + (mine ? '<a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + deck.id + '">Mở</a><a class="btn btn-edit btn-sm" href="bo-the-tao.html?id=' + deck.id + '">Sửa</a>' : '<a class="btn btn-secondary btn-sm" href="' + href + '">Xem</a>') + "</div></li>";
         }).join("");
       }
     });

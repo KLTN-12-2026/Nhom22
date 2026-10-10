@@ -27,7 +27,7 @@ export default function AuthLayout({ children }) {
           <ul className="aside-facts" role="list">
             <li>Bộ mẫu Giao tiếp và TOEIC để bắt đầu ngay</li>
             <li>Ôn đúng lúc bằng lịch lặp lại ngắt quãng</li>
-            <li>Tự tạo bộ thẻ, nhập từ tệp CSV</li>
+            <li>Tự tạo bộ thẻ, sao chép từ thư viện</li>
           </ul>
         </aside>
 

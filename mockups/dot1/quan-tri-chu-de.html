@@ -70,7 +70,7 @@
             <ul class="small muted" style="padding-left:1.1rem;display:grid;gap:var(--sp-2)">
               <li>Tên không trùng nhau, không phân biệt hoa thường và dấu.</li>
               <li>Chỉ xóa được chủ đề khi không còn bộ thẻ nào dùng.</li>
-              <li>Xóa nhãn sẽ gỡ nhãn khỏi mọi thẻ đang gắn.</li>
+              <li>Chỉ xóa được nhãn khi không còn thẻ nào dùng.</li>
             </ul>
           </section>
         </aside>
@@ -110,8 +110,8 @@
         const list = response.items;
         document.getElementById("rows").innerHTML = list.map((x, i) =>
           '<tr><td class="num">' + (i + 1) + '</td><td class="ten">' + VL.esc(x.ten) + "</td><td>" + "—" + "</td><td>" +
-          (true ? '<button type="button" class="btn btn-quiet btn-sm" data-version="' + x.version + '" data-rename="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("edit") + "Đổi tên</button>" : "") +
-          '<button type="button" class="btn btn-quiet btn-sm" style="color:var(--danger)" data-del="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("trash") + "Xóa</button></td></tr>").join("");
+          (true ? '<button type="button" class="btn btn-edit btn-sm" data-version="' + x.version + '" data-rename="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("edit") + "Đổi tên</button>" : "") +
+          '<button type="button" class="btn btn-danger btn-sm" data-del="' + x.id + '" data-ten="' + VL.esc(x.ten) + '">' + VL.icon("trash") + "Xóa</button></td></tr>").join("");
       }
     });
   }

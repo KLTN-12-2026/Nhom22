@@ -12,13 +12,11 @@
   display: grid; 
   grid-template-columns: 2.25rem minmax(0, 1fr); 
   gap: var(--space-3); 
-  padding: var(--space-4); 
-  border: 1px solid var(--color-border); 
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-3);
+  overflow-wrap: anywhere;
   align-items: start;
 }
 .cardTools { grid-column: 2; display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
+.cardTools button { min-height: var(--tap); }
 @media (min-width: 720px) { 
   .cardRow { grid-template-columns: 2.25rem minmax(0, 1fr) auto; } 
   .cardTools { grid-column: auto; flex-direction: column; align-items: flex-end; margin-top: 0; } 
@@ -32,3 +30,7 @@
 .kv { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); font-size: var(--font-size-sm); }
 .kv dt { color: var(--color-ink-3); }
 .kv dd { font-weight: bold; margin: 0; }
+
+.cardFlags { display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-2); min-width:0; max-width:100%; }
+.cardFlags > * { min-width:0; max-width:100%; }
+.cardFlags .btn { max-width:100%; white-space:normal; text-align:left; }

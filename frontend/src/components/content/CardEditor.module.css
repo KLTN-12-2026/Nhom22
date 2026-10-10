@@ -1,0 +1,13 @@
+.form, .fields { display: grid; gap: var(--sp-5); min-width: 0; }
+.fields { border: 0; padding: 0; margin: 0; }
+.two, .media { display: grid; gap: var(--sp-4); min-width: 0; }
+.ipaKeys { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.ipaKeys button { min-width: var(--tap); min-height: var(--tap); border: var(--rule) solid var(--primary-line); background: var(--field); border-radius: var(--radius-field); font-family: var(--font-word); font-size: var(--fs-lead); }
+.ipaKeys button:hover { background: var(--primary-tint); }
+.foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+.face { display: grid; gap: var(--sp-2); justify-items: center; text-align: center; overflow-wrap: anywhere; border: var(--rule) solid var(--primary-line); background: var(--field); padding: var(--sp-5) var(--sp-4); min-height: 170px; }
+.face + .face { border-top: 0; }
+.faceLabel { justify-self: start; color: var(--primary); font-size: var(--fs-caption); font-weight: 650; }
+.face :global(.word) { font-family:var(--font-word); font-size:2rem; line-height:var(--lh-tight); }
+.modalGrid { display: block; }
+@media (min-width: 720px) { .two { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } .even, .media { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

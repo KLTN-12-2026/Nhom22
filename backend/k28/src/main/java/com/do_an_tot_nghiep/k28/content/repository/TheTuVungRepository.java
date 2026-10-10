@@ -2,6 +2,8 @@ package com.do_an_tot_nghiep.k28.content.repository;
 
 import com.do_an_tot_nghiep.k28.content.controller.CardController;
 import com.do_an_tot_nghiep.k28.content.entity.TheTuVung;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +28,10 @@ public interface TheTuVungRepository
     );
 
     Optional<TheTuVung> findByIdAndXoaAtIsNull(Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select c from TheTuVung c where c.boTheId = :deckId and c.xoaAt is null order by c.id")
+    List<TheTuVung> findAllForCopy(@Param("deckId") Long deckId);
 
     @Query("""
             select c.id as id,

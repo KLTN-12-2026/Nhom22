@@ -56,6 +56,7 @@
               <select class="select" id="chuDeId" name="chuDeId"><option value="">Không chọn chủ đề</option></select>
               <p class="field-error"></p>
             </div>
+            <div class="field"><label class="field-label" for="mucTieu">Mục tiêu của bộ</label><select class="select" id="mucTieu" name="mucTieu"><option value="">Chưa chọn</option><option value="GIAO_TIEP">Giao tiếp</option><option value="TOEIC">TOEIC</option></select><p class="field-hint">Mục tiêu riêng của bộ thẻ, không phụ thuộc thiết lập học của bạn.</p></div>
             <fieldset class="fieldset field" data-field="trinhDo">
               <legend>Trình độ</legend>
               <div class="choice-grid cols-2">
@@ -70,7 +71,7 @@
               <legend>Ai xem được bộ này?</legend>
               <div class="choice-grid">
                 <label class="choice choice-card"><input type="radio" name="quyenTruyCap" value="RIENG_TU" checked><span class="bubble" aria-hidden="true">A</span><span class="choice-body"><span class="choice-title">Riêng tư</span><span class="choice-desc">Chỉ bạn thấy. Không xuất hiện trong thư viện.</span></span></label>
-                <label class="choice choice-card"><input type="radio" name="quyenTruyCap" value="CONG_KHAI"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Công khai</span><span class="choice-desc">Lưu quyền công khai. Xem và sao chép trong thư viện thuộc B1.10–B1.11, chưa có trong B1.8.</span></span></label>
+                <label class="choice choice-card"><input type="radio" name="quyenTruyCap" value="CONG_KHAI"><span class="bubble" aria-hidden="true">B</span><span class="choice-body"><span class="choice-title">Công khai</span><span class="choice-desc">Hiện trong thư viện để người khác xem và sao chép. Bộ bị ẩn sẽ không xuất hiện.</span></span></label>
               </div>
             </fieldset>
             <div class="form-foot">
@@ -124,7 +125,7 @@
     const t = topics.find((x) => x.id === fd.get("chuDeId"));
     document.getElementById("pv-meta").innerHTML =
       (fd.get("quyenTruyCap") === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
-      (fd.get("goal") ? "<span>" + VL.GOAL[fd.get("goal")] + "</span>" : "") + (t ? "<span>" + VL.esc(t.ten) + "</span>" : "") + (fd.get("trinhDo") ? VL.levelHtml(fd.get("trinhDo")) : "");
+      (fd.get("mucTieu") ? "<span>" + VL.GOAL[fd.get("mucTieu")] + "</span>" : "") + (t ? "<span>" + VL.esc(t.ten) + "</span>" : "") + (fd.get("trinhDo") ? VL.levelHtml(fd.get("trinhDo")) : "");
   }
   form.addEventListener("input", preview);
   form.addEventListener("change", preview);
@@ -147,7 +148,7 @@
         document.querySelector("#back span").textContent = deck.ten.length > 40 ? deck.ten.slice(0, 40) + "…" : deck.ten;
         document.getElementById("cancel").href = back;
         form.ten.value = deck.ten;
-        form.moTa.value = deck.moTa || "";
+        form.moTa.value = deck.moTa || ""; form.mucTieu.value=deck.mucTieu || "";
         form.chuDeId.value = deck.chuDeId;
 
         form.querySelector('[name="trinhDo"][value="' + deck.trinhDo + '"]').checked = true;
@@ -166,7 +167,7 @@
     e.preventDefault();
     VL.clearErrors(form);
     const fd = new FormData(form);
-    const data = { ten: fd.get("ten"), moTa: fd.get("moTa"), chuDeId: fd.get("chuDeId") || null, trinhDo: fd.get("trinhDo"), quyenTruyCap: fd.get("quyenTruyCap") };
+    const data = { ten: fd.get("ten"), moTa: fd.get("moTa"), chuDeId: fd.get("chuDeId") || null, mucTieu: fd.get("mucTieu") || undefined, boMucTieu: !!id && !fd.get("mucTieu"), trinhDo: fd.get("trinhDo"), quyenTruyCap: fd.get("quyenTruyCap") };
     VL.busy(submit, async () => {
       try {
         if (id) {

@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
@@ -36,9 +37,9 @@ const ADMIN_NAV_ONLY = [
   ] },
   { group: "Quản trị", items: [
     { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
-    { key: "admin-users", label: "Tài khoản", icon: "users", href: "/quan-tri/tai-khoan" },
+    { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
-    { key: "admin-audit", label: "Nhật ký", icon: "activity", href: "/quan-tri/nhat-ky" }
+    { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
   ] }
 ];
 
@@ -52,6 +53,7 @@ const BOTTOM = [
 
 export function AppShell({ children, user, isAdmin = false }) {
   const queryClient = useQueryClient();
+  const [collapsed, setCollapsed] = useState(false);
   const { data: avatar } = useAvatar(user);
   const pathname = usePathname();
 
@@ -66,7 +68,7 @@ export function AppShell({ children, user, isAdmin = false }) {
   }
 
   return (
-    <div className="app">
+    <div className={`app${collapsed ? ' sidebar-collapsed' : ''}`}>
       <header className="app-header">
         <Link href="/bo-the" className="brand">
           <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
@@ -101,6 +103,8 @@ export function AppShell({ children, user, isAdmin = false }) {
 
       <div className="app-body">
         <nav className="sidebar" aria-label="Điều hướng chính">
+          <button type="button" className="btn btn-quiet sidebar-toggle" aria-controls="sidebar-links" aria-expanded={!collapsed} aria-label={collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng'} title={collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng'} onClick={() => setCollapsed(value => !value)}><Icon name={collapsed ? 'chevron-right' : 'chevron-left'} /><span className="nav-label">Thu gọn</span></button>
+          <div id="sidebar-links">
           {navList.map((g) => (
             <div key={g.group} className="nav-group">
               <p className="nav-group-title">{g.group}</p>
@@ -108,22 +112,23 @@ export function AppShell({ children, user, isAdmin = false }) {
                 const active = it.href && isActive(it.href);
                 if (it.soon) {
                   return (
-                    <span key={it.key} className="nav-link" aria-disabled="true">
-                      <span className="nav-dot"></span>
-                      {it.label}
+                    <span key={it.key} className="nav-link" aria-label={it.label} title={it.label} aria-disabled="true">
+                      <Icon name={it.icon} />
+                      <span className="nav-label">{it.label}</span>
                       <span className="nav-soon">{it.soon}</span>
                     </span>
                   );
                 }
                 return (
-                  <Link key={it.key} className="nav-link" href={it.href} aria-current={active ? 'page' : undefined}>
-                    <span className="nav-dot"></span>
-                    {it.label}
+                  <Link key={it.key} className="nav-link" href={it.href} aria-current={active ? 'page' : undefined} aria-label={it.label} title={it.label}>
+                    <Icon name={it.icon} />
+                    <span className="nav-label">{it.label}</span>
                   </Link>
                 );
               })}
             </div>
           ))}
+          </div>
         </nav>
 
         <main className="app-main" id="main">

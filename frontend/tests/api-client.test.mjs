@@ -43,3 +43,9 @@ test('network failures produce a user-facing API error', async () => {
   globalThis.fetch = async () => { throw new TypeError('Failed to fetch'); };
   await assert.rejects(apiFetch('/api/v1/me'), error => error instanceof ApiError && error.status === 0);
 });
+test('CSRF network failures are normalized and do not send the mutation', async () => {
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw new TypeError('Failed to fetch'); };
+  await assert.rejects(apiFetch('/api/v1/me', { method: 'PATCH', body: '{}' }), error => error instanceof ApiError && error.status === 0);
+  assert.equal(calls, 1);
+});

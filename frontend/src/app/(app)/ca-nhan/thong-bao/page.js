@@ -35,7 +35,7 @@ export default function NotificationsPage() {
     mutationFn: (body) => apiFetch('/api/v1/me/notification-settings', { method: 'PUT', body: JSON.stringify(body) }),
     onSuccess: (data) => {
       queryClient.setQueryData(['notification-settings'], data);
-      setFormState({ ...formState, version: data.version });
+      setFormState(data);
       queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
       setSuccessMsg(`Lưu lúc ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`);
       setErrorMsg('');
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateMutation.mutate({...formState, gioNhac: formState.nhacHoc ? formState.gioNhac || null : null});
+    if (!updateMutation.isPending) updateMutation.mutate({...formState, gioNhac: formState.nhacHoc ? formState.gioNhac || null : null});
   };
 
   if (isLoading) return <div className="skeleton"><div className="sk sk-row" /></div>;
@@ -62,8 +62,9 @@ export default function NotificationsPage() {
         <p>Thông báo quan trọng về tài khoản (xác thực, đổi mật khẩu) luôn được gửi qua email.</p>
       </div>
 
-      <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
+      <form id="form" className="settings-form" onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
+        {updateMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={async () => { const result = await refetch(); if (result.data) { setFormState(null); setErrorMsg(''); updateMutation.reset(); } }}>Tải lại cài đặt</button>}
 
         <fieldset className="fieldset">
           <legend>Kênh nhận thông báo</legend>
@@ -118,6 +119,7 @@ export default function NotificationsPage() {
               id="gioNhac"
               name="gioNhac"
               type="time"
+              required={formState.nhacHoc}
               disabled={!formState.nhacHoc}
               value={formState.gioNhac || ''}
               onChange={e => setFormState({...formState, gioNhac: e.target.value})}

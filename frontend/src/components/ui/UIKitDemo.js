@@ -54,7 +54,7 @@ export default function UIKitPage() {
         {/* Header */}
         <div style={{ marginBottom: 'var(--space-12)', textAlign: 'center' }}>
           <h1 style={{ fontSize: 'var(--font-size-4xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-primary-700)' }}>
-            🎨 VocabFlow UI Kit
+            VocabLearning UI Kit
           </h1>
           <p style={{ color: 'var(--color-text-muted)', marginTop: 'var(--space-2)' }}>
             Design System — F0.2 Showcase · Tất cả thành phần UI

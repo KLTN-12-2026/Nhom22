@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button } from '@/components/ui';
+
 import { AppShell } from './AppShell';
 
 export function PublicLayout({ children }) {
   const pathname = usePathname();
 
-  const { data: me, isLoading } = useQuery({
+  const { data: me } = useQuery({
     queryKey: ['me'],
     queryFn: () => apiFetch('/api/v1/me'),
     retry: false,
@@ -62,12 +62,8 @@ export function PublicLayout({ children }) {
           </nav>
 
           <div className="header-actions" style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Link href="/dang-nhap" style={{ textDecoration: 'none' }}>
-              <Button variant="ghost">Đăng nhập</Button>
-            </Link>
-            <Link href="/dang-ky" style={{ textDecoration: 'none' }}>
-              <Button variant="primary">Tạo tài khoản</Button>
-            </Link>
+            <Link href="/dang-nhap" className="btn btn-quiet">Đăng nhập</Link>
+            <Link href="/dang-ky" className="btn btn-primary site-create">Tạo tài khoản</Link>
           </div>
         </div>
       </header>

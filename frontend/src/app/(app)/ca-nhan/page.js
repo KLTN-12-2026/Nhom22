@@ -36,7 +36,9 @@ export default function ProfilePage() {
 
   const updateMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify(body) }),
-    onSuccess: () => {
+    onSuccess: data => {
+      queryClient.setQueryData(['me'], data);
+      setFormState(null);
       queryClient.invalidateQueries({ queryKey: ['me'] });
       setSuccessMsg(`Đã lưu lúc ${new Date().toLocaleTimeString('vi-VN')}`);
       setErrorMsg('');
@@ -49,6 +51,7 @@ export default function ProfilePage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (updateMutation.isPending) return;
     updateMutation.mutate({
       tenHienThi: formState.tenHienThi,
       muiGio: formState.muiGio
@@ -75,7 +78,7 @@ export default function ProfilePage() {
         <h1 id="page-title">Hồ sơ của bạn</h1>
       </div>
 
-      <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
+      <form id="form" className="settings-form" onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
         <div className="field" data-field="file">
@@ -140,6 +143,7 @@ export default function ProfilePage() {
             value={formState.muiGio}
             onChange={e => setFormState({...formState, muiGio: e.target.value})}
           >
+            {!['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'Asia/Tokyo', 'Europe/Berlin', 'America/New_York'].includes(formState.muiGio) && <option value={formState.muiGio}>{formState.muiGio}</option>}
             <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
             <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
             <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
