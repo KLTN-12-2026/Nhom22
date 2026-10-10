@@ -1,5 +1,5 @@
 'use client';
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 
 /**
  * Input — với label, hint, error message
@@ -15,6 +15,8 @@ export const Input = forwardRef(function Input({
   className = '',
   ...props
 }, ref) {
+  const generatedId = useId();
+  id = id || generatedId;
   return (
     <div className="field">
       {label && (
@@ -27,6 +29,7 @@ export const Input = forwardRef(function Input({
         <input
           ref={ref}
           id={id}
+          required={required}
           className={[
             'input',
             iconLeft && 'input--with-icon',

@@ -331,10 +331,18 @@
     const side = document.querySelector(".sidebar");
     if (side) {
       side.setAttribute("aria-label", "Điều hướng chính");
-      side.innerHTML = NAV.filter((g) => !g.admin || u.vaiTro.includes("ADMIN")).map((g) =>
-        '<div class="nav-group"><p class="nav-group-title">' + esc(g.group) + "</p>" + g.items.map((it) => it.soon
-          ? '<span class="nav-link" aria-disabled="true"><span class="nav-dot"></span>' + esc(it.label) + '<span class="nav-soon">' + esc(it.soon) + "</span></span>"
-          : '<a class="nav-link" href="' + url(it.href) + '"' + (it.key === nav ? ' aria-current="page"' : "") + '><span class="nav-dot"></span>' + esc(it.label) + "</a>").join("") + "</div>").join("");
+      side.innerHTML = '<button type="button" class="btn btn-quiet sidebar-toggle" aria-controls="sidebar-links" aria-expanded="true" aria-label="Thu gọn điều hướng" title="Thu gọn điều hướng">' + icon('chevron-left') + '<span class="nav-label">Thu gọn</span></button><div id="sidebar-links">' + NAV.filter((g) => !g.admin || u.vaiTro.includes('ADMIN')).map((g) =>
+        '<div class="nav-group"><p class="nav-group-title">' + esc(g.group) + '</p>' + g.items.map(it => it.soon
+          ? '<span class="nav-link" aria-disabled="true" aria-label="' + esc(it.label) + '" title="' + esc(it.label) + '">' + icon(it.icon) + '<span class="nav-label">' + esc(it.label) + '</span><span class="nav-soon">' + esc(it.soon) + '</span></span>'
+          : '<a class="nav-link" href="' + url(it.href) + '" aria-label="' + esc(it.label) + '" title="' + esc(it.label) + '"' + (it.key === nav ? ' aria-current="page"' : '') + '>' + icon(it.icon) + '<span class="nav-label">' + esc(it.label) + '</span></a>').join('') + '</div>').join('') + '</div>';
+      side.querySelector('.sidebar-toggle').addEventListener('click', event => {
+        const collapsed = document.querySelector('.app').classList.toggle('sidebar-collapsed');
+        const button = event.currentTarget;
+        button.setAttribute('aria-expanded', String(!collapsed));
+        button.setAttribute('aria-label', collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng');
+        button.title = button.getAttribute('aria-label');
+        button.innerHTML = icon(collapsed ? 'chevron-right' : 'chevron-left') + '<span class="nav-label">Thu gọn</span>';
+      });
     }
     const bottom = document.querySelector(".bottom-nav");
     if (bottom) {
@@ -427,7 +435,7 @@
       '<p class="aside-word" lang="en">receipt</p><p class="aside-ipa" lang="en">/rɪˈsiːt/ <em>n.</em></p>' +
       '<ol class="aside-options" role="list">' + opts.map((o) => '<li><span class="bubble' + (o[0] === "B" ? " aside-pick" : "") + '">' + o[0] + "</span>" + esc(o[1]) + "</li>").join("") + "</ol>" +
       '<figcaption>Mỗi từ có hai chiều học, mỗi chiều một lịch ôn riêng.</figcaption></figure>' +
-      '<ul class="aside-facts" role="list"><li>Bộ mẫu Giao tiếp và TOEIC để bắt đầu ngay</li><li>Ôn đúng lúc bằng lịch lặp lại ngắt quãng</li><li>Tự tạo bộ thẻ, nhập từ tệp CSV</li></ul>';
+      '<ul class="aside-facts" role="list"><li>Bộ mẫu Giao tiếp và TOEIC để bắt đầu ngay</li><li>Ôn đúng lúc bằng lịch lặp lại ngắt quãng</li><li>Tự tạo bộ thẻ, sao chép từ thư viện</li></ul>';
     const pick = aside.querySelector(".aside-pick");
     setTimeout(() => pick && pick.classList.add("is-filled"), 700);
   }
@@ -494,6 +502,43 @@
   function fmtDay(ymd, weekday) { return new Date(ymd + "T12:00:00Z").toLocaleDateString("vi-VN", Object.assign({ day: "2-digit", month: "2-digit", timeZone: "UTC" }, weekday ? { weekday: "long" } : {})); }
   function fmtDuration(sec) { const m = Math.floor(sec / 60); const s = Math.round(sec % 60); return m ? m + " phút" + (s ? " " + s + " giây" : "") : s + " giây"; }
 
-  window.VL = { root, url, icon, esc, params, api, put, uploadFile, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
+  function cardImage(cardId) {
+    const card=VLDemo.db.cards.find(item=>item.id===String(cardId));
+    const file=VLDemo.db.files[card?.anhId];
+    const src=file?.url || card?.imageUrl;
+    return src ? '<div data-card-image data-image-url="'+esc(src)+'"><button type="button" class="btn btn-media btn-sm" data-show-image>'+icon('image')+'Xem ảnh</button></div>' : '';
+  }
+  function syncCardImages() {
+    let automatic=true;
+    try { automatic=localStorage.getItem('vocab:show-card-images')!=='false'; } catch(e) {}
+    document.querySelectorAll('[data-image-preference]').forEach(input=>{
+      input.checked=automatic;
+      input.onchange=()=>{try{localStorage.setItem('vocab:show-card-images',String(input.checked));}catch(e){}syncCardImages();};
+    });
+    document.querySelectorAll('[data-card-image]').forEach(container=>{
+      const button=container.querySelector('[data-show-image]');
+      const show=()=>{
+        button.hidden=true;
+        container.style.flexBasis='100%';
+        let image=container.querySelector('img');
+        if(!image){image=document.createElement('img');image.className='card-inline-image';image.alt='Ảnh minh họa từ vựng';image.loading='lazy';image.width=320;image.height=240;image.src=container.dataset.imageUrl;container.appendChild(image);}
+        image.hidden=false;
+      };
+      button.onclick=show;
+      if(automatic)show();
+      else {button.hidden=false;container.style.flexBasis='';const image=container.querySelector('img');if(image)image.hidden=true;}
+    });
+  }
+  function speak(text) {
+    if(!window.speechSynthesis || !window.SpeechSynthesisUtterance){toast('Trình duyệt này chưa hỗ trợ giọng đọc.','error');return;}
+    const voice=speechSynthesis.getVoices().find(voice=>/^en(?:-|_)/i.test(voice.lang));
+    if(!voice){toast('Chưa tìm thấy giọng tiếng Anh. Hãy bật giọng tiếng Anh trong cài đặt thiết bị hoặc dùng tệp âm thanh.','error');return;}
+    speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(text);
+    utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.85;
+    utterance.onerror=event=>{if(!['canceled','interrupted'].includes(event.error))toast('Chưa phát được giọng đọc. Bạn có thể thử lại hoặc dùng tệp âm thanh.','error');};
+    speechSynthesis.speak(utterance);
+  }
+  window.VL = { cardImage, syncCardImages, speak, root, url, icon, esc, params, api, put, uploadFile, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
   window.VL.ready = boot();
 })();

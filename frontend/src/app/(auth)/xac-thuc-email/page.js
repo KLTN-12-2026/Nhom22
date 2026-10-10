@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/components/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCooldown } from '@/hooks/useCooldown';
 import { apiFetch } from '@/lib/api-client';
 
 export default function VerifyEmailPage() {
@@ -24,9 +25,10 @@ export default function VerifyEmailPage() {
     mutationFn: (e) => apiFetch('/api/v1/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email: e }) })
   });
 
+  const cooldown = useCooldown(resendMutation.error);
   const handleResend = (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || resendMutation.isPending || cooldown > 0) return;
     resendMutation.mutate(email);
   };
 
@@ -68,13 +70,13 @@ export default function VerifyEmailPage() {
             )}
           </div>
 
-          <form onSubmit={handleResend} noValidate>
+          <form onSubmit={handleResend}>
             <div className="field">
               <label className="field-label" htmlFor="email">Email đã đăng ký</label>
               <input
                 className="input"
                 id="email"
-                name="email"
+                name="email" maxLength={255}
                 type="email"
                 autoComplete="email"
                 inputMode="email"
@@ -86,8 +88,9 @@ export default function VerifyEmailPage() {
               <p className="field-error"></p>
             </div>
 
-            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={resendMutation.isPending}>
-              {resendMutation.isPending ? 'Đang gửi...' : 'Gửi lại thư xác thực'}
+            {resendMutation.error && <p className="notice notice-error" role="alert">{resendMutation.error.message}</p>}
+            <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={resendMutation.isPending || cooldown > 0}>
+              {cooldown > 0 ? `Thử lại sau ${cooldown} giây` : resendMutation.isPending ? 'Đang gửi...' : 'Gửi lại thư xác thực'}
             </button>
 
             {resendMutation.isSuccess && (

@@ -184,7 +184,9 @@ public class CardService {
                 : List.of();
 
         if (changeFiles) {
-            validateFiles(userId, selections);
+            Map<VaiTroTep, Long> retained = new EnumMap<>(VaiTroTep.class);
+            links.findFiles(List.of(cardId)).forEach(link -> retained.put(link.vaiTro(), link.tepId()));
+            validateFiles(userId, selections, retained);
         }
 
         applyDetails(card, request);
@@ -464,6 +466,14 @@ public class CardService {
             Long userId,
             Collection<FileSelection> selections
     ) {
+        validateFiles(userId, selections, Map.of());
+    }
+
+    private void validateFiles(
+            Long userId,
+            Collection<FileSelection> selections,
+            Map<VaiTroTep, Long> retained
+    ) {
         Map<Long, TepTin> lockedFiles = new TreeMap<>();
 
         List<Long> ids = selections.stream()
@@ -473,16 +483,18 @@ public class CardService {
                 .toList();
 
         for (Long id : ids) {
-            TepTin file = files.findOwnedForUpdate(id, userId)
+            boolean newAttachment = selections.stream().anyMatch(selection -> id.equals(selection.tepId())
+                    && !id.equals(retained.get(selection.vaiTro())));
+            TepTin file = (newAttachment ? files.findOwnedForUpdate(id, userId) : files.findForCopy(id))
                     .orElseThrow(this::fileNotFound);
 
             entityManager.refresh(
-                    file, LockModeType.PESSIMISTIC_WRITE
+                    file, newAttachment ? LockModeType.PESSIMISTIC_WRITE : LockModeType.PESSIMISTIC_READ
             );
 
-            if (!Objects.equals(file.getChuSoHuuId(), userId)
-                    || file.getTrangThaiXoa()
-                    != TrangThaiXoaTep.CON_HIEU_LUC) {
+            if ((newAttachment && !Objects.equals(file.getChuSoHuuId(), userId))
+                    || file.getTrangThaiXoa() != TrangThaiXoaTep.CON_HIEU_LUC
+                    || file.getXoaAt() != null) {
                 throw fileNotFound();
             }
 

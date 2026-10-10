@@ -264,9 +264,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - [Luồng B1.10](../docs/luong-backend/B1.10-thu-vien-cong-khai.md), [báo cáo bàn giao hiện có](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>), [kiểm chứng tổng hợp](../report/evidence/B1.10-verification-20261008.json), [UI](../report/evidence/B1.10-ui-20261008.json).
 
 
-### [ ] B1.11 Sao chép bộ — FR-04, TC-03
+### [x] B1.11 Sao chép bộ — FR-04, TC-03
 - API: `POST /decks/{id}/copy` với header `Idempotency-Key`.
 - Tạo bộ + thẻ mới, giữ `bo_nguon_id`; **không** sao chép tiến độ/lịch sử/điểm. Gửi lại cùng key → trả kết quả cũ.
+- **Triển khai10/10:** V6 ghi key theo người dùng và snapshot DeckResponse; copy chỉ nguồn công khai bình thường chưa xóa, bộ mới riêng tư/không mẫu. Nhãn dùng liên kết mới, tệp dùng chung có kiểm tra quyền qua bộ đích. Gửi cùng key khác nguồn409; rollback toàn bộ khi tệp nguồn lỗi. FE nối API thật, giữ key khi retry/reload, mở và sửa/xóa thẻ bản sao; bố cục theo mockup.
+- **Kiểm chứng10/10:** compile BE đạt; lượt đầu73/73, lượt cuối riêng22/22 (B1.11 20 + onboarding2), hồi quy DTO bộ riêng11/11; không cộng các lượt. FE12/12/build đạt; lint phạm vi sửa0 lỗi, toàn frontend0 lỗi/14 cảnh báo ngoài phần sửa. Browser thật13 kiểm tra đạt: desktop1280/mobile390/360, copy/reload/retry sau mất phản hồi, sửa độc lập/media/nguồn riêng tư, empty/404/guest/reduced motion. [Evidence](../report/evidence/B1.11-verification-20261010.json).
+- **Bàn giao:** [luồng B1.11](../docs/luong-backend/B1.11-sao-chep-bo.md); báo cáo Đợt 1 hiện có. Không chạy HTTP6 B1.8 hoặc thay trạng thái các bước trước; CSV/quản trị thuộc bước riêng.
 
 ### [ ] B1.12 Nhập/xuất CSV — FR-05, TC-04
 - API: `POST /decks/{id}/imports/preview` (lưu tạm kết quả trong Redis 30 phút), `POST /imports/{id}/commit`, `GET /decks/{id}/export`.

@@ -110,4 +110,19 @@ public class BoThe extends BaseEntity {
     public void updateGoal(MucTieu mucTieu) {
         this.mucTieu = mucTieu;
     }
+
+    public static BoThe createCopy(Long ownerId, BoThe source) {
+        BoThe copy = create(
+                ownerId,
+                source.getChuDeId(),
+                source.getTen(),
+                source.getMoTa(),
+                source.getTrinhDo(),
+                QuyenTruyCap.RIENG_TU
+        );
+        copy.updateGoal(source.getMucTieu());
+        copy.boNguonId = source.getId();
+        copy.boMau = false;
+        return copy;
+    }
 }

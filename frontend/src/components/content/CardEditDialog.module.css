@@ -1,0 +1,4 @@
+.dialog { width: min(100% - var(--sp-6), 48rem); max-height: calc(100dvh - var(--sp-6)); overflow: auto; background: var(--sheet); color: var(--ink); border: var(--rule-strong) solid var(--primary-line); padding: var(--sp-5); box-shadow: var(--shadow-pop); }
+.dialog::backdrop { background: color-mix(in srgb, var(--timing) 45%, transparent); }
+.dialog h2 { margin-bottom: var(--sp-5); }
+.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-5); }

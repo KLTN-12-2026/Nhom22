@@ -87,7 +87,7 @@ export default function DecksPage() {
                   </div>
                   <div className="deck-actions">
                     <Link className="btn btn-secondary btn-sm" href={`/bo-the/${deck.id}`}>Mở</Link>
-                    <Link className="btn btn-quiet btn-sm" href={`/bo-the/tao?id=${deck.id}`}>Sửa</Link>
+                    <Link className="btn btn-edit btn-sm" href={`/bo-the/tao?id=${deck.id}`}><Icon name="edit" />Sửa</Link>
                   </div>
                 </li>
               ))}

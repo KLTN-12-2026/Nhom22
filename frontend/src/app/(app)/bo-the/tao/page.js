@@ -14,12 +14,12 @@ export default function CreateDeckPage() {
   const { data, isLoading, error, refetch } = useDeck(id);
   if (id && isLoading) return <div className="page sheet skeleton"><div className="sk sk-row" /></div>;
   if (id && error) return <div className="page sheet"><ErrorState description={error.message} onRetry={refetch} /></div>;
-  return <DeckForm key={id || 'new'} deck={data} />;
+  return <DeckForm key={id ? `${id}-${data?.version}` : 'new'} deck={data} />;
 }
 function DeckForm({ deck }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: topics = [] } = useTopics();
+  const { data: topics = [], error: topicsError, refetch: reloadTopics } = useTopics();
 
   const [name, setName] = useState(deck?.ten || '');
   const [desc, setDesc] = useState(deck?.moTa || '');
@@ -27,6 +27,7 @@ function DeckForm({ deck }) {
   const [topicId, setTopicId] = useState(deck?.chuDeId || '');
   const [level, setLevel] = useState(deck?.trinhDo || 'MOI_BAT_DAU');
   const [visibility, setVisibility] = useState(deck?.quyenTruyCap || 'RIENG_TU');
+  const [goal, setGoal] = useState(deck?.mucTieu || '');
 
   const createMutation = useMutation({
     mutationFn: (data) => apiFetch(deck ? `/api/v1/decks/${deck.id}` : '/api/v1/decks', { method: deck ? 'PATCH' : 'POST', body: JSON.stringify(data) }),
@@ -42,9 +43,12 @@ function DeckForm({ deck }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (createMutation.isPending) return;
+    if (!name.trim()) { setErrorMsg('Nhập tên bộ thẻ.'); return; }
     createMutation.mutate({
       ten: name, moTa: desc, trinhDo: level, quyenTruyCap: visibility,
       ...(topicId ? { chuDeId: topicId } : deck ? { boChuDe: true } : {}),
+      ...(goal ? { mucTieu: goal } : deck ? { boMucTieu: true } : {}),
       ...(deck ? { version: deck.version } : {})
     });
   };
@@ -99,6 +103,8 @@ function DeckForm({ deck }) {
           </div>
 
 
+          <div className="field"><label className="field-label" htmlFor="mucTieu">Mục tiêu của bộ</label><select className="select" id="mucTieu" value={goal} onChange={event => setGoal(event.target.value)}><option value="">Chưa chọn</option><option value="GIAO_TIEP">Giao tiếp</option><option value="TOEIC">TOEIC</option></select><p className="field-hint">Mục tiêu riêng của bộ thẻ, không phụ thuộc thiết lập học của bạn.</p></div>
+          {topicsError && <ErrorState description={topicsError.message} onRetry={reloadTopics} />}
           <div className="field">
             <label className="field-label" htmlFor="topicId">Chủ đề</label>
             <select className="select" id="topicId" name="topicId" value={topicId} onChange={(e) => setTopicId(e.target.value)}>
@@ -153,13 +159,14 @@ function DeckForm({ deck }) {
                 <span className="bubble" aria-hidden="true">B</span>
                 <span className="choice-body">
                   <span className="choice-title">Công khai</span>
-                  <span className="choice-desc">Đánh dấu bộ là công khai. Tính năng chia sẻ trong thư viện sẽ mở khi sẵn sàng.</span>
+                  <span className="choice-desc">Hiện trong thư viện để người khác xem và sao chép. Bộ bị ẩn sẽ không xuất hiện.</span>
                 </span>
               </label>
             </div>
           </fieldset>
 
           {errorMsg && <p role="alert" className="notice notice-error">{errorMsg}</p>}
+          {createMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['deck', deck.id] })}>Tải lại bộ thẻ</button>}
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>

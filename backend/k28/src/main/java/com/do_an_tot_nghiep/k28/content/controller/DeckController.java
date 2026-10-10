@@ -8,6 +8,10 @@ import com.do_an_tot_nghiep.k28.content.dto.CreateDeckRequest;
 import com.do_an_tot_nghiep.k28.content.dto.DeckResponse;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateDeckRequest;
 import com.do_an_tot_nghiep.k28.content.service.DeckService;
+import com.do_an_tot_nghiep.k28.content.service.DeckCopyService;
+import com.do_an_tot_nghiep.k28.content.service.DeckMediaService;
+import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
+import com.do_an_tot_nghiep.k28.content.entity.enums.VaiTroTep;
 import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,31 @@ public class DeckController {
 
     private final DeckService service;
     private final CurrentUser currentUser;
+    private final DeckCopyService copies;
+    private final DeckMediaService media;
+
+    @PostMapping("/{id}/copy")
+    public ResponseEntity<DeckResponse> copy(
+            @PathVariable("id") Long id,
+            @RequestHeader(value = "Idempotency-Key", required = false) String key,
+            @RequestBody(required = false) byte[] body
+    ) {
+        Long userId = currentUser.id();
+        if (body != null && body.length > 0) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "body", "API sao chép không nhận request body");
+        }
+        DeckResponse response = copies.copy(userId, checkedId(id), key);
+        return ResponseEntity.created(URI.create("/api/v1/decks/" + response.id())).body(response);
+    }
+
+    @GetMapping("/{id}/cards/{cardId}/files/{role}")
+    public FileResponse media(
+            @PathVariable("id") Long id,
+            @PathVariable("cardId") Long cardId,
+            @PathVariable("role") VaiTroTep role
+    ) {
+        return media.get(currentUser.id(), checkedId(id), cardId, role);
+    }
 
     @GetMapping
     public PageResponse<DeckResponse> list(

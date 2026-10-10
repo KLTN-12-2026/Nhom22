@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { safeNext } from '@/lib/content-contract.mjs';
+import { useCooldown } from '@/hooks/useCooldown';
+import { FieldError } from '@/components/ui/FieldError';
 import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
 import { useState } from 'react';
@@ -24,10 +27,10 @@ export default function LoginPage() {
       body: JSON.stringify(credentials)
     }),
     onSuccess: (user) => {
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.clear();
       queryClient.setQueryData(['me'], user);
-      const safeNext = nextParam?.startsWith('/') && !nextParam.startsWith('//') && !nextParam.includes('\\') ? nextParam : '/bo-the';
-      const dest = !user.daHoanTatKhoiDau ? '/bat-dau' : safeNext;
+      const destination = safeNext(nextParam);
+      const dest = !user.daHoanTatKhoiDau ? `/bat-dau?next=${encodeURIComponent(destination)}` : destination;
       router.push(dest);
     },
     onError: (err) => {
@@ -35,17 +38,18 @@ export default function LoginPage() {
     }
   });
 
+  const cooldown = useCooldown(loginMutation.error);
+  const googleError = searchParams.get('loi');
+  const oauthMessage = googleError === 'OAUTH_LINK_REQUIRED' ? 'Email Google đã có tài khoản. Đăng nhập bằng mật khẩu của email đó trong 10 phút để liên kết Google.' : googleError ? 'Không đăng nhập được bằng Google. Thử lại hoặc đăng nhập bằng email.' : '';
+
   const handleLogin = (e) => {
     e.preventDefault();
+    if (loginMutation.isPending || cooldown > 0) return;
+    setErrorMsg('');
     loginMutation.mutate({
       email,
       password,
     });
-  };
-
-  const handleDemoFill = (demoEmail) => {
-    setEmail(demoEmail);
-    setPassword('12345678');
   };
 
   return (
@@ -69,7 +73,7 @@ export default function LoginPage() {
         </p>
       )}
 
-      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => window.location.assign('/api/v1/auth/google/start')}>
+      <button type="button" className="btn btn-secondary btn-lg btn-block" onClick={() => window.location.assign(`/api/v1/auth/google/start?next=${encodeURIComponent(safeNext(nextParam))}`)}>
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.8 6.1C12.3 13.6 17.6 9.5 24 9.5Z" />
           <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5Z" />
@@ -81,6 +85,8 @@ export default function LoginPage() {
 
       <p className="or-divider">hoặc dùng email</p>
 
+      {oauthMessage && <p className="notice notice-warning" role="alert">{oauthMessage}</p>}
+      {loginMutation.error?.code === 'EMAIL_NOT_VERIFIED' && <Link className="btn btn-secondary" href={`/xac-thuc-email?email=${encodeURIComponent(email)}`}>Gửi lại thư xác thực</Link>}
       {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
       <form id="form" onSubmit={handleLogin}>
         <div className="field">
@@ -88,7 +94,7 @@ export default function LoginPage() {
           <input
             className="input"
             id="email"
-            name="email"
+            name="email" maxLength={255}
             type="email"
             autoComplete="username"
             inputMode="email"
@@ -97,7 +103,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <p className="field-error"></p>
+          <FieldError error={loginMutation.error} field="email" />
         </div>
 
         <div className="field">
@@ -108,8 +114,8 @@ export default function LoginPage() {
           <div className="input-group">
             <input
               className="input"
-              id="password"
-              name="password"
+              id="password" aria-label="Mật khẩu"
+              name="password" maxLength={72}
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
@@ -126,32 +132,15 @@ export default function LoginPage() {
               <Icon name={showPassword ? "eye-off" : "eye"} />
             </button>
           </div>
-          <p className="field-error"></p>
+          <FieldError error={loginMutation.error} field="password" />
         </div>
 
 
-        <p className="field-hint">Dùng cookie phiên; chưa hỗ trợ ghi nhớ đăng nhập 7 ngày.</p>
-        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loginMutation.isPending}>
-          {loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
+        <p className="field-hint">Phiên đăng nhập được giữ trên thiết bị này cho đến khi bạn đăng xuất hoặc phiên hết hạn.</p>
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={loginMutation.isPending || cooldown > 0}>
+          {cooldown > 0 ? `Thử lại sau ${cooldown} giây` : loginMutation.isPending ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
       </form>
-
-      <details className="demo-accounts" hidden={process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled'}>
-        <summary>Tài khoản dùng thử (mockup)</summary>
-        <p className="muted" style={{ marginTop: '4px' }}>Mật khẩu chung: <code>12345678</code>. Bấm để điền.</p>
-        <ul id="demo-list">
-          <li>
-            <button type="button" onClick={() => handleDemoFill('an@vocab.local')}>
-              <span>an@vocab.local</span><span className="muted">Người học, đã có bộ thẻ</span>
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => handleDemoFill('admin@vocab.local')}>
-              <span>admin@vocab.local</span><span className="muted">Quản trị viên</span>
-            </button>
-          </li>
-        </ul>
-      </details>
 
       <p className="auth-foot" style={{ marginTop: 0 }}>
         Chưa có tài khoản? <Link href="/dang-ky">Tạo tài khoản</Link>

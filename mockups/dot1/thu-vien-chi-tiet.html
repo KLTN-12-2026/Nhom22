@@ -20,6 +20,7 @@
   .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); font-size: var(--fs-small); }
   .facts li { display: grid; grid-template-columns: 18px 1fr; gap: var(--sp-2); }
   .facts .bubble { width: 14px; height: 14px; border-width: 1.25px; margin-top: 3px; }
+  #copied .btn { min-height: var(--tap); }
 </style>
 </head>
 <body data-root=".." data-nav="library" data-auth="optional">
@@ -41,15 +42,14 @@
               <h1 id="deck-title" class="deck-title"></h1>
               <p id="deck-desc"></p>
               <div class="actions">
-                <button type="button" class="btn btn-accent btn-lg" id="copy">Sao chép để học</button>
-                <button type="button" class="btn btn-secondary btn-lg" id="fav" hidden aria-pressed="false"></button>
+                <button type="button" class="btn btn-primary btn-lg" id="copy">Sao chép để học</button>
                 <button type="button" class="btn btn-quiet btn-lg" id="share"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>Sao chép liên kết</button>
               </div>
               <div id="copied" class="notice notice-success" hidden role="status"></div>
             </div>
 
             <div class="row-between" style="margin-bottom:var(--sp-3)">
-              <h2 style="font-size:var(--fs-h3)">Thẻ mẫu</h2>
+              <h2 style="font-size:var(--fs-h3)">Thẻ mẫu</h2><label class="card-image-preference"><input type="checkbox" data-image-preference checked>Hiển thị ảnh</label>
               <p class="muted small" id="sample-note"></p>
             </div>
             <ol class="answer-list" id="cards" role="list"></ol>
@@ -77,6 +77,7 @@
 </div>
 
 <script src="../shared/demo.js"></script>
+<script src="../shared/contract-demo.js"></script>
 <script src="../shared/app.js"></script>
 <script>
 (function () {
@@ -117,26 +118,22 @@
         '<li class="answer-row card-row"><span class="answer-no">' + (i + 1) + '</span>' +
         '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + '</span><span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + '</span><span class="pos" lang="en">' + VL.esc(c.pos) + "</span></div>" +
         '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
-        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + "</div>" +
-        '<button type="button" class="speak" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "</button></li>").join("");
-      const fav = document.getElementById("fav");
-      if (user) {
-        fav.hidden = false;
-        setFav(d.favorite);
-      }
+        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + '<div class="card-inline-media">'+VL.cardImage(c.id)+'</div></div>' +
+        '<button type="button" class="btn btn-media btn-icon" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "</button></li>").join("");
+      VL.syncCardImages();
     }
   });
 
-  function setFav(on) {
-    const fav = document.getElementById("fav");
-    fav.setAttribute("aria-pressed", String(on));
-    fav.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="' + (on ? "fill:var(--accent);stroke:var(--accent-text)" : "") + '"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg>' + (on ? "Đã yêu thích" : "Yêu thích");
-  }
 
-  document.getElementById("cards").addEventListener("click", (e) => { const b = e.target.closest("[data-say]"); if (b) speak(b.dataset.say); });
+  document.getElementById("cards").addEventListener("click", (e) => { const b = e.target.closest("[data-say]"); if (b) VL.speak(b.dataset.say); });
 
   const copyBtn = document.getElementById("copy");
-  const idemKey = "copy-" + id + "-" + Math.random().toString(16).slice(2);
+  const attemptName = "deck-copy:" + (user?.id || "guest") + ":" + id;
+  let idemKey = sessionStorage.getItem(attemptName);
+  if (!idemKey) {
+    idemKey = "copy-" + crypto.randomUUID();
+    sessionStorage.setItem(attemptName, idemKey);
+  }
   copyBtn.addEventListener("click", () => {
     if (!user) { location.href = "dang-nhap.html?next=" + encodeURIComponent("dot1/thu-vien-chi-tiet.html?id=" + id); return; }
     VL.busy(copyBtn, async () => {
@@ -144,7 +141,7 @@
         const res = await VL.api("POST", "/decks/" + id + "/copy", null, { headers: { "Idempotency-Key": idemKey } });
         const box = document.getElementById("copied");
         box.hidden = false;
-        box.innerHTML = VL.icon("check") + '<div class="stack-sm"><p class="notice-title">Đã sao chép ' + res.cardCount + ' thẻ vào Bộ của tôi</p><div><a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + res.deckId + '">Mở bộ vừa sao chép</a></div></div>';
+        box.innerHTML = VL.icon("check") + '<div class="stack-sm"><p class="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><div><a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + res.id + '">Mở bộ vừa sao chép</a></div></div>';
         copyBtn.textContent = "Đã sao chép";
         copyBtn.setAttribute("aria-disabled", "true");
         copyBtn.disabled = true;
@@ -153,17 +150,6 @@
     });
   });
 
-  const favBtn = document.getElementById("fav");
-  favBtn.addEventListener("click", () => {
-    const on = favBtn.getAttribute("aria-pressed") !== "true";
-    VL.busy(favBtn, async () => {
-      try {
-        await VL.api(on ? "PUT" : "DELETE", "/decks/" + id + "/favorite");
-        setFav(on);
-        VL.toast(on ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
-      } catch (err) { VL.toast(err.message, "error"); }
-    });
-  });
 
   document.getElementById("share").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(location.href); VL.toast("Đã sao chép liên kết"); }

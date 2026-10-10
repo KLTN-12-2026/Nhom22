@@ -100,4 +100,18 @@ public class TheTuVung extends BaseEntity {
             xoaAt = deletedAt;
         }
     }
+
+    public static TheTuVung createCopy(Long deckId, TheTuVung source) {
+        return create(
+                deckId,
+                source.getTu(),
+                source.getTuLoai(),
+                source.getNghiaVi(),
+                source.getPhienAm(),
+                source.getViDuEn(),
+                source.getDichVi(),
+                source.getDoKho(),
+                source.getNguon()
+        );
+    }
 }

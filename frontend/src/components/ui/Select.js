@@ -1,9 +1,11 @@
 'use client';
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 
 export const Select = forwardRef(function Select({
   id, label, hint, error, required, options = [], placeholder, className = '', ...props
 }, ref) {
+  const generatedId = useId();
+  id = id || generatedId;
   return (
     <div className="field">
       {label && (
@@ -14,6 +16,7 @@ export const Select = forwardRef(function Select({
       <select
         ref={ref}
         id={id}
+        required={required}
         className={['select', error && 'select--error', className].filter(Boolean).join(' ')}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}

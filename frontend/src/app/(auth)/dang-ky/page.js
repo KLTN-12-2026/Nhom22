@@ -3,6 +3,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
+import { useCooldown } from '@/hooks/useCooldown';
+import { FieldError } from '@/components/ui/FieldError';
 import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
 
@@ -23,9 +25,11 @@ export default function RegisterPage() {
     }
   });
 
+  const cooldown = useCooldown(registerMutation.error);
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!e.currentTarget.reportValidity()) return;
+    if (registerMutation.isPending || cooldown > 0 || !e.currentTarget.reportValidity()) return;
+    setErrorMsg('');
     if (e.target.password.value !== e.target.confirm.value) { setErrorMsg('Hai mật khẩu chưa khớp.'); return; }
     registerMutation.mutate({
       tenHienThi: e.target.elements.namedItem('name').value,
@@ -68,7 +72,7 @@ export default function RegisterPage() {
             required
             placeholder="Ví dụ: Hoàng Anh"
           />
-          <p className="field-error"></p>
+          <FieldError error={registerMutation.error} field="tenHienThi" />
         </div>
 
         <div className="field">
@@ -83,7 +87,7 @@ export default function RegisterPage() {
             required
             placeholder="ten@gmail.com"
           />
-          <p className="field-error"></p>
+          <FieldError error={registerMutation.error?.status === 409 ? {fieldErrors:[{field:"email",message:"Email đã được đăng ký"}]} : registerMutation.error} field="email" />
         </div>
 
         <div className="field">
@@ -96,13 +100,13 @@ export default function RegisterPage() {
             autoComplete="new-password"
             required
           />
-          <p className="field-error"></p>
+          <FieldError error={registerMutation.error} field="password" />
         </div>
 
         <div className="field"><label className="field-label" htmlFor="confirm">Nhập lại mật khẩu</label><input className="input" id="confirm" name="confirm" type="password" autoComplete="new-password" required maxLength={72} /></div>
         <label className="choice"><input name="acceptTerms" type="checkbox" required /><span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span><span>Tôi đồng ý với <Link href="/chinh-sach">Điều khoản sử dụng</Link></span></label>
-        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={registerMutation.isPending}>
-          {registerMutation.isPending ? 'Đang tạo...' : 'Tạo tài khoản'}
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={registerMutation.isPending || cooldown > 0}>
+          {cooldown > 0 ? `Thử lại sau ${cooldown} giây` : registerMutation.isPending ? 'Đang tạo...' : 'Tạo tài khoản'}
         </button>
       </form>
 

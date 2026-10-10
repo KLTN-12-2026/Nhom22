@@ -1,9 +1,11 @@
 'use client';
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 
 export const Textarea = forwardRef(function Textarea({
   id, label, hint, error, required, rows = 4, className = '', ...props
 }, ref) {
+  const generatedId = useId();
+  id = id || generatedId;
   return (
     <div className="field">
       {label && (
@@ -14,6 +16,7 @@ export const Textarea = forwardRef(function Textarea({
       <textarea
         ref={ref}
         id={id}
+        required={required}
         rows={rows}
         className={['textarea', error && 'textarea--error', className].filter(Boolean).join(' ')}
         aria-invalid={!!error}

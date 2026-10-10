@@ -1,7 +1,9 @@
 'use client';
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 
 export const Checkbox = forwardRef(function Checkbox({ id, label, error, className = '', ...props }, ref) {
+  const generatedId = useId();
+  id = id || generatedId;
   return (
     <div className="field">
       <label className="checkbox-wrapper" htmlFor={id}>

@@ -9,7 +9,8 @@ import { apiFetch } from '@/lib/api-client';
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
+  const [errorMsg, setErrorMsg] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [view, setView] = useState(token ? 'ask' : 'bad'); // ask, done, bad
@@ -17,15 +18,17 @@ export default function ResetPasswordPage() {
   const resetMutation = useMutation({
     mutationFn: (data) => apiFetch('/api/v1/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => setView('done'),
-    onError: () => setView('bad')
+    onError: error => { setErrorMsg(error.message); if (error.code === 'TOKEN_INVALID') setView('bad'); }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (password !== confirm) {
-      alert('Hai mật khẩu chưa khớp!');
+      setErrorMsg('Hai mật khẩu chưa khớp.');
       return;
     }
+    if (resetMutation.isPending) return;
+    setErrorMsg('');
     resetMutation.mutate({ token, password });
   };
 
@@ -37,16 +40,17 @@ export default function ResetPasswordPage() {
             <h1>Đặt mật khẩu mới</h1>
             <p>Sau khi đổi, các phiên đăng nhập khác của bạn sẽ bị đăng xuất.</p>
           </div>
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit}>
+            {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
             <div className="field">
               <label className="field-label" htmlFor="password">Mật khẩu mới</label>
-              <input 
-                className="input" 
-                id="password" 
-                name="password" 
-                type="password" 
-                autoComplete="new-password" 
-                required 
+              <input
+                className="input"
+                id="password"
+                name="password" minLength={8} maxLength={72} pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,72}" title="Mật khẩu 8–72 ký tự, có chữ cái và chữ số"
+                type="password"
+                autoComplete="new-password"
+                required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
@@ -55,16 +59,16 @@ export default function ResetPasswordPage() {
               </div>
               <p className="field-error"></p>
             </div>
-            
+
             <div className="field">
               <label className="field-label" htmlFor="confirm">Nhập lại mật khẩu mới</label>
-              <input 
-                className="input" 
-                id="confirm" 
-                name="confirm" 
-                type="password" 
-                autoComplete="new-password" 
-                required 
+              <input
+                className="input"
+                id="confirm"
+                name="confirm" maxLength={72}
+                type="password"
+                autoComplete="new-password"
+                required
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
               />
@@ -90,7 +94,7 @@ export default function ResetPasswordPage() {
       {view === 'bad' && (
         <div className="error-state" role="alert">
           <Icon name="alert" className="icon-lg" />
-          <h2>Liên kết đặt lại không dùng được</h2>
+          <h1>Liên kết đặt lại không dùng được</h1>{errorMsg && <p>{errorMsg}</p>}
           <p>Liên kết đã hết hạn sau 30 phút, đã được dùng, hoặc bị sao chép thiếu.</p>
           <div className="row">
             <Link href="/quen-mat-khau" className="btn btn-secondary">Gửi liên kết mới</Link>

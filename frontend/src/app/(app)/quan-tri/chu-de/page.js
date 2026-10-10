@@ -12,6 +12,7 @@ export default function AdminTopicsPage() {
   const [kind, setKind] = useState('topics'); // 'topics' or 'tags'
   const [nameInput, setNameInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   // For renaming topics
   const [renamingId, setRenamingId] = useState(null);
@@ -34,9 +35,10 @@ export default function AdminTopicsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin', kind] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['public-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['public-tags'] });
       setNameInput('');
       setErrorMsg('');
-      alert(kind === 'topics' ? 'Đã thêm chủ đề' : 'Đã thêm nhãn');
+      setSuccessMsg(kind === 'topics' ? 'Đã thêm chủ đề' : 'Đã thêm nhãn');
     },
     onError: (err) => {
       setErrorMsg(err.message || 'Lỗi thêm mới');
@@ -49,10 +51,11 @@ export default function AdminTopicsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin', kind] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['public-topics'] });
-      alert('Đã xóa');
+      queryClient.invalidateQueries({ queryKey: ['public-tags'] });
+      setSuccessMsg('Đã xóa');
     },
     onError: (err) => {
-      alert(err.message || 'Lỗi khi xóa');
+      setErrorMsg(err.message || 'Lỗi khi xóa');
     }
   });
 
@@ -65,11 +68,12 @@ export default function AdminTopicsPage() {
       queryClient.invalidateQueries({ queryKey: ['admin', kind] });
       queryClient.invalidateQueries({ queryKey: ['topics'] });
       queryClient.invalidateQueries({ queryKey: ['public-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['public-tags'] });
       setRenamingId(null);
-      alert('Đã lưu tên');
+      setSuccessMsg('Đã lưu tên');
     },
     onError: (err) => {
-      alert(err.message || 'Lỗi đổi tên');
+      setErrorMsg(err.message || 'Lỗi đổi tên');
     }
   });
 
@@ -82,7 +86,7 @@ export default function AdminTopicsPage() {
   const handleDelete = (item) => {
     const msg = kind === "topics"
       ? `Xóa “${item.ten}”? Chủ đề sẽ biến khỏi bộ lọc thư viện.`
-      : `Xóa “${item.ten}”? Nhãn sẽ được gỡ khỏi mọi thẻ đang gắn.`;
+      : `Xóa “${item.ten}”? Chỉ xóa được nhãn khi không còn thẻ sử dụng.`;
     if (confirm(msg)) {
       deleteMutation.mutate(item.id);
     }
@@ -112,6 +116,9 @@ export default function AdminTopicsPage() {
           <div className="form-head">
             <div className="form-code"><span>Quản trị</span><span>Danh mục nội dung</span></div>
             <h1 id="page-title">Chủ đề và nhãn</h1>
+            {successMsg && <p className="notice notice-success" role="status">{successMsg}</p>}
+            {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
+            {renameMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => { setRenamingId(null); refetch(); }}>Tải lại danh mục</button>}
             <p>Chủ đề dùng để lọc thư viện. Nhãn gắn vào từng thẻ, ví dụ “Part 5” hay “Cụm động từ”.</p>
           </div>
 
@@ -188,11 +195,11 @@ export default function AdminTopicsPage() {
                         <td>{'—'}</td>
                         <td>
                           {(
-                            <button type="button" className="btn btn-quiet btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => openRename(item)}>
+                            <button type="button" className="btn btn-edit btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => openRename(item)}>
                               <Icon name="edit" /> Đổi tên
                             </button>
                           )}
-                          <button type="button" className="btn btn-quiet btn-sm" style={{ color: 'var(--color-danger)' }} disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => handleDelete(item)}>
+                          <button type="button" className="btn btn-danger btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => handleDelete(item)}>
                             <Icon name="trash" /> Xóa
                           </button>
                         </td>
@@ -223,7 +230,7 @@ export default function AdminTopicsPage() {
             <ul className="small muted" style={{ paddingLeft: '1.1rem', display: 'grid', gap: 'var(--space-2)' }}>
               <li>Tên không trùng nhau, không phân biệt hoa thường và dấu.</li>
               <li>Chỉ xóa được chủ đề khi không còn bộ thẻ nào dùng.</li>
-              <li>Xóa nhãn sẽ gỡ nhãn khỏi mọi thẻ đang gắn.</li>
+              <li>Chỉ xóa được nhãn khi không còn thẻ nào dùng.</li>
             </ul>
           </section>
         </aside>

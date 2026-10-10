@@ -2557,6 +2557,50 @@ Bằng chứng: [tổng hợp](../report/evidence/B1.10-verification-20261008.js
 
 Các phát hiện06/10 được giữ như lịch sử. Trong phạm vi B1.10 đã nối mucTieu/boMucTieu vào DeckService/DeckResponse và kiểm chứng bằng FR04LibraryOnboardingTest; đã sửa @Param publicDisplayNames, mở FeatureGate thư viện, dùng DTO thật và bổ sung trang chi tiết. B1.8/HTTP6 không chạy lại hoặc thay trạng thái. B1.11 sao chép bộ, CSV, quản trị duyệt/bộ mẫu, benchmark lớn và seed production còn ngoài phạm vi.
 
+### B1.11 — sao chép bộ, hoàn tất10/10/2026
+
+POST /api/v1/decks/{id}/copy không có body, Idempotency-Key bắt buộc `[A-Za-z0-9._:-]{1,128}`. Đăng nhập + CSRF; nguồn mới chỉ CONG_KHAI/BINH_THUONG/chưa xóa. Trả201 + Location và DeckResponse.id, không trả DTO demo deckId/cardCount. Bộ mới riêng tư, không mẫu, owner người gọi, nguồn trực tiếp; metadata/mục tiêu nullable giữ từ bộ nguồn. Thẻ/nhãn/link tệp mới, không mang tiến độ/lịch sử/điểm/yêu thích.
+
+V6 lưu key theo người dùng trong bảng riêng và snapshot JSON. Cùng key/source trả kết quả cũ kể cả nguồn/bản sao sửa hoặc xóa; cùng key khác source409. Một transaction READ_COMMITTED ghi reservation/nội dung/response; tệp nguồn lỗi422 rollback toàn bộ. Tệp đã hoàn tất dùng chung, ownership không chuyển. GET /api/v1/decks/{id}/cards/{cardId}/files/{role} đọc theo owner bộ đích/link thẻ; files chung vẫn ownership. Sửa thẻ giữ link ngoại sở hữu cũ cùng vai trò; gắn mới hoặc sang thẻ khác vẫn cần tệp thuộc người gọi.
+
+FE có CTA sao chép, key giữ khi retry/reload, pending/success/error/guest, mở bộ cá nhân, PageResponse thẻ, media và sửa/xóa độc lập. Đồng bộ sheet/cột thông tin/font/token/CTA với mockup desktop/mobile; thẻ mới dùng payload B1.9 đúng tên trường. Sửa phụ thuộc boMucTieu của UpdateDeckRequest thành Boolean chuẩn hóa false để partial PATCH không lỗi khi thiếu cờ. Không mở CSV/quản trị/SRS giả theo mockup.
+
+| Kiểm chứng10/10 | Bằng chứng quan sát |
+|---|---|
+| BE compile | Đạt |
+| Tích hợp đầu | 73/73: copy19, cards22, library19/media11/onboarding2 |
+| Sau sửa DTO và test hồi quy | Lượt riêng22/22: copy20/onboarding2; lượt DTO bộ riêng11/11 |
+| FE | Node12/12; build đạt; lint phạm vi sửa0 lỗi/0 cảnh báo, toàn frontend0 lỗi/14 cảnh báo ngoài phạm vi |
+| Browser thật | 13 kiểm tra đạt; Next3100 → BE8080; có mất phản hồi sau commit rồi retry cùng key/kết quả |
+| Đối chiếu hình | Desktop1280/mobile390, thêm360/reduced motion; screenshot thật và mockup tách riêng |
+| Giới hạn | Không chạy Newman B1.11 hoặc cập nhật Postman cloud; registry/export Postman vắng trong checkout. Không chạy HTTP6 B1.8; không thay trạng thái/số liệu lịch sử các bước trước |
+
+Các số ở từng lượt được giữ riêng; test tồn tại không tự tạo bằng chứng pass. Mockup có5 kiểm tra riêng dùng dữ liệu demo, không chứng minh backend thật. Tài liệu UI brief ở đường dẫn skill chỉ định thiếu; dùng mockup/tokens hiện có. Graph AST-only đã cập nhật; parser SQL thiếu, V6 được kiểm tra trực tiếp. Đã xóa mềm18 bộ fixture local qua ownership API, chỉ tài khoản có prefix b111- và đúng tên runner tạo; không sửa bộ của người dùng. ID/ảnh evidence ghi nhận trước dọn fixture; snapshot idempotency và object được giữ.
+
+[Luồng B1.11](../docs/luong-backend/B1.11-sao-chep-bo.md), [evidence tổng hợp](../report/evidence/B1.11-verification-20261010.json), [browser thật](../report/evidence/B1.11-ui-20261010.json), [mockup](../report/evidence/B1.11-mockup-20261010.json). Dùng báo cáo bàn giao hiện có, không tạo báo cáo BE song song. B1.12 CSV vẫn là bước tiếp theo.
+
+### Hoàn thiện FE từ GĐ0 đến B1.11 —10/10/2026
+
+Đã tích hợp tài khoản/xác thực/email/mật khẩu/Google start, onboarding/hồ sơ/thiết lập/nhắc học, ảnh đại diện/upload, danh mục B1.7, bộ B1.8, thẻ B1.9, thư viện B1.10 và sao chép B1.11. Dùng DTO native, PageResponse/version/quyền/CSRF của BE. Sửa trường và giới hạn thẻ, source/nhãn/ba vai trò tệp, removal flags, mục tiêu bộ nullable độc lập; không gửi tiến độ/lịch sử/điểm theo bản sao. Cache được đổi khi đăng nhập/đăng xuất; lỗi401 ở form đăng nhập không đẩy mất form, protected route giữ next. Xung đột bộ/thiết lập/thẻ có tải lại dữ liệu trước khi sửa tiếp. Upload có checksum byte thật, Content-Type đúng và chỉ complete sau PUT thành công.
+
+FE và mockup giữ Archivo/Gentium, sheet/cột thông tin/token hiện có. Theo yêu cầu người dùng mới, màu nút theo chức năng: xanh dương tạo/lưu/sao chép, cam sửa, xanh ngọc nghe, đỏ xóa, trung tính hủy/điều hướng. Đây là điều chỉnh chủ đích so với quy tắc màu cũ trong skill; dùng chữ/icon/focus cùng màu để nhận biết. Thanh bên desktop thu gọn/mở rộng thành icon SVG có nhãn, mobile giữ thanh dưới icon/tên; không dùng emoji. Hàng nút media xuống dòng và nằm trong thẻ ở360/390/1280px.
+
+Nút đọc từ/câu dùng giọng tiếng Anh của trình duyệt, ưu tiên giọng cài trên máy. Không cần upload, không có key Google Cloud hoặc amTuId/amCauId giả; giọng/khả năng phát phụ thuộc thiết bị. Tệp riêng vẫn phát qua media đúng quyền. **Hiển thị ảnh** mặc định bật, ảnh gần vùng đang xem tự tải; tắt thì có nút **Xem ảnh**, lựa chọn ghi nhớ trên trình duyệt, không mở rộng DTO settings BE. API files chung vẫn ownership; guest chỉ dùng media của thư viện công khai. Đã bổ sung CORS storage local cho origin3100 và áp dụng lại bằng bước s3-init; không đổi quyền/tệp nguồn.
+
+| Kiểm chứng FE trong lượt riêng10/10 | Quan sát thực chạy |
+|---|---|
+| Logic/hợp đồng | Node22/22, gồm MSW ping native status/serverTime; ping BE thật trảUP |
+| Build/lint | Build production đạt36 route entries; lint0 lỗi/14 cảnh báo hiện có về ảnh/font/điều hướng và trang tương lai |
+| UI toàn phạm vi | 29 case quan sát trong lượt đầu và các lượt tiếp nối, đếm một lần theo tên;3 tình huống mô phỏng tách riêng: speech engine,429 form, lỗi mạng |
+| Sao chép hồi quy | Lượt riêng13/13 trên backend thật: cùng key/reload, mất phản hồi sau commit, sửa bản sao, giữ media khi nguồn chuyển riêng tư, guest/404 |
+| Admin/UI kit/mockup | Lượt riêng4/4: CRUD admin thật trên fixture dev và native dialog focus/Escape; mockup demo có hợp đồng native |
+| Hoàn thiện giao diện | Lượt riêng6/6: sidebar SVG thu gọn, màu nút, desktop/mobile và không lỗi JS; FE thật/mockup demo được phân biệt |
+| Ảnh tự hiển thị | Lượt riêng7/7: mặc định bật, tắt/reload không gọi image media, mở thủ công, bật lại, không tràn nút, guest đúng quyền và mockup demo |
+
+Các số trên không cộng vào BE/HTTP6 B1.8 hoặc thay số liệu lịch sử B1.10/B1.11. Không chạy build/test BE trong lượt FE này. Chất lượng âm thanh nghe được và trao đổi token với Google provider thật chưa được xác nhận tự động; Google start/guidance đã nối theo hợp đồng. MSW chỉ mock ping nền; handler auth/nội dung demo cũ không nạp. CSV B1.12/SRS/luyện tập/quản trị ngoài danh mục B1.7 vẫn chưa mở; F1.11 của roadmap FE là CSV và chưa đánh dấu hoàn tất. UI brief ở đường dẫn skill chỉ định vẫn thiếu, dùng mockup/tokens và yêu cầu mới trực tiếp của người dùng.
+
+[Tổng hợp FE](../report/evidence/FE-B0-B1.11-verification-20261010.json) ghi kết quả quan sát trong phiên làm việc. Thư mục report cũ không còn tại thời điểm bàn giao; runner, JSON chi tiết và screenshot trước đó hiện không có để đối chiếu lại, nguyên nhân chưa xác định. Không tái tạo các artifact cũ như bằng chứng gốc. Smoke production: sáu trang công khai trả200, ping đúng /api/v1/public/ping trảUP; /_ui hiển thị not-found và không có showcase (HTTP200 do streaming). Tài liệu bàn giao này là nguồn chung, không tạo báo cáo BE song song.
+
 ## 11. Báo lỗi cho BE
 
 Gửi đường dẫn API + body + `requestId`; BE tra: `docker compose logs api | grep <requestId>`.

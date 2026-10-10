@@ -1,6 +1,6 @@
 # PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG HỌC TỪ VỰNG TIẾNG ANH
 
-> Đối chiếu triển khai 08/10/2026: API quản lý thẻ/public tags B1.9 và thư viện B1.10 đã triển khai; sao chép B1.11 và CSV B1.12 còn kế hoạch. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 hiện có bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Bằng chứng và hợp đồng chi tiết: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
+> Đối chiếu triển khai 10/10/2026: API quản lý thẻ/public tags B1.9, thư viện B1.10 và sao chép B1.11 đã triển khai; CSV B1.12 còn kế hoạch. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. V6 lưu idempotency và snapshot sao chép. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Hợp đồng và kiểm chứng: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md), [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
 
 ## 1. Thông tin tài liệu và cơ sở phân tích
 
@@ -203,8 +203,10 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 
 1. Visitor/User tìm bộ theo tên/mô tả, mục tiêu, chủ đề, trình độ và nguồn. B1.10 chỉ hiển thị CONG_KHAI + BINH_THUONG + chưa xóa, bằng JPA Specification.
 2. Xem số thẻ, mẫu nội dung, tác giả, nguồn và nhãn “Bộ mẫu” hoặc “Người học chia sẻ”.
-3. Dự kiến B1.11: chọn sao chép; hệ thống tạo bộ cá nhân và thẻ mới, giữ tham chiếu nguồn. B1.10 chỉ có sao chép liên kết công khai.
+3. B1.11 triển khai10/10/2026: chọn sao chép bằng POST /api/v1/decks/{id}/copy, không có body, gửi Idempotency-Key. Tạo bộ riêng tư thuộc người gọi và thẻ mới, giữ bo_nguon_id trực tiếp; không đánh dấu bộ mẫu. Nguồn cho request mới phải CONG_KHAI + BINH_THUONG + xoa_at IS NULL. B1.10 chỉ có sao chép liên kết công khai.
 4. Không sao chép tiến độ, điểm thưởng hoặc lịch sử học.
+5. Giữ mục tiêu bộ nullable, nội dung/nguồn thẻ; tạo liên kết nhãn/tệp mới. Tệp đã hoàn tất được dùng chung, ownership tệp giữ nguyên; đọc bằng quyền chủ bộ đích qua /api/v1/decks/{id}/cards/{cardId}/files/{role}. Files chung không nới ownership; nguồn đổi riêng tư/ẩn/xóa mềm không thu hồi nội dung bản sao.
+6. Key phân biệt hoa/thường, scope người dùng + thao tác sao chép, fingerprint sourceId. Cùng key/source trả snapshot DeckResponse và201/Location cũ; cùng key khác source409. Một transaction READ_COMMITTED ghi key, nội dung và snapshot; lỗi rollback toàn bộ. Chi tiết và bằng chứng hiện tại: [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md).
 5. Người học sửa bản sao độc lập; cập nhật bộ nguồn không tự ghi đè bản sao.
 
 ### 6.3. Tạo thẻ bằng AI
@@ -504,6 +506,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `tep_tin` | chu_so_huu_id, object_key, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa |
 | `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu |
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
+| `yeu_cau_sao_chep_bo` | V6 B1.11: nguoi_dung_id, idempotency_key ascii_bin, bo_nguon_id, bo_ket_qua_id nullable, response_json JSON nullable, hoan_tat_at nullable; unique người dùng/key; kết quả cùng null hoặc cùng hoàn tất |
 | `tien_do_the` | nguoi_dung_id, the_id, chieu_hoc, trang_thai, buoc_hoc, ef, khoang_on_ngay, chuoi_thanh_cong, so_lan_quen, han_on_at, version |
 | `phien_hoc` | nguoi_dung_id, chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian |
 | `phien_hoc_the` | phien_id, the_id, chieu_hoc, thu_tu, trang_thai; hàng đợi đã cấp |

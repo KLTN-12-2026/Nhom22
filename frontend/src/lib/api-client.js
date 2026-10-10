@@ -3,6 +3,7 @@ export class ApiError extends Error {
     const fields = Array.isArray(data.fieldErrors) ? data.fieldErrors.map(e => e.message).join('; ') : '';
     super([data.message || (!fields && 'Không thể kết nối. Vui lòng thử lại.'), fields, (data.requestId || data.traceId) && `Mã lỗi: ${data.requestId || data.traceId}`].filter(Boolean).join(' '));
     this.status = status;
+    this.code = data.code;
     this.data = data;
     this.fieldErrors = data.fieldErrors || [];
     this.traceId = data.requestId || data.traceId;
@@ -25,13 +26,14 @@ export async function apiFetch(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   const headers = new Headers(options.headers);
   if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
-    const token = await csrf();
-    headers.set(token.headerName, token.token);
-  }
   let res;
-  try { res = await fetch(path, { ...options, method, credentials: 'include', headers }); }
-  catch { throw new ApiError(0); }
+  try {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      const token = await csrf();
+      headers.set(token.headerName, token.token);
+    }
+    res = await fetch(path, { ...options, method, credentials: 'include', headers });
+  } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(0); }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     if (res.status === 403) resetCsrf();

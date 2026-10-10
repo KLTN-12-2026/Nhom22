@@ -13,7 +13,7 @@ export function Tabs({ tabs = [], defaultTab, onChange, children }) {
   };
 
   return (
-    <div className="tabs">
+    <div className="ui-tabs">
       <div className="tabs__list" role="tablist">
         {tabs.map((tab) => (
           <button
@@ -22,12 +22,13 @@ export function Tabs({ tabs = [], defaultTab, onChange, children }) {
             id={`tab-${tab.id}`}
             aria-selected={active === tab.id}
             aria-controls={`panel-${tab.id}`}
+            tabIndex={active === tab.id ? 0 : -1}
             className={`tabs__tab${active === tab.id ? ' tabs__tab--active' : ''}`}
             onClick={() => handleChange(tab.id)}
             onKeyDown={(e) => {
               const idx = tabs.findIndex(t => t.id === tab.id);
-              if (e.key === 'ArrowRight') handleChange(tabs[(idx + 1) % tabs.length].id);
-              if (e.key === 'ArrowLeft')  handleChange(tabs[(idx - 1 + tabs.length) % tabs.length].id);
+              const next = e.key === 'ArrowRight' ? (idx + 1) % tabs.length : e.key === 'ArrowLeft' ? (idx - 1 + tabs.length) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+              if (next !== null) { e.preventDefault(); handleChange(tabs[next].id); e.currentTarget.parentElement.children[next].focus(); }
             }}
           >
             {tab.icon && <span aria-hidden="true">{tab.icon}</span>}

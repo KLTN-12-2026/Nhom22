@@ -1,11 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiFetch, logout } from '@/lib/api-client';
+import { useMutation } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
 
 export default function SecurityPage() {
-  const queryClient = useQueryClient();
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -47,15 +46,13 @@ export default function SecurityPage() {
       setErrorMsg('Mật khẩu chưa đủ mạnh');
       return;
     }
+    if (updateMutation.isPending) return;
     updateMutation.mutate({
       currentPassword: formState.currentPassword,
       newPassword: formState.newPassword
     });
   };
 
-  const handleLogout = () => {
-    logout(queryClient).catch(error => alert(error.message));
-  };
 
   return (
     <>
@@ -65,7 +62,7 @@ export default function SecurityPage() {
         <p>Sau khi đổi, bạn vẫn đăng nhập trên thiết bị này. Các thiết bị khác sẽ bị đăng xuất.</p>
       </div>
 
-      <form id="form" className="settings-form" noValidate onSubmit={handleSubmit}>
+      <form id="form" className="settings-form" onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
         <div className="field">
@@ -75,6 +72,7 @@ export default function SecurityPage() {
               className="input"
               id="currentPassword"
               name="currentPassword"
+              maxLength={72}
               type={showCurrent ? "text" : "password"}
               autoComplete="current-password"
               required
@@ -95,6 +93,7 @@ export default function SecurityPage() {
               className="input"
               id="newPassword"
               name="newPassword"
+              minLength={8}
               type={showNew ? "text" : "password"}
               autoComplete="new-password"
               required
@@ -121,6 +120,7 @@ export default function SecurityPage() {
             className="input"
             id="confirm"
             name="confirm"
+            maxLength={72}
             type={showNew ? "text" : "password"}
             autoComplete="new-password"
             required

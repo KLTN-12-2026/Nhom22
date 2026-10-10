@@ -30,7 +30,7 @@ public record UpdateDeckRequest(
 
         MucTieu mucTieu,
 
-        boolean boMucTieu,
+        Boolean boMucTieu,
 
         @NotNull(message = "Thiếu phiên bản, vui lòng tải lại")
         @PositiveOrZero(message = "Phiên bản không hợp lệ")
