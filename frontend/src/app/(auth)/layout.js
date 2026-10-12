@@ -1,4 +1,5 @@
 'use client';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import Link from 'next/link';
 import { RouteGuard } from '@/components/layout/RouteGuard';
 
@@ -10,7 +11,7 @@ export default function AuthLayout({ children }) {
       <div className="auth">
         <aside className="auth-aside">
           <Link className="brand" href="/">
-            <img className="brand-mark" src="/shared/assets/logo-mark-inverse.svg" alt="" width="28" height="28" />
+            <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
             <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
           <figure className="aside-sheet" aria-label="Ví dụ một câu hỏi từ vựng">
@@ -31,9 +32,9 @@ export default function AuthLayout({ children }) {
           </ul>
         </aside>
 
-        <main className="auth-main" id="main">
+        <main className="auth-main" id="main"><ThemeToggle className="theme-auth" />
           <Link className="brand" href="/">
-            <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+            <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
             <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
 

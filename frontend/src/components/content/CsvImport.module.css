@@ -1,0 +1,11 @@
+.stack { display: grid; gap: var(--sp-4); margin-top: var(--sp-5); }
+.mapping { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--sp-3); }
+.mapping label { display: grid; gap: var(--sp-2); min-width: 0; }
+.mapping select { min-height: 44px; width: 100%; color: var(--ink); background: var(--field); border: 1px solid var(--primary-line); border-radius: 8px; padding: 8px; }
+.tableWrap { overflow: auto; max-height: 60vh; }
+.tableWrap table { min-width: 660px; }
+.tableWrap input { width: 22px; height: 22px; }
+.meaning { min-width: 160px; white-space: pre-wrap; }
+.actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); border-top: var(--rule-strong) solid var(--primary-line); padding-top: var(--sp-4); }
+.result { font-size: 3rem; font-weight: 800; }
+@media(max-width: 600px) { .mapping { grid-template-columns: 1fr; } .actions > * { flex: 1 1 100%; } }

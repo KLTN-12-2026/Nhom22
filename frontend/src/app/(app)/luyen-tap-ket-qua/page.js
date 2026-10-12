@@ -32,7 +32,7 @@ function PracticeResultContent() {
 
   if (session && !session.daNop) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid">
+      <div className="page page-grid">
         <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ marginBottom: 'var(--space-4)' }}>
             <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
@@ -107,7 +107,7 @@ function PracticeResultContent() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
@@ -117,7 +117,7 @@ function PracticeResultContent() {
           <p style={{ color: 'var(--color-ink-2)' }}>{A.boTheTen}. Nộp lúc {new Date(A.nopAt).toLocaleString('vi-VN')}</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
+        <div className="result-metrics">
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Điểm</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{A.diem}<span style={{ fontSize: '1rem', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>/100</span></div>
@@ -147,9 +147,9 @@ function PracticeResultContent() {
           {A.ketQua.map(renderResultRow)}
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
+        <div className="action-bar" style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
           {wrongCount > 0 && (
-            <Button variant="primary" size="lg" onClick={() => retryMutation.mutate(A.lanLamId)} disabled={retryMutation.isPending}>
+            <Button variant="accent" size="lg" onClick={() => retryMutation.mutate(A.lanLamId)} loading={retryMutation.isPending}>
               {retryMutation.isPending ? 'Đang tạo bài...' : `Luyện lại ${wrongCount} câu sai`}
             </Button>
           )}

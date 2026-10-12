@@ -24,7 +24,7 @@ export function CardMedia({ deckId, cardId, role, publicDeck = false, autoShow =
     queryFn: () => apiFetch(`/api/v1/${publicDeck ? 'library/' : ''}decks/${encodeURIComponent(deckId)}/cards/${encodeURIComponent(cardId)}/files/${role}`),
     enabled: enabled || (automatic && visible), staleTime: 0, gcTime: 0,
   });
-  const label = role === 'ANH' ? 'Xem ảnh' : role === 'AM_TU' ? 'Nghe từ' : 'Nghe câu';
+  const label = role === 'ANH' ? 'Xem ảnh' : role === 'AM_TU' ? 'Đọc từ' : 'Đọc câu ví dụ';
   return <div ref={container} className={`${styles.media}${role === 'ANH' && (automatic || enabled) ? ` ${styles.imageMedia}` : ''}`}>
     {(!automatic || error) && <button type="button" className="btn btn-media btn-sm" disabled={isFetching} aria-busy={isFetching} onClick={() => enabled || automatic ? refetch() : setEnabled(true)}><Icon name={role === 'ANH' ? 'image' : 'volume'} />{isFetching ? 'Đang tải…' : error && automatic ? 'Tải lại ảnh' : label}</button>}
     {automatic && isFetching && !data && <p className="muted" role="status">Đang tải ảnh…</p>}

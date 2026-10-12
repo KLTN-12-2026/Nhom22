@@ -8,9 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .toolbar-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--sp-3); margin: var(--sp-4) 0; }
   .toolbar-row .field { flex: 1 1 260px; }
@@ -32,6 +33,10 @@
   .dialog.wide { width: min(640px, calc(100vw - 32px)); }
   .rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="admin-decks" data-auth="required" data-role="ADMIN">
 <!-- F2.8 · UI49 · API: GET/POST /admin/decks, GET/PATCH/DELETE /admin/decks/{id} {…, quyenTruyCap, trangThaiKiemDuyet, lyDo, version} (B2.11), GET /admin/cards?boTheId, POST /admin/cards, PATCH/DELETE /admin/cards/{id} (B2.11), GET /admin/topics (B1.7) -->
@@ -134,8 +139,9 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
@@ -158,10 +164,10 @@
   function toolsHtml(d, withCards) {
     const t = [];
     if (withCards) t.push('<a class="btn btn-quiet" href="quan-tri-bo-mau.html?id=' + d.id + '">Quản lý thẻ</a>');
-    t.push('<button type="button" class="btn btn-quiet" data-act="edit">' + VL.icon("edit") + "Sửa thông tin</button>");
+    t.push('<button type="button" class="btn btn-edit" data-act="edit">' + VL.icon("edit") + "Sửa thông tin</button>");
     if (d.trangThaiKiemDuyet !== "DA_AN") t.push(d.quyenTruyCap === "CONG_KHAI" ? '<button type="button" class="btn btn-quiet" data-act="draft">Chuyển về nháp</button>' : '<button type="button" class="btn btn-quiet" data-act="publish">Xuất bản</button>');
     t.push(d.trangThaiKiemDuyet === "DA_AN" ? '<button type="button" class="btn btn-quiet" data-act="show">Hiện lại</button>' : '<button type="button" class="btn btn-quiet" data-act="hide">Ẩn khỏi thư viện</button>');
-    t.push('<button type="button" class="btn btn-quiet danger-text" data-act="delete">' + VL.icon("trash") + "Xóa bộ</button>");
+    t.push('<button type="button" class="btn btn-danger" data-act="delete">' + VL.icon("trash") + "Xóa bộ</button>");
     return t.join("");
   }
 
@@ -210,7 +216,7 @@
   async function deckAction(act, d, after) {
     const name = d.ten.length > 60 ? d.ten.slice(0, 60) + "…" : d.ten;
     let res = null;
-    if (act === "edit") { res = await deckDialog(d); if (res) VL.toast("Đã lưu thông tin bộ"); }
+    if (act === "edit") { res = await deckDialog(d); if (res) VL.toast("Đã lưu thông tin bộ", "success"); }
     else if (act === "publish") {
       if (!(await VL.confirm({ title: "Xuất bản " + name + "?", message: "Bộ sẽ hiện trong thư viện cho mọi người học.", confirmText: "Xuất bản" }))) return;
       try { res = await VL.api("PATCH", "/admin/decks/" + d.id, { quyenTruyCap: "CONG_KHAI", version: d.version }); VL.toast("Đã xuất bản bộ"); }
@@ -253,7 +259,7 @@
       render: (l) => {
         cards = l;
         $("cards").innerHTML = l.map((c, i) => '<li class="answer-row d-row" data-id="' + c.id + '"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><div class="c-word"><strong lang="en">' + VL.esc(c.tu) + "</strong>" + (c.phienAm ? '<span class="small muted">' + VL.esc(c.phienAm) + "</span>" : "") + (c.tuLoai ? '<span class="small muted">' + VL.esc(c.tuLoai) + "</span>" : "") + "</div><div>" + VL.esc(c.nghiaVi) + "</div>" + (c.viDuEn ? '<div class="c-ex"><span lang="en">' + VL.esc(c.viDuEn) + "</span>" + (c.dichVi ? "<br>" + VL.esc(c.dichVi) : "") + "</div>" : "") +
-          '<div class="tools"><button type="button" class="btn btn-quiet" data-card="edit">' + VL.icon("edit") + 'Sửa thẻ</button><button type="button" class="btn btn-quiet danger-text" data-card="delete">' + VL.icon("trash") + "Xóa thẻ</button></div></div></li>").join("");
+          '<div class="tools"><button type="button" class="btn btn-edit" data-card="edit">' + VL.icon("edit") + 'Sửa thẻ</button><button type="button" class="btn btn-quiet danger-text" data-card="delete">' + VL.icon("trash") + "Xóa thẻ</button></div></div></li>").join("");
       }
     });
     $("deck-tools").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b && deck) deckAction(b.dataset.act, deck, loadDeck); });
@@ -265,7 +271,7 @@
       const body = { boTheId: p.id };
       ["tu", "nghiaVi", "tuLoai", "phienAm", "viDuEn", "dichVi"].forEach((k) => { body[k] = cf[k].value; });
       VL.busy($("card-add"), async () => {
-        try { await VL.api("POST", "/admin/cards", body); VL.toast("Đã thêm thẻ"); cf.reset(); cf.tu.focus(); loadDeck(); }
+        try { await VL.api("POST", "/admin/cards", body); VL.toast("Đã thêm thẻ", "success"); cf.reset(); cf.tu.focus(); loadDeck(); }
         catch (err) { VL.showErrors(cf, err); }
       });
     });
@@ -301,7 +307,7 @@
         const body = { version: c.version };
         F.forEach((x) => { body[x[0]] = f[x[0]].value; });
         VL.busy(f.querySelector('[type="submit"]'), async () => {
-          try { await VL.api("PATCH", "/admin/cards/" + c.id, body); close(); VL.toast("Đã lưu thẻ"); loadCards(); }
+          try { await VL.api("PATCH", "/admin/cards/" + c.id, body); close(); VL.toast("Đã lưu thẻ", "success"); loadCards(); }
           catch (err) { VL.showErrors(f, err); }
         });
       });
@@ -334,9 +340,7 @@
         items = d.items;
         $("total").textContent = d.totalElements + " bộ";
         $("list").innerHTML = d.items.map((x, i) => '<li class="answer-row d-row" data-id="' + x.id + '"><span class="answer-no">' + (d.page * d.size + i + 1) + '</span><div class="answer-main"><a class="d-name" href="quan-tri-bo-mau.html?id=' + x.id + '" style="color:inherit">' + VL.esc(x.ten) + "</a>" + (x.moTa ? '<div class="d-desc">' + VL.esc(x.moTa) + "</div>" : "") + '<div class="answer-meta">' + metaHtml(x) + '</div><div class="tools">' + toolsHtml(x, true) + "</div></div></li>").join("");
-        const pages = [];
-        for (let i = 0; i < d.totalPages; i++) pages.push(i === d.page ? '<span aria-current="page">' + (i + 1) + "</span>" : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '">' + (i + 1) + "</button>");
-        $("pager").innerHTML = d.totalPages > 1 ? pages.join("") : "";
+        $("pager").innerHTML = VL.pagination(d.page, d.totalPages);
       }
     });
   }
@@ -348,7 +352,7 @@
   });
   $("create").addEventListener("click", async () => {
     const d = await deckDialog(null);
-    if (d) { VL.toast("Đã tạo bộ mẫu"); location.href = "quan-tri-bo-mau.html?id=" + d.id; }
+    if (d) { VL.toast("Đã tạo bộ mẫu", "success"); location.href = "quan-tri-bo-mau.html?id=" + d.id; }
   });
   $("tabs").addEventListener("click", (e) => { const t = e.target.closest("[data-st]"); if (t) { st = t.dataset.st; pageNo = 0; load(); } });
   sf.addEventListener("submit", (e) => { e.preventDefault(); pageNo = 0; load(); });
@@ -356,5 +360,6 @@
   load();
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

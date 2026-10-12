@@ -8,9 +8,6 @@ const defaultIcon = (
   </svg>
 );
 
-/**
- * ErrorState — hiển thị khi API lỗi, có nút thử lại
- */
 export function ErrorState({ icon = defaultIcon, title = 'Đã xảy ra lỗi', description, onRetry, retryLabel = 'Thử lại' }) {
   return (
     <div className="error-state">

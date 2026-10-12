@@ -1,9 +1,6 @@
 'use client';
 import { forwardRef, useId } from 'react';
 
-/**
- * Input — với label, hint, error message
- */
 export const Input = forwardRef(function Input({
   id,
   label,

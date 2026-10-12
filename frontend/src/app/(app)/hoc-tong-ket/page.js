@@ -1,10 +1,9 @@
 'use client';
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button } from '@/components/ui';
 
 function SummaryContent() {
   const router = useRouter();
@@ -17,12 +16,6 @@ function SummaryContent() {
     enabled: !!id
   });
 
-  const { data: history } = useQuery({
-    queryKey: ['learning-history', id],
-    queryFn: () => apiFetch(`/api/v1/learning/history?phienId=${id}&size=50`),
-    enabled: session?.trangThai === 'KET_THUC'
-  });
-
   const finishMutation = useMutation({
     mutationFn: () => apiFetch(`/api/v1/learning/sessions/${id}/finish`, { method: 'POST' }),
     onSuccess: () => refetch()
@@ -33,7 +26,7 @@ function SummaryContent() {
 
   if (session?.trangThai === 'DANG_HOC') {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid">
+      <div className="page page-grid">
         <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <div style={{ marginBottom: 'var(--space-4)' }}>
             <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
@@ -43,7 +36,7 @@ function SummaryContent() {
             <p style={{ color: 'var(--color-ink-2)' }}>Học tiếp để chấm các thẻ còn lại, hoặc kết thúc ngay. Các thẻ đã chấm vẫn được lưu.</p>
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-            <Button variant="primary" onClick={() => router.push(`/hoc-phien?id=${id}`)}>Học tiếp</Button>
+            <Button variant="accent" onClick={() => router.push(`/hoc-phien?id=${id}`)}>Học tiếp</Button>
             <Button variant="secondary" onClick={() => finishMutation.mutate()} disabled={finishMutation.isPending}>
               {finishMutation.isPending ? 'Đang kết thúc...' : 'Kết thúc phiên'}
             </Button>
@@ -59,7 +52,7 @@ function SummaryContent() {
   const maxRate = Math.max(1, t.theoDanhGia.QUEN, t.theoDanhGia.KHO, t.theoDanhGia.NHO, t.theoDanhGia.DE);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
@@ -149,7 +142,7 @@ function SummaryContent() {
           </ul>
         </div>
 
-        <div style={{ paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)', display: 'flex', gap: 'var(--space-3)' }}>
+        <div className="action-bar" style={{ paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)', display: 'flex', gap: 'var(--space-3)' }}>
           <Button variant="primary" onClick={() => router.push('/hom-nay')}>Học phiên khác</Button>
           <Button variant="secondary" onClick={() => router.push('/hom-nay')}>Về trang Hôm nay</Button>
         </div>

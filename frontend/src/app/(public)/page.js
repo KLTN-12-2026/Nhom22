@@ -33,14 +33,10 @@ export default function HomePage() {
       <section className={styles.hero}>
         <div className={styles.wrap}>
           <div className={`sheet ${styles.heroSheet}`}>
-            <div className={styles.sheetTop}>
-              <strong>Phiếu học từ vựng tiếng Anh</strong>
-              <span>Mẫu dành cho người học Giao tiếp và TOEIC</span>
-            </div>
-
+            <div className={styles.sheetTop}><strong>Phiếu học từ vựng tiếng Anh</strong><span>Mẫu dành cho người học Giao tiếp và TOEIC</span></div>
             <div className={styles.heroGrid}>
               <div>
-                <h1 className={styles.hero}>Học từ vựng tiếng Anh, ôn đúng lúc sắp quên.</h1>
+                <h1>Học từ vựng tiếng Anh, ôn đúng lúc sắp quên.</h1>
                 <p className={styles.lead}>Chọn bộ Giao tiếp hoặc TOEIC, học vài phút mỗi ngày. Mỗi từ có hai lịch ôn riêng: Anh → Việt và Việt → Anh, để bạn vừa hiểu nghĩa vừa nhớ được cách dùng.</p>
 
                 <form className={styles.fillGrid} id="plan" aria-label="Điền thử kế hoạch của bạn">
@@ -65,7 +61,7 @@ export default function HomePage() {
                 <p className="muted small" id="plan-note" aria-live="polite" style={{ marginTop: 'var(--sp-2)' }}>Tô thử hai ô trên. Bạn có thể lưu kế hoạch trong phần thiết lập học sau khi đăng nhập.</p>
 
                 <div className={styles.ctaRow}>
-                  <Link href="/dang-ky" className="btn btn-accent btn-lg">Bắt đầu học miễn phí</Link>
+                  <Link href="/dang-ky" className="btn btn-primary btn-lg">Bắt đầu học miễn phí</Link>
                   <Link href="/thu-vien" className="btn btn-secondary btn-lg">Xem thư viện</Link>
                 </div>
               </div>
@@ -75,16 +71,15 @@ export default function HomePage() {
                   <span id="quiz-title">Thử một câu</span>
                   <span id="quiz-code">Câu {quizIdx + 1} ({q.dir})</span>
                 </div>
-                <div className={styles.quizBody}>
+                <div key={quizIdx} className={`${styles.quizBody} ${styles.quizBodySwap}`}>
                   <p className={`${styles.quizPrompt} ${!q.en ? styles.quizPromptVi : ''}`}>{q.prompt}</p>
                   <p className={styles.quizSub}>{q.sub}</p>
                   <ul className={styles.quizOptions} role="list">
                     {q.options.map((opt, i) => {
                       let dataResult = undefined;
                       if (quizState) {
-                        if (i === q.answer) dataResult = 'correct';
+                        if (i === q.answer) dataResult = quizState.isCorrect ? 'correct' : 'answer';
                         else if (i === quizState.selected && !quizState.isCorrect) dataResult = 'wrong';
-                        else dataResult = 'answer'; // bg color
                       }
                       return (
                         <li key={i}>
@@ -94,7 +89,7 @@ export default function HomePage() {
                             disabled={quizState !== null}
                             data-result={dataResult}
                           >
-                            <span className="bubble" aria-hidden="true">{['A','B','C','D'][i]}</span>
+                            <span className={`bubble ${dataResult === 'correct' || dataResult === 'wrong' ? 'is-filled' : ''}`} aria-hidden="true">{['A','B','C','D'][i]}</span>
                             <span className={q.en ? '' : 'en'}>{opt}</span>
                           </button>
                         </li>
@@ -103,7 +98,7 @@ export default function HomePage() {
                   </ul>
                 </div>
                 <div className={styles.quizFoot}>
-                  <p className={styles.verdict} data-kind={quizState ? (quizState.isCorrect ? 'ok' : 'no') : undefined}>
+                  <p className={`${styles.verdict} verdict`} role="status" data-kind={quizState ? (quizState.isCorrect ? 'ok' : 'no') : undefined}>
                     {quizState ? (quizState.isCorrect ? `Đúng. ${q.note}` : `Chưa đúng, đáp án là ${['A','B','C','D'][q.answer]}. ${q.note}`) : 'Chọn một đáp án.'}
                   </p>
                   {quizState && <button type="button" className="btn btn-secondary" onClick={nextQuiz}>{quizIdx < QUIZ.length - 1 ? "Câu tiếp" : "Làm lại"}</button>}

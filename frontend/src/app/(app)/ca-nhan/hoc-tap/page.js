@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import styles from './page.module.css';
+import { SpeechSettings } from '@/components/content/SpeechSettings';
 import { ErrorState, Icon } from '@/components/ui';
 
 export default function LearningSettingsPage() {
@@ -229,6 +230,7 @@ export default function LearningSettingsPage() {
           <span className="saved-at" id="saved-at" aria-live="polite">{successMsg}</span>
         </div>
       </form>
+      <SpeechSettings />
     </>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
 import { useState, useEffect } from 'react';
@@ -74,12 +75,13 @@ export default function OnboardingPage() {
       <header className={styles.onbHeader}>
         <div className={styles.onbHeaderInner}>
           <Link className="brand" href="/bo-the">
-            <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+            <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
             <span>Vocab<span className="brand-accent">Learning</span></span>
           </Link>
+          <div className="row"><ThemeToggle />
           <button type="button" className="btn btn-quiet" onClick={() => logout(queryClient).catch(error => alert(error.message))}>
             Đăng xuất
-          </button>
+          </button></div>
         </div>
       </header>
 

@@ -322,21 +322,6 @@
     if (f.until > Date.now()) throw new ApiError(429, "RATE_LIMITED", "Bạn thao tác quá nhiều lần, vui lòng thử lại sau", [], { retryAfter: Math.ceil((f.until - Date.now()) / 1000) });
     return { fail() { f.n += 1; if (f.n >= limit) { f.until = Date.now() + 60000; f.n = 0; } db.fails[key] = f; }, reset() { delete db.fails[key]; } };
   }
-  function parseCsv(text) {
-    const rows = []; let row = []; let cell = ""; let q = false;
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
-      else if (ch === '"') q = true;
-      else if (ch === ",") { row.push(cell); cell = ""; }
-      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
-      else cell += ch;
-    }
-    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
-    return rows.filter((r) => r.some((x) => x.trim() !== ""));
-  }
-  const safeCell = (v) => { const s = (v == null ? "" : String(v)); const t = /^[=+\-@\t\r]/.test(s) ? "'" + s : s; return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
-
   const flags = { offline: false, conflictOnce: false };
   const iso = (ms) => new Date(ms).toISOString();
   const tzOf = (u) => (u && u.muiGio) || "Asia/Ho_Chi_Minh";
@@ -1175,58 +1160,6 @@
       return { status: 204 };
     }],
 
-    ["POST", /^\/decks\/(\w+)\/imports\/preview$/, (m, b) => {
-      const { d } = ownDeck(m[1]);
-      const text = b.csv || "";
-      if (!text.trim()) bad([fe("file", "Tệp CSV trống")]);
-      if (text.length > 1024 * 1024) bad([fe("file", "Tệp CSV tối đa 1 MB")]);
-      const rows = parseCsv(text);
-      const header = (rows.shift() || []).map((h) => norm(h));
-      const need = ["word", "meaning_vi"];
-      const missing = need.filter((h) => !header.includes(h));
-      if (missing.length) throw new ApiError(422, "BUSINESS_RULE", "Tệp thiếu cột bắt buộc: " + missing.join(", ") + ". Dòng đầu phải là tên cột.");
-      if (rows.length > 1000) throw new ApiError(422, "BUSINESS_RULE", "Tệp có " + rows.length + " dòng, tối đa 1000 dòng mỗi lần nhập");
-      const col = (r, name) => { const i = header.indexOf(name); return i >= 0 ? (r[i] || "").trim() : ""; };
-      const seen = {};
-      const out = rows.map((r, i) => {
-        const x = { line: i + 2, word: col(r, "word"), pos: col(r, "pos"), ipa: col(r, "ipa"), meaningVi: col(r, "meaning_vi"), exampleEn: col(r, "example_en"), exampleVi: col(r, "example_vi") };
-        const errors = [];
-        if (!x.word) errors.push("Thiếu từ");
-        else if (x.word.length > 100) errors.push("Từ dài quá 100 ký tự");
-        if (!x.meaningVi) errors.push("Thiếu nghĩa tiếng Việt");
-        [x.word, x.meaningVi, x.exampleEn].forEach((v) => { if (/^[=+\-@]/.test(v)) errors.push("Ô bắt đầu bằng ký tự công thức (= + - @)"); });
-        const k = strip(x.word) + "|" + norm(x.pos);
-        let status = errors.length ? "ERROR" : "OK";
-        let note = errors.join("; ");
-        if (status === "OK" && (duplicatesOf(d.id, x.word, x.pos).length || seen[k])) { status = "DUPLICATE"; note = seen[k] ? "Trùng với dòng " + seen[k] + " trong tệp" : "Đã có trong bộ thẻ"; }
-        if (!seen[k]) seen[k] = x.line;
-        return Object.assign(x, { status, note });
-      });
-      const id = nextId();
-      db.imports[id] = { deckId: d.id, rows: out, committed: false };
-      const count = (s) => out.filter((x) => x.status === s).length;
-      return { importId: id, expiresInMinutes: 30, rows: out, summary: { total: out.length, ok: count("OK"), duplicate: count("DUPLICATE"), error: count("ERROR") } };
-    }],
-    ["POST", /^\/imports\/(\w+)\/commit$/, (m, b, q, h) => {
-      requireMe();
-      const imp = db.imports[m[1]];
-      if (!imp) throw new ApiError(404, "NOT_FOUND", "Phiên nhập đã hết hạn (30 phút). Hãy tải tệp lên lại.");
-      if (imp.committed) return imp.result;
-      ownDeck(imp.deckId);
-      const lines = new Set(b.lines || []);
-      const chosen = imp.rows.filter((x) => lines.has(x.line) && x.status !== "ERROR");
-      chosen.forEach((x) => db.cards.push({ id: nextId(), deckId: imp.deckId, word: x.word, pos: x.pos, ipa: x.ipa, meaningVi: x.meaningVi, exampleEn: x.exampleEn, exampleVi: x.exampleVi, difficulty: 2, tagIds: [], imageUrl: null, audioUrl: null, version: 0, createdAt: new Date().toISOString() }));
-      imp.committed = true;
-      imp.result = { created: chosen.length, skipped: imp.rows.length - chosen.length };
-      return imp.result;
-    }],
-    ["GET", /^\/decks\/(\w+)\/export$/, (m) => {
-      ownDeck(m[1]);
-      const head = "word,pos,ipa,meaning_vi,example_en,example_vi";
-      const body = db.cards.filter((x) => x.deckId === m[1]).map((x) => [x.word, x.pos, x.ipa, x.meaningVi, x.exampleEn, x.exampleVi].map(safeCell).join(","));
-      return { csv: "﻿" + [head].concat(body).join("\n") };
-    }],
-
     ["GET", /^\/admin\/topics$/, () => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && !d.deleted).length })); }],
     ["POST", /^\/admin\/topics$/, (m, b) => {
       requireAdmin();
@@ -1767,6 +1700,7 @@
     put,
     session,
     flags,
+    persist() { save(db); },
     play,
     localDate,
     reset() { localStorage.removeItem(KEY); session.clear(); db = load(); seedPractice(); },

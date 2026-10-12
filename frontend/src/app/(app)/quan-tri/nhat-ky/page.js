@@ -100,7 +100,7 @@ function AdminAuditContent() {
         </div>
 
         <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
-          <button style={{ padding: '6px 12px', border: 'none', background: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-full)', fontWeight: 'bold' }}>Thao tác quản trị</button>
+          <button style={{ padding: '6px 12px', border: 'none', background: 'var(--primary-fill)', color: 'var(--on-primary)', borderRadius: 'var(--radius-full)', fontWeight: 'bold' }}>Thao tác quản trị</button>
           <button disabled title="Có ở Đợt 3" style={{ padding: '6px 12px', border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-ink-3)', borderRadius: 'var(--radius-full)', cursor: 'not-allowed', fontWeight: 'bold' }}>Tác vụ nền (Đợt 3)</button>
         </div>
 

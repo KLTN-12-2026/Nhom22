@@ -1,6 +1,6 @@
 # ROADMAP FRONTEND — VocabLearning (VocabFlow)
 
-> Trạng thái10/10/2026: đã tích hợp FE từ GĐ0 đến hợp đồng BE B1.11, sửa lỗi DTO/phiên/upload/form, đối chiếu mockup desktop/mobile. F1.11 trong roadmap FE là CSV B1.12 và vẫn chưa mở. OAuth provider cần credentials để kiểm thử trao đổi Google thật; không tuyên bố luồng provider đã chạy. Bằng chứng và giới hạn nằm trong báo cáo bàn giao hiện có, không thay số liệu lịch sử BE.
+> Trạng thái10/10/2026: đã tích hợp FE từ GĐ0 đến hợp đồng BE B1.11, sửa lỗi DTO/phiên/upload/form, đối chiếu mockup desktop/mobile. F1.11 CSV B1.12 đã mở/kiểm chứng13/10/2026; xem bàn giao và verification/B1.12. Ghi nhận10/10 được giữ làm lịch sử. OAuth provider cần credentials để kiểm thử trao đổi Google thật; không tuyên bố luồng provider đã chạy. Bằng chứng và giới hạn nằm trong báo cáo bàn giao hiện có, không thay số liệu lịch sử BE.
 
 > Nguồn: TK (`docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` §4, §6, §9, §10, §16), lịch sprint `roadmap/SPRINT_PLAN.md`, API từ `report/<PHASE>_BAO_CAO_FE.md`.
 > Mỗi bước `Fx.y` ghép với bước BE cùng số giai đoạn. Màn hình `UIxx` và route: `SPRINT_PLAN.md` §5.
@@ -122,8 +122,9 @@ frontend/
 ### [x] F1.10 Sao chép bộ ← B1.11
 - Gửi POST không body với `Idempotency-Key` giữ theo người dùng/bộ nguồn khi retry/reload; dùng `DeckResponse.id`, hiển thị thành công và mở bộ mới. Không tự tạo key khác khi mất phản hồi.
 
-### [ ] F1.11 CSV — UI17 ← B1.12
+### [x] F1.11 CSV — UI17 ← B1.12
 - Chọn tệp (≤ 1 MB, ≤ 1000 dòng) → xem trước → bảng lỗi từng dòng, đánh dấu trùng → chọn dòng → commit → kết quả; nút xuất CSV.
+- Hoàn tất13/10: route `/bo-the/{id}/nhap-csv`, multipart/mapping9 cột,50 dòng/trang, retry cùng key sau mất response/reload, export blob, button icons/colors sáng/tối, mockup cùng contract;35 Node test/lint/build/ui:sync/ui:check pass, browser thật7 nhóm. Thẻ thư viện media cột phải và tùy chọn ảnh ở mép phải. [Bằng chứng](../verification/B1.12/browser.json).
 
 ### [x] F1.12 Quản trị chủ đề & nhãn — UI48 ← B1.7
 - Chủ đề/nhãn: CRUD dùng DTO native và version; ADMIN được phép, learner thấy trang403; nhãn còn liên kết trả409. Bàn giao bổ sung trong `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md`, không tạo báo cáo BE song song.
