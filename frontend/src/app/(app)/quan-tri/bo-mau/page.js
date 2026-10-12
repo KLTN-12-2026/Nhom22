@@ -286,7 +286,7 @@ function AdminDecksContent() {
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: 'var(--space-3)' }}>
         {isList && <Button variant="ghost" size="sm" onClick={() => router.push(`/quan-tri/bo-mau?id=${d.id}`)}>Quản lý thẻ</Button>}
-        <Button variant="ghost" size="sm" onClick={() => { setEditingDeck(d); setShowDeckDialog(true); }}>Sửa thông tin</Button>
+        <Button variant="edit" size="sm" onClick={() => { setEditingDeck(d); setShowDeckDialog(true); }}>Sửa thông tin</Button>
         {d.trangThaiKiemDuyet !== 'DA_AN' && (
           <Button variant="ghost" size="sm" onClick={() => handleDeckAction(d.quyenTruyCap === 'CONG_KHAI' ? 'draft' : 'publish', d)} disabled={actionMutation.isPending}>
             {d.quyenTruyCap === 'CONG_KHAI' ? 'Chuyển về nháp' : 'Xuất bản'}
@@ -295,7 +295,7 @@ function AdminDecksContent() {
         <Button variant="ghost" size="sm" onClick={() => handleDeckAction(d.trangThaiKiemDuyet === 'DA_AN' ? 'show' : 'hide', d)} disabled={actionMutation.isPending}>
           {d.trangThaiKiemDuyet === 'DA_AN' ? 'Hiện lại' : 'Ẩn khỏi thư viện'}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => handleDeckAction('delete', d)} style={{ color: 'var(--color-danger)' }} disabled={actionMutation.isPending}>Xóa bộ</Button>
+        <Button variant="danger" size="sm" onClick={() => handleDeckAction('delete', d)} style={{ color: 'var(--color-danger)' }} disabled={actionMutation.isPending}>Xóa bộ</Button>
       </div>
     );
   };
@@ -303,7 +303,7 @@ function AdminDecksContent() {
   if (id) {
     if (deckLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>;
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+      <div className="page page-grid with-side">
         <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <Button variant="ghost" onClick={() => router.push('/quan-tri/bo-mau')} style={{ marginLeft: '-12px', marginBottom: 'var(--space-4)' }}>
             <Icon name="arrow-left" /> Tất cả bộ mẫu
@@ -344,8 +344,8 @@ function AdminDecksContent() {
                       </div>
                     )}
                     <div style={{ display: 'flex', gap: '8px', marginTop: 'var(--space-2)' }}>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingCard(c)}>Sửa thẻ</Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteCard(c)} style={{ color: 'var(--color-danger)' }}>Xóa thẻ</Button>
+                      <Button variant="edit" size="sm" onClick={() => setEditingCard(c)}>Sửa thẻ</Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteCard(c)} style={{ color: 'var(--color-danger)' }}>Xóa thẻ</Button>
                     </div>
                   </div>
                 </li>
@@ -386,7 +386,6 @@ function AdminDecksContent() {
     );
   }
 
-  // List View
   const handleTabClick = (st) => {
     setTrangThai(st);
     const params = new URLSearchParams(searchParams);
@@ -404,7 +403,7 @@ function AdminDecksContent() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
@@ -422,15 +421,15 @@ function AdminDecksContent() {
             { id: 'DA_XUAT_BAN', label: 'Đã xuất bản' },
             { id: 'DA_AN', label: 'Đã ẩn' }
           ].map(t => (
-            <button key={t.id} onClick={() => handleTabClick(t.id)} style={{ padding: '6px 12px', border: trangThai === t.id ? 'none' : '1px solid var(--color-border)', background: trangThai === t.id ? 'var(--color-primary)' : 'transparent', color: trangThai === t.id ? 'white' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer' }}>
+            <button key={t.id} onClick={() => handleTabClick(t.id)} style={{ padding: '6px 12px', border: trangThai === t.id ? 'none' : '1px solid var(--color-border)', background: trangThai === t.id ? 'var(--primary-fill)' : 'transparent', color: trangThai === t.id ? 'var(--on-primary)' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer' }}>
               {t.label}
             </button>
           ))}
         </div>
 
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-5)' }}>
-          <div style={{ flex: 1 }}>
-            <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm theo tên bộ..." style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
+        <form onSubmit={handleSearch} className="admin-search">
+          <div className="field">
+            <input className="input" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm theo tên bộ..." style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
           </div>
           <Button type="submit" variant="secondary">Tìm</Button>
           <Button type="button" variant="primary" onClick={() => { setEditingDeck(null); setShowDeckDialog(true); }}>Tạo bộ mẫu</Button>

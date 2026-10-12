@@ -1,0 +1,37 @@
+/* Topic illustrations and row geometry are shared with the HTML mockups. */
+.deck-list-sheet { container: deck-list / inline-size; }
+.deck-title-group { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-3); min-width: 0; }
+.deck-total { color: var(--ink-2); font-size: var(--fs-small); font-weight: 600; white-space: nowrap; }
+.deck-name-line { display: flex; align-items: flex-start; gap: var(--sp-3); min-width: 0; }
+.deck-name-line .answer-title { min-width: 0; flex: 1; }
+.deck-thumbnail { width: var(--deck-thumb-w); height: var(--deck-thumb-h); flex: 0 0 var(--deck-thumb-w); object-fit: cover; border: var(--rule) solid var(--primary-line); border-radius: var(--radius-field); background: var(--sheet); }
+@media (max-width: 639px) { .deck-thumbnail { width: var(--deck-thumb-mobile-w); height: var(--deck-thumb-mobile-h); flex-basis: var(--deck-thumb-mobile-w); } }
+/* A sidebar can make the sheet narrow even on desktop. Reuse its stacked rows. */
+@container deck-list (max-width: 700px) {
+  .deck-head { display: none; }
+  .deck-row, .deck-row.has-actions { grid-template-columns: 2.25rem minmax(0, 1fr); }
+  .deck-cols { display: flex; grid-column: 2; }
+  .deck-actions { grid-column: 2; flex-wrap: wrap; }
+}
+
+/* Personal decks have four actual columns. Actions occupy the right edge. */
+.personal-decks .deck-row, .personal-decks .deck-head {
+  grid-template-columns: 2rem minmax(0, 1fr) 9rem 9.5rem;
+  align-items: center;
+}
+.personal-decks .deck-cols { display: flex; grid-column: 3; padding: 0; }
+.personal-decks .deck-actions { grid-column: 4; justify-self: end; justify-content: flex-end; flex-wrap: nowrap; }
+.personal-decks .level { min-width: 0; }
+.personal-decks .level .bubble-row { flex-shrink: 0; }
+@container deck-list (max-width: 760px) {
+  .personal-decks .deck-head { display: none; }
+  .personal-decks .deck-row { grid-template-columns: 2rem minmax(0, 1fr) auto; gap: var(--sp-2) var(--sp-3); }
+  .personal-decks .answer-no { grid-row: 1 / 3; align-self: start; }
+  .personal-decks .answer-main { grid-column: 2; }
+  .personal-decks .deck-cols { grid-column: 2; grid-row: 2; }
+  .personal-decks .deck-actions { grid-column: 3; grid-row: 1 / 3; align-self: center; }
+}
+@container deck-list (max-width: 480px) {
+  .personal-decks .deck-row { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .personal-decks .deck-actions { grid-column: 2; grid-row: 3; justify-self: end; }
+}

@@ -12,11 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 
 @Slf4j
 @RestControllerAdvice
@@ -37,7 +41,8 @@ public class GlobalExceptionHandler {
         return build(ErrorCode.VALIDATION_FAILED, "Dữ liệu không hợp lệ", fields);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
+            HttpMediaTypeNotSupportedException.class})
     ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
         return build(ErrorCode.VALIDATION_FAILED, "Yêu cầu không đúng định dạng", List.of());
     }
@@ -61,6 +66,13 @@ public class GlobalExceptionHandler {
     ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         log.error("Unhandled error", ex);
         return build(ErrorCode.INTERNAL_ERROR, "Hệ thống đang gặp sự cố, vui lòng thử lại sau", List.of());
+    }
+
+    @ExceptionHandler({MissingServletRequestPartException.class, MissingRequestHeaderException.class,
+            MaxUploadSizeExceededException.class})
+    ResponseEntity<ErrorResponse> handleMultipart(Exception ex) {
+        return build(ErrorCode.VALIDATION_FAILED, "Thiếu phần bắt buộc hoặc tệp vượt giới hạn 1 MB",
+                List.of(new ErrorResponse.FieldErrorItem("file", "Kiểm tra tệp CSV và các phần của yêu cầu")));
     }
 
     private ResponseEntity<ErrorResponse> build(ErrorCode code, String message,

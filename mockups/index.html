@@ -8,20 +8,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="shared/tokens.css">
-<link rel="stylesheet" href="shared/base.css">
-<link rel="stylesheet" href="shared/components.css">
+<link rel="stylesheet" href="shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .wrap { max-width: 1080px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-7); }
   .phase { margin-top: var(--sp-6); }
   .phase h2 { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-h2); }
   .mock-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; border-top: var(--rule-strong) solid var(--primary); }
   .mock-list li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); position: relative; }
-  .mock-list .ui { font-family: var(--font-form); font-stretch: 78%; font-weight: 800; color: var(--primary); }
+  .mock-list .ui { font-family: var(--font-form); font-stretch: 100%; font-weight: 800; color: var(--primary); }
   .mock-list a { font-weight: 650; }
   .mock-list .meta { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-top: 2px; }
   @media (min-width: 800px) { .mock-list li { grid-template-columns: 3.5rem 15rem minmax(0, 1fr); align-items: baseline; } .mock-list .meta { margin: 0; } }
 </style>
+<script src="shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="shared/mascot.css?v=c679fd5e94c1">
+<script src="shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".">
 <main id="main" class="wrap">
@@ -86,6 +90,28 @@
       </ul>
     </section>
 
+<section class="phase" aria-labelledby="dot3"><h2 id="dot3">Đợt 3 · AI, phát âm và mở rộng <span class="stamp">19 giao diện/khối</span></h2><p class="small muted">Bản mô phỏng tương tác, dùng chung giao diện sáng/tối. API đợt 3 còn kế hoạch; dữ liệu mẫu không xác nhận backend đã triển khai.</p>
+<div class="row" style="margin-block:var(--sp-4)"><a class="btn btn-primary" href="dot2/hom-nay.html?as=an">Trải nghiệm luồng người học</a><a class="btn btn-secondary" href="dot3/quan-tri-tong-quan.html?as=admin">Trải nghiệm luồng quản trị</a></div>
+<p class="small muted">Chỉ các lối vào này chọn tài khoản demo. Khi chuyển màn hình trong ứng dụng, tài khoản và dữ liệu mẫu được giữ nguyên.</p><ul class="mock-list" role="list"><li><span class="ui">UI28</span><a href="dot3/goi-y.html?as=an">Gợi ý có lý do</a><span class="meta"><span class="stamp">F3.4</span>Một vài bước tiếp theo, kèm bằng chứng từ việc học.</span></li>
+<li><span class="ui">UI29</span><a href="dot3/ai-xuong-the.html?as=an">Xưởng thẻ AI</a><span class="meta"><span class="stamp">F3.1</span>Từ một đoạn văn đến thẻ nháp bạn đã kiểm tra.</span></li>
+<li><span class="ui">UI30</span><a href="dot3/ai-giai-thich.html?as=an">Giải thích theo ngữ cảnh</a><span class="meta"><span class="stamp">F3.2</span>Hiểu nghĩa trong câu, giữ nguyên thẻ đang học.</span></li>
+<li><span class="ui">UI31</span><a href="dot3/ai-viet-cau.html?as=an">Viết câu dùng thử</a><span class="meta"><span class="stamp">F3.2</span>Dùng từ mới trong một câu của chính bạn.</span></li>
+<li><span class="ui">UI32</span><a href="dot3/ai-lich-su.html?as=an">Lịch sử AI và hạn mức</a><span class="meta"><span class="stamp">F3.3</span>Theo dõi yêu cầu, kết quả và lượt sử dụng còn lại.</span></li>
+<li><span class="ui">UI33</span><a href="dot3/phat-am.html?as=an">Góc phát âm</a><span class="meta"><span class="stamp">F3.5</span>Nghe, ghi ngắn và xem lại trước khi gửi đánh giá.</span></li>
+<li><span class="ui">UI34</span><a href="dot3/phat-am-lich-su.html?as=an">Lịch sử phát âm</a><span class="meta"><span class="stamp">F3.5</span>So sánh các lượt của cùng một từ bằng chỉ số có sẵn.</span></li>
+<li><span class="ui">UI36</span><a href="dot3/ban-do-lam-chu.html?as=an">Bản đồ làm chủ</a><span class="meta"><span class="stamp">F3.9</span>Nhận nghĩa, chính tả và phát âm được xem riêng.</span></li>
+<li><span class="ui">UI37</span><a href="dot3/tong-ket-tuan.html?as=an">Tổng kết tuần</a><span class="meta"><span class="stamp">F3.9</span>Nhìn lại một tuần, chọn việc vừa sức cho tuần sau.</span></li>
+<li><span class="ui">UI38</span><a href="dot3/thanh-tich.html?as=an">Thành tích của bạn</a><span class="meta"><span class="stamp">F3.6</span>Ghi nhận những bước học hợp lệ, không chạy đua điểm.</span></li>
+<li><span class="ui">UI39</span><a href="dot3/thong-bao.html?as=an">Thông báo</a><span class="meta"><span class="stamp">F3.7</span>Nhắc học, tổng kết và phản hồi về nội dung của bạn.</span></li>
+<li><span class="ui">UI44</span><a href="dot3/ca-nhan-du-lieu.html?as=an">Dữ liệu cá nhân</a><span class="meta"><span class="stamp">F3.10</span>Hiểu dữ liệu được giữ và phạm vi xử lý khi yêu cầu xóa.</span></li>
+<li><span class="ui">UI45</span><a href="dot3/bao-cao-noi-dung.html?as=an">Báo cáo nội dung</a><span class="meta"><span class="stamp">F3.8</span>Giúp kiểm tra bộ thẻ, nghĩa của từ hoặc đầu ra AI.</span></li>
+<li><span class="ui">UI46</span><a href="dot3/quan-tri-tong-quan.html?as=admin">Tổng quan quản trị</a><span class="meta"><span class="stamp">F3.11</span>Theo dõi nội dung cần xử lý và hoạt động dịch vụ.</span></li>
+<li><span class="ui">UI50</span><a href="dot3/quan-tri-bao-cao.html?as=admin">Hàng đợi báo cáo</a><span class="meta"><span class="stamp">F3.8</span>Xem bằng chứng, chọn quyết định và lưu lý do.</span></li>
+<li><span class="ui">UI51</span><a href="dot3/quan-tri-dich-vu.html?as=admin">Hạn mức và sử dụng dịch vụ</a><span class="meta"><span class="stamp">F3.11</span>Kiểm soát lượt dùng; không tính chi phí khi thiếu đơn giá.</span></li>
+<li><span class="ui">UI52</span><a href="dot3/quan-tri-thong-bao.html?as=admin">Thông báo hệ thống</a><span class="meta"><span class="stamp">F3.7</span>Soạn, xem trước và xác nhận trước khi gửi.</span></li>
+<li><span class="ui">UI53</span><a href="dot3/quan-tri-tac-vu.html?as=admin">Tác vụ nền</a><span class="meta"><span class="stamp">F3.11</span>Theo dõi trạng thái, lần thử và yêu cầu chưa rõ kết quả.</span></li>
+<li><span class="ui">UI54</span><a href="dot3/quan-tri-dong-luc.html?as=admin">Huy hiệu và thử thách</a><span class="meta"><span class="stamp">F3.6</span>Quản lý điều kiện ghi nhận, không thay đổi điểm tùy ý.</span></li></ul></section>
+
     <section class="phase" aria-labelledby="dev">
       <h2 id="dev">Cách dùng</h2>
       <ul class="small" style="padding-left:1.1rem;display:grid;gap:6px;margin-top:var(--sp-3)">
@@ -96,7 +122,8 @@
     </section>
   </div>
 </main>
-<script src="shared/demo.js"></script>
-<script src="shared/app.js"></script>
+<script src="shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="shared/app.js?v=8aa721dd6a29"></script>
+<script src="shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

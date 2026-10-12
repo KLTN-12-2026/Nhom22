@@ -1,7 +1,6 @@
 'use client';
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import styles from './page.module.css';
@@ -33,8 +32,6 @@ function formatDay(dateStr, includeYear = false) {
 }
 
 function StatsContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   
   const today = new Date().toISOString().split('T')[0];
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;

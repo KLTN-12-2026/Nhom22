@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, Pagination } from '@/components/ui';
 
 const TYPES = {
   CHON_NGHIA: 'Chọn nghĩa',
@@ -113,19 +113,7 @@ function PracticeHistoryContent() {
               ))}
             </ol>
             
-            {data.totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-6)' }}>
-                {Array.from({ length: data.totalPages }).map((_, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => handlePageChange(i)}
-                    style={{ padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: page === i ? 'var(--color-primary)' : 'var(--color-bg)', color: page === i ? 'white' : 'var(--color-ink)', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+            <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={value => handlePageChange(value - 1)} />
           </>
         ) : (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>

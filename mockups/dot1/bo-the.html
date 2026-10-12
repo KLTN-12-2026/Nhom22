@@ -8,9 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/deck-illustrations.css?v=683a5eb92aab">
 <style>
   .head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-3); flex-wrap: wrap; }
   .plan { display: grid; gap: var(--sp-3); }
@@ -18,6 +20,10 @@
   .plan-line span:first-child { color: var(--primary); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 600; font-size: var(--fs-small); }
   .plan-line span:last-child { font-weight: 650; text-align: right; }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="decks" data-auth="required">
 <!-- F1.8 · UI13 · API: GET /decks?tab=mine|favorites&q (B1.8), GET /me/learning-settings (B1.5) -->
@@ -27,11 +33,10 @@
     <nav class="sidebar"></nav>
     <main class="app-main" id="main">
       <div class="page page-grid with-side">
-        <section class="sheet" aria-labelledby="page-title">
+        <section class="sheet deck-list-sheet personal-decks" aria-labelledby="page-title">
           <div class="form-head">
-            <div class="form-code"><span>Bộ của tôi</span><span id="count-code">—</span></div>
             <div class="head-row">
-              <h1 id="page-title">Bộ thẻ của bạn</h1>
+              <div class="deck-title-group"><h1 id="page-title">Bộ thẻ của bạn</h1><span class="deck-total" id="count-code">—</span></div>
               <a class="btn btn-primary" href="bo-the-tao.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Tạo bộ thẻ</a>
             </div>
           </div>
@@ -53,7 +58,7 @@
           <div data-view="loading" id="region" role="tabpanel" aria-labelledby="tab-mine">
             <div data-when="loading"><div class="skeleton"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div></div>
             <div data-when="ready">
-              <div class="deck-head has-actions" aria-hidden="true"><span>Số</span><span>Bộ thẻ</span><span>Mục tiêu</span><span>Trình độ</span><span style="text-align:right">Số thẻ</span><span></span></div>
+              <div class="deck-head has-actions" aria-hidden="true"><span>Số</span><span>Bộ thẻ</span><span>Trình độ</span><span></span></div>
               <ol class="answer-list" id="list" role="list"></ol>
             </div>
             <div data-when="empty">
@@ -85,9 +90,11 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/contract-demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
+<script src="../shared/deck-illustration.js?v=71a56573de29"></script>
 <script>
 (function () {
   if (!VL.ready) return;
@@ -125,7 +132,7 @@
           const href = mine ? "bo-the-chi-tiet.html?id=" + deck.id : "thu-vien-chi-tiet.html?id=" + deck.id;
           return '<li class="answer-row deck-row has-actions">' +
             '<span class="answer-no">' + (i + 1) + "</span>" +
-            '<div class="answer-main"><a class="answer-title" href="' + href + '">' + VL.esc(deck.ten) + "</a>" +
+            '<div class="answer-main"><div class="deck-name-line">' + VLDeckThumbnail(deck) + '<a class="answer-title" href="' + href + '">' + VL.esc(deck.ten) + "</a></div>" +
             '<div class="answer-meta">' + (deck.quyenTruyCap === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
             (deck.boNguonId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
             '<div class="deck-cols">' + VL.levelHtml(deck.trinhDo) + '</div>' +
@@ -147,5 +154,6 @@
   load();
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

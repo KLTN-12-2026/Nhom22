@@ -162,6 +162,7 @@
     return original(method,url,body,headers);
   };
   document.addEventListener('DOMContentLoaded',()=>{
+    if(document.body.dataset.phase==='dot3')return;
     const notice=document.createElement('p');
     notice.className='alert';
     notice.textContent='Bản demo giao diện. Dữ liệu này không xác nhận API thật đã được kiểm thử. Mở ứng dụng Next.js để dùng backend.';

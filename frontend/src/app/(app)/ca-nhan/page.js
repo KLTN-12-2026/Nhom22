@@ -59,7 +59,6 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    // Basic logout handling
     logout(queryClient).catch(error => alert(error.message));
   };
 

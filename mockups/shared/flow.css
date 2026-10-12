@@ -1,0 +1,17 @@
+/* Mockup-only interaction layout; uses the existing shared palette. */
+.flow-related { grid-column:1 / -1; display:grid; gap:var(--sp-3); margin-top:var(--sp-5); }
+.flow-dialog { width:min(36rem,calc(100vw - 2rem)); max-height:calc(100dvh - 2rem); overflow:auto; padding:var(--sp-5); border:var(--rule) solid var(--primary-line); border-radius:var(--radius-btn); background:var(--sheet); color:var(--ink); box-shadow:var(--shadow-pop); }
+.flow-dialog > * + * { margin-top:var(--sp-4); }
+.flow-dialog::backdrop { background:var(--overlay); }
+.flow-breadcrumb { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); font-size:var(--fs-small); margin-bottom:var(--sp-4); color:var(--ink-2); }
+@media(max-width:479px) { .app-header [data-logout] { display:none; } .flow-related .row { align-items:stretch; } .flow-related .btn { flex:1 1 12rem; } }
+
+.flow-menu-button { display:none; }
+.flow-menu { margin:0 auto 0 0; height:100dvh; max-height:100dvh; width:min(22rem,100vw); max-width:100vw; border-radius:0; }
+.flow-menu nav { display:grid; gap:var(--sp-4); }
+.flow-menu .nav-group { display:grid; gap:var(--sp-1); }
+.flow-card-more { position:relative; }
+.flow-card-links { display:grid; gap:var(--sp-2); padding-block:var(--sp-2); }
+.flow-card-more summary { list-style:none; cursor:pointer; }
+@media(max-width:1023px) { .flow-menu-button { display:inline-flex; } }
+@media(max-width:479px) { .app-header .brand { font-size:var(--fs-small); gap:var(--sp-1); } .app-header .brand-mark { width:24px; height:24px; } .app-header .header-actions { gap:var(--sp-1); } .app-header .user-chip { display:none; } }

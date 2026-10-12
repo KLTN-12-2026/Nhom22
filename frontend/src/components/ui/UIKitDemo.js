@@ -1,4 +1,6 @@
 'use client';
+import { ThemeToggle } from './ThemeToggle';
+import { Icon } from './Icon';
 import { useState } from 'react';
 import {
   Button, Input, Select, Checkbox, Textarea, Card, CardHeader, CardBody, CardFooter,
@@ -62,12 +64,17 @@ export default function UIKitPage() {
         </div>
 
         {/* BUTTON */}
+        <ThemeToggle />
         <Section title="Button">
           <Button variant="primary">Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
           <Button variant="link">Link</Button>
+          <Button variant="accent">Bắt đầu học</Button>
+          <Button variant="edit"><Icon name="edit" />Sửa</Button>
+          <Button variant="media"><Icon name="volume" />Nghe</Button>
+          <Button variant="favorite" aria-pressed={true}><Icon name="heart" />Yêu thích</Button>
           <Button variant="primary" size="sm">Small</Button>
           <Button variant="primary" size="lg">Large</Button>
           <Button variant="primary" loading>Loading...</Button>

@@ -3,12 +3,12 @@
 .done { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
 .rescue { display: grid; gap: var(--sp-4); }
 .rescueLead { font-size: var(--fs-lead); max-width: 52ch; }
-.rescueLead strong { font-family: var(--font-form); font-stretch: 80%; font-size: 1.375rem; }
-.planList .answer-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; padding: var(--sp-3) var(--sp-2) var(--sp-3) 0; }
-.planList .answer-title::after { display: none; }
+.rescueLead strong { font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: 1.375rem; }
+.planList :global(.answer-row) { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; padding: var(--sp-3) var(--sp-2) var(--sp-3) 0; }
+.planList :global(.answer-title)::after { display: none; }
 .planList .when { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; }
 .streak { display: flex; align-items: baseline; gap: var(--sp-2); }
-.streak .tallyN { font-size: 2.5rem; }
+.streak :global(.tally-n) { font-size: 2.5rem; }
 .deckMini { list-style: none; margin: 0; padding: 0; display: grid; }
 .deckMini li { display: grid; gap: 4px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
 .deckMini li:first-child { padding-top: 0; }
