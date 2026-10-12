@@ -13,6 +13,7 @@ import styles from './page.module.css';
 import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
 import { apiFetch } from '@/lib/api-client';
+import { saveDownload } from '@/lib/csv.mjs';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 export default function DeckDetailPage() {
@@ -26,6 +27,7 @@ export default function DeckDetailPage() {
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
+  const download = useMutation({ mutationFn: () => apiFetch(`/api/v1/decks/${id}/export`, { responseType: 'blob' }), onSuccess: blob => saveDownload(blob, `deck-${id}.csv`) });
   const tags = useQuery({ queryKey: ['public-tags', 'detail'], queryFn: () => apiFetch('/api/v1/public/tags?size=100') });
   const cards = useQuery({ queryKey: ['deck-cards', id, page], queryFn: () => apiFetch(`/api/v1/decks/${id}/cards?page=${page}&size=20`) });
   const deleteCard = useMutation({
@@ -53,11 +55,15 @@ export default function DeckDetailPage() {
         <div className="row">
           <Link className="btn btn-primary" href={`/bo-the/${id}/the-tao`}><Icon name="plus" />Thêm thẻ</Link>
           <Link className="btn btn-edit" href={`/bo-the/tao?id=${id}`}><Icon name="edit" />Sửa bộ</Link>
-          <button className="btn btn-secondary btn-favorite" disabled={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="star" />{deck.yeuThich ? 'Gỡ yêu thích' : 'Yêu thích'}</button>
+          <Link className="btn btn-media" href={`/bo-the/${id}/nhap-csv`}><Icon name="upload" />Nhập CSV</Link>
+          <button className="btn btn-export" disabled={download.isPending} aria-busy={download.isPending} onClick={() => download.mutate()}><Icon name="download" />Xuất CSV</button>
+          <button className="btn btn-favorite" type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Gỡ yêu thích' : 'Yêu thích'}</button>
           <button className="btn btn-danger" disabled={remove.isPending} onClick={() => setConfirmation({ type: 'deck' })}><Icon name="trash" />Xóa bộ</button>
         </div>
       </div>
       {(favorite.error || remove.error) && <ErrorState description={(favorite.error || remove.error).message} onRetry={refetch} />}
+      {download.error && <ErrorState description={download.error.message} onRetry={() => download.mutate()} />}
+      {params.get('imported') && <p className="notice notice-success" role="status">Đã nhập {params.get('imported')} thẻ từ CSV.</p>}
       {deck.boNguonId && <p className="muted">Bản sao độc lập từ <Link href={`/thu-vien/${deck.boNguonId}`}>bộ nguồn</Link>. Bộ nguồn có thể không còn công khai.</p>}
       {params.get('saved') && <p className="notice notice-success" role="status">Đã lưu thẻ{params.get('duplicate') ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
       <div className={styles.listBar}><h2>Thẻ trong bộ <span className="muted num">{cards.data?.totalElements ?? ''}</span></h2><CardImagePreference checked={showImages} onChange={setShowImages} /></div>

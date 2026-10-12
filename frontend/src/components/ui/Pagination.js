@@ -24,6 +24,7 @@ export function Pagination({ page, totalPages, onPageChange, className = '' }) {
   return (
     <nav className={`pagination ${className}`} aria-label="Phân trang">
       <button
+        type="button"
         className="pagination__btn"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
@@ -39,8 +40,9 @@ export function Pagination({ page, totalPages, onPageChange, className = '' }) {
           ? <span key={`el-${i}`} className="pagination__ellipsis">…</span>
           : (
             <button
+              type="button"
               key={p}
-              className={`pagination__btn${p === page ? ' pagination__btn--active' : ''}`}
+              className={`pagination__btn${p === page ? ' pagination__btn--active' : ''}${(p === 1 || p === totalPages) && Math.abs(p - page) > 1 ? ' pagination__btn--boundary' : ''}`}
               onClick={() => onPageChange(p)}
               aria-label={`Trang ${p}`}
               aria-current={p === page ? 'page' : undefined}
@@ -51,6 +53,7 @@ export function Pagination({ page, totalPages, onPageChange, className = '' }) {
       )}
 
       <button
+        type="button"
         className="pagination__btn"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}

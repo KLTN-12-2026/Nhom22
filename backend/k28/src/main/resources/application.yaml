@@ -7,6 +7,10 @@ spring:
       - optional:file:backend/k28/.env[.properties]
   profiles:
     default: dev
+  servlet:
+    multipart:
+      max-file-size: 1048576B
+      max-request-size: 2MB
   flyway:
     locations: classpath:db/migration
   datasource:

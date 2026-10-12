@@ -1,6 +1,3 @@
-/**
- * Skeleton — placeholder animation khi đang tải dữ liệu
- */
 export function Skeleton({ width, height, className = '', variant = '', style = {} }) {
   return (
     <div

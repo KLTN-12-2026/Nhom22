@@ -2,7 +2,7 @@
 
 /**
  * Button — F0.2 UI Kit
- * @param {'primary'|'secondary'|'ghost'|'danger'|'link'} variant
+ * @param {'primary'|'secondary'|'ghost'|'danger'|'danger-solid'|'link'|'accent'|'edit'|'media'|'favorite'} variant
  * @param {'sm'|'md'|'lg'} size
  * @param {boolean} loading
  * @param {boolean} fullWidth
@@ -28,11 +28,10 @@ export function Button({
         fullWidth && 'btn-block',
         className,
       ].filter(Boolean).join(' ')}
+      {...props}
       disabled={disabled || loading}
       aria-busy={loading}
-      {...props}
     >
-      {loading && <span className="btn__spinner" aria-hidden="true" />}
       {children}
     </button>
   );

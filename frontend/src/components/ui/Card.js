@@ -1,6 +1,3 @@
-/**
- * Card — container với header, body, footer
- */
 export function Card({ children, interactive = false, className = '', onClick, ...props }) {
   const Tag = interactive && onClick ? 'button' : 'div';
   return (

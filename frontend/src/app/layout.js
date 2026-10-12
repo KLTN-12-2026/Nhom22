@@ -1,18 +1,23 @@
+import Script from 'next/script';
 import '@/styles/mockup-tokens.css';
 import '@/styles/mockup-base.css';
 import '@/styles/mockup-components.css';
 import '@/styles/compat.css';
+import '@/styles/mascot.css';
+import '@/styles/deck-illustrations.css';
+import '@/styles/learning-refinements.css';
 import { Providers } from './providers';
 
 export const metadata = {
   title: { default: 'VocabLearning', template: '%s — VocabLearning' },
   description: 'Học từ vựng tiếng Anh thông minh với hệ thống SRS',
+  icons: { icon: '/mascot.svg', shortcut: '/mascot.svg' },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <head>
+      <head><Script src="/theme.js" strategy="beforeInteractive" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -24,6 +29,7 @@ export default function RootLayout({ children }) {
         <Providers>
           {children}
         </Providers>
+        <Script src="/mascot.js" strategy="afterInteractive" />
       </body>
     </html>
   );

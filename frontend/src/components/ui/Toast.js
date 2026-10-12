@@ -11,6 +11,7 @@ export function ToastProvider({ children }) {
   }, []);
 
   const toast = useCallback((message, { variant = 'default', title, duration = 4000 } = {}) => {
+    if (variant === 'success' || variant === 'error') window.dispatchEvent(new CustomEvent('vocab:mascot', { detail: { state: variant } }));
     const id = Date.now().toString();
     setToasts((prev) => [...prev, { id, message, title, variant }]);
     if (duration > 0) setTimeout(() => dismiss(id), duration);

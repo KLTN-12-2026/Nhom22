@@ -4,6 +4,15 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../src/lib/api-client.js', import.meta.url), 'utf8');
 const { apiFetch, resetCsrf, applyServerErrors, ApiError } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 const originalFetch = globalThis.fetch;
+test('CSV download returns bytes with cookies instead of parsing JSON', async () => {
+  globalThis.fetch = async (path, options) => {
+    assert.equal(options.credentials, 'include');
+    return new Response('\uFEFFtu,nghiaVi\r\na,b\r\n', { headers: { 'Content-Type': 'text/csv' } });
+  };
+  const blob = await apiFetch('/api/v1/decks/1/export', { responseType: 'blob' });
+  assert.equal(blob.type, 'text/csv');
+  assert.match(await blob.text(), /tu,nghiaVi/);
+});
 afterEach(() => { globalThis.fetch = originalFetch; resetCsrf(); });
 test('writes acquire one CSRF token, include cookies and preserve custom headers', async () => {
   const calls = [];
@@ -48,4 +57,36 @@ test('CSRF network failures are normalized and do not send the mutation', async 
   globalThis.fetch = async () => { calls++; throw new TypeError('Failed to fetch'); };
   await assert.rejects(apiFetch('/api/v1/me', { method: 'PATCH', body: '{}' }), error => error instanceof ApiError && error.status === 0);
   assert.equal(calls, 1);
+});
+
+
+test('mascot feedback acknowledges confirmed writes and pairs pending events', async () => {
+  const previousWindow = globalThis.window;
+  const events = [];
+  globalThis.window = { dispatchEvent: event => events.push(event.detail.state) };
+  globalThis.fetch = async path => path.endsWith('/csrf')
+    ? Response.json({ headerName: 'X-CSRF', token: 'test-token' })
+    : Response.json({ id: 'confirmed-card' });
+  try {
+    const result = await apiFetch('/api/v1/decks/1/cards', { method: 'POST', body: '{}' });
+    assert.equal(result.id, 'confirmed-card');
+    assert.deepEqual(events, ['start', 'success', 'end']);
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window; else globalThis.window = previousWindow;
+  }
+});
+
+test('failed writes release mascot pending state without celebrating', async () => {
+  const previousWindow = globalThis.window;
+  const events = [];
+  globalThis.window = { dispatchEvent: event => events.push(event.detail.state) };
+  globalThis.fetch = async path => path.endsWith('/csrf')
+    ? Response.json({ headerName: 'X-CSRF', token: 'test-token' })
+    : Response.json({ code: 'VERSION_CONFLICT', message: 'Conflict' }, { status: 409 });
+  try {
+    await assert.rejects(apiFetch('/api/v1/cards/1', { method: 'PATCH', body: '{}' }), error => error.status === 409);
+    assert.deepEqual(events, ['start', 'error', 'end']);
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window; else globalThis.window = previousWindow;
+  }
 });

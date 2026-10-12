@@ -8,38 +8,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
-  .flash { display: grid; gap: 0; padding-bottom: 0; }
-  .flash .form-code { margin-bottom: 0; }
-  .face { display: grid; justify-items: center; align-content: center; gap: var(--sp-2); text-align: center; min-height: 220px; padding: var(--sp-6) 0 var(--sp-5); }
-  .face-label { justify-self: start; font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: var(--fs-caption); font-weight: 650; color: var(--primary); }
-  .flash-word { font-family: var(--font-word); font-weight: 700; font-size: var(--fs-word); line-height: 1.1; overflow-wrap: anywhere; max-width: 100%; }
-  .flash-mean { font-weight: 700; font-stretch: 92%; font-size: clamp(1.375rem, 1.1rem + 1.4vw, 2rem); line-height: 1.25; overflow-wrap: anywhere; max-width: 32ch; }
-  .flash .ipa { font-size: 1.1875rem; }
-  .back { border-top: var(--rule) dashed var(--primary-line); animation: reveal var(--dur-3) var(--ease-out); }
-  @keyframes reveal { from { opacity: 0; transform: translateY(6px); } }
   .example { display: grid; gap: 2px; max-width: 52ch; margin-top: var(--sp-3); }
   .example .en { font-style: italic; color: var(--ink); font-size: 1.0625rem; }
   .example .vi { color: var(--ink-2); font-size: var(--fs-small); }
   .back-img { width: min(280px, 100%); aspect-ratio: 4 / 3; object-fit: cover; border: var(--rule) solid var(--primary-line); margin-top: var(--sp-3); }
   .face-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-2); }
-  .actions { position: sticky; bottom: 0; z-index: 5; display: grid; gap: var(--sp-3); padding: var(--sp-3) 0 calc(var(--sp-4) + env(safe-area-inset-bottom)); background: var(--sheet); border-top: var(--rule-strong) solid var(--primary); }
-  .flip { width: 100%; min-height: 56px; font-size: 1.125rem; }
-  .rates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2); }
-  .rate {
-    min-height: 68px; display: grid; place-items: center; gap: 4px; padding: var(--sp-2) 4px;
-    background: var(--field); color: var(--ink); border: 1.5px solid var(--primary); border-radius: var(--radius-btn);
-    font-family: var(--font-form); font-stretch: 90%; font-weight: 650; font-size: 1.0625rem;
-    transition: background var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
-  }
-  .rate:hover:not(:disabled) { background: var(--primary-tint); }
-  .rate:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--shadow-press); }
-  .rate:disabled { opacity: 0.5; cursor: not-allowed; }
-  .rate-top { display: inline-flex; align-items: center; gap: 6px; }
-  .rate-when { font-size: var(--fs-caption); color: var(--ink-2); font-weight: 600; }
   .rate-help summary { cursor: pointer; min-height: var(--tap); display: inline-flex; align-items: center; color: var(--primary); font-weight: 600; font-size: var(--fs-small); }
   .rate-help ul { list-style: none; margin: 0 0 var(--sp-2); padding: 0; display: grid; gap: 4px; font-size: var(--fs-small); color: var(--ink-2); }
   .bar-stamps { display: flex; align-items: center; gap: var(--sp-2); }
@@ -51,6 +29,10 @@
   .key-help ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
   @media (max-width: 479px) { .bar-stamps .stamp .lbl { display: none; } .rate { font-size: 1rem; } }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="study" data-auth="required" class="no-bottom-nav">
 <!-- F2.2 · UI19 · API: GET /learning/sessions/{id} (B2.3), POST /learning/sessions/{id}/reviews {clientEventId, theId, chieuHoc, danhGia, expectedVersion, thoiGianTraLoiMs} (B2.4), POST /learning/sessions/{id}/finish (B2.5), PUT /notebook/{cardId} (B2.9) -->
@@ -91,6 +73,7 @@
           <div class="actions">
             <button type="button" class="btn btn-primary flip" id="flip">Lật thẻ <span class="kbd">Space</span></button>
             <div id="rating" hidden>
+              <p class="rate-caption">Lần ôn tiếp theo</p>
               <div class="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
                 <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span><span class="rate-when" data-when-for="QUEN"></span></button>
                 <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span><span class="rate-when" data-when-for="KHO"></span></button>
@@ -132,8 +115,9 @@
   </main>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
@@ -164,11 +148,7 @@
 
   function speak(the) {
     if (the.amThanhUrl) { new Audio(the.amThanhUrl).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
-    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(the.tu);
-    u.lang = "en-US"; u.rate = 0.9;
-    speechSynthesis.speak(u);
+    VL.speak(the.tu);
   }
 
   function setSync(state) {
@@ -201,10 +181,10 @@
   function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHO" && h.the); }
 
   function faceHtml(the, side) {
-    const listen = '<div class="face-tools"><button type="button" class="btn btn-secondary btn-sm" data-say>' + VL.icon("volume") + 'Nghe <span class="kbd">P</span></button>' + (the.amThanhUrl ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
+    const listen = '<div class="face-tools"><button type="button" class="btn btn-media btn-sm" data-say>' + VL.icon("volume") + 'Đọc từ <span class="kbd">P</span></button>' + (the.amThanhUrl ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
     const word = '<p class="flash-word" lang="en">' + VL.esc(the.tu) + "</p>" + (the.phienAm ? '<p class="ipa" lang="en">' + VL.esc(the.phienAm) + "</p>" : "") + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
     const mean = '<p class="flash-mean">' + VL.esc(the.nghiaVi) + "</p>" + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
-    const example = the.viDuEn ? '<div class="example"><p class="en" lang="en">' + VL.esc(the.viDuEn) + "</p>" + (the.dichVi ? '<p class="vi">' + VL.esc(the.dichVi) + "</p>" : "") + "</div>" : "";
+    const example = the.viDuEn ? '<div class="example"><p class="en" lang="en">' + VL.esc(the.viDuEn) + '</p><button type="button" class="btn btn-media btn-sm" data-say-example>Đọc câu ví dụ</button>' + (the.dichVi ? '<p class="vi">' + VL.esc(the.dichVi) + "</p>" : "") + "</div>" : "";
     const img = the.anhUrl ? '<img class="back-img" src="' + VL.esc(the.anhUrl) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
     const mark = '<div class="face-tools"><button type="button" class="btn btn-quiet btn-sm" data-mark>' + VL.icon("star") + "Đánh dấu từ khó</button></div>";
     if (S.chieuHoc === "EN_VI") return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại nghĩa</span>' + word + listen : '<span class="face-label">Mặt sau</span>' + mean + example + img + mark;
@@ -237,7 +217,7 @@
     $("back").innerHTML = "";
     $("flip").hidden = false;
     $("rating").hidden = true;
-    RATE_KEYS.forEach((r) => { document.querySelector('[data-when-for="' + r + '"]').textContent = cur.duKien[r] ? "Gặp lại sau " + cur.duKien[r] : ""; });
+    RATE_KEYS.forEach((r) => { document.querySelector('[data-when-for="' + r + '"]').textContent = cur.duKien[r] || ""; });
     $("flip").focus({ preventScroll: true });
   }
 
@@ -300,7 +280,7 @@
         document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
         $("flash-note").hidden = false;
         $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[err.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
-        RATE_KEYS.forEach((k) => { document.querySelector('[data-when-for="' + k + '"]').textContent = err.duKien[k] ? "Gặp lại sau " + err.duKien[k] : ""; });
+        RATE_KEYS.forEach((k) => { document.querySelector('[data-when-for="' + k + '"]').textContent = err.duKien[k] || ""; });
         return;
       } else if (err.code === "CONFLICT") {
         location.replace("hoc-tong-ket.html?id=" + id);
@@ -366,10 +346,11 @@
   document.querySelectorAll(".rate").forEach((b) => b.addEventListener("click", () => rate(b.dataset.rate)));
   document.getElementById("card").addEventListener("click", async (e) => {
     if (e.target.closest("[data-say]")) speak(cur.the);
+    if (e.target.closest("[data-say-example]")) VL.speak(cur.the.viDuEn);
     const mk = e.target.closest("[data-mark]");
     if (mk) {
       await VL.busy(mk, async () => {
-        try { await VL.api("PUT", "/notebook/" + cur.theId, { danhDauThuCong: true }); mk.innerHTML = VL.icon("check") + "Đã đánh dấu"; mk.disabled = true; VL.toast("Đã thêm vào sổ tay"); }
+        try { await VL.api("PUT", "/notebook/" + cur.theId, { danhDauThuCong: true }); mk.innerHTML = VL.icon("check") + "Đã đánh dấu"; mk.disabled = true; VL.toast("Đã thêm vào sổ tay", "success"); }
         catch (err) { VL.toast(err.message, "error"); }
       });
       if (mk.innerHTML.includes("Đã đánh dấu")) mk.disabled = true;
@@ -418,5 +399,6 @@
   });
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

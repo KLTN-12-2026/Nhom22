@@ -14,7 +14,6 @@ export default function AdminTopicsPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // For renaming topics
   const [renamingId, setRenamingId] = useState(null);
   const [newName, setNewName] = useState('');
 
@@ -177,7 +176,7 @@ export default function AdminTopicsPage() {
 
             <div data-when="ready">
               <div className="table-wrap">
-                <table className={`data-table ${styles.adminTable}`}>
+                <table className={`data-table admin-table ${styles.adminTable}`}>
                   <caption className="sr-only">{L[4]}</caption>
                   <thead>
                     <tr>
@@ -194,6 +193,7 @@ export default function AdminTopicsPage() {
                         <td className={styles.name}>{item.ten}</td>
                         <td>{'—'}</td>
                         <td>
+                          <div className="table-actions">
                           {(
                             <button type="button" className="btn btn-edit btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => openRename(item)}>
                               <Icon name="edit" /> Đổi tên
@@ -202,6 +202,7 @@ export default function AdminTopicsPage() {
                           <button type="button" className="btn btn-danger btn-sm" disabled={renameMutation.isPending || deleteMutation.isPending} onClick={() => handleDelete(item)}>
                             <Icon name="trash" /> Xóa
                           </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -87,14 +87,14 @@ function LibraryDetail({ id }) {
         {copy.error && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
         {userError && userError.status !== 401 && <ErrorState title="Không kiểm tra được đăng nhập" description={userError.message} onRetry={() => client.invalidateQueries({ queryKey: ['me'] })} />}
       </div>
-      <div className="row-between"><h2 className={styles.listTitle}>Thẻ mẫu</h2><CardImagePreference checked={showImages} onChange={setShowImages} /><p className="muted small">Hiển thị {the.items.length}/{boThe.soThe} thẻ</p></div>
+      <div className="library-card-toolbar"><div className="library-card-summary"><h2 className={styles.listTitle}>Thẻ mẫu</h2><p className="muted small">Hiển thị {the.items.length}/{boThe.soThe} thẻ</p></div><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
       {the.items.length === 0 ? <div className="empty"><h2>Bộ thẻ này chưa có thẻ ở trang này</h2><p>Chọn trang trước hoặc quay lại thư viện.</p></div> : <ol className="answer-list">
-        {the.items.map((card, index) => <li key={card.id} className={`answer-row ${styles.card}`}>
+        {the.items.map((card, index) => <li key={card.id} className="answer-row library-card">
           <span className="answer-no">{page * 20 + index + 1}</span>
           <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa" lang="en">{card.phienAm}</span>}{card.tuLoai && <span className="pos" lang="en">{card.tuLoai}</span>}</div>
             <p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}
-            <div className={styles.media}>{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} publicDeck deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia publicDeck deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia publicDeck deckId={id} cardId={card.id} role="AM_CAU" />}</div>
           </div>
+          <div className="library-card-media">{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} publicDeck deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia publicDeck deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia publicDeck deckId={id} cardId={card.id} role="AM_CAU" />}</div>
         </li>)}
       </ol>}
       <Pagination page={page + 1} totalPages={the.totalPages} onPageChange={value => router.replace(`/thu-vien/${encodeURIComponent(id)}?page=${value - 1}`, { scroll: false })} />

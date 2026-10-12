@@ -97,7 +97,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(frontendUrl));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "Idempotency-Key", "X-Request-Id"));
-        config.setExposedHeaders(List.of("X-Request-Id"));
+        config.setExposedHeaders(List.of("X-Request-Id", "Content-Disposition"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

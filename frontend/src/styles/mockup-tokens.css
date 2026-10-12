@@ -1,6 +1,7 @@
 :root {
-  --sheet: #fafaf6;
-  --desk: #e6e7e1;
+  color-scheme: light;
+  --sheet: #fffdf8;
+  --desk: #f0f2ef;
   --field: #ffffff;
   --ink: #24262c;
   --ink-2: #474b55;
@@ -9,12 +10,12 @@
   --graphite-soft: #55585f;
   --timing: #15161a;
 
-  --primary: #3b47b0;
-  --primary-strong: #252e7c;
-  --primary-hover: #323d9c;
+  --primary: #3549bb;
+  --primary-strong: #23337f;
+  --primary-hover: #293b9f;
   --primary-tint: #eceef9;
   --primary-tint-2: #dfe2f4;
-  --primary-line: #a4abdc;
+  --primary-line: #d5dae5;
   --on-primary: #ffffff;
   --on-primary-soft: #c9cdf0;
 
@@ -22,8 +23,8 @@
   --secondary-bg: #e3f2ea;
   --secondary-text: #14603f;
 
-  --accent: #e8a317;
-  --accent-hover: #d99513;
+  --accent: #f2b32b;
+  --accent-hover: #e4a119;
   --accent-bg: #fcf1d6;
   --accent-text: #6b4a00;
   --on-accent: #24262c;
@@ -37,7 +38,7 @@
   --font-form: "Archivo", "Segoe UI", system-ui, sans-serif;
   --font-body: "Archivo", "Segoe UI", system-ui, sans-serif;
   --font-word: "Gentium Book Plus", "Gentium Plus", "Charis SIL", "Noto Serif", Georgia, serif;
-  --stretch-form: 82%;
+  --stretch-form: 100%;
 
   --fs-caption: 0.8125rem;
   --fs-small: 0.875rem;
@@ -49,7 +50,7 @@
   --fs-word: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
   --fs-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
   --lh-tight: 1.15;
-  --lh-body: 1.55;
+  --lh-body: 1.6;
 
   --sp-1: 0.25rem;
   --sp-2: 0.5rem;
@@ -62,16 +63,16 @@
 
   --rule: 1px;
   --rule-strong: 2px;
-  --radius-field: 2px;
-  --radius-btn: 4px;
+  --radius-field: 6px;
+  --radius-btn: 8px;
   --bubble: 1.375rem;
   --bubble-lg: 2.75rem;
 
   --tap: 44px;
   --tap-primary: 48px;
-  --sidebar-w: 248px;
-  --side-col: 320px;
-  --header-h: 60px;
+  --sidebar-w: 240px;
+  --side-col: 304px;
+  --header-h: 68px;
   --bottom-nav-h: 64px;
   --measure: 68ch;
 
@@ -86,4 +87,99 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   --focus: 0 0 0 2px var(--sheet), 0 0 0 4px var(--primary);
+  --fs-home-title: clamp(2.25rem, 1.8rem + 2.4vw, 3.75rem);
+  --fs-meaning: clamp(1.375rem, 1.1rem + 1.4vw, 2rem);
+  --fs-word-mobile: clamp(1.75rem, 7vw, 2.25rem);
+  --icon-nav: 22px;
+  --dur-pending: 1400ms;
+  --sidebar-compact: calc(var(--tap) + var(--sp-3) * 2);
+  --deck-context-w: 96px;
+  --deck-context-h: 72px;
+  --deck-context-mobile-w: 80px;
+  --deck-context-mobile-h: 60px;
+  --deck-thumb-w: 64px;
+  --deck-thumb-h: 48px;
+  --deck-thumb-mobile-w: 56px;
+  --deck-thumb-mobile-h: 42px;
+  --app-page-max: 1440px;
+
+  --primary-fill: #3549bb;
+  --primary-fill-hover: #293b9f;
+  --brand-surface: #23337f;
+  --edit: #1762ad;
+  --edit-bg: #e5f0ff;
+  --edit-hover: #124c88;
+  --on-edit: #ffffff;
+  --favorite: #cf2938;
+  --favorite-bg: #ffedf1;
+  --media-ink: #096f74;
+  --media-bg: #e5f4f2;
+  --media-line: #81b9b6;
+  --media-fill: #096f74;
+  --media-hover: #07595d;
+  --export-fill: #14603f;
+  --export-hover: #104b32;
+  --danger-fill: #a62b38;
+  --on-danger: #ffffff;
+  --control-line: #8c93a6;
+  --overlay: rgba(15, 19, 28, .55);
+  --toast-surface: #303541;
+  --on-toast: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --desk: #191d24;
+  --sheet: #242a33;
+  --field: #2c333e;
+  --ink: #f1f0eb;
+  --ink-2: #c2c7d1;
+  --ink-3: #a2aabc;
+  --graphite: #c5cad4;
+  --graphite-soft: #8e97aa;
+  --timing: #7c8598;
+  --primary: #aab8ff;
+  --primary-strong: #d9dfff;
+  --primary-hover: #c5ceff;
+  --primary-tint: #2d344b;
+  --primary-tint-2: #353e5c;
+  --primary-line: #46515f;
+  --primary-fill: #5262c9;
+  --primary-fill-hover: #4759c4;
+  --brand-surface: #2e375b;
+  --on-primary: #ffffff;
+  --on-primary-soft: #d8deff;
+  --secondary: #73d5a3;
+  --secondary-bg: #243c32;
+  --secondary-text: #9ce8be;
+  --accent: #edb439;
+  --accent-hover: #dda228;
+  --accent-bg: #3c3422;
+  --accent-text: #f3cd79;
+  --on-accent: #231e14;
+  --edit: #226eb8;
+  --edit-bg: #243a54;
+  --edit-hover: #2065a8;
+  --on-edit: #ffffff;
+  --favorite: #ff8b87;
+  --favorite-bg: #432b2f;
+  --media-ink: #84ddd7;
+  --media-bg: #203c3e;
+  --media-line: #446d70;
+  --media-fill: #137479;
+  --media-hover: #09666b;
+  --export-fill: #226744;
+  --export-hover: #1a5437;
+  --danger: #ffa0aa;
+  --danger-bg: #412b33;
+  --danger-fill: #a62b38;
+  --on-danger: #ffffff;
+  --warning: #e5be6b;
+  --warning-bg: #3c3422;
+  --warning-text: #f3cd79;
+  --control-line: #6e788e;
+  --overlay: rgba(6, 8, 12, .72);
+  --toast-surface: #303541;
+  --shadow-sheet: 0 2px 12px rgba(0, 0, 0, .14);
+  --shadow-pop: 0 8px 32px rgba(0, 0, 0, .35);
 }

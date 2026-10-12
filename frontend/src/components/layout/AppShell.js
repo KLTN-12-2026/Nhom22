@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { MobileNavigation } from './MobileNavigation';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/ui';
+import { Icon, useToast } from '@/components/ui';
 
 const NAV = [
   { group: "Học tập", items: [
@@ -44,37 +45,38 @@ const ADMIN_NAV_ONLY = [
 ];
 
 const BOTTOM = [
-  { key: "decks", label: "Học", icon: "decks", href: "/bo-the", also: ["deck-new"] },
+  { key: "today", label: "Học", icon: "today", href: "/hom-nay" },
   { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
   { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
   { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
-  { key: "me", label: "Tôi", icon: "user", href: "/ca-nhan", also: ["profile", "learning", "security", "notify", "admin-topics"] }
+  { key: "me", label: "Tôi", icon: "user", href: "/ca-nhan" }
 ];
 
 export function AppShell({ children, user, isAdmin = false }) {
   const queryClient = useQueryClient();
-  const [collapsed, setCollapsed] = useState(false);
+  const { toast } = useToast();
+  const handleLogout = () => logout(queryClient).catch(error => toast(error.message, { variant: 'error' }));
   const { data: avatar } = useAvatar(user);
   const pathname = usePathname();
 
-  // Decide which sidebar to show based on the current URL
   const inAdminArea = pathname.startsWith('/quan-tri');
   const navList = (isAdmin && inAdminArea) ? ADMIN_NAV_ONLY : (isAdmin ? ADMIN_NAV : NAV);
 
   const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
-  if (pathname === '/bat-dau') {
+  if (pathname === '/bat-dau' || pathname === '/hoc-phien') {
     return <>{children}</>;
   }
 
   return (
-    <div className={`app${collapsed ? ' sidebar-collapsed' : ''}`}>
+    <div className="app">
       <header className="app-header">
-        <Link href="/bo-the" className="brand">
-          <img className="brand-mark" src="/shared/assets/logo-mark.svg" alt="" width="28" height="28" />
+        <MobileNavigation groups={navList} onLogout={handleLogout} />
+        <Link href="/hom-nay" className="brand">
+          <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
-        <div className="header-actions">
+        <div className="header-actions"><ThemeToggle />
           {user && (
             <Link href="/ca-nhan" className="user-chip" aria-label={`Hồ sơ của ${user.tenHienThi || 'User'}`}>
               <span className="avatar">
@@ -88,13 +90,10 @@ export function AppShell({ children, user, isAdmin = false }) {
             </Link>
           )}
           <button
-            className="btn btn-quiet btn-icon"
+            className="btn btn-quiet btn-icon header-logout"
             aria-label="Đăng xuất"
             title="Đăng xuất"
-            onClick={() => {
-              // Basic logout logic: redirect to login
-              logout(queryClient).catch(error => alert(error.message));
-            }}
+            onClick={handleLogout}
           >
             <Icon name="logout" />
           </button>
@@ -103,22 +102,12 @@ export function AppShell({ children, user, isAdmin = false }) {
 
       <div className="app-body">
         <nav className="sidebar" aria-label="Điều hướng chính">
-          <button type="button" className="btn btn-quiet sidebar-toggle" aria-controls="sidebar-links" aria-expanded={!collapsed} aria-label={collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng'} title={collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng'} onClick={() => setCollapsed(value => !value)}><Icon name={collapsed ? 'chevron-right' : 'chevron-left'} /><span className="nav-label">Thu gọn</span></button>
-          <div id="sidebar-links">
+          <div id="sidebar-links" className="sidebar-links">
           {navList.map((g) => (
             <div key={g.group} className="nav-group">
               <p className="nav-group-title">{g.group}</p>
               {g.items.map(it => {
                 const active = it.href && isActive(it.href);
-                if (it.soon) {
-                  return (
-                    <span key={it.key} className="nav-link" aria-label={it.label} title={it.label} aria-disabled="true">
-                      <Icon name={it.icon} />
-                      <span className="nav-label">{it.label}</span>
-                      <span className="nav-soon">{it.soon}</span>
-                    </span>
-                  );
-                }
                 return (
                   <Link key={it.key} className="nav-link" href={it.href} aria-current={active ? 'page' : undefined} aria-label={it.label} title={it.label}>
                     <Icon name={it.icon} />
@@ -137,16 +126,8 @@ export function AppShell({ children, user, isAdmin = false }) {
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
-        {BOTTOM.map(it => {
-          const cur = isActive(it.href || '/--not-found');
-          if (it.soon) {
-            return (
-              <span key={it.key} aria-disabled="true" title={`Có ở ${it.soon}`}>
-                <span className="nav-bubble"><Icon name={it.icon} /></span>
-                {it.label}
-              </span>
-            );
-          }
+        {(inAdminArea ? ADMIN_NAV_ONLY.flatMap(group=>group.items).map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-audit':'Nhật ký'})[item.key]})) : BOTTOM).map(it => {
+          const cur = it.key==='today' ? ['/hom-nay','/hoc','/bo-the','/thong-ke'].some(route=>isActive(route)) : isActive(it.href);
           return (
             <Link key={it.key} href={it.href} aria-current={cur ? 'page' : undefined}>
               <span className="nav-bubble"><Icon name={it.icon} /></span>

@@ -1,9 +1,6 @@
 'use client';
 import { useState } from 'react';
 
-/**
- * Tabs — điều hướng theo tab với hỗ trợ bàn phím
- */
 export function Tabs({ tabs = [], defaultTab, onChange, children }) {
   const [active, setActive] = useState(defaultTab || tabs[0]?.id);
 

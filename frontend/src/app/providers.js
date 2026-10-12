@@ -4,14 +4,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '@/components/ui/Toast';
 import { queryClient } from '@/lib/query-client';
 
-// Thêm biến global này ở ngoài để giữ Promise khởi động MSW
 let mockingPromise;
 
 export function Providers({ children }) {
   const [mswReady, setMswReady] = useState(false);
 
   useEffect(() => {
-    // Chỉ gọi start() nếu chưa có mockingPromise nào được tạo
     if (!mockingPromise) {
       if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
         mockingPromise = import('@/mocks/browser').then(({ worker }) => {
