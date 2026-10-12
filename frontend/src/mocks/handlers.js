@@ -1,4 +1,4 @@
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 let mockSessionStatus = 'DANG_HOC';
 let mockPracticeStatus = 'DANG_LAM';
@@ -510,8 +510,7 @@ export const handlers = [
   }),
 
   // Admin Update User Roles
-  http.put('*/api/v1/admin/users/:id/roles', async ({ request, params }) => {
-    const body = await request.json();
+  http.put('*/api/v1/admin/users/:id/roles', () => {
     return HttpResponse.json({ success: true });
   }),
 

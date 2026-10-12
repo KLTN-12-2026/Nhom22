@@ -1,6 +1,6 @@
 # Báo cáo bàn giao BE → FE — DOT1 Tài khoản & nội dung
 
-> **Cập nhật08/10/2026 — B1.10:** thư viện BE và FE thật đã hoàn tất trong phạm vi mục5.40–5.42/mục10. Các ghi nhận hoàn tác FE05/10 bên dưới là lịch sử. Bộ mẫu chỉ seed dev; sao chép bộ/CSV còn kế hoạch.
+> **Cập nhật13/10/2026 — B1.12:** đã triển khai import/export CSV và FE thật; xem hợp đồng mục5.44 và bằng chứng mới mục10. B1.11 được bổ sung Postman. Các nhận định hoàn tác FE hoặc CSV còn kế hoạch bên dưới là lịch sử theo ngày, không mô tả phiên bản hiện tại. Giữ nguyên B1.8/HTTP6.
 
 > **Đợt khắc phục 05/10/2026 — GĐ0–B1.8:** BE thống nhất IANA, reset CSRF custom login/logout, OpenAPI security theo operation, log requestId và mẫu boot. **Toàn bộ thay đổi trong frontend đã hoàn tác theo yêu cầu mới nhất; các chênh lệch FE còn cần tích hợp riêng.** Giữ BE/Postman/tài liệu và mockup ngoài frontend; mockup là demo có lớp hợp đồng riêng; trạng thái hiện tại theo [báo cáo đối chiếu](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md).
 >
@@ -9,16 +9,16 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 1 — Tài khoản & nội dung (12/10 – 25/10/2026) |
-| Ngày cập nhật | 08/10/2026 — hoàn tất B1.10; giữ kết quả lịch sử theo ngày |
-| Trạng thái BE | B1.1–B1.8 đã triển khai; B1.8 hoàn tất theo bằng chứng05/10 được kế thừa, không chạy lại trong lượt06/10. B1.9 có 4 API thẻ + public tags; HTTP77/77 và assertion19/19 theo evidence06/10. FR03CardTest đã pass theo xác nhận người dùng sau sửa; HTTP ADMIN9/9 đã pass; Postman thêm28 request cho5 API, đã hoàn tất B1.9 trong phạm vi BE và bàn giao. Script Postman/Newman B1.9 mới chưa chạy. B1.10 đã triển khai và kiểm chứng ngày08/10 (mục5.40–5.42 và mục10); B1.11–B1.12 còn kế hoạch; không cộng kết quả khác ngày thành một suite |
-| FE làm tương ứng | F1.7 / UI02, UI03 và bộ khởi động UI11 đã tích hợp B1.10; API thẻ B1.9 đã bàn giao. Sao chép bộ/CSV còn dự kiến; các bước khác giữ trạng thái riêng |
+| Ngày cập nhật | 13/10/2026 — B1.12, Postman B1.11–B1.12 và rà soát Đợt1 |
+| Trạng thái BE | Đã triển khai B1.1–B1.12. Hồi quy13/10:193 test/24 suite ngoài CSV và handler; lượt cuối CSV+handler38 test/4 suite. Hai nhóm lưu riêng, không cộng thành một lệnh; loại FR03DeckTest và artifact cũ. Giữ trạng thái/bằng chứng lịch sử B1.8, không chạy HTTP6. Google provider thật chưa kiểm chứng; không cộng các lần chạy thành một suite |
+| FE làm tương ứng | GĐ0–B1.12 đã nối API thật; F1.11/UI17 có multipart/mapping/preview/selection/idempotency/export blob. Thư viện media/đọc và tùy chọn ảnh bố trí bên phải; sáng/tối/mobile được kiểm tra riêng |
 | Báo cáo trước | [GĐ0](GD0_BAO_CAO_FE.md) — hợp đồng chung (lỗi, CSRF, phân trang, `api-client.js`) xem ở đó |
 
 > **Đọc nhanh:**
 > - Dùng được thật ngay: `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`. Thư xác thực xem ở Mailpit http://localhost:8025.
 > - **Tên trường JSON = tên field entity** (tiếng Việt không dấu): `tenHienThi`, `trangThai`, `muiGio`, `vaiTro`, `daHoanTatKhoiDau`. FE dùng nguyên tên, không đổi sang tiếng Anh.
 > - Đăng nhập thật đã có: `POST /auth/login`, `POST /auth/logout`, `GET /me` (cookie `SESSION`). Tài khoản seed: `an@vocab.local` / `Vocab@12345`.
-> - **FE cần áp dụng (mã frontend đã hoàn tác):** chỉ thử lại 403 khi `code === 'FORBIDDEN'` (mục 3).
+> - FE hiện tại dùng apiFetch thật, giữ CSRF/cookie/requestId; không tự replay write khi nhận403. Ghi nhận hoàn tác05/10 là lịch sử.
 > - Tệp và avatar thật đã có (B1.6): SHA-256 → xin URL → PUT bytes → complete → `PUT /me/avatar`. `/me` trả `anhDaiDienId`; URL ảnh lấy ở `GET /me/avatar`.
 > - Hồ sơ & thiết lập thật đã có (B1.5): `PATCH /me`, thiết lập học (lưu lần đầu = hoàn tất `/bat-dau`), thông báo; PUT phải gửi `version` (409 khi cũ) — mục 5.11–5.13.
 > - Google thật đã có (B1.4): nút Google **điều hướng toàn trang** tới `/api/v1/auth/google/start?next=…`; lỗi quay về `/dang-nhap?loi=<MÃ>` (mục 5.10).
@@ -232,7 +232,7 @@ sequenceDiagram
 
 Chi tiết transaction và nhánh lỗi: [Luồng B1.7](../docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md).
 
-## 5. API chi tiết (đã kiểm chứng trên BE thật)
+## 5. API chi tiết — hợp đồng hiện tại, bằng chứng theo từng lần chạy
 
 Mọi request ghi (POST) cần cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN` (GĐ0 §3). Thiếu → 403 `FORBIDDEN`.
 
@@ -1859,6 +1859,30 @@ HTTP200 thật roleANH (downloadUrl đã che URL ký):
 
 FE xin URL khi bấm mở ảnh/nghe âm thanh, tải trực tiếp S3; lỗi thì thử lại để xin URL mới. TTL theo expiresAt; URL đã cấp có thể còn hiệu lực đến hết TTL nếu bộ chuyển riêng tư/xóa sau đó. API GET không tăng version/không ghi bộ/thẻ. Ba role tải thật và so khớp SHA-256 đã đạt; audio fixture là âm thử1giây, không phải phát âm thật.
 
+### 5.43 `POST /api/v1/decks/{id}/copy` — B1.11
+
+SESSION + CSRF; Idempotency-Key bắt buộc ASCII1–128 `[A-Za-z0-9._:-]`; không có body. Nguồn CONG_KHAI/BINH_THUONG/chưa xóa;201 DeckResponse với ID string, boNguonId, RIENG_TU. Bộ/thẻ độc lập, giữ nhãn/media theo B1.11; không mang tiến độ/lịch sử/điểm. Cùng key/nguồn replay response gốc; khác nguồn409. Lỗi400/401/403/404/409/422 theo [luồng copy](../docs/luong-backend/B1.11-sao-chep-bo.md). FE F1.10/UI03; Postman cloud đã có happy/replay/key conflict/missing key; Newman thực chạy13/10.
+
+### 5.44 CSV — B1.12 / FR-05 / TC-04 / F1.11 / UI17
+
+| API | Quyền | Hợp đồng |
+|---|---|---|
+| POST /api/v1/decks/{id}/imports/preview | O + CSRF | Multipart file, JSON part mapping tùy chọn target→header;200 snapshot30m |
+| POST /api/v1/imports/{id}/commit | O + CSRF | JSON rowNumbers; Idempotency-Key bắt buộc;200 kết quả atomic |
+| GET /api/v1/decks/{id}/export | O |200 text/csv;charset=UTF-8; attachment/no-store |
+
+Cột `tu,tuLoai,nghiaVi,phienAm,viDuEn,dichVi,doKho,nguon,nhanIds`; tu/nghiaVi bắt buộc. Giới hạn100/30/500/100/300/300/1–5/500/100 ID. doKho trống=1; nhãn ngăn bằng `;`, phải tồn tại. UTF-8 strict, import BOM tùy chọn/export có BOM; comma, RFC4180 quotes/multiline, export CRLF. Import≤1048576 byte/1000 bản ghi logic; rowNumber1-based sau header. Export toàn bộ active, không áp trần1000. Không nhập/xuất media/object key/URL ký, owner/version/timestamps, source refs/visibility/moderation, tiến độ/lịch sử/điểm. Nhãn chỉ có ý nghĩa trong hệ thống hiện tại.
+
+Preview200: importId,boTheId,expiresAt,totalRows,validRows,invalidRows,ignoredColumns,rows. Row: rowNumber,rawValues,data,valid,fieldErrors[] `{field,message}`,trung,theTrungIds,dongTrungNumbers. Trùng tu+tuLoai chỉ cảnh báo; dòng lỗi không chọn được. Redis immutable theo user+import, không gia hạn; Redis lỗi503. Không gọi Redis trong transaction DB.
+
+Commit dùng nội dung snapshot server, chỉ nhận số dòng. Dòng lỗi/thiếu/trùng số400 và rollback toàn selection; nhãn đã mất409. READ_COMMITTED, khóa bộ, unique(user,key)/unique(user,import), thẻ/link/response cùng transaction. Selection sắp xếp trước hash. Retry cùng key+import+selection replay200 kể cả Redis hết hạn; khác nội dung hoặc import đã commit bằng key khác409. Response importId/boTheId/importedCount/items; items có rowNumber/theId string/trung/theTrungIds/dongTrungNumbers.
+
+Export thêm `'` trước ô có nguy cơ công thức =+-@, kể cả whitespace/control/format/fullwidth; TAB/CR/LF đầu ô cũng guard. Import giữ nguyên `'`. Chưa kiểm chứng Excel lưu/mở lại và không bảo đảm mọi spreadsheet giữ escape. Lỗi shared400/401/403/404/409/503; own DA_AN vẫn thao tác, foreign public/ADMIN404; bản sao không bị nguồn ẩn/xóa chi phối.
+
+FE `/bo-the/{id}/nhap-csv`: chọn/kéo thả/mẫu, mapping9 cột, preview/filter/select/50 dòng mỗi trang, pending/error/result. Sau gửi commit khóa selection, giữ key/selection/preview theo user+deck trong sessionStorage để retry/reload; không tự replay write. Thành công invalidate cache. Export blob thật. Nhập teal/upload, Xuất xanh lá/download; media thẻ thư viện và tùy chọn ảnh ở bên phải, mobile media xuống dưới.
+
+[Hợp đồng đầy đủ](../docs/luong-backend/B1.12-csv.md), [response commit thực](../verification/B1.12/commit-response.json), [CSV export thực](../verification/B1.12/export.csv), [Postman](../postman/README.md), [file bệnh viện124 từ](../data/csv/co-gi-trong-benh-vien.csv).
+
 ## 6. Mã FE mẫu
 
 **Zod** (giới hạn = BE):
@@ -2135,7 +2159,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 | Thử "đăng xuất phiên khác" | Đăng nhập cùng tài khoản ở 2 trình duyệt (hoặc 1 cửa sổ ẩn danh), đổi mật khẩu ở cửa sổ 1 → cửa sổ 2 tải lại bị đưa về `/dang-nhap` |
 | Bị 429 khi dev | Chờ hết cửa sổ (1 giờ / 15 phút) hoặc nhờ BE xóa khóa Redis `rl:*` |
 
-## 8. Checklist FE cho phần đã bàn giao B1.1 → B1.8
+## 8. Checklist FE Đợt1 — B1.1 đến B1.12
 
 - [ ] `/dang-ky`: 4 trường + checkbox điều khoản; Zod khớp mục 6; gửi `muiGio` từ trình duyệt
 - [ ] Lỗi server hiện dưới đúng ô theo `fieldErrors[].field` (`tenHienThi`, `email`, `password`, `acceptTerms`)
@@ -2187,18 +2211,20 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 - [ ] Bỏ chủ đề dùng boChuDe=true; xóa mô tả dùng chuỗi rỗng; chủ đề đọc items/ten từ public topics.
 - [x] Bằng chứng BE B1.8: kế thừa kiểm chứng05/10 về xóa mềm/bảo toàn tham chiếu. Dấu này không xác nhận frontend đã tích hợp, không phải lần chạy mới06/10.
 
-## 9. Sắp có ở Đợt 1 — hợp đồng dự kiến
+- [x] F1.11/UI17: CSV thật/mapping/selection/retry/export; sáng/tối/mobile và mockup kiểm chứng13/10.
+
+## 9. Đợt1 đã bàn giao và phạm vi tiếp theo
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
 | B1.9 | Code và HTTP phạm vi mục5.39 đã kiểm chứng ngày06/10 | CRUD thẻ và đọc nhãn: mục5.39 | F1.7, F1.9 | FR03CardTest pass theo người dùng; HTTP ADMIN9/9 pass; Postman28 request đã đồng bộ; FE/mockup chưa sửa |
-| B1.11 – B1.12 | Đợt 1 (12/10–25/10 theo roadmap) | **Dự kiến:** sao chép bộ, CSV (TK §13.2) | F1.10–F1.11 | B1.10 đã bàn giao ở mục5.40–5.42 |
+| B1.11–B1.12 | Đã triển khai; kiểm chứng13/10/2026 | Sao chép201; preview/commit200; export CSV200, mục5.43–5.44 | F1.10–F1.11 | FE thật, mockup, Postman12 request; bằng chứng riêng mục10 |
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
 ### Tổng hợp bằng chứng triển khai BE Đợt1
 
-Báo cáo này là nơi ghi chung trạng thái triển khai BE, bằng chứng kiểm chứng và hợp đồng bàn giao FE. Không ghi tiếp báo cáo tiến độ BE cũ hoặc tạo báo cáo BAO_CAO_BE song song. Trạng thái từng bước đối chiếu mục1 và [roadmap BE](../roadmap/ROADMAP_BE.md); đường đi trong code xem [mục lục luồng backend](../docs/luong-backend/README.md).
+Báo cáo này là nơi ghi chung trạng thái triển khai BE, bằng chứng kiểm chứng và hợp đồng bàn giao FE. Không ghi tiếp báo cáo tiến độ BE cũ hoặc tạo báo cáo BAO_CAO_BE song song. Trạng thái từng bước đối chiếu mục1 và [roadmap BE](../roadmap/TienDoDuKien_backend.md); đường đi trong code xem [mục lục luồng backend](../docs/luong-backend/README.md).
 
 | Phạm vi | Bằng chứng đã ghi nhận | Giới hạn |
 |---|---|---|
@@ -2212,7 +2238,7 @@ Báo cáo này là nơi ghi chung trạng thái triển khai BE, bằng chứng 
 | B1.8,04/10/2026 (lịch sử) | 6a8/8 và6b26/26 HTTP, tổng34/34 | Các nhánh còn thiếu ở lần này đã được bổ sung bằng kiểm thử05/10 |
 | B1.9,06/10/2026 | HTTP77/77 + assertion19/19 theo evidence603099a05ed3; HTTP ADMIN9/9 theo evidenceec263badc3c9 | FR03CardTest đã pass theo người dùng sau sửa, chưa có log/số lượt thực chạy (source16 phương thức/22 lượt dự kiến). Không cộng HTTP/assertion/JUnit thành một suite. ADMIN fixture đã thu hồi role/logout; không chạy lại build/JUnit hoặc B1.8 đã bỏ qua |
 | B1.10 | Đã triển khai và kiểm chứng08/10 | 3 GET guest, Specification, media, FE và bộ mẫu dev; bằng chứng riêng bên dưới |
-| B1.11–B1.12 | Chưa triển khai | Sao chép bộ và CSV còn theo kế hoạch |
+| B1.11–B1.12 | Đã triển khai và kiểm chứng13/10/2026 | CSV, hồi quy, browser và Newman ghi riêng ở phần13/10 phía dưới |
 
 Không cộng số test/HTTP giữa các ngày. Các dòng lịch sử ở bảng trên giữ mốc cũ; ngày05/10 đã chạy toàn suite117/117, trong đó FR03DeckTest11/11. Nhánh xóa mềm/bảo toàn tham chiếu, bộ ẩn và cập nhật đồng thời đã kiểm chứng tự động; Newman xác nhận DELETE204 và GET sau xóa404. B1.8 được đánh dấu hoàn tất.
 
@@ -2508,11 +2534,11 @@ Danh mục dưới đây dùng đường dẫn tại checkout hiện tại. “�
 | `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `evidence/B1.9-postman-sync-20261006.json` |
 | `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `../postman/README.md` |
 | `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 1695 | `evidence/B1.9-http-edc71d632f85.json` |
-| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2079 | `../roadmap/ROADMAP_BE.md` |
+| `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2079 | `../roadmap/TienDoDuKien_backend.md` |
 | `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2125 | `../postman/avatar.png` |
 | `ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` | 2125 | `../postman/README.md` |
-| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/ROADMAP_BE.md` |
-| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/ROADMAP_FE.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/TienDoDuKien_backend.md` |
+| `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 659 | `../roadmap/TienDoDuKien_fronend.md` |
 | `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/GD0_BAO_CAO_FE.md` |
 | `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/DOT1_BAO_CAO_BE.md` |
 | `docs/PROJECT_PLAN_HOC_TU_VUNG_K28.md` | 660 | `../report/DOT1_BAO_CAO_FE.md` |
@@ -2600,6 +2626,24 @@ Nút đọc từ/câu dùng giọng tiếng Anh của trình duyệt, ưu tiên 
 Các số trên không cộng vào BE/HTTP6 B1.8 hoặc thay số liệu lịch sử B1.10/B1.11. Không chạy build/test BE trong lượt FE này. Chất lượng âm thanh nghe được và trao đổi token với Google provider thật chưa được xác nhận tự động; Google start/guidance đã nối theo hợp đồng. MSW chỉ mock ping nền; handler auth/nội dung demo cũ không nạp. CSV B1.12/SRS/luyện tập/quản trị ngoài danh mục B1.7 vẫn chưa mở; F1.11 của roadmap FE là CSV và chưa đánh dấu hoàn tất. UI brief ở đường dẫn skill chỉ định vẫn thiếu, dùng mockup/tokens và yêu cầu mới trực tiếp của người dùng.
 
 [Tổng hợp FE](../report/evidence/FE-B0-B1.11-verification-20261010.json) ghi kết quả quan sát trong phiên làm việc. Thư mục report cũ không còn tại thời điểm bàn giao; runner, JSON chi tiết và screenshot trước đó hiện không có để đối chiếu lại, nguyên nhân chưa xác định. Không tái tạo các artifact cũ như bằng chứng gốc. Smoke production: sáu trang công khai trả200, ping đúng /api/v1/public/ping trảUP; /_ui hiển thị not-found và không có showcase (HTTP200 do streaming). Tài liệu bàn giao này là nguồn chung, không tạo báo cáo BE song song.
+
+### B1.12 và rà soát Đợt1 —13/10/2026
+
+| Phạm vi | Bằng chứng thực chạy | Giới hạn |
+|---|---|---|
+| Backend compile | mvnw.cmd -q -DskipTests compile, exit0 | Java target21, runtime JDK25.0.4.1; V7 mới, không sửa migration cũ |
+| Hồi quy ngoài CSV/handler |193 test/24 suite pass,0 failure/error; [summary](../verification/B1.12/regression-tests.json), raw XML trong regression-junit | Từ lệnh *Test,!FR03DeckTest; CSV/handler cuối ghi riêng, không cộng hai lệnh |
+| CSV và handler cuối |38 test/4 suite pass,0 failure/error; [summary và XML](../verification/B1.12/backend-tests.json) | CSV13/formula20/snapshot2/handler3; atomic/race/owner/limits/tags/expiry/Redis503/export1001 |
+| Newman |13 request chính gồm login fixture+12 B1.11–B1.12; tất cả assertion pass; [stats](../verification/B1.12/newman.json) | Chỉ folder mới; không chạy request cũ/HTTP6 B1.8 |
+| Browser/API thật |7 nhóm pass; [runner](../verification/B1.12/verify.cjs), [result](../verification/B1.12/browser.json), screenshot cùng thư mục | Next3100/BE8081; fixtures @test.local. Lost response sau server commit → reload retry cùng key, không ghi đôi |
+| File bệnh viện |124/124 hợp lệ,0 lỗi; [artifact](../verification/B1.12/hospital-validation.json) | Chỉ preview trên bộ thử, không nhập vào bộ thật của người dùng |
+| FE checks | Node35/35, lint --quiet exit0, production build exit0, ui:sync/ui:check pass | Kết quả lệnh trong verification; mockup là demo riêng |
+
+B1.8/HTTP6 và số liệu lịch sử giữ nguyên. Artifact cũ dưới report/evidence không còn trong workspace; không khôi phục chúng như bằng chứng gốc. Kết quả mới lưu verification/B1.12 gồm raw JUnit và runner thật. Không coi số liệu hội thoại/tồn tại test là pass.
+
+Đợt1 có code B1.1–B1.12 và FE tương ứng; B1.12 đóng theo tiêu chí bước. Không tuyên bố toàn bộ production đã kiểm chứng: Google provider exchange, Excel save/reopen và benchmark lớn chưa chạy; học/luyện/AI/quản trị ngoài danh mục B1.7 vẫn kế hoạch.
+
+Dọn rác: xóa mềm10 bộ fixture đúng tên thuộc tài khoản CSV test.local của runner ([artifact](../verification/B1.12/fixture-cleanup.json)), không xóa người dùng hoặc snapshot idempotency; bỏ handler/parser/export CSV demo cũ đã thay, import Java và CSS dư; giữ thay đổi chưa commit. .gitignore bỏ .history/cache/build/log/secrets, cho Git nhận docs/Postman/report/verification. Không stage/commit/push hoặc xóa dữ liệu thật/migration đã áp dụng. Hai thư mục build thử .next-csv/.next-csv-build được ignore; tự động phê duyệt chặn xóa recursive (blocked by policy), nên giữ lại. Tiến trình thử8081/3100 đã dừng.
 
 ## 11. Báo lỗi cho BE
 

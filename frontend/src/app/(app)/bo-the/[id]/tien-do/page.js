@@ -1,11 +1,9 @@
 'use client';
-import { useState, Suspense, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
-import { useMe } from '@/hooks/useMe';
 
 const GROUPS = [
   { id: '', label: 'Tất cả' },
@@ -19,9 +17,9 @@ const GROUPS = [
 const STAMP = {
   MOI: { class: 'var(--color-desk)', text: 'var(--color-ink-2)' },
   DANG_HOC: { class: 'var(--color-border)', text: 'var(--color-ink)' },
-  DEN_HAN: { class: 'var(--color-primary)', text: 'white' },
+  DEN_HAN: { class: 'var(--primary-fill)', text: 'var(--on-primary)' },
   QUA_HAN: { class: 'var(--color-warning-bg)', text: 'var(--color-warning-text)' },
-  TAM_NGUNG: { class: 'var(--color-ink-3)', text: 'white' }
+  TAM_NGUNG: { class: 'var(--field)', text: 'var(--ink-2)' }
 };
 
 const DIR = { EN_VI: 'Anh → Việt', VI_EN: 'Việt → Anh' };
@@ -74,7 +72,6 @@ function ProgressContent() {
   const searchParams = useSearchParams();
   const params = useParams();
   const queryClient = useQueryClient();
-  const { me } = useMe();
 
   const id = params.id;
 
@@ -116,12 +113,6 @@ function ProgressContent() {
     const urlParams = new URLSearchParams(searchParams);
     if (val) urlParams.set('q', val); else urlParams.delete('q');
     urlParams.set('page', '0');
-    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
-  };
-
-  const handlePageChange = (newPage) => {
-    const urlParams = new URLSearchParams(searchParams);
-    urlParams.set('page', newPage.toString());
     router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
   };
 
@@ -168,7 +159,7 @@ function ProgressContent() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <Button variant="ghost" onClick={() => router.push(`/bo-the/${id}`)} style={{ marginLeft: '-12px', marginBottom: 'var(--space-3)' }}>
           <Icon name="arrow-left" /> Về bộ thẻ
@@ -190,7 +181,7 @@ function ProgressContent() {
               <button
                 key={g.id}
                 onClick={() => handleTabClick(g.id)}
-                style={{ padding: '6px 12px', border: nhom === g.id ? 'none' : '1px solid var(--color-border)', background: nhom === g.id ? 'var(--color-primary)' : 'transparent', color: nhom === g.id ? 'white' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center' }}
+                style={{ padding: '6px 12px', border: nhom === g.id ? 'none' : '1px solid var(--color-border)', background: nhom === g.id ? 'var(--primary-fill)' : 'transparent', color: nhom === g.id ? 'var(--on-primary)' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center' }}
               >
                 {g.label}
                 {g.id && count > 0 && <span style={{ background: nhom === g.id ? 'rgba(255,255,255,0.2)' : 'var(--color-border)', padding: '2px 6px', borderRadius: '10px', fontSize: '12px' }}>{count}</span>}

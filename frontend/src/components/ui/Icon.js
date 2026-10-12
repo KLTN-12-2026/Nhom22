@@ -1,16 +1,17 @@
 export const Icons = {
   chart: <g><path d="M4 20V4M4 20h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/></g>,
-  library: <g><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h13"/><path d="M9 7h6"/></g>,
+  library: <g><path d="M12 6c-2.5-2-6-2.5-9-2v15c3-.5 6.5 0 9 2 2.5-2 6-2.5 9-2V4c-3-.5-6.5 0-9 2ZM12 6v15"/><path d="M6 8h3M6 12h3M15 8h3M15 12h3"/></g>,
   decks: <g><rect x="3" y="7" width="14" height="13" rx="1.5"/><path d="M7 4h12.5A1.5 1.5 0 0 1 21 5.5V16"/><path d="M7 12h6M7 15.5h4"/></g>,
   practice: <g><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></g>,
   notebook: <g><rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M5 7H3M5 12H3M5 17H3M10 8h6M10 12h6"/></g>,
   user: <g><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6"/></g>,
-  today: <g><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g>,
+  today: <g><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18m-13 5 3 3 5-5"/></g>,
   search: <g><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></g>,
   plus: <g><path d="M12 5v14M5 12h14"/></g>,
   upload: <g><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></g>,
   download: <g><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></g>,
   copy: <g><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></g>,
+  heart: <g><path d="M20.8 4.8a5.5 5.5 0 0 0-7.8 0L12 5.9l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.4a5.5 5.5 0 0 0 0-7.8Z"/></g>,
   star: <g><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></g>,
   trash: <g><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></g>,
   edit: <g><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></g>,
@@ -39,15 +40,20 @@ export const Icons = {
   refresh: <g><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></g>,
   file: <g><path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></g>,
   link: <g><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></g>,
-  filter: <g><path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z"/></g>,
+  filter: <g><path d="M3 6h4M11 6h10M3 12h10M17 12h4M3 18h4M11 18h10"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></g>,
   target: <g><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></g>,
-  menu: <g><path d="M4 12h16M4 6h16M4 18h16"/></g>
+  menu: <g><path d="M4 12h16M4 6h16M4 18h16"/></g>,
+  play: <g><path d="M8 5v14l11-7-11-7Z"/></g>,
+  pause: <g><path d="M8 5v14M16 5v14"/></g>,
+  flame: <g><path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.2 2.2-5.3 3.6-7.4.3 1.6 1.2 2.7 2.3 3.1C11.1 7.1 12.4 4.6 15 3c-.3 2.8 1.2 4.6 2.4 6.3.9 1.3 1.6 2.9 1.6 4.8C19 18.3 16 21 12 21Z"/></g>,
+  wifi: <g><path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></g>,
+  keyboard: <g><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></g>
 };
 
 export function Icon({ name, className = '' }) {
   if (!Icons[name]) return null;
   return (
-    <svg className={`icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={`icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
       {Icons[name]}
     </svg>
   );

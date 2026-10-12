@@ -21,11 +21,6 @@ function HocContent() {
   const [quyThoiGian, setQuyThoiGian] = useState('10');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // When data is loaded and no deck is selected, auto-select "Tất cả" if applicable
-  if (data && data.boThe && boTheId === '' && !defaultDeckId) {
-    // Wait, let's keep boTheId as '' for "Tất cả bộ của tôi"
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -58,7 +53,7 @@ function HocContent() {
   const allInfo = boThe.reduce((a, b) => ({ soCanOn: a.soCanOn + b.soCanOn, soMoi: a.soMoi + b.soMoi }), { soCanOn: 0, soMoi: 0 });
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', alignItems: 'center' }}>
@@ -86,7 +81,7 @@ function HocContent() {
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--space-6)' }}>
             <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
               <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Bộ thẻ</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: boTheId === '' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: boTheId === '' ? 'var(--color-primary)' : 'var(--color-border)' }}>
                   <input type="radio" name="boTheId" value="" checked={boTheId === ''} onChange={() => setBoTheId('')} style={{ transform: 'scale(1.2)' }} />
                   <div style={{ flex: 1 }}>
@@ -114,7 +109,7 @@ function HocContent() {
 
             <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
               <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Chiều học</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: chieuHoc === 'EN_VI' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: chieuHoc === 'EN_VI' ? 'var(--color-primary)' : 'var(--color-border)' }}>
                   <input type="radio" name="chieuHoc" value="EN_VI" checked={chieuHoc === 'EN_VI'} onChange={() => setChieuHoc('EN_VI')} style={{ transform: 'scale(1.2)' }} />
                   <div style={{ flex: 1 }}>
@@ -135,7 +130,7 @@ function HocContent() {
 
             <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
               <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Thời gian</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: quyThoiGian === '5' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: quyThoiGian === '5' ? 'var(--color-primary)' : 'var(--color-border)' }}>
                   <input type="radio" name="quyThoiGian" value="5" checked={quyThoiGian === '5'} onChange={() => setQuyThoiGian('5')} style={{ transform: 'scale(1.2)' }} />
                   <div style={{ flex: 1 }}>
@@ -161,8 +156,8 @@ function HocContent() {
               <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>Số lượt là ước tính theo 15 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
             </fieldset>
 
-            <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary)' }}>
-              <Button type="submit" variant="primary" disabled={isSubmitting}>
+            <div className="action-bar" style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary)' }}>
+              <Button type="submit" variant="accent" loading={isSubmitting}>
                 {isSubmitting ? 'Đang tải...' : 'Bắt đầu học'}
               </Button>
               <Button type="button" variant="ghost" onClick={() => router.push('/hom-nay')} disabled={isSubmitting}>

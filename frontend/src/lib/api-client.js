@@ -22,27 +22,36 @@ async function csrf() {
   }
   return csrfPromise;
 }
+function mascotFeedback(state) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vocab:mascot', { detail: { state } })); }
 export async function apiFetch(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
-  const headers = new Headers(options.headers);
-  if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-  let res;
+  const writing = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  if (writing) mascotFeedback('start');
   try {
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
-      const token = await csrf();
-      headers.set(token.headerName, token.token);
+    const headers = new Headers(options.headers);
+    if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    let res;
+    try {
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        const token = await csrf();
+        headers.set(token.headerName, token.token);
+      }
+      res = await fetch(path, { ...options, method, credentials: 'include', headers });
+    } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(0); }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 403) resetCsrf();
+      throw new ApiError(res.status, data);
     }
-    res = await fetch(path, { ...options, method, credentials: 'include', headers });
-  } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(0); }
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 403) resetCsrf();
-    throw new ApiError(res.status, data);
-  }
-  if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();
-  if (res.status === 204) return null;
-  const body = await res.text();
-  return body ? JSON.parse(body) : null;
+    if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();
+    if (res.status === 204) { if (writing) mascotFeedback('success'); return null; }
+    if (options.responseType === 'blob') return res.blob();
+    const body = await res.text();
+    const result = body ? JSON.parse(body) : null;
+    if (writing) { let input;try { input=typeof options.body==='string'?JSON.parse(options.body):null; } catch {} mascotFeedback(input?.danhGia==='QUEN'||result?.dung===false?'error':'success'); }
+    return result;
+  } catch (error) { if (writing) mascotFeedback('error'); throw error; }
+  finally { if (writing) mascotFeedback('end'); }
 }
 export function applyServerErrors(setError, errors) {
   const fields = Array.isArray(errors) ? errors : Object.entries(errors || {}).map(([field, message]) => ({ field, message }));

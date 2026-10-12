@@ -1,11 +1,11 @@
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--sp-4); }
 .hero { padding: var(--sp-5) 0 var(--sp-7); }
 .heroSheet { display: grid; gap: var(--sp-6); }
-.sheetTop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--sp-2) var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--primary); color: var(--on-primary); font-family: var(--font-form); font-stretch: 80%; }
+.sheetTop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--sp-2) var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--primary-fill); color: var(--on-primary); font-family: var(--font-form); font-stretch: 80%; }
 .sheetTop strong { font-size: clamp(1.125rem, 0.9rem + 1vw, 1.5rem); font-weight: 800; letter-spacing: -0.01em; }
 .sheetTop span { font-size: var(--fs-small); font-weight: 650; color: var(--on-primary-soft); }
 .heroGrid { display: grid; gap: var(--sp-6); }
-.heroGrid h1 { font-size: var(--fs-display); font-stretch: 78%; font-weight: 820; letter-spacing: -0.02em; line-height: 0.98; max-width: 12ch; }
+.heroGrid h1 { font-size: var(--fs-home-title); font-stretch: 85%; font-weight: 820; letter-spacing: -0.02em; line-height: 1.12; max-width: 18ch; }
 .lead { font-size: var(--fs-lead); color: var(--ink-2); max-width: 46ch; margin-top: var(--sp-4); }
 .ctaRow { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-5); }
 
@@ -15,13 +15,13 @@
 .fillRow > span { padding: var(--sp-3); background: var(--primary-tint); color: var(--primary); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; font-size: var(--fs-small); border-right: var(--rule) solid var(--primary-line); display: flex; align-items: center; }
 .fillRow fieldset { border: 0; margin: 0; padding: var(--sp-2) var(--sp-3); display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
 .fillRow legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.fillRow .choice { padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-1); align-items: center; }
+.fillRow :global(.choice) { padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-1); align-items: center; }
 
 .quiz { border: var(--rule) solid var(--primary); background: var(--field); display: grid; }
 .quizHead { display: flex; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: var(--rule) solid var(--primary); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; font-size: var(--fs-small); color: var(--primary); }
 .quizBody { padding: var(--sp-5) var(--sp-4) var(--sp-4); display: grid; gap: var(--sp-2); }
 .quizPrompt { font-family: var(--font-word); font-weight: 700; font-size: var(--fs-word); line-height: 1.05; overflow-wrap: anywhere; }
-.quizPrompt.vi { font-family: var(--font-body); font-stretch: 90%; font-weight: 750; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); }
+.quizPromptVi { font-family: var(--font-body); font-stretch: 90%; font-weight: 750; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); }
 .quizSub { font-family: var(--font-word); color: var(--ink-2); font-size: 1.125rem; min-height: 1.6em; }
 .quizOptions { list-style: none; margin: var(--sp-4) 0 0; padding: 0; display: grid; gap: 2px; }
 .quizOptions button {
@@ -30,11 +30,11 @@
 }
 .quizOptions button:hover:not(:disabled) { background: var(--primary-tint); }
 .quizOptions button:disabled { cursor: default; color: var(--ink); }
-.quizOptions .en { font-family: var(--font-word); font-size: 1.125rem; }
-.quizOptions .bubble { width: 26px; height: 26px; font-size: 0.8125rem; margin: 0; }
-.quizOptions [data-result="correct"] .bubble { border-color: var(--secondary); }
-.quizOptions [data-result="correct"] .bubble::after { background: var(--secondary); }
-.quizOptions [data-result="wrong"] .bubble::after { background: repeating-linear-gradient(118deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 3px), var(--graphite); }
+.quizOptions :global(.en) { font-family: var(--font-word); font-size: 1.125rem; }
+.quizOptions :global(.bubble) { width: 26px; height: 26px; font-size: 0.8125rem; margin: 0; }
+.quizOptions [data-result="correct"] :global(.bubble) { border-color: var(--secondary); }
+.quizOptions [data-result="correct"] :global(.bubble)::after { background: var(--secondary); }
+.quizOptions [data-result="wrong"] :global(.bubble)::after { background: repeating-linear-gradient(118deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 3px), var(--graphite); }
 .quizOptions [data-result="answer"] { background: var(--secondary-bg); }
 .quizFoot { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) var(--sp-4); border-top: var(--rule) solid var(--primary-line); min-height: 64px; }
 .verdict { font-weight: 650; }
@@ -64,12 +64,12 @@
 .sched caption { caption-side: bottom; text-align: left; padding: var(--sp-2) var(--sp-4); color: var(--ink-3); font-size: var(--fs-caption); }
 @media (min-width: 900px) { .schedGrid { grid-template-columns: 1fr 1fr; } }
 
-.close { background: var(--primary-strong); color: #fff; position: relative; overflow: hidden; }
+.close { background: var(--brand-surface); color: var(--on-primary); position: relative; overflow: hidden; }
 .close::before { content: ""; position: absolute; left: 12px; top: var(--sp-6); bottom: var(--sp-6); width: 8px; background: repeating-linear-gradient(to bottom, #fff 0 5px, transparent 5px 22px); opacity: 0.5; }
 .close .wrap { padding-top: var(--sp-7); padding-bottom: var(--sp-7); padding-left: calc(var(--sp-4) + 24px); display: grid; gap: var(--sp-4); }
 .close h2 { color: #fff; font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.75rem); font-stretch: 80%; font-weight: 800; max-width: 20ch; }
 .close p { color: var(--on-primary-soft); max-width: 50ch; }
-.btnOnDark { background: #fff; color: var(--primary-strong); }
+.btnOnDark { background: var(--field); color: var(--primary-strong); }
 .btnOnDark:hover { background: var(--primary-tint); }
 
 @media (min-width: 1024px) {
@@ -81,3 +81,6 @@
   .quizBodySwap { animation: swap var(--dur-3) var(--ease-out); }
   @keyframes swap { from { opacity: 0; transform: translateY(6px); } }
 }
+
+.heroGrid > * { min-width:0; }
+@media(max-width:639px) { .fillRow { grid-template-columns:minmax(0,1fr); } .fillRow > span { border-right:0; } .heroGrid h1 { font-size:var(--fs-home-title); } }

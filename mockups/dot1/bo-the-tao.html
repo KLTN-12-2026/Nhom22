@@ -8,9 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .form-grid { display: grid; gap: var(--sp-5); }
   .form-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
@@ -19,6 +20,10 @@
   .preview-row .answer-row { grid-template-columns: 1.5rem minmax(0, 1fr); padding-right: 0; }
   .danger-zone { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--primary-line); display: grid; gap: var(--sp-2); justify-items: start; }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="decks" data-auth="required">
 <!-- F1.8 · UI14 · API: POST /decks, GET/PATCH/DELETE /decks/{id} (version), GET /public/topics (B1.7, B1.8) -->
@@ -101,9 +106,10 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/contract-demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
@@ -173,7 +179,7 @@
         if (id) {
           const d = await VL.api("PATCH", "/decks/" + id, Object.assign(data, { version, boChuDe: !data.chuDeId }));
           version = d.version;
-          VL.toast("Đã lưu bộ thẻ");
+          VL.toast("Đã lưu bộ thẻ", "success");
         } else {
           const d = await VL.api("POST", "/decks", data);
           location.href = "bo-the-chi-tiet.html?id=" + d.id + "&created=1";
@@ -202,5 +208,6 @@
   });
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

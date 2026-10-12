@@ -234,7 +234,7 @@ function NotebookContent() {
                       <button type="button" className="btn btn-quiet" data-act="play">
                         <Icon name="play" />Nghe
                       </button>
-                      <button type="button" className="btn btn-quiet" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
+                      <button type="button" className="btn btn-edit" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
                         {it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}
                       </button>
                       <button type="button" className="btn btn-quiet" data-act="mark" aria-pressed={it.danhDauThuCong} onClick={() => toggleMark(it)} disabled={updateMutation.isPending}>

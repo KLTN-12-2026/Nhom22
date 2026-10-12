@@ -1,6 +1,6 @@
 # PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG HỌC TỪ VỰNG TIẾNG ANH
 
-> Đối chiếu triển khai 10/10/2026: API quản lý thẻ/public tags B1.9, thư viện B1.10 và sao chép B1.11 đã triển khai; CSV B1.12 còn kế hoạch. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. V6 lưu idempotency và snapshot sao chép. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Hợp đồng và kiểm chứng: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md), [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
+> Đối chiếu triển khai 10/10/2026: API quản lý thẻ/public tags B1.9, thư viện B1.10 và sao chép B1.11 đã triển khai; CSV B1.12 đã triển khai13/10/2026 (preview Redis30m, commit Idempotency-Key, export owner-only); kiểm chứng theo artifact mới và báo cáo chung, không cộng số liệu lịch sử. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. V6 lưu idempotency và snapshot sao chép. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Hợp đồng và kiểm chứng: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md), [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
 
 ## 1. Thông tin tài liệu và cơ sở phân tích
 
@@ -593,6 +593,8 @@ erDiagram
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
 | Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements` |
+
+Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
 Các endpoint là hợp đồng đề xuất; cần đặc tả request/response và quyền cụ thể trong OpenAPI khi lập trình. Duyệt bài AI được dùng cho bản nháp đã kiểm tra, không gửi trực tiếp nội dung AI chưa duyệt thành bài kiểm tra có đáp án cố định.
 

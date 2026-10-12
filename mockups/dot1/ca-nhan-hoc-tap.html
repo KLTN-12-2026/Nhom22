@@ -8,18 +8,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .num-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-  .num-row .input { width: 7.5rem; text-align: center; font-family: var(--font-form); font-stretch: 85%; font-weight: 700; font-size: 1.125rem; }
+  .num-row .input { width: 7.5rem; text-align: center; font-family: var(--font-form); font-stretch: 100%; font-weight: 700; font-size: 1.125rem; }
   .quick { display: flex; gap: 6px; flex-wrap: wrap; }
-  .quick button { min-width: var(--tap); min-height: var(--tap); border-radius: 22px; border: 1.5px solid var(--primary-line); background: var(--field); font-family: var(--font-form); font-stretch: 85%; font-weight: 700; color: var(--primary); }
+  .quick button { min-width: var(--tap); min-height: var(--tap); border-radius: 22px; border: 1.5px solid var(--primary-line); background: var(--field); font-family: var(--font-form); font-stretch: 100%; font-weight: 700; color: var(--primary); }
   .quick button:hover { border-color: var(--primary); background: var(--primary-tint); }
   .quick button[aria-pressed="true"] { background: var(--graphite); border-color: var(--graphite); color: #fff; }
   .estimate { font-size: var(--fs-small); color: var(--ink-2); }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="learning" data-auth="required">
 <!-- F1.5 · UI41 · API: GET/PUT /me/learning-settings (version), GET /public/topics (B1.5, B1.7) -->
@@ -95,6 +100,7 @@
               <span class="saved-at" id="saved-at" aria-live="polite"></span>
             </div>
           </form>
+          <section class="speech-settings" data-speech-settings aria-label="Giọng đọc tiếng Anh"></section>
         </section>
         <aside class="side-col" data-when="ready">
           <section class="panel" aria-labelledby="h-title">
@@ -108,12 +114,14 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/contract-demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
+  window.VocabSpeech.mountSettings(document.querySelector("[data-speech-settings]"));
   const form = document.getElementById("form");
   const save = document.getElementById("save");
   let version;
@@ -151,7 +159,7 @@
       try {
         const s = await VL.api("PUT", "/me/learning-settings", data);
         version = s.version;
-        VL.toast("Đã lưu thiết lập");
+        VL.toast("Đã lưu thiết lập", "success");
         document.getElementById("saved-at").textContent = "Lưu lúc " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
       } catch (err) {
         if (err.code === "VERSION_CONFLICT") {
@@ -166,5 +174,6 @@
   });
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

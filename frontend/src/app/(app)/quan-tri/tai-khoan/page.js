@@ -3,21 +3,21 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button, Pagination } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const STATUS = {
   HOAT_DONG: { label: 'Đang hoạt động', className: '' },
   BI_KHOA: { label: 'Bị khóa', className: 'var(--color-danger-bg)' },
   CHUA_XAC_THUC: { label: 'Chưa xác thực', className: 'var(--color-warning-bg)' },
-  DANG_XOA: { label: 'Đang xóa', className: 'var(--color-ink-3)' }
+  DANG_XOA: { label: 'Đang xóa', className: 'var(--field)' }
 };
 
 const STATUS_TEXT_COLOR = {
   HOAT_DONG: 'var(--color-ink)',
   BI_KHOA: 'var(--color-danger-text)',
   CHUA_XAC_THUC: 'var(--color-warning-text)',
-  DANG_XOA: 'white'
+  DANG_XOA: 'var(--ink-2)'
 };
 
 function AdminUsersContent() {
@@ -117,7 +117,7 @@ function AdminUsersContent() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-5)', alignItems: 'start' }} className="page-grid with-side">
+    <div className="page page-grid with-side">
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
@@ -129,7 +129,7 @@ function AdminUsersContent() {
         </div>
 
         <form onSubmit={handleSearch} style={{ display: 'grid', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', paddingBottom: 'var(--space-5)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 'var(--space-3)', alignItems: 'end' }}>
+          <div className="filter-grid">
             <div>
               <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Tìm theo email hoặc tên</label>
               <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Ví dụ: an@vocab.local" style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
@@ -217,19 +217,7 @@ function AdminUsersContent() {
                 );
               })}
             </ol>
-            {data.totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-6)' }}>
-                {Array.from({ length: data.totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    style={{ padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: page === i ? 'var(--color-primary)' : 'var(--color-bg)', color: page === i ? 'white' : 'var(--color-ink)', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+            <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={value => handlePageChange(value - 1)} />
           </>
         ) : (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>

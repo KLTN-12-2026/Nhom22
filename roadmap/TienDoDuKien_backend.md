@@ -39,7 +39,7 @@
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
 Sau bước cuối mỗi giai đoạn: chạy `/fe-report <GĐ>` để bàn giao cho FE.
-Lịch theo tuần (S1–S11) ghép BE ↔ FE: `roadmap/SPRINT_PLAN.md`; bước FE: `roadmap/ROADMAP_FE.md`.
+Lịch theo tuần (S1–S11) ghép BE ↔ FE: `roadmap/SPRINT_PLAN.md`; bước FE: `roadmap/TienDoDuKien_fronend.md`.
 
 ---
 
@@ -271,9 +271,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Kiểm chứng10/10:** compile BE đạt; lượt đầu73/73, lượt cuối riêng22/22 (B1.11 20 + onboarding2), hồi quy DTO bộ riêng11/11; không cộng các lượt. FE12/12/build đạt; lint phạm vi sửa0 lỗi, toàn frontend0 lỗi/14 cảnh báo ngoài phần sửa. Browser thật13 kiểm tra đạt: desktop1280/mobile390/360, copy/reload/retry sau mất phản hồi, sửa độc lập/media/nguồn riêng tư, empty/404/guest/reduced motion. [Evidence](../report/evidence/B1.11-verification-20261010.json).
 - **Bàn giao:** [luồng B1.11](../docs/luong-backend/B1.11-sao-chep-bo.md); báo cáo Đợt 1 hiện có. Không chạy HTTP6 B1.8 hoặc thay trạng thái các bước trước; CSV/quản trị thuộc bước riêng.
 
-### [ ] B1.12 Nhập/xuất CSV — FR-05, TC-04
+### [x] B1.12 Nhập/xuất CSV — FR-05, TC-04
 - API: `POST /decks/{id}/imports/preview` (lưu tạm kết quả trong Redis 30 phút), `POST /imports/{id}/commit`, `GET /decks/{id}/export`.
 - Giới hạn 1 MB / 1000 dòng; báo lỗi **từng dòng**; đánh dấu trùng; commit chỉ ghi dòng hợp lệ đã chọn. Export chống công thức (ô bắt đầu `= + - @` → thêm `'`).
+- Hoàn tất13/10/2026: owner-only; multipart/mapping, Redis30m, atomic selection, V7 idempotency/replay, RFC4180 UTF-8 BOM và guard công thức; FE/mockup thật đã nối. CSV35 test+handler3 pass; hồi quy ngoài CSV/handler193 test riêng; Newman25 HTTP (13 chính+12 CSRF)/31 assertion pass; browser7 nhóm pass. Giữ B1.8/HTTP6. [Luồng CSV](../docs/luong-backend/B1.12-csv.md), [bằng chứng](../verification/B1.12/browser.json), [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 - **Cuối Đợt 1 →** `/fe-report DOT1`.
 
 ---
@@ -281,7 +282,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 2 — Học, luyện tập, thống kê & quản trị (26/10–08/11) · FR-06, 07, 11, 13
 
 ### [ ] B2.1 Bộ tính SRS thuần — FR-06, TC-06, TC-07
-- `V5__learning.sql`: `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
+- migration learning mới dùng số tiếp theo chưa sử dụng (V1–V7 hiện đã có; không sửa migration đã áp dụng): `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
 - `SrsCalculator` (class thuần, không Spring): nhận trạng thái cũ + mức (QUEN/KHO/NHO/DE) + `Instant now` → trạng thái mới, theo **đúng bảng TK §7.2** (EF 2.5, min 1.3, trần 365 ngày).
 - **Xong khi:** unit test chuỗi Nhớ: mới → 10 phút → 1 ngày → 6 ngày → 15 ngày; Quên ở ON_TAP → HOC_LAI, tăng số lần quên.
 

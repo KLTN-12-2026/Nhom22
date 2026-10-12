@@ -1,52 +1,54 @@
 (function () {
   const ICONS = {
-    library: '<path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h13"/><path d="M9 7h6"/>',
-    decks: '<rect x="3" y="7" width="14" height="13" rx="1.5"/><path d="M7 4h12.5A1.5 1.5 0 0 1 21 5.5V16"/><path d="M7 12h6M7 15.5h4"/>',
-    practice: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
-    notebook: '<rect x="5" y="3" width="15" height="18" rx="1.5"/><path d="M5 7H3M5 12H3M5 17H3M10 8h6M10 12h6"/>',
-    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6"/>',
-    today: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
-    download: '<path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
-    copy: '<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>',
-    star: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
-    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-    edit: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/>',
-    check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
-    x: '<path d="M6 6l12 12M18 6 6 18"/>',
-    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>',
-    eye: '<path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/><circle cx="12" cy="12" r="3"/>',
-    "eye-off": '<path d="M3 3l18 18M10.6 5.1A9.6 9.6 0 0 1 12 5c6 0 9.5 7 9.5 7a15.7 15.7 0 0 1-3 3.8M6.6 6.6A15.4 15.4 0 0 0 2.5 12S6 19 12 19a9 9 0 0 0 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
-    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z"/>',
-    lock: '<rect x="5" y="10" width="14" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-    volume: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
-    image: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
-    "chevron-left": '<path d="m15 5-7 7 7 7"/>',
-    "chevron-right": '<path d="m9 5 7 7-7 7"/>',
-    "chevron-down": '<path d="m5 9 7 7 7-7"/>',
-    "arrow-left": '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-    logout: '<path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
-    bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
-    mail: '<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 6 8.5 7 8.5-7"/>',
-    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    shield: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/>',
-    tag: '<path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9-9-9Z"/><circle cx="8" cy="8" r="1.5"/>',
-    folder: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-12Z"/>',
-    refresh: '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/>',
-    file: '<path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
-    link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
-    filter: '<path d="M4 5h16l-6 7.5V19l-4 2v-8.5L4 5Z"/>',
-    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-    chart: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/>',
-    play: '<path d="M7 5v14l11-7L7 5Z"/>',
-    flame: '<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.2 2.2-5.3 3.6-7.4.3 1.6 1.2 2.7 2.3 3.1C11.1 7.1 12.4 4.6 15 3c-.3 2.8 1.2 4.6 2.4 6.3.9 1.3 1.6 2.9 1.6 4.8C19 18.3 16 21 12 21Z"/>',
-    pause: '<path d="M8 5v14M16 5v14"/>',
-    wifi: '<path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 19h.01"/>',
-    keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="1.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'
+    "chart": "<path d=\"M4 20V4M4 20h16\"/><path d=\"M8 16v-5M12 16V8M16 16v-3\"/>",
+    "library": "<path d=\"M12 6c-2.5-2-6-2.5-9-2v15c3-.5 6.5 0 9 2 2.5-2 6-2.5 9-2V4c-3-.5-6.5 0-9 2ZM12 6v15\"/><path d=\"M6 8h3M6 12h3M15 8h3M15 12h3\"/>",
+    "decks": "<rect x=\"3\" y=\"7\" width=\"14\" height=\"13\" rx=\"1.5\"/><path d=\"M7 4h12.5A1.5 1.5 0 0 1 21 5.5V16\"/><path d=\"M7 12h6M7 15.5h4\"/>",
+    "practice": "<path d=\"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z\"/><path d=\"m13.5 6.5 4 4\"/>",
+    "notebook": "<rect x=\"5\" y=\"3\" width=\"15\" height=\"18\" rx=\"1.5\"/><path d=\"M5 7H3M5 12H3M5 17H3M10 8h6M10 12h6\"/>",
+    "user": "<circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21c1.5-4 4.4-6 8-6s6.5 2 8 6\"/>",
+    "today": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M7 3v4M17 3v4M3 10h18m-13 5 3 3 5-5\"/>",
+    "search": "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-4-4\"/>",
+    "plus": "<path d=\"M12 5v14M5 12h14\"/>",
+    "upload": "<path d=\"M12 16V4M7 9l5-5 5 5\"/><path d=\"M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3\"/>",
+    "download": "<path d=\"M12 4v12M7 11l5 5 5-5\"/><path d=\"M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3\"/>",
+    "copy": "<rect x=\"8\" y=\"8\" width=\"12\" height=\"12\" rx=\"1.5\"/><path d=\"M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8\"/>",
+    "heart": "<path d=\"M20.8 4.8a5.5 5.5 0 0 0-7.8 0L12 5.9l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.4a5.5 5.5 0 0 0 0-7.8Z\"/>",
+    "star": "<path d=\"m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z\"/>",
+    "trash": "<path d=\"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3\"/>",
+    "edit": "<path d=\"M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z\"/>",
+    "check": "<path d=\"m5 12.5 4.5 4.5L19 7.5\"/>",
+    "x": "<path d=\"M6 6l12 12M18 6 6 18\"/>",
+    "alert": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7.5v5.5M12 16.5v.01\"/>",
+    "info": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5.5M12 7.5v.01\"/>",
+    "eye": "<path d=\"M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>",
+    "eye-off": "<path d=\"M3 3l18 18M10.6 5.1A9.6 9.6 0 0 1 12 5c6 0 9.5 7 9.5 7a15.7 15.7 0 0 1-3 3.8M6.6 6.6A15.4 15.4 0 0 0 2.5 12S6 19 12 19a9 9 0 0 0 4.2-1\"/><path d=\"M9.9 9.9a3 3 0 0 0 4.2 4.2\"/>",
+    "globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z\"/>",
+    "lock": "<rect x=\"5\" y=\"10\" width=\"14\" height=\"10\" rx=\"1.5\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3\"/>",
+    "volume": "<path d=\"M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5Z\"/><path d=\"M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11\"/>",
+    "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"1.5\"/><circle cx=\"9\" cy=\"10\" r=\"2\"/><path d=\"m21 16-5-5-9 9\"/>",
+    "chevron-left": "<path d=\"m15 5-7 7 7 7\"/>",
+    "chevron-right": "<path d=\"m9 5 7 7-7 7\"/>",
+    "chevron-down": "<path d=\"m5 9 7 7 7-7\"/>",
+    "arrow-left": "<path d=\"M19 12H5M11 6l-6 6 6 6\"/>",
+    "logout": "<path d=\"M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15\"/><path d=\"M10 8l-4 4 4 4M6 12h10\"/>",
+    "settings": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z\"/>",
+    "bell": "<path d=\"M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z\"/><path d=\"M10 20.5a2 2 0 0 0 4 0\"/>",
+    "mail": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"1.5\"/><path d=\"m3.5 6 8.5 7 8.5-7\"/>",
+    "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>",
+    "shield": "<path d=\"M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6L12 3Z\"/><path d=\"m9 12 2 2 4-4\"/>",
+    "tag": "<path d=\"M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9-9-9Z\"/><circle cx=\"8\" cy=\"8\" r=\"1.5\"/>",
+    "folder": "<path d=\"M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-12Z\"/>",
+    "refresh": "<path d=\"M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4\"/>",
+    "file": "<path d=\"M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z\"/><path d=\"M14 3v5h5M9 13h6M9 17h6\"/>",
+    "link": "<path d=\"M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1\"/><path d=\"M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1\"/>",
+    "filter": "<path d=\"M3 6h4M11 6h10M3 12h10M17 12h4M3 18h4M11 18h10\"/><circle cx=\"9\" cy=\"6\" r=\"2\"/><circle cx=\"15\" cy=\"12\" r=\"2\"/><circle cx=\"9\" cy=\"18\" r=\"2\"/>",
+    "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>",
+    "menu": "<path d=\"M4 12h16M4 6h16M4 18h16\"/>",
+    "play": "<path d=\"M8 5v14l11-7-11-7Z\"/>",
+    "pause": "<path d=\"M8 5v14M16 5v14\"/>",
+    "flame": "<path d=\"M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.2 2.2-5.3 3.6-7.4.3 1.6 1.2 2.7 2.3 3.1C11.1 7.1 12.4 4.6 15 3c-.3 2.8 1.2 4.6 2.4 6.3.9 1.3 1.6 2.9 1.6 4.8C19 18.3 16 21 12 21Z\"/>",
+    "wifi": "<path d=\"M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01\"/>",
+    "keyboard": "<rect x=\"2.5\" y=\"6\" width=\"19\" height=\"12\" rx=\"2\"/><path d=\"M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10\"/>"
   };
 
   const GOAL = { GIAO_TIEP: "Giao tiếp", TOEIC: "TOEIC" };
@@ -67,8 +69,10 @@
   async function api(method, path, data, opts) {
     await wait(260 + Math.random() * 360);
     const headers = (opts && opts.headers) || {};
-    const res = window.VLDemo.handle(method, path, data, headers);
-    return res.body;
+    const writing=!['GET','HEAD','OPTIONS'].includes(method);
+    const emit=state=>window.dispatchEvent(new CustomEvent('vocab:mascot',{detail:{state}}));
+    if(writing)emit('start');
+    try{const res=await window.VLDemo.handle(method,path,data,headers);if(writing)emit(data?.danhGia==='QUEN'?'error':'success');return res.body;}catch(error){if(writing)emit('error');throw error;}finally{if(writing)emit('end');}
   }
 
   function me() { try { const s = window.VLDemo.session.get(); if (!s) return null; return window.VLDemo.db.users.find((u) => u.id === s.userId) || null; } catch (e) { return null; } }
@@ -115,6 +119,7 @@
   /* ---------- Toast ---------- */
   let toastRegion;
   function toast(message, type) {
+    if(type==='success'||type==='error')window.VocabMascot?.react(type);
     if (!toastRegion) {
       toastRegion = document.createElement("div");
       toastRegion.className = "toast-region";
@@ -127,6 +132,18 @@
     el.innerHTML = icon(type === "error" ? "alert" : "check") + "<span>" + esc(message) + "</span>";
     toastRegion.appendChild(el);
     setTimeout(() => el.remove(), 3600);
+  }
+
+  /* ---------- Pagination: API page is zero-based, labels are one-based ---------- */
+  function pagination(page, totalPages) {
+    if (totalPages <= 1) return "";
+    const arrow = (target, label, path, disabled) => '<button type="button" data-page="' + target + '" aria-label="' + label + '"' + (disabled ? ' disabled' : '') + '>' + '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="' + path + '"/></svg></button>';
+    const left = Math.max(0, page - 1), right = Math.min(totalPages - 1, page + 1);
+    const numbers = [];
+    if (left > 0) { numbers.push(0); if (left > 1) numbers.push(null); }
+    for (let i = left; i <= right; i++) numbers.push(i);
+    if (right < totalPages - 1) { if (right < totalPages - 2) numbers.push(null); numbers.push(totalPages - 1); }
+    return arrow(Math.max(0, page - 1), 'Trang trước', 'm15 18-6-6 6-6', page <= 0) + numbers.map(i => i === null ? '<span class="gap" aria-hidden="true">…</span>' : '<button type="button" data-page="' + i + '" aria-label="Trang ' + (i + 1) + '"' + (i === page ? ' aria-current="page"' : '') + ((i === 0 || i === totalPages - 1) && Math.abs(i - page) > 1 ? ' class="pagination__btn--boundary"' : '') + '>' + (i + 1) + '</button>').join('') + arrow(Math.min(totalPages - 1, page + 1), 'Trang sau', 'm9 6 6 6-6 6', page >= totalPages - 1) + '<small class="pagination__info">Trang ' + (page + 1) + '/' + totalPages + '</small>';
   }
 
   /* ---------- Busy buttons ---------- */
@@ -298,13 +315,34 @@
       { key: "notebook", label: "Sổ tay", icon: "notebook", href: "dot2/so-tay.html" },
       { key: "stats", label: "Thống kê", icon: "chart", href: "dot2/thong-ke.html" }
     ] },
+    { group: "Công cụ học", items: [
+      { key: "ai-xuong-the", label: "Xưởng thẻ AI", icon: "decks", href: "dot3/ai-xuong-the.html" },
+      { key: "ai-viet-cau", label: "Viết câu", icon: "practice", href: "dot3/ai-viet-cau.html" },
+      { key: "phat-am", label: "Phát âm", icon: "volume", href: "dot3/phat-am.html" },
+      { key: "ai-lich-su", label: "Lịch sử AI", icon: "file", href: "dot3/ai-lich-su.html" },
+      { key: "phat-am-lich-su", label: "Lịch sử phát âm", icon: "clock", href: "dot3/phat-am-lich-su.html" }
+    ] },
+    { group: "Tiến bộ", items: [
+      { key: "goi-y", label: "Gợi ý ôn tập", icon: "target", href: "dot3/goi-y.html" },
+      { key: "ban-do-lam-chu", label: "Bản đồ làm chủ", icon: "chart", href: "dot3/ban-do-lam-chu.html" },
+      { key: "tong-ket-tuan", label: "Tổng kết tuần", icon: "today", href: "dot3/tong-ket-tuan.html" },
+      { key: "thanh-tich", label: "Thành tích", icon: "shield", href: "dot3/thanh-tich.html" }
+    ] },
     { group: "Tài khoản", items: [
+      { key: "thong-bao", label: "Thông báo của tôi", icon: "bell", href: "dot3/thong-bao.html" },
+      { key: "ca-nhan-du-lieu", label: "Dữ liệu cá nhân", icon: "user", href: "dot3/ca-nhan-du-lieu.html" },
       { key: "profile", label: "Hồ sơ", icon: "user", href: "dot1/ca-nhan.html" },
       { key: "learning", label: "Thiết lập học", icon: "target", href: "dot1/ca-nhan-hoc-tap.html" },
       { key: "security", label: "Bảo mật", icon: "shield", href: "dot1/ca-nhan-bao-mat.html" },
       { key: "notify", label: "Thông báo & nhắc học", icon: "bell", href: "dot1/ca-nhan-thong-bao.html" }
     ] },
     { group: "Quản trị", admin: true, items: [
+      { key: "quan-tri-tong-quan", label: "Tổng quan", icon: "chart", href: "dot3/quan-tri-tong-quan.html" },
+      { key: "quan-tri-bao-cao", label: "Báo cáo nội dung", icon: "alert", href: "dot3/quan-tri-bao-cao.html" },
+      { key: "quan-tri-dich-vu", label: "Dịch vụ", icon: "settings", href: "dot3/quan-tri-dich-vu.html" },
+      { key: "quan-tri-thong-bao", label: "Thông báo hệ thống", icon: "bell", href: "dot3/quan-tri-thong-bao.html" },
+      { key: "quan-tri-tac-vu", label: "Tác vụ nền", icon: "clock", href: "dot3/quan-tri-tac-vu.html" },
+      { key: "quan-tri-dong-luc", label: "Huy hiệu & thử thách", icon: "shield", href: "dot3/quan-tri-dong-luc.html" },
       { key: "admin-users", label: "Tài khoản & vai trò", icon: "user", href: "dot2/quan-tri-tai-khoan.html" },
       { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "dot1/quan-tri-chu-de.html" },
       { key: "admin-decks", label: "Bộ và thẻ mẫu", icon: "decks", href: "dot2/quan-tri-bo-mau.html" },
@@ -312,11 +350,11 @@
     ] }
   ];
   const BOTTOM = [
-    { key: "today", label: "Học", icon: "today", href: HOME, also: ["decks", "deck-new", "study", "stats"] },
+    { key: "today", label: "Học", icon: "today", href: HOME, also: ["decks", "deck-new", "study", "stats", "ai-xuong-the", "goi-y", "ban-do-lam-chu", "tong-ket-tuan", "thanh-tich"] },
     { key: "library", label: "Thư viện", icon: "library", href: "dot1/thu-vien.html" },
-    { key: "practice", label: "Luyện tập", icon: "practice", href: "dot2/luyen-tap.html" },
+    { key: "practice", label: "Luyện tập", icon: "practice", href: "dot2/luyen-tap.html", also: ["ai-viet-cau", "phat-am", "ai-lich-su", "phat-am-lich-su", "ai-giai-thich"] },
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "dot2/so-tay.html" },
-    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["profile", "learning", "security", "notify", "admin-topics", "admin-users", "admin-decks", "admin-audit"] }
+    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["profile", "learning", "security", "notify", "thong-bao", "ca-nhan-du-lieu", "bao-cao-noi-dung", "admin-topics", "admin-users", "admin-decks", "admin-audit"] }
   ];
 
   function renderAppShell(u) {
@@ -324,32 +362,28 @@
     const header = document.querySelector(".app-header");
     if (header) {
       header.innerHTML =
-        '<a class="brand" href="' + url(HOME) + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
-        '<div class="header-actions"><a class="user-chip" href="' + url("dot1/ca-nhan.html") + '" aria-label="Hồ sơ của ' + esc(u.tenHienThi) + '">' + avatarHtml(u) + '<span class="user-name">' + esc(u.tenHienThi) + "</span></a>" +
+        '<a class="brand" href="' + url(HOME) + '"><img class="brand-mark" src="' + url("shared/assets/mascot-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
+        '<div class="header-actions">' + '<a class="user-chip" href="' + url("dot1/ca-nhan.html") + '" aria-label="Hồ sơ của ' + esc(u.tenHienThi) + '">' + avatarHtml(u) + '<span class="user-name">' + esc(u.tenHienThi) + "</span></a>" +
         '<button type="button" class="btn btn-quiet btn-icon" data-logout aria-label="Đăng xuất" title="Đăng xuất">' + icon("logout") + "</button></div>";
     }
     const side = document.querySelector(".sidebar");
     if (side) {
       side.setAttribute("aria-label", "Điều hướng chính");
-      side.innerHTML = '<button type="button" class="btn btn-quiet sidebar-toggle" aria-controls="sidebar-links" aria-expanded="true" aria-label="Thu gọn điều hướng" title="Thu gọn điều hướng">' + icon('chevron-left') + '<span class="nav-label">Thu gọn</span></button><div id="sidebar-links">' + NAV.filter((g) => !g.admin || u.vaiTro.includes('ADMIN')).map((g) =>
-        '<div class="nav-group"><p class="nav-group-title">' + esc(g.group) + '</p>' + g.items.map(it => it.soon
-          ? '<span class="nav-link" aria-disabled="true" aria-label="' + esc(it.label) + '" title="' + esc(it.label) + '">' + icon(it.icon) + '<span class="nav-label">' + esc(it.label) + '</span><span class="nav-soon">' + esc(it.soon) + '</span></span>'
-          : '<a class="nav-link" href="' + url(it.href) + '" aria-label="' + esc(it.label) + '" title="' + esc(it.label) + '"' + (it.key === nav ? ' aria-current="page"' : '') + '>' + icon(it.icon) + '<span class="nav-label">' + esc(it.label) + '</span></a>').join('') + '</div>').join('') + '</div>';
-      side.querySelector('.sidebar-toggle').addEventListener('click', event => {
-        const collapsed = document.querySelector('.app').classList.toggle('sidebar-collapsed');
-        const button = event.currentTarget;
-        button.setAttribute('aria-expanded', String(!collapsed));
-        button.setAttribute('aria-label', collapsed ? 'Mở rộng điều hướng' : 'Thu gọn điều hướng');
-        button.title = button.getAttribute('aria-label');
-        button.innerHTML = icon(collapsed ? 'chevron-right' : 'chevron-left') + '<span class="nav-label">Thu gọn</span>';
-      });
+      side.innerHTML = '<div id="sidebar-links" class="sidebar-links">' + NAV.filter((g) => (!g.admin || u.vaiTro.includes('ADMIN')) && (!body.dataset.nav?.startsWith('quan-tri-') && !body.dataset.nav?.startsWith('admin-') || g.admin)).map((g) =>
+        '<div class="nav-group"><p class="nav-group-title">' + esc(g.group) + '</p>' + g.items.map(it => '<a class="nav-link" href="' + url(it.href) + '" aria-label="' + esc(it.label) + '" title="' + esc(it.label) + '"' + (it.key === nav ? ' aria-current="page"' : '') + '>' + icon(it.icon) + '<span class="nav-label">' + esc(it.label) + '</span></a>').join('') + '</div>').join('') + '</div>';
     }
     const bottom = document.querySelector(".bottom-nav");
     if (bottom) {
       bottom.setAttribute("aria-label", "Điều hướng chính");
-      bottom.innerHTML = BOTTOM.map((it) => {
+      const items = (nav?.startsWith("quan-tri-") || nav?.startsWith("admin-")) ? [
+        {key:"quan-tri-tong-quan",label:"Tổng quan",icon:"chart",href:"dot3/quan-tri-tong-quan.html"},
+        {key:"quan-tri-bao-cao",label:"Báo cáo",icon:"alert",href:"dot3/quan-tri-bao-cao.html"},
+        {key:"quan-tri-dich-vu",label:"Dịch vụ",icon:"settings",href:"dot3/quan-tri-dich-vu.html"},
+        {key:"quan-tri-tac-vu",label:"Tác vụ",icon:"clock",href:"dot3/quan-tri-tac-vu.html"},
+        {key:"today",label:"Học tập",icon:"today",href:HOME}
+      ] : BOTTOM;
+      bottom.innerHTML = items.map((it) => {
         const cur = it.key === nav || (it.also || []).includes(nav);
-        if (it.soon) return '<span aria-disabled="true" title="Có ở ' + esc(it.soon) + '"><span class="nav-bubble">' + icon(it.icon) + "</span>" + esc(it.label) + "</span>";
         return '<a href="' + url(it.href) + '"' + (cur ? ' aria-current="page"' : "") + '><span class="nav-bubble">' + icon(it.icon) + "</span>" + esc(it.label) + "</a>";
       }).join("");
     }
@@ -371,9 +405,9 @@
   }
   function publicHeaderInner(nav) {
     const link = (key, href, label) => '<a href="' + url(href) + '"' + (key === nav ? ' aria-current="page"' : "") + ">" + label + "</a>";
-    return '<div class="site-header-inner"><a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
+    return '<div class="site-header-inner"><a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/mascot-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
       '<nav class="site-nav" aria-label="Trang công khai">' + link("library", "dot1/thu-vien.html", "Thư viện") + link("guide", "gd0/huong-dan.html", "Cách học") + link("policy", "gd0/chinh-sach.html", "Chính sách") + "</nav>" +
-      '<div class="header-actions"><a class="btn btn-quiet" href="' + url("dot1/dang-nhap.html") + '">Đăng nhập</a><a class="btn btn-primary" href="' + url("dot1/dang-ky.html") + '">Tạo tài khoản</a></div></div>';
+      '<div class="header-actions">' + '<a class="btn btn-quiet" href="' + url("dot1/dang-nhap.html") + '">Đăng nhập</a><a class="btn btn-primary" href="' + url("dot1/dang-ky.html") + '">Tạo tài khoản</a></div></div>';
   }
 
   /* ---------- Mock bar ---------- */
@@ -429,7 +463,7 @@
     if (!aside) return;
     const opts = [["A", "lời mời"], ["B", "biên lai, giấy biên nhận"], ["C", "công thức nấu ăn"], ["D", "người nhận"]];
     aside.innerHTML =
-      '<a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark-inverse.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
+      '<a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/mascot-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>' +
       '<figure class="aside-sheet" aria-label="Ví dụ một câu hỏi từ vựng">' +
       '<div class="aside-q"><span class="aside-no">Câu 14</span><span class="aside-dir">Anh → Việt</span></div>' +
       '<p class="aside-word" lang="en">receipt</p><p class="aside-ipa" lang="en">/rɪˈsiːt/ <em>n.</em></p>' +
@@ -474,7 +508,7 @@
     if (document.querySelector(".app")) { if (u) renderAppShell(u); else renderPublicShell(); }
     const siteHeader = document.querySelector("header.site-header:empty");
     if (siteHeader) siteHeader.innerHTML = u
-      ? '<div class="site-header-inner"><a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/logo-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a><nav class="site-nav" aria-label="Trang công khai"><a href="' + url("dot1/thu-vien.html") + '">Thư viện</a><a href="' + url("gd0/huong-dan.html") + '"' + (body.dataset.nav === "guide" ? ' aria-current="page"' : "") + '>Cách học</a><a href="' + url("gd0/chinh-sach.html") + '"' + (body.dataset.nav === "policy" ? ' aria-current="page"' : "") + '>Chính sách</a></nav><div class="header-actions"><a class="btn btn-primary" href="' + url("dot1/bo-the.html") + '">Vào học</a></div></div>'
+      ? '<div class="site-header-inner"><a class="brand" href="' + url("gd0/trang-chu.html") + '"><img class="brand-mark" src="' + url("shared/assets/mascot-mark.svg") + '" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a><nav class="site-nav" aria-label="Trang công khai"><a href="' + url("dot1/thu-vien.html") + '">Thư viện</a><a href="' + url("gd0/huong-dan.html") + '"' + (body.dataset.nav === "guide" ? ' aria-current="page"' : "") + '>Cách học</a><a href="' + url("gd0/chinh-sach.html") + '"' + (body.dataset.nav === "policy" ? ' aria-current="page"' : "") + '>Chính sách</a></nav><div class="header-actions">' + '<a class="btn btn-primary" href="' + url("dot1/bo-the.html") + '">Vào học</a></div></div>'
       : publicHeaderInner(body.dataset.nav);
 
     document.addEventListener("click", async (e) => {
@@ -530,15 +564,9 @@
     });
   }
   function speak(text) {
-    if(!window.speechSynthesis || !window.SpeechSynthesisUtterance){toast('Trình duyệt này chưa hỗ trợ giọng đọc.','error');return;}
-    const voice=speechSynthesis.getVoices().find(voice=>/^en(?:-|_)/i.test(voice.lang));
-    if(!voice){toast('Chưa tìm thấy giọng tiếng Anh. Hãy bật giọng tiếng Anh trong cài đặt thiết bị hoặc dùng tệp âm thanh.','error');return;}
-    speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(text);
-    utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.85;
-    utterance.onerror=event=>{if(!['canceled','interrupted'].includes(event.error))toast('Chưa phát được giọng đọc. Bạn có thể thử lại hoặc dùng tệp âm thanh.','error');};
-    speechSynthesis.speak(utterance);
+    window.VocabSpeech.speak(text, (state, error) => { if (error) toast(error, 'error'); });
   }
-  window.VL = { cardImage, syncCardImages, speak, root, url, icon, esc, params, api, put, uploadFile, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, initials, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
+  window.VL = { pagination, cardImage, syncCardImages, speak, url, icon, esc, params, api, uploadFile, me, toast, busy, showErrors, clearErrors, setFieldError, load, confirm: confirmDialog, reasonDialog, bindPassword, countdown, fmtDate, fmtDateTime, fmtTime, fmtDay, fmtDuration, eventId, mockAction, levelHtml, avatarHtml, GOAL, LEVEL, DIR, RATING, SRS_STATE, PRACTICE, ERROR_GROUP, SKILL, HOME, ready: false };
   window.VL.ready = boot();
+  Promise.resolve(window.VL.ready).then(() => window.VocabTheme?.mount());
 })();

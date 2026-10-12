@@ -1,4 +1,5 @@
 'use client';
+import { DeckCover } from '@/components/ui/DeckCover';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { useState } from 'react';
@@ -17,15 +18,11 @@ export default function DecksPage() {
   const myDecks = (data?.items || []).filter(deck => (activeTab !== 'fav' || deck.yeuThich) && deck.ten.toLocaleLowerCase('vi').includes(search.toLocaleLowerCase('vi')));
 
   return (
-    <div className={`page page-grid with-side ${styles.withSide}`}>
-      <section className="sheet" aria-labelledby="page-title">
+    <div className="page page-grid with-side">
+      <section className="sheet deck-list-sheet personal-decks" aria-labelledby="page-title">
         <div className="form-head">
-          <div className="form-code">
-            <span>Bộ của tôi</span>
-            <span id="count-code">{isLoading ? '—' : `${data?.totalElements || 0} bộ`}</span>
-          </div>
           <div className={styles.headRow}>
-            <h1 id="page-title">Bộ thẻ của bạn</h1>
+            <div className="deck-title-group"><h1 id="page-title">Bộ thẻ của bạn</h1><span className="deck-total" id="count-code">{isLoading ? '—' : `${data?.totalElements || 0} bộ`}</span></div>
             <Link className="btn btn-primary" href="/bo-the/tao">
               <Icon name="plus" /> Tạo bộ thẻ
             </Link>
@@ -63,7 +60,10 @@ export default function DecksPage() {
                 <li key={deck.id} className="answer-row deck-row has-actions">
                   <span className="answer-no">{i + 1}</span>
                   <div className="answer-main">
+                    <div className="deck-name-line">
+                    <DeckCover deck={deck} priority={i < 2} />
                     <Link className="answer-title" href={`/bo-the/${deck.id}`}>{deck.ten}</Link>
+                    </div>
                     <div className="answer-meta">
                       {deck.quyenTruyCap === 'CONG_KHAI'
                         ? <span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>

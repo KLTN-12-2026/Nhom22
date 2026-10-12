@@ -8,9 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .csv-step { display: grid; gap: var(--sp-5); margin-top: var(--sp-6); }
   .spec { font-size: var(--fs-small); }
@@ -21,11 +22,15 @@
   .data-table td.pick { width: 44px; }
   .data-table .choice { padding: 0; min-height: 0; }
   .data-table .choice:hover { background: none; }
-  .data-table .line { font-family: var(--font-form); font-stretch: 78%; font-weight: 700; color: var(--primary); text-align: right; }
+  .data-table .line { font-family: var(--font-form); font-stretch: 100%; font-weight: 700; color: var(--primary); text-align: right; }
   .data-table td.mean { min-width: 180px; }
   .commit-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
-  .result-num { font-family: var(--font-form); font-stretch: 80%; font-weight: 800; font-size: 3rem; line-height: 1; color: var(--ink); }
+  .result-num { font-family: var(--font-form); font-stretch: 100%; font-weight: 800; font-size: 3rem; line-height: 1; color: var(--ink); }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="decks" data-auth="required">
 <!-- F1.11 · UI17 · API: POST /decks/{id}/imports/preview, POST /imports/{id}/commit (B1.12); GET /decks/{id} -->
@@ -61,6 +66,7 @@
               <button type="button" class="btn btn-quiet" id="template"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải tệp mẫu</button>
               <button type="button" class="btn btn-quiet" id="sample">Thử với dữ liệu có lỗi</button>
             </div>
+            <div id="mapping" class="stack" hidden></div><button type="button" class="btn btn-primary" id="preview-file" hidden>Xem trước tệp</button>
             <p id="reading" class="muted" aria-live="polite" hidden>Đang đọc tệp…</p>
           </div>
 
@@ -103,15 +109,15 @@
             <h2 class="panel-title" id="spec-title">Cột trong tệp</h2>
             <table class="spec" style="width:100%;border-collapse:collapse">
               <tbody>
-                <tr><td>word</td><td>Từ tiếng Anh <strong>(bắt buộc)</strong></td></tr>
-                <tr><td>meaning_vi</td><td>Nghĩa tiếng Việt <strong>(bắt buộc)</strong></td></tr>
-                <tr><td>pos</td><td>Từ loại: n., v., adj.…</td></tr>
-                <tr><td>ipa</td><td>Phiên âm</td></tr>
-                <tr><td>example_en</td><td>Câu ví dụ</td></tr>
-                <tr><td>example_vi</td><td>Bản dịch ví dụ</td></tr>
+                <tr><td>tu</td><td>Từ tiếng Anh <strong>(bắt buộc)</strong></td></tr>
+                <tr><td>nghiaVi</td><td>Nghĩa tiếng Việt <strong>(bắt buộc)</strong></td></tr>
+                <tr><td>tuLoai</td><td>Từ loại: n., v., adj.…</td></tr>
+                <tr><td>phienAm</td><td>Phiên âm</td></tr>
+                <tr><td>viDuEn</td><td>Câu ví dụ</td></tr>
+                <tr><td>dichVi</td><td>Bản dịch ví dụ</td></tr>
               </tbody>
             </table>
-            <p class="small muted" style="margin-top:var(--sp-3)">Dòng đầu tiên là tên cột. Ô bắt đầu bằng = + - @ bị từ chối để tránh công thức bảng tính.</p>
+            <p class="small muted" style="margin-top:var(--sp-3)">Dòng đầu tiên là tên cột. Export thêm dấu nháy đơn vào ô có nguy cơ công thức. Nhập lại giữ nguyên dấu này. Không nhập tệp media hoặc tiến độ học.</p>
           </section>
         </aside>
       </div>
@@ -120,21 +126,24 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/csv-demo.js?v=6e2f49b85e5b"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
   const deckId = VL.params().deckId || "21";
-  let importId = null, rows = [], filter = "ALL";
+  let importId = null, rows = [], filter = "ALL", commitKey = null, pendingFile = null;
   const selected = new Set();
 
   VL.api("GET", "/decks/" + encodeURIComponent(deckId)).then((d) => {
     const back = "bo-the-chi-tiet.html?id=" + d.id;
     document.getElementById("back").href = back;
     document.getElementById("open-deck").href = back;
-    document.getElementById("back-label").textContent = d.name.length > 40 ? d.name.slice(0, 40) + "…" : d.name;
-    document.getElementById("deck-code").textContent = "Bộ đích: " + (d.name.length > 30 ? d.name.slice(0, 30) + "…" : d.name);
+    document.getElementById("back-label").textContent = d.ten.length > 40 ? d.ten.slice(0, 40) + "…" : d.ten;
+    document.getElementById("deck-code").textContent = "Bộ đích: " + (d.ten.length > 30 ? d.ten.slice(0, 30) + "…" : d.ten);
   }).catch((err) => { if (err.status === 404) location.href = "bo-the.html"; });
 
   function go(n) {
@@ -142,8 +151,8 @@
     document.querySelectorAll("#steps li").forEach((m, i) => { m.dataset.state = i + 1 < n ? "done" : i + 1 === n ? "current" : ""; });
   }
 
-  const TEMPLATE = "word,pos,ipa,meaning_vi,example_en,example_vi\ninvoice,n.,/ˈɪnvɔɪs/,hóa đơn,Please send the invoice by Friday.,Vui lòng gửi hóa đơn trước thứ Sáu.\n";
-  const SAMPLE = "word,pos,ipa,meaning_vi,example_en,example_vi\n" +
+  const TEMPLATE = "tu,tuLoai,phienAm,nghiaVi,viDuEn,dichVi\ninvoice,n.,/ˈɪnvɔɪs/,hóa đơn,Please send the invoice by Friday.,Vui lòng gửi hóa đơn trước thứ Sáu.\n";
+  const SAMPLE = "tu,tuLoai,phienAm,nghiaVi,viDuEn,dichVi\n" +
     "deadline,n.,/ˈdedlaɪn/,hạn chót,The deadline is next Monday.,Hạn chót là thứ Hai tới.\n" +
     "negotiate,v.,/nɪˈɡoʊʃieɪt/,đàm phán,We need to negotiate the price.,Chúng ta cần đàm phán giá.\n" +
     "receipt,n.,/rɪˈsiːt/,biên lai,Keep your receipt.,Giữ biên lai của bạn.\n" +
@@ -159,7 +168,7 @@
     a.download = name; a.click(); URL.revokeObjectURL(a.href);
   }
   document.getElementById("template").addEventListener("click", () => download("mau-nhap-the.csv", TEMPLATE));
-  document.getElementById("sample").addEventListener("click", () => preview(SAMPLE, "du-lieu-thu.csv"));
+  document.getElementById("sample").addEventListener("click", () => preview(new File([SAMPLE], "du-lieu-thu.csv", {type:"text/csv"}), "du-lieu-thu.csv"));
 
   function pickError(msg, reqId) {
     const box = document.getElementById("pick-error");
@@ -168,33 +177,41 @@
     box.setAttribute("role", "alert");
     box.innerHTML = VL.icon("alert") + '<div><p class="notice-title">' + VL.esc(msg) + "</p>" + (reqId ? '<p class="request-id">Mã yêu cầu: ' + VL.esc(reqId) + "</p>" : "") + "</div>";
   }
-  function readFile(file) {
-    document.getElementById("pick-error").hidden = true;
-    if (!/\.csv$/i.test(file.name)) { pickError("Tệp “" + file.name + "” không phải CSV. Hãy lưu bảng tính dưới dạng CSV UTF-8."); return; }
-    if (file.size > 1024 * 1024) { pickError("Tệp lớn hơn 1 MB. Hãy chia thành nhiều tệp nhỏ hơn."); return; }
-    const r = new FileReader();
-    r.onload = () => preview(String(r.result).replace(/^﻿/, ""), file.name);
-    r.onerror = () => pickError("Không đọc được tệp. Thử chọn lại.");
-    r.readAsText(file, "utf-8");
+  async function readFile(file) {
+    try {
+      if (!file.size || file.size > 1048576) throw new Error('Tệp CSV tối đa 1 MB');
+      const header = VLCsv.parse(new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer()))[0];
+      pendingFile=file;
+      const box=document.getElementById('mapping');box.hidden=false;
+      box.innerHTML=VLCsv.fields.map(field=>'<label>'+VL.esc(field)+'<select data-target="'+field+'"><option value="">Không nhập</option>'+header.map(name=>'<option value="'+VL.esc(name)+'"'+(field===name?' selected':'')+'>'+VL.esc(name)+'</option>').join('')+'</select></label>').join('');
+      document.getElementById('preview-file').hidden=false;
+    } catch(error) { pickError(error.message); }
   }
+  document.getElementById('preview-file').addEventListener('click',()=>{
+    const mapping=Object.fromEntries([...document.querySelectorAll('[data-target]')].filter(select=>select.value).map(select=>[select.dataset.target,select.value]));
+    preview(pendingFile,pendingFile.name,mapping);
+  });
   document.getElementById("file").addEventListener("change", (e) => { if (e.target.files[0]) readFile(e.target.files[0]); e.target.value = ""; });
   const drop = document.getElementById("drop");
   drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.setAttribute("data-over", ""); });
   drop.addEventListener("dragleave", () => drop.removeAttribute("data-over"));
   drop.addEventListener("drop", (e) => { e.preventDefault(); drop.removeAttribute("data-over"); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
 
-  async function preview(text, name) {
+  async function preview(file, name, mapping) {
     const reading = document.getElementById("reading");
     reading.hidden = false;
     try {
-      const res = await VL.api("POST", "/decks/" + deckId + "/imports/preview", { csv: text });
+      const form=new FormData();form.append('file',file);
+      if(mapping)form.append('mapping',new Blob([JSON.stringify(mapping)],{type:'application/json'}));
+      const res = await VL.api("POST", "/decks/" + deckId + "/imports/preview", form);
       importId = res.importId;
-      rows = res.rows;
+      commitKey=null;
+      rows = res.rows.map(row=>({...row,...row.data,line:row.rowNumber,word:row.data.tu,pos:row.data.tuLoai,ipa:row.data.phienAm,meaningVi:row.data.nghiaVi,status:!row.valid?'ERROR':row.trung?'DUPLICATE':'OK',note:row.fieldErrors.map(item=>item.field+': '+item.message).join('; ') || (row.trung?'Có thể trùng':'Hợp lệ')}));
       selected.clear();
-      rows.filter((r) => r.status === "OK").forEach((r) => selected.add(r.line));
+      rows.filter((r) => r.valid).forEach((r) => selected.add(r.line));
       document.getElementById("file-name").textContent = name;
       document.getElementById("counts").innerHTML =
-        '<span class="stamp stamp-success">' + res.summary.ok + ' hợp lệ</span><span class="stamp stamp-warning">' + res.summary.duplicate + ' trùng</span><span class="stamp stamp-danger">' + res.summary.error + " lỗi</span>";
+        '<span class="stamp stamp-success">' + res.validRows + ' hợp lệ</span><span class="stamp stamp-warning">' + res.rows.filter(row=>row.valid && row.trung).length + ' trùng</span><span class="stamp stamp-danger">' + res.invalidRows + " lỗi</span>";
       filter = "ALL";
       renderRows();
       go(2);
@@ -208,7 +225,7 @@
     document.querySelectorAll("#filter [data-f]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.f === filter)));
     const list = rows.filter((r) => filter === "ALL" || r.status === filter);
     document.getElementById("rows").innerHTML = list.length ? list.map((r) => {
-      const dis = r.status === "ERROR";
+      const dis = r.status === "ERROR" || !!commitKey;
       const label = { OK: "Hợp lệ", DUPLICATE: r.note, ERROR: r.note }[r.status];
       return '<tr data-row="' + (r.status === "ERROR" ? "error" : r.status === "DUPLICATE" ? "dup" : "ok") + '">' +
         '<td class="pick"><label class="choice"><input type="checkbox" data-line="' + r.line + '"' + (selected.has(r.line) ? " checked" : "") + (dis ? " disabled" : "") + ' aria-label="Chọn dòng ' + r.line + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span></label></td>' +
@@ -232,10 +249,11 @@
   const commit = document.getElementById("commit");
   commit.addEventListener("click", () => VL.busy(commit, async () => {
     try {
-      const res = await VL.api("POST", "/imports/" + importId + "/commit", { lines: [...selected] });
-      document.getElementById("created").textContent = res.created;
-      document.getElementById("skipped").textContent = res.skipped ? "Bỏ qua " + res.skipped + " dòng không chọn hoặc bị lỗi." : "Không bỏ qua dòng nào.";
-      document.getElementById("open-deck").href = "bo-the-chi-tiet.html?id=" + deckId + "&imported=" + res.created;
+      commitKey=commitKey || crypto.randomUUID();renderRows();
+      const res = await VL.api("POST", "/imports/" + importId + "/commit", { rowNumbers: [...selected].sort((a,b)=>a-b) }, {headers:{'Idempotency-Key':commitKey}});
+      document.getElementById("created").textContent = res.importedCount;
+      document.getElementById("skipped").textContent = "Các dòng không chọn không được nhập.";
+      document.getElementById("open-deck").href = "bo-the-chi-tiet.html?id=" + deckId + "&imported=" + res.importedCount;
       go(3);
       document.getElementById("done-title").focus();
     } catch (err) {
@@ -245,5 +263,6 @@
   }));
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

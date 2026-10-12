@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, ErrorState } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function TodayPage() {
@@ -12,7 +12,7 @@ export default function TodayPage() {
   const [chieuHoc, setChieuHoc] = useState('EN_VI');
   const [minutes, setMinutes] = useState(10);
   
-  const { data: plan, isLoading, error } = useQuery({
+  const { data: plan, isLoading, error, refetch } = useQuery({
     queryKey: ['learning-today'],
     queryFn: () => apiFetch('/api/v1/learning/today')
   });
@@ -21,8 +21,7 @@ export default function TodayPage() {
     mutationFn: (body) => apiFetch('/api/v1/learning/sessions', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: (res) => {
       router.push(`/hoc-phien?id=${res.id}`);
-    },
-    onError: (err) => alert(err.message || 'Lỗi tạo phiên học')
+    }
   });
 
   const handleStart = (e) => {
@@ -49,7 +48,7 @@ export default function TodayPage() {
   const todayStr = new Date().toLocaleDateString('vi-VN');
 
   return (
-    <div className="page page-grid with-side" data-view={isLoading ? 'loading' : error ? 'error' : 'ready'}>
+    <div className="page page-grid with-side today-page" data-view={isLoading ? 'loading' : error ? 'error' : 'ready'}>
       {isLoading && (
         <div data-when="loading">
           <div className="sheet">
@@ -63,7 +62,7 @@ export default function TodayPage() {
         </div>
       )}
       
-      {error && <div data-when="error">Lỗi tải kế hoạch</div>}
+      {error && <section className="sheet" data-when="error"><ErrorState title="Chưa tải được kế hoạch học" description={error.message} onRetry={refetch} /></section>}
 
       {!isLoading && !error && (plan?.tongSoThe === 0) && (
         <section className="sheet" data-when="empty" aria-labelledby="empty-title">
@@ -98,6 +97,7 @@ export default function TodayPage() {
 
             {plan?.cuuLichOn ? (
               <section className={styles.rescue} aria-labelledby="rescue-title">
+                {sessionMutation.error && <p className="notice notice-danger study-error" role="alert">{sessionMutation.error.message}</p>}
                 <h2 id="rescue-title" style={{ fontSize: 'var(--fs-h3)' }}>Kế hoạch học lại sau thời gian nghỉ</h2>
                 <p className={styles.rescueLead} id="rescue-lead">
                   Có <strong>{plan.cuuLichOn.soTheCanOn}</strong> thẻ cần ôn; hôm nay bạn có <strong>{plan.cuuLichOn.phutMoiNgay}</strong> phút. Chia thành {plan.cuuLichOn.soNgay} ngày là vừa sức.
@@ -157,7 +157,7 @@ export default function TodayPage() {
                   <Icon name="info" />
                   <span>Đây là ước tính, tính theo khoảng {plan.giayMoiLuot} giây mỗi lượt và sẽ chỉnh theo tốc độ làm bài thực tế. Ngày đến hạn gốc của thẻ vẫn được giữ, nên thống kê vẫn cho thấy đúng số thẻ đang trễ.</span>
                 </p>
-                <div className={styles.startFoot}>
+                <div className={`${styles.startFoot} start-foot`}>
                   <Button type="button" onClick={handleRescueStart} variant="accent" size="lg" disabled={sessionMutation.isPending}>
                     {sessionMutation.isPending ? 'Đang tải...' : 'Bắt đầu phiên hôm nay'}
                   </Button>
@@ -166,6 +166,7 @@ export default function TodayPage() {
               </section>
             ) : (
               <div id="normal">
+                {sessionMutation.error && <p className="notice notice-danger study-error" role="alert">{sessionMutation.error.message || 'Chưa bắt đầu được phiên học. Hãy thử lại.'}</p>}
                 <dl className="tally cols-2" id="tally">
                   <div>
                     <dt>Quá hạn<small>trễ từ hôm trước</small></dt>
@@ -186,10 +187,10 @@ export default function TodayPage() {
                 </dl>
 
                 {(plan?.soQuaHan || 0) + (plan?.soDenHan || 0) + (plan?.soMoiConLai || 0) === 0 ? (
-                  <div className={styles.done}>
+                  <div className={`${styles.done} today-done`}>
                     <p className="notice notice-success">
                       <Icon name="check" />
-                      <span><strong>Hôm nay đã ôn xong.</strong> Không còn thẻ đến hạn và đã đủ từ mới theo thiết lập. Thẻ tiếp theo sẽ đến hạn vào ngày mai.</span>
+                      <span><strong>Hôm nay đã ôn xong.</strong> Không còn thẻ đến hạn và đã đủ từ mới theo thiết lập. Thẻ chưa đến hạn sẽ được giữ cho những phiên học sau.</span>
                     </p>
                     <div className="row">
                       <Link className="btn btn-primary" href="/luyen-tap">Làm một bài luyện</Link>
@@ -197,7 +198,7 @@ export default function TodayPage() {
                     </div>
                   </div>
                 ) : (
-                  <form className={styles.start} onSubmit={handleStart} noValidate>
+                  <form className={`${styles.start} today-plan`} onSubmit={handleStart} noValidate>
                     <fieldset className="fieldset">
                       <legend>Hôm nay bạn có bao nhiêu phút?</legend>
                       <div className="choice-grid cols-3">
@@ -234,7 +235,7 @@ export default function TodayPage() {
                         </label>
                       </div>
                     </fieldset>
-                    <div className={styles.startFoot}>
+                    <div className={`${styles.startFoot} start-foot`}>
                       <Button type="submit" variant="accent" size="lg" disabled={sessionMutation.isPending}>
                         {sessionMutation.isPending ? 'Đang tải...' : 'Bắt đầu học'}
                       </Button>
@@ -286,7 +287,7 @@ export default function TodayPage() {
                       </span>
                       <span className="row" style={{ gap: 'var(--sp-2)' }}>
                         <Link className="btn btn-secondary btn-sm" href={`/hoc?boTheId=${b.boTheId}`}>Học bộ này</Link>
-                        <Link className="btn btn-quiet btn-sm" href={`/bo-the-tien-do?id=${b.boTheId}`}>Tiến độ</Link>
+                        <Link className="btn btn-quiet btn-sm" href={`/bo-the/${b.boTheId}/tien-do`}>Tiến độ</Link>
                       </span>
                     </li>
                   ))}

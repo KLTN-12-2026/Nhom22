@@ -2,7 +2,7 @@
 
 > Phần dưới có ảnh chụp tiến độ29/09. Trạng thái hiện hành theo ROADMAP_BE và báo cáo Đợt1 cập nhật05/10; FE đã khởi tạo và tích hợp GĐ0–B1.8.
 
-> Nguồn: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (**TK**: §3 quyền, §4 chức năng, §5 FR, §6 luồng, §7 SRS, §8 luyện tập, §9 trải nghiệm, §10 màn hình, §13 API, §18 mốc, §19 TC, §20 demo), `docs/– Chức năng đối với User.txt`, `roadmap/ROADMAP_BE.md` (bước **B**), `roadmap/ROADMAP_FE.md` (bước **F**).
+> Nguồn: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (**TK**: §3 quyền, §4 chức năng, §5 FR, §6 luồng, §7 SRS, §8 luyện tập, §9 trải nghiệm, §10 màn hình, §13 API, §18 mốc, §19 TC, §20 demo), `docs/– Chức năng đối với User.txt`, `roadmap/TienDoDuKien_backend.md` (bước **B**), `roadmap/TienDoDuKien_fronend.md` (bước **F**).
 > Thời gian: **28/09/2026 – 14/12/2026**, 11 sprint × 1 tuần (thứ Hai → Chủ nhật). Mốc giai đoạn giữ đúng TK §18.1.
 
 ---
@@ -88,6 +88,8 @@
 | B1.10 Thư viện công khai | `GET /library/decks`, `GET /library/decks/{id}` | F1.7 | UI02 `/thu-vien`, UI03 `/thu-vien/[id]` (link chia sẻ), gợi ý bộ khởi động ở UI11 |
 | B1.11 Sao chép bộ | `POST /decks/{id}/copy` + `Idempotency-Key` | F1.10 | Nút "Sao chép" trên UI03 |
 | B1.12 CSV | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export` | F1.11 | UI17 `/bo-the/[id]/nhap-csv` |
+
+Cập nhật13/10/2026: B1.11/B1.12 và F1.10/F1.11 đã triển khai/kiểm chứng trong [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md). Giữ lịch sprint dự kiến và trạng thái B1.8/HTTP6; không coi hoàn thành CSV là hoàn thành các đợt học/AI sau.
 
 **Xong khi:** TC-02, 03, 04 qua. **Demo Đợt 1:** Visitor xem thư viện → User sao chép bộ TOEIC → sửa thẻ, thêm ảnh → nhập CSV có dòng lỗi → xuất CSV.
 

@@ -8,13 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css">
-<link rel="stylesheet" href="../shared/base.css">
-<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
 <style>
   .deck-title { overflow-wrap: anywhere; }
   .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
-  .card-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; }
+
   .speak { width: var(--tap); height: var(--tap); display: grid; place-items: center; border: 1.5px solid var(--primary-line); border-radius: 50%; background: var(--field); color: var(--primary); position: relative; z-index: 1; }
   .speak:hover { border-color: var(--primary); background: var(--primary-tint); }
   .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); font-size: var(--fs-small); }
@@ -22,6 +23,10 @@
   .facts .bubble { width: 14px; height: 14px; border-width: 1.25px; margin-top: 3px; }
   #copied .btn { min-height: var(--tap); }
 </style>
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
 </head>
 <body data-root=".." data-nav="library" data-auth="optional">
 <!-- F1.7, F1.10 · UI03 · API: GET /library/decks/{id} (B1.10), POST /decks/{id}/copy + Idempotency-Key (B1.11), PUT/DELETE /decks/{id}/favorite (B1.8) -->
@@ -48,9 +53,8 @@
               <div id="copied" class="notice notice-success" hidden role="status"></div>
             </div>
 
-            <div class="row-between" style="margin-bottom:var(--sp-3)">
-              <h2 style="font-size:var(--fs-h3)">Thẻ mẫu</h2><label class="card-image-preference"><input type="checkbox" data-image-preference checked>Hiển thị ảnh</label>
-              <p class="muted small" id="sample-note"></p>
+            <div class="library-card-toolbar" style="margin-bottom:var(--sp-3)">
+              <div class="library-card-summary"><h2 style="font-size:var(--fs-h3)">Thẻ mẫu</h2><p class="muted small" id="sample-note"></p></div><label class="card-image-preference"><input type="checkbox" data-image-preference checked>Hiển thị ảnh</label>
             </div>
             <ol class="answer-list" id="cards" role="list"></ol>
           </article>
@@ -76,31 +80,22 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js"></script>
-<script src="../shared/contract-demo.js"></script>
-<script src="../shared/app.js"></script>
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
   if (!VL.ready) return;
   const id = VL.params().id || "11";
   const region = document.getElementById("region");
   const user = VL.me();
-  let deck;
-
-  function speak(text) {
-    if (!("speechSynthesis" in window)) { VL.toast("Trình duyệt chưa hỗ trợ đọc to", "error"); return; }
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US"; u.rate = 0.9;
-    speechSynthesis.speak(u);
-  }
 
   VL.load(region, {
     errorTitle: "Không mở được bộ thẻ",
     fetch: () => VL.api("GET", "/library/decks/" + encodeURIComponent(id)),
     isEmpty: (d) => !d.sampleCards.length,
     render: (d) => {
-      deck = d;
       document.title = d.name + " – VocabLearning";
       document.getElementById("stamps").innerHTML =
         '<span class="stamp ' + (d.kind === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (d.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + '</span><span class="stamp">' + VL.esc(VL.GOAL[d.goal]) + '</span><span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>";
@@ -115,11 +110,11 @@
         "<dt>Cập nhật</dt><dd>" + VL.fmtDate(d.updatedAt) + "</dd>";
       document.getElementById("sample-note").textContent = "Hiển thị " + d.sampleCards.length + "/" + d.cardCount + " thẻ";
       document.getElementById("cards").innerHTML = d.sampleCards.map((c, i) =>
-        '<li class="answer-row card-row"><span class="answer-no">' + (i + 1) + '</span>' +
+        '<li class="answer-row library-card"><span class="answer-no">' + (i + 1) + '</span>' +
         '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + '</span><span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + '</span><span class="pos" lang="en">' + VL.esc(c.pos) + "</span></div>" +
         '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
-        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + '<div class="card-inline-media">'+VL.cardImage(c.id)+'</div></div>' +
-        '<button type="button" class="btn btn-media btn-icon" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "</button></li>").join("");
+        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + '</div><div class="library-card-media">'+VL.cardImage(c.id) +
+        '<button type="button" class="btn btn-media btn-icon" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "Đọc từ</button>"+(c.exampleEn?'<button type="button" class="btn btn-media" data-say="'+VL.esc(c.exampleEn)+'">'+VL.icon("volume")+'Đọc câu ví dụ</button>':'')+"</div></li>").join("");
       VL.syncCardImages();
     }
   });
@@ -145,17 +140,18 @@
         copyBtn.textContent = "Đã sao chép";
         copyBtn.setAttribute("aria-disabled", "true");
         copyBtn.disabled = true;
-        VL.toast("Đã sao chép bộ thẻ");
+        VL.toast("Đã sao chép bộ thẻ", "success");
       } catch (err) { VL.toast(err.message, "error"); }
     });
   });
 
 
   document.getElementById("share").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(location.href); VL.toast("Đã sao chép liên kết"); }
+    try { await navigator.clipboard.writeText(location.href); VL.toast("Đã sao chép liên kết", "success"); }
     catch (e) { VL.toast("Không sao chép được. Hãy sao chép địa chỉ trên thanh trình duyệt.", "error"); }
   });
 })();
 </script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
 </body>
 </html>

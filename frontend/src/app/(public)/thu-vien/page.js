@@ -7,6 +7,7 @@ import { libraryPage } from '@/lib/library-query.mjs';
 import styles from './page.module.css';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
+import { DeckCover } from '@/components/ui/DeckCover';
 
 export default function LibraryPage() {
   return <Suspense fallback={<p className="page" role="status">Đang tải thư viện…</p>}><LibraryContent /></Suspense>;
@@ -47,7 +48,7 @@ function LibraryContent() {
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" aria-labelledby="page-title">
+      <section className="sheet deck-list-sheet" aria-labelledby="page-title">
         <div className="form-head">
           <div className="form-code">
             <span>Thư viện công khai</span><span>Giao tiếp và TOEIC</span>
@@ -162,7 +163,10 @@ function LibraryContent() {
                 <li key={deck.id} className="answer-row deck-row">
                   <span className="answer-no">{page * size + i + 1}</span>
                   <div className="answer-main">
+                    <div className="deck-name-line">
+                    <DeckCover deck={deck} priority={i < 2} />
                     <Link className="answer-title" href={`/thu-vien/${deck.id}`}>{deck.ten}</Link>
+                    </div>
                     <p className="muted clamp-2">{deck.moTa}</p>
                     <div className="answer-meta">
                       {deck.nguon === 'MAU' ? (

@@ -3,5 +3,5 @@
 .quick { display: flex; gap: 6px; flex-wrap: wrap; }
 .quick button { min-width: var(--tap); min-height: var(--tap); border-radius: 22px; border: 1.5px solid var(--primary-line); background: var(--field); font-family: var(--font-form); font-stretch: 85%; font-weight: 700; color: var(--primary); }
 .quick button:hover { border-color: var(--primary); background: var(--primary-tint); }
-.quick button[aria-pressed="true"] { background: var(--graphite); border-color: var(--graphite); color: #fff; }
+.quick button[aria-pressed="true"] { background: var(--primary-fill); border-color: var(--primary-fill); color: var(--on-primary); }
 .estimate { font-size: var(--fs-small); color: var(--ink-2); }
