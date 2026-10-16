@@ -281,10 +281,11 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ## Đợt 2 — Học, luyện tập, thống kê & quản trị (26/10–08/11) · FR-06, 07, 11, 13
 
-### [ ] B2.1 Bộ tính SRS thuần — FR-06, TC-06, TC-07
-- migration learning mới dùng số tiếp theo chưa sử dụng (V1–V7 hiện đã có; không sửa migration đã áp dụng): `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
+### [x] B2.1 Bộ tính SRS thuần — FR-06, TC-06, TC-07
+- `V8__learning.sql` (V1–V7 đã dùng; không sửa migration đã áp dụng): `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
 - `SrsCalculator` (class thuần, không Spring): nhận trạng thái cũ + mức (QUEN/KHO/NHO/DE) + `Instant now` → trạng thái mới, theo **đúng bảng TK §7.2** (EF 2.5, min 1.3, trần 365 ngày).
 - **Xong khi:** unit test chuỗi Nhớ: mới → 10 phút → 1 ngày → 6 ngày → 15 ngày; Quên ở ON_TAP → HOC_LAI, tăng số lần quên.
+- **Đã làm (16/10/2026):** `V8__learning.sql`, `SrsState`, `SrsCalculator` (phiên bản `SM2-VN-1`), `FR06SrsCalculatorTest` 28 test. Kiểm chứng: `./mvnw -q verify` thoát 0 (271 test, 0 lỗi) khi chạy với `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Users\Public`; không có tùy chọn này, 181 test tích hợp lỗi do Netty loopback trên Windows. Không có API/HTTP/Postman ở bước này. Làm tròn HALF_UP và `now + N×24h` là **đề xuất**. Flow: [B2.1](../docs/luong-backend/B2.1-srs-calculator.md).
 
 ### [ ] B2.2 Kế hoạch hôm nay — FR-02, FR-06
 - API: `GET /learning/today`: số thẻ đến hạn, quá hạn, mới còn lại hôm nay, ước tính phút, chuỗi ngày.
@@ -306,7 +307,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Trong `/learning/today`: khi quá hạn vượt ngưỡng → trả phương án chia N ngày theo phút/ngày, giảm từ mới, ưu tiên thẻ quên nhiều. **Không** đổi `han_on_at` gốc.
 
 ### [ ] B2.7 Tạo bài luyện — FR-07, TC-11
-- `V6__practice.sql`: `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
+- `V9__practice.sql` (V8 đã dùng cho learning; nếu số này bị chiếm thì lấy số kế tiếp chưa dùng): `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
 - API: `POST /practice/sessions` (dạng: chọn nghĩa, chọn từ, ghép, điền chỗ trống, nhập từ theo nghĩa, nghe viết, phân biệt cặp, tổng hợp), `GET /practice/sessions/{id}`.
 - Lưu **bản chụp** câu hỏi + đáp án; response **không chứa đáp án**.
 
@@ -322,7 +323,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Tính từ `lich_su_on`, `tra_loi_bai_luyen` bằng truy vấn tổng hợp; lọc ngày theo múi giờ User.
 
 ### [ ] B2.11 Quản trị nền — FR-13, TC-17
-- `V7__admin.sql`: `nhat_ky_quan_tri`.
+- `V10__admin.sql` (hoặc số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
 - API: `GET /admin/users`, `PATCH /admin/users/{id}/status` (khóa/mở → hủy phiên), `PUT /admin/users/{id}/roles` (**không bỏ quyền Admin cuối cùng**), CRUD `/admin/decks`, `/admin/cards` (bộ mẫu: xuất bản/ẩn), `GET /admin/audit-logs`.
 - Mọi thao tác quan trọng ghi nhật ký: người làm, hành động, đối tượng, lý do, trước/sau (đã lọc dữ liệu nhạy cảm).
 - **Cuối Đợt 2 →** `/fe-report DOT2`.
@@ -346,7 +347,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - AI lỗi/timeout **không chặn** học SRS và bài cố định.
 
 ### [ ] B3.4 Phát âm — FR-10, TC-14
-- `V7__speaking.sql`: `ket_qua_phat_am`.
+- `V<n>__speaking.sql` (số kế tiếp chưa dùng khi tới bước này): `ket_qua_phat_am`.
 - API: `GET /cards/{id}/audio` (TTS, cache theo nội dung+giọng+phiên bản), `POST /pronunciation/assessments` (multipart, ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}`.
 - Interface `SpeechClient` + Azure Speech adapter + Fake (gắn nhãn "Mô phỏng"). Chỉ số thiếu → `null`, không sinh điểm giả.
 
