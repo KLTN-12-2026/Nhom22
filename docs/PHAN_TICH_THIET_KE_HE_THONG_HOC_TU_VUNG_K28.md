@@ -304,6 +304,8 @@ EF_moi = max(1.3, EF_cu + 0.1 - (5-q) * (0.08 + (5-q)*0.02))
 
 `I` là khoảng ôn cũ theo ngày; các mức Khó/Nhớ/Dễ ở `ON_TAP` đều tăng chuỗi thành công một lần. Khoảng ôn giới hạn tối đa 365 ngày là cấu hình đề xuất cho bản minh họa. Chỉ cập nhật EF theo công thức ở `ON_TAP`, tránh giảm EF lặp trong bước học lại ngắn.
 
+Quy ước triển khai B2.1 (**đề xuất**, phiên bản thuật toán `SM2-VN-1`): `round` là làm tròn gần nhất, đúng `.5` làm tròn lên (HALF_UP); mỗi "ngày" của khoảng ôn được quy đổi thành `now + N×24 giờ` qua một hàm duy nhất, chưa dùng ngày lịch địa phương/giờ ôn. Hai quy ước này chưa được duyệt như quy tắc cố định; đổi chúng chỉ cần sửa `SrsCalculator` và nâng phiên bản thuật toán.
+
 **Ví dụ:** thẻ mới chọn Nhớ → 10 phút; tại bước 1 chọn Nhớ → 1 ngày; lần ôn kế tiếp chọn Nhớ → 6 ngày; sau đó chọn Nhớ với EF=2,5 → 15 ngày. Chiều Việt–Anh không thay đổi nếu chỉ học chiều Anh–Việt.
 
 ### 7.3. Quy tắc hàng đợi và thời gian

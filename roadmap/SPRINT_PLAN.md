@@ -1,8 +1,8 @@
 # KẾ HOẠCH SPRINT — VocabLearning (VocabFlow) · BE + FE thống nhất
 
-> Phần dưới có ảnh chụp tiến độ29/09. Trạng thái hiện hành theo ROADMAP_BE và báo cáo Đợt1 cập nhật05/10; FE đã khởi tạo và tích hợp GĐ0–B1.8.
+> Cập nhật nguồn 13/10/2026: kế hoạch này dùng để đối chiếu sprint, FR/TC và phụ thuộc; lịch dự kiến không chứng minh hoàn thành. Trạng thái triển khai theo [roadmap BE](TienDoDuKien_backend.md), [roadmap FE](TienDoDuKien_fronend.md), mã hiện tại và [bàn giao Đợt 1](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>). Số liệu lịch sử cần artifact để xác minh; không chạy lại hoặc thay trạng thái B1.8/HTTP6 chỉ để cập nhật tài liệu.
 
-> Nguồn: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (**TK**: §3 quyền, §4 chức năng, §5 FR, §6 luồng, §7 SRS, §8 luyện tập, §9 trải nghiệm, §10 màn hình, §13 API, §18 mốc, §19 TC, §20 demo), `docs/– Chức năng đối với User.txt`, `roadmap/TienDoDuKien_backend.md` (bước **B**), `roadmap/TienDoDuKien_fronend.md` (bước **F**).
+> Nguồn: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (**TK**: §3 quyền, §4 chức năng, §5 FR, §6 luồng, §7 SRS, §8 luyện tập, §9 trải nghiệm, §10 màn hình, §13 API, §18 mốc, §19 TC, §20 demo), `roadmap/TienDoDuKien_backend.md` (bước **B**), `roadmap/TienDoDuKien_fronend.md` (bước **F**), `docs/luong-backend/README.md` (luồng đã có). File chức năng User cũ không còn trong checkout; dùng các mục tương ứng của TK.
 > Thời gian: **28/09/2026 – 14/12/2026**, 11 sprint × 1 tuần (thứ Hai → Chủ nhật). Mốc giai đoạn giữ đúng TK §18.1.
 
 ---
@@ -12,7 +12,7 @@
 | Sprint | Thời gian | Giai đoạn | Mục tiêu sprint | BE | FE | FR / TC | Mốc |
 |---|---|---|---|---|---|---|---|
 | **S1** | 28/09–04/10 | GĐ0 | Chốt yêu cầu, SRS, màn hình; dựng nền BE/FE | B0.1–B0.5 ✅ | F0.1–F0.3 | — | Chốt phạm vi, bảng SRS §7.2 |
-| **S2** | 05/10–11/10 | GĐ0 | Hợp đồng API chung, Swagger, test nền; FE layout + mockup Đợt 1 | B0.6–B0.8 ✅ | F0.4–F0.6 | — | 📦 `report/GD0_BAO_CAO_FE.md` ✅ |
+| **S2** | 05/10–11/10 | GĐ0 | Hợp đồng API chung, Swagger, test nền; FE layout + mockup Đợt 1 | B0.6–B0.8 ✅ | F0.4–F0.6 | — | 📦 Hợp đồng nền trong bàn giao hiện có; báo cáo GĐ0 riêng chưa tìm thấy |
 | **S3** | 12/10–18/10 | Đợt 1 | Tài khoản & hồ sơ chạy thật | B1.1–B1.6 | F1.1–F1.6 | FR-01, 02 · TC-01 | |
 | **S4** | 19/10–25/10 | Đợt 1 | Bộ/thẻ, thư viện, sao chép, CSV | B1.7–B1.12 | F1.7–F1.12 | FR-03, 04, 05 · TC-02, 03, 04 | 🎯 **Demo Đợt 1** (25/10): vòng quản lý nội dung · 📦 `DOT1` |
 | **S5** | 26/10–01/11 | Đợt 2 | Học SRS đầu-cuối | B2.1–B2.6 | F2.1–F2.4 | FR-06 · TC-05…10 | |
@@ -23,7 +23,7 @@
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
-**Tình trạng hiện tại (29/09):** BE đã xong GĐ0 (B0.1–B0.8), B1.1 và B1.2, 42 test xanh → **BE vượt ~2 tuần**. FE chưa khởi tạo Next.js (chi tiết: `report/DOT1_BAO_CAO_FE.md`). Dùng phần dư của S1–S2 để làm sớm B1.1–B1.6, giúp FE có API thật từ đầu S3. Không dời mốc demo.
+**Ghi nhận lịch sử 29/09:** kế hoạch từng ghi BE xong GĐ0, B1.1–B1.2 và 42 test xanh, FE chưa khởi tạo. Đây không phải trạng thái hiện tại; không công nhận số pass khi thiếu artifact đối chiếu. Báo cáo hiện có ghi triển khai đến B1.12; kiểm tra mã và bằng chứng tương ứng trước khi đóng bước. Giữ lịch demo dự kiến.
 
 ---
 
@@ -34,9 +34,9 @@
 | Thứ Hai | Nhận bước B, đọc TK | Nhận bước F, mockup (`/ui-mockup`) nếu chưa có | Planning 30′: chốt phạm vi sprint |
 | Thứ Tư | API xong + test xanh + Swagger + `/postman-sync` | Dựng màn hình bằng MSW theo hợp đồng | BE gửi hợp đồng API (mục "Sắp có" của báo cáo trước) |
 | Thứ Sáu | Sửa lỗi tích hợp | Tắt MSW, nối API thật | Tích hợp + demo nội bộ 15′ |
-| Chủ nhật | Tick roadmap, cập nhật `bao-cao-tien-do-BE/` | Tick roadmap FE | Retro ngắn; cuối giai đoạn chạy `/fe-report <PHASE>` |
+| Chủ nhật | Cập nhật roadmap BE, luồng và báo cáo bàn giao đợt; chỉ tick khi đủ bằng chứng | Tick roadmap FE khi đủ tiêu chí | Retro ngắn; cuối giai đoạn chạy `/fe-report <PHASE>`; tìm báo cáo hiện có trước khi tạo mới |
 
-**Quy ước thống nhất BE ↔ FE** (chi tiết: `report/GD0_BAO_CAO_FE.md` §3)
+**Quy ước thống nhất BE ↔ FE** (chi tiết: [bàn giao hiện có, mục 3](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>); đối chiếu mã trước khi dùng)
 - `/api/v1`, JSON camelCase với **tên trường = tên field entity** (tiếng Việt không dấu: `tenHienThi`, `trangThai`, `muiGio`; không có trong entity thì chọn tên gần nhất: `password`, `token`), ID dạng string, thời gian ISO-8601 UTC, phân trang `{items, page, size, totalElements, totalPages}`.
 - Lỗi `{code, message, fieldErrors, requestId}`; 401 → `/dang-nhap?next=`, 403 CSRF → lấy token rồi thử lại 1 lần, 404 cả với dữ liệu riêng của người khác.
 - Cookie `SESSION` + CSRF `X-XSRF-TOKEN`; ghi kết quả học dùng `clientEventId`, nộp bài dùng `submitKey`, sao chép/commit dùng `Idempotency-Key`.
@@ -89,7 +89,7 @@
 | B1.11 Sao chép bộ | `POST /decks/{id}/copy` + `Idempotency-Key` | F1.10 | Nút "Sao chép" trên UI03 |
 | B1.12 CSV | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export` | F1.11 | UI17 `/bo-the/[id]/nhap-csv` |
 
-Cập nhật13/10/2026: B1.11/B1.12 và F1.10/F1.11 đã triển khai/kiểm chứng trong [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md). Giữ lịch sprint dự kiến và trạng thái B1.8/HTTP6; không coi hoàn thành CSV là hoàn thành các đợt học/AI sau.
+Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) ghi B1.11/B1.12 và F1.10/F1.11 đã triển khai/kiểm chứng. Artifact được dẫn trong báo cáo hiện không có trong checkout; ghi nhận kết quả lịch sử, chưa xác minh lại. Giữ lịch sprint dự kiến và trạng thái B1.8/HTTP6; không coi hoàn thành CSV là hoàn thành các đợt học/AI sau.
 
 **Xong khi:** TC-02, 03, 04 qua. **Demo Đợt 1:** Visitor xem thư viện → User sao chép bộ TOEIC → sửa thẻ, thêm ảnh → nhập CSV có dòng lỗi → xuất CSV.
 
@@ -102,6 +102,10 @@ Cập nhật13/10/2026: B1.11/B1.12 và F1.10/F1.11 đã triển khai/kiểm ch�
 | B2.4 Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.2 | UI19 `/hoc/[sessionId]` (lật thẻ, phím tắt 1–4/Space, trạng thái "đã lưu / chưa đồng bộ") |
 | B2.5 Kết thúc, lịch sử, tạm ngưng/đặt lại | `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20 tổng kết, UI21 `/bo-the/[id]/tien-do` |
 | B2.6 Cứu lịch ôn | trong `GET /learning/today` | F2.4 | UI22 khối "Cứu lịch ôn" trên UI12 |
+
+**Phạm vi B2.1:** migration learning dùng số tiếp theo chưa sử dụng sau khi kiểm tra checkout; không sửa migration đã áp dụng. Calculator Java thuần nhận trạng thái cũ, QUEN/KHO/NHO/DE và `Instant now`, trả trạng thái mới bất biến theo TK §7.2; EF ban đầu 2.5, min 1.3, trần khoảng ôn 365 ngày. TC-06 kiểm chuỗi Nhớ 10 phút → 1 ngày → 6 ngày → 15 ngày; TC-07 kiểm học lại, EF và số lần quên. Kiểm thưởng lặp thuộc bước ghi kết quả/thưởng, không nằm trong calculator. Chốt cách làm tròn và xung đột giữa lịch địa phương §7.3 với đầu vào calculator trước code; đề xuất trong chat chưa phải quyết định đã áp dụng. Không đưa API, ownership, quota, thống kê hoặc luyện tập vào calculator. B2.1 chưa được đánh dấu hoàn tất.
+
+**Bàn giao Đợt 2:** chưa tìm thấy báo cáo riêng trong checkout. Khi được yêu cầu viết báo cáo, tìm lại tài liệu bàn giao hiện có và chốt đường dẫn mới nếu cần; không mặc định tạo `report/DOT2_BAO_CAO_FE.md` hoặc báo cáo BE song song.
 
 **Xong khi:** TC-05…TC-10 qua; học một thẻ hai chiều cho hai lịch khác nhau; gửi trùng và hai tab không làm hỏng tiến độ. Âm thanh thẻ tạm dùng tệp đã tải lên (B1.6) hoặc Web Speech API của trình duyệt đến khi có B3.4.
 
@@ -286,7 +290,7 @@ Mỗi PR có một người review khác module. Kiểm thử và tài liệu l�
 
 | Sprint | Rủi ro | Phòng ngừa |
 |---|---|---|
-| S5 | SRS sai hoặc ghi trùng — lõi của đề tài | B2.1 làm và test đầu tiên với `Clock` cố định; B2.4 test đồng thời trước khi FE nối |
+| S5 | SRS sai hoặc ghi trùng — lõi của đề tài | B2.1 làm và test đầu tiên bằng `Instant` cố định truyền vào calculator; service dùng `Clock` cố định khi test. B2.4 test đồng thời trước khi FE nối |
 | S7 | Chưa có khóa AI / chi phí | `FakeAiClient` từ đầu S7; FE dựng bằng Fake, nối thật cuối sprint |
 | S8 | API phát âm thiếu chỉ số | Chỉ số nullable; FE hiện "Chưa có dữ liệu"; dữ liệu giả gắn nhãn "Mô phỏng" |
 | S9 | Dồn nhiều màn quản trị | Dùng chung bảng dữ liệu + bộ lọc admin từ S6 |

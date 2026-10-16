@@ -82,7 +82,7 @@ CSV dùng UTF-8/BOM, comma và quote RFC4180; import1MB/1000 dòng. Dòng lỗi 
 
 Nhập CSV dùng teal/icon upload, Xuất CSV xanh lá/icon download, token sáng/tối. Thẻ thư viện có cột phải cho media/đọc; tùy chọn ảnh ở bên phải toolbar, mobile media xuống dưới. CSS/mockup dùng cùng nguồn chuẩn qua ui:sync/ui:check.
 
-Âm thanh tải lên không bắt buộc. Nút **Đọc từ / Đọc câu ví dụ** dùng [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), ưu tiên giọng tiếng Anh cài trên máy; danh sách giọng và khả năng phát phụ thuộc thiết bị. Có tệp âm thanh thì thẻ giữ nút nghe tệp riêng. Không tạo `amTuId`/`amCauId` giả, không đưa giọng trình duyệt lên storage, không cần khóa Google Cloud. Kiểm tra tự động không xác nhận chất lượng âm thanh nghe được.
+Âm thanh tải lên không bắt buộc. Nút **Đọc từ / Đọc câu ví dụ** dùng [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), cho chọn Anh-Mỹ, Anh-Anh, Anh-Úc, Anh-Canada hoặc tất cả giọng tiếng Anh. Tự động ưu tiên tên giọng có Natural/Neural, rồi Google, rồi giọng mặc định trong vùng đã chọn; đây là xếp hạng theo metadata, không phải kết quả đo chất lượng. Nếu vùng không có giọng thì dùng giọng tiếng Anh khác có sẵn; lựa chọn giọng cụ thể được ưu tiên. Danh sách và chất lượng phụ thuộc thiết bị; giọng trực tuyến cần mạng. Có tệp âm thanh thì thẻ giữ nút nghe tệp riêng. Không tạo `amTuId`/`amCauId` giả, không đưa giọng trình duyệt lên storage. Chưa tích hợp Azure Speech hoặc dịch vụ TTS có khóa. Kiểm tra tự động không xác nhận chất lượng âm thanh nghe được.
 
 FE và mockup dùng SVG cùng nét, không dùng emoji. Thanh bên desktop có nút thu gọn/mở rộng; trên điện thoại giữ thanh dưới với icon và tên. Màu hành động: xanh dương lưu/tạo/sao chép, cam sửa, xanh ngọc nghe, đỏ xóa, trung tính điều hướng/hủy. Chữ/icon và trạng thái focus vẫn thể hiện chức năng, không dựa riêng vào màu.
 
@@ -112,7 +112,7 @@ CSS dùng chung và biểu tượng do frontend/scripts/sync-ui.mjs đồng bộ
 Sau sửa giao diện chạy `npm run ui:sync`, kiểm tra bằng `npm run ui:check`.
 Nguồn yêu cầu hiện hành: design/YEU_CAU_GIAO_DIEN.md.
 
-Thiết lập học có danh sách giọng tiếng Anh, tốc độ và nghe thử; lưu riêng trên trình duyệt bằng `vocab:speech`. Runtime `public/speech.js` dùng chung FE và mockup, xử lý giọng tải muộn, giọng đã lưu không còn khả dụng và hủy lượt đọc trước. Nghe thử không thay đổi thiết lập đã lưu.
+Thiết lập học có vùng giọng, danh sách giọng tiếng Anh, tốc độ và nghe thử; lưu riêng trên trình duyệt bằng `vocab:speech`. Thiết lập cũ vẫn được đọc, tốc độ mặc định mới là 1×. Runtime `public/speech.js` dùng chung FE và mockup, chờ danh sách giọng tối đa 8 giây qua `voiceschanged` và polling, hủy cả lượt chờ khi đổi/dừng đọc; thông báo lỗi nếu không tìm được giọng. Nghe thử không thay đổi thiết lập đã lưu. Không thêm thư viện bọc Web Speech vì chúng không cung cấp thêm giọng.
 Tên linh vật sửa trong bảng tương tác, tối đa 24 ký tự, lưu bằng `vocab:mascot:name`. Nút giao diện chọn Sáng / Tối / Theo thiết bị, lưu `vocab:theme`; chế độ tự động theo thay đổi của hệ thống.
 
 Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và đặt lại góc mặc định. Vị trí tương đối lưu trong `vocab:mascot:position`, giới hạn trong viewport và được căn lại khi đổi kích thước màn hình.

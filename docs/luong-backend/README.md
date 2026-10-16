@@ -29,6 +29,10 @@ Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải t
 - [B1.11 — Sao chép bộ](B1.11-sao-chep-bo.md)
 - [B1.12 — Nhập và xuất CSV](B1.12-csv.md)
 
+## Học SRS B2
+
+- [B2.1 — Bộ tính SRS thuần](B2.1-srs-calculator.md)
+
 ## Redis
 
 - [Luồng Redis trong dự án](REDIS-trong-du-an.md)

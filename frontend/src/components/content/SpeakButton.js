@@ -15,7 +15,7 @@ export function SpeakButton({ text, sentence = false }) {
     if (speaking) { cancel.current(); return; }
     setError('');
     cancel.current = window.VocabSpeech.speak(text, (state, message) => {
-      setSpeaking(state === 'speaking'); setError(message || '');
+      setSpeaking(state === 'speaking' || state === 'loading'); setError(message || '');
     });
   };
   return <div className="browser-speech">
