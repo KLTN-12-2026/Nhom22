@@ -455,8 +455,8 @@
     const todays = db.reviews.filter((r) => r.uid === u.id && localDate(Date.parse(r.createdAt), tz) === today);
     const st = streakOf(u.id, tz);
     return {
-      ngay: today, muiGio: tz, soQuaHan: quaHan, soDenHan: denHan, soMoiConLai, tuMoiMoiNgay: l.newCardsPerDay, soTheMoiDaHoc: used.soTheMoi, phutMoiNgay: l.minutesPerDay,
-      uocTinhPhut: Math.ceil((canOn + soMoiConLai) * AVG_SECONDS / 60), laUocTinh: true, giayMoiLuot: AVG_SECONDS,
+      ngay: today, soQuaHan: quaHan, soDenHan: denHan, soMoiConLai, tuMoiMoiNgay: l.newCardsPerDay, soTheMoiDaHoc: used.soTheMoi, phutMoiNgay: l.minutesPerDay,
+      uocTinhPhut: Math.ceil((canOn + soMoiConLai) * AVG_SECONDS / 60), giayMoiLuot: AVG_SECONDS,
       daHocHomNay: { soLuot: todays.length, soPhut: Math.round(todays.reduce((a, r) => a + r.thoiGianTraLoiMs, 0) / MIN) },
       chuoiNgay: st.chuoiNgay, homNayDaTinhChuoi: st.homNayDaTinh, luotToiThieuChuoi: 5, tongSoThe: cards.length,
       boThe: Object.keys(perDeck).map((id) => ({ boTheId: id, ten: deckName(id), soCanOn: perDeck[id].soCanOn, soMoi: perDeck[id].soMoi })),

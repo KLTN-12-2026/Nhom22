@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +30,13 @@ public class AccountService {
         NguoiDung user = users.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHENTICATED, "Bạn cần đăng nhập để tiếp tục"));
         return toResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public ZoneId zoneOf(Long userId) {
+        NguoiDung user = users.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHENTICATED, "Bạn cần đăng nhập để tiếp tục"));
+        return ZoneId.of(user.getMuiGio());
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
