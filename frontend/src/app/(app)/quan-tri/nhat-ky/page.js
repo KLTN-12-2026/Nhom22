@@ -16,7 +16,7 @@ const ACTION = {
 const KIND = { NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ mẫu', THE_TU_VUNG: 'Thẻ mẫu' };
 const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ' };
 const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Đã xuất bản', RIENG_TU: 'Bản nháp', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn' };
-const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC', IELTS: 'IELTS' };
+const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 const LEVEL = { A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
 
 function AdminAuditContent() {

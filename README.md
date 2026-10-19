@@ -16,7 +16,7 @@ VocabLearning giúp người học tổ chức từ vựng thành các bộ th�
 
 | Thành phần | Công nghệ |
 |---|---|
-| Frontend | Next.js, React, JavaScript, TanStack Query, React Hook Form, Zod |
+| Frontend | Next.js, React, JavaScript, TanStack Query, Zod (React Hook Form đã cài, chưa dùng) |
 | Backend | Java 21, Spring Boot 4, Spring Security, Spring Data JPA, Flyway |
 | Cơ sở dữ liệu | MySQL 8.4 |
 | Phiên đăng nhập | Redis 7.4, Spring Session |
@@ -104,8 +104,10 @@ npm run start
 
 ```powershell
 docker compose up -d
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
+
+Profile `dev` nạp dữ liệu mẫu (`db/seed`, gồm tài khoản ADMIN) và phải bật tường minh; không có profile mặc định. Container API trong Compose đặt `SPRING_PROFILES_ACTIVE=dev` mặc định, ghi đè bằng biến môi trường khi triển khai.
 
 Nếu container API đang chạy, dừng nó trước bằng `docker compose --profile app stop api` để giải phóng cổng `8080`. Frontend vẫn chạy theo hướng dẫn ở trên.
 

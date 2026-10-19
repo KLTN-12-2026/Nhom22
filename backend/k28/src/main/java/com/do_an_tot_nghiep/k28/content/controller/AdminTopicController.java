@@ -17,7 +17,7 @@ import java.net.URI;
 @RestController
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-@RequestMapping("api/v1/admin/topics")
+@RequestMapping("/api/v1/admin/topics")
 public class AdminTopicController {
 
     private final TopicService service;

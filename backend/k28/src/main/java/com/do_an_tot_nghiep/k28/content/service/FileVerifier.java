@@ -9,7 +9,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Locale;
-import java.util.Set;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +18,6 @@ import lombok.RequiredArgsConstructor;
 public class FileVerifier {
 
     private final MediaValidator media;
-
-    private static final Set<String> IMAGE_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp"
-    );
-
-    private static final Set<String> AUDIO_TYPES = Set.of(
-            "audio/mpeg", "audio/vnd.wave", "audio/x-flac"
-    );
 
     private final Tika tika = new Tika();
 
@@ -38,10 +29,7 @@ public class FileVerifier {
     }
 
     public int maxBytes(LoaiTep loai) {
-        return switch (loai) {
-            case ANH -> 2 * 1024 * 1024;
-            case AM_THANH -> 5 * 1024 * 1024;
-        };
+        return (int) loai.getGioiHan();
     }
 
     public String validateRequest(UploadRequest request) {
@@ -79,11 +67,7 @@ public class FileVerifier {
     }
 
     private void requireAllowed(LoaiTep loai, String mimeType) {
-        Set<String> allowed = switch (loai) {
-            case ANH -> IMAGE_TYPES;
-            case AM_THANH -> AUDIO_TYPES;
-        };
-        if (!allowed.contains(mimeType)) {
+        if (!loai.getMimeTypes().contains(mimeType)) {
             throw invalid("Định dạng tệp không được hỗ trợ");
         }
     }

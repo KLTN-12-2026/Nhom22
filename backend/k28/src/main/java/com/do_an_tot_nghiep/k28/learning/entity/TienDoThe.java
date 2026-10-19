@@ -10,6 +10,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
+import java.math.BigDecimal;
 import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,5 +44,23 @@ public class TienDoThe extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TrangThaiTienDo trangThai;
 
+    @Column(nullable = false)
+    private int buocHoc;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal ef;
+
+    @Column(nullable = false)
+    private int khoangOnNgay;
+
+    @Column(nullable = false)
+    private int chuoiThanhCong;
+
+    @Column(nullable = false)
+    private int soLanQuen;
+
     private Instant hanOnAt;
+
+    @Version
+    private Long version;
 }

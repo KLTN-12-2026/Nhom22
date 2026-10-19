@@ -1,8 +1,10 @@
 # ROADMAP FRONTEND — VocabLearning (VocabFlow)
 
+> **Lưu ý tham chiếu (20/10/2026):** các đường dẫn `report/`, `verification/`, `postman/`, `data/csv/`, `huong-dan/`, `GD0_BAO_CAO_FE.md`, `DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md` trong tài liệu này là bằng chứng lịch sử và **không còn trong checkout**. Bàn giao hiện hành nằm ở `ban-giao-cho fe/`. Không dùng các đường dẫn đó làm bằng chứng kiểm chứng.
+
 > Trạng thái10/10/2026: đã tích hợp FE từ GĐ0 đến hợp đồng BE B1.11, sửa lỗi DTO/phiên/upload/form, đối chiếu mockup desktop/mobile. F1.11 CSV B1.12 đã mở/kiểm chứng13/10/2026; xem bàn giao và verification/B1.12. Ghi nhận10/10 được giữ làm lịch sử. OAuth provider cần credentials để kiểm thử trao đổi Google thật; không tuyên bố luồng provider đã chạy. Bằng chứng và giới hạn nằm trong báo cáo bàn giao hiện có, không thay số liệu lịch sử BE.
 
-> Nguồn: TK (`docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` §4, §6, §9, §10, §16), lịch sprint `roadmap/SPRINT_PLAN.md`, API từ `report/<PHASE>_BAO_CAO_FE.md`.
+> Nguồn: TK (`docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` §4, §6, §9, §10, §16), lịch sprint `roadmap/SPRINT_PLAN.md`, API từ `ban-giao-cho fe/SPRINT_<n>_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` (thư mục `report/` cũ không còn trong checkout; các đường dẫn `report/`, `verification/`, `postman/` còn lại trong tài liệu là lịch sử).
 > Mỗi bước `Fx.y` ghép với bước BE cùng số giai đoạn. Màn hình `UIxx` và route: `SPRINT_PLAN.md` §5.
 > Quy trình một màn hình: `/ui-brief` → `/ui-mockup <UI>` → `/fe-from-mockup mockups/<phase>/<file>.html` → nối API thật.
 
@@ -12,7 +14,7 @@
 |---|---|
 | Framework | Next.js (App Router), JavaScript, React |
 | Gọi API | `src/lib/api-client.js` (GĐ0 report §6), TanStack Query |
-| Form & validate | react-hook-form + Zod (giới hạn = BE) |
+| Form & validate | Zod (`content-contract.mjs`, form thẻ) + kiểm tra HTML; `react-hook-form` đã cài nhưng chưa dùng; giới hạn = BE |
 | Mock | MSW chỉ endpoint ping nền; auth/nội dung dùng BE thật. Mockup HTML dùng demo riêng |
 | Giao diện | Design tokens `mockups/shared/tokens.css`, font hỗ trợ tiếng Việt + IPA, tối thiểu 16px |
 | Kiểm thử | Node test runner (logic/hợp đồng), Playwright trên Edge (UI thật và demo tách riêng) |
@@ -29,7 +31,7 @@
 | **GĐ4** — Kiểm thử | S10 | 30/11–06/12 | E2E, responsive, tiếp cận, lỗi mạng | F4.1–F4.4 |
 | **GĐ5** — Bàn giao | S11 | 07/12–14/12 | Build production, dữ liệu demo, hướng dẫn, diễn tập | F5.1–F5.4 |
 
-Mỗi giai đoạn bắt đầu bằng việc đọc `report/<PHASE>_BAO_CAO_FE.md` của BE (API đã kiểm chứng + hợp đồng "Sắp có" để mock trước).
+Mỗi giai đoạn bắt đầu bằng việc đọc báo cáo bàn giao BE trong `ban-giao-cho fe/` (API đã kiểm chứng + hợp đồng "Sắp có" để mock trước).
 
 ## 0.2. Cấu trúc mã nguồn
 
@@ -52,7 +54,7 @@ frontend/
     ├── lib/
     │   ├── api-client.js        # fetch + CSRF + ApiError (GĐ0 report §6)
     │   ├── query-client.js      # TanStack Query, xử lý 401 toàn cục
-    │   ├── schemas/             # Zod theo module, giới hạn = BE
+    │   ├── content-contract.mjs # Zod cho form thẻ, giới hạn = BE
     │   └── format.js            # ngày giờ theo múi giờ người học, số liệu
     ├── hooks/                   # useMe, useDecks, useStudySession…
     ├── mocks/                   # MSW handlers theo module (dữ liệu thật từ báo cáo FE)
@@ -65,7 +67,7 @@ frontend/
 
 ### [x] F0.1 Khởi tạo dự án
 - `frontend/` Next.js App Router, ESLint, alias `@/`, `.env.example` (`API_URL`, `NEXT_PUBLIC_API_MOCKING`); giữ cấu hình formatter hiện có, không ghi nhận Prettier chưa cài là đã kiểm chứng.
-- Thư mục: `app/(public)`, `app/(auth)`, `app/(app)`, `app/quan-tri`, `components/ui`, `components/<module>`, `lib`, `mocks`.
+- Thư mục (thực tế: không có `AdminLayout`, `schemas/`, `format.js`; token ở `mockup-tokens.css`; `quan-tri` nằm trong `app/(app)/`): `app/(public)`, `app/(auth)`, `app/(app)`, `app/quan-tri`, `components/ui`, `components/<module>`, `lib`, `mocks`.
 - **Xong khi:** `npm run dev` chạy, trang `/` hiển thị.
 
 ### [x] F0.2 Design system & UI kit — TK §9.8
@@ -78,7 +80,7 @@ frontend/
 - **Xong khi:** `GET /public/ping` chạy với cả MSW và BE thật.
 
 ### [x] F0.4 Layout & bảo vệ route
-- `PublicLayout` (header, footer), `AppShell` (sidebar desktop, bottom nav mobile), `AdminLayout`.
+- `PublicLayout` (header, footer), `AppShell` (sidebar desktop, bottom nav mobile); chưa có `AdminLayout` riêng (trang quản trị dùng `AppShell`).
 - Guard: chưa đăng nhập → `/dang-nhap?next=`; không phải ADMIN → trang 403; chưa onboarding → `/bat-dau`.
 - **Xong khi:** responsive 360px không tràn ngang.
 
@@ -132,7 +134,7 @@ frontend/
 ### Hoàn thiện giao diện10/10/2026
 
 - Thu gọn/mở rộng thanh bên desktop; SVG có nhãn truy cập, mobile giữ icon/tên và vùng chạm44px.
-- FE/mockup cùng màu hành động theo yêu cầu mới: xanh dương lưu/tạo/sao chép, cam sửa, xanh ngọc nghe, đỏ xóa, trung tính hủy/điều hướng. Đây là điều chỉnh có chủ đích so với quy tắc màu cũ của skill, không thêm green completion làm nút.
+- FE/mockup cùng màu hành động theo yêu cầu mới: xanh dương lưu/tạo/sao chép, xanh dương đậm (`--edit`, #1762ad) sửa, xanh ngọc nghe, đỏ xóa, trung tính hủy/điều hướng. Đây là điều chỉnh có chủ đích so với quy tắc màu cũ của skill, không thêm green completion làm nút.
 - Đọc từ/câu bằng trình duyệt khi không có tệp; upload vẫn tùy chọn, giữ quyền media và DTO BE. Hiển thị ảnh mặc định bật, có lựa chọn ghi nhớ trên trình duyệt; khi tắt có nút Xem ảnh. Hàng nút tự xuống dòng trong thẻ.
 - [Bằng chứng FE](../report/evidence/FE-B0-B1.11-verification-20261010.json). CSV/SRS/quản trị ngoài B1.7 không được đánh dấu hoàn tất.
 
@@ -159,6 +161,8 @@ frontend/
 - Đề không có đáp án; nộp một lần với `submitKey`; kết quả + giải thích; luyện lại câu sai; lịch sử.
 
 ### [ ] F2.6 Sổ tay từ khó & cặp nhầm — UI27 ← B2.9
+
+> Số liệu kiểm thử FE tại 20/10/2026: `npm test` 39/39 pass, ESLint 0 lỗi 14 cảnh báo (các con số 9/9, 35, "3 warning" ở trên là lịch sử). `react-hook-form` đã cài nhưng chưa dùng; không có Playwright và không có script `test:contract`.
 
 ### [ ] F2.7 Thống kê nền — UI35 ← B2.10
 - Biểu đồ theo ngày (múi giờ người học), tỷ lệ đúng, mức làm chủ theo kỹ năng; thiếu dữ liệu → "Chưa đủ dữ liệu".

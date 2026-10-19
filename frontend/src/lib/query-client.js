@@ -3,7 +3,7 @@ import { ApiError } from './api-client';
 
 function expiredSession(error) {
   if (!(error instanceof ApiError) || error.status !== 401 || typeof window === 'undefined') return;
-  if (/^\/(bo-the|ca-nhan|bat-dau|quan-tri)(\/|$)/.test(window.location.pathname)) {
+  if (/^\/(bo-the|ca-nhan|bat-dau|quan-tri|hom-nay|hoc|luyen-tap|so-tay|thong-ke)/.test(window.location.pathname)) {
     window.location.assign(`/dang-nhap?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
   }
 }
