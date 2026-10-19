@@ -28,8 +28,7 @@ function HocContent() {
       const payload = {
         boTheId: boTheId || null,
         chieuHoc,
-        quyThoiGian: Number(quyThoiGian),
-        cheDo: 'THUONG'
+        quyThoiGian: Number(quyThoiGian)
       };
       const res = await apiFetch('/api/v1/learning/sessions', {
         method: 'POST',

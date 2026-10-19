@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,7 +21,9 @@ public class VaiTro {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 30)
     private String ma;
 
+    @Column(nullable = false, length = 100)
     private String ten;
 }

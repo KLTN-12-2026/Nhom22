@@ -10,7 +10,7 @@ ON DUPLICATE KEY UPDATE email = email;
 
 INSERT IGNORE INTO nguoi_dung_vai_tro (nguoi_dung_id, vai_tro_id)
 SELECT u.id, r.id FROM nguoi_dung u JOIN vai_tro r ON r.ma = 'USER'
-WHERE u.email LIKE '%@vocab.local';
+WHERE u.email IN ('admin@vocab.local', 'an@vocab.local', 'binh@vocab.local', 'chi@vocab.local');
 
 INSERT IGNORE INTO nguoi_dung_vai_tro (nguoi_dung_id, vai_tro_id)
 SELECT u.id, r.id FROM nguoi_dung u JOIN vai_tro r ON r.ma = 'ADMIN'
@@ -22,7 +22,7 @@ SELECT id,
        CASE email WHEN 'binh@vocab.local' THEN 'TOEIC' ELSE 'GIAO_TIEP' END,
        CASE email WHEN 'chi@vocab.local' THEN 20 ELSE 10 END,
        10, TRUE
-FROM nguoi_dung WHERE email LIKE '%@vocab.local';
+FROM nguoi_dung WHERE email IN ('admin@vocab.local', 'an@vocab.local', 'binh@vocab.local', 'chi@vocab.local');
 
 INSERT IGNORE INTO cai_dat_thong_bao (nguoi_dung_id, gio_nhac)
-SELECT id, '20:00:00' FROM nguoi_dung WHERE email LIKE '%@vocab.local';
+SELECT id, '20:00:00' FROM nguoi_dung WHERE email IN ('admin@vocab.local', 'an@vocab.local', 'binh@vocab.local', 'chi@vocab.local');

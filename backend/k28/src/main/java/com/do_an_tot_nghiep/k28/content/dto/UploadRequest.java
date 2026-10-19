@@ -8,15 +8,15 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record UploadRequest(
-        @NotNull
+        @NotNull(message = "Chọn loại tệp")
         LoaiTep loai,
-        @NotBlank
-        @Size(max = 50)
+        @NotBlank(message = "Thiếu loại nội dung của tệp")
+        @Size(max = 50, message = "Loại nội dung tối đa 50 ký tự")
         String mimeType,
-        @Positive
+        @Positive(message = "Dung lượng tệp phải lớn hơn 0")
         long kichThuoc,
-        @NotBlank
-        @Pattern(regexp = "[a-fA-F0-9]{64}")
+        @NotBlank(message = "Thiếu mã kiểm tra tệp")
+        @Pattern(regexp = "[a-fA-F0-9]{64}", message = "Mã kiểm tra tệp phải gồm 64 ký tự thập lục phân")
         String checksum
 ) {
 }

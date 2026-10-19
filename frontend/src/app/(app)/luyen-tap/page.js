@@ -31,7 +31,7 @@ function PracticeForm() {
 
   const { data: myDecks } = useQuery({
     queryKey: ['my-decks'],
-    queryFn: () => apiFetch('/api/v1/decks?tab=mine').catch(() => ({ items: [] }))
+    queryFn: () => apiFetch('/api/v1/decks').catch(() => ({ items: [] }))
   });
 
   const { data: history, isLoading: isHistoryLoading } = useQuery({

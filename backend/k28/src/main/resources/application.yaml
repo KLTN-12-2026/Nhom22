@@ -5,14 +5,13 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:backend/k28/.env[.properties]
-  profiles:
-    default: dev
   servlet:
     multipart:
       max-file-size: 1048576B
       max-request-size: 2MB
   flyway:
     locations: classpath:db/migration
+    ignore-migration-patterns: "repeatable:missing"
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:vocab_learn}?characterEncoding=UTF-8&connectionTimeZone=UTC
     username: ${DB_USER:vocab}
@@ -95,6 +94,7 @@ management:
         enabled: true
 
 server:
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
   servlet:
     session:
       timeout: 7d

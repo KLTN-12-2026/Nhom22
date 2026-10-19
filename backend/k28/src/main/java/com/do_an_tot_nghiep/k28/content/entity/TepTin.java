@@ -21,18 +21,25 @@ public class TepTin extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
     private Long chuSoHuuId;
+    @Column(nullable = false, updatable = false, length = 200)
     private String objectKey;
+    @Column(nullable = false, length = 50)
     private String mimeType;
+    @Column(nullable = false)
     private long kichThuoc;
+    @Column(nullable = false, length = 64)
     private String checksum;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
     private LoaiTep loai;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
     private TrangThaiXoaTep trangThaiXoa;
 
     private Instant hoanTatAt;

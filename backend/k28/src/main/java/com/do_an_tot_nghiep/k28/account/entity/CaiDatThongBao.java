@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
@@ -17,10 +18,13 @@ public class CaiDatThongBao extends BaseEntity {
     @Id
     private Long nguoiDungId;
 
+    @Column(nullable = false)
     private boolean nhanTrongUngDung;
 
+    @Column(nullable = false)
     private boolean nhanEmail;
 
+    @Column(nullable = false)
     private boolean nhacHoc;
 
     private LocalTime gioNhac;
@@ -33,7 +37,7 @@ public class CaiDatThongBao extends BaseEntity {
         settings.nguoiDungId = nguoiDungId;
         settings.nhanTrongUngDung = true;
         settings.nhanEmail = true;
-        settings.nhacHoc = true;
+        settings.nhacHoc = false;
         return settings;
     }
 

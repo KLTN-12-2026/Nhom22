@@ -26,6 +26,11 @@ public interface TheTuVungRepository
             Pageable pageable
     );
 
+    Page<TheTuVung> findByBoTheIdAndXoaAtIsNullOrderByIdAsc(
+            Long boTheId,
+            Pageable pageable
+    );
+
     Optional<TheTuVung> findByIdAndXoaAtIsNull(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_READ)

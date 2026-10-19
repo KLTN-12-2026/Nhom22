@@ -47,9 +47,9 @@ Mở file Markdown bằng trình xem có hỗ trợ ảnh SVG. Nếu trình xem 
 - Sơ đồ hoạt động dùng `flowchart TD`: đi từ trên xuống, hình thoi biểu diễn điều kiện, nhánh ghi rõ lựa chọn hoặc lỗi.
 - Sơ đồ tuần tự dùng `sequenceDiagram` và `autonumber`: đọc từ trên xuống theo số bước; mũi tên liền là yêu cầu, nét đứt là phản hồi; `alt/else` tách trường hợp.
 - Mỗi sơ đồ có ảnh SVG hiển thị trực tiếp và phần mã Mermaid thu gọn ngay bên dưới. Phần giải thích giữ gần sơ đồ và các quy tắc liên quan.
-- Tất cả sơ đồ dùng cùng font, màu và khoảng cách từ [mermaid-config.json](mermaid-config.json). Cấu hình cũng được đưa vào mã Mermaid để xem trực tiếp nhất quán.
+- Tất cả sơ đồ dùng cùng font, màu và khoảng cách từ `mermaid-config.json` (tệp này không còn trong thư mục; dùng cấu hình nhúng trong mã Mermaid). Cấu hình cũng được đưa vào mã Mermaid để xem trực tiếp nhất quán.
 - Đường dẫn ảnh dùng `assets/<tên-file>-<số-thứ-tự>.svg`; thứ tự ảnh theo thứ tự sơ đồ trong tài liệu.
 
 Sau khi sửa Mermaid, chạy `python docs/luong-backend/render-diagrams.py` từ thư mục gốc dự án. Cần Node.js và Mermaid CLI (`mmdc`); công cụ chỉ cập nhật Markdown và SVG trong thư mục tài liệu này, kiểm tra mọi sơ đồ render thành công trước khi ghi Markdown.
 
-Danh sách hiện có 17 tài liệu giai đoạn và một tài liệu Redis. B0.6 và B0.7 chưa có file luồng riêng trong thư mục này.
+Danh sách hiện có 20 tài liệu giai đoạn và một tài liệu Redis. B0.6 và B0.7 chưa có file luồng riêng trong thư mục này.

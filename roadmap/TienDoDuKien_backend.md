@@ -1,6 +1,8 @@
 # ROADMAP BACKEND — VocabLearning (VocabFlow)
 
-> Cập nhật 05/10/2026: đợt sửa bao phủ GĐ0–B1.8; B1.9 đang triển khai. Host trong cấu hình có default/Compose override, không phải tất cả cần khai báo trong .env.example. Google placeholder dev dùng để boot; OAuth thật cần credentials hợp lệ. Kết quả kiểm chứng cuối đợt theo DOT1_BAO_CAO_FE và báo cáo đối chiếu.
+> **Lưu ý tham chiếu (20/10/2026):** các đường dẫn `report/`, `verification/`, `postman/`, `data/csv/`, `huong-dan/`, `GD0_BAO_CAO_FE.md`, `DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md` trong tài liệu này là bằng chứng lịch sử và **không còn trong checkout**. Bàn giao hiện hành nằm ở `ban-giao-cho fe/`. Không dùng các đường dẫn đó làm bằng chứng kiểm chứng.
+
+> Cập nhật 05/10/2026: đợt sửa bao phủ GĐ0–B1.8 (B1.9–B1.12 và B2.1–B2.2 đã xong về sau, xem các bước bên dưới). Host trong cấu hình có default/Compose override, không phải tất cả cần khai báo trong .env.example. Google placeholder dev dùng để boot; OAuth thật cần credentials hợp lệ. Kết quả kiểm chứng cuối đợt theo DOT1_BAO_CAO_FE và báo cáo đối chiếu.
 
 > Nguồn yêu cầu: `docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md` (viết tắt **TK**). Mã yêu cầu `FR-xx` (TK §5), mã kiểm thử `TC-xx` (TK §19).
 > Mỗi bước `Bx.y` là một đơn vị giao việc: chạy `/be-code B1.1` (viết code) hoặc `/be-chat B1.1` (học và tự gõ).
@@ -75,8 +77,8 @@ backend/k28/
     │   └── admin/           # quan_tri: người dùng, vai trò, kiểm duyệt, nhật ký
     │       (mỗi module) controller/ service/ repository/ entity/ dto/ mapper/
     ├── main/resources/
-    │   ├── application.yaml  application-dev.yml  application-docker.yml
-    │   └── db/migration/V1__account.sql …   db/seed/R__seed_dev.sql
+    │   ├── application.yaml  application-dev.yaml
+    │   └── db/migration/V1__account.sql …   db/seed/R__seed_dev.sql  R__library_starter.sql
     └── test/java/com/do_an_tot_nghiep/k28/…
 ```
 
@@ -122,11 +124,11 @@ backend/k28/
 </plugin>
 ```
 - `.gitattributes`: `mvnw text eol=lf` (tránh lỗi `/bin/sh^M` khi build Docker trên Windows). `.gitignore`: `target/`, `.env`.
-- **Xong khi:** `./mvnw -q -DskipTests compile` chạy qua; một `HealthMapper` thử MapStruct + Lombok sinh được code trong `target/generated-sources`.
+- **Xong khi:** `./mvnw -q -DskipTests compile` chạy qua; một mapper thử (thực tế là `ToolingMapperTest`) MapStruct + Lombok sinh được code trong `target/generated-sources`.
 
 ### [x] B0.2 Docker Compose môi trường dev
 - `docker-compose.yml`: `mysql:8.4` (cổng host 3307, `utf8mb4`, TZ UTC, healthcheck), `redis` (6379), `s3` = RustFS (9000/9001) + `s3-init` tạo bucket bằng aws-cli, `mailpit` (1025/8025), `api` (chỉ khi `--profile app`).
-- `.env.example` chỉ có tên biến và giá trị dev giả: `DB_NAME, DB_USER, DB_PASSWORD, DB_ROOT_PASSWORD, REDIS_HOST, S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, MAIL_HOST, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AI_API_KEY, SPEECH_KEY, APP_FRONTEND_URL`.
+- `.env.example` chỉ có tên biến và giá trị dev giả: `DB_NAME, DB_USER, DB_PASSWORD, DB_ROOT_PASSWORD, REDIS_HOST, S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, MAIL_HOST, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AI_API_KEY, SPEECH_KEY, APP_FRONTEND_URL`. Bản thực tế của `.env.example` (nguồn duy nhất, không nhắc lại ở nơi khác) gồm thêm `API_PORT, DB_PORT, S3_PUBLIC_ENDPOINT, FORWARD_HEADERS_STRATEGY, COOKIE_SECURE, SWAGGER_ENABLED, GOOGLE_REDIRECT_URI` (MAIL_HOST do Compose đặt, MAIL_PORT mặc định 1025); `REDIS_HOST` và `S3_ENDPOINT` do Compose đặt cho container `api`.
 - `Dockerfile` multi-stage:
 
 ```dockerfile
@@ -146,17 +148,17 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ```
-- Profile mặc định dev kết nối localhost:3307; Compose truyền DB_HOST/REDIS_HOST/S3_ENDPOINT/MAIL_HOST, không có profile docker riêng. Test dùng profile test và Testcontainers.
+- Profile mặc định dev kết nối localhost:3307; Compose truyền DB_HOST/REDIS_HOST/S3_ENDPOINT/MAIL_HOST, không có profile docker riêng (cấu hình host qua biến môi trường). Test dùng profile test và Testcontainers.
 - **Xong khi:** `docker compose up -d` → các service có healthcheck healthy, Mailpit chạy và s3-init hoàn tất thành công; `docker compose --profile app up -d --build` → `GET /actuator/health` trả `UP`.
 
 ### [x] B0.3 Cấu hình ứng dụng & Flyway
 - `application.yaml`: datasource, `spring.jpa.hibernate.ddl-auto=validate`, `open-in-view=false`, `hibernate.jdbc.time_zone=UTC`, naming snake_case mặc định, Flyway bật, `spring.session.data.redis`, multipart giới hạn, Jackson ISO-8601.
 - `V1__account.sql`: `nguoi_dung`, `vai_tro`, `nguoi_dung_vai_tro`, `danh_tinh_oauth`, `token_tai_khoan`, `ho_so_hoc_tap`, `cai_dat_thong_bao` (TK §12.2). Seed 2 vai trò `USER`, `ADMIN`.
-- Dev seed tách riêng `db/seed/` (chỉ bật ở profile dev): 1 Admin, 3 User mẫu.
+- Dev seed tách riêng `db/seed/` (chỉ bật khi kích hoạt tường minh profile `dev`, không còn profile mặc định; Compose `api` đặt `SPRING_PROFILES_ACTIVE=dev` mặc định, ghi đè khi triển khai): 1 Admin, 3 User mẫu.
 - **Xong khi:** app khởi động, Flyway áp V1, `validate` không báo lỗi.
 
 ### [x] B0.4 Xử lý lỗi & tiện ích web chung
-- `ErrorCode` (enum: `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, VERSION_CONFLICT, BUSINESS_RULE, RATE_LIMITED, DEPENDENCY_DOWN`) → HTTP 400/401/403/404/409/409/422/429/503.
+- `ErrorCode` (enum 17 mã, thêm `UNSUPPORTED_MEDIA_TYPE` 415 và `METHOD_NOT_ALLOWED` 405 ở cuối danh sách; nhóm 15 mã gốc: `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, VERSION_CONFLICT, BUSINESS_RULE, RATE_LIMITED, DEPENDENCY_DOWN, INTERNAL_ERROR` (500), `TOKEN_INVALID, INVALID_CREDENTIALS, EMAIL_NOT_VERIFIED, ACCOUNT_LOCKED`, `OAUTH_LINK_REQUIRED` (chỉ dùng làm tham số redirect `?loi=`)) → HTTP 400/401/403/404/409/409/422/429/503/500/400/401/403/403/409 theo đúng thứ tự liệt kê. Lỗi `RATE_LIMITED` (429) kèm header `Retry-After` (giây còn lại của cửa sổ, đọc từ TTL Redis). Thiếu header bắt buộc trả `VALIDATION_FAILED` kèm `fieldErrors[].field` là tên header; tệp quá giới hạn trả thông điệp riêng. `POST /decks/{id}/cards` trả `Location: /api/v1/cards/{id}` dù chưa có `GET /cards/{id}` (giữ có chủ đích, FE không nên gọi).
 - `ApiException(ErrorCode, message)`; `GlobalExceptionHandler` trả `{code, message, fieldErrors, requestId}` (TK §13.1), **không** trả stack trace.
 - `RequestIdFilter`: sinh `X-Request-Id`, đưa vào MDC log.
 - `PageResponse<T>(items, page, size, totalElements, totalPages)`; `BaseEntity` với `createdAt`, `updatedAt` (JPA Auditing).
@@ -164,7 +166,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Xong khi:** test MockMvc: body sai → 400 có `fieldErrors`; id không tồn tại → 404 có `requestId`.
 
 ### [x] B0.5 Bảo mật nền
-- `SecurityConfig`: phiên lưu Redis (Spring Session), cookie `HttpOnly`, `SameSite=Lax`, `Secure` khi HTTPS; CSRF bằng `CookieCsrfTokenRepository` (header `X-XSRF-TOKEN`); CORS chỉ cho `APP_FRONTEND_URL`.
+- `SecurityConfig`: phiên lưu Redis (Spring Session), cookie `HttpOnly`, `SameSite=Lax`, `Secure` chỉ khi `COOKIE_SECURE=true` (mặc định false, không tự nhận HTTPS; **bắt buộc bật khi triển khai production**); CSRF bằng `CookieCsrfTokenRepository` (header `X-XSRF-TOKEN`); CORS chỉ cho `APP_FRONTEND_URL`.
 - Phân quyền URL: `/api/v1/auth/**`, `/api/v1/library/**`, `/api/v1/public/**`, Swagger, health → `permitAll`; `/api/v1/admin/**` → `ADMIN`; còn lại → đăng nhập.
 - 401/403 trả JSON theo B0.4. `PasswordEncoder` = BCrypt. `CurrentUser` lấy id người đang đăng nhập.
 - `RateLimiter` đơn giản: đếm `INCR` + `EXPIRE` trên Redis theo khóa (IP/user + hành động).
@@ -176,12 +178,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ### [x] B0.7 Nền kiểm thử
 - `AbstractIntegrationTest`: `@SpringBootTest` + MockMvc + Testcontainers (MySQL 8.4, Redis) dùng `@ServiceConnection`.
-- Tên test theo mã: `FR01RegisterTest`, phương thức `tc01_...`.
+- Tên test theo mã: `FR01RegisterTest`, phương thức đặt theo mã yêu cầu thực tế (`fr02_...`, `fr03_...`; tiền tố `tcNN_` chỉ ở các test cũ). Swagger UI mở ở `/swagger-ui/index.html` (cũng chuyển hướng từ `/swagger-ui.html`); health dùng `/actuator/health/readiness`. Dockerfile trong roadmap chỉ là mẫu, bản thật nằm ở `backend/k28/Dockerfile`. CORS của S3 cho phép origin cổng 3000 và 3100 (`docker/s3-cors.json`).
 - **Xong khi:** `./mvnw -q verify` chạy qua với Docker đang bật.
 
 ### [x] B0.8 Kho lưu tệp & email
 - `StorageService`: tạo presigned PUT/GET (hết hạn ngắn), xóa object; bucket riêng tư.
-- `MailService`: gửi mail HTML đơn giản qua SMTP (Mailpit khi dev), gửi **sau commit** bằng `@TransactionalEventListener(AFTER_COMMIT)` + `@Async`.
+- `MailService`: gửi mail HTML đơn giản qua SMTP (Mailpit khi dev), gửi **sau commit** bằng `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)` + `@Async`; nếu phát sự kiện ngoài transaction thì mail được gửi ngay.
 - **Xong khi:** test tích hợp upload/download qua URL ký; gửi mail thử thấy trong Mailpit.
 
 ---
@@ -225,10 +227,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Đã hoàn tất 02/10/2026: MIME thực, SHA-256, kiểm tra ảnh/âm thanh, ảnh đại diện, xóa và retry/dọn tệp nền, CORS bucket cho browser. 22 test FR-03 + 13 test hồi quy pass. Luồng/API: `docs/luong-backend/B1.6-tep-tin-anh-dai-dien.md`.
 
 ### [x] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
-- `V4__content.sql`: `chu_de`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich`. V2/V3 đã dùng cho tệp và cleanup.
+- `V4__content.sql`: `chu_de`, `chu_de_yeu_thich`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich` (8 bảng). V2/V3 đã dùng cho tệp và cleanup.
 - Nợ từ B1.5: chủ đề yêu thích của người học (bảng nối `nguoi_dung` ↔ `chu_de`, tối đa 5) + thêm vào `GET/PUT /me/learning-settings`.
 - Public: `GET /public/topics`. Admin: CRUD `/admin/topics`, `/admin/tags`.
-- **Đã làm 03/10/2026:** 11 API danh mục; cập nhật `GET/PUT /me/learning-settings` với `chuDeIds` bắt buộc, tối đa 5 ID tồn tại và không trùng. PUT danh mục kèm `version`; xóa danh mục đang được tham chiếu trả 409, không cascade. Trình độ dùng enum hiện có, không có API CRUD trình độ.
+- **Đã làm 03/10/2026:** 11 API danh mục (B1.9 thêm `GET /public/tags` thành 12); cập nhật `GET/PUT /me/learning-settings` với `chuDeIds` bắt buộc, tối đa 5 ID tồn tại và không trùng. PUT danh mục kèm `version`; xóa danh mục đang được tham chiếu trả 409, không cascade. Trình độ dùng enum hiện có, không có API CRUD trình độ.
 - **Kiểm chứng 05/10/2026:** FR03CatalogTest 14/14 pass trong toàn suite 117/117. Có kiểm thử tạo trùng đồng thời, sửa cùng version, xóa đồng thời cho cả topics/tags; fixture FK bo_the/the_nhan và chủ đề người học. 62 lượt HTTP ngày03/10 là bằng chứng lịch sử. FR-13 audit log thuộc giai đoạn sau.
 - **Bàn giao:** `report/DOT1_BAO_CAO_FE.md` mục 5.12, 5.21–5.31; `docs/luong-backend/B1.7-chu-de-nhan-chu-de-yeu-thich.md`; Postman thêm 15, cập nhật 3 request. Mockup B1.7 và Next.js đã đồng bộ DTO/method/version/409; mockup vẫn là demo.
 
@@ -241,6 +243,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Báo cáo và bàn giao:** [báo cáo Đợt1](../report/DOT1_BAO_CAO_FE.md) mục 5.32–5.38 và mục10; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
 
 
+- **Còn mở (20/10/2026):** `DeckResponse` chưa có `soThe` và chưa có API liệt kê bộ yêu thích (`?favorite=true`); UI13 phụ thuộc hai thứ này nên phải chốt (thêm vào BE hoặc bỏ khỏi UI13) trước khi nối FE.
 - **Phạm vi bước sau:** mục tiêu bộ, số thẻ, tìm kiếm toàn bộ thư viện và favorite listing phải chốt trước B1.9/B1.10. Mục tiêu hồ sơ không tự trở thành mục tiêu bộ.
 
 ### [x] B1.9 Thẻ từ vựng — FR-03, TC-02
@@ -285,7 +288,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `V8__learning.sql` (V1–V7 đã dùng; không sửa migration đã áp dụng): `tien_do_the`, `phien_hoc`, `phien_hoc_the`, `lich_su_on`, `su_dung_hoc_ngay` + unique/index TK §12.4.
 - `SrsCalculator` (class thuần, không Spring): nhận trạng thái cũ + mức (QUEN/KHO/NHO/DE) + `Instant now` → trạng thái mới, theo **đúng bảng TK §7.2** (EF 2.5, min 1.3, trần 365 ngày).
 - **Xong khi:** unit test chuỗi Nhớ: mới → 10 phút → 1 ngày → 6 ngày → 15 ngày; Quên ở ON_TAP → HOC_LAI, tăng số lần quên.
-- **Đã làm (16/10/2026):** `V8__learning.sql`, `SrsState`, `SrsCalculator` (phiên bản `SM2-VN-1`), `FR06SrsCalculatorTest` 28 test. Kiểm chứng: `./mvnw -q verify` thoát 0 (271 test, 0 lỗi) khi chạy với `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Users\Public`; không có tùy chọn này, 181 test tích hợp lỗi do Netty loopback trên Windows. Không có API/HTTP/Postman ở bước này. Làm tròn HALF_UP và `now + N×24h` là **đề xuất**. Flow: [B2.1](../docs/luong-backend/B2.1-srs-calculator.md).
+- **Đã làm (16/10/2026):** `V8__learning.sql`, `SrsState`, `SrsCalculator` (phiên bản `SM2-VN-1`), `FR06SrsCalculatorTest` 28 test. Kiểm chứng: `./mvnw -q verify` thoát 0 (271 test tại thời điểm chạy, chưa chạy lại; số `@Test` trong mã nguồn khác tổng này vì có test tham số hóa; 0 lỗi) khi chạy với `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Users\Public`; không có tùy chọn này, 181 test tích hợp lỗi do Netty loopback trên Windows. Không có API/HTTP/Postman ở bước này. Làm tròn HALF_UP và `now + N×24h` là **đề xuất**. Flow: [B2.1](../docs/luong-backend/B2.1-srs-calculator.md).
 
 ### [x] B2.2 Kế hoạch hôm nay — FR-02, FR-06, TC-09
 - API: `GET /learning/today` (cần đăng nhập): `ngay`, `soQuaHan`, `soDenHan`, `soTheMoiDaHoc`, `tuMoiMoiNgay`, `soMoiConLai`, `giayMoiLuot`, `uocTinhPhut`, `phutMoiNgay`, `chuoiNgay`, `homNayDaTinhChuoi`, `luotToiThieuChuoi`, `daHocHomNay{soLuot,soPhut}`, `tongSoThe`, `boThe[{boTheId,ten,soCanOn,soMoi}]`.
@@ -293,20 +296,20 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Chỉ tính `DANG_HOC`, `ON_TAP`, `HOC_LAI`; loại thẻ/bộ đã xóa, `TAM_NGUNG`, bộ không thuộc người dùng. Thẻ mới = không có hàng tiến độ nào khác `MOI`; `soMoiConLai = min(max(0, tuMoiMoiNgay − so_the_moi hôm nay), thẻ mới khả dụng)`; hết suất không giảm số ôn.
 - Ước tính 20 giây/lượt (hằng, ghi là ước tính). Chuỗi ngày: ngày có `so_luot_hop_le >= 5`, hôm nay chưa đủ thì tính từ hôm qua; Đợt 3 (engagement) thay thế. Chưa có `cuuLichOn` và query `phut`, `giuTuMoi` (B2.6).
 - **Xong khi:** `FR06TodayPlanTest` (TC-09 nửa đêm/múi giờ, hạn mức từ mới không nhân đôi hai chiều, thẻ/bộ xóa, tạm ngưng, người khác) và `StreakCalculatorTest` pass.
-- **Đã làm (19/10/2026):** code `TienDoThe`, `SuDungHocNgay`, `TienDoTheRepository`, `SuDungHocNgayRepository`, `StreakCalculator`, `LearningPlanService`, `LearningController`, `AccountService.zoneOf`; không migration mới. 20 giây/lượt và chuỗi theo ngày ≥5 lượt là **đề xuất**. Hai lớp test `FR06TodayPlanTest`, `StreakCalculatorTest` đã có trong repository (chưa commit). **Kiểm chứng:** người dùng chạy `StreakCalculatorTest` và `FR06TodayPlanTest` ngày 19/10/2026 và báo không có lỗi (không ghi số lượng test, không đính kèm log). Mockup `hom-nay.html` rà 19/10: cùng tên field với BE, bỏ `muiGio` và `laUocTinh` thừa khỏi `demo.js`, trang hiển thị đúng và console không lỗi; còn lệch demo 15 giây/lượt (BE 20) và `cuuLichOn` (B2.6). Postman: thêm request "Kế hoạch hôm nay (B2.2 · FR-06)" vào thư mục "03 Học tập" của "VocabLearning API", đã ghi `synced`. **Chưa kiểm chứng:** gọi HTTP thật và chạy request Postman. Flow: [B2.2](../docs/luong-backend/B2.2-ke-hoach-hom-nay.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+- **Đã làm (19/10/2026):** code `TienDoThe`, `SuDungHocNgay`, `TienDoTheRepository`, `SuDungHocNgayRepository`, `StreakCalculator`, `LearningPlanService`, `LearningController`, `AccountService.zoneOf`; commit B2.2 có kèm `V9__phien_hoc_bo_the.sql` (nền cho B2.3), B2.2 tự không cần migration. 20 giây/lượt và chuỗi theo ngày ≥5 lượt là **đề xuất**. Hai lớp test `FR06TodayPlanTest`, `StreakCalculatorTest` đã có trong repository. **Kiểm chứng:** người dùng chạy `StreakCalculatorTest` và `FR06TodayPlanTest` ngày 19/10/2026 và báo không có lỗi (không ghi số lượng test, không đính kèm log). Mockup `hom-nay.html` rà 19/10: cùng tên field với BE, bỏ `muiGio` và `laUocTinh` thừa khỏi `demo.js`, trang hiển thị đúng và console không lỗi; còn lệch demo 15 giây/lượt (BE 20) và `cuuLichOn` (B2.6). Postman: thêm request "Kế hoạch hôm nay (B2.2 · FR-06)" vào thư mục "03 Học tập" của "VocabLearning API", đã ghi `synced`. **Chưa kiểm chứng:** gọi HTTP thật và chạy request Postman. Flow: [B2.2](../docs/luong-backend/B2.2-ke-hoach-hom-nay.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [ ] B2.3 Tạo phiên học — FR-06
-- `V9__phien_hoc_bo_the.sql`: thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK. Thứ tự migration dự kiến: V9 (B2.3), V10 practice (B2.7), V11 admin (B2.11), V12 jobs_ai (B3.1), V13 speaking (B3.4), V14 engagement (B3.6), V15 notification_report (B3.7), V16 privacy (B3.10). Số thực tế luôn lấy số kế tiếp chưa dùng khi tới bước đó (B2.6 có thể chèn thêm một migration cho `cheDo`).
+- `V9__phien_hoc_bo_the.sql` **đã có** (commit cùng B2.2): thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK; B2.3 không tạo lại và không sửa V9. Thứ tự migration: V9 (đã có, thuộc B2.3), V10 practice (B2.7), V11 admin (B2.11), V12 jobs_ai (B3.1), V13 speaking (B3.4), V14 engagement (B3.6), V15 notification_report (B3.7), V16 privacy (B3.10). Số thực tế luôn lấy số kế tiếp chưa dùng khi tới bước đó (B2.6 có thể chèn thêm một migration cho `cheDo`).
 - API: `POST /learning/sessions` body `{boTheId?, chieuHoc, quyThoiGian}` (`EN_VI`/`VI_EN`, 5/10/20 phút), `GET /learning/sessions/{id}` (chỉ chủ phiên; người khác → 404). Không có `cheDo` (thuộc B2.6).
 - Hàng đợi tối đa `quyThoiGian×60/20` thẻ (20 giây/lượt là ước tính): bước học lại đến hạn → ôn đến hạn (`han_on_at <= now`) → thẻ mới thật trong hạn mức → thẻ đã học chiều kia (không tốn hạn mức). Bỏ thẻ tạm ngưng/đã xóa/bộ không thuộc người dùng. Lưu vào `phien_hoc_the`; `mui_gio` = múi giờ người dùng lúc tạo.
 - Hàng đợi rỗng → 422 `BUSINESS_RULE`, không lưu phiên. B2.3 không trừ hạn mức (B2.4 làm). Response: `hetGioAt` (tính ra, không lưu), `hangDoi[].trangThai` (`CHUA_TRA_LOI`/`DA_TRA_LOI`), `hangDoi[].the` (media là ID tệp `anhId`/`amTuId`/`amCauId`), `hangDoi[].tienDo` (kèm `version`). Chưa có `duKien`.
 - **Xong khi:** test hàng đợi đúng thứ tự và giới hạn, hạn mức không nhân đôi hai chiều, thẻ/bộ xóa và tạm ngưng, người khác → 404, rỗng → 422, `GET` đúng chủ.
 
 ### [ ] B2.4 Ghi kết quả ôn — FR-06, TC-05, TC-08, TC-09
-- API: `POST /learning/sessions/{id}/reviews` body `{clientEventId, cardId, direction, rating, expectedVersion, answerTimeMs}` (TK §13.3).
+- API: `POST /learning/sessions/{id}/reviews` body `{clientEventId, theId, chieuHoc, danhGia, expectedVersion, thoiGianTraLoiMs}` (TK §13.3; `danhGia` là `QUEN`/`KHO`/`NHO`/`DE`, `chieuHoc` là `EN_VI`/`VI_EN`).
 - Một transaction theo TK §7.4: kiểm thẻ thuộc hàng đợi → `clientEventId` đã có thì trả kết quả cũ → so `expectedVersion` (lệch → 409) → ghi `lich_su_on` (trước/sau JSON, phiên bản thuật toán) → cập nhật `tien_do_the` + `su_dung_hoc_ngay`.
 - Hạn mức từ mới đếm theo **thẻ vật lý**, không nhân đôi hai chiều. B2.3 không trừ hạn mức nên hai phiên tạo liền nhau có thể chứa cùng thẻ mới: kiểm lại hạn mức khi ghi.
-- Thẻ học lại trong phiên (mockup đẩy lại cuối hàng đợi): V8 có unique `(phien_id, the_id, chieu_hoc)` và `(phien_id, thu_tu)` nên không thêm dòng thứ hai được. Chốt trước khi code: tái dùng dòng cũ (đặt lại `CHUA_TRA_LOI`, đổi `thu_tu`) hay đổi ràng buộc bằng migration. Thêm `duKien` (xem trước lịch 4 mức, tính bằng `SrsCalculator`) vào response phiên khi F2.2 cần.
+- Thẻ học lại trong phiên: **đã chốt (20/10/2026) tái dùng dòng cũ, không migration**. Sau khi ghi kết quả, nếu thẻ còn bước học lại/học trong phiên (`han_on_at <= hetGioAt`) thì đặt dòng `phien_hoc_the` về `CHUA_TRA_LOI` và `thu_tu = max(thu_tu) + 1` (cuối hàng đợi); ngược lại đặt `DA_TRA_LOI`. Giữ nguyên unique `(phien_id, the_id, chieu_hoc)` và `(phien_id, thu_tu)` của V8. Lịch sử từng lượt nằm ở `lich_su_on`, nên dòng hàng đợi chỉ là trạng thái hiện tại. Thêm `duKien` (xem trước lịch 4 mức, tính bằng `SrsCalculator`) vào response phiên khi F2.2 cần.
 - Thẻ chưa có hàng `tien_do_the` có `version` 0 ở response B2.3; tạo hàng khi `expectedVersion=0` và chưa có hàng (unique `(nguoi_dung_id, the_id, chieu_hoc)` chặn hai tab).
 
 ### [ ] B2.5 Kết thúc phiên, lịch sử, tạm ngưng/đặt lại — FR-06
@@ -318,7 +321,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Mở rộng `POST /learning/sessions` nhận `cheDo` (`THUONG`/`CUU_LICH`); `CUU_LICH` bỏ thẻ mới và ưu tiên thẻ quên nhiều. Cần lưu chế độ của phiên (migration mới) nếu `GET /sessions/{id}` phải trả `cheDo`.
 
 ### [ ] B2.7 Tạo bài luyện — FR-07, TC-11
-- `V10__practice.sql` (V8 dùng cho learning, V9 cho `phien_hoc.bo_the_id` ở B2.3; nếu số này bị chiếm thì lấy số kế tiếp chưa dùng): `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
+- `V10__practice.sql` (V8 dùng cho learning, V9 cho `phien_hoc.bo_the_id`, đã có; nếu số này bị chiếm thì lấy số kế tiếp chưa dùng): `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
 - API: `POST /practice/sessions` (dạng: chọn nghĩa, chọn từ, ghép, điền chỗ trống, nhập từ theo nghĩa, nghe viết, phân biệt cặp, tổng hợp), `GET /practice/sessions/{id}`.
 - Lưu **bản chụp** câu hỏi + đáp án; response **không chứa đáp án**.
 
@@ -398,6 +401,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Mỗi TC ở TK §19 có ít nhất một test tự động (trừ TC-18 thủ công, TC-19/20 có biên bản). Bảng truy vết `FR ↔ API ↔ TC` trong `docs/`.
 
 ### [ ] B4.2 Rà soát bảo mật
+- Swagger UI và `/v3/api-docs` bật mặc định và `permitAll`: đặt `SWAGGER_ENABLED=false` ở production. Image `rustfs/rustfs`, `axllent/mailpit`, `amazon/aws-cli` đang dùng tag `latest`: ghim phiên bản trước khi triển khai.
 - Chạy `/security-review`; kiểm rate limit (đăng nhập, quên mật khẩu, upload, AI, báo cáo), kiểm quyền cha–con, không log token/mật khẩu/khóa, CORS/CSRF, header bảo mật.
 
 ### [ ] B4.3 Hiệu năng — TC-20
@@ -415,7 +419,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## GĐ5 — Triển khai & bàn giao (07/12–14/12)
 
 ### [ ] B5.1 Compose production
-- `docker-compose.prod.yml`: Nginx reverse proxy (FE + `/api` cùng domain), HTTPS, không mở cổng MySQL/Redis/S3 ra ngoài, biến bí mật qua `.env` không commit.
+- `docker-compose.prod.yml`: Nginx reverse proxy (FE + `/api` cùng domain), HTTPS, không mở cổng MySQL/Redis/S3 ra ngoài, biến bí mật qua `.env` không commit. Đặt `FORWARD_HEADERS_STRATEGY=native` cho service `api` (Nginx gửi `X-Forwarded-For`/`-Proto`) để rate limit theo IP thật; nếu không, mọi người dùng chung một IP proxy. Bật `COOKIE_SECURE=true`, `SPRING_PROFILES_ACTIVE` khác `dev`.
 
 ### [ ] B5.2 Dữ liệu demo — TK §20.1
 - 1 Admin, 3 User có lịch sử khác nhau, 6–10 bộ giao tiếp/TOEIC (200–300 thẻ), thẻ quá hạn, cặp nhầm, AI nháp, một báo cáo, một ca dịch vụ lỗi.

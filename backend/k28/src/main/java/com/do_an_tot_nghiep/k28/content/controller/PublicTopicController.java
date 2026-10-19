@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/v1/public/topics")
+@RequestMapping("/api/v1/public/topics")
 public class PublicTopicController {
 
     private final TopicService service;
