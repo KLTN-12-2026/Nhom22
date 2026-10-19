@@ -296,22 +296,29 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Đã làm (19/10/2026):** code `TienDoThe`, `SuDungHocNgay`, `TienDoTheRepository`, `SuDungHocNgayRepository`, `StreakCalculator`, `LearningPlanService`, `LearningController`, `AccountService.zoneOf`; không migration mới. 20 giây/lượt và chuỗi theo ngày ≥5 lượt là **đề xuất**. Hai lớp test `FR06TodayPlanTest`, `StreakCalculatorTest` đã có trong repository (chưa commit). **Kiểm chứng:** người dùng chạy `StreakCalculatorTest` và `FR06TodayPlanTest` ngày 19/10/2026 và báo không có lỗi (không ghi số lượng test, không đính kèm log). Mockup `hom-nay.html` rà 19/10: cùng tên field với BE, bỏ `muiGio` và `laUocTinh` thừa khỏi `demo.js`, trang hiển thị đúng và console không lỗi; còn lệch demo 15 giây/lượt (BE 20) và `cuuLichOn` (B2.6). Postman: thêm request "Kế hoạch hôm nay (B2.2 · FR-06)" vào thư mục "03 Học tập" của "VocabLearning API", đã ghi `synced`. **Chưa kiểm chứng:** gọi HTTP thật và chạy request Postman. Flow: [B2.2](../docs/luong-backend/B2.2-ke-hoach-hom-nay.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [ ] B2.3 Tạo phiên học — FR-06
-- API: `POST /learning/sessions` (bộ, chiều `EN_VI`/`VI_EN`, quỹ thời gian 5/10/20 phút), `GET /learning/sessions/{id}`.
-- Hàng đợi: bước học lại đến hạn → ôn quá hạn/đến hạn → thẻ mới trong hạn mức. Bỏ thẻ tạm ngưng/đã xóa. Lưu vào `phien_hoc_the`.
+- `V9__phien_hoc_bo_the.sql`: thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK. Thứ tự migration dự kiến: V9 (B2.3), V10 practice (B2.7), V11 admin (B2.11), V12 jobs_ai (B3.1), V13 speaking (B3.4), V14 engagement (B3.6), V15 notification_report (B3.7), V16 privacy (B3.10). Số thực tế luôn lấy số kế tiếp chưa dùng khi tới bước đó (B2.6 có thể chèn thêm một migration cho `cheDo`).
+- API: `POST /learning/sessions` body `{boTheId?, chieuHoc, quyThoiGian}` (`EN_VI`/`VI_EN`, 5/10/20 phút), `GET /learning/sessions/{id}` (chỉ chủ phiên; người khác → 404). Không có `cheDo` (thuộc B2.6).
+- Hàng đợi tối đa `quyThoiGian×60/20` thẻ (20 giây/lượt là ước tính): bước học lại đến hạn → ôn đến hạn (`han_on_at <= now`) → thẻ mới thật trong hạn mức → thẻ đã học chiều kia (không tốn hạn mức). Bỏ thẻ tạm ngưng/đã xóa/bộ không thuộc người dùng. Lưu vào `phien_hoc_the`; `mui_gio` = múi giờ người dùng lúc tạo.
+- Hàng đợi rỗng → 422 `BUSINESS_RULE`, không lưu phiên. B2.3 không trừ hạn mức (B2.4 làm). Response: `hetGioAt` (tính ra, không lưu), `hangDoi[].trangThai` (`CHUA_TRA_LOI`/`DA_TRA_LOI`), `hangDoi[].the` (media là ID tệp `anhId`/`amTuId`/`amCauId`), `hangDoi[].tienDo` (kèm `version`). Chưa có `duKien`.
+- **Xong khi:** test hàng đợi đúng thứ tự và giới hạn, hạn mức không nhân đôi hai chiều, thẻ/bộ xóa và tạm ngưng, người khác → 404, rỗng → 422, `GET` đúng chủ.
 
 ### [ ] B2.4 Ghi kết quả ôn — FR-06, TC-05, TC-08, TC-09
 - API: `POST /learning/sessions/{id}/reviews` body `{clientEventId, cardId, direction, rating, expectedVersion, answerTimeMs}` (TK §13.3).
 - Một transaction theo TK §7.4: kiểm thẻ thuộc hàng đợi → `clientEventId` đã có thì trả kết quả cũ → so `expectedVersion` (lệch → 409) → ghi `lich_su_on` (trước/sau JSON, phiên bản thuật toán) → cập nhật `tien_do_the` + `su_dung_hoc_ngay`.
-- Hạn mức từ mới đếm theo **thẻ vật lý**, không nhân đôi hai chiều.
+- Hạn mức từ mới đếm theo **thẻ vật lý**, không nhân đôi hai chiều. B2.3 không trừ hạn mức nên hai phiên tạo liền nhau có thể chứa cùng thẻ mới: kiểm lại hạn mức khi ghi.
+- Thẻ học lại trong phiên (mockup đẩy lại cuối hàng đợi): V8 có unique `(phien_id, the_id, chieu_hoc)` và `(phien_id, thu_tu)` nên không thêm dòng thứ hai được. Chốt trước khi code: tái dùng dòng cũ (đặt lại `CHUA_TRA_LOI`, đổi `thu_tu`) hay đổi ràng buộc bằng migration. Thêm `duKien` (xem trước lịch 4 mức, tính bằng `SrsCalculator`) vào response phiên khi F2.2 cần.
+- Thẻ chưa có hàng `tien_do_the` có `version` 0 ở response B2.3; tạo hàng khi `expectedVersion=0` và chưa có hàng (unique `(nguoi_dung_id, the_id, chieu_hoc)` chặn hai tab).
 
 ### [ ] B2.5 Kết thúc phiên, lịch sử, tạm ngưng/đặt lại — FR-06
-- API: `POST /learning/sessions/{id}/finish` (tổng kết khớp lịch sử), `GET /learning/history`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (cần xác nhận).
+- API: `POST /learning/sessions/{id}/finish` (tổng kết khớp lịch sử), `GET /learning/history`, `GET /decks/{id}/progress` (UI21: `tongHop` theo `MOI/DANG_HOC/DEN_HAN/QUA_HAN/TAM_NGUNG`, danh sách thẻ kèm tiến độ từng chiều, phân trang; nhóm quá hạn/đến hạn theo cùng quy tắc ngày địa phương của B2.2), `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (cần xác nhận).
+- Chốt khi làm: `suspend` áp cho một chiều hay cả hai (ảnh hưởng định nghĩa "thẻ mới thật" của B2.2/B2.3 với thẻ chỉ có hàng `TAM_NGUNG`); `finish` đóng phiên `DANG_HOC` (B2.3 cho phép nhiều phiên cùng lúc) và đặt `ket_thuc_at`.
 
 ### [ ] B2.6 Cứu lịch ôn — FR-06, TC-10
 - Trong `/learning/today`: khi quá hạn vượt ngưỡng → trả phương án chia N ngày theo phút/ngày, giảm từ mới, ưu tiên thẻ quên nhiều. **Không** đổi `han_on_at` gốc.
+- Mở rộng `POST /learning/sessions` nhận `cheDo` (`THUONG`/`CUU_LICH`); `CUU_LICH` bỏ thẻ mới và ưu tiên thẻ quên nhiều. Cần lưu chế độ của phiên (migration mới) nếu `GET /sessions/{id}` phải trả `cheDo`.
 
 ### [ ] B2.7 Tạo bài luyện — FR-07, TC-11
-- `V9__practice.sql` (V8 đã dùng cho learning; nếu số này bị chiếm thì lấy số kế tiếp chưa dùng): `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
+- `V10__practice.sql` (V8 dùng cho learning, V9 cho `phien_hoc.bo_the_id` ở B2.3; nếu số này bị chiếm thì lấy số kế tiếp chưa dùng): `bai_luyen`, `cau_hoi_bai_luyen`, `lan_lam_bai`, `tra_loi_bai_luyen`, `loi_hoc_tap`, `so_tay_tu_kho`, `cap_tu_de_nham`.
 - API: `POST /practice/sessions` (dạng: chọn nghĩa, chọn từ, ghép, điền chỗ trống, nhập từ theo nghĩa, nghe viết, phân biệt cặp, tổng hợp), `GET /practice/sessions/{id}`.
 - Lưu **bản chụp** câu hỏi + đáp án; response **không chứa đáp án**.
 
@@ -327,7 +334,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Tính từ `lich_su_on`, `tra_loi_bai_luyen` bằng truy vấn tổng hợp; lọc ngày theo múi giờ User.
 
 ### [ ] B2.11 Quản trị nền — FR-13, TC-17
-- `V10__admin.sql` (hoặc số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
+- `V11__admin.sql` (hoặc số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
 - API: `GET /admin/users`, `PATCH /admin/users/{id}/status` (khóa/mở → hủy phiên), `PUT /admin/users/{id}/roles` (**không bỏ quyền Admin cuối cùng**), CRUD `/admin/decks`, `/admin/cards` (bộ mẫu: xuất bản/ẩn), `GET /admin/audit-logs`.
 - Mọi thao tác quan trọng ghi nhật ký: người làm, hành động, đối tượng, lý do, trước/sau (đã lọc dữ liệu nhạy cảm).
 - **Cuối Đợt 2 →** `/fe-report DOT2`.
@@ -337,7 +344,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 3 — AI, phát âm, động lực & vận hành (09/11–29/11) · FR-08, 09, 10, 12, 14
 
 ### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
-- `V8__jobs_ai.sql`: `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
+- `V12__jobs_ai.sql` (V8 là learning; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
 
@@ -359,12 +366,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, PHAT_AM_THAP, QUA_HAN_NHIEU (TK §8.3). Ngưỡng trong `application.yaml`.
 
 ### [ ] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
-- `V8__engagement.sql`: `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
-- `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày; chuỗi ngày khi phiên có ≥ 5 lượt hợp lệ (TK §15.1).
+- `V14__engagement.sql` (số thực tế lấy số kế tiếp chưa dùng): `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
+- `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày; chuỗi ngày khi phiên có ≥ 5 lượt hợp lệ (TK §15.1). B2.2 đang tính chuỗi theo **ngày** có ≥ 5 lượt (`su_dung_hoc_ngay`); khi làm bước này phải chốt theo phiên hay theo ngày rồi sửa `LearningPlanService`/`StreakCalculator` và `/learning/today` cho cùng một định nghĩa.
 - API: `GET /rewards/history`, `GET /badges`, `GET /challenges`; Admin: CRUD `/admin/badges`, `/admin/challenges` (TK §4.2).
 
 ### [ ] B3.7 Thông báo & nhắc học — FR-12, TC-15
-- `V9__notification_report.sql`: `thong_bao`, `bao_cao_noi_dung`.
+- `V15__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
 - API: `GET /notifications`, `PATCH /notifications/{id}`; `POST /admin/announcements`.
 - Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
 
@@ -375,7 +382,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `GET /statistics/weekly-summary`: từ đã học, kỹ năng tiến bộ, 3 từ khó, mục tiêu tuần sau. Văn bản từ mẫu; số liệu không lấy từ AI.
 
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
-- `V10__privacy.sql`: `yeu_cau_xoa_du_lieu`.
+- `V16__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
 - Admin: `GET /admin/deletion-requests` theo dõi tiến độ xóa (TK §4.2).
 

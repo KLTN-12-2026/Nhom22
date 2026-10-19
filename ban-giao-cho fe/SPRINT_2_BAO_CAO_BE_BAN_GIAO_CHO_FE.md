@@ -131,9 +131,9 @@ Chưa có seed cho tiến độ thẻ. Đến B2.4 mới tạo được `tien_do
 
 | BE bước | Dự kiến có | API | FE bước | UI |
 |---|---|---|---|---|
-| B2.3 | Tạo phiên học | `POST /learning/sessions`, `GET /learning/sessions/{id}` | F2.2 | UI18, UI19 |
+| B2.3 | Tạo phiên học | `POST /learning/sessions` body `{boTheId?, chieuHoc, quyThoiGian}`, `GET /learning/sessions/{id}` | F2.2 | UI18, UI19 |
 | B2.4 | Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.3 | UI19 |
-| B2.5 | Kết thúc phiên, lịch sử | `POST .../finish`, `GET /learning/history`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20, UI21 |
+| B2.5 | Kết thúc phiên, lịch sử | `POST .../finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20, UI21 |
 | B2.6 | Cứu lịch ôn | Thêm `cuuLichOn` và query `phut`, `giuTuMoi` vào `/learning/today` | F2.4 | UI22 |
 
 Hợp đồng dự kiến theo TK §13 và roadmap; chưa phải đã triển khai.
@@ -149,6 +149,8 @@ Hợp đồng dự kiến theo TK §13 và roadmap; chưa phải đã triển kh
 | Postman | Request `Kế hoạch hôm nay (B2.2 · FR-06)` đã tạo trong "VocabLearning API" › "03 Học tập", có test script; chưa chạy request. Cần đăng nhập trước bằng request thư mục 01 |
 | Đổi múi giờ | Ngày cũ trong `su_dung_hoc_ngay` giữ ngày địa phương lúc ghi, không viết lại |
 | Chuỗi | Chỉ xét tối đa 1000 ngày gần nhất |
+| Hợp đồng B2.3 dự kiến khác mockup (đối chiếu 19/10, chưa triển khai) | (1) `POST /learning/sessions` chưa nhận `cheDo` (B2.6); (2) response có `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, mockup dùng `CHO`/`DA_ON`; (3) `hangDoi[].the` trả `anhId`/`amTuId`/`amCauId` (ID tệp, tải qua `/files/{id}`), mockup dùng `anhUrl`/`amThanhUrl`; (4) chưa có `duKien` (xem trước lịch 4 mức) ở B2.3; (5) hàng đợi tối đa `phút×60/20` thẻ, mockup dùng 15 giây; (6) `hetGioAt` được tính ra; (7) hàng đợi rỗng → 422 `BUSINESS_RULE`. Mockup đã sửa 19/10 theo (2), (3), (5) (`trangThai` dòng hàng đợi, `anhId`/`amTuId`/`amCauId`, 20 giây/lượt, gợi ý 15/30/60 lượt ở `hoc.html`) và bỏ `cheDo` khỏi yêu cầu của `hoc.html`; `demo.js` vẫn hỗ trợ `cheDo` và `duKien` cho B2.4/B2.6. Chưa chạy lại trên trình duyệt (cổng 5173 bị chặn), chỉ kiểm cú pháp `demo.js` và script của `hoc-phien.html` |
+| Thẻ học lại trong phiên | Mockup đẩy thẻ lại cuối hàng đợi (`laiTrongPhien`); V8 có unique `(phien_id, the_id, chieu_hoc)` nên cách làm sẽ chốt ở B2.4 |
 | Ngoại lệ module | Truy vấn của `learning` join entity `content` (chỉ đọc); đã ghi vào conventions |
 
 ## 11. Báo lỗi cho BE

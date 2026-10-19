@@ -100,7 +100,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B2.2 Kế hoạch hôm nay | `GET /learning/today` | F2.1 | UI12 `/hom-nay` (chọn 5/10/20 phút) |
 | B2.3 Tạo phiên học | `POST /learning/sessions`, `GET /learning/sessions/{id}` | F2.2 | UI18 chọn chiều/thời gian |
 | B2.4 Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.2 | UI19 `/hoc/[sessionId]` (lật thẻ, phím tắt 1–4/Space, trạng thái "đã lưu / chưa đồng bộ") |
-| B2.5 Kết thúc, lịch sử, tạm ngưng/đặt lại | `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20 tổng kết, UI21 `/bo-the/[id]/tien-do` |
+| B2.5 Kết thúc, lịch sử, tạm ngưng/đặt lại | `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20 tổng kết, UI21 `/bo-the/[id]/tien-do` |
 | B2.6 Cứu lịch ôn | trong `GET /learning/today` | F2.4 | UI22 khối "Cứu lịch ôn" trên UI12 |
 
 **Phạm vi B2.1:** migration learning dùng số tiếp theo chưa sử dụng sau khi kiểm tra checkout; không sửa migration đã áp dụng. Calculator Java thuần nhận trạng thái cũ, QUEN/KHO/NHO/DE và `Instant now`, trả trạng thái mới bất biến theo TK §7.2; EF ban đầu 2.5, min 1.3, trần khoảng ôn 365 ngày. TC-06 kiểm chuỗi Nhớ 10 phút → 1 ngày → 6 ngày → 15 ngày; TC-07 kiểm học lại, EF và số lần quên. Kiểm thưởng lặp thuộc bước ghi kết quả/thưởng, không nằm trong calculator. Chốt cách làm tròn và xung đột giữa lịch địa phương §7.3 với đầu vào calculator trước code; đề xuất trong chat chưa phải quyết định đã áp dụng. Không đưa API, ownership, quota, thống kê hoặc luyện tập vào calculator. B2.1 chưa được đánh dấu hoàn tất.

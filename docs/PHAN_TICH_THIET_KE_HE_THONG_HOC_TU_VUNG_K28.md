@@ -510,7 +510,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
 | `yeu_cau_sao_chep_bo` | V6 B1.11: nguoi_dung_id, idempotency_key ascii_bin, bo_nguon_id, bo_ket_qua_id nullable, response_json JSON nullable, hoan_tat_at nullable; unique người dùng/key; kết quả cùng null hoặc cùng hoàn tất |
 | `tien_do_the` | nguoi_dung_id, the_id, chieu_hoc, trang_thai, buoc_hoc, ef, khoang_on_ngay, chuoi_thanh_cong, so_lan_quen, han_on_at, version |
-| `phien_hoc` | nguoi_dung_id, chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian |
+| `phien_hoc` | nguoi_dung_id, bo_the_id (null = tất cả bộ), chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian |
 | `phien_hoc_the` | phien_id, the_id, chieu_hoc, thu_tu, trang_thai; hàng đợi đã cấp |
 | `lich_su_on` | client_event_id, phien_id, tien_do_id, danh_gia, thoi_gian, truoc_json, sau_json, phien_ban_thuat_toan |
 | `su_dung_hoc_ngay` | nguoi_dung_id, ngay_dia_phuong, so_the_moi, so_luot_hop_le, diem; unique người/ngày |
@@ -587,14 +587,14 @@ erDiagram
 | Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
 | Bộ/thẻ | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}` |
 | CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `DELETE /files/{id}` |
-| Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
+| Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
 | AI | `POST /ai/card-drafts`, `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/exercise-drafts`, `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit`, `GET /ai/history`, `GET /me/service-quota` |
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
