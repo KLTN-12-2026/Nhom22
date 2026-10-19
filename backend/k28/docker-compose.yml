@@ -61,6 +61,10 @@ services:
     build: .
     restart: on-failure
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      FORWARD_HEADERS_STRATEGY: ${FORWARD_HEADERS_STRATEGY:-none}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${DB_NAME:-vocab_learn}

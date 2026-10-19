@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -32,11 +33,24 @@ public class RateLimiter {
                 redis.expire(key, policy.window());
             }
         } catch (DataAccessException ex) {
-            throw new ApiException(ErrorCode.DEPENDENCY_DOWN, "Hệ thống tạm thời gian đoạn, vui lòng thử lại sau");
+            throw new ApiException(ErrorCode.DEPENDENCY_DOWN, "Hệ thống tạm thời gián đoạn, vui lòng thử lại sau");
         }
         if (count != null && count > policy.limit()) {
-            throw new ApiException(ErrorCode.RATE_LIMITED, "Bạn thao tác quá nhiều lần, vui lòng thử lại sau");
+            throw new ApiException(ErrorCode.RATE_LIMITED, "Bạn thao tác quá nhiều lần, vui lòng thử lại sau",
+                    retryAfter(key, policy));
         }
+    }
+
+    private long retryAfter(String key, Policy policy) {
+        try {
+            Long ttl = redis.getExpire(key, TimeUnit.SECONDS);
+            if (ttl != null && ttl > 0) {
+                return ttl;
+            }
+        } catch (DataAccessException ex) {
+            return policy.window().toSeconds();
+        }
+        return policy.window().toSeconds();
     }
 
     public void reset(Policy policy, String subject) {

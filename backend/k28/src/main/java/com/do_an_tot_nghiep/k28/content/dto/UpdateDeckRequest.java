@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.dto;
 
+import com.do_an_tot_nghiep.k28.content.service.CardText;
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
@@ -37,8 +38,8 @@ public record UpdateDeckRequest(
         Long version
 ) {
     public UpdateDeckRequest {
-        ten = ten == null ? null : ten.strip();
-        moTa = moTa == null ? null : moTa.strip();
+        ten = ten == null ? null : CardText.text(ten);
+        moTa = moTa == null ? null : CardText.text(moTa);
         boChuDe = Boolean.TRUE.equals(boChuDe);
         boMucTieu = Boolean.TRUE.equals(boMucTieu);
     }

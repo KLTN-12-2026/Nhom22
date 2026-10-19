@@ -1,5 +1,5 @@
 export class ApiError extends Error {
-  constructor(status, data = {}) {
+  constructor(status, data = {}, retryAfter) {
     const fields = Array.isArray(data.fieldErrors) ? data.fieldErrors.map(e => e.message).join('; ') : '';
     super([data.message || (!fields && 'Không thể kết nối. Vui lòng thử lại.'), fields, (data.requestId || data.traceId) && `Mã lỗi: ${data.requestId || data.traceId}`].filter(Boolean).join(' '));
     this.status = status;
@@ -7,6 +7,7 @@ export class ApiError extends Error {
     this.data = data;
     this.fieldErrors = data.fieldErrors || [];
     this.traceId = data.requestId || data.traceId;
+    this.retryAfter = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined;
   }
 }
 let csrfPromise;
@@ -41,7 +42,7 @@ export async function apiFetch(path, options = {}) {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       if (res.status === 403) resetCsrf();
-      throw new ApiError(res.status, data);
+      throw new ApiError(res.status, data, Number.parseInt(res.headers.get('Retry-After'), 10));
     }
     if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();
     if (res.status === 204) { if (writing) mascotFeedback('success'); return null; }

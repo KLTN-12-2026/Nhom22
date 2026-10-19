@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.dto;
 
+import com.do_an_tot_nghiep.k28.content.service.CardText;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -11,7 +12,7 @@ public record CreateTopicRequest(
         String moTa
 ) {
     public CreateTopicRequest {
-        ten = ten == null ? null : ten.strip();
-        moTa = moTa == null ? null : moTa.strip();
+        ten = ten == null ? null : CardText.text(ten);
+        moTa = moTa == null ? null : CardText.text(moTa);
     }
 }

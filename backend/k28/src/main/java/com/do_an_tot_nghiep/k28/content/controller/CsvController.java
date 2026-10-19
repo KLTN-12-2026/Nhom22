@@ -37,7 +37,7 @@ public class CsvController {
         return commit.commit(currentUser.id(), id, key, request);
     }
 
-    @GetMapping(value = "/decks/{id}/export", produces = "text/csv")
+    @GetMapping("/decks/{id}/export")
     public ResponseEntity<byte[]> export(@PathVariable Long id) {
         var bytes = export.export(currentUser.id(), checkedId(id));
         return ResponseEntity.ok().contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))

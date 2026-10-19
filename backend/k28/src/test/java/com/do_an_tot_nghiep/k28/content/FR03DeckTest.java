@@ -168,6 +168,18 @@ class FR03DeckTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void fr03_unicodeWhitespaceNamesAreTrimmedOrRejected() throws Exception {
+        send(owner, post(PATH), Map.of("ten", "   ", "trinhDo", "CO_BAN"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.fieldErrors").isNotEmpty());
+
+        send(owner, post(PATH), Map.of("ten", " Unicode deck ", "trinhDo", "CO_BAN"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.ten").value("Unicode deck"));
+    }
+
+    @Test
     void fr03_invalidPatchReturns400() throws Exception {
         JsonNode deck = createDeck();
         String path = PATH + "/" + deck.get("id").asText();

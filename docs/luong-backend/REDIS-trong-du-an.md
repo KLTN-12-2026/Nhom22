@@ -4,7 +4,7 @@ Tài liệu này giải thích vai trò Redis **đã được triển khai** ở
 
 ## 1. Sơ đồ vai trò Redis
 
-Redis ở phạm vi này có **hai nhóm dữ liệu thực tế**: phiên Spring Session và bộ đếm `RateLimiter`. `SessionRevoker` thao tác trên nhóm phiên; nó không tạo kho dữ liệu thứ ba.
+Redis ở phạm vi này có **ba nhóm dữ liệu thực tế**: phiên Spring Session, bộ đếm `RateLimiter` và snapshot xem trước CSV của B1.12 (`CsvImportSnapshotStore`, TTL 30 phút; chi tiết ở `B1.12`). `SessionRevoker` thao tác trên nhóm phiên; nó không tạo kho dữ liệu thứ tư. Phần giải thích bên dưới tập trung vào hai nhóm đầu.
 
 ![Sơ đồ hoạt động REDIS-trong-du-an — hình SVG](assets/REDIS-trong-du-an-1.svg)
 
@@ -132,6 +132,7 @@ sequenceDiagram
 | `LOGIN` | `email:<SHA-256(email)>` | 5 lần/15 phút | Login thành công hoặc reset mật khẩu. |
 | `FORGOT_PASSWORD` | `ip:<IP>` và `email:<SHA-256(email)>` | 3 lần/15 phút cho từng khóa | Không; chờ TTL. |
 | `CHANGE_PASSWORD` | `user:<id>` | 5 lần/15 phút | Đổi mật khẩu thành công. |
+| `file-upload` (khai trong `FileService`) | `rl:file-upload:<userId>` | 30 lần/phút | Không; chờ TTL. |
 
 ## 4. Sơ đồ tuần tự: thu hồi phiên khi mật khẩu thay đổi
 

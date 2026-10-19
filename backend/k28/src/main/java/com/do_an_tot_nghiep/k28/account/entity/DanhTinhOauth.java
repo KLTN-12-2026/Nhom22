@@ -19,16 +19,21 @@ public class DanhTinhOauth {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private Long nguoiDungId;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
     private NhaCungCap nhaCungCap;
 
+    @Column(nullable = false)
     private String subject;
 
+    @Column(length = 255)
     private String email;
 
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     public static DanhTinhOauth google(Long nguoiDungId, String subject, String email, Instant now) {

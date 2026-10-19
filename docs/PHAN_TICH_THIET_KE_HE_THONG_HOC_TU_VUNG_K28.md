@@ -1,5 +1,7 @@
 # PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG HỌC TỪ VỰNG TIẾNG ANH
 
+> Trạng thái tài liệu: mục 1 và các phần thiết kế vẫn là đề xuất ban đầu; ghi chú đối chiếu bên dưới và các mục có dấu "triển khai" phản ánh code thực tế (nguồn đúng khi hai bên lệch là code + roadmap).
+>
 > Đối chiếu triển khai 10/10/2026: API quản lý thẻ/public tags B1.9, thư viện B1.10 và sao chép B1.11 đã triển khai; CSV B1.12 đã triển khai13/10/2026 (preview Redis30m, commit Idempotency-Key, export owner-only); kiểm chứng theo artifact mới và báo cáo chung, không cộng số liệu lịch sử. B1.10 dùng CONG_KHAI + BINH_THUONG + xoa_at IS NULL theo quyết định A; schema không có trạng thái chờ duyệt/đã duyệt. V5 bổ sung bo_the.muc_tieu và bo_mau; mục tiêu bộ nullable, độc lập hồ sơ tác giả. V6 lưu idempotency và snapshot sao chép. Phân trang trả items/page/size/totalElements/totalPages. URL ký được cấp khi đọc media, không lưu lâu dài. Hợp đồng và kiểm chứng: [luồng B1.10](luong-backend/B1.10-thu-vien-cong-khai.md), [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md). Trạng thái B1.8 và phần HTTP6 đã bỏ qua được giữ nguyên.
 
 ## 1. Thông tin tài liệu và cơ sở phân tích
@@ -111,7 +113,7 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xem thông tin bộ thẻ, nguồn, chủ đề, trình độ, số thẻ và trạng thái nội dung.
 - Tạo, sửa, xóa và quản lý bộ thẻ cá nhân.
 - Tạo, sửa, xóa thẻ: từ/cụm từ, từ loại, nghĩa, IPA, ví dụ, bản dịch, ảnh và âm thanh.
-- Quản lý nhãn, độ khó, quyền công khai/riêng tư và yêu thích.
+- Gắn nhãn cho thẻ, đặt độ khó, quyền công khai/riêng tư và yêu thích. Danh mục nhãn (tạo/sửa/xóa) chỉ ADMIN thực hiện qua `/admin/tags`; User chỉ chọn nhãn có sẵn.
 - Sao chép bộ công khai và chia sẻ liên kết.
 - Nhập/xuất CSV, xem trước dữ liệu nhập và cảnh báo thẻ trùng.
 - Báo cáo bộ/thẻ công khai hoặc đầu ra AI không chính xác.
@@ -280,7 +282,7 @@ Các trạng thái:
 - `HOC_LAI`: trả lời quên ở giai đoạn ôn.
 - `TAM_NGUNG`: không đưa vào hàng đợi.
 
-“Đến hạn” và “quá hạn” là trạng thái tính từ `han_on_at`, không cần hai trạng thái lưu riêng. Thẻ quá hạn khi `han_on_at < now`; hiển thị mức trễ theo ngày địa phương khi cần.
+“Đến hạn” và “quá hạn” là trạng thái tính từ `han_on_at`, không cần hai trạng thái lưu riêng. Thẻ quá hạn khi `han_on_at < now`; hiển thị mức trễ theo ngày địa phương khi cần. Hiện thực có ba cách đếm: thống kê theo bộ (`dueByDeck`) coi quá hạn là `han_on_at` trước đầu ngày địa phương; hàng đợi học (`dueQueue`) lấy thẻ `han_on_at <= now`; hiển thị chi tiết dùng `< now`. Khi viết UI cần chọn đúng định nghĩa cho từng màn hình.
 
 ### 7.2. Biến thể SM-2 đề xuất [Thiết kế]
 
@@ -311,7 +313,7 @@ Quy ước triển khai B2.1 (**đề xuất**, phiên bản thuật toán `SM2-
 ### 7.3. Quy tắc hàng đợi và thời gian
 
 - Lưu thời điểm dưới dạng UTC; quy đổi hiển thị/mục tiêu theo múi giờ IANA của User, ví dụ `Asia/Ho_Chi_Minh`.
-- Bước phút tính từ thời điểm máy chủ nhận kết quả; bước ngày tính theo ngày lịch tại múi giờ của phiên và giờ ôn đã quy định, không trộn hai cách tính.
+- Bước phút tính từ thời điểm máy chủ nhận kết quả; bước ngày hiện tính `now + N×24 giờ` (phiên bản thuật toán `SM2-VN-1`, xem §7.2), không trộn với bước phút. Ngày lịch theo múi giờ của phiên và giờ ôn là phương án chờ duyệt; chỉ áp dụng khi nhóm chốt, khi đó nâng phiên bản lên `SM2-VN-2` và thêm nơi lưu giờ ôn.
 - Giới hạn từ mới tính theo thẻ vật lý lần đầu học trong ngày, không tính hai lần vì học cả hai chiều; hai chiều vẫn có tiến độ riêng.
 - Thẻ đến hạn không bị mất chỉ vì hết hạn mức từ mới.
 - Khối lượng phiên dựa trên quỹ thời gian và thời gian trung bình của các lượt gần đây; chưa có dữ liệu thì dùng giá trị mặc định và ghi là ước tính.
@@ -496,7 +498,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 
 | Bảng | Trường chính và mục đích |
 |---|---|
-| `nguoi_dung` | id, email unique, password_hash nullable cho tài khoản OAuth, ten_hien_thi, trang_thai, mui_gio |
+| `nguoi_dung` | id, email unique, password_hash nullable cho tài khoản OAuth, ten_hien_thi, trang_thai, mui_gio, anh_dai_dien_id (FK `tep_tin`), email_xac_thuc_at, dang_nhap_cuoi_at, version |
 | `vai_tro`, `nguoi_dung_vai_tro` | Danh mục vai trò và gán quyền |
 | `danh_tinh_oauth` | nguoi_dung_id, nha_cung_cap, subject; unique(nha_cung_cap, subject) |
 | `token_tai_khoan` | token_hash, loai, het_han_at, da_dung_at; không lưu token rõ |
@@ -505,15 +507,17 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
-| `tep_tin` | chu_so_huu_id, object_key, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa |
-| `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu |
+| `tep_tin` | chu_so_huu_id, object_key unique, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu; khóa chính (the_id, vai_tro) nên mỗi thẻ có tối đa một tệp cho mỗi vai trò |
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
+| `chu_de_yeu_thich` | V4: nguoi_dung_id, chu_de_id; khóa chính cặp; tối đa 5 chủ đề/người (kiểm ở dịch vụ) |
+| `yeu_cau_nhap_csv` | V7 B1.12: nguoi_dung_id, idempotency_key ascii_bin, import_id (UUID), bo_the_id, request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key) và (người dùng, import_id) |
 | `yeu_cau_sao_chep_bo` | V6 B1.11: nguoi_dung_id, idempotency_key ascii_bin, bo_nguon_id, bo_ket_qua_id nullable, response_json JSON nullable, hoan_tat_at nullable; unique người dùng/key; kết quả cùng null hoặc cùng hoàn tất |
 | `tien_do_the` | nguoi_dung_id, the_id, chieu_hoc, trang_thai, buoc_hoc, ef, khoang_on_ngay, chuoi_thanh_cong, so_lan_quen, han_on_at, version |
-| `phien_hoc` | nguoi_dung_id, bo_the_id (null = tất cả bộ), chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian |
-| `phien_hoc_the` | phien_id, the_id, chieu_hoc, thu_tu, trang_thai; hàng đợi đã cấp |
+| `phien_hoc` | nguoi_dung_id, bo_the_id (null = tất cả bộ), chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian, version |
+| `phien_hoc_the` | phien_id, the_id, chieu_hoc, thu_tu, trang_thai; hàng đợi đã cấp; unique (phien_id, the_id, chieu_hoc) và (phien_id, thu_tu); thẻ học lại trong phiên tái dùng dòng cũ, đặt lại `CHUA_TRA_LOI` và `thu_tu` cuối hàng đợi |
 | `lich_su_on` | client_event_id, phien_id, tien_do_id, danh_gia, thoi_gian, truoc_json, sau_json, phien_ban_thuat_toan |
-| `su_dung_hoc_ngay` | nguoi_dung_id, ngay_dia_phuong, so_the_moi, so_luot_hop_le, diem; unique người/ngày |
+| `su_dung_hoc_ngay` | nguoi_dung_id, ngay_dia_phuong, so_the_moi, so_luot_hop_le, diem, version; unique người/ngày |
 | `bai_luyen`, `cau_hoi_bai_luyen` | đề đã sinh, loại bài, thẻ nguồn, câu hỏi và đáp án lưu tại máy chủ |
 | `lan_lam_bai`, `tra_loi_bai_luyen` | nguoi_dung_id, bai_id, submit_key, câu trả lời, đúng/sai, điểm và thời gian |
 | `loi_hoc_tap` | nguoi_dung_id, the_id, nhom_loi, nguon_su_kien, bang_chung_json |
@@ -526,7 +530,8 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `huy_hieu`, `nguoi_dung_huy_hieu` | điều kiện, lần nhận; unique người/huy hiệu |
 | `thu_thach`, `tien_do_thu_thach` | quy tắc thử thách, khoảng ngày và mức hoàn thành |
 | `so_diem_thuong` | nguoi_dung_id, loai_su_kien, su_kien_id, so_diem; unique nguồn thưởng |
-| `thong_bao`, `cai_dat_thong_bao` | thông báo, đã đọc, kênh và cài đặt |
+| `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7) |
+| `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
 | `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý |
 | `nhat_ky_quan_tri` | người thực hiện, hành động, đối tượng, lý do, trước/sau đã lọc thông tin nhạy cảm |
 | `tac_vu_nen` | loại, payload_ref, trạng thái, retry_count, next_run_at, khóa giữ tác vụ |
@@ -557,11 +562,14 @@ erDiagram
 
 ### 12.4. Ràng buộc và chỉ mục quan trọng
 
-- Unique `tien_do_the(nguoi_dung_id, the_id, chieu_hoc)`.
+- Unique `tien_do_the(nguoi_dung_id, the_id, chieu_hoc)`; unique `phien_hoc_the(phien_id, the_id, chieu_hoc)` và `(phien_id, thu_tu)`.
+- Chỉ mục đã có: `idx_phien_hoc_nguoi_bat_dau`, `idx_lich_su_on_nguoi_ngay`, `idx_lich_su_on_phien_ngay`, `idx_tep_tin_chu_so_huu`, `idx_tep_tin_cho_hoan_tat`, `idx_tep_tin_cho_xoa`, `idx_the_tu_vung_bo_the`, `idx_bo_the_chu_so_huu`, `idx_bo_the_cong_khai`.
+- Trùng tên chủ đề/nhãn/email do unique kết hợp collation `utf8mb4_0900_ai_ci` của MySQL (không phân biệt hoa thường và dấu): "Du lịch" và "Du lich" bị coi là trùng (409). Các khóa idempotency dùng `ascii_bin` nên phân biệt hoa thường.
 - Index hàng đợi `tien_do_the(nguoi_dung_id, trang_thai, han_on_at)`.
 - Unique `lich_su_on(nguoi_dung_id, client_event_id)`; bổ sung người dùng vào bảng lịch sử để định danh chống trùng trực tiếp.
 - Unique `lan_lam_bai(nguoi_dung_id, submit_key)` và `so_diem_thuong(nguoi_dung_id, loai_su_kien, su_kien_id)`.
 - Index `bo_the(quyen_truy_cap, trang_thai_kiem_duyet, chu_de_id, created_at)`.
+- `trang_thai_kiem_duyet = DA_AN` chưa có API đặt giá trị; chờ B2.11 (kiểm duyệt). Trước đó chỉ `BINH_THUONG` được tạo ra.
 - Index lịch sử `lich_su_on(nguoi_dung_id, created_at)` và báo cáo `(trang_thai, created_at)`.
 - Chuẩn hóa từ/từ loại để cảnh báo trùng; không unique toàn cục vì cùng từ có nhiều nghĩa và ngữ cảnh.
 - Xóa bộ đang có lịch sử: ẩn/xóa mềm trước, xử lý phụ thuộc theo chính sách; không dùng cascade thiếu kiểm soát làm mất minh chứng học.
@@ -582,11 +590,12 @@ erDiagram
 
 | Nhóm | Endpoint đề xuất |
 |---|---|
-| Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback` |
-| Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `POST /me/deletion-requests` |
+| Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback`, `GET /auth/csrf` |
+| Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `GET/PUT/DELETE /me/avatar`, `POST /me/deletion-requests` (chưa triển khai) |
 | Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
-| Bộ/thẻ | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}` |
-| CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `DELETE /files/{id}` |
+| Bộ/thẻ | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` (media thẻ của chủ bộ) |
+| Danh mục công khai (B1.7, B1.9) | `GET /public/topics`, `GET /public/tags`; quản trị: CRUD `/admin/topics`, `/admin/tags` |
+| CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `GET/DELETE /files/{id}` |
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
@@ -594,7 +603,7 @@ erDiagram
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
@@ -602,14 +611,16 @@ Các endpoint là hợp đồng đề xuất; cần đặc tả request/response
 
 ### 13.3. Ví dụ ghi kết quả học
 
+Tên trường JSON dùng camelCase trùng tên thuộc tính entity (quy ước DTO của dự án); `phien_id` nằm trên đường dẫn `POST /learning/sessions/{id}/reviews`.
+
 ```json
 {
-  "client_event_id": "evt-example-001",
-  "the_id": 125,
-  "chieu_hoc": "EN_VI",
-  "danh_gia": "NHO",
-  "expected_version": 3,
-  "thoi_gian_tra_loi_ms": 8200
+  "clientEventId": "evt-example-001",
+  "theId": 125,
+  "chieuHoc": "EN_VI",
+  "danhGia": "NHO",
+  "expectedVersion": 3,
+  "thoiGianTraLoiMs": 8200
 }
 ```
 

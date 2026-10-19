@@ -142,7 +142,8 @@ class FR02SettingsTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nhanTrongUngDung").value(true))
                 .andExpect(jsonPath("$.nhanEmail").value(true))
-                .andExpect(jsonPath("$.nhacHoc").value(true))
+                .andExpect(jsonPath("$.nhacHoc").value(false))
+                .andExpect(jsonPath("$.gioNhac").doesNotExist())
                 .andExpect(jsonPath("$.version").value(0));
 
         send(put("/api/v1/me/notification-settings"), notification(true, null, 0))

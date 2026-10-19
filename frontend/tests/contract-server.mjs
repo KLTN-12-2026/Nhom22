@@ -2,14 +2,14 @@
 import { createServer } from 'node:http';
 let settings = { mucTieu: 'TOEIC', trinhDo: 'CO_BAN', phutMoiNgay: 10, tuMoiMoiNgay: 0, chuDeIds: ['1'], version: 0, daHoanTatKhoiDau: true };
 let notifications = { nhanTrongUngDung: true, nhanEmail: false, nhacHoc: true, gioNhac: '20:30', version: 0 };
-let user = { id: '1', email: 'fixture@example.test', tenHienThi: 'Người kiểm tra giao diện', muiGio: 'Asia/Ho_Chi_Minh', vaiTro: ['ADMIN', 'LEARNER'], trangThai: 'HOAT_DONG', daHoanTatKhoiDau: true };
+let user = { id: '1', email: 'fixture@example.test', tenHienThi: 'Người kiểm tra giao diện', muiGio: 'Asia/Ho_Chi_Minh', vaiTro: ['ADMIN', 'USER'], trangThai: 'HOAT_DONG', daHoanTatKhoiDau: true };
 let topics = [{ id: '1', ten: 'Kinh doanh và công việc', moTa: null, version: 0 }];
 let decks = [{ id: '1', chuSoHuuId: '1', ten: 'Từ vựng tiếng Anh dành cho công việc và giao tiếp hằng ngày', moTa: 'Nghĩa tiếng Việt có dấu và mô tả nhiều dòng để kiểm tra hiển thị.', trinhDo: 'CO_BAN', chuDeId: '1', quyenTruyCap: 'RIENG_TU', trangThaiKiemDuyet: 'BINH_THUONG', yeuThich: false, createdAt: '2026-10-05T00:00:00Z', updatedAt: '2026-10-05T00:00:00Z', version: 0 }];
 const page = items => ({ items, page: 0, size: 20, totalElements: items.length, totalPages: 1 });
 createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname;
   const send = (data, status = 200) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(data == null ? '' : JSON.stringify(data)); };
-  if (path.endsWith('/csrf')) return send({ headerName: 'X-CSRF', token: 'fixture-token' });
+  if (path.endsWith('/csrf')) return send({ headerName: 'X-XSRF-TOKEN', token: 'fixture-token' });
   let body = ''; for await (const chunk of req) body += chunk;
   const data = body ? JSON.parse(body) : {};
   if (req.method !== 'GET' && req.headers['x-csrf'] !== 'fixture-token') return send({ message: 'Missing CSRF', traceId: 'fixture' }, 403);

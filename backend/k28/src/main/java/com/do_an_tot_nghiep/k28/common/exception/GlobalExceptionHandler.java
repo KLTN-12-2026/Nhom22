@@ -28,9 +28,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ErrorResponse> handleApi(ApiException ex) {
-        return build(ex.getErrorCode(), ex.getMessage(), ex.getField() == null
+        ResponseEntity<ErrorResponse> response = build(ex.getErrorCode(), ex.getMessage(), ex.getField() == null
                 ? List.of()
                 : List.of(new ErrorResponse.FieldErrorItem(ex.getField(), ex.getMessage())));
+        if (ex.getRetryAfterSeconds() == null) {
+            return response;
+        }
+        return ResponseEntity.status(response.getStatusCode())
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(response.getBody());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -41,13 +47,22 @@ public class GlobalExceptionHandler {
         return build(ErrorCode.VALIDATION_FAILED, "Dữ liệu không hợp lệ", fields);
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
-            HttpMediaTypeNotSupportedException.class})
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
         return build(ErrorCode.VALIDATION_FAILED, "Yêu cầu không đúng định dạng", List.of());
     }
 
-    @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class})
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<ErrorResponse> handleMediaType(HttpMediaTypeNotSupportedException ex) {
+        return build(ErrorCode.UNSUPPORTED_MEDIA_TYPE, "Định dạng nội dung không được hỗ trợ", List.of());
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<ErrorResponse> handleMethod(HttpRequestMethodNotSupportedException ex) {
+        return build(ErrorCode.METHOD_NOT_ALLOWED, "Phương thức không được hỗ trợ", List.of());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
     ResponseEntity<ErrorResponse> handleNoRoute(Exception ex) {
         return build(ErrorCode.NOT_FOUND, "Không tìm thấy đường dẫn", List.of());
     }
@@ -68,8 +83,13 @@ public class GlobalExceptionHandler {
         return build(ErrorCode.INTERNAL_ERROR, "Hệ thống đang gặp sự cố, vui lòng thử lại sau", List.of());
     }
 
-    @ExceptionHandler({MissingServletRequestPartException.class, MissingRequestHeaderException.class,
-            MaxUploadSizeExceededException.class})
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException ex) {
+        return build(ErrorCode.VALIDATION_FAILED, "Thiếu header bắt buộc",
+                List.of(new ErrorResponse.FieldErrorItem(ex.getHeaderName(), "Header bắt buộc")));
+    }
+
+    @ExceptionHandler({MissingServletRequestPartException.class, MaxUploadSizeExceededException.class})
     ResponseEntity<ErrorResponse> handleMultipart(Exception ex) {
         return build(ErrorCode.VALIDATION_FAILED, "Thiếu phần bắt buộc hoặc tệp vượt giới hạn 1 MB",
                 List.of(new ErrorResponse.FieldErrorItem("file", "Kiểm tra tệp CSV và các phần của yêu cầu")));

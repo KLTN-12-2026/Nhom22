@@ -54,9 +54,9 @@ function FlashcardSessionContent() {
   if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải phiên học...</div>;
   if (error || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Lỗi tải phiên học.</div>;
 
-  const currentItem = queue.find(q => q.trangThai === 'CHO' && (!q.tienDo.hanOnAt || new Date(q.tienDo.hanOnAt) <= new Date()));
+  const currentItem = queue.find(q => q.trangThai === 'CHUA_TRA_LOI' && (!q.tienDo.hanOnAt || new Date(q.tienDo.hanOnAt) <= new Date()));
   const realItems = queue.filter(q => q.the);
-  const doneCount = realItems.filter(q => q.trangThai === 'DA_ON').length;
+  const doneCount = realItems.filter(q => q.trangThai === 'DA_TRA_LOI').length;
   const progressPercent = realItems.length ? (doneCount / realItems.length) * 100 : 0;
 
   const handleFlip = () => {
@@ -75,9 +75,9 @@ function FlashcardSessionContent() {
       });
 
       const newQueue = [...queue];
-      const index = newQueue.findIndex(q => q.theId === currentItem.theId && q.trangThai === 'CHO');
+      const index = newQueue.findIndex(q => q.theId === currentItem.theId && q.trangThai === 'CHUA_TRA_LOI');
       if (index !== -1) {
-        newQueue[index].trangThai = 'DA_ON';
+        newQueue[index].trangThai = 'DA_TRA_LOI';
         newQueue[index].tienDo = res.tienDo;
       }
 
@@ -85,7 +85,7 @@ function FlashcardSessionContent() {
         newQueue.push({
           theId: currentItem.theId,
           thuTu: newQueue.length + 1,
-          trangThai: 'CHO',
+          trangThai: 'CHUA_TRA_LOI',
           tienDo: res.tienDo,
           duKien: res.duKien,
           the: currentItem.the
@@ -95,7 +95,7 @@ function FlashcardSessionContent() {
       setQueue(newQueue);
       setFlipped(false);
 
-      const remaining = newQueue.filter(q => q.trangThai === 'CHO');
+      const remaining = newQueue.filter(q => q.trangThai === 'CHUA_TRA_LOI');
       if (remaining.length === 0) {
         finishMutation.mutate();
       }
