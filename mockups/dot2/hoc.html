@@ -27,7 +27,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="today" data-auth="required">
-<!-- F2.2 · UI18 · API: GET /learning/today (B2.2) để lấy danh sách bộ và số thẻ cần ôn, POST /learning/sessions {boTheId, chieuHoc, quyThoiGian, cheDo} (B2.3) -->
+<!-- F2.2 · UI18 · API: GET /learning/today (B2.2) để lấy danh sách bộ và số thẻ cần ôn, POST /learning/sessions {boTheId, chieuHoc, quyThoiGian} (B2.3) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -70,11 +70,11 @@
               <fieldset class="fieldset field" data-field="quyThoiGian">
                 <legend>Thời gian</legend>
                 <div class="choice-grid cols-3">
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 phút</span><span class="choice-desc">khoảng 20 lượt</span></span></label>
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 phút</span><span class="choice-desc">khoảng 40 lượt</span></span></label>
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 phút</span><span class="choice-desc">khoảng 80 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 phút</span><span class="choice-desc">khoảng 15 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 phút</span><span class="choice-desc">khoảng 30 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 phút</span><span class="choice-desc">khoảng 60 lượt</span></span></label>
                 </div>
-                <p class="field-hint">Số lượt là ước tính theo 15 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
+                <p class="field-hint">Số lượt là ước tính theo 20 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
                 <p class="field-error"></p>
               </fieldset>
               <div data-form-error hidden></div>
@@ -141,7 +141,7 @@
     VL.clearErrors(form);
     VL.busy(btn, async () => {
       try {
-        const s = await VL.api("POST", "/learning/sessions", { boTheId: form.boTheId.value || null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.quyThoiGian.value), cheDo: "THUONG" });
+        const s = await VL.api("POST", "/learning/sessions", { boTheId: form.boTheId.value || null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.quyThoiGian.value) });
         location.href = "hoc-phien.html?id=" + s.id;
       } catch (err) { VL.showErrors(form, err); }
     });

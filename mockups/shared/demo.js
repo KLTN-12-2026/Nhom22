@@ -64,7 +64,7 @@
   const MIN = 60000;
   const DAY = 86400000;
   const ALGO = "sm2-vl-1";
-  const AVG_SECONDS = 15;
+  const AVG_SECONDS = 20;
   const RATINGS = ["QUEN", "KHO", "NHO", "DE"];
   const RATING_Q = { QUEN: 1, KHO: 3, NHO: 4, DE: 5 };
   const DIRS = ["EN_VI", "VI_EN"];
@@ -332,6 +332,9 @@
   function theView(x) {
     return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn, dichVi: x.exampleVi, anhUrl: x.imageUrl, amThanhUrl: x.audioUrl, version: x.version };
   }
+  function studyCard(x) {
+    return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn, dichVi: x.exampleVi, anhId: x.anhId || null, amTuId: x.amTuId || null, amCauId: x.amCauId || null, version: x.version };
+  }
   function ownCards(uid, deckId) {
     const ids = db.decks.filter((d) => d.ownerId === uid && !d.deleted && (!deckId || d.id === deckId)).map((d) => d.id);
     return db.cards.filter((x) => ids.includes(x.deckId));
@@ -495,7 +498,7 @@
       hangDoi: s.hangDoi.map((h) => {
         const x = cardById(h.theId);
         const p = progressOf(u.id, h.theId, s.chieuHoc);
-        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), duKien: previewOf(p, t, s.muiGio), the: x ? theView(x) : null };
+        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), duKien: previewOf(p, t, s.muiGio), the: x ? studyCard(x) : null };
       }),
       tongKet: s.tongKet || null
     };
@@ -1214,7 +1217,7 @@
       if (!queue.length) throw new ApiError(422, "BUSINESS_RULE", "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, hoặc thêm thẻ mới vào bộ.");
       const t = Date.now();
       const id = nextId();
-      db.sessions[id] = { id, uid: u.id, boTheId: b.boTheId || null, chieuHoc: b.chieuHoc, quyThoiGian: Number(b.quyThoiGian), cheDo: mode, muiGio: tzOf(u), batDauAt: iso(t), hetGioAt: iso(t + Number(b.quyThoiGian) * MIN), trangThai: "DANG_HOC", hangDoi: queue.map((it, i) => ({ theId: it.x.id, thuTu: i + 1, trangThai: "CHO" })) };
+      db.sessions[id] = { id, uid: u.id, boTheId: b.boTheId || null, chieuHoc: b.chieuHoc, quyThoiGian: Number(b.quyThoiGian), cheDo: mode, muiGio: tzOf(u), batDauAt: iso(t), hetGioAt: iso(t + Number(b.quyThoiGian) * MIN), trangThai: "DANG_HOC", hangDoi: queue.map((it, i) => ({ theId: it.x.id, thuTu: i + 1, trangThai: "CHUA_TRA_LOI" })) };
       return { status: 201, body: sessionView(db.sessions[id], u) };
     }],
     ["GET", /^\/learning\/sessions\/(\w+)$/, (m) => {
@@ -1236,7 +1239,7 @@
       if (typeof b.expectedVersion !== "number") errors.push(fe("expectedVersion", "Thiếu phiên bản tiến độ"));
       if (errors.length) bad(errors);
       if (s.trangThai !== "DANG_HOC") throw new ApiError(409, "CONFLICT", "Phiên học đã kết thúc. Các kết quả đã lưu vẫn được giữ.");
-      const h = s.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHO");
+      const h = s.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHUA_TRA_LOI");
       if (!h) throw new ApiError(422, "BUSINESS_RULE", "Thẻ này không có trong hàng đợi của phiên");
       const t = Date.now();
       const tz = s.muiGio;
@@ -1260,9 +1263,9 @@
       const us = usageOf(u.id, localDate(t, tz));
       us.soLuotHopLe++;
       if (phys) us.soTheMoi++;
-      h.trangThai = "DA_ON";
+      h.trangThai = "DA_TRA_LOI";
       const again = (n.trangThai === "DANG_HOC" || n.trangThai === "HOC_LAI") && Date.parse(n.hanOnAt) <= Date.parse(s.hetGioAt);
-      if (again) s.hangDoi.push({ theId: b.theId, thuTu: s.hangDoi.length + 1, trangThai: "CHO" });
+      if (again) s.hangDoi.push({ theId: b.theId, thuTu: s.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI" });
       const res = { clientEventId: b.clientEventId, theId: b.theId, chieuHoc: s.chieuHoc, danhGia: b.danhGia, truoc, tienDo: progressView(n), khoangHienThi: intervalLabel(t, n.hanOnAt, tz), laiTrongPhien: again, duKien: again ? previewOf(n, t, tz) : null };
       db.events[ek] = res;
       return { status: 201, body: res };

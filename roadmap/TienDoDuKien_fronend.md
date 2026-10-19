@@ -145,8 +145,10 @@ frontend/
 - Chọn bộ, chiều (Anh–Việt / Việt–Anh), thời gian; lật thẻ (Space), đánh giá Quên/Khó/Nhớ/Dễ (phím 1–4, không kích hoạt khi đang gõ) kèm giải thích.
 - Mỗi lượt sinh `clientEventId` một lần, lưu tạm hàng đợi chưa đồng bộ, gửi lại cùng khóa khi mất mạng; 409 → tải trạng thái mới.
 - Hết giờ: cho hoàn tất thẻ đang học rồi kết thúc.
+- Hợp đồng B2.3: `POST /learning/sessions` chỉ gửi `{boTheId?, chieuHoc, quyThoiGian}` (không `cheDo` đến B2.6); hàng đợi rỗng → 422 `BUSINESS_RULE`. Response: `hetGioAt` tính ra, `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, `hangDoi[].the` có `anhId`/`amTuId`/`amCauId` (tải qua `/files/{id}`, không có URL), `hangDoi[].tienDo.version` dùng cho `expectedVersion`. Chưa có `duKien` đến khi BE thêm; số thẻ tối đa = `phút×60/giayMoiLuot` (20 giây), không ghi cứng 15 giây.
 
 ### [ ] F2.3 Tổng kết, tiến độ, lịch sử — UI20, UI21 ← B2.5
+- UI21 đọc `GET /decks/{id}/progress` (B2.5): `tongHop` và danh sách thẻ phân trang; mockup `bo-the-tien-do.html` đã dùng endpoint này.
 - Tổng kết khớp lịch sử; bảng thẻ theo trạng thái (mới, đang học, đến hạn, quá hạn, tạm ngưng); tạm ngưng/khôi phục/đặt lại có xác nhận.
 
 ### [ ] F2.4 Cứu lịch ôn — UI22 ← B2.6

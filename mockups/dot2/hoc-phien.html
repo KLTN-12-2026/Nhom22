@@ -146,8 +146,13 @@
   });
   VL.mockAction("Mô phỏng tab khác chấm trước (409)", () => { VLDemo.flags.conflictOnce = true; VL.toast("Lần chấm tiếp theo sẽ gặp xung đột phiên bản"); });
 
+  function fileUrl(id) {
+    const f = id && VLDemo.db.files[id];
+    return f && f.url ? f.url : null;
+  }
+
   function speak(the) {
-    if (the.amThanhUrl) { new Audio(the.amThanhUrl).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
+    if (fileUrl(the.amTuId)) { new Audio(fileUrl(the.amTuId)).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
     VL.speak(the.tu);
   }
 
@@ -168,7 +173,7 @@
 
   function progress() {
     const real = S.hangDoi.filter((h) => h.the);
-    const done = real.filter((h) => h.trangThai === "DA_ON").length;
+    const done = real.filter((h) => h.trangThai === "DA_TRA_LOI").length;
     const total = real.length;
     const m = $("progress");
     m.style.setProperty("--v", total ? done / total : 0);
@@ -178,14 +183,14 @@
   }
 
   function dueNow(h) { return !h.tienDo.hanOnAt || h.tienDo.trangThai === "MOI" || h.tienDo.trangThai === "ON_TAP" || Date.parse(h.tienDo.hanOnAt) <= Date.now(); }
-  function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHO" && h.the); }
+  function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI" && h.the); }
 
   function faceHtml(the, side) {
-    const listen = '<div class="face-tools"><button type="button" class="btn btn-media btn-sm" data-say>' + VL.icon("volume") + 'Đọc từ <span class="kbd">P</span></button>' + (the.amThanhUrl ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
+    const listen = '<div class="face-tools"><button type="button" class="btn btn-media btn-sm" data-say>' + VL.icon("volume") + 'Đọc từ <span class="kbd">P</span></button>' + (fileUrl(the.amTuId) ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
     const word = '<p class="flash-word" lang="en">' + VL.esc(the.tu) + "</p>" + (the.phienAm ? '<p class="ipa" lang="en">' + VL.esc(the.phienAm) + "</p>" : "") + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
     const mean = '<p class="flash-mean">' + VL.esc(the.nghiaVi) + "</p>" + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
     const example = the.viDuEn ? '<div class="example"><p class="en" lang="en">' + VL.esc(the.viDuEn) + '</p><button type="button" class="btn btn-media btn-sm" data-say-example>Đọc câu ví dụ</button>' + (the.dichVi ? '<p class="vi">' + VL.esc(the.dichVi) + "</p>" : "") + "</div>" : "";
-    const img = the.anhUrl ? '<img class="back-img" src="' + VL.esc(the.anhUrl) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
+    const img = fileUrl(the.anhId) ? '<img class="back-img" src="' + VL.esc(fileUrl(the.anhId)) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
     const mark = '<div class="face-tools"><button type="button" class="btn btn-quiet btn-sm" data-mark>' + VL.icon("star") + "Đánh dấu từ khó</button></div>";
     if (S.chieuHoc === "EN_VI") return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại nghĩa</span>' + word + listen : '<span class="face-label">Mặt sau</span>' + mean + example + img + mark;
     return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại từ tiếng Anh</span>' + mean : '<span class="face-label">Mặt sau</span>' + word + listen + example + img + mark;
@@ -247,9 +252,9 @@
 
   const RATE_KEYS = ["QUEN", "KHO", "NHO", "DE"];
   function applyResult(item, res) {
-    item.trangThai = "DA_ON";
+    item.trangThai = "DA_TRA_LOI";
     item.tienDo = res.tienDo;
-    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHO", tienDo: res.tienDo, duKien: res.duKien, the: item.the });
+    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI", tienDo: res.tienDo, duKien: res.duKien, the: item.the });
   }
 
   async function rate(r) {
@@ -312,7 +317,7 @@
         } catch (err) {
           if (err.status === 0) { VL.toast("Vẫn chưa có mạng. Kết quả vẫn được giữ.", "error"); break; }
           pending = pending.filter((x) => x !== body);
-          if (item) { item.trangThai = "CHO"; if (err.tienDo) { item.tienDo = err.tienDo; item.duKien = err.duKien; } }
+          if (item) { item.trangThai = "CHUA_TRA_LOI"; if (err.tienDo) { item.tienDo = err.tienDo; item.duKien = err.duKien; } }
           VL.toast(err.code === "VERSION_CONFLICT" ? "Một thẻ đã được chấm ở tab khác, bạn sẽ gặp lại để chấm lại" : err.message, "error");
         }
       }
@@ -388,7 +393,7 @@
     render: (s) => {
       if (s.trangThai !== "DANG_HOC") { location.replace("hoc-tong-ket.html?id=" + id); return; }
       S = s;
-      pending.forEach((b) => { const h = S.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHO"); if (h) h.trangThai = "CHO_DONG_BO"; });
+      pending.forEach((b) => { const h = S.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHUA_TRA_LOI"); if (h) h.trangThai = "CHO_DONG_BO"; });
       document.title = s.boTheTen + " – Đang học";
       $("bar-title").textContent = s.boTheTen;
       $("bar-dir").textContent = VL.DIR[s.chieuHoc] + (s.cheDo === "CUU_LICH" ? ", học lại sau nghỉ" : "");
