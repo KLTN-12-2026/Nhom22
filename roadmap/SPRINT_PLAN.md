@@ -75,16 +75,16 @@
 | B1.3 Quên/đặt lại/đổi mật khẩu | `POST /auth/forgot-password`, `/auth/reset-password`, `PUT /me/password` | F1.3 | UI09 `/quen-mat-khau`, UI10 `/dat-lai-mat-khau`, UI42 `/ca-nhan/bao-mat` |
 | B1.4 Google | `GET /auth/google/start`, `/auth/google/callback` | F1.4 | Nút Google trên UI06/UI08 |
 | B1.5 Hồ sơ & thiết lập | `PATCH /me`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings` | F1.5 | UI11 `/bat-dau`, UI40 `/ca-nhan`, UI41 `/ca-nhan/hoc-tap`, UI43 `/ca-nhan/thong-bao` |
-| B1.6 Tệp & ảnh đại diện | `POST /files/upload-requests`, `/files/{id}/complete`, `DELETE /files/{id}` | F1.6 | Component tải tệp, ảnh đại diện trên UI40 |
+| B1.6 Tệp & ảnh đại diện | `POST /files/upload-requests`, `/files/{id}/complete`, `GET/DELETE /files/{id}`, `GET/PUT/DELETE /me/avatar` | F1.6 | Component tải tệp, ảnh đại diện trên UI40 |
 
 **Xong khi:** TC-01 qua; đăng ký → mail Mailpit → xác thực → đăng nhập → onboarding → đổi ảnh đại diện chạy trên giao diện thật.
 
 ### S4 · 19/10–25/10 · Nội dung — FR-03, FR-04, FR-05
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B1.7 Chủ đề/nhãn/trình độ | `GET /public/topics`, CRUD `/admin/topics`, `/admin/tags` | F1.12 | UI48 `/quan-tri/chu-de` |
+| B1.7 Chủ đề/nhãn/trình độ | `GET /public/topics`, CRUD `/admin/topics`, `/admin/tags`; `GET /public/tags` (thêm ở B1.9) | F1.12 | UI48 `/quan-tri/chu-de` |
 | B1.8 Bộ thẻ cá nhân | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `PUT/DELETE /decks/{id}/favorite` | F1.8 | UI13 `/bo-the`, UI14 `/bo-the/tao`, `/bo-the/[id]/sua` |
-| B1.9 Thẻ từ vựng | `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}` | F1.9 | UI15 `/bo-the/[id]`, UI16 `/bo-the/[id]/the/tao`, `/the/[id]/sua` |
+| B1.9 Thẻ từ vựng | `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` | F1.9 | UI15 `/bo-the/[id]`, UI16 `/bo-the/[id]/the/tao`, `/the/[id]/sua` |
 | B1.10 Thư viện công khai | `GET /library/decks`, `GET /library/decks/{id}` | F1.7 | UI02 `/thu-vien`, UI03 `/thu-vien/[id]` (link chia sẻ), gợi ý bộ khởi động ở UI11 |
 | B1.11 Sao chép bộ | `POST /decks/{id}/copy` + `Idempotency-Key` | F1.10 | Nút "Sao chép" trên UI03 |
 | B1.12 CSV | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export` | F1.11 | UI17 `/bo-the/[id]/nhap-csv` |
@@ -198,7 +198,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI02 | Thư viện | `/thu-vien` | G | S4 |
 | UI03 | Chi tiết bộ công khai (link chia sẻ) | `/thu-vien/[id]` | G | S4 |
 | UI04 | Hướng dẫn & FAQ | `/huong-dan` | G | S2 |
-| UI05 | Chính sách & điều khoản | `/chinh-sach`, `/dieu-khoan` | G | S2 |
+| UI05 | Chính sách & điều khoản | `/chinh-sach` (`/dieu-khoan` chưa có) | G | S2 |
 | UI06 | Đăng ký | `/dang-ky` | G | S3 |
 | UI07 | Xác thực email | `/xac-thuc-email` | G | S3 |
 | UI08 | Đăng nhập (+ Google) | `/dang-nhap` | G | S3 |
@@ -207,19 +207,19 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI11 | Khởi đầu (mục tiêu, trình độ, chủ đề, thời gian, bộ khởi động) | `/bat-dau` | L | S3–S4 |
 | UI12 | Hôm nay học gì? (dashboard) | `/hom-nay` | L | S5 |
 | UI13 | Bộ của tôi & yêu thích | `/bo-the` | L | S4 |
-| UI14 | Tạo/sửa bộ | `/bo-the/tao`, `/bo-the/[id]/sua` | O | S4 |
+| UI14 | Tạo/sửa bộ | `/bo-the/tao` (sửa: `/bo-the/tao?id=`) | O | S4 |
 | UI15 | Chi tiết bộ + danh sách thẻ | `/bo-the/[id]` | O | S4 |
-| UI16 | Biên tập thẻ (tệp, nhãn, cảnh báo trùng) | `/bo-the/[id]/the/tao`, `/the/[id]/sua` | O | S4 |
+| UI16 | Biên tập thẻ (tệp, nhãn, cảnh báo trùng) | `/bo-the/[id]/the-tao` (sửa thẻ: hộp thoại `CardEditDialog`) | O | S4 |
 | UI17 | Nhập/xuất CSV | `/bo-the/[id]/nhap-csv` | O | S4 |
 | UI18 | Chọn phiên học | `/hoc` | L | S5 |
-| UI19 | Màn học flashcard | `/hoc/[sessionId]` | O | S5 |
-| UI20 | Tổng kết phiên | `/hoc/[sessionId]/tong-ket` | O | S5 |
+| UI19 | Màn học flashcard | `/hoc-phien?id=` | O | S5 |
+| UI20 | Tổng kết phiên | `/hoc-tong-ket` | O | S5 |
 | UI21 | Tiến độ & lịch sử ôn | `/bo-the/[id]/tien-do` | O | S5 |
 | UI22 | Cứu lịch ôn | khối trên `/hom-nay` | L | S5 |
 | UI23 | Chọn dạng bài luyện | `/luyen-tap` | L | S6 |
-| UI24 | Làm bài | `/luyen-tap/[id]` | O | S6 |
-| UI25 | Kết quả, đáp án, giải thích | `/luyen-tap/[id]/ket-qua` | O | S6 |
-| UI26 | Lịch sử bài luyện | `/luyen-tap/lich-su` | L | S6 |
+| UI24 | Làm bài | `/luyen-tap-lam-bai` | O | S6 |
+| UI25 | Kết quả, đáp án, giải thích | `/luyen-tap-ket-qua` | O | S6 |
+| UI26 | Lịch sử bài luyện | `/luyen-tap-lich-su` | L | S6 |
 | UI27 | Sổ tay từ khó & cặp nhầm | `/so-tay` | L | S6 |
 | UI28 | Gợi ý có lý do | khối trên `/hom-nay`, `/so-tay` | L | S7 |
 | UI29 | Xưởng thẻ AI | `/ai/xuong-the` | L | S7 |
@@ -239,7 +239,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI43 | Thông báo & giờ nhắc | `/ca-nhan/thong-bao` | L | S3 |
 | UI44 | Dữ liệu & xóa tài khoản | `/ca-nhan/du-lieu` | L | S9 |
 | UI45 | Báo cáo nội dung (hộp thoại) | trên UI03/UI15/UI29 | L | S9 |
-| UI46 | Quản trị — tổng quan | `/quan-tri` | A | S9 |
+| UI46 | Quản trị — tổng quan | `/quan-tri` (hiện chuyển hướng sang `/quan-tri/chu-de`) | A | S9 |
 | UI47 | Quản trị — tài khoản & vai trò | `/quan-tri/tai-khoan` | A | S6 |
 | UI48 | Quản trị — chủ đề & nhãn | `/quan-tri/chu-de` | A | S4 |
 | UI49 | Quản trị — bộ/thẻ mẫu | `/quan-tri/bo-mau` | A | S6 |

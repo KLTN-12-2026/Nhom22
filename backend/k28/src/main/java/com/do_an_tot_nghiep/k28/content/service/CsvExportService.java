@@ -38,7 +38,7 @@ public class CsvExportService {
             printer.printRecord(CsvImportParser.FIELDS);
             int page = 0;
             while (true) {
-                var batch = cards.findByBoTheIdAndXoaAtIsNullOrderByIdDesc(deck.getId(),
+                var batch = cards.findByBoTheIdAndXoaAtIsNullOrderByIdAsc(deck.getId(),
                         PageRequest.of(page++, 500, Sort.unsorted()));
                 Map<Long, List<String>> tagIds = new HashMap<>();
                 links.findTags(batch.stream().map(card -> card.getId()).toList())

@@ -29,8 +29,7 @@ export default function TodayPage() {
     sessionMutation.mutate({
       boTheId: null,
       chieuHoc,
-      quyThoiGian: minutes,
-      cheDo: 'THUONG'
+      quyThoiGian: minutes
     });
   };
 
@@ -40,8 +39,7 @@ export default function TodayPage() {
     sessionMutation.mutate({
       boTheId: null,
       chieuHoc,
-      quyThoiGian: r?.phutMoiNgay || 10,
-      cheDo: 'CUU_LICH'
+      quyThoiGian: r?.phutMoiNgay || 10
     });
   };
 

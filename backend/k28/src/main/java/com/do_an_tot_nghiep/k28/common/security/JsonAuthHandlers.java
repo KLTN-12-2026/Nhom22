@@ -38,7 +38,7 @@ public class JsonAuthHandlers implements AuthenticationEntryPoint, AccessDeniedH
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException)
             throws IOException, ServletException {
-        write(response, ErrorCode.FORBIDDEN, "Bạn không có quyền truy cập");
+        write(response, ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này");
     }
 
     private void write(HttpServletResponse response, ErrorCode code, String message) throws IOException {

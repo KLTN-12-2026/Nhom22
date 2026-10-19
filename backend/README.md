@@ -48,12 +48,14 @@ Cách này giúp bạn lập trình và debug dễ dàng hơn. Dịch vụ phụ
 2. Bật Spring Boot API bằng Maven Wrapper (đã tích hợp sẵn):
    - **Trên Windows (PowerShell / CMD):**
      ```cmd
-     .\mvnw.cmd spring-boot:run
+     .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
      ```
    - **Trên macOS / Linux (hoặc Git Bash):**
      ```bash
-     ./mvnw spring-boot:run
+     ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
      ```
+
+     Profile `dev` nạp dữ liệu mẫu (gồm tài khoản ADMIN) và phải bật tường minh; không có profile mặc định.
 
 3. Chờ khoảng 1-2 phút, khi thấy dòng báo `Started ...Application in ... seconds` là Backend đã hoạt động ở cổng **8080**.
 

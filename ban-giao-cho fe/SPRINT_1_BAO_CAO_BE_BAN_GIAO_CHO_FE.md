@@ -1,5 +1,7 @@
 # Báo cáo bàn giao BE → FE — DOT1 Tài khoản & nội dung
 
+> **Lưu ý tham chiếu (20/10/2026):** các đường dẫn `report/`, `verification/`, `postman/`, `data/csv/`, `huong-dan/`, `GD0_BAO_CAO_FE.md`, `DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md` trong tài liệu này là bằng chứng lịch sử và **không còn trong checkout**. Bàn giao hiện hành nằm ở `ban-giao-cho fe/`. Không dùng các đường dẫn đó làm bằng chứng kiểm chứng.
+
 > **Cập nhật13/10/2026 — B1.12:** đã triển khai import/export CSV và FE thật; xem hợp đồng mục5.44 và bằng chứng mới mục10. B1.11 được bổ sung Postman. Các nhận định hoàn tác FE hoặc CSV còn kế hoạch bên dưới là lịch sử theo ngày, không mô tả phiên bản hiện tại. Giữ nguyên B1.8/HTTP6.
 
 > **Đợt khắc phục 05/10/2026 — GĐ0–B1.8:** BE thống nhất IANA, reset CSRF custom login/logout, OpenAPI security theo operation, log requestId và mẫu boot. **Toàn bộ thay đổi trong frontend đã hoàn tác theo yêu cầu mới nhất; các chênh lệch FE còn cần tích hợp riêng.** Giữ BE/Postman/tài liệu và mockup ngoài frontend; mockup là demo có lớp hợp đồng riêng; trạng thái hiện tại theo [báo cáo đối chiếu](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md).
@@ -58,9 +60,9 @@ Các file bàn giao: [báo cáo54 mục](DOI_CHIEU_BE_GD0_B1_8_2026_10_05.md), [
 | B1.8 Bộ thẻ cá nhân | ✅ 7 API; kế thừa FR03DeckTest11/11 và Newman DELETE204/GET404 ngày05/10; không chạy lại ngày06/10 | F1.8 UI13 `/bo-the`, UI14 `/bo-the/tao` | Mục5.32–5.38; tên trường tiếng Việt, PATCH/DELETE kèm version, xử lý404/409; giới hạn mockup tại mục10 |
 | B1.9 | ✅ BE và bàn giao hoàn tất; FR03CardTest pass theo người dùng, HTTP77/77 + assertion19/19 và ADMIN9/9 riêng ngày06/10 | F1.7, F1.9 | Mục5.39; FR03CardTest pass theo người dùng; HTTP ADMIN9/9 pass, Postman28 request đã đồng bộ; FE/mockup chưa sửa |
 | B1.10 | Đã triển khai và kiểm chứng08/10 | F1.7 / UI02, UI03, UI11 | FE thật có danh sách/chi tiết/media/link chia sẻ và gợi ý bộ mẫu sau lưu thiết lập; xem mục5.40–5.42 |
-| B1.11 – B1.12 | ⏳ chưa làm | F1.10–F1.11 | Sao chép bộ và CSV còn kế hoạch |
+| B1.11 – B1.12 | ✅ BE đã triển khai | F1.10–F1.11 | Sao chép bộ (`POST /decks/{id}/copy`) và CSV (`/decks/{id}/imports/preview`, `/imports/{id}/commit`, `/decks/{id}/export`) |
 
-**Chưa có API BE:** sao chép và CSV (B1.11–B1.12); tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. B1.9 đã có code và kiểm chứng HTTP phạm vi mục5.39. Lịch dự kiến Đợt1: 12/10–25/10. B1.8 hoàn tất theo bằng chứng riêng05/10; không lấy HTTP B1.9 thay thế hoặc cộng vào bằng chứng B1.8. Không chạy lại phần B1.8 người dùng đã bỏ qua.
+**Chưa có API BE:** tìm kiếm bộ cá nhân và danh sách bộ yêu thích của người khác chưa thuộc GET /decks hiện tại. B1.9 đã có code và kiểm chứng HTTP phạm vi mục5.39. Lịch dự kiến Đợt1: 12/10–25/10. B1.8 hoàn tất theo bằng chứng riêng05/10; không lấy HTTP B1.9 thay thế hoặc cộng vào bằng chứng B1.8. Không chạy lại phần B1.8 người dùng đã bỏ qua.
 
 ## 2. Chạy BE
 
@@ -268,10 +270,10 @@ Chưa tạo phiên: đăng ký xong **không** đăng nhập; phải xác thực
 | HTTP | `code` | Khi nào | FE xử lý |
 |---|---|---|---|
 | 400 | `VALIDATION_FAILED` + `fieldErrors` | Sai giới hạn trường | `applyServerErrors` → lỗi dưới ô (`field` = tên input) |
-| 400 | `VALIDATION_FAILED`, `fieldErrors: []`, message `"Múi giờ không hợp lệ"` | `muiGio` không phải IANA | Hiện lỗi chung của form (hoặc không gửi `muiGio`) |
+| 400 | `VALIDATION_FAILED`, `fieldErrors: [{field:"muiGio", ...}]`, message `"Múi giờ không hợp lệ"` | `muiGio` không phải IANA | Gắn lỗi vào ô múi giờ (hoặc không gửi `muiGio`) |
 | 409 | `CONFLICT` "Email đã được sử dụng" | Email đã có (không phân biệt hoa/thường) | `setError('email', …)` + link `/dang-nhap` |
 | 429 | `RATE_LIMITED` | > 5 lần/giờ cùng IP | Khóa nút, toast |
-| 403 | `FORBIDDEN` | Thiếu CSRF | `api-client` tự lấy token và thử lại 1 lần |
+| 403 | `FORBIDDEN` | Thiếu CSRF | `api-client` hiện chỉ xóa token CSRF đã nhớ (lấy lại ở lần gọi sau), không tự gửi lại request |
 
 ```json
 {"code":"VALIDATION_FAILED","message":"Dữ liệu không hợp lệ","fieldErrors":[{"field":"password","message":"Mật khẩu 8–72 ký tự, có chữ cái và chữ số"},{"field":"email","message":"Email không hợp lệ"},{"field":"acceptTerms","message":"Bạn cần đồng ý với điều khoản sử dụng"},{"field":"tenHienThi","message":"Vui lòng nhập tên hiển thị"}],"requestId":"cbf0c5d5-fa82-45a8-ad78-67fa0dbb90e4"}
@@ -659,7 +661,7 @@ Gọi thật đã kiểm tra thiếu trường, >5, trùng, ID không tồn tạ
 |---|---|---|---|
 | L | F1.5 | UI43 | `/ca-nhan/thong-bao` |
 
-**GET → 200** (thật, mặc định): `{"nhanTrongUngDung":true,"nhanEmail":true,"nhacHoc":true,"gioNhac":null,"version":0}`
+**GET → 200** (thật, mặc định): `{"nhanTrongUngDung":true,"nhanEmail":true,"nhacHoc":false,"gioNhac":null,"version":0}`
 
 **PUT — gửi:**
 
@@ -681,7 +683,7 @@ Gọi thật đã kiểm tra thiếu trường, >5, trùng, ID không tồn tạ
 | 409 | `VERSION_CONFLICT` | `version` cũ | Như 5.12 |
 | 401 | `UNAUTHENTICATED` | | `/dang-nhap?next=` |
 
-Lưu ý: mặc định `nhacHoc = true` nhưng `gioNhac = null` → FE hiện công tắc bật và ô giờ trống; khi lưu phải có giờ. Gửi nhắc thật làm ở module thông báo (Đợt 3).
+Lưu ý: mặc định `nhacHoc = false` và `gioNhac = null` (đã đổi 20/10/2026 để khớp luật: bật nhắc học thì phải có giờ); khi người dùng bật công tắc, FE phải bắt chọn giờ trước khi lưu. Gửi nhắc thật làm ở module thông báo (Đợt 3).
 
 ### Hợp đồng chung cho API tệp B1.6
 
@@ -740,7 +742,7 @@ HTTP/1.1 201
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 |400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
 |429|RATE_LIMITED|30 lần/phút chung request+complete|khóa nút, thử lại sau|
@@ -782,8 +784,10 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
+|409|CONFLICT|chỉ ở DELETE: tệp đang được thẻ từ vựng sử dụng|báo người dùng gỡ khỏi thẻ trước|
+|503|DEPENDENCY_DOWN|chỉ ở DELETE: S3 lỗi, tombstone giữ lại để retry|thử lại sau|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
 |429|RATE_LIMITED|30 lần/phút chung request+complete|khóa nút, thử lại sau|
 |409|CONFLICT|trạng thái tệp thay đổi|đọc lại tệp|
@@ -825,7 +829,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
 
@@ -855,7 +859,7 @@ Không có body.
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 
 **Tác dụng phụ:** Ghi tombstone, gỡ avatar nếu đang dùng, xóa object. Nếu S3 lỗi503, tệp vẫn bị ẩn trong DB và worker retry. Gọi lại DELETE cùng tệp vẫn204 khi S3 hoạt động.
@@ -899,7 +903,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 |400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
@@ -939,7 +943,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 
 **Tác dụng phụ:** 200 khi có avatar;204 không có body khi chưa gắn/gỡ ảnh. URL tải được ký lại mỗi lần GET.
 
@@ -965,7 +969,7 @@ Không có body.
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp CSRF; chỉ thử lại lỗi CSRF|
+|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
 
 **Tác dụng phụ:** Chỉ bỏ liên kết avatar, giữ tệp; sau gỡ GET /files/{id} vẫn200. Nếu muốn xóa bytes, gọi DELETE /files/{id} riêng.
 
@@ -1590,11 +1594,12 @@ Mọi endpoint cần SESSION; request ghi cần CSRF theo hợp đồng chung G�
 | trinhDo | MOI_BAT_DAU / CO_BAN / TRUNG_CAP / NANG_CAO |
 | quyenTruyCap | RIENG_TU / CONG_KHAI |
 | trangThaiKiemDuyet | BINH_THUONG / DA_AN |
+| mucTieu | GIAO_TIEP / TOEIC hoặc null |
 | yeuThich | boolean riêng cho người đang đăng nhập |
 | createdAt, updatedAt | chuỗi Instant |
 | version | number; dùng response mới nhất khi sửa/xóa |
 
-Không có goal, cardCount, ownerName, visibility, favorite trong DTO. GET /decks chỉ trả bộ của mình chưa xóa; yêu thích bộ người khác không làm bộ đó xuất hiện trong danh sách này.
+`DeckResponse` có `mucTieu` (GIAO_TIEP/TOEIC hoặc null; POST/PATCH nhận `mucTieu`, PATCH nhận thêm `boMucTieu` để xóa, gửi cả hai → 400). Không có cardCount, ownerName, visibility, favorite trong DTO. GET /decks chỉ trả bộ của mình chưa xóa; yêu thích bộ người khác không làm bộ đó xuất hiện trong danh sách này.
 
 | HTTP / code | Tình huống | Kiểm chứng B1.8 | FE xử lý |
 |---|---|---|---|
@@ -2150,7 +2155,7 @@ Sau CRUD topic invalidate `['topics']`, `['admin-topics']` và chi tiết topic;
 
 | Việc | Cách làm |
 |---|---|
-| Tài khoản seed (profile `dev`) | `admin@vocab.local` (ADMIN, USER), `an@vocab.local`, `binh@vocab.local`, `chi@vocab.local` — mật khẩu chung `Vocab@12345` (README). `an@` có `daHoanTatKhoiDau = true` |
+| Tài khoản seed (profile `dev`) | `admin@vocab.local` (ADMIN, USER), `an@vocab.local`, `binh@vocab.local`, `chi@vocab.local` — mật khẩu chung `Vocab@12345` (băm sẵn trong `R__seed_dev.sql`, README không nhắc). Chưa có test đăng nhập bằng tài khoản seed vì profile `test` không nạp `db/seed`; kiểm tay ở profile `dev`. `an@` có `daHoanTatKhoiDau = true` |
 | Thử 403 `EMAIL_NOT_VERIFIED` | Đăng ký tài khoản mới, **không** bấm link trong Mailpit, rồi đăng nhập |
 | Thử 403 `ACCOUNT_LOCKED` | Chưa có API khóa (phần quản trị); nhờ BE đổi `trang_thai = 'BI_KHOA'` trong DB dev |
 | Tạo tài khoản test mới | Đăng ký với email bất kỳ `*@vocab.local` → mở http://localhost:8025 → bấm link trong thư |
@@ -2246,7 +2251,7 @@ Postman B1.8 đã được đồng bộ và kiểm tra12 request cùng3 biến m
 
 | Mục | Chi tiết |
 |---|---|
-| `api-client` retry 403 | Đã có 403 nghiệp vụ (`EMAIL_NOT_VERIFIED`, `ACCOUNT_LOCKED`) → FE cần chỉ retry tối đa1 lần với FORBIDDEN; không retry lỗi nghiệp vụ |
+| `api-client` retry 403 | Đã có 403 nghiệp vụ (`EMAIL_NOT_VERIFIED`, `ACCOUNT_LOCKED`) → api-client hiện không retry; chỉ làm mới CSRF khi gặp 403. Nếu thêm retry thì tối đa 1 lần và chỉ với FORBIDDEN, không retry lỗi nghiệp vụ |
 | "Ghi nhớ đăng nhập (7 ngày)" | Mockup có ô này nhưng BE **chưa hỗ trợ**: `remember` bị bỏ qua, cookie `SESSION` luôn là cookie phiên trình duyệt. FE ẩn ô này hoặc để nguyên nhưng không hứa 7 ngày; cần thì báo BE bổ sung |
 | Tên seed mockup ≠ BE | Mockup: `an@` tên "Nguyễn An", `chi@` chưa xác thực. BE seed: "Nguyễn Văn An", `chi@` đã xác thực. Dữ liệu thật lấy theo BE |
 | Hạn mức theo IP | Gửi lại thư đếm chung theo IP (3/15 phút) cho mọi email → nhiều người cùng mạng/NAT có thể bị 429 sớm. Dev trên localhost cũng chung 1 IP |
@@ -2337,7 +2342,7 @@ Postman B1.8 đã được đồng bộ và kiểm tra12 request cùng3 biến m
 | DC19-08 |P2| Mockup lưu imageUrl/audioUrl; upload đã giữ media.*Id nhưng submit không gửi ID; gỡ không gửi cờ bo* |Gửi anhId/amTuId/amCauId và cờ bỏ cho từng vai trò; URL ký chỉ preview, không lưu làm liên kết. Thiếu/null PATCH giữ nguyên |Chỉ ghi yêu cầu bàn giao |
 | DC19-09 |P2| Mockup checkDup bỏ dấu NFD, so từ loại thô và chỉ xét danh sách đang tải |Dùng trung/theTrungIds từ BE; BE giữ dấu, NFC, gom khoảng trắng và lowercase cả từ/từ loại; không chặn lưu trùng |Giữ BE; consumer còn lệch |
 | DC19-10 |P2| Trang chi tiết Next/mockup vẫn nói chưa có thẻ; report/flow có đoạn coi B1.9 chưa triển khai |Đính chính tài liệu theo code/evidence06/10; triển khai màn hình thẻ trong lượt UI riêng |Đã sửa đoạn tài liệu hiện hành; UI giữ nguyên |
-| DC19-11 |P2| ApiError hiện tại trong frontend đọc traceId, BE trả requestId |Consumer cần đọc requestId và code; không rename ErrorResponse hoặc thêm alias BE để bù consumer |Chỉ ghi yêu cầu; không sửa frontend |
+| DC19-11 |P2| ApiError trong frontend chấp nhận cả traceId lẫn requestId; BE chỉ trả requestId (thống nhất dùng requestId trong tài liệu mới) |Consumer cần đọc requestId và code; không rename ErrorResponse hoặc thêm alias BE để bù consumer |Chỉ ghi yêu cầu; không sửa frontend |
 | DC19-12 |P3| Mỗi GET trang/POST/PATCH đọc toàn bộ ứng viên trùng của bộ; nhóm nhiều thẻ trùng có thể làm response lớn dù size≤100 |Đo trên bộ lớn rồi tối ưu truy vấn/key chuẩn hóa và giới hạn cảnh báo phù hợp hợp đồng; migration mới nếu cần, không sửa V4 |Giới hạn hiệu năng đã biết; chưa có benchmark, không kết luận lỗi nghiệp vụ |
 
 **Ưu tiên tiếp theo:** B1.10 — Thư viện công khai; đối chiếu thiết kế/schema/code trước triển khai. B1.9 đã đóng với FR03CardTest pass theo người dùng, HTTP và đồng bộ Postman có evidence riêng. Script Postman/Newman mới chưa chạy; UI/benchmark thuộc lượt riêng. Không chạy lại B1.8 đã bỏ qua.
@@ -2361,8 +2366,8 @@ Có **29 nhóm điểm lệch/rủi ro**: 4 BE (2 lỗi rõ từ code,1 rủi ro
 
 | ID | Ưu tiên | Điểm lệch và căn cứ | Cách sửa tối ưu / nơi sửa |
 |---|---|---|---|
-| BE-01 | P1 | POST/PATCH nhận `mucTieu`; PATCH nhận `boMucTieu`, nhưng [DeckService](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/DeckService.java:63>) không đọc hai trường. Entity và V5 đã có cột mục tiêu; [DeckResponse](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/DeckResponse.java:8>) cũng không trả mục tiêu. Hợp đồng nhận dữ liệu nhưng không lưu/trả lại; không có ca `mucTieu` trong FR03DeckTest hiện tại. | **Sửa BE trước**: giữ V5 hiện có, nối create/update với `updateGoal`, bổ sung trường mục tiêu trong response/mapping và chốt PATCH: thiếu/null giữ, `boMucTieu=true` xóa. Thêm ca kiểm chứng lưu/đọc/sửa/xóa mục tiêu và version; sau đó cập nhật hợp đồng. Không cần triển khai thư viện để sửa lỗi nhận rồi bỏ dữ liệu này. Nếu quyết định hoãn metadata sang B1.10, phải gỡ phần nhận mục tiêu khỏi hợp đồng đang công bố và ghi rõ hoãn, không chỉ sửa văn bản để hợp thức hóa việc bỏ dữ liệu. |
-| BE-02 | P2 | [UpdateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/UpdateDeckRequest.java:51>) có `isGoalSelectionValid()` nhưng thiếu `@AssertTrue`, khác kiểm tra chủ đề ngay phía trên. `mucTieu=TOEIC` đồng thời `boMucTieu=true` không được constraint này kiểm tra. | **Sửa BE cùng BE-01**: gắn validation cho xung đột chọn/xóa mục tiêu, trả400 và lỗi có thể ánh xạ vào form; kiểm tra cả trường hợp hợp lệ. Không sửa luật tài liệu thành cho phép payload mâu thuẫn. |
+| BE-01 | P1 (đã sửa trong code) | POST/PATCH nhận `mucTieu`; PATCH nhận `boMucTieu`, nhưng [DeckService](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/DeckService.java:63>) không đọc hai trường. Entity và V5 đã có cột mục tiêu; [DeckResponse](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/DeckResponse.java:8>) cũng không trả mục tiêu. Hợp đồng nhận dữ liệu nhưng không lưu/trả lại; không có ca `mucTieu` trong FR03DeckTest hiện tại. | **Sửa BE trước**: giữ V5 hiện có, nối create/update với `updateGoal`, bổ sung trường mục tiêu trong response/mapping và chốt PATCH: thiếu/null giữ, `boMucTieu=true` xóa. Thêm ca kiểm chứng lưu/đọc/sửa/xóa mục tiêu và version; sau đó cập nhật hợp đồng. Không cần triển khai thư viện để sửa lỗi nhận rồi bỏ dữ liệu này. Nếu quyết định hoãn metadata sang B1.10, phải gỡ phần nhận mục tiêu khỏi hợp đồng đang công bố và ghi rõ hoãn, không chỉ sửa văn bản để hợp thức hóa việc bỏ dữ liệu. |
+| BE-02 | P2 (đã sửa trong code) | [UpdateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/UpdateDeckRequest.java:51>) có `isGoalSelectionValid()` nhưng thiếu `@AssertTrue`, khác kiểm tra chủ đề ngay phía trên. `mucTieu=TOEIC` đồng thời `boMucTieu=true` không được constraint này kiểm tra. | **Sửa BE cùng BE-01**: gắn validation cho xung đột chọn/xóa mục tiêu, trả400 và lỗi có thể ánh xạ vào form; kiểm tra cả trường hợp hợp lệ. Không sửa luật tài liệu thành cho phép payload mâu thuẫn. |
 | BE-03 | P2 · cần xác minh | [CreateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/CreateDeckRequest.java:34>) và [UpdateDeckRequest](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/dto/UpdateDeckRequest.java:40>) chỉ dùng `String.strip()`. Các khoảng trắng NBSP/U+2007/U+202F không thuộc nhóm Java whitespace được strip; PATCH chỉ kiểm tra độ dài. Có nguy cơ tên nhìn như trống vẫn hợp lệ. Chưa tái hiện bằng HTTP lượt này. | **Xác minh BE rồi sửa nếu tái hiện**: thêm ca tên chỉ chứa các khoảng trắng Unicode này; thống nhất chuẩn hóa mép chuỗi và từ chối tên trắng sau chuẩn hóa. Giữ giới hạn150; không tự đổi toàn bộ quy tắc chuẩn hóa tên bộ theo quy tắc thẻ. |
 | BE-04 | P3 · tối ưu | [CardService.list](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/CardService.java:96>) và [duplicateIds](<C:/doantotnghiep/khoa_luan_tot_nghiep/backend/k28/src/main/java/com/do_an_tot_nghiep/k28/content/service/CardService.java:517>) đọc ứng viên trùng của toàn bộ bộ thẻ. Phân trang100 không giới hạn lượng ứng viên hoặc độ dài `theTrungIds`. Chưa có benchmark chứng minh lỗi hiệu năng. | **Đo BE trước khi tối ưu** với bộ lớn và nhiều thẻ trùng. Nếu cần, truy vấn khóa chuẩn hóa/index theo nhóm trùng; thay đổi schema bằng migration tiếp theo. Giữ cảnh báo trùng không chặn lưu, không thêm unique constraint và không cắt âm thầm danh sách cảnh báo. |
 | TL-01 | P2 | [TK đầu tài liệu](<C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:3>) vẫn ghi API từ B1.9 là kế hoạch; hiện đã có CardController và public tags. | **Sửa tài liệu**: đánh dấu4 API thẻ + public tags đã triển khai, tách B1.10–B1.12 dự kiến; ghi ngày và mức bằng chứng. Nội dung FR-03/TC-02 và bảng API không đòi thêm GET thẻ đơn. |

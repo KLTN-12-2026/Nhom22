@@ -2,7 +2,7 @@
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { safeNext } from '@/lib/content-contract.mjs';
 import Link from 'next/link';
@@ -28,6 +28,7 @@ export default function OnboardingPage() {
   const [mins, setMins] = useState('10');
   const [cards, setCards] = useState('10');
   const [savedSettings, setSavedSettings] = useState(null);
+  const done = useRef({ profile: null, notification: null });
   const starters = useLibraryDecks({ nguon: 'MAU', mucTieu: savedSettings?.mucTieu, trinhDo: savedSettings?.trinhDo, size: 4 }, { enabled: step === 5 && !!savedSettings });
 
   useEffect(() => {
@@ -46,9 +47,16 @@ export default function OnboardingPage() {
     setSaving(true);
     try {
       const current = await apiFetch('/api/v1/me/learning-settings');
-      const notification = await apiFetch('/api/v1/me/notification-settings');
-      await apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify({ muiGio }) });
-      await apiFetch('/api/v1/me/notification-settings', { method: 'PUT', body: JSON.stringify({ nhanTrongUngDung: notification.nhanTrongUngDung, nhanEmail: notification.nhanEmail, nhacHoc: !!gioNhac, gioNhac: gioNhac || null, version: notification.version }) });
+      if (done.current.profile !== muiGio) {
+        await apiFetch('/api/v1/me', { method: 'PATCH', body: JSON.stringify({ muiGio }) });
+        done.current.profile = muiGio;
+      }
+      const reminder = gioNhac || '';
+      if (done.current.notification !== reminder) {
+        const notification = await apiFetch('/api/v1/me/notification-settings');
+        await apiFetch('/api/v1/me/notification-settings', { method: 'PUT', body: JSON.stringify({ nhanTrongUngDung: notification.nhanTrongUngDung, nhanEmail: notification.nhanEmail, nhacHoc: !!gioNhac, gioNhac: gioNhac || null, version: notification.version }) });
+        done.current.notification = reminder;
+      }
       const saved = await apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({ mucTieu: goal, trinhDo: level, chuDeIds: topics, phutMoiNgay: Number(mins), tuMoiMoiNgay: Number(cards), version: current.version }) });
       setSavedSettings(saved);
       await queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -209,7 +217,7 @@ export default function OnboardingPage() {
                 <div className="field">
                   <label className="field-label" htmlFor="muiGio">Múi giờ</label>
                   <select className="select" id="muiGio" name="muiGio" value={muiGio} onChange={e => setMuiGio(e.target.value)}>
-                    {!['Asia/Ho_Chi_Minh', 'Asia/Tokyo', 'Europe/Berlin', 'America/New_York'].includes(muiGio) && <option value={muiGio}>{muiGio}</option>}
+                    {!['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'Asia/Tokyo', 'Europe/Berlin', 'America/New_York'].includes(muiGio) && <option value={muiGio}>{muiGio}</option>}
                     <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
                     <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
                     <option value="Asia/Tokyo">Tokyo (GMT+9)</option>

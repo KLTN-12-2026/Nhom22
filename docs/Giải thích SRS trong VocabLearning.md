@@ -24,11 +24,11 @@ Mình đã đọc toàn bộ 22 mục của [tài liệu phân tích–thiết k
 | EF khi Quên, trước khi áp dụng mức sàn | Giảm **0,54** | Giảm **0,20** |
 | EF khi Khó | Giảm **0,14** | Giảm **0,15** |
 | Hoàn tất học lại bằng Nhớ | Ôn sau **1 ngày** | Dùng khoảng **50% lịch cũ** |
-| Khoảng ôn theo ngày | Ngày lịch địa phương và giờ ôn quy định | Cộng số ngày × 24 giờ |
+| Khoảng ôn theo ngày | Hiện tại (`SM2-VN-1`, đã cài trong `SrsCalculator`): cộng số ngày × 24 giờ; ngày lịch địa phương và giờ ôn là phương án chờ duyệt | Cộng số ngày × 24 giờ |
 
-Đây là khác biệt nghiệp vụ, không chỉ khác cách viết. Có thể xem phiên bản thứ hai tại [thiết kế hệ thống §9.1](C:/doantotnghiep/docs/THIET_KE_HE_THONG_HOC_TU_VUNG.md:1408). Trước khi lập trình, cần thống nhất một bảng quy tắc và đồng bộ tài liệu, kiểm thử theo bảng đó.
+Đây là khác biệt nghiệp vụ, không chỉ khác cách viết. Phiên bản thứ hai nằm trong tài liệu `THIET_KE_HE_THONG_HOC_TU_VUNG.md` ngoài repository này (không có trong checkout). Trước khi lập trình, cần thống nhất một bảng quy tắc và đồng bộ tài liệu, kiểm thử theo bảng đó.
 
-**Hiện trạng:** backend chưa có bộ tính và các API SRS; B2.1–B2.6 chưa hoàn tất. Mockup có hàm mô phỏng, nhưng không phải bằng chứng backend đã triển khai.
+**Hiện trạng:** backend đã có bộ tính SRS (`SrsCalculator`, B2.1) và `GET /learning/today` (B2.2); B2.3–B2.6 (phiên học, ghi kết quả, cứu lịch) chưa hoàn tất. Mockup có hàm mô phỏng, nhưng không phải bằng chứng backend đã triển khai.
 
 ---
 
@@ -174,6 +174,7 @@ Một điểm cần thống nhất thêm: TK gọi quá hạn khi `han_on_at < n
 | `buoc_hoc` | Bước ghi nhớ ban đầu | 0 hoặc 1 |
 | `chuoi_thanh_cong` | Số lượt liên tiếp thành công theo quy tắc | 2 |
 | `so_lan_quen` | Số lần đang ôn bị chuyển sang học lại | 3 |
+| `khoang_on_ngay` | Khoảng ôn hiện tại tính bằng ngày (số nguyên; 0 khi chưa ở trạng thái ôn tập) | 6 |
 | `han_on_at` | Thời điểm cần xuất hiện lại | Một timestamp cụ thể |
 | `version` | Phiên bản dữ liệu để chống ghi đè | 7 |
 
@@ -393,7 +394,7 @@ Giả sử bạn hoàn tất một bước lúc **23:50 ngày 13/10**:
 Theo [TK §7.3](C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:309):
 
 - Bước phút: tính từ thời điểm máy chủ nhận kết quả.
-- Bước ngày: tính theo ngày lịch, múi giờ của phiên và giờ ôn đã quy định.
+- Bước ngày: hiện cộng `N×24 giờ` (`SM2-VN-1`). Cách tính theo ngày lịch, múi giờ phiên và giờ ôn (ví dụ 20:00 ở bảng trên) là phương án chờ nhóm duyệt, chưa cài đặt.
 - Lưu thời điểm dưới dạng UTC.
 - Hiển thị và tính ngày mục tiêu theo múi giờ người học.
 

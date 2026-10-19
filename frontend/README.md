@@ -78,19 +78,19 @@ Truy cập [localhost:3000](http://localhost:3000). Backend cần tiếp tục c
 - Thư viện công khai, phân trang, bộ mẫu; sao chép với key giữ theo người dùng/bộ nguồn khi thử lại hoặc tải lại trang. Bản sao sửa độc lập.
 - Quản trị chủ đề/nhãn B1.7 dành cho ADMIN. CSV B1.12 đã mở tại `/bo-the/{id}/nhap-csv`: multipart, ánh xạ, preview, chọn dòng, commit atomic/Idempotency-Key và export blob. Các chức năng học SRS/luyện tập ở giai đoạn sau vẫn chưa mở.
 
-CSV dùng UTF-8/BOM, comma và quote RFC4180; import1MB/1000 dòng. Dòng lỗi không chọn được, trùng chỉ cảnh báo. Sau lần gửi commit, khóa selection và lưu key theo user/bộ trong sessionStorage để retry cùng yêu cầu sau reload. Export không chứa media/tiến độ; ô nguy hiểm thêm dấu nháy đơn, không bỏ khi nhập lại. [Hợp đồng CSV](../docs/luong-backend/B1.12-csv.md), [file bệnh viện124 từ](../data/csv/co-gi-trong-benh-vien.csv), [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+CSV dùng UTF-8/BOM, comma và quote RFC4180; import 1 MB/1000 dòng. Dòng lỗi không chọn được, trùng chỉ cảnh báo. Sau lần gửi commit, khóa selection và lưu key theo user/bộ trong sessionStorage để retry cùng yêu cầu sau reload. Export không chứa media/tiến độ; ô nguy hiểm thêm dấu nháy đơn, không bỏ khi nhập lại. [Hợp đồng CSV](../docs/luong-backend/B1.12-csv.md), [file bệnh viện124 từ](`data/csv/co-gi-trong-benh-vien.csv` (tệp mẫu không còn trong checkout)), [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 Nhập CSV dùng teal/icon upload, Xuất CSV xanh lá/icon download, token sáng/tối. Thẻ thư viện có cột phải cho media/đọc; tùy chọn ảnh ở bên phải toolbar, mobile media xuống dưới. CSS/mockup dùng cùng nguồn chuẩn qua ui:sync/ui:check.
 
 Âm thanh tải lên không bắt buộc. Nút **Đọc từ / Đọc câu ví dụ** dùng [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), cho chọn Anh-Mỹ, Anh-Anh, Anh-Úc, Anh-Canada hoặc tất cả giọng tiếng Anh. Tự động ưu tiên tên giọng có Natural/Neural, rồi Google, rồi giọng mặc định trong vùng đã chọn; đây là xếp hạng theo metadata, không phải kết quả đo chất lượng. Nếu vùng không có giọng thì dùng giọng tiếng Anh khác có sẵn; lựa chọn giọng cụ thể được ưu tiên. Danh sách và chất lượng phụ thuộc thiết bị; giọng trực tuyến cần mạng. Có tệp âm thanh thì thẻ giữ nút nghe tệp riêng. Không tạo `amTuId`/`amCauId` giả, không đưa giọng trình duyệt lên storage. Chưa tích hợp Azure Speech hoặc dịch vụ TTS có khóa. Kiểm tra tự động không xác nhận chất lượng âm thanh nghe được.
 
-FE và mockup dùng SVG cùng nét, không dùng emoji. Thanh bên desktop có nút thu gọn/mở rộng; trên điện thoại giữ thanh dưới với icon và tên. Màu hành động: xanh dương lưu/tạo/sao chép, cam sửa, xanh ngọc nghe, đỏ xóa, trung tính điều hướng/hủy. Chữ/icon và trạng thái focus vẫn thể hiện chức năng, không dựa riêng vào màu.
+FE và mockup dùng SVG cùng nét, không dùng emoji. Thanh bên desktop có nút thu gọn/mở rộng; trên điện thoại giữ thanh dưới với icon và tên. Màu hành động: xanh dương lưu/tạo/sao chép, xanh dương đậm (`--edit`, #1762ad) sửa, xanh ngọc nghe, đỏ xóa, trung tính điều hướng/hủy. Chữ/icon và trạng thái focus vẫn thể hiện chức năng, không dựa riêng vào màu.
 
 ### Mock và kiểm tra
 
 `NEXT_PUBLIC_API_MOCKING=enabled` chỉ mock endpoint nền `GET /api/v1/public/ping` với `{ status, serverTime }`. Auth/nội dung đi tới backend thật; các handler demo cũ không được nạp. Mockup HTML dùng demo riêng và không chứng minh backend đã được kiểm thử. `npm test` dùng Node test runner, không dùng Vitest. `/_ui` chỉ mở ở dev; production trả404.
 
-### Bản xem trước cổng3100
+### Bản xem trước cổng 3100
 
 ```powershell
 $env:NEXT_DIST_DIR='.next-check/fe011-build'
@@ -102,11 +102,15 @@ Dùng cùng `NEXT_DIST_DIR` khi build/start. Với OAuth/email, backend đặt `
 
 **Hiển thị ảnh:** mặc định bật ở đầu danh sách thẻ của bộ cá nhân và thư viện. Tắt thì chỉ tải ảnh khi bấm **Xem ảnh**; bật thì ảnh gần vùng đang xem tự tải qua endpoint media đúng quyền. Lựa chọn được nhớ trên trình duyệt, không thêm trường vào thiết lập tài khoản của BE. Hàng nút tự xuống dòng để không bị cắt trên màn hình nhỏ.
 
+## Trang chờ backend
+
+Các trang đã có mã nhưng gọi endpoint backend chưa tồn tại (phiên học, luyện tập, sổ tay, thống kê, `/decks/{id}/progress`, quản trị tài khoản/bộ mẫu/nhật ký; thuộc B2.3–B2.11) được che bởi `FeatureGate` (danh sách `FUTURE` trong `src/components/layout/FeatureGate.js`) và ẩn khỏi điều hướng `AppShell`. Khi backend xong bước tương ứng, gỡ route khỏi `FUTURE`. Trang `/hoc` và `/hoc-phien` dùng `trangThai` `CHUA_TRA_LOI`/`DA_TRA_LOI` và chưa gửi `cheDo` (thuộc B2.6).
+
 ## Đồng bộ giao diện
 
 Giữ phong cách giấy và logo cũ; nút chuyển sáng/tối nằm trên thanh đầu trang,
 lưu lựa chọn trong trình duyệt. Các màu nút theo chức năng: indigo (chính),
-vàng (bắt đầu học), cam (sửa), teal (media), trái tim đỏ (yêu thích), đỏ rượu (nguy hiểm).
+vàng (bắt đầu học), xanh dương đậm (sửa), teal (media), trái tim đỏ (yêu thích), đỏ rượu (nguy hiểm).
 
 CSS dùng chung và biểu tượng do frontend/scripts/sync-ui.mjs đồng bộ sang mockups/shared.
 Sau sửa giao diện chạy `npm run ui:sync`, kiểm tra bằng `npm run ui:check`.
@@ -116,3 +120,9 @@ Thiết lập học có vùng giọng, danh sách giọng tiếng Anh, tốc đ�
 Tên linh vật sửa trong bảng tương tác, tối đa 24 ký tự, lưu bằng `vocab:mascot:name`. Nút giao diện chọn Sáng / Tối / Theo thiết bị, lưu `vocab:theme`; chế độ tự động theo thay đổi của hệ thống.
 
 Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và đặt lại góc mặc định. Vị trí tương đối lưu trong `vocab:mascot:position`, giới hạn trong viewport và được căn lại khi đổi kích thước màn hình.
+
+## Giới hạn đã biết
+
+- Đếm ngược 429 (`useCooldown`) dùng header `Retry-After` của BE (giây); thiếu header thì mặc định 60 giây.
+- Onboarding (`/bat-dau`) gọi tuần tự 3 PUT/PATCH, không nằm trong một giao dịch; bước đã xong được ghi nhớ nên bấm gửi lại chỉ lặp phần còn lỗi (thiết lập học ghi sau cùng).
+- `tests/contract-server.mjs` là fixture thủ công, không script nào gọi; không có `test:contract` hay Playwright.

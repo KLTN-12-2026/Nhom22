@@ -9,7 +9,7 @@
 | Báo cáo trước | [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó |
 
 > **Đọc nhanh:**
-> - Báo cáo này mới có một API: `GET /api/v1/learning/today` (mục 5.1). Mọi thứ khác của Đợt 2 vẫn dùng MSW.
+> - Báo cáo này mới có một API: `GET /api/v1/learning/today` (mục 5.1). Các phần còn lại của Đợt 2 chưa có API: trang gọi BE thật sẽ nhận 404 (MSW chỉ còn mock `GET /public/ping`, không còn handler cho Đợt 2).
 > - Hợp đồng ở mục 5.1 là **contract từ code**, test BE đã chạy nhưng chưa gọi HTTP thật nên JSON mẫu chưa phải response thật (mục 10).
 > - Phần lớn số liệu bằng 0 cho đến khi B2.4 (ghi kết quả ôn) hoàn tất, vì chưa có API nào ghi `tien_do_the` và `su_dung_hoc_ngay`.
 
@@ -22,7 +22,7 @@
 | B2.1 Bộ tính SRS thuần | ✅ `SrsCalculator` (`SM2-VN-1`), 28 test theo roadmap; không API | — | Không có việc cho FE |
 | B2.2 Kế hoạch hôm nay | ✅ `GET /learning/today`, test BE đã chạy (người dùng xác nhận); chưa HTTP thật | F2.1 UI12 `/hom-nay` | Nối theo mục 5.1; ẩn khối cứu lịch ôn |
 
-**Chưa có** (dùng MSW): tạo phiên học và ghi kết quả ôn (B2.3–B2.4), kết thúc phiên/lịch sử/tạm ngưng/đặt lại (B2.5), cứu lịch ôn và query `phut`, `giuTuMoi` (B2.6), luyện tập (B2.7–B2.8), sổ tay (B2.9), thống kê (B2.10), quản trị (B2.11).
+**Chưa có** (BE chưa có endpoint, FE gọi sẽ 404): tạo phiên học và ghi kết quả ôn (B2.3–B2.4), kết thúc phiên/lịch sử/tạm ngưng/đặt lại (B2.5), cứu lịch ôn và query `phut`, `giuTuMoi` (B2.6), luyện tập (B2.7–B2.8), sổ tay (B2.9), thống kê (B2.10), quản trị (B2.11).
 
 ## 2. Chạy BE
 
@@ -113,7 +113,7 @@ Không có `cuuLichOn`; FE coi là `undefined` đến hết B2.6.
 
 - Zod schema: các field ở mục 5.1; `boThe[].boTheId` là `z.string()`, `cuuLichOn` là `.optional()`.
 - Hook: `useQuery({ queryKey: ['learning','today'], queryFn: () => api('/learning/today') })`; làm mới sau khi kết thúc phiên (B2.5).
-- MSW: dùng JSON minh họa ở mục 5.1 cho đến khi có response thật.
+- Không còn MSW cho Đợt 2: dùng JSON minh họa ở mục 5.1 làm mẫu; `/hom-nay` đọc API thật khi F2.1 được nối.
 
 ## 7. Dữ liệu mẫu / tài khoản demo
 
@@ -142,7 +142,7 @@ Hợp đồng dự kiến theo TK §13 và roadmap; chưa phải đã triển kh
 
 | Mục | Chi tiết |
 |---|---|
-| Kiểm chứng | `StreakCalculatorTest` và `FR06TodayPlanTest` (chưa commit) đã được người dùng chạy ngày 19/10/2026, báo không lỗi; không có số lượng test hay log đính kèm. Chưa HTTP thật; request Postman chưa chạy |
+| Kiểm chứng | `StreakCalculatorTest` và `FR06TodayPlanTest` (đã commit) đã được người dùng chạy ngày 19/10/2026, báo không lỗi; không có số lượng test hay log đính kèm. Chưa HTTP thật; request Postman chưa chạy |
 | Quyết định nghiệp vụ đề xuất | 20 giây/lượt (hằng); chuỗi theo ngày ≥5 lượt thay vì theo phiên (TK §15.1 chưa chốt); `daHocHomNay.soPhut` ước tính. Có thể đổi khi B2.3/B2.5 và Đợt 3 hoàn tất |
 | "Đến hạn hôm nay" ≠ hàng đợi | Gồm cả thẻ hạn muộn hơn giờ hiện tại trong ngày; hàng đợi B2.3 lấy `han_on_at <= now`. FE không dùng `soDenHan` làm số thẻ chắc chắn học được ngay |
 | Mockup | Đã rà 19/10: `mockups/dot2/hom-nay.html` đọc đúng tên field, hiển thị đúng và console không lỗi; `demo.js` đã bỏ `muiGio`, `laUocTinh`. Lệch còn lại của demo: 15 giây/lượt (BE 20, trang đọc `giayMoiLuot`), `soPhut` đo thật còn BE ước tính, demo không liệt kê bộ rỗng, demo có `cuuLichOn` (B2.6). `hoc.html` ghi cứng "15 giây" (B2.3) |
@@ -150,7 +150,7 @@ Hợp đồng dự kiến theo TK §13 và roadmap; chưa phải đã triển kh
 | Đổi múi giờ | Ngày cũ trong `su_dung_hoc_ngay` giữ ngày địa phương lúc ghi, không viết lại |
 | Chuỗi | Chỉ xét tối đa 1000 ngày gần nhất |
 | Hợp đồng B2.3 dự kiến khác mockup (đối chiếu 19/10, chưa triển khai) | (1) `POST /learning/sessions` chưa nhận `cheDo` (B2.6); (2) response có `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, mockup dùng `CHO`/`DA_ON`; (3) `hangDoi[].the` trả `anhId`/`amTuId`/`amCauId` (ID tệp, tải qua `/files/{id}`), mockup dùng `anhUrl`/`amThanhUrl`; (4) chưa có `duKien` (xem trước lịch 4 mức) ở B2.3; (5) hàng đợi tối đa `phút×60/20` thẻ, mockup dùng 15 giây; (6) `hetGioAt` được tính ra; (7) hàng đợi rỗng → 422 `BUSINESS_RULE`. Mockup đã sửa 19/10 theo (2), (3), (5) (`trangThai` dòng hàng đợi, `anhId`/`amTuId`/`amCauId`, 20 giây/lượt, gợi ý 15/30/60 lượt ở `hoc.html`) và bỏ `cheDo` khỏi yêu cầu của `hoc.html`; `demo.js` vẫn hỗ trợ `cheDo` và `duKien` cho B2.4/B2.6. Chưa chạy lại trên trình duyệt (cổng 5173 bị chặn), chỉ kiểm cú pháp `demo.js` và script của `hoc-phien.html` |
-| Thẻ học lại trong phiên | Mockup đẩy thẻ lại cuối hàng đợi (`laiTrongPhien`); V8 có unique `(phien_id, the_id, chieu_hoc)` nên cách làm sẽ chốt ở B2.4 |
+| Thẻ học lại trong phiên | Mockup đẩy thẻ lại cuối hàng đợi (`laiTrongPhien`); V8 có unique `(phien_id, the_id, chieu_hoc)`; đã chốt tái dùng dòng cũ (đặt lại `CHUA_TRA_LOI`, `thu_tu` = cuối hàng đợi), không migration, thực hiện ở B2.4 |
 | Ngoại lệ module | Truy vấn của `learning` join entity `content` (chỉ đọc); đã ghi vào conventions |
 
 ## 11. Báo lỗi cho BE

@@ -49,7 +49,7 @@ function StatsContent() {
 
   const { data: myDecks } = useQuery({
     queryKey: ['my-decks'],
-    queryFn: () => apiFetch('/api/v1/decks?tab=mine').catch(() => ({ items: [] }))
+    queryFn: () => apiFetch('/api/v1/decks').catch(() => ({ items: [] }))
   });
 
   const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, isError: overviewError } = useQuery({

@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { Button, Icon } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
-const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC', IELTS: 'IELTS' };
+const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 const LEVEL = { A1: 'A1 - Sơ cấp', A2: 'A2 - Sơ trung cấp', B1: 'B1 - Trung cấp', B2: 'B2 - Thượng trung cấp', C1: 'C1 - Cao cấp', C2: 'C2 - Thành thạo' };
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
@@ -69,7 +70,7 @@ function DeckDialog({ deck, topics, onClose, onSave }) {
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Chủ đề *</label>
             <select required value={formData.chuDeId} onChange={e => setFormData({ ...formData, chuDeId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px' }}>
               <option value="">Chọn</option>
-              {topics?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {topics?.map(t => <option key={t.id} value={t.id}>{t.ten}</option>)}
             </select>
           </div>
           <div>
@@ -176,7 +177,7 @@ function AdminDecksContent() {
 
   const { data: topics } = useQuery({
     queryKey: ['admin-topics'],
-    queryFn: () => apiFetch('/api/v1/admin/topics')
+    queryFn: () => fetchAllPages('/api/v1/admin/topics')
   });
 
   const { data: listData, isLoading: listLoading } = useQuery({
