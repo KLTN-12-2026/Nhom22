@@ -92,4 +92,18 @@ public interface TheTuVungRepository
 
         Long getSoThe();
     }
+
+    @Query("""
+            select c
+            from TheTuVung c
+            join BoThe b on b.id = c.boTheId
+            where c.id in :ids
+              and c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+            """)
+    List<TheTuVung> findOwnedActive(
+            @Param("userId") Long userId,
+            @Param("ids") Collection<Long> ids
+    );
 }

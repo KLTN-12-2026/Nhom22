@@ -131,4 +131,6 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
             @Param("moi") TrangThaiTienDo moi,
             Pageable pageable
     );
+
+    List<TienDoThe> findByNguoiDungIdAndChieuHocAndTheIdIn(Long nguoiDungId, ChieuHoc chieuHoc, Collection<Long> theIds);
 }
