@@ -33,6 +33,7 @@ Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải t
 
 - [B2.1 — Bộ tính SRS thuần](B2.1-srs-calculator.md)
 - [B2.2 — Kế hoạch hôm nay](B2.2-ke-hoach-hom-nay.md)
+- [B2.3 — Tạo phiên học](B2.3-tao-phien-hoc.md)
 
 ## Redis
 

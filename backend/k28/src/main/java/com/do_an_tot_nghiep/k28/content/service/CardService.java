@@ -5,6 +5,7 @@ import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CreateCardRequest;
+import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateCardRequest;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
 import com.do_an_tot_nghiep.k28.content.entity.TepTin;
@@ -229,6 +230,46 @@ public class CardService {
 
         card.markDeleted(clock.instant());
         cards.flush();
+    }
+
+    public Map<Long, StudyCardResponse> studyCards(
+            Long userId,
+            Collection<Long> cardIds
+    ) {
+        if (cardIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, List<CardLinkRepository.FileLink>> filesByCard =
+                links.findFiles(cardIds).stream()
+                        .collect(Collectors.groupingBy(
+                                CardLinkRepository.FileLink::theId
+                        ));
+
+        return cards.findOwnedActive(userId, cardIds).stream()
+                .collect(Collectors.toMap(
+                        TheTuVung::getId,
+                        card -> {
+                            List<CardLinkRepository.FileLink> fileLinks =
+                                    filesByCard.getOrDefault(
+                                            card.getId(), List.of()
+                                    );
+                            return new StudyCardResponse(
+                                    String.valueOf(card.getId()),
+                                    String.valueOf(card.getBoTheId()),
+                                    card.getTu(),
+                                    card.getTuLoai(),
+                                    card.getPhienAm(),
+                                    card.getNghiaVi(),
+                                    card.getViDuEn(),
+                                    card.getDichVi(),
+                                    fileId(fileLinks, VaiTroTep.ANH),
+                                    fileId(fileLinks, VaiTroTep.AM_TU),
+                                    fileId(fileLinks, VaiTroTep.AM_CAU),
+                                    card.getVersion()
+                            );
+                        }
+                ));
     }
 
     private void applyDetails(
