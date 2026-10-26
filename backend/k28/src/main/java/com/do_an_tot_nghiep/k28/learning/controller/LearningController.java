@@ -2,12 +2,16 @@ package com.do_an_tot_nghiep.k28.learning.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
+import com.do_an_tot_nghiep.k28.learning.dto.ReviewRequest;
+import com.do_an_tot_nghiep.k28.learning.dto.ReviewResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudySessionResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.ReviewService;
 import com.do_an_tot_nghiep.k28.learning.service.StudySessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +25,7 @@ public class LearningController {
     private final LearningPlanService planService;
     private final CurrentUser currentUser;
     private final StudySessionService sessionService;
+    private final ReviewService reviewService;
 
     @GetMapping("/today")
     public TodayPlanResponse today() {
@@ -35,6 +40,18 @@ public class LearningController {
         return ResponseEntity.created(
                 URI.create("/api/v1/learning/sessions/" + response.id())
         ).body(response);
+    }
+
+    @PostMapping("/sessions/{id}/reviews")
+    public ResponseEntity<ReviewResponse> review(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ReviewRequest request
+    ) {
+        ReviewService.Outcome outcome =
+                reviewService.record(currentUser.id(), id, request);
+        return ResponseEntity
+                .status(outcome.replayed() ? HttpStatus.OK : HttpStatus.CREATED)
+                .body(outcome.body());
     }
 
     @GetMapping("/sessions/{id}")

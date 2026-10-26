@@ -53,4 +53,13 @@ public class PhienHocThe extends BaseEntity {
         item.trangThai = TrangThaiPhienHocThe.CHUA_TRA_LOI;
         return item;
     }
+
+    public void markAnswered() {
+        this.trangThai = TrangThaiPhienHocThe.DA_TRA_LOI;
+    }
+
+    public void requeue(int thuTu) {
+        this.thuTu = thuTu;
+        this.trangThai = TrangThaiPhienHocThe.CHUA_TRA_LOI;
+    }
 }
