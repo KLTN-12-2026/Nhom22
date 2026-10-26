@@ -6,6 +6,7 @@ import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -130,6 +131,14 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
             @Param("boTheId") Long boTheId,
             @Param("moi") TrangThaiTienDo moi,
             Pageable pageable
+    );
+
+    Optional<TienDoThe> findByNguoiDungIdAndTheIdAndChieuHoc(
+            Long nguoiDungId, Long theId, ChieuHoc chieuHoc
+    );
+
+    boolean existsByNguoiDungIdAndTheIdAndTrangThaiNot(
+            Long nguoiDungId, Long theId, TrangThaiTienDo trangThai
     );
 
     List<TienDoThe> findByNguoiDungIdAndChieuHocAndTheIdIn(Long nguoiDungId, ChieuHoc chieuHoc, Collection<Long> theIds);

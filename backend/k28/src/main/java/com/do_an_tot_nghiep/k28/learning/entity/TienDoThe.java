@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.learning.entity;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
+import com.do_an_tot_nghiep.k28.learning.service.SrsState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,8 +12,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+
 import java.math.BigDecimal;
 import java.time.Instant;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,4 +66,32 @@ public class TienDoThe extends BaseEntity {
 
     @Version
     private Long version;
+
+    public static TienDoThe create(Long nguoiDungId, Long theId, ChieuHoc chieuHoc) {
+        TienDoThe row = new TienDoThe();
+        row.nguoiDungId = nguoiDungId;
+        row.theId = theId;
+        row.chieuHoc = chieuHoc;
+        row.apply(SrsState.newCard());
+
+        return row;
+    }
+
+    public SrsState toState() {
+        return new SrsState(
+                trangThai, buocHoc, ef, khoangOnNgay,
+                chuoiThanhCong, soLanQuen, hanOnAt
+        );
+    }
+
+    public void apply(SrsState state) {
+        this.trangThai = state.trangThai();
+        this.buocHoc = state.buocHoc();
+        this.ef = state.ef();
+        this.khoangOnNgay = state.khoangOnNgay();
+        this.chuoiThanhCong = state.chuoiThanhCong();
+        this.soLanQuen = state.soLanQuen();
+        this.hanOnAt = state.hanOnAt();
+    }
+
 }
