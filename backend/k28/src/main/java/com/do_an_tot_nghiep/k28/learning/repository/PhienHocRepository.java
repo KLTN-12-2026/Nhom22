@@ -2,15 +2,26 @@ package com.do_an_tot_nghiep.k28.learning.repository;
 
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHoc;
 
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PhienHocRepository extends JpaRepository<PhienHoc, Long> {
 
     Optional<PhienHoc> findByIdAndNguoiDungId(Long id, Long nguoiDungId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p
+            from PhienHoc p
+            where p.id = :id
+              and p.nguoiDungId = :userId
+            """)
+    Optional<PhienHoc> lockOwned(@Param("id") Long id, @Param("userId") Long userId);
 
     @Query("""
             select b.ten

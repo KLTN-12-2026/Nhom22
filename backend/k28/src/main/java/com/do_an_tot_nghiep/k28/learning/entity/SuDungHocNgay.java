@@ -35,4 +35,11 @@ public class SuDungHocNgay extends BaseEntity {
 
     @Version
     private Long version;
+
+    public void record(boolean theMoiVatLy) {
+        this.soLuotHopLe++;
+        if (theMoiVatLy) {
+            this.soTheMoi++;
+        }
+    }
 }
