@@ -232,6 +232,10 @@ public class CardService {
         cards.flush();
     }
 
+    public boolean isStudyable(Long userId, Long cardId) {
+        return !cards.findOwnedActive(userId, List.of(cardId)).isEmpty();
+    }
+
     public Map<Long, StudyCardResponse> studyCards(
             Long userId,
             Collection<Long> cardIds

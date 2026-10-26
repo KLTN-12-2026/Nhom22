@@ -324,12 +324,13 @@ Quy ước triển khai B2.1 (**đề xuất**, phiên bản thuật toán `SM2-
 
 Mỗi kết quả mang `client_event_id`, `phien_id`, `the_id`, `chieu_hoc` và `expected_version`. Trong một giao dịch:
 
-1. Kiểm tra quyền, trạng thái phiên và thẻ thực sự thuộc hàng đợi.
-2. Kiểm tra sự kiện đã được lưu chưa; nếu có, trả lại kết quả cũ.
-3. Khóa bản ghi tiến độ hoặc kiểm tra phiên bản.
-4. Ghi lịch sử gồm trạng thái trước/sau và phiên bản thuật toán.
-5. Cập nhật tiến độ, hạn mức từ mới và thưởng hợp lệ.
-6. Commit và trả phiên bản mới.
+1. Kiểm tra quyền sở hữu phiên (khóa dòng phiên để các lượt cùng phiên xếp hàng).
+2. Kiểm tra sự kiện đã được lưu chưa; nếu có, trả lại kết quả cũ, không kiểm lại trạng thái phiên hay hàng đợi (retry sau khi thẻ đã trả lời hoặc phiên đã kết thúc vẫn nhận kết quả cũ).
+3. Kiểm tra phiên còn đang học (đã kết thúc: xung đột), thẻ thực sự thuộc hàng đợi và chưa trả lời, thẻ còn khả dụng, hạn mức từ mới.
+4. Kiểm tra phiên bản tiến độ.
+5. Ghi lịch sử gồm trạng thái trước/sau và phiên bản thuật toán.
+6. Cập nhật tiến độ, hạn mức từ mới và thưởng hợp lệ.
+7. Commit và trả phiên bản mới.
 
 Hai tab cùng nộp với phiên bản cũ: một tab thành công, tab còn lại nhận xung đột và tải trạng thái mới. Không tự ghi đè.
 
