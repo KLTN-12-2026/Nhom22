@@ -91,11 +91,15 @@ function PracticeForm() {
             <select className="select" id="source" name="source" value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="">Tất cả bộ của tôi</option>
               <option value="SO_TAY">Sổ tay từ khó</option>
-              {myDecks?.items?.map(deck => (
-                <option key={deck.id} value={`deck:${deck.id}`}>
-                  {deck.name.length > 80 ? deck.name.slice(0, 80) + '…' : deck.name} ({deck.cardCount} thẻ)
-                </option>
-              ))}
+              {myDecks?.items?.map(deck => {
+                const name = deck.ten || deck.name || 'Bộ thẻ';
+                const count = deck.soThe ?? deck.cardCount ?? 0;
+                return (
+                  <option key={deck.id} value={`deck:${deck.id}`}>
+                    {name.length > 80 ? name.slice(0, 80) + '…' : name} ({count} thẻ)
+                  </option>
+                );
+              })}
             </select>
             <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
           </div>

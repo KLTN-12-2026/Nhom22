@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-const FUTURE = ['/hom-nay', '/hoc', '/luyen-tap', '/so-tay', '/thong-ke', '/quan-tri/tai-khoan', '/quan-tri/bo-mau', '/quan-tri/nhat-ky'];
+const FUTURE = ['/quan-tri/tai-khoan', '/quan-tri/bo-mau', '/quan-tri/nhat-ky'];
 export function isPendingRoute(path) {
   return FUTURE.some(route => path === route || path.startsWith(route + '/') || path.startsWith(route + '-')) || /^\/bo-the\/[^/]+\/tien-do$/.test(path);
 }
