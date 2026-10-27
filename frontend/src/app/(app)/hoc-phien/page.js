@@ -13,10 +13,10 @@ function FlashcardSessionContent() {
   const id = searchParams.get('id');
   const flipButton = useRef(null);
   const rateButtons = useRef([]);
+  const cardStartTimeRef = useRef(Date.now());
 
   const [flipped, setFlipped] = useState(false);
   const [queueDraft, setQueue] = useState(null);
-
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['session', id],
@@ -27,17 +27,16 @@ function FlashcardSessionContent() {
   const session = data;
   const queue = queueDraft ?? data?.hangDoi ?? [];
 
-
   const reviewMutation = useMutation({
     mutationFn: (body) => apiFetch(`/api/v1/learning/sessions/${id}/reviews`, { method: 'POST', body: JSON.stringify(body) }),
   });
 
-  const finishMutation = useMutation({
-    mutationFn: () => apiFetch(`/api/v1/learning/sessions/${id}/finish`, { method: 'POST' }),
-    onSuccess: () => {
-      router.push(`/hom-nay`);
+  const generateClientEventId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
     }
-  });
+    return 'ev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+  };
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -50,14 +49,19 @@ function FlashcardSessionContent() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  if (!id) return <div>Invalid Session</div>;
-  if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải phiên học...</div>;
-  if (error || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Lỗi tải phiên học.</div>;
-
-  const currentItem = queue.find(q => q.trangThai === 'CHUA_TRA_LOI' && (!q.tienDo.hanOnAt || new Date(q.tienDo.hanOnAt) <= new Date()));
+  const currentItem = queue.find(q => q.trangThai === 'CHUA_TRA_LOI' && (!q.tienDo?.hanOnAt || new Date(q.tienDo.hanOnAt) <= new Date()));
   const realItems = queue.filter(q => q.the);
   const doneCount = realItems.filter(q => q.trangThai === 'DA_TRA_LOI').length;
   const progressPercent = realItems.length ? (doneCount / realItems.length) * 100 : 0;
+
+  useEffect(() => {
+    cardStartTimeRef.current = Date.now();
+    setFlipped(false);
+  }, [currentItem?.theId, currentItem?.thuTu]);
+
+  if (!id) return <div>Invalid Session</div>;
+  if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải phiên học...</div>;
+  if (error || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-danger)' }}>Lỗi tải phiên học.</div>;
 
   const handleFlip = () => {
     setFlipped(true);
@@ -66,19 +70,25 @@ function FlashcardSessionContent() {
   const handleRate = async (rate) => {
     if (!currentItem || !flipped || reviewMutation.isPending) return;
     try {
+      const thoiGianTraLoiMs = Math.min(120000, Math.max(100, Date.now() - cardStartTimeRef.current));
+      const expectedVersion = currentItem.tienDo?.version ?? 0;
+
       const res = await reviewMutation.mutateAsync({
+        clientEventId: generateClientEventId(),
         theId: currentItem.theId,
         chieuHoc: session.chieuHoc,
         danhGia: rate,
-        expectedVersion: currentItem.tienDo.version,
-        thoiGianTraLoiMs: 1500
+        expectedVersion,
+        thoiGianTraLoiMs
       });
 
       const newQueue = [...queue];
       const index = newQueue.findIndex(q => q.theId === currentItem.theId && q.trangThai === 'CHUA_TRA_LOI');
       if (index !== -1) {
         newQueue[index].trangThai = 'DA_TRA_LOI';
-        newQueue[index].tienDo = res.tienDo;
+        if (res.tienDo) {
+          newQueue[index].tienDo = res.tienDo;
+        }
       }
 
       if (res.laiTrongPhien) {
@@ -86,8 +96,7 @@ function FlashcardSessionContent() {
           theId: currentItem.theId,
           thuTu: newQueue.length + 1,
           trangThai: 'CHUA_TRA_LOI',
-          tienDo: res.tienDo,
-          duKien: res.duKien,
+          tienDo: res.tienDo || currentItem.tienDo,
           the: currentItem.the
         });
       }
@@ -97,13 +106,14 @@ function FlashcardSessionContent() {
 
       const remaining = newQueue.filter(q => q.trangThai === 'CHUA_TRA_LOI');
       if (remaining.length === 0) {
-        finishMutation.mutate();
+        setTimeout(() => {
+          router.push('/hom-nay');
+        }, 1200);
       }
     } catch (err) {
-      alert(err.message || 'Lỗi khi lưu kết quả');
+      alert(err.message || 'Lỗi khi lưu kết quả ôn');
     }
   };
-
 
   const the = currentItem?.the;
   const englishFront = session.chieuHoc === 'EN_VI';
@@ -114,43 +124,74 @@ function FlashcardSessionContent() {
       <header className="session-bar">
         <Button variant="ghost" className="btn-icon" aria-label="Rời phiên học" onClick={() => router.push('/hom-nay')}><Icon name="x" /></Button>
         <div className="grow">
-          <p className="bar-title">{session.boTheTen}</p>
+          <p className="bar-title">{session.boTheTen || 'Tất cả bộ thẻ'}</p>
           <p className="bar-sub">{englishFront ? 'Anh → Việt' : 'Việt → Anh'}<span>{doneCount} / {realItems.length} thẻ</span></p>
         </div>
         <span className="stamp" role="status">{reviewMutation.isPending ? 'Đang lưu…' : 'Đã tải phiên học'}</span>
-      <ThemeToggle className="theme-session" /></header>
+        <ThemeToggle className="theme-session" />
+      </header>
       <div className="meter is-progress session-meter" role="progressbar" aria-label="Tiến độ phiên học" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressPercent)}>
         <span style={{ '--v': progressPercent / 100 }} />
       </div>
       <main className="session-main" id="main">
         <div className="sheet flash">
-          {currentItem ? <>
-            <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
-              <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
+          {currentItem && the ? (
+            <>
+              <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
+                <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
+              </div>
+              <div className="face">
+                <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
+                <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
+                {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
+                {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
+              </div>
+              {flipped && (
+                <div className="face back" role="region" aria-label="Mặt sau" aria-live="polite">
+                  <p className="face-label">Mặt sau</p>
+                  <div className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</div>
+                  {!englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
+                  {the.viDuEn && <p className="example en" lang="en">“{the.viDuEn}”</p>}
+                </div>
+              )}
+              <div className="row">
+                {(englishFront || flipped) && <SpeakButton text={the.tu} />}
+                {flipped && the.viDuEn && <SpeakButton sentence text={the.viDuEn} />}
+              </div>
+              <div className="actions">
+                {!flipped ? (
+                  <Button ref={flipButton} variant="primary" className="flip" onClick={handleFlip}>
+                    Lật thẻ <span className="kbd">Space</span>
+                  </Button>
+                ) : (
+                  <div>
+                    <p className="rate-caption">Đánh giá khả năng nhớ</p>
+                    <div className="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
+                      {ratings.map(([rate, label], index) => (
+                        <button
+                          type="button"
+                          className="rate"
+                          key={rate}
+                          ref={element => { rateButtons.current[index] = element; }}
+                          onClick={() => handleRate(rate)}
+                          disabled={reviewMutation.isPending}
+                        >
+                          <span className="rate-top"><span className="kbd">{index + 1}</span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="wait" role="status" style={{ textAlign: 'center', padding: 'var(--space-6) var(--space-4)' }}>
+              <div style={{ fontSize: '3rem', marginBottom: 'var(--space-3)' }}>🎉</div>
+              <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-2)' }}>Chúc mừng bạn đã hoàn thành phiên học!</h2>
+              <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Tất cả các thẻ trong phiên đã được ghi nhận và tính toán lịch ôn tập tiếp theo.</p>
+              <Button variant="primary" onClick={() => router.push('/hom-nay')}>Trở về Hôm nay</Button>
             </div>
-            <div className="face">
-              <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
-              <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
-              {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-              {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
-            </div>
-            {flipped && <div className="face back" role="region" aria-label="Mặt sau" aria-live="polite">
-              <p className="face-label">Mặt sau</p>
-              <div className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</div>
-              {!englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-              {the.viDuEn && <p className="example en" lang="en">“{the.viDuEn}”</p>}
-            </div>}
-            <div className="row">{(englishFront || flipped) && <SpeakButton text={the.tu} />}{flipped && the.viDuEn && <SpeakButton sentence text={the.viDuEn} />}</div>
-            <div className="actions">
-              {!flipped ? <Button ref={flipButton} variant="primary" className="flip" onClick={handleFlip}>Lật thẻ <span className="kbd">Space</span></Button> :
-                <div><p className="rate-caption">Lần ôn tiếp theo</p><div className="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
-                  {ratings.map(([rate, label], index) => <button type="button" className="rate" key={rate} ref={element => { rateButtons.current[index] = element; }} onClick={() => handleRate(rate)} disabled={reviewMutation.isPending}>
-                    <span className="rate-top"><span className="kbd">{index + 1}</span>{label}</span>
-                    {currentItem.duKien?.[rate] && <span className="rate-when">{currentItem.duKien[rate]}</span>}
-                  </button>)}
-                </div></div>}
-            </div>
-          </> : <div className="wait" role="status">Không còn thẻ cần ôn ngay. Vui lòng chờ hoặc kết thúc phiên.</div>}
+          )}
         </div>
       </main>
     </div>
@@ -158,5 +199,9 @@ function FlashcardSessionContent() {
 }
 
 export default function FlashcardSessionPage() {
-  return <Suspense fallback={<div className="flash-note" role="status">Đang tải phiên học…</div>}><FlashcardSessionContent /></Suspense>;
+  return (
+    <Suspense fallback={<div className="flash-note" role="status">Đang tải phiên học…</div>}>
+      <FlashcardSessionContent />
+    </Suspense>
+  );
 }

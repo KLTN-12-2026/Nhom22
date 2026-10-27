@@ -84,7 +84,7 @@ function PracticeSessionContent() {
     });
 
     submitMutation.mutate({
-      submitKey: 'mock-submit-key',
+      submitKey: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('sub-' + Date.now()),
       traLoi,
       thoiGianMs: Date.now() - startTime
     });
@@ -92,58 +92,72 @@ function PracticeSessionContent() {
 
   const renderQuestion = (q, index) => {
     const renderContent = () => {
-      switch (q.loaiCau) {
-        case 'CHON_NGHIA':
-          return (
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'var(--font-word)', marginBottom: '4px' }}>{q.deBai.tu}</div>
-              <div style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-                {q.deBai.phienAm && <span style={{ marginRight: '8px' }}>{q.deBai.phienAm}</span>}
-                {q.deBai.tuLoai && <span style={{ color: 'var(--color-primary)' }}>{q.deBai.tuLoai}</span>}
-              </div>
-              <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-                {q.phuongAn.map((opt, i) => (
-                  <label key={opt.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', gap: 'var(--space-3)', cursor: 'pointer', background: answers[q.id] === opt.id ? 'var(--color-primary-tint)' : 'transparent' }}>
-                    <input type="radio" name={q.id} value={opt.id} checked={answers[q.id] === opt.id} onChange={(e) => handleInputChange(q.id, e.target.value)} />
-                    <span style={{ fontWeight: 'bold', width: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                    <span>{opt.noiDung}</span>
-                  </label>
-                ))}
-              </div>
+      if (q.phuongAn && Array.isArray(q.phuongAn)) {
+        return (
+          <div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 'bold', fontFamily: 'var(--font-word)', marginBottom: '4px' }}>
+              {q.deBai?.tu || q.deBai?.nghiaVi || q.deBai?.cau}
             </div>
-          );
-        case 'DIEN_CHO_TRONG':
-          const sentenceHtml = q.deBai.cau.replace('_____', '<span style="display:inline-block; width:50px; border-bottom:2px solid var(--color-ink); margin:0 4px;"></span>');
-          return (
-            <div>
-              <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }} dangerouslySetInnerHTML={{ __html: sentenceHtml }} />
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Gợi ý: {q.deBai.goiY} <span style={{ color: 'var(--color-primary)' }}>{q.deBai.tuLoai}</span></div>
-              <input type="text" placeholder="Từ cần điền" value={answers[q.id] || ''} onChange={(e) => handleInputChange(q.id, e.target.value)} style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '1.1rem' }} />
+            <div style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
+              {q.deBai?.phienAm && <span style={{ marginRight: '8px' }}>{q.deBai.phienAm}</span>}
+              {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
+              {q.deBai?.goiY && <span style={{ marginLeft: '8px' }}>Gợi ý: {q.deBai.goiY}</span>}
             </div>
-          );
-        case 'GHEP_TU':
-          return (
-            <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-              {q.deBai.cotTrai.map(left => (
-                <div key={left.id} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 'var(--space-3)', alignItems: 'center' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
-                  <select
-                    style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
-                    value={answers[q.id]?.[left.id] || ''}
-                    onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
-                  >
-                    <option value="">Chọn nghĩa...</option>
-                    {q.deBai.cotPhai.map(right => (
-                      <option key={right.id} value={right.id}>{right.noiDung}</option>
-                    ))}
-                  </select>
-                </div>
+            <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
+              {q.phuongAn.map((opt, i) => (
+                <label key={opt.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', gap: 'var(--space-3)', cursor: 'pointer', background: answers[q.id] === opt.id ? 'var(--color-primary-tint)' : 'transparent' }}>
+                  <input type="radio" name={q.id} value={opt.id} checked={answers[q.id] === opt.id} onChange={(e) => handleInputChange(q.id, e.target.value)} />
+                  <span style={{ fontWeight: 'bold', width: '20px' }}>{String.fromCharCode(65 + i)}</span>
+                  <span>{opt.noiDung}</span>
+                </label>
               ))}
             </div>
-          );
-        default:
-          return <div>Dạng bài này chưa được hỗ trợ mock FE ({q.loaiCau})</div>;
+          </div>
+        );
       }
+
+      if (q.loaiCau === 'GHEP_TU' && q.deBai?.cotTrai) {
+        return (
+          <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
+            {q.deBai.cotTrai.map(left => (
+              <div key={left.id} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 'var(--space-3)', alignItems: 'center' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
+                <select
+                  style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  value={answers[q.id]?.[left.id] || ''}
+                  onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
+                >
+                  <option value="">Chọn nghĩa...</option>
+                  {q.deBai.cotPhai?.map(right => (
+                    <option key={right.id} value={right.id}>{right.noiDung}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      const sentenceHtml = q.deBai?.cau ? q.deBai.cau.replace('_____', '<span style="display:inline-block; width:50px; border-bottom:2px solid var(--color-ink); margin:0 4px;"></span>') : null;
+      return (
+        <div>
+          {sentenceHtml ? (
+            <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }} dangerouslySetInnerHTML={{ __html: sentenceHtml }} />
+          ) : (
+            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
+          )}
+          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
+            Gợi ý: {q.deBai?.goiY || 'Gõ từ tiếng Anh chuẩn xác'} {q.deBai?.phienAm && <span>({q.deBai.phienAm})</span>} {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
+          </div>
+          <input
+            type="text"
+            placeholder={q.loaiCau === 'NGHE_VIET' ? 'Nghe phát âm hoặc dựa gợi ý gõ từ...' : 'Nhập từ tiếng Anh...'}
+            value={answers[q.id] || ''}
+            onChange={(e) => handleInputChange(q.id, e.target.value)}
+            style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '1.1rem' }}
+          />
+        </div>
+      );
     };
 
     return (

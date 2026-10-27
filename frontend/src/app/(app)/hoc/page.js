@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, ErrorState } from '@/components/ui';
 
 function HocContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultDeckId = searchParams.get('boTheId') || '';
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['learning-today'],
     queryFn: () => apiFetch('/api/v1/learning/today')
   });
@@ -20,10 +20,12 @@ function HocContent() {
   const [chieuHoc, setChieuHoc] = useState('EN_VI');
   const [quyThoiGian, setQuyThoiGian] = useState('10');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMessage('');
     try {
       const payload = {
         boTheId: boTheId || null,
@@ -34,178 +36,262 @@ function HocContent() {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      router.push(`/hoc-phien/${res.id}`);
+      router.push(`/hoc-phien?id=${res.id}`);
     } catch (err) {
-      alert(err.message || 'Lỗi khi bắt đầu phiên học');
+      setErrorMessage(err.message || 'Lỗi khi bắt đầu phiên học');
       setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
-    return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>;
+    return (
+      <div className="page page-grid with-side">
+        <section className="sheet">
+          <div className="skeleton">
+            <div className="sk sk-title"></div>
+            <div className="sk sk-row"></div>
+            <div className="sk sk-row"></div>
+            <div className="sk sk-row"></div>
+          </div>
+        </section>
+      </div>
+    );
   }
+
   if (error) {
-    return <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-danger)' }}>Lỗi: {error.message}</div>;
+    return (
+      <div className="page page-grid with-side">
+        <section className="sheet">
+          <ErrorState title="Chưa tải được thông tin phiên học" description={error.message} onRetry={refetch} />
+        </section>
+      </div>
+    );
   }
 
   const boThe = data?.boThe || [];
-  const allInfo = boThe.reduce((a, b) => ({ soCanOn: a.soCanOn + b.soCanOn, soMoi: a.soMoi + b.soMoi }), { soCanOn: 0, soMoi: 0 });
+  const allInfo = boThe.reduce(
+    (a, b) => ({ soCanOn: a.soCanOn + (b.soCanOn || 0), soMoi: a.soMoi + (b.soMoi || 0) }),
+    { soCanOn: 0, soMoi: 0 }
+  );
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', alignItems: 'center' }}>
-            <span>Phiên học</span>
-            <span>&bull;</span>
-            <span>Chọn bộ, chiều và thời gian</span>
-          </div>
-          <Link href="/hom-nay" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--color-ink-2)', textDecoration: 'none', marginBottom: 'var(--space-3)' }}>
+      <section className="sheet" aria-labelledby="page-title">
+        <div className="form-head">
+          <div className="form-code"><span>Phiên học</span><span>Chọn bộ, chiều và thời gian</span></div>
+          <Link href="/hom-nay" className="btn btn-quiet" style={{ justifySelf: 'start', marginLeft: '-12px' }}>
             <Icon name="arrow-left" /> Hôm nay
           </Link>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Chọn phiên học</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Hệ thống xếp thẻ theo thứ tự: bước học lại đến hạn, thẻ ôn quá hạn và đến hạn, rồi mới đến từ mới trong hạn mức.</p>
+          <h1 id="page-title">Chọn phiên học</h1>
+          <p>Hệ thống xếp thẻ theo thứ tự: bước học lại đến hạn, thẻ ôn quá hạn và đến hạn, rồi mới đến từ mới trong hạn mức.</p>
         </div>
 
-        {boThe.length === 0 ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Chưa có bộ thẻ nào để học</h2>
-            <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ thẻ trước.</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-3)' }}>
-              <Button variant="primary" onClick={() => router.push('/thu-vien')}>Xem thư viện</Button>
-              <Button variant="secondary" onClick={() => router.push('/bo-the-tao')}>Tạo bộ thẻ</Button>
+        {errorMessage && (
+          <p className="notice notice-danger study-error" role="alert" style={{ marginBottom: 'var(--space-4)' }}>
+            {errorMessage}
+          </p>
+        )}
+
+        {boThe.length === 0 && data?.tongSoThe === 0 ? (
+          <div className="empty">
+            <div className="empty-sheet" aria-hidden="true">
+              <span data-n="1"><i></i><i></i><i></i><i></i></span>
+              <span data-n="2"><i></i><i></i><i></i><i></i></span>
+            </div>
+            <h2>Chưa có bộ thẻ nào để học</h2>
+            <p>Sao chép một bộ mẫu trong thư viện hoặc tự tạo bộ thẻ trước.</p>
+            <div className="row">
+              <Link className="btn btn-primary" href="/thu-vien">Xem thư viện</Link>
+              <Link className="btn btn-secondary" href="/bo-the/tao">Tạo bộ thẻ</Link>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--space-6)' }}>
-            <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-              <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Bộ thẻ</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: boTheId === '' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: boTheId === '' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="boTheId" value="" checked={boTheId === ''} onChange={() => setBoTheId('')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Tất cả bộ của tôi</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', display: 'flex', gap: '12px' }}>
-                      <span>{allInfo.soCanOn} thẻ cần ôn</span>
-                      <span>{allInfo.soMoi} từ chưa học</span>
-                    </div>
-                  </div>
+          <form onSubmit={handleSubmit} className="stack-lg" noValidate>
+            <fieldset className="fieldset" data-field="boTheId">
+              <legend>Bộ thẻ</legend>
+              <div className="choice-grid" id="decks">
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="boTheId"
+                    value=""
+                    checked={boTheId === ''}
+                    onChange={() => setBoTheId('')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">Tất cả bộ của tôi</span>
+                    <span className="choice-desc">
+                      {allInfo.soCanOn} thẻ cần ôn, {allInfo.soMoi} từ chưa học
+                    </span>
+                  </span>
                 </label>
-                {boThe.map(b => (
-                  <label key={b.boTheId} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: boTheId === b.boTheId ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: boTheId === b.boTheId ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                    <input type="radio" name="boTheId" value={b.boTheId} checked={boTheId === b.boTheId} onChange={() => setBoTheId(b.boTheId)} style={{ transform: 'scale(1.2)' }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{b.ten}</div>
-                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', display: 'flex', gap: '12px' }}>
-                        <span>{b.soCanOn} thẻ cần ôn</span>
-                        <span>{b.soMoi} từ chưa học</span>
-                      </div>
-                    </div>
+
+                {boThe.map((b) => (
+                  <label key={b.boTheId} className="choice choice-card">
+                    <input
+                      type="radio"
+                      name="boTheId"
+                      value={b.boTheId}
+                      checked={boTheId === String(b.boTheId)}
+                      onChange={() => setBoTheId(String(b.boTheId))}
+                    />
+                    <span className="bubble" aria-hidden="true"></span>
+                    <span className="choice-body">
+                      <span className="choice-title">{b.ten}</span>
+                      <span className="choice-desc">
+                        {b.soCanOn} thẻ cần ôn, {b.soMoi} từ chưa học
+                      </span>
+                    </span>
                   </label>
                 ))}
               </div>
             </fieldset>
 
-            <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-              <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Chiều học</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: chieuHoc === 'EN_VI' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: chieuHoc === 'EN_VI' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="chieuHoc" value="EN_VI" checked={chieuHoc === 'EN_VI'} onChange={() => setChieuHoc('EN_VI')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Anh → Việt</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Mặt trước là từ tiếng Anh, bạn nhớ lại nghĩa</div>
-                  </div>
+            <fieldset className="fieldset field" data-field="chieuHoc">
+              <legend>Chiều học</legend>
+              <div className="choice-grid cols-2">
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="chieuHoc"
+                    value="EN_VI"
+                    checked={chieuHoc === 'EN_VI'}
+                    onChange={() => setChieuHoc('EN_VI')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">Anh → Việt</span>
+                    <span className="choice-desc">Mặt trước là từ tiếng Anh, bạn nhớ lại nghĩa</span>
+                  </span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: chieuHoc === 'VI_EN' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: chieuHoc === 'VI_EN' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="chieuHoc" value="VI_EN" checked={chieuHoc === 'VI_EN'} onChange={() => setChieuHoc('VI_EN')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Việt → Anh</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Mặt trước là nghĩa tiếng Việt, bạn nhớ lại từ</div>
-                  </div>
-                </label>
-              </div>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>Mỗi chiều có lịch ôn riêng. Học chiều này không làm thay đổi lịch của chiều kia.</p>
-            </fieldset>
-
-            <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-              <legend style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: 'var(--space-3)' }}>Thời gian</legend>
-              <div style={{ display: 'grid', gap: 'var(--space-3)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: quyThoiGian === '5' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: quyThoiGian === '5' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="quyThoiGian" value="5" checked={quyThoiGian === '5'} onChange={() => setQuyThoiGian('5')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>5 phút</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>khoảng 20 lượt</div>
-                  </div>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: quyThoiGian === '10' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: quyThoiGian === '10' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="quyThoiGian" value="10" checked={quyThoiGian === '10'} onChange={() => setQuyThoiGian('10')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>10 phút</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>khoảng 40 lượt</div>
-                  </div>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', background: quyThoiGian === '20' ? 'var(--color-primary-tint)' : 'var(--color-field)', borderColor: quyThoiGian === '20' ? 'var(--color-primary)' : 'var(--color-border)' }}>
-                  <input type="radio" name="quyThoiGian" value="20" checked={quyThoiGian === '20'} onChange={() => setQuyThoiGian('20')} style={{ transform: 'scale(1.2)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>20 phút</div>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>khoảng 80 lượt</div>
-                  </div>
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="chieuHoc"
+                    value="VI_EN"
+                    checked={chieuHoc === 'VI_EN'}
+                    onChange={() => setChieuHoc('VI_EN')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">Việt → Anh</span>
+                    <span className="choice-desc">Mặt trước là nghĩa tiếng Việt, bạn nhớ lại từ</span>
+                  </span>
                 </label>
               </div>
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>Số lượt là ước tính theo 15 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
+              <p className="field-hint">Mỗi chiều có lịch ôn riêng. Học chiều này không làm thay đổi lịch của chiều kia.</p>
             </fieldset>
 
-            <div className="action-bar" style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary)' }}>
-              <Button type="submit" variant="accent" loading={isSubmitting}>
-                {isSubmitting ? 'Đang tải...' : 'Bắt đầu học'}
+            <fieldset className="fieldset field" data-field="quyThoiGian">
+              <legend>Thời gian</legend>
+              <div className="choice-grid cols-3">
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="quyThoiGian"
+                    value="5"
+                    checked={quyThoiGian === '5'}
+                    onChange={() => setQuyThoiGian('5')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">5 phút</span>
+                    <span className="choice-desc">khoảng 15 lượt</span>
+                  </span>
+                </label>
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="quyThoiGian"
+                    value="10"
+                    checked={quyThoiGian === '10'}
+                    onChange={() => setQuyThoiGian('10')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">10 phút</span>
+                    <span className="choice-desc">khoảng 30 lượt</span>
+                  </span>
+                </label>
+                <label className="choice choice-card">
+                  <input
+                    type="radio"
+                    name="quyThoiGian"
+                    value="20"
+                    checked={quyThoiGian === '20'}
+                    onChange={() => setQuyThoiGian('20')}
+                  />
+                  <span className="bubble" aria-hidden="true"></span>
+                  <span className="choice-body">
+                    <span className="choice-title">20 phút</span>
+                    <span className="choice-desc">khoảng 60 lượt</span>
+                  </span>
+                </label>
+              </div>
+              <p className="field-hint">Số lượt là ước tính theo 20 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
+            </fieldset>
+
+            <div className="form-foot" style={{ marginTop: 'var(--space-6)' }}>
+              <Button type="submit" variant="accent" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? 'Đang khởi tạo…' : 'Bắt đầu học'}
               </Button>
-              <Button type="button" variant="ghost" onClick={() => router.push('/hom-nay')} disabled={isSubmitting}>
-                Hủy
-              </Button>
+              <Link className="btn btn-quiet" href="/hom-nay">Hủy</Link>
             </div>
           </form>
         )}
       </section>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Bốn mức tự đánh giá</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
+      <aside className="side-col">
+        <section className="panel" aria-labelledby="rate-title">
+          <h2 className="panel-title" id="rate-title">Bốn mức tự đánh giá</h2>
+          <table className="rate-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
             <thead>
-              <tr style={{ borderBottom: '1px dashed var(--color-border)' }}>
-                <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--color-primary)' }}>Mức</th>
-                <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--color-primary)' }}>Khi nào chọn</th>
+              <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <th scope="col" style={{ textAlign: 'left', padding: 'var(--space-2) 0' }}>Mức</th>
+                <th scope="col" style={{ textAlign: 'left', padding: 'var(--space-2) 0' }}>Khi nào chọn</th>
               </tr>
             </thead>
             <tbody>
-              {/* Using a bit of manual style for table cells */}
               <tr style={{ borderBottom: '1px dashed var(--color-border)' }}>
-                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Quên <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>1</kbd></td>
-                <td style={{ padding: '8px 0' }}>Không nhớ ra, hoặc nhớ sai</td>
+                <th scope="row" style={{ textAlign: 'left', padding: 'var(--space-2) 0', fontWeight: 'bold' }}>
+                  Quên <span className="kbd">1</span>
+                </th>
+                <td style={{ padding: 'var(--space-2) 0' }}>Không nhớ ra, hoặc nhớ sai</td>
               </tr>
               <tr style={{ borderBottom: '1px dashed var(--color-border)' }}>
-                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Khó <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>2</kbd></td>
-                <td style={{ padding: '8px 0' }}>Nhớ ra nhưng phải nghĩ lâu</td>
+                <th scope="row" style={{ textAlign: 'left', padding: 'var(--space-2) 0', fontWeight: 'bold' }}>
+                  Khó <span className="kbd">2</span>
+                </th>
+                <td style={{ padding: 'var(--space-2) 0' }}>Nhớ ra nhưng phải nghĩ lâu</td>
               </tr>
               <tr style={{ borderBottom: '1px dashed var(--color-border)' }}>
-                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Nhớ <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>3</kbd></td>
-                <td style={{ padding: '8px 0' }}>Nhớ đúng trong vài giây</td>
+                <th scope="row" style={{ textAlign: 'left', padding: 'var(--space-2) 0', fontWeight: 'bold' }}>
+                  Nhớ <span className="kbd">3</span>
+                </th>
+                <td style={{ padding: 'var(--space-2) 0' }}>Nhớ đúng trong vài giây</td>
               </tr>
               <tr>
-                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Dễ <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>4</kbd></td>
-                <td style={{ padding: '8px 0' }}>Biết ngay, không cần nghĩ</td>
+                <th scope="row" style={{ textAlign: 'left', padding: 'var(--space-2) 0', fontWeight: 'bold' }}>
+                  Dễ <span className="kbd">4</span>
+                </th>
+                <td style={{ padding: 'var(--space-2) 0' }}>Biết ngay, không cần nghĩ</td>
               </tr>
             </tbody>
           </table>
-          <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginTop: 'var(--space-3)' }}>Chọn theo trí nhớ thật của bạn. Đây không phải điểm số, chỉ dùng để xếp lịch ôn.</p>
+          <p className="small muted" style={{ marginTop: 'var(--sp-3)' }}>
+            Chọn theo trí nhớ thật của bạn. Đây không phải điểm số, chỉ dùng để xếp lịch ôn.
+          </p>
         </section>
-        
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Phím tắt khi học</h2>
-          <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-            <li><kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>Space</kbd> Lật thẻ</li>
-            <li><kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>1</kbd> <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>2</kbd> <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>3</kbd> <kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>4</kbd> Quên, Khó, Nhớ, Dễ</li>
-            <li><kbd style={{ padding: '2px 6px', background: 'var(--color-desk)', border: '1px solid var(--color-border)', borderRadius: '4px' }}>P</kbd> Nghe phát âm</li>
+
+        <section className="panel" aria-labelledby="key-title">
+          <h2 className="panel-title" id="key-title">Phím tắt khi học</h2>
+          <ul className="queue-order" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-2)' }}>
+            <li><span className="kbd">Space</span> Lật thẻ</li>
+            <li>
+              <span className="kbd">1</span> <span className="kbd">2</span> <span className="kbd">3</span> <span className="kbd">4</span> Quên, Khó, Nhớ, Dễ
+            </li>
+            <li><span className="kbd">P</span> Nghe phát âm</li>
           </ul>
         </section>
       </aside>
@@ -215,7 +301,7 @@ function HocContent() {
 
 export default function HocPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div className="page sheet skeleton"><div className="sk sk-row" /></div>}>
       <HocContent />
     </Suspense>
   );
