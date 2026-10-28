@@ -185,7 +185,7 @@ function NotebookContent() {
 
                     <div className="answer-meta">
                       <Link href={`/bo-the-tien-do?id=${it.boTheId}`}>
-                        {it.boTheTen.length > 60 ? it.boTheTen.slice(0, 60) + '…' : it.boTheTen}
+                        {(it.boTheTen || 'Bộ của tôi').length > 60 ? (it.boTheTen || 'Bộ của tôi').slice(0, 60) + '…' : (it.boTheTen || 'Bộ của tôi')}
                       </Link>
                       {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
                       {it.lanGanNhatAt && <span>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
