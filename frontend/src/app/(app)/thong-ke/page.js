@@ -238,7 +238,7 @@ function StatsContent() {
               <select className="select" id="deck" name="boTheId" value={deckId} onChange={e => setDeckId(e.target.value)}>
                 <option value="">Tất cả bộ của tôi</option>
                 {myDecks?.items?.map(d => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
+                  <option key={d.id} value={d.id}>{d.ten || d.name || 'Bộ thẻ'}</option>
                 ))}
               </select>
               <p className="field-error"></p>
