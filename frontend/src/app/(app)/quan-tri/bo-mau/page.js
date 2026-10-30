@@ -9,7 +9,7 @@ import { Button, Icon } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
-const LEVEL = { A1: 'A1 - Sơ cấp', A2: 'A2 - Sơ trung cấp', B1: 'B1 - Trung cấp', B2: 'B2 - Thượng trung cấp', C1: 'C1 - Cao cấp', C2: 'C2 - Thành thạo' };
+const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -162,7 +162,7 @@ function AdminDecksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { me } = useMe();
+  const { data: me } = useMe();
 
   const id = searchParams.get('id');
   const defaultQ = searchParams.get('q') || '';
@@ -181,8 +181,15 @@ function AdminDecksContent() {
   });
 
   const { data: listData, isLoading: listLoading } = useQuery({
-    queryKey: ['admin-decks', q, trangThai, page],
-    queryFn: () => apiFetch(`/api/v1/admin/decks?q=${encodeURIComponent(q)}&trangThai=${trangThai}&page=${page}&size=20`),
+    queryKey: ['admin-decks', defaultQ, defaultStatus, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (defaultQ) params.set('q', defaultQ);
+      if (defaultStatus) params.set('trangThai', defaultStatus);
+      params.set('page', page.toString());
+      params.set('size', '20');
+      return apiFetch(`/api/v1/admin/decks?${params.toString()}`);
+    },
     enabled: !id
   });
 
@@ -208,12 +215,17 @@ function AdminDecksContent() {
         if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
       }
     },
-    onError: (err) => alert(err.message || 'Lỗi')
+    onError: (err) => alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.')
   });
 
   const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (bắt buộc):');
-    return reason?.trim();
+    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
+    if (reason === undefined) return undefined;
+    if (reason.length < 10 || reason.length > 500) {
+      alert('Lý do cần từ 10 đến 500 ký tự.');
+      return undefined;
+    }
+    return reason;
   };
 
   const handleDeckAction = (act, d) => {

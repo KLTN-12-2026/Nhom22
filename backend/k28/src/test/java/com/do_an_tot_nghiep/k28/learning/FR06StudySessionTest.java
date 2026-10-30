@@ -20,6 +20,7 @@ import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
 import com.do_an_tot_nghiep.k28.learning.dto.StudyQueueItemResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudySessionResponse;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
+import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
@@ -74,6 +75,8 @@ class FR06StudySessionTest extends AbstractIntegrationTest {
     PhienHocTheRepository queue;
     @Autowired
     CardService cardService;
+    @Autowired
+    LichSuOnRepository history;
 
     @Test
     void fr06_queueOrderIsStepsThenReviewsThenNewWithinQuota() throws Exception {
@@ -295,7 +298,7 @@ class FR06StudySessionTest extends AbstractIntegrationTest {
             String instant, Learner learner, String deckId, ChieuHoc direction, int minutes) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new StudySessionService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, cardService)
+                sessions, queue, cardService, history, jsonMapper)
                 .create(learner.id(), new CreateSessionRequest(deckId, direction, minutes));
     }
 

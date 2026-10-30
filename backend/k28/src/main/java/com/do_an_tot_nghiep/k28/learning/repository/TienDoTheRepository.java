@@ -7,12 +7,96 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
+
+    String NHOM_EN_VI = """
+            case when en.id is null or en.trangThai = :moi then 'MOI'
+                 when en.trangThai = :tamNgung then 'TAM_NGUNG'
+                 when en.hanOnAt < :batDau then 'QUA_HAN'
+                 when en.hanOnAt < :ketThuc then 'DEN_HAN'
+                 else 'DANG_HOC' end
+            """;
+
+    String NHOM_VI_EN = """
+            case when vi.id is null or vi.trangThai = :moi then 'MOI'
+                 when vi.trangThai = :tamNgung then 'TAM_NGUNG'
+                 when vi.hanOnAt < :batDau then 'QUA_HAN'
+                 when vi.hanOnAt < :ketThuc then 'DEN_HAN'
+                 else 'DANG_HOC' end
+            """;
+
+    String DECK_PROGRESS_FROM = """
+            from TheTuVung c
+            left join TienDoThe en on en.theId = c.id
+                and en.nguoiDungId = :userId
+                and en.chieuHoc = :enVi
+            left join TienDoThe vi on vi.theId = c.id
+                and vi.nguoiDungId = :userId
+                and vi.chieuHoc = :viEn
+            where c.boTheId = :boTheId
+              and c.xoaAt is null
+              and (:q is null or c.tu like :q escape '!' or c.nghiaVi like :q escape '!')
+            """
+            + "  and (:nhom is null or (" + NHOM_EN_VI + ") = :nhom or ("
+            + NHOM_VI_EN + ") = :nhom) ";
+
+    @Query(
+            value = """
+                    select new com.do_an_tot_nghiep.k28.learning.repository.DeckProgressRow(
+                        c.id, c.tu, c.tuLoai, c.phienAm, c.nghiaVi)
+                    """ + DECK_PROGRESS_FROM + "order by c.id",
+            countQuery = "select count(c) " + DECK_PROGRESS_FROM
+    )
+    Page<DeckProgressRow> deckProgress(
+            @Param("userId") Long userId,
+            @Param("boTheId") Long boTheId,
+            @Param("enVi") ChieuHoc enVi,
+            @Param("viEn") ChieuHoc viEn,
+            @Param("moi") TrangThaiTienDo moi,
+            @Param("tamNgung") TrangThaiTienDo tamNgung,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc,
+            @Param("q") String q,
+            @Param("nhom") String nhom,
+            Pageable pageable
+    );
+
+    @Query("""
+            select new com.do_an_tot_nghiep.k28.learning.repository.DeckProgressCountRow(
+                count(case when t.trangThai = :tamNgung then 1 end),
+                count(case when t.trangThai <> :moi and t.trangThai <> :tamNgung
+                           and t.hanOnAt < :batDau then 1 end),
+                count(case when t.trangThai <> :moi and t.trangThai <> :tamNgung
+                           and t.hanOnAt >= :batDau and t.hanOnAt < :ketThuc then 1 end),
+                count(case when t.trangThai <> :moi and t.trangThai <> :tamNgung
+                           and t.hanOnAt >= :ketThuc then 1 end))
+            from TienDoThe t
+            join TheTuVung c on c.id = t.theId
+            where t.nguoiDungId = :userId
+              and c.boTheId = :boTheId
+              and c.xoaAt is null
+            """)
+    DeckProgressCountRow deckProgressCount(
+            @Param("userId") Long userId,
+            @Param("boTheId") Long boTheId,
+            @Param("moi") TrangThaiTienDo moi,
+            @Param("tamNgung") TrangThaiTienDo tamNgung,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc
+    );
+
+    @Query("select count(c) from TheTuVung c where c.boTheId = :boTheId and c.xoaAt is null")
+    long activeCardCount(@Param("boTheId") Long boTheId);
+
+    List<TienDoThe> findByNguoiDungIdAndTheId(Long nguoiDungId, Long theId);
+
+    List<TienDoThe> findByNguoiDungIdAndTheIdIn(Long nguoiDungId, Collection<Long> theIds);
 
     @Query("""
             select new com.do_an_tot_nghiep.k28.learning.repository.DeckDueRow(

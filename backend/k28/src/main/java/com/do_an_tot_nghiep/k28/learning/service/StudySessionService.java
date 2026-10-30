@@ -7,15 +7,22 @@ import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.service.CardService;
 import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
+import com.do_an_tot_nghiep.k28.learning.dto.LichTiepTheoResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.SessionSummaryResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudyQueueItemResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudySessionResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TienDoResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.TuCanLuyenResponse;
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHocThe;
 import com.do_an_tot_nghiep.k28.learning.entity.SuDungHocNgay;
 import com.do_an_tot_nghiep.k28.learning.entity.TienDoThe;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.DanhGia;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHocThe;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
+import com.do_an_tot_nghiep.k28.learning.repository.HistoryRow;
+import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
@@ -24,6 +31,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +46,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -59,6 +70,8 @@ public class StudySessionService {
     private final PhienHocRepository sessions;
     private final PhienHocTheRepository queue;
     private final CardService cardService;
+    private final LichSuOnRepository history;
+    private final JsonMapper jsonMapper;
 
     @Transactional
     public StudySessionResponse create(Long userId, CreateSessionRequest request) {
@@ -122,16 +135,109 @@ public class StudySessionService {
                         ErrorCode.NOT_FOUND,
                         "Không tìm thấy phiên học"
                 ));
-        String boTheTen = session.getBoTheId() == null
-                ? TAT_CA_BO
-                : sessions.deckName(session.getBoTheId()).orElse(TAT_CA_BO);
 
         return toResponse(
                 userId,
                 session,
-                boTheTen,
+                deckNameOf(session),
                 queue.findByPhienIdOrderByThuTu(session.getId())
         );
+    }
+
+    @Transactional
+    public SessionSummaryResponse finish(Long userId, Long id) {
+        PhienHoc session = sessions.lockOwned(id, userId)
+                .orElseThrow(() -> new ApiException(
+                        ErrorCode.NOT_FOUND,
+                        "Không tìm thấy phiên học"
+                ));
+        session.finish(clock.instant());
+        return summary(userId, session);
+    }
+
+    private SessionSummaryResponse summary(Long userId, PhienHoc session) {
+        List<HistoryRow> events = history.sessionEvents(userId, session.getId());
+        Map<Long, List<HistoryRow>> byCard = events.stream()
+                .collect(Collectors.groupingBy(
+                        HistoryRow::theId, LinkedHashMap::new, Collectors.toList()
+                ));
+
+        Map<DanhGia, Integer> theoDanhGia = new EnumMap<>(DanhGia.class);
+        for (DanhGia danhGia : DanhGia.values()) {
+            theoDanhGia.put(danhGia, 0);
+        }
+        events.forEach(event -> theoDanhGia.merge(event.danhGia(), 1, Integer::sum));
+
+        int soTheMoi = (int) byCard.values().stream()
+                .filter(rows -> tienDo(rows.getFirst().truocJson()).trangThai()
+                        == TrangThaiTienDo.MOI)
+                .count();
+
+        List<TuCanLuyenResponse> tuCanLuyen = byCard.values().stream()
+                .filter(rows -> rows.stream().anyMatch(row ->
+                        row.danhGia() == DanhGia.QUEN || row.danhGia() == DanhGia.KHO))
+                .map(rows -> {
+                    HistoryRow first = rows.getFirst();
+                    return new TuCanLuyenResponse(
+                            String.valueOf(first.theId()),
+                            first.tu(),
+                            first.tuLoai(),
+                            first.nghiaVi(),
+                            rows.stream().map(HistoryRow::danhGia).toList()
+                    );
+                })
+                .toList();
+
+        List<LichTiepTheoResponse> lichTiepTheo = byCard.values().stream()
+                .map(rows -> {
+                    HistoryRow last = rows.getLast();
+                    TienDoResponse sau = tienDo(last.sauJson());
+                    return new LichTiepTheoResponse(
+                            String.valueOf(last.theId()),
+                            last.tu(),
+                            sau.trangThai(),
+                            sau.hanOnAt()
+                    );
+                })
+                .sorted(Comparator.comparing(
+                        LichTiepTheoResponse::hanOnAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ))
+                .toList();
+
+        return new SessionSummaryResponse(
+                String.valueOf(session.getId()),
+                session.getBoTheId() == null
+                        ? null
+                        : String.valueOf(session.getBoTheId()),
+                deckNameOf(session),
+                session.getChieuHoc(),
+                session.getQuyThoiGian(),
+                session.getBatDauAt(),
+                session.hetGioAt(),
+                session.getKetThucAt(),
+                session.getTrangThai(),
+                events.size(),
+                byCard.size(),
+                soTheMoi,
+                queue.countByPhienIdAndTrangThai(
+                        session.getId(), TrangThaiPhienHocThe.CHUA_TRA_LOI
+                ),
+                events.stream().mapToLong(HistoryRow::thoiGian).sum(),
+                theoDanhGia,
+                tuCanLuyen,
+                lichTiepTheo
+        );
+    }
+
+    private String deckNameOf(PhienHoc session) {
+        return session.getBoTheId() == null
+                ? TAT_CA_BO
+                : sessions.deckName(session.getBoTheId()).orElse(TAT_CA_BO);
+    }
+
+    private TienDoResponse tienDo(String json) {
+        return jsonMapper.readValue(json, TienDoResponse.class);
     }
 
     private List<Long> pickCardIds(
@@ -197,7 +303,7 @@ public class StudySessionService {
                         String.valueOf(row.getTheId()),
                         row.getThuTu(),
                         row.getTrangThai(),
-                        tienDoOf(progressByCard.get(row.getTheId())),
+                        TienDoResponse.of(progressByCard.get(row.getTheId())),
                         cards.get(row.getTheId())
                 ))
                 .toList();
@@ -211,29 +317,11 @@ public class StudySessionService {
                 session.getChieuHoc(),
                 session.getQuyThoiGian(),
                 session.getBatDauAt(),
-                session.getBatDauAt().plusSeconds(session.getQuyThoiGian() * 60L),
+                session.hetGioAt(),
                 session.getKetThucAt(),
                 session.getTrangThai(),
                 session.getMuiGio(),
                 hangDoi
-        );
-    }
-
-    private TienDoResponse tienDoOf(TienDoThe row) {
-        if (row == null) {
-            return new TienDoResponse(
-                    TrangThaiTienDo.MOI, 0, SrsState.INITIAL_EF, 0, 0, 0, null, 0L
-            );
-        }
-        return new TienDoResponse(
-                row.getTrangThai(),
-                row.getBuocHoc(),
-                row.getEf(),
-                row.getKhoangOnNgay(),
-                row.getChuoiThanhCong(),
-                row.getSoLanQuen(),
-                row.getHanOnAt(),
-                row.getVersion()
         );
     }
 }

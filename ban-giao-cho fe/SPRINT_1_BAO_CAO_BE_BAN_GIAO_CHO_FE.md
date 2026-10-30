@@ -97,7 +97,7 @@ Postman: thêm 15 request (11 API + 4 lỗi), cập nhật 3 request thiết l�
 | Enum `vaiTro` | `USER`, `ADMIN` |
 | Hạn mức mới (429 `RATE_LIMITED`) | Đăng ký: 5 lần/giờ/IP. Gửi lại thư: 3 lần/15 phút theo IP **và** 3 lần/15 phút theo email. Đăng nhập: 5 lần/15 phút theo email (lần 6 bị 429 kể cả khi đúng mật khẩu; đăng nhập đúng trước đó thì bộ đếm về 0) |
 | Mã lỗi mới (B1.2) | `INVALID_CREDENTIALS` 401 · `EMAIL_NOT_VERIFIED` 403 · `ACCOUNT_LOCKED` 403 |
-| **`api-client.js` (GĐ0 §6) phải sửa** | FE còn cần cập nhật client: thử lại tối đa một lần khi `code === 'FORBIDDEN'` (code mẫu ở mục 6) |
+| **`api-client.js` (GĐ0 §6)** | Đã sửa 30/10/2026: lỗi CSRF trả mã riêng `CSRF_INVALID` (403); client nạp lại CSRF và gửi lại đúng một lần. `FORBIDDEN` (thiếu quyền) không gửi lại |
 | Hạn mức mới (B1.3) | Quên mật khẩu: 3 lần/15 phút theo IP **và** theo email. Đổi mật khẩu: 5 lần/15 phút theo người dùng (đổi thành công thì bộ đếm về 0) |
 | Lỗi nghiệp vụ có `fieldErrors` (từ B1.3) | Một số lỗi không phải lỗi định dạng vẫn kèm 1 phần tử `fieldErrors` để FE hiện dưới ô (ví dụ sai mật khẩu hiện tại → `currentPassword`). `applyServerErrors` xử lý được, không cần code riêng |
 | Cookie phiên | `SESSION` (HttpOnly, SameSite=Lax) có principal sau **đăng nhập thành công**; Google-start có thể tạo session tạm trước xác thực; request khách bị 401 không tạo phiên. Logout trả `SESSION=; Max-Age=0` |
@@ -236,7 +236,7 @@ Chi tiết transaction và nhánh lỗi: [Luồng B1.7](../docs/luong-backend/B1
 
 ## 5. API chi tiết — hợp đồng hiện tại, bằng chứng theo từng lần chạy
 
-Mọi request ghi (POST) cần cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN` (GĐ0 §3). Thiếu → 403 `FORBIDDEN`.
+Mọi request ghi (POST) cần cookie `XSRF-TOKEN` + header `X-XSRF-TOKEN` (GĐ0 §3). Thiếu hoặc sai → 403 `CSRF_INVALID` (từ 30/10/2026; trước đó là `FORBIDDEN`).
 
 ### 5.1 `POST /api/v1/auth/register` — đăng ký
 
@@ -273,7 +273,7 @@ Chưa tạo phiên: đăng ký xong **không** đăng nhập; phải xác thực
 | 400 | `VALIDATION_FAILED`, `fieldErrors: [{field:"muiGio", ...}]`, message `"Múi giờ không hợp lệ"` | `muiGio` không phải IANA | Gắn lỗi vào ô múi giờ (hoặc không gửi `muiGio`) |
 | 409 | `CONFLICT` "Email đã được sử dụng" | Email đã có (không phân biệt hoa/thường) | `setError('email', …)` + link `/dang-nhap` |
 | 429 | `RATE_LIMITED` | > 5 lần/giờ cùng IP | Khóa nút, toast |
-| 403 | `FORBIDDEN` | Thiếu CSRF | `api-client` hiện chỉ xóa token CSRF đã nhớ (lấy lại ở lần gọi sau), không tự gửi lại request |
+| 403 | `CSRF_INVALID` | Thiếu/sai CSRF | `api-client` nạp lại token CSRF và gửi lại đúng một lần |
 
 ```json
 {"code":"VALIDATION_FAILED","message":"Dữ liệu không hợp lệ","fieldErrors":[{"field":"password","message":"Mật khẩu 8–72 ký tự, có chữ cái và chữ số"},{"field":"email","message":"Email không hợp lệ"},{"field":"acceptTerms","message":"Bạn cần đồng ý với điều khoản sử dụng"},{"field":"tenHienThi","message":"Vui lòng nhập tên hiển thị"}],"requestId":"cbf0c5d5-fa82-45a8-ad78-67fa0dbb90e4"}
@@ -742,7 +742,7 @@ HTTP/1.1 201
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 |400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
 |429|RATE_LIMITED|30 lần/phút chung request+complete|khóa nút, thử lại sau|
@@ -784,7 +784,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 |409|CONFLICT|chỉ ở DELETE: tệp đang được thẻ từ vựng sử dụng|báo người dùng gỡ khỏi thẻ trước|
 |503|DEPENDENCY_DOWN|chỉ ở DELETE: S3 lỗi, tombstone giữ lại để retry|thử lại sau|
@@ -829,7 +829,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
 
@@ -859,7 +859,7 @@ Không có body.
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 
 **Tác dụng phụ:** Ghi tombstone, gỡ avatar nếu đang dùng, xóa object. Nếu S3 lỗi503, tệp vẫn bị ẩn trong DB và worker retry. Gọi lại DELETE cùng tệp vẫn204 khi S3 hoạt động.
@@ -903,7 +903,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 |404|NOT_FOUND|không có, khác chủ hoặc đã xóa (GET/complete)|bỏ preview và tải lại dữ liệu|
 |400|VALIDATION_FAILED|body sai, đã kiểm trên BE thật|hiện fieldErrors|
 |422|BUSINESS_RULE|vượt giới hạn, bytes không khớp, pending hết hạn/chưa complete, loại avatar sai tùy API|sửa/chọn lại tệp và tạo yêu cầu mới|
@@ -943,7 +943,7 @@ HTTP/1.1 200
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 
 **Tác dụng phụ:** 200 khi có avatar;204 không có body khi chưa gắn/gỡ ảnh. URL tải được ký lại mỗi lần GET.
 
@@ -969,7 +969,7 @@ Không có body.
 | HTTP | code | Khi nào | FE xử lý |
 |---|---|---|---|
 |401|UNAUTHENTICATED|thiếu/hết phiên, đã kiểm với CSRF hợp lệ|đăng nhập lại|
-|403|FORBIDDEN|request ghi thiếu/sai CSRF|nạp lại CSRF cho lần gọi sau (api-client không tự retry)|
+|403|CSRF_INVALID|request ghi thiếu/sai CSRF|api-client tự nạp lại CSRF và gửi lại đúng một lần|
 
 **Tác dụng phụ:** Chỉ bỏ liên kết avatar, giữ tệp; sau gỡ GET /files/{id} vẫn200. Nếu muốn xóa bytes, gọi DELETE /files/{id} riêng.
 
@@ -1599,7 +1599,7 @@ Mọi endpoint cần SESSION; request ghi cần CSRF theo hợp đồng chung G�
 | createdAt, updatedAt | chuỗi Instant |
 | version | number; dùng response mới nhất khi sửa/xóa |
 
-`DeckResponse` có `mucTieu` (GIAO_TIEP/TOEIC hoặc null; POST/PATCH nhận `mucTieu`, PATCH nhận thêm `boMucTieu` để xóa, gửi cả hai → 400). Không có cardCount, ownerName, visibility, favorite trong DTO. GET /decks chỉ trả bộ của mình chưa xóa; yêu thích bộ người khác không làm bộ đó xuất hiện trong danh sách này.
+`DeckResponse` có `mucTieu` (GIAO_TIEP/TOEIC hoặc null; POST/PATCH nhận `mucTieu`, PATCH nhận thêm `boMucTieu` để xóa, gửi cả hai → 400). Không có cardCount, ownerName, visibility trong DTO; trạng thái yêu thích trả ở `yeuThich`. GET /decks chỉ trả bộ của mình chưa xóa; yêu thích bộ người khác không làm bộ đó xuất hiện trong danh sách này.
 
 | HTTP / code | Tình huống | Kiểm chứng B1.8 | FE xử lý |
 |---|---|---|---|

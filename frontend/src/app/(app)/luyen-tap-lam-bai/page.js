@@ -1,49 +1,113 @@
 'use client';
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { PRACTICE_TYPE, label, splitBlank } from '@/lib/practice-labels.mjs';
+
+const randomPart = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+
+function submitKeyFor(id) {
+  const name = `practice-submit:${id}`;
+  try {
+    const existing = window.sessionStorage.getItem(name);
+    if (existing) return existing;
+    const key = `sub-${randomPart()}`;
+    window.sessionStorage.setItem(name, key);
+    return key;
+  } catch {
+    return `sub-${randomPart()}`;
+  }
+}
+
+function playAudio(url, rate) {
+  const audio = new Audio(url);
+  audio.playbackRate = rate;
+  return audio.play();
+}
+
+const now = () => Date.now();
+
+function BlankSentence({ sentence, mark = '' }) {
+  const [before, after] = splitBlank(sentence);
+  if (after === null) return before;
+  return <>{before}<span style={{ display: 'inline-block', minWidth: '50px', borderBottom: '2px solid var(--color-ink)', margin: '0 4px', textAlign: 'center' }}>{mark}</span>{after}</>;
+}
+
+function ListenPrompt({ url, tuLoai }) {
+  const [error, setError] = useState('');
+  if (!url) return <p className="notice notice-warning" style={{ marginBottom: 'var(--space-3)' }}>Câu này chưa có âm thanh.</p>;
+  const listen = (rate) => {
+    setError('');
+    playAudio(url, rate).catch(() => setError('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'));
+  };
+  return (
+    <div style={{ marginBottom: 'var(--space-3)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <Button type="button" variant="secondary" onClick={() => listen(1)}><Icon name="volume" /> Nghe</Button>
+        <Button type="button" variant="ghost" onClick={() => listen(0.6)}>Nghe chậm</Button>
+      </div>
+      <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>
+        {tuLoai && <>Từ loại <span style={{ color: 'var(--color-primary)' }}>[{tuLoai}]</span>, </>}nghe bao nhiêu lần cũng được
+      </p>
+      {error && <p className="field-error" role="alert">{error}</p>}
+    </div>
+  );
+}
 
 function PracticeSessionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
+  const startRef = useRef(0);
+  const submitKey = useRef('');
 
-  const { data: session, isLoading } = useQuery({
+  const { data: session, isLoading, error } = useQuery({
     queryKey: ['practice-session', id],
     queryFn: () => apiFetch(`/api/v1/practice/sessions/${id}`),
     enabled: !!id
   });
 
   const [answers, setAnswers] = useState({});
-  const [startTime] = useState(() => Date.now());
   const [timer, setTimer] = useState(0);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
+    startRef.current = now();
     const interval = setInterval(() => {
-      setTimer(Math.floor((Date.now() - startTime) / 1000));
+      setTimer(Math.floor((now() - startRef.current) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, [startTime]);
+  }, []);
+
+  useEffect(() => {
+    if (session?.daNop) router.replace(`/luyen-tap-ket-qua?id=${id}`);
+  }, [session?.daNop, id, router]);
 
   const submitMutation = useMutation({
     mutationFn: (body) => apiFetch(`/api/v1/practice/sessions/${id}/submissions`, { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => {
       router.push(`/luyen-tap-ket-qua?id=${id}`);
     },
-    onError: (err) => alert(err.message || 'Lỗi nộp bài')
+    onError: (err) => {
+      if (err.status === 409) {
+        router.replace(`/luyen-tap-ket-qua?id=${id}`);
+        return;
+      }
+      setSubmitError(err.message || 'Chưa nộp được bài. Hãy thử lại, câu trả lời vẫn được giữ.');
+    }
   });
 
   if (!id) return <div>Invalid Session</div>;
+  if (error) return <div className="notice notice-danger" role="alert" style={{ margin: 'var(--space-6)' }}>{error.message || 'Chưa tải được bài luyện.'}</div>;
   if (isLoading || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải bài...</div>;
 
   const handleInputChange = (questionId, value, subId = null) => {
     setAnswers(prev => {
       const next = { ...prev };
       if (subId) {
-        if (!next[questionId]) next[questionId] = {};
-        next[questionId][subId] = value;
+        next[questionId] = { ...(next[questionId] || {}), [subId]: value };
       } else {
         next[questionId] = value;
       }
@@ -83,10 +147,12 @@ function PracticeSessionContent() {
       return { cauHoiId: q.id, noiDung: answers[q.id] || '' };
     });
 
+    if (!submitKey.current) submitKey.current = submitKeyFor(id);
+    setSubmitError('');
     submitMutation.mutate({
-      submitKey: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('sub-' + Date.now()),
+      submitKey: submitKey.current,
       traLoi,
-      thoiGianMs: Date.now() - startTime
+      thoiGianMs: now() - startRef.current
     });
   };
 
@@ -96,7 +162,7 @@ function PracticeSessionContent() {
         return (
           <div>
             <div style={{ fontSize: '1.4rem', fontWeight: 'bold', fontFamily: 'var(--font-word)', marginBottom: '4px' }}>
-              {q.deBai?.tu || q.deBai?.nghiaVi || q.deBai?.cau}
+              {q.deBai?.tu || q.deBai?.nghiaVi || (q.deBai?.cau ? <BlankSentence sentence={q.deBai.cau} /> : null)}
             </div>
             <div style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
               {q.deBai?.phienAm && <span style={{ marginRight: '8px' }}>{q.deBai.phienAm}</span>}
@@ -138,20 +204,25 @@ function PracticeSessionContent() {
         );
       }
 
-      const sentenceHtml = q.deBai?.cau ? q.deBai.cau.replace('_____', '<span style="display:inline-block; width:50px; border-bottom:2px solid var(--color-ink); margin:0 4px;"></span>') : null;
+      const listening = q.loaiCau === 'NGHE_VIET';
       return (
         <div>
-          {sentenceHtml ? (
-            <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }} dangerouslySetInnerHTML={{ __html: sentenceHtml }} />
+          {listening ? (
+            <ListenPrompt url={q.deBai?.amThanhUrl} tuLoai={q.deBai?.tuLoai} />
+          ) : q.deBai?.cau ? (
+            <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}><BlankSentence sentence={q.deBai.cau} /></div>
           ) : (
             <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
           )}
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-            Gợi ý: {q.deBai?.goiY || 'Gõ từ tiếng Anh chuẩn xác'} {q.deBai?.phienAm && <span>({q.deBai.phienAm})</span>} {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
-          </div>
+          {!listening && (
+            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
+              Gợi ý: {q.deBai?.goiY || 'Gõ từ tiếng Anh chuẩn xác'} {q.deBai?.phienAm && <span>({q.deBai.phienAm})</span>} {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
+              {q.deBai?.viDuVi && <div style={{ marginTop: '4px' }}>Ví dụ: {q.deBai.viDuVi}</div>}
+            </div>
+          )}
           <input
             type="text"
-            placeholder={q.loaiCau === 'NGHE_VIET' ? 'Nghe phát âm hoặc dựa gợi ý gõ từ...' : 'Nhập từ tiếng Anh...'}
+            placeholder={listening ? 'Từ bạn nghe được' : 'Nhập từ tiếng Anh...'}
             value={answers[q.id] || ''}
             onChange={(e) => handleInputChange(q.id, e.target.value)}
             style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '1.1rem' }}
@@ -167,7 +238,7 @@ function PracticeSessionContent() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'bold', color: 'var(--color-primary)', marginBottom: 'var(--space-3)', textTransform: 'uppercase' }}>
-            {q.loaiCau.replace(/_/g, ' ')}
+            {label(PRACTICE_TYPE, q.loaiCau)}
           </div>
           {renderContent()}
         </div>
@@ -180,7 +251,7 @@ function PracticeSessionContent() {
       <header style={{ background: 'var(--color-field)', display: 'flex', alignItems: 'center', padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 10 }}>
         <Button variant="ghost" onClick={() => router.push('/luyen-tap')} style={{ padding: '8px' }}><Icon name="x" /></Button>
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Bài luyện ({session.loaiBai})</div>
+          <div style={{ fontWeight: 'bold' }}>Bài luyện: {label(PRACTICE_TYPE, session.loaiBai)}</div>
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{session.boTheTen}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', fontWeight: 'bold' }}>
@@ -202,6 +273,8 @@ function PracticeSessionContent() {
             <div>
               {session.cauHoi.map((q, index) => renderQuestion(q, index))}
             </div>
+
+            {submitError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-4)' }}>{submitError}</p>}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-6)', position: 'sticky', bottom: 'var(--space-4)', background: 'var(--color-field)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
               <div style={{ fontWeight: 'bold' }}>Đã trả lời {answeredCount}/{session.cauHoi.length}</div>

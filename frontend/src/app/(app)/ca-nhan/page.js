@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, logout } from '@/lib/api-client';
 import { uploadAvatar } from '@/lib/upload-avatar';
 import { Icon } from '@/components/ui';
+import { useCooldown } from '@/hooks/useCooldown';
 import styles from './layout.module.css';
 
 export default function ProfilePage() {
@@ -18,6 +19,7 @@ export default function ProfilePage() {
   });
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const avatarCooldown = useCooldown(avatarMutation.error);
 
   const { data: me } = useQuery({
     queryKey: ['me'],
@@ -93,12 +95,12 @@ export default function ProfilePage() {
               </span>
             </span>
             <div className={styles.avatarActions}>
-              <button type="button" className="btn btn-secondary" id="avatar-upload" disabled={avatarMutation.isPending} onClick={() => fileRef.current.click()}>
-                <Icon name="upload" />Tải ảnh lên
+              <button type="button" className="btn btn-secondary" id="avatar-upload" disabled={avatarMutation.isPending || avatarCooldown > 0} onClick={() => fileRef.current.click()}>
+                <Icon name="upload" />{avatarCooldown > 0 ? `Thử lại sau ${avatarCooldown} giây` : 'Tải ảnh lên'}
               </button>
               <input ref={fileRef} onChange={event => { const file = event.target.files[0]; if (file) avatarMutation.mutate(file); event.target.value = ''; }} type="file" id="avatar-file" className="sr-only" accept="image/jpeg,image/png,image/webp" />
-              <button type="button" className="btn btn-quiet" id="avatar-remove" disabled={avatarMutation.isPending} onClick={() => avatarMutation.mutate(null)} hidden={!avatar?.downloadUrl}>Gỡ ảnh</button>
-              <p className="field-hint">JPG, PNG hoặc WEBP, tối đa 2 MB.</p>
+              <button type="button" className="btn btn-quiet" id="avatar-remove" disabled={avatarMutation.isPending || avatarCooldown > 0} onClick={() => avatarMutation.mutate(null)} hidden={!avatar?.downloadUrl}>Gỡ ảnh</button>
+              <p className="field-hint">JPG, PNG hoặc WEBP, tối đa 2 MB, cạnh dài không quá 4096 px.</p>
             </div>
           </div>
           <p className="field-error"></p>

@@ -48,6 +48,26 @@ test('validation and conflict errors retain traceId and field errors without rep
   assert.equal(errors[0][0], 'ten');
   assert.equal(errors[0][1].message, 'Nhập tên');
 });
+test('expired CSRF token is refreshed and the write is retried once', async () => {
+  let tokens = 0;
+  const sent = [];
+  globalThis.fetch = async (path, options) => {
+    if (path.endsWith('/csrf')) return Response.json({ headerName: 'X-XSRF-TOKEN', token: `token-${++tokens}` });
+    sent.push(options.headers.get('X-XSRF-TOKEN'));
+    return sent.length === 1 ? Response.json({ code: 'CSRF_INVALID', message: 'Phiên bảo mật đã hết hạn' }, { status: 403 }) : Response.json({ id: '9' });
+  };
+  assert.equal((await apiFetch('/api/v1/decks', { method: 'POST', body: '{}' })).id, '9');
+  assert.deepEqual(sent, ['token-1', 'token-2']);
+});
+test('CSRF retry happens only once and plain 403 is never replayed', async () => {
+  let writes = 0;
+  globalThis.fetch = async path => path.endsWith('/csrf') ? Response.json({ headerName: 'X-CSRF', token: 't' }) : (writes++, Response.json({ code: writes > 2 ? 'FORBIDDEN' : 'CSRF_INVALID' }, { status: 403 }));
+  await assert.rejects(apiFetch('/api/v1/decks', { method: 'POST', body: '{}' }), error => error.status === 403 && error.code === 'CSRF_INVALID');
+  assert.equal(writes, 2);
+  writes = 2;
+  await assert.rejects(apiFetch('/api/v1/decks', { method: 'POST', body: '{}' }), error => error.code === 'FORBIDDEN');
+  assert.equal(writes, 3);
+});
 test('network failures produce a user-facing API error', async () => {
   globalThis.fetch = async () => { throw new TypeError('Failed to fetch'); };
   await assert.rejects(apiFetch('/api/v1/me'), error => error instanceof ApiError && error.status === 0);

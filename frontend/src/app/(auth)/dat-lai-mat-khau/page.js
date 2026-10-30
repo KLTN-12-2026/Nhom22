@@ -13,12 +13,15 @@ export default function ResetPasswordPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [view, setView] = useState(token ? 'ask' : 'bad'); // ask, done, bad
+  const [view, setView] = useState(token ? 'ask' : 'bad');
 
   const resetMutation = useMutation({
     mutationFn: (data) => apiFetch('/api/v1/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => setView('done'),
-    onError: error => { setErrorMsg(error.message); if (error.code === 'TOKEN_INVALID') setView('bad'); }
+    onError: error => {
+      setErrorMsg(error.message);
+      if (error.code === 'TOKEN_INVALID' || error.fieldErrors?.some(item => item.field === 'token')) setView('bad');
+    }
   });
 
   const handleSubmit = (e) => {

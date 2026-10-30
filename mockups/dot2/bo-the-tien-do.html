@@ -81,7 +81,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="decks" data-auth="required">
-<!-- F2.3 · UI21 · API: GET /decks/{id} (B1.8), GET /decks/{id}/progress?nhom&q&page (dự kiến, cần bổ sung vào B2.5), PUT /cards/{id}/progress/suspend {tamNgung}, POST /cards/{id}/progress/reset, GET /learning/history?theId (B2.5) -->
+<!-- F2.3 · UI21 · API: GET /decks/{id} (B1.8), GET /decks/{id}/progress?nhom&q&page (B2.5, dự kiến), PUT /cards/{id}/progress/suspend {tamNgung} (B2.5), POST /cards/{id}/progress/reset {xacNhan: true} (B2.5), GET /learning/history?theId (B2.5) -->
 <div class="app">
     <header class="app-header"></header>
     <div class="app-body">
@@ -197,7 +197,11 @@
                 timeZone: VL.me().muiGio
             }) + ", đang trễ";
             if (c.nhom === "DEN_HAN") return "Đến hạn " + VL.fmtTime(c.hanOnAt) + " hôm nay";
-            return "Ôn lại sau " + c.khoangHienThi;
+            return "Ôn lại ngày " + new Date(c.hanOnAt).toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                timeZone: VL.me().muiGio
+            });
         }
 
         function dirHtml(dir, c) {
@@ -307,7 +311,7 @@
             if (!(await VL.confirm(cfg))) return;
             VL.busy(b, async () => {
                 try {
-                    if (b.dataset.act === "reset") await VL.api("POST", "/cards/" + b.dataset.id + "/progress/reset");
+                    if (b.dataset.act === "reset") await VL.api("POST", "/cards/" + b.dataset.id + "/progress/reset", {xacNhan: true});
                     else await VL.api("PUT", "/cards/" + b.dataset.id + "/progress/suspend", {tamNgung: b.dataset.act === "suspend"});
                     VL.toast(cfg.toast);
                     load();

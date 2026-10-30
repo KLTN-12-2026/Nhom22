@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.stereotype.Component;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorResponse;
 import tools.jackson.databind.json.JsonMapper;
@@ -38,6 +39,10 @@ public class JsonAuthHandlers implements AuthenticationEntryPoint, AccessDeniedH
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException)
             throws IOException, ServletException {
+        if (accessDeniedException instanceof CsrfException) {
+            write(response, ErrorCode.CSRF_INVALID, "Phiên bảo mật đã hết hạn, vui lòng thử lại");
+            return;
+        }
         write(response, ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này");
     }
 

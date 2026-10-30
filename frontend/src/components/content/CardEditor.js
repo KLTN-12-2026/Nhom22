@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { cardPayload, normalizeTerm } from '@/lib/content-contract.mjs';
 import { ErrorState, Icon } from '@/components/ui';
 import { FileUpload } from './FileUpload';
@@ -20,13 +21,8 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
   const [busy, setBusy] = useState(0);
   const [saved, setSaved] = useState(null);
   const ipa = useRef(null);
-  const tags = useQuery({ queryKey: ['public-tags'], queryFn: async () => {
-    const first = await apiFetch('/api/v1/public/tags?size=100');
-    const items = [...first.items];
-    for (let page = 1; page < first.totalPages; page++) items.push(...(await apiFetch(`/api/v1/public/tags?size=100&page=${page}`)).items);
-    return items;
-  } });
-  const existing = useQuery({ queryKey: ['deck-cards', deckId, 'editor'], queryFn: () => apiFetch(`/api/v1/decks/${deckId}/cards?size=100`) });
+  const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
+  const existing = useQuery({ queryKey: ['deck-cards', deckId, 'editor'], queryFn: () => fetchAllPages(`/api/v1/decks/${deckId}/cards`) });
   const save = useMutation({
     mutationFn: body => apiFetch(initial ? `/api/v1/cards/${initial.id}` : `/api/v1/decks/${deckId}/cards`, { method: initial ? 'PATCH' : 'POST', body: JSON.stringify(body) }),
     onSuccess: card => {
@@ -39,7 +35,7 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
   useEffect(() => { onPending?.(pending); }, [pending, onPending]);
   const change = (key, value) => { setValues(current => ({ ...current, [key]: value })); setFieldErrors(current => ({ ...current, [key]: '' })); };
   const errorFor = key => fieldErrors[key] || save.error?.fieldErrors?.find(item => item.field === key)?.message;
-  const duplicate = existing.data?.items.find(card => card.id !== initial?.id && normalizeTerm(card.tu) === normalizeTerm(values.tu) && normalizeTerm(card.tuLoai || '') === normalizeTerm(values.tuLoai));
+  const duplicate = existing.data?.find(card => card.id !== initial?.id && normalizeTerm(card.tu) === normalizeTerm(values.tu) && normalizeTerm(card.tuLoai || '') === normalizeTerm(values.tuLoai));
   const submit = event => {
     event.preventDefault();
     if (pending) return;
@@ -74,7 +70,7 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
         <fieldset className="fieldset field"><legend>Nhãn</legend>{tags.isPending ? <p role="status">Đang tải nhãn…</p> : tags.error ? <ErrorState description={tags.error.message} onRetry={tags.refetch} /> : tags.data?.length === 0 ? <p className="muted">Chưa có nhãn để chọn.</p> : <div className="choice-grid cols-3">{tags.data?.map(tag => <label className="choice" key={tag.id}><input type="checkbox" checked={values.nhanIds.includes(tag.id)} onChange={event => change('nhanIds', event.target.checked ? [...values.nhanIds, tag.id] : values.nhanIds.filter(id => id !== tag.id))} /><span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span><span>{tag.ten}</span></label>)}</div>}</fieldset>
         <p className="field-help">Không cần tải âm thanh: dùng giọng đọc tiếng Anh của trình duyệt. Tệp âm thanh riêng vẫn là tùy chọn.</p><div className="row"><SpeakButton text={values.tu} /><SpeakButton sentence text={values.viDuEn} /></div><div className={styles.media}>{[['anhId', 'Ảnh minh họa', 'ANH', 'ANH'], ['amTuId', 'Âm thanh từ', 'AM_THANH', 'AM_TU'], ['amCauId', 'Âm thanh câu', 'AM_THANH', 'AM_CAU']].map(([key, label, loai, role]) => <div key={key}><FileUpload label={label} loai={loai} value={values[key]} onChange={id => change(key, id)} onBusy={active => setBusy(count => count + (active ? 1 : -1))} disabled={pending} />{initial?.[key] && values[key] === initial[key] && <CardMedia deckId={deckId} cardId={initial.id} role={role} />}</div>)}</div>
       </fieldset>
-      {save.error && <div role="alert"><p className="notice notice-error">{save.error.message}</p>{save.error.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => { client.invalidateQueries({ queryKey: ['deck-cards', deckId] }); onCancel(); }}>Tải lại thẻ</button>}</div>}
+      {save.error && <div role="alert"><p className="notice notice-error">{save.error.message}</p>{save.error.code === 'VERSION_CONFLICT' && <button type="button" className="btn btn-secondary" onClick={() => { client.invalidateQueries({ queryKey: ['deck-cards', deckId] }); onCancel?.(); }}>Tải lại thẻ</button>}</div>}
       {saved && <p className="notice notice-success" role="status">Đã lưu thẻ{saved.trung ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
       <div className={styles.foot}>{onCancel ? <button type="button" className="btn btn-quiet" disabled={pending} onClick={onCancel}>Hủy</button> : <Link className="btn btn-quiet" href={`/bo-the/${deckId}`}>Hủy</Link>}{!initial && <button className="btn btn-secondary" value="more" disabled={pending}>Lưu và thêm thẻ khác</button>}<button className="btn btn-primary btn-lg" disabled={pending} aria-busy={pending}>{pending ? 'Đang lưu…' : 'Lưu thẻ'}</button></div>
     </form>
