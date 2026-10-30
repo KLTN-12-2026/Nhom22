@@ -25,6 +25,15 @@ const STAMP = {
 const DIR = { EN_VI: 'Anh → Việt', VI_EN: 'Việt → Anh' };
 const SRS_STATE = { MOI: 'Mới', DANG_HOC: 'Đang học', ON_TAP: 'Ôn tập', HOC_LAI: 'Học lại', TAM_NGUNG: 'Tạm ngưng' };
 const RATING = { QUEN: 'Quên', KHO: 'Khó', NHO: 'Nhớ', DE: 'Dễ' };
+const currentTime = () => Date.now();
+
+function until(iso) {
+  const mins = Math.round((Date.parse(iso) - currentTime()) / 60000);
+  if (mins <= 0) return 'ngay bây giờ';
+  if (mins < 60) return `sau ${mins} phút`;
+  if (mins < 1440) return `sau ${Math.round(mins / 60)} giờ`;
+  return `sau ${Math.round(mins / 1440)} ngày`;
+}
 
 function HistoryLog({ theId }) {
   const { data, isLoading, error } = useQuery({
@@ -83,7 +92,7 @@ function ProgressContent() {
   const [q, setQ] = useState(defaultQ);
   const [openHistory, setOpenHistory] = useState({}); // { [theId]: boolean }
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['deck-progress', id, nhom, q, page],
     queryFn: () => {
       const urlParams = new URLSearchParams();
@@ -121,7 +130,7 @@ function ProgressContent() {
     if (c.nhom === 'TAM_NGUNG') return 'Không vào phiên học';
     if (c.nhom === 'QUA_HAN') return `Đến hạn từ ${new Date(c.hanOnAt).toLocaleDateString('vi-VN')}, đang trễ`;
     if (c.nhom === 'DEN_HAN') return `Đến hạn ${new Date(c.hanOnAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} hôm nay`;
-    return `Ôn lại sau ${c.khoangHienThi}`;
+    return c.hanOnAt ? `Ôn lại ${until(c.hanOnAt)}` : 'Chưa có lịch ôn';
   };
 
   const renderDir = (dirCode, c) => {
@@ -150,7 +159,8 @@ function ProgressContent() {
     if (!window.confirm(`Đặt lại tiến độ thẻ "${word}"? Cả hai chiều sẽ quay về trạng thái Mới.`)) return;
     actionMutation.mutate({
       method: 'POST',
-      url: `/api/v1/cards/${theId}/progress/reset`
+      url: `/api/v1/cards/${theId}/progress/reset`,
+      body: { xacNhan: true }
     });
   };
 
@@ -172,6 +182,7 @@ function ProgressContent() {
           </div>
           <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>{data?.ten || 'Tiến độ'}</h1>
           <p style={{ color: 'var(--color-ink-2)' }}>Mỗi thẻ có hai chiều học, mỗi chiều một lịch ôn riêng. Quá hạn nghĩa là trễ từ hôm trước trở đi.</p>
+          {actionMutation.isError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>{actionMutation.error.message}</p>}
         </div>
 
         <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
@@ -207,6 +218,8 @@ function ProgressContent() {
 
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải tiến độ...</div>
+        ) : error ? (
+          <p className="notice notice-danger" role="alert">{error.status === 404 ? 'Không tìm thấy bộ thẻ.' : error.message}</p>
         ) : data?.items?.length > 0 ? (
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
             {data.items.map((it, i) => (
@@ -258,7 +271,7 @@ function ProgressContent() {
               {GROUPS.slice(1).map(g => (
                 <div key={g.id} style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{g.label}</span>
-                  <div><strong style={{ fontSize: '1.375rem', marginRight: '4px' }}>{data.tongHop[g.id]}</strong><span style={{ fontSize: 'var(--font-size-xs)' }}>thẻ</span></div>
+                  <div><strong style={{ fontSize: '1.375rem', marginRight: '4px' }}>{data.tongHop[g.id] ?? 0}</strong><span style={{ fontSize: 'var(--font-size-xs)' }}>thẻ</span></div>
                 </div>
               ))}
             </div>

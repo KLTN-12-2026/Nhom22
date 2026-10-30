@@ -31,7 +31,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="today" data-auth="required">
-<!-- F2.3 · UI20 · API: GET /learning/sessions/{id} kèm tongKet (B2.3, B2.5), POST /learning/sessions/{id}/finish (B2.5), GET /learning/history?phienId (B2.5), POST /practice/sessions (B2.7) -->
+<!-- F2.3 · UI20 · API: GET /learning/sessions/{id} (B2.3), POST /learning/sessions/{id}/finish (B2.5, gọi lại khi phiên đã KET_THUC để lấy tổng kết), GET /learning/history?phienId (B2.5), GET /learning/today (chuỗi ngày, B2.2), POST /practice/sessions (B2.7) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -118,16 +118,32 @@
   const $ = (x) => document.getElementById(x);
   let hardIds = [];
 
+  function until(iso) {
+    const mins = Math.round((Date.parse(iso) - Date.now()) / 60000);
+    if (mins <= 0) return "đã đến hạn";
+    if (mins < 60) return "sau " + mins + " phút";
+    if (mins < 1440) return "sau " + Math.round(mins / 60) + " giờ";
+    return "sau " + Math.round(mins / 1440) + " ngày";
+  }
+
+  function renderStreak() {
+    VL.api("GET", "/learning/today").then((p) => {
+      $("streak-n").textContent = p.chuoiNgay;
+      $("streak-note").textContent = p.homNayDaTinhChuoi ? "Hôm nay đã được tính vào chuỗi." : "Hôm nay chưa được tính. Cần ít nhất " + p.luotToiThieuChuoi + " lượt ôn trong ngày.";
+    }).catch(() => { $("streak-note").textContent = "Chưa tải được chuỗi ngày."; });
+  }
+
   function renderSummary(t) {
+    const giay = Math.round(t.thoiGian / 1000);
     document.title = "Tổng kết: " + t.boTheTen + " – VocabLearning";
     $("code").textContent = VL.DIR[t.chieuHoc];
     $("page-title").textContent = t.soLuot ? "Bạn đã ôn " + t.soThe + " thẻ" : "Phiên kết thúc khi chưa chấm thẻ nào";
-    $("lead").textContent = t.boTheTen;
+    $("lead").textContent = t.boTheTen + (t.soChuaTraLoi ? " · " + t.soChuaTraLoi + " thẻ chưa chấm khi kết thúc" : "");
     $("tally").innerHTML =
       '<div><dt>Lượt chấm</dt><dd><span class="tally-n">' + t.soLuot + "</span>lượt</dd></div>" +
       '<div><dt>Thẻ khác nhau</dt><dd><span class="tally-n">' + t.soThe + "</span>thẻ</dd></div>" +
       '<div><dt>Từ mới</dt><dd><span class="tally-n">' + t.soTheMoi + "</span>từ</dd></div>" +
-      '<div><dt>Thời gian<small>quỹ ' + t.quyThoiGian + " phút</small></dt><dd><span class=\"tally-n\">" + Math.floor(t.thoiGianGiay / 60) + "</span>phút " + (t.thoiGianGiay % 60) + " giây</dd></div>";
+      '<div><dt>Thời gian trả lời<small>quỹ ' + t.quyThoiGian + " phút</small></dt><dd><span class=\"tally-n\">" + Math.floor(giay / 60) + "</span>phút " + (giay % 60) + " giây</dd></div>";
     const max = Math.max(1, ...Object.values(t.theoDanhGia));
     $("dist").innerHTML = ["QUEN", "KHO", "NHO", "DE"].map((r) =>
       "<div><dt>" + VL.RATING[r] + '</dt><dd><div class="meter" role="img" aria-label="' + t.theoDanhGia[r] + " lượt " + VL.RATING[r] + '" style="--v:' + t.theoDanhGia[r] / max + '"><span></span></div></dd><dd class="num">' + t.theoDanhGia[r] + "</dd></div>").join("");
@@ -138,10 +154,9 @@
       '<li class="answer-row plain-row"><span class="answer-no">' + (i + 1) + '</span><div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(w.tu) + '</span><span class="pos" lang="en">' + VL.esc(w.tuLoai || "") + '</span></div><p class="entry-mean">' + VL.esc(w.nghiaVi) + '</p></div><span class="answer-meta">' + w.danhGia.map((r) => '<span class="stamp stamp-graphite">' + VL.RATING[r] + "</span>").join("") + "</span></li>").join("");
 
     $("next").innerHTML = t.lichTiepTheo.length ? t.lichTiepTheo.map((w, i) =>
-      '<li class="answer-row plain-row"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><span class="entry-word" lang="en" style="font-size:1.125rem">' + VL.esc(w.tu) + '</span><span class="answer-meta"><span>' + VL.esc(VL.SRS_STATE[w.trangThai] || "") + "</span><span>" + VL.fmtDateTime(w.hanOnAt) + '</span></span></div><span class="when">sau ' + VL.esc(w.khoangHienThi) + "</span></li>").join("") : '<li class="small muted" style="padding:var(--sp-3) 0">Chưa có thẻ nào được chấm.</li>';
+      '<li class="answer-row plain-row"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><span class="entry-word" lang="en" style="font-size:1.125rem">' + VL.esc(w.tu) + '</span><span class="answer-meta"><span>' + VL.esc(VL.SRS_STATE[w.trangThai] || "") + "</span><span>" + VL.fmtDateTime(w.hanOnAt) + '</span></span></div><span class="when">' + until(w.hanOnAt) + "</span></li>").join("") : '<li class="small muted" style="padding:var(--sp-3) 0">Chưa có thẻ nào được chấm.</li>';
 
-    $("streak-n").textContent = t.chuoiNgay;
-    $("streak-note").textContent = t.homNayDaTinhChuoi ? "Hôm nay đã được tính vào chuỗi." : "Hôm nay chưa được tính. Cần một phiên có ít nhất " + t.luotToiThieuChuoi + " lượt ôn.";
+    renderStreak();
 
     const btn = $("practice");
     if (hardIds.length) {
@@ -162,7 +177,9 @@
   function load() {
     VL.load(region, {
       errorTitle: "Không mở được tổng kết",
-      fetch: () => VL.api("GET", "/learning/sessions/" + encodeURIComponent(id || "")),
+      fetch: () => VL.api("GET", "/learning/sessions/" + encodeURIComponent(id || "")).then((s) => s.trangThai === "DANG_HOC"
+        ? s
+        : VL.api("POST", "/learning/sessions/" + encodeURIComponent(id) + "/finish").then((t) => Object.assign(s, { tongKet: t }))),
       isEmpty: (s) => s.trangThai === "DANG_HOC",
       empty: () => { $("resume").href = "hoc-phien.html?id=" + id; },
       render: (s) => renderSummary(s.tongKet)

@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.learning.repository;
 
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHocThe;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHocThe;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,6 @@ public interface PhienHocTheRepository extends JpaRepository<PhienHocThe, Long> 
 
     @Query("select coalesce(max(p.thuTu), 0) from PhienHocThe p where p.phienId = :phienId")
     int maxThuTu(@Param("phienId") Long phienId);
+
+    long countByPhienIdAndTrangThai(Long phienId, TrangThaiPhienHocThe trangThai);
 }

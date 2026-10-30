@@ -166,7 +166,7 @@ function DeckForm({ deck }) {
           </fieldset>
 
           {errorMsg && <p role="alert" className="notice notice-error">{errorMsg}</p>}
-          {createMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['deck', deck.id] })}>Tải lại bộ thẻ</button>}
+          {deck && createMutation.error?.code === 'VERSION_CONFLICT' && <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['deck', deck.id] })}>Tải lại bộ thẻ</button>}
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>

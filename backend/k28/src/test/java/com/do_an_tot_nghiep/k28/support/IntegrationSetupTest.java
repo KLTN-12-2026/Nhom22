@@ -37,7 +37,7 @@ class IntegrationSetupTest extends AbstractIntegrationTest {
     void postWithoutXsrfIsRejected() throws Exception {
         mockMvc.perform(post("/api/v1/public/ping").with(randomIp()))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value("CSRF_INVALID"));
     }
 
     @Test

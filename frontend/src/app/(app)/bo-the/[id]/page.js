@@ -13,6 +13,7 @@ import styles from './page.module.css';
 import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { saveDownload } from '@/lib/csv.mjs';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -28,7 +29,7 @@ export default function DeckDetailPage() {
   const [editing, setEditing] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const download = useMutation({ mutationFn: () => apiFetch(`/api/v1/decks/${id}/export`, { responseType: 'blob' }), onSuccess: blob => saveDownload(blob, `deck-${id}.csv`) });
-  const tags = useQuery({ queryKey: ['public-tags', 'detail'], queryFn: () => apiFetch('/api/v1/public/tags?size=100') });
+  const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
   const cards = useQuery({ queryKey: ['deck-cards', id, page], queryFn: () => apiFetch(`/api/v1/decks/${id}/cards?page=${page}&size=20`) });
   const deleteCard = useMutation({
     mutationFn: card => apiFetch(`/api/v1/cards/${card.id}?version=${card.version}`, { method: 'DELETE' }),
@@ -55,6 +56,7 @@ export default function DeckDetailPage() {
         <div className="row">
           <Link className="btn btn-primary" href={`/bo-the/${id}/the-tao`}><Icon name="plus" />Thêm thẻ</Link>
           <Link className="btn btn-edit" href={`/bo-the/tao?id=${id}`}><Icon name="edit" />Sửa bộ</Link>
+          <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}>Tiến độ</Link>
           <Link className="btn btn-media" href={`/bo-the/${id}/nhap-csv`}><Icon name="upload" />Nhập CSV</Link>
           <button className="btn btn-export" disabled={download.isPending} aria-busy={download.isPending} onClick={() => download.mutate()}><Icon name="download" />Xuất CSV</button>
           <button className="btn btn-favorite" type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Gỡ yêu thích' : 'Yêu thích'}</button>
@@ -74,7 +76,7 @@ export default function DeckDetailPage() {
       <ol className="answer-list">{cards.data?.items.map((card, index) => <li className={`answer-row ${styles.cardRow}`} key={card.id}>
         <span className="answer-no">{page * 20 + index + 1}</span>
         <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa">{card.phienAm}</span>}{card.tuLoai && <span className="pos">{card.tuLoai}</span>}</div><p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}{card.trung && <span className="stamp stamp-warning">Có thể trùng</span>}
-          <div className="answer-meta"><span className="stamp stamp-quiet">Độ khó {card.doKho}/5</span>{card.nhanIds?.map(tagId => <span className="stamp stamp-quiet" key={tagId}>{tags.data?.items.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`}</span>)}</div><div className={styles.cardFlags}>{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia deckId={id} cardId={card.id} role="AM_CAU" />}</div>
+          <div className="answer-meta"><span className="stamp stamp-quiet">Độ khó {card.doKho}/5</span>{card.nhanIds?.map(tagId => <span className="stamp stamp-quiet" key={tagId}>{tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`}</span>)}</div><div className={styles.cardFlags}>{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia deckId={id} cardId={card.id} role="AM_CAU" />}</div>
         </div>
         <div className={styles.cardTools}><button className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button><button className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })}><Icon name="trash" />Xóa thẻ</button></div>
       </li>)}</ol>

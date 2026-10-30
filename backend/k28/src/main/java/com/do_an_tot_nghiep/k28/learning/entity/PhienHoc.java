@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -73,5 +74,18 @@ public class PhienHoc extends BaseEntity {
         session.trangThai = TrangThaiPhienHoc.DANG_HOC;
         session.quyThoiGian = quyThoiGian;
         return session;
+    }
+
+    public Instant hetGioAt() {
+        return batDauAt.plusSeconds(quyThoiGian * 60L);
+    }
+
+    public void finish(Instant now) {
+        if (trangThai != TrangThaiPhienHoc.DANG_HOC) {
+            return;
+        }
+        Instant endedAt = now.truncatedTo(ChronoUnit.MILLIS);
+        this.trangThai = TrangThaiPhienHoc.KET_THUC;
+        this.ketThucAt = endedAt.isBefore(batDauAt) ? batDauAt : endedAt;
     }
 }

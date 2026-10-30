@@ -46,6 +46,12 @@ public class LichSuOn extends BaseEntity {
     @Column(nullable = false)
     private int thoiGian;
 
+    @Column(nullable = false, columnDefinition = "json")
+    private String truocJson;
+
+    @Column(nullable = false, columnDefinition = "json")
+    private String sauJson;
+
     @Column(nullable = false, length = 50)
     private String phienBanThuatToan;
 }

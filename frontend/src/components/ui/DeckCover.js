@@ -1,9 +1,8 @@
 import Image from 'next/image';
 import { deckIllustration } from '@/lib/deck-illustration.mjs';
 
-// Illustrations describe the learning context; they are not user-uploaded covers.
-export function DeckCover({ deck, priority = false }) {
-  const illustration = deckIllustration(deck);
+export function DeckCover({ deck, topicName, priority = false }) {
+  const illustration = deckIllustration(deck, topicName ?? deck.tenChuDe);
   if (!illustration) return null;
   const contextCover = ['office-cover.png', 'everyday-cover.png'].includes(illustration);
   return (

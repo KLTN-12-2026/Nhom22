@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Icon } from '@/components/ui';
+import { Pagination } from '@/components/ui';
+import { SpeakButton } from '@/components/content/SpeakButton';
+import { ERROR_GROUP, label } from '@/lib/practice-labels.mjs';
 import styles from './page.module.css';
 
 const GROUPS = [
@@ -25,14 +27,6 @@ const REASON = {
   DANH_DAU_THU_CONG: 'Bạn tự đánh dấu'
 };
 
-const ERROR_GROUP = {
-  NGHIA: 'Nghĩa',
-  CHINH_TA: 'Chính tả',
-  NGHE: 'Nghe',
-  NGU_CANH: 'Ngữ cảnh',
-  CAP_NHAM: 'Cặp dễ nhầm'
-};
-
 const MIX = {
   HINH_THUC_GAN_GIONG: 'Viết gần giống',
   NGHIA_GAN_NHAU: 'Nghĩa gần nhau'
@@ -48,13 +42,15 @@ function NotebookContent() {
 
   const [editingNote, setEditingNote] = useState(null);
   const [noteContent, setNoteContent] = useState('');
+  const [actionError, setActionError] = useState('');
+  const fail = (err) => setActionError(err.message || 'Chưa thực hiện được. Hãy thử lại.');
 
-  const { data: notebook, isLoading: nbLoading } = useQuery({
+  const { data: notebook, isLoading: nbLoading, error: nbError } = useQuery({
     queryKey: ['notebook', page, nhomLoi],
     queryFn: () => apiFetch(`/api/v1/notebook?page=${page}&size=20${nhomLoi ? `&nhomLoi=${nhomLoi}` : ''}`)
   });
 
-  const { data: pairs, isLoading: pairsLoading } = useQuery({
+  const { data: pairs, isLoading: pairsLoading, error: pairsError } = useQuery({
     queryKey: ['confusing-pairs'],
     queryFn: () => apiFetch('/api/v1/learning/confusing-pairs')
   });
@@ -64,18 +60,27 @@ function NotebookContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notebook'] });
       setEditingNote(null);
-    }
+    },
+    onError: fail
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => apiFetch(`/api/v1/notebook/${id}`, { method: 'DELETE' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notebook'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notebook'] }),
+    onError: fail
   });
 
   const practiceMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: (res) => router.push(`/luyen-tap-lam-bai?id=${res.id}`)
+    onSuccess: (res) => router.push(`/luyen-tap-lam-bai?id=${res.id}`),
+    onError: fail
   });
+
+  const goToPage = (value) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(value));
+    router.push(`/so-tay?${params.toString()}`, { scroll: false });
+  };
 
   const handleTabClick = (groupId) => {
     const params = new URLSearchParams(searchParams);
@@ -86,24 +91,29 @@ function NotebookContent() {
   };
 
   const saveNote = (id) => {
+    setActionError('');
     updateMutation.mutate({ id, body: { ghiChu: noteContent } });
   };
 
   const toggleMark = (it) => {
+    setActionError('');
     updateMutation.mutate({ id: it.theId, body: { danhDauThuCong: !it.danhDauThuCong } });
   };
 
   const removeEntry = (id) => {
     if (window.confirm('Bỏ khỏi sổ tay? Lịch sử ôn và bài luyện vẫn giữ nguyên.')) {
+      setActionError('');
       deleteMutation.mutate(id);
     }
   };
 
   const startPracticeNotebook = () => {
+    setActionError('');
     practiceMutation.mutate({ loaiBai: 'TONG_HOP', nguon: 'SO_TAY', soCau: 10 });
   };
 
   const startPracticePairs = (id1, id2) => {
+    setActionError('');
     practiceMutation.mutate({ loaiBai: 'PHAN_BIET_CAP', theIds: [id1, id2], soCau: 5 });
   };
 
@@ -148,7 +158,9 @@ function NotebookContent() {
           </button>
         </div>
 
-        <div data-view={nbLoading ? "loading" : (notebook?.items?.length > 0 ? "ready" : "empty")} id="region" aria-live="polite">
+        {actionError && <p className="notice notice-danger" role="alert">{actionError}</p>}
+
+        <div data-view={nbLoading ? "loading" : nbError ? "error" : (notebook?.items?.length > 0 ? "ready" : "empty")} id="region" aria-live="polite">
           <div data-when="loading">
             <div className="skeleton">
               <div className="sk sk-row"></div>
@@ -178,13 +190,13 @@ function NotebookContent() {
                       ))}
                       {it.nhomLoi?.map(g => (
                         <span key={g.nhomLoi} className="stamp stamp-quiet">
-                          {ERROR_GROUP[g.nhomLoi] || g.nhomLoi} &times; {g.soLan}
+                          {label(ERROR_GROUP, g.nhomLoi)} &times; {g.soLan}
                         </span>
                       ))}
                     </div>
 
                     <div className="answer-meta">
-                      <Link href={`/bo-the-tien-do?id=${it.boTheId}`}>
+                      <Link href={`/bo-the/${it.boTheId}/tien-do`}>
                         {(it.boTheTen || 'Bộ của tôi').length > 60 ? (it.boTheTen || 'Bộ của tôi').slice(0, 60) + '…' : (it.boTheTen || 'Bộ của tôi')}
                       </Link>
                       {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
@@ -218,7 +230,7 @@ function NotebookContent() {
                         <ol>
                           {it.bangChung.map((b, idx) => (
                             <li key={idx}>
-                              {ERROR_GROUP[b.nhomLoi] || b.nhomLoi}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
+                              {label(ERROR_GROUP, b.nhomLoi)}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
                               {b.baiLuyenId && (
                                 <>
                                   . <Link href={`/luyen-tap-ket-qua?id=${b.baiLuyenId}`}>Xem bài</Link>
@@ -231,9 +243,7 @@ function NotebookContent() {
                     )}
 
                     <div className={styles.nbTools}>
-                      <button type="button" className="btn btn-quiet" data-act="play">
-                        <Icon name="play" />Nghe
-                      </button>
+                      <SpeakButton text={it.tu} />
                       <button type="button" className="btn btn-edit" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
                         {it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}
                       </button>
@@ -249,9 +259,7 @@ function NotebookContent() {
               ))}
             </ol>
             <div className={styles.pagerWrap}>
-              <nav className="pager" id="pager" aria-label="Phân trang">
-                {/* Phân trang tĩnh để UI ko lỗi, có thể implement pager linh hoạt sau nếu API hỗ trợ totalPages */}
-              </nav>
+              <Pagination page={page + 1} totalPages={notebook?.totalPages || 0} onPageChange={value => goToPage(value - 1)} />
             </div>
           </div>
           <div data-when="empty">
@@ -267,21 +275,23 @@ function NotebookContent() {
               <Link className="btn btn-primary" href="/luyen-tap" id="empty-action">Làm một bài luyện</Link>
             </div>
           </div>
-          <div data-when="error"></div>
+          <div data-when="error">
+            <p className="notice notice-danger" role="alert">{nbError?.message || 'Chưa tải được sổ tay.'}</p>
+          </div>
         </div>
       </section>
 
       <aside className="side-col">
         <section className="panel" aria-labelledby="pairs-title">
           <h2 className="panel-title" id="pairs-title">Cặp dễ nhầm</h2>
-          <div data-view={pairsLoading ? "loading" : (pairs?.length > 0 ? "ready" : "empty")} id="pairs-region" aria-live="polite">
+          <div data-view={pairsLoading ? "loading" : pairsError ? "error" : (pairs?.length > 0 ? "ready" : "empty")} id="pairs-region" aria-live="polite">
             <div data-when="loading">
               <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
             </div>
             <div data-when="ready">
               <ul className={styles.pairs} id="pairs" role="list">
                 {pairs?.map((pr, i) => (
-                  <li key={i}>
+                  <li key={pr.id || i}>
                     <div className={styles.pairWords}>
                       <div>
                         <b>{pr.the1.tu}</b>
@@ -307,7 +317,9 @@ function NotebookContent() {
             <div data-when="empty">
               <p className="small muted">Chưa có cặp nào. Cặp được ghi lại khi bạn chọn nhầm giữa hai từ trong bài luyện.</p>
             </div>
-            <div data-when="error"></div>
+            <div data-when="error">
+              <p className="small muted">{pairsError?.message || 'Chưa tải được cặp dễ nhầm.'}</p>
+            </div>
           </div>
         </section>
 

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ErrorState, Pagination, Icon } from '@/components/ui';
 import styles from './page.module.css';
 import { useDecks } from '@/hooks/useDecks';
+import { useTopics } from '@/hooks/useTopics';
 
 export default function DecksPage() {
   const { data: plan } = useQuery({ queryKey: ['learning-settings'], queryFn: () => apiFetch('/api/v1/me/learning-settings') });
@@ -15,6 +16,8 @@ export default function DecksPage() {
 
   const [page, setPage] = useState(0);
   const { data, isLoading, error, refetch } = useDecks(page);
+  const { data: topics = [] } = useTopics();
+  const topicName = id => topics.find(topic => topic.id === id)?.ten;
   const myDecks = (data?.items || []).filter(deck => (activeTab !== 'fav' || deck.yeuThich) && deck.ten.toLocaleLowerCase('vi').includes(search.toLocaleLowerCase('vi')));
 
   return (
@@ -61,7 +64,7 @@ export default function DecksPage() {
                   <span className="answer-no">{i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
-                    <DeckCover deck={deck} priority={i < 2} />
+                    <DeckCover deck={deck} topicName={topicName(deck.chuDeId)} priority={i < 2} />
                     <Link className="answer-title" href={`/bo-the/${deck.id}`}>{deck.ten}</Link>
                     </div>
                     <div className="answer-meta">
@@ -125,7 +128,7 @@ export default function DecksPage() {
         </section>
         <section className="panel" aria-labelledby="csv-title">
           <h2 className="panel-title" id="csv-title">Có sẵn danh sách từ?</h2>
-          <p className="small muted">Nhập CSV sẽ mở khi chức năng quản lý thẻ sẵn sàng.</p>
+          <p className="small muted">Mở một bộ thẻ rồi chọn “Nhập CSV” để thêm nhiều thẻ cùng lúc. Tệp CSV cần có cột từ và nghĩa tiếng Việt.</p>
         </section>
       </aside>
     </div>
