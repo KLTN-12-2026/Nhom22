@@ -118,7 +118,7 @@ function PracticeHistoryContent() {
         ) : (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
             <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>
-              {loaiBai ? `Chưa có bài ${TYPES[loaiBai].toLowerCase()}` : 'Bạn chưa làm bài luyện nào'}
+              {loaiBai ? `Chưa có bài ${(TYPES[loaiBai] || loaiBai).toLowerCase()}` : 'Bạn chưa làm bài luyện nào'}
             </h2>
             <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Làm một bài ngắn 5 câu để biết mình hay sai ở đâu.</p>
             <Button variant="primary" onClick={() => router.push('/luyen-tap')}>Chọn dạng bài</Button>

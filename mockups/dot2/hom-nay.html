@@ -32,6 +32,35 @@
 .goal-line { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
 .links { display: grid; gap: var(--sp-1); }
 .links a { justify-content: flex-start; margin-left: -12px; }
+.resume { display: grid; gap: var(--sp-3); padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: var(--rule) solid var(--primary-line); }
+.resume-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-1) var(--sp-3); }
+.resume h2, .week h2 { font-size: var(--fs-h3); margin: 0; }
+.resume-meta { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.resume .goal-line { margin-bottom: 0; }
+.resume .row { gap: var(--sp-2); margin-top: var(--sp-1); }
+.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+.week-grid { display: grid; gap: var(--sp-6); }
+@media (min-width: 720px) { .week-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mini { margin: 0; display: grid; gap: var(--sp-2); align-content: start; min-width: 0; }
+.mini figcaption { display: grid; gap: 2px; }
+.mini-title { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; color: var(--ink); }
+.mini-sum { font-size: var(--fs-small); color: var(--ink-2); }
+.mini-bars { position: relative; height: 116px; padding-top: 20px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; border-bottom: var(--rule) solid var(--primary); background: repeating-linear-gradient(to top, transparent 0 31px, var(--primary-tint) 31px 32px); }
+.mini-bar { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.mini-bar i { display: block; width: 100%; height: 100%; background: var(--graphite); transform-origin: bottom; transform: scaleY(var(--v, 0)); transition: transform var(--dur-3) var(--ease-out); }
+.mini-bar[data-goal] i { background: var(--secondary); }
+.is-forecast .mini-bar i { background: var(--primary); }
+.mini-bar b { position: absolute; left: 0; right: 0; bottom: calc(var(--v, 0) * 100% + 2px); text-align: center; font-family: var(--font-form); font-stretch: var(--stretch-form); font-variant-numeric: tabular-nums; font-size: var(--fs-caption); font-weight: 700; color: var(--ink-2); }
+.mini-goal { position: absolute; left: 0; right: 0; bottom: calc(var(--g) * (100% - 20px)); border-top: 1.5px dashed var(--accent-text); pointer-events: none; }
+.mini-x { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: var(--fs-caption); color: var(--ink-3); text-align: center; }
+.mini-x span { display: grid; line-height: 1.25; }
+.mini-x b { font-weight: 650; color: var(--ink-2); }
+.mini-x .is-today b, .mini-x .is-today { color: var(--primary); font-weight: 700; }
+.mini-legend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: var(--fs-caption); color: var(--ink-2); }
+.mini-legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--secondary); }
+.mini-legend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
+.mini .btn-quiet { justify-self: start; margin-left: -12px; }
+@media (prefers-reduced-motion: reduce) { .mini-bar i { transition: none; } }
 </style>
 <script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
@@ -39,7 +68,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="today" data-auth="required">
-<!-- F2.1, F2.4 · UI12, UI22 · API: GET /learning/today?phut&giuTuMoi (B2.2, B2.6), POST /learning/sessions (B2.3) -->
+<!-- F2.1, F2.4 · UI12, UI22 · API: GET /learning/today?phut&giuTuMoi (B2.2, B2.6, B2.12), GET /statistics/overview?tuNgay&denNgay (B2.10), POST /learning/sessions (B2.3), POST /learning/sessions/{id}/finish (B2.5) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -69,6 +98,17 @@
           </div>
 
           <p class="notice notice-success" id="welcome" hidden style="margin-bottom:var(--sp-5)"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Đã lưu thiết lập học. Chọn thời gian bên dưới rồi bắt đầu phiên học đầu tiên.</span></p>
+
+          <section class="resume" id="resume" hidden aria-labelledby="resume-title">
+            <div class="resume-head">
+              <h2 id="resume-title">Phiên đang dở</h2>
+              <span class="resume-meta" id="resume-meta"></span>
+            </div>
+            <p class="goal-line"><span id="resume-text"></span><span class="num" id="resume-num"></span></p>
+            <div class="meter is-progress" role="img" id="resume-meter"><span></span></div>
+            <p class="small muted" id="resume-note" hidden>Đã quá thời gian dự kiến của phiên. Bạn vẫn làm tiếp được, kết quả vẫn được lưu.</p>
+            <div class="row"><button type="button" class="btn btn-accent" id="resume-go">Tiếp tục phiên</button></div>
+          </section>
 
           <section class="rescue" id="rescue" hidden aria-labelledby="rescue-title">
             <h2 id="rescue-title" style="font-size:var(--fs-h3)">Kế hoạch học lại sau thời gian nghỉ</h2>
@@ -128,6 +168,25 @@
               <div class="row"><a class="btn btn-primary" href="luyen-tap.html">Làm một bài luyện</a><a class="btn btn-secondary" href="so-tay.html">Xem sổ tay từ khó</a></div>
             </div>
           </div>
+
+          <section class="week" id="week" aria-labelledby="week-title">
+            <h2 id="week-title">Tuần này</h2>
+            <div class="week-grid">
+              <figure class="mini" id="activity-box">
+                <figcaption><span class="mini-title">Hoạt động 7 ngày qua</span><span class="mini-sum" id="activity-sum"></span></figcaption>
+                <div class="mini-bars" id="activity" role="img"></div>
+                <div class="mini-x" id="activity-x" aria-hidden="true"></div>
+                <ul class="mini-legend" aria-hidden="true"><li><i></i>Ngày đạt mục tiêu</li><li><i class="goal"></i><span id="activity-goal"></span></li></ul>
+                <a class="btn btn-quiet" href="thong-ke.html">Xem thống kê chi tiết</a>
+              </figure>
+              <figure class="mini" id="forecast-box">
+                <figcaption><span class="mini-title">Dự báo ôn 7 ngày tới</span><span class="mini-sum" id="forecast-sum"></span></figcaption>
+                <div class="mini-bars is-forecast" id="forecast" role="img"></div>
+                <div class="mini-x" id="forecast-x" aria-hidden="true"></div>
+                <p class="small muted">Mỗi chiều học của một thẻ tính là một lượt. Số có thể tăng khi bạn ôn thêm hôm nay.</p>
+              </figure>
+            </div>
+          </section>
         </section>
 
         <aside class="side-col" data-when="ready">
@@ -140,6 +199,7 @@
             <h2 class="panel-title" id="goal-title">Mục tiêu mỗi ngày</h2>
             <p class="goal-line"><span id="goal-text"></span><span id="goal-num" class="num"></span></p>
             <div class="meter is-progress" role="img" id="goal-meter"><span></span></div>
+            <p class="small muted" id="goal-note" style="margin-top:var(--sp-2)"></p>
             <a class="btn btn-quiet" href="../dot1/ca-nhan-hoc-tap.html" style="margin:var(--sp-2) 0 0 -12px">Đổi thiết lập học</a>
           </section>
           <section class="panel" aria-labelledby="decks-title">
@@ -184,6 +244,83 @@
     return VL.api("GET", "/learning/today" + (q.length ? "?" + q.join("&") : ""));
   }
 
+  const addDays = (ymd, n) => new Date(Date.parse(ymd + "T12:00:00Z") + n * 86400000).toISOString().slice(0, 10);
+  const WEEKDAY = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+  async function fetchAll() {
+    const d = await fetchPlan();
+    let act = null;
+    try { act = await VL.api("GET", "/statistics/overview?tuNgay=" + addDays(d.ngay, -6) + "&denNgay=" + d.ngay); } catch (err) { act = null; }
+    return { plan: d, act };
+  }
+
+  function drawBars(id, rows, opts) {
+    const max = Math.max(1, opts.goal || 0, ...rows.map((r) => r.v));
+    const plot = document.getElementById(id);
+    plot.innerHTML = rows.map((r) => '<div class="mini-bar"' + (r.met ? " data-goal" : "") + ' style="--v:' + (r.v / max).toFixed(3) + '" title="' + VL.fmtDay(r.ngay, true) + ": " + r.v + " " + opts.unit + '"><b>' + r.v + "</b><i></i></div>").join("") +
+      (opts.goal ? '<div class="mini-goal" style="--g:' + (opts.goal / max).toFixed(3) + '"></div>' : "");
+    plot.setAttribute("aria-label", opts.label + ": " + rows.map((r) => VL.fmtDay(r.ngay, true) + " " + r.v + " " + opts.unit).join("; "));
+    document.getElementById(id + "-x").innerHTML = rows.map((r) => {
+      const wd = WEEKDAY[new Date(r.ngay + "T12:00:00Z").getUTCDay()];
+      return "<span" + (r.today ? ' class="is-today" title="Hôm nay"' : "") + "><b>" + wd + "</b>" + r.ngay.slice(8, 10) + "/" + r.ngay.slice(5, 7) + "</span>";
+    }).join("");
+  }
+
+  function renderWeek(d, act) {
+    const goal = d.phutMoiNgay;
+    const actBox = document.getElementById("activity-box");
+    const fcBox = document.getElementById("forecast-box");
+    actBox.hidden = !(act && Array.isArray(act.theoNgay));
+    fcBox.hidden = !Array.isArray(d.duBaoOn);
+    document.getElementById("week").hidden = actBox.hidden && fcBox.hidden;
+    if (!actBox.hidden) {
+      const rows = act.theoNgay.map((x) => ({ ngay: x.ngay, v: x.soPhut, met: x.soPhut > 0 && x.soPhut >= goal, today: x.ngay === d.ngay }));
+      drawBars("activity", rows, { goal, unit: "phút", label: "Số phút học 7 ngày qua, mục tiêu " + goal + " phút mỗi ngày" });
+      const total = rows.reduce((a, r) => a + r.v, 0);
+      const studied = act.theoNgay.filter((x) => x.soPhut > 0 || x.soLuotOn > 0).length;
+      const met = rows.filter((r) => r.met).length;
+      document.getElementById("activity-sum").textContent = studied
+        ? "Tổng " + total + " phút, " + studied + "/7 ngày có học, " + met + " ngày đạt mục tiêu"
+        : "Chưa có hoạt động trong 7 ngày qua.";
+      document.getElementById("activity-goal").textContent = "Mục tiêu " + goal + " phút";
+    }
+    if (!fcBox.hidden) {
+      const rows = d.duBaoOn.map((x) => ({ ngay: x.ngay, v: x.soCanOn }));
+      drawBars("forecast", rows, { unit: "lượt", label: "Số lượt đến hạn trong 7 ngày tới" });
+      const total = rows.reduce((a, r) => a + r.v, 0);
+      const peak = rows.reduce((a, r) => r.v > a.v ? r : a, rows[0]);
+      document.getElementById("forecast-sum").textContent = total
+        ? "Tổng " + total + " lượt; nhiều nhất " + VL.fmtDay(peak.ngay, true) + " (" + peak.v + " lượt)"
+        : "Chưa có lượt nào đến hạn trong 7 ngày tới.";
+    }
+  }
+
+  function renderResume(s) {
+    const box = document.getElementById("resume");
+    const open = !!(s && s.soChuaTraLoi > 0);
+    box.hidden = !s;
+    ["start", "rescue-start"].forEach((id) => {
+      const b = document.getElementById(id);
+      b.classList.toggle("btn-accent", !open);
+      b.classList.toggle("btn-secondary", open);
+    });
+    document.getElementById("start").textContent = open ? "Bắt đầu phiên mới" : "Bắt đầu học";
+    if (!s) return;
+    const total = s.soDaTraLoi + s.soChuaTraLoi;
+    document.getElementById("resume-meta").textContent = s.boTheTen + " · " + (VL.DIR[s.chieuHoc] || s.chieuHoc) + " · " + s.quyThoiGian + " phút, bắt đầu lúc " + VL.fmtTime(s.batDauAt);
+    document.getElementById("resume-text").textContent = open ? "Còn " + s.soChuaTraLoi + " thẻ chưa trả lời" : "Đã trả lời hết thẻ, phiên chưa kết thúc";
+    document.getElementById("resume-num").textContent = s.soDaTraLoi + "/" + total + " thẻ";
+    const meter = document.getElementById("resume-meter");
+    meter.style.setProperty("--v", total ? s.soDaTraLoi / total : 0);
+    meter.setAttribute("aria-label", "Đã trả lời " + s.soDaTraLoi + " trên " + total + " thẻ của phiên");
+    document.getElementById("resume-note").hidden = !(open && Date.now() > Date.parse(s.hetGioAt));
+    const go = document.getElementById("resume-go");
+    go.textContent = open ? "Tiếp tục phiên" : "Kết thúc và xem tổng kết";
+    go.className = "btn " + (open ? "btn-accent" : "btn-primary");
+    go.dataset.id = s.id;
+    go.dataset.mode = open ? "continue" : "finish";
+  }
+
   function renderRescue(r) {
     const box = document.getElementById("rescue");
     box.hidden = !r;
@@ -214,20 +351,37 @@
     document.getElementById("done").hidden = !nothing;
     if (!document.querySelector('[name="minutes"]')) choiceMinutes(document.getElementById("minutes"), "minutes", [5, 10, 20], nearest(d.phutMoiNgay));
     renderRescue(d.cuuLichOn);
+    renderResume(d.phienDangDo);
 
     document.getElementById("streak-n").textContent = d.chuoiNgay;
-    document.getElementById("streak-note").textContent = (d.homNayDaTinhChuoi ? "Hôm nay đã được tính. " : "Hôm nay chưa được tính. ") + "Một ngày được tính khi bạn hoàn thành một phiên có ít nhất " + d.luotToiThieuChuoi + " lượt ôn.";
-    const pct = Math.min(1, d.daHocHomNay.soPhut / d.phutMoiNgay);
+    document.getElementById("streak-note").textContent = (d.homNayDaTinhChuoi ? "Hôm nay đã được tính. " : "Hôm nay chưa được tính. ") + "Một ngày được tính khi bạn có ít nhất " + d.luotToiThieuChuoi + " lượt ôn trong ngày, không cần kết thúc phiên.";
+    const goalMs = d.phutMoiNgay * 60000;
+    const spent = d.daHocHomNay.thoiGian;
     document.getElementById("goal-text").textContent = "Đã học " + d.daHocHomNay.soLuot + " lượt hôm nay";
     document.getElementById("goal-num").textContent = d.daHocHomNay.soPhut + "/" + d.phutMoiNgay + " phút";
     const meter = document.getElementById("goal-meter");
-    meter.style.setProperty("--v", pct);
+    meter.style.setProperty("--v", Math.min(1, spent / goalMs));
     meter.setAttribute("aria-label", "Đã học " + d.daHocHomNay.soPhut + " trên " + d.phutMoiNgay + " phút mục tiêu");
+    document.getElementById("goal-note").textContent = spent >= goalMs
+      ? "Đã đạt mục tiêu hôm nay."
+      : "Còn khoảng " + Math.ceil((goalMs - spent) / 60000) + " phút để đạt mục tiêu. Thời gian tính từ lúc trả lời thẻ và làm bài luyện.";
     document.getElementById("decks").innerHTML = d.boThe.map((b) =>
       '<li><span class="name">' + VL.esc(b.ten) + '</span><span class="meta"><span>' + b.soCanOn + " thẻ cần ôn</span><span>" + b.soMoi + ' từ chưa học</span></span><span class="row" style="gap:var(--sp-2)"><a class="btn btn-secondary btn-sm" href="hoc.html?boTheId=' + b.boTheId + '">Học bộ này</a><a class="btn btn-quiet btn-sm" href="bo-the-tien-do.html?id=' + b.boTheId + '">Tiến độ</a></span></li>').join("");
   }
 
-  VL.load(region, { fetch: fetchPlan, isEmpty: (d) => d.tongSoThe === 0, render });
+  VL.load(region, { fetch: fetchAll, isEmpty: (r) => r.plan.tongSoThe === 0, render: (r) => { render(r.plan); renderWeek(r.plan, r.act); } });
+
+  document.getElementById("resume-go").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const id = btn.dataset.id;
+    if (btn.dataset.mode === "continue") { location.href = "hoc-phien.html?id=" + encodeURIComponent(id); return; }
+    await VL.busy(btn, async () => {
+      try {
+        await VL.api("POST", "/learning/sessions/" + encodeURIComponent(id) + "/finish");
+        location.href = "hoc-tong-ket.html?id=" + encodeURIComponent(id);
+      } catch (err) { VL.toast(err.message, "error"); }
+    });
+  });
 
   document.getElementById("rescue-form").addEventListener("change", async (e) => {
     if (e.target.name === "rescueDir") return;

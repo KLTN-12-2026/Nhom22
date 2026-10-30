@@ -3,27 +3,30 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { SKILL, SKILL_PRACTICE, label } from '@/lib/practice-labels.mjs';
 import styles from './page.module.css';
 
-const ERROR_GROUP = {
-  NGHIA: 'Nghĩa',
-  CHINH_TA: 'Chính tả',
-  NGHE: 'Nghe',
-  NGU_CANH: 'Ngữ cảnh',
-  CAP_NHAM: 'Cặp dễ nhầm'
+const MAX_DAYS = 90;
+const pad = n => String(n).padStart(2, '0');
+const localDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseDay = value => {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y, m - 1, d);
 };
-
-const PRACTICE_MAP = {
-  NHAN_NGHIA: 'CHON_NGHIA',
-  VIET: 'NHAP_TU_THEO_NGHIA',
-  NGHE: 'NGHE_VIET',
-  NGU_CANH: 'DIEN_CHO_TRONG',
-  CAP_NHAM: 'PHAN_BIET_CAP'
+const shiftDay = (value, n) => {
+  const d = parseDay(value);
+  d.setDate(d.getDate() + n);
+  return localDay(d);
 };
+const todayLocal = () => localDay(new Date());
+const inclusiveDays = (from, to) => Math.round((parseDay(to) - parseDay(from)) / 86400000) + 1;
+const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
+const browserZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function formatDay(dateStr, includeYear = false) {
   if (!dateStr) return '';
-  const d = new Date(dateStr);
+  const d = parseDay(dateStr);
   if (includeYear) {
     return d.toLocaleDateString('vi-VN');
   } else {
@@ -32,59 +35,54 @@ function formatDay(dateStr, includeYear = false) {
 }
 
 function StatsContent() {
-  
-  const today = new Date().toISOString().split('T')[0];
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  
+  const [today] = useState(todayLocal);
+  const [tz] = useState(browserZone);
+
   const [rangeType, setRangeType] = useState('7');
-  const [tuNgay, setTuNgay] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    return d.toISOString().split('T')[0];
-  });
+  const [tuNgay, setTuNgay] = useState(() => shiftDay(todayLocal(), -6));
   const [denNgay, setDenNgay] = useState(today);
+  const [custom, setCustom] = useState(null);
+  const [rangeError, setRangeError] = useState('');
   const [deckId, setDeckId] = useState('');
-  
-  const [viewMode, setViewMode] = useState('chart'); // 'chart' or 'table'
 
-  const { data: myDecks } = useQuery({
-    queryKey: ['my-decks'],
-    queryFn: () => apiFetch('/api/v1/decks').catch(() => ({ items: [] }))
+  const [viewMode, setViewMode] = useState('chart');
+
+  const { data: myDecks = [] } = useQuery({
+    queryKey: ['my-decks', 'all'],
+    queryFn: () => fetchAllPages('/api/v1/decks')
   });
 
-  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, isError: overviewError } = useQuery({
-    queryKey: ['stats-overview', rangeType, tuNgay, denNgay, deckId],
-    queryFn: () => {
-      let qTu = tuNgay;
-      let qDen = denNgay;
-      if (rangeType === '7') {
-        const d = new Date(); d.setDate(d.getDate() - 6);
-        qTu = d.toISOString().split('T')[0];
-        qDen = today;
-      } else if (rangeType === '30') {
-        const d = new Date(); d.setDate(d.getDate() - 29);
-        qTu = d.toISOString().split('T')[0];
-        qDen = today;
-      }
-      return apiFetch(`/api/v1/statistics/overview?tuNgay=${qTu}&denNgay=${qDen}${deckId ? `&boTheId=${deckId}` : ''}`);
-    }
+  const range = rangeType === 'custom'
+    ? custom
+    : { tu: shiftDay(today, rangeType === '30' ? -29 : -6), den: today };
+
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview, error: overviewError } = useQuery({
+    queryKey: ['stats-overview', range?.tu, range?.den, deckId],
+    queryFn: () => apiFetch(`/api/v1/statistics/overview?tuNgay=${range.tu}&denNgay=${range.den}${deckId ? `&boTheId=${deckId}` : ''}`),
+    enabled: !!range
   });
 
-  const { data: skills, isLoading: skillsLoading, isError: skillsError } = useQuery({
+  const { data: skills, isLoading: skillsLoading, error: skillsError } = useQuery({
     queryKey: ['stats-skills', deckId],
     queryFn: () => apiFetch(`/api/v1/statistics/skills${deckId ? `?boTheId=${deckId}` : ''}`)
   });
 
   const handleApply = (e) => {
     e.preventDefault();
+    setRangeError('');
     if (rangeType === 'custom') {
-      if (!tuNgay || !denNgay) return alert('Vui lòng chọn ngày bắt đầu và kết thúc');
-      if (tuNgay > denNgay) return alert('Ngày bắt đầu phải trước ngày kết thúc');
-      const diffDays = (new Date(denNgay) - new Date(tuNgay)) / 86400000;
-      if (diffDays > 90) return alert('Chỉ được chọn khoảng tối đa 90 ngày');
+      if (!tuNgay || !denNgay) return setRangeError('Chọn ngày bắt đầu và ngày kết thúc');
+      if (tuNgay > denNgay) return setRangeError('Ngày bắt đầu phải trước ngày kết thúc');
+      if (inclusiveDays(tuNgay, denNgay) > MAX_DAYS) return setRangeError(`Chọn khoảng tối đa ${MAX_DAYS} ngày`);
+      if (custom?.tu !== tuNgay || custom?.den !== denNgay) {
+        setCustom({ tu: tuNgay, den: denNgay });
+        return;
+      }
     }
     refetchOverview();
   };
+
+  const hasActivity = overview?.theoNgay?.some(d => d.soLuotOn || d.soCauLuyen || d.soPhut);
 
   const getLowestSkill = () => {
     if (!skills) return null;
@@ -96,7 +94,7 @@ function StatsContent() {
 
   const renderChart = () => {
     if (!overview || !overview.theoNgay || overview.theoNgay.length === 0) return null;
-    
+
     const maxVal = Math.max(overview.mucTieuPhutNgay || 1, ...overview.theoNgay.map(d => d.soPhut));
     const maxGrid = Math.ceil(maxVal * 1.2) || 1;
     const goalH = ((overview.mucTieuPhutNgay || 0) / maxGrid) * 100;
@@ -130,7 +128,7 @@ function StatsContent() {
               if (totalDays <= 7) showLabel = true;
               else if (totalDays <= 31) showLabel = i === 0 || i === totalDays - 1 || i % 5 === 0;
               else showLabel = i === 0 || i === totalDays - 1 || i % 15 === 0;
-              
+
               return (
                 <span key={i}>{showLabel ? formatDay(d.ngay) : ''}</span>
               );
@@ -190,7 +188,7 @@ function StatsContent() {
         <div className="form-head">
           <div className="form-code">
             <span>Thống kê</span>
-            <span id="tz">Múi giờ {tz}</span>
+            <span id="tz">Múi giờ {overview?.muiGio || tz}</span>
           </div>
           <h1 id="page-title">Thống kê học tập</h1>
           <p>Số liệu tính từ lượt ôn và bài luyện đã ghi nhận. Mỗi lượt chỉ tính một lần, ngày tính theo múi giờ của bạn.</p>
@@ -217,7 +215,7 @@ function StatsContent() {
               </label>
             </div>
           </fieldset>
-          
+
           <div className={styles.dates} id="dates" hidden={rangeType !== 'custom'}>
             <div className="field" data-field="tuNgay">
               <label className="field-label" htmlFor="tuNgay">Từ ngày</label>
@@ -229,16 +227,16 @@ function StatsContent() {
               <input className="input" type="date" id="denNgay" name="denNgay" value={denNgay} onChange={e => setDenNgay(e.target.value)} max={today} />
               <p className="field-error"></p>
             </div>
-            <p className="field-hint" style={{ gridColumn: '1/-1' }}>Chọn tối đa 90 ngày.</p>
+            {rangeError ? <p className="field-error" role="alert" style={{ gridColumn: '1/-1' }}>{rangeError}</p> : <p className="field-hint" style={{ gridColumn: '1/-1' }}>Chọn tối đa {MAX_DAYS} ngày.</p>}
           </div>
-          
+
           <div className={styles.foot}>
             <div className="field" data-field="boTheId">
               <label className="field-label" htmlFor="deck">Bộ thẻ</label>
               <select className="select" id="deck" name="boTheId" value={deckId} onChange={e => setDeckId(e.target.value)}>
                 <option value="">Tất cả bộ của tôi</option>
-                {myDecks?.items?.map(d => (
-                  <option key={d.id} value={d.id}>{d.ten || d.name || 'Bộ thẻ'}</option>
+                {myDecks.map(d => (
+                  <option key={d.id} value={d.id}>{d.ten}</option>
                 ))}
               </select>
               <p className="field-error"></p>
@@ -247,7 +245,7 @@ function StatsContent() {
           </div>
         </form>
 
-        <div data-view={overviewLoading ? "loading" : overviewError ? "error" : (overview?.theoNgay?.length > 0 ? "ready" : "empty")} id="region" aria-live="polite">
+        <div data-view={!range ? "empty" : overviewLoading ? "loading" : overviewError ? "error" : (hasActivity ? "ready" : "empty")} id="region" aria-live="polite">
           <div data-when="loading">
             <div className="skeleton">
               <div className="sk sk-row"></div><div className="sk sk-row"></div><div className="sk sk-row"></div><div className="sk sk-row"></div>
@@ -258,13 +256,13 @@ function StatsContent() {
             <dl className="tally cols-2" id="tally">
               <div><dt>Từ đã học</dt><dd>{overview?.soTuDaHoc || 0}</dd></div>
               <div><dt>Lượt ôn</dt><dd>{overview?.soLuotOn || 0}</dd></div>
-              <div><dt>Tỷ lệ nhớ</dt><dd>{overview?.tyLeNho || 0}%</dd></div>
-              <div><dt>Bài luyện</dt><dd>{overview?.baiLuyen?.soCauDung || 0}/{overview?.baiLuyen?.tongSoCau || 0} câu</dd></div>
+              <div><dt>Tỷ lệ nhớ</dt><dd>{percent(overview?.tyLeNho)}</dd></div>
+              <div><dt>Bài luyện</dt><dd>{overview?.baiLuyen?.soCauDung || 0}/{overview?.baiLuyen?.tongSoCau || 0} câu ({percent(overview?.baiLuyen?.tyLeDung)} đúng)</dd></div>
               <div><dt>Thời gian học</dt><dd>{overview?.tongPhut || 0} phút</dd></div>
               <div><dt>Ngày đạt mục tiêu</dt><dd>{overview?.soNgayDatMucTieu || 0}/{overview?.soNgayCoHoc || 0} ngày</dd></div>
               <div><dt>Chuỗi ngày</dt><dd>{overview?.chuoiNgay || 0} ngày</dd></div>
             </dl>
-            
+
             <div className={styles.secHead}>
               <h2 className={styles.secTitle} id="chart-title">Thời gian học theo ngày</h2>
               <button type="button" className="btn btn-quiet" id="toggle" aria-pressed={viewMode === 'table'} aria-controls="chart-box table-box" onClick={() => setViewMode(viewMode === 'chart' ? 'table' : 'chart')}>
@@ -279,12 +277,12 @@ function StatsContent() {
                 <span data-n="1"><i></i><i></i><i></i><i></i></span>
                 <span data-n="2"><i></i><i></i><i></i><i></i></span>
               </div>
-              <h2>Chưa có hoạt động trong khoảng này</h2>
-              <p id="empty-text">Học hoặc làm bài luyện, số liệu sẽ hiện ở đây ngay sau khi được ghi nhận.</p>
+              <h2>{range ? 'Chưa có hoạt động trong khoảng này' : 'Chọn khoảng thời gian'}</h2>
+              <p id="empty-text">{range ? 'Học hoặc làm bài luyện, số liệu sẽ hiện ở đây ngay sau khi được ghi nhận.' : 'Chọn ngày bắt đầu, ngày kết thúc rồi bấm Xem thống kê.'}</p>
               <Link className="btn btn-primary" href="/hom-nay">Về trang Hôm nay</Link>
             </div>
           </div>
-          <div data-when="error">Lỗi tải dữ liệu.</div>
+          <div data-when="error"><p className="notice notice-danger" role="alert">{overviewError?.message || 'Chưa tải được thống kê.'}</p></div>
         </div>
 
         <h2 className={styles.secTitle}>Mức làm chủ theo kỹ năng</h2>
@@ -307,8 +305,8 @@ function StatsContent() {
                 </thead>
                 <tbody id="skills">
                   {skills?.map((s, i) => (
-                    <tr key={i}>
-                      <td>{ERROR_GROUP[s.kyNang] || s.kyNang}</td>
+                    <tr key={s.kyNang || i}>
+                      <td>{label(SKILL, s.kyNang)}</td>
                       <td className={styles.skillCell}>
                         {s.duDuLieu ? (
                           <>
@@ -322,8 +320,8 @@ function StatsContent() {
                           </>
                         )}
                       </td>
-                      <td className={styles.num}>{s.tyLeDungLanDau !== null ? `${s.tyLeDungLanDau}%` : '—'}</td>
-                      <td className={styles.num}>{s.tyLeDungSauLuyenLai !== null ? `${s.tyLeDungSauLuyenLai}%` : '—'}</td>
+                      <td className={styles.num}>{percent(s.tyLeDungLanDau)}</td>
+                      <td className={styles.num}>{percent(s.tyLeDungSauLuyenLai)}</td>
                       <td className={styles.num}>{s.soQuanSat}</td>
                     </tr>
                   ))}
@@ -335,7 +333,7 @@ function StatsContent() {
           <div data-when="empty">
             <p className="small muted">Bạn chưa làm bài luyện nào. <Link href="/luyen-tap">Chọn dạng bài</Link></p>
           </div>
-          <div data-when="error">Lỗi tải dữ liệu.</div>
+          <div data-when="error"><p className="small muted">{skillsError?.message || 'Chưa tải được mức làm chủ.'}</p></div>
         </div>
       </section>
 
@@ -350,17 +348,17 @@ function StatsContent() {
             <li id="tz-note">Ngày được chia theo múi giờ của bạn.</li>
           </ul>
         </section>
-        
+
         <section className="panel" aria-labelledby="next-title">
           <h2 className="panel-title" id="next-title">Luyện kỹ năng yếu</h2>
           {lowestSkill ? (
             <>
               <p className="small muted" id="weak">
-                Kỹ năng yếu nhất hiện tại là <strong>{(ERROR_GROUP[lowestSkill.kyNang] || lowestSkill.kyNang).toLowerCase()}</strong> ({lowestSkill.mucLamChu}%).
+                Kỹ năng yếu nhất hiện tại là <strong>{label(SKILL, lowestSkill.kyNang).toLowerCase()}</strong> ({lowestSkill.mucLamChu}%).
                 {thinSkills.length > 0 && ` Còn ${thinSkills.length} kỹ năng chưa đủ dữ liệu.`}
               </p>
-              <Link className="btn btn-secondary" href={`/luyen-tap?loaiBai=${PRACTICE_MAP[lowestSkill.kyNang] || 'CHON_NGHIA'}`} style={{ marginTop: 'var(--sp-3)' }}>
-                Luyện {(ERROR_GROUP[lowestSkill.kyNang] || lowestSkill.kyNang).toLowerCase()}
+              <Link className="btn btn-secondary" href={`/luyen-tap?loaiBai=${SKILL_PRACTICE[lowestSkill.kyNang] || 'CHON_NGHIA'}`} style={{ marginTop: 'var(--sp-3)' }}>
+                Luyện {label(SKILL, lowestSkill.kyNang).toLowerCase()}
               </Link>
             </>
           ) : (

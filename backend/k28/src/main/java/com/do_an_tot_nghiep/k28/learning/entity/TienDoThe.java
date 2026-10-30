@@ -94,4 +94,44 @@ public class TienDoThe extends BaseEntity {
         this.hanOnAt = state.hanOnAt();
     }
 
+    public boolean suspend() {
+        if (trangThai == TrangThaiTienDo.TAM_NGUNG) {
+            return false;
+        }
+        this.trangThai = TrangThaiTienDo.TAM_NGUNG;
+        return true;
+    }
+
+    public boolean resume() {
+        if (trangThai != TrangThaiTienDo.TAM_NGUNG) {
+            return false;
+        }
+        apply(new SrsState(
+                resumedStatus(), buocHoc, ef, khoangOnNgay,
+                chuoiThanhCong, soLanQuen, hanOnAt
+        ));
+        return true;
+    }
+
+    public boolean reset() {
+        SrsState fresh = SrsState.newCard();
+        if (toState().equals(fresh)) {
+            return false;
+        }
+        apply(fresh);
+        return true;
+    }
+
+    private TrangThaiTienDo resumedStatus() {
+        if (hanOnAt == null) {
+            return TrangThaiTienDo.MOI;
+        }
+        if (khoangOnNgay > 0) {
+            return TrangThaiTienDo.ON_TAP;
+        }
+        if (soLanQuen > 0) {
+            return TrangThaiTienDo.HOC_LAI;
+        }
+        return TrangThaiTienDo.DANG_HOC;
+    }
 }

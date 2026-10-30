@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
+import { useCooldown } from '@/hooks/useCooldown';
 
 export default function SecurityPage() {
   const [errorMsg, setErrorMsg] = useState('');
@@ -36,8 +37,11 @@ export default function SecurityPage() {
     }
   });
 
+  const cooldown = useCooldown(updateMutation.error);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (cooldown > 0) return;
     if (formState.confirm !== formState.newPassword) {
       setErrorMsg('Hai mật khẩu chưa khớp');
       return;
@@ -131,8 +135,8 @@ export default function SecurityPage() {
         </div>
 
         <div className="settings-foot">
-          <button type="submit" className="btn btn-primary btn-lg" id="save" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? 'Đang đổi...' : 'Đổi mật khẩu'}
+          <button type="submit" className="btn btn-primary btn-lg" id="save" disabled={updateMutation.isPending || cooldown > 0}>
+            {cooldown > 0 ? `Thử lại sau ${cooldown} giây` : updateMutation.isPending ? 'Đang đổi...' : 'Đổi mật khẩu'}
           </button>
           <a href="/quen-mat-khau" className="small">Quên mật khẩu hiện tại?</a>
         </div>

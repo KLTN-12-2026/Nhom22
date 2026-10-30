@@ -1,11 +1,16 @@
 package com.do_an_tot_nghiep.k28.learning.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
+import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
+import com.do_an_tot_nghiep.k28.learning.dto.HistoryQuery;
+import com.do_an_tot_nghiep.k28.learning.dto.LichSuOnResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.ReviewRequest;
 import com.do_an_tot_nghiep.k28.learning.dto.ReviewResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.SessionSummaryResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudySessionResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
+import com.do_an_tot_nghiep.k28.learning.service.HistoryService;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
 import com.do_an_tot_nghiep.k28.learning.service.ReviewService;
 import com.do_an_tot_nghiep.k28.learning.service.StudySessionService;
@@ -26,6 +31,7 @@ public class LearningController {
     private final CurrentUser currentUser;
     private final StudySessionService sessionService;
     private final ReviewService reviewService;
+    private final HistoryService historyService;
 
     @GetMapping("/today")
     public TodayPlanResponse today() {
@@ -57,5 +63,15 @@ public class LearningController {
     @GetMapping("/sessions/{id}")
     public StudySessionResponse get(@PathVariable("id") Long id) {
         return sessionService.get(currentUser.id(), id);
+    }
+
+    @PostMapping("/sessions/{id}/finish")
+    public SessionSummaryResponse finish(@PathVariable("id") Long id) {
+        return sessionService.finish(currentUser.id(), id);
+    }
+
+    @GetMapping("/history")
+    public PageResponse<LichSuOnResponse> history(@Valid @ModelAttribute HistoryQuery query) {
+        return historyService.list(currentUser.id(), query);
     }
 }

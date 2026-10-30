@@ -32,16 +32,18 @@ export async function apiFetch(path, options = {}) {
     const headers = new Headers(options.headers);
     if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     let res;
-    try {
-      if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
-        const token = await csrf();
-        headers.set(token.headerName, token.token);
-      }
-      res = await fetch(path, { ...options, method, credentials: 'include', headers });
-    } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(0); }
-    if (!res.ok) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        if (writing) {
+          const token = await csrf();
+          headers.set(token.headerName, token.token);
+        }
+        res = await fetch(path, { ...options, method, credentials: 'include', headers });
+      } catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(0); }
+      if (res.ok) break;
       const data = await res.json().catch(() => ({}));
       if (res.status === 403) resetCsrf();
+      if (writing && attempt === 0 && res.status === 403 && data.code === 'CSRF_INVALID') continue;
       throw new ApiError(res.status, data, Number.parseInt(res.headers.get('Retry-After'), 10));
     }
     if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();

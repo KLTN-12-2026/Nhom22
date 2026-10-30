@@ -5,6 +5,49 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { ERROR_GROUP, PRACTICE_TYPE, SKILL, label, splitBlank } from '@/lib/practice-labels.mjs';
+
+function BlankSentence({ sentence }) {
+  const [before, after] = splitBlank(sentence);
+  if (after === null) return before;
+  return <>{before}<span style={{ display: 'inline-block', minWidth: '40px', borderBottom: '2px solid var(--color-ink)', margin: '0 4px', textAlign: 'center' }}>?</span>{after}</>;
+}
+
+function Prompt({ r }) {
+  const d = r.deBai || {};
+  if (r.loaiCau === 'CHON_NGHIA') return <div style={{ fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'var(--font-word)' }}>{d.tu}</div>;
+  if (r.loaiCau === 'CHON_TU' || r.loaiCau === 'NHAP_TU_THEO_NGHIA') return <div style={{ fontWeight: 'bold' }}>{d.nghiaVi}</div>;
+  if (r.loaiCau === 'NGHE_VIET') return <div style={{ fontWeight: 'bold' }}>Nghe và viết lại từ{d.tuLoai ? ` (${d.tuLoai})` : ''}</div>;
+  if (r.loaiCau === 'GHEP_TU') return <div style={{ fontWeight: 'bold' }}>Ghép {d.cotTrai?.length || 0} từ với nghĩa</div>;
+  if (d.cau) return <div><BlankSentence sentence={d.cau} /></div>;
+  return <div>{d.goiY || d.nghiaVi || d.tu}</div>;
+}
+
+function MatchDetail({ r }) {
+  const rows = r.giaiThich?.cap || [];
+  return (
+    <div className="table-wrap" style={{ marginBottom: 'var(--space-3)' }}>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Từ</th>
+            <th scope="col">Bạn ghép</th>
+            <th scope="col">Nghĩa đúng</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(c => (
+            <tr key={c.traiId}>
+              <td lang="en"><strong>{c.tu}</strong></td>
+              <td style={c.dung ? {} : { color: 'var(--color-danger)', fontWeight: 'bold' }}>{c.nghiaDaChon || <em style={{ color: 'var(--color-ink-3)' }}>Để trống</em>}</td>
+              <td style={{ color: c.dung ? 'inherit' : 'var(--color-success-strong)', fontWeight: c.dung ? 'normal' : 'bold' }}>{c.nghiaDung}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function PracticeResultContent() {
   const router = useRouter();
@@ -12,8 +55,9 @@ function PracticeResultContent() {
   const id = searchParams.get('id');
 
   const [onlyWrong, setOnlyWrong] = useState(false);
+  const [retryError, setRetryError] = useState('');
 
-  const { data: session, isLoading } = useQuery({
+  const { data: session, isLoading, error } = useQuery({
     queryKey: ['practice-session-result', id],
     queryFn: () => apiFetch(`/api/v1/practice/sessions/${id}`),
     enabled: !!id
@@ -24,11 +68,12 @@ function PracticeResultContent() {
     onSuccess: (res) => {
       router.push(`/luyen-tap-lam-bai?id=${res.id}`);
     },
-    onError: (err) => alert(err.message || 'Lỗi khi luyện lại')
+    onError: (err) => setRetryError(err.message || 'Chưa tạo được bài luyện lại. Hãy thử lại.')
   });
 
   if (!id) return <div>Invalid Session</div>;
   if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải kết quả...</div>;
+  if (error) return <div className="notice notice-danger" role="alert" style={{ margin: 'var(--space-6)' }}>{error.message || 'Chưa tải được kết quả.'}</div>;
 
   if (session && !session.daNop) {
     return (
@@ -54,51 +99,52 @@ function PracticeResultContent() {
 
   const renderResultRow = (r) => {
     if (onlyWrong && r.dung) return null;
-
-    let promptHtml = '';
-    if (r.loaiCau === 'CHON_NGHIA') promptHtml = <div style={{ fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'var(--font-word)' }}>{r.deBai.tu}</div>;
-    else if (r.loaiCau === 'CHON_TU' || r.loaiCau === 'NHAP_TU_THEO_NGHIA') promptHtml = <div style={{ fontWeight: 'bold' }}>{r.deBai.nghiaVi}</div>;
-    else if (r.deBai.cau) {
-      const sentenceHtml = r.deBai.cau.replace('_____', '<span style="display:inline-block; width:40px; border-bottom:2px solid var(--color-ink); margin:0 4px;">?</span>');
-      promptHtml = <div dangerouslySetInnerHTML={{ __html: sentenceHtml }} />;
-    } else {
-      promptHtml = <div>{r.deBai.goiY || 'Prompt'}</div>;
-    }
+    const g = r.giaiThich || {};
 
     return (
       <section key={r.thuTu} style={{ display: 'flex', gap: 'var(--space-4)', padding: 'var(--space-5) 0', borderBottom: '1px dashed var(--color-border)' }}>
         <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{r.thuTu}</div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-            <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase' }}>{r.loaiCau.replace(/_/g, ' ')}</span>
+            <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'bold', color: 'var(--color-primary)', textTransform: 'uppercase' }}>{label(PRACTICE_TYPE, r.loaiCau)}</span>
             {r.dung ? (
               <span style={{ padding: '2px 8px', background: 'var(--color-success-bg)', color: 'var(--color-success-text)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><Icon name="check" size={12} /> Đúng</span>
             ) : (
               <span style={{ padding: '2px 8px', background: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><Icon name="x" size={12} /> Sai</span>
             )}
             {r.nhomLoi && (
-              <span style={{ padding: '2px 8px', background: 'var(--color-border)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold' }}>Lỗi {r.nhomLoi}</span>
+              <span style={{ padding: '2px 8px', background: 'var(--color-border)', borderRadius: '4px', fontSize: 'var(--font-size-xs)', fontWeight: 'bold' }}>Lỗi {label(ERROR_GROUP, r.nhomLoi).toLowerCase()}</span>
             )}
           </div>
-          
-          <div style={{ marginBottom: 'var(--space-3)' }}>{promptHtml}</div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-3)' }}>
-            <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Bạn trả lời</div>
-            <div style={!r.dung ? { color: 'var(--color-danger)', fontWeight: 'bold' } : {}}>{r.traLoi?.noiDung || <em style={{ color: 'var(--color-ink-3)' }}>Để trống</em>}</div>
-            
-            {!r.dung && (
-              <>
-                <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Đáp án</div>
-                <div style={{ color: 'var(--color-success-strong)', fontWeight: 'bold' }}>{r.dapAn?.noiDung}</div>
-              </>
-            )}
-          </div>
-          
-          {r.giaiThich && (
+
+          <div style={{ marginBottom: 'var(--space-3)' }}><Prompt r={r} /></div>
+
+          {r.loaiCau === 'GHEP_TU' ? <MatchDetail r={r} /> : (
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-3)' }}>
+              <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Bạn trả lời</div>
+              <div style={!r.dung ? { color: 'var(--color-danger)', fontWeight: 'bold' } : {}}>{r.traLoi?.noiDung || <em style={{ color: 'var(--color-ink-3)' }}>Để trống</em>}</div>
+
+              {!r.dung && (
+                <>
+                  <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Đáp án</div>
+                  <div style={{ color: 'var(--color-success-strong)', fontWeight: 'bold' }}>{r.dapAn?.noiDung}</div>
+                </>
+              )}
+            </div>
+          )}
+
+          {g.tu && (
             <div style={{ borderLeft: '4px solid var(--color-primary-tint)', paddingLeft: 'var(--space-3)', background: 'var(--color-bg)', padding: 'var(--space-3)' }}>
-              <div style={{ fontWeight: 'bold', fontFamily: 'var(--font-word)' }}>{r.giaiThich.tu} {r.giaiThich.phienAm && <span style={{ color: 'var(--color-ink-2)', fontSize: '0.9em', fontWeight: 'normal' }}>{r.giaiThich.phienAm}</span>}</div>
-              <div style={{ fontSize: 'var(--font-size-sm)' }}>{r.giaiThich.nghiaVi}</div>
+              <div style={{ fontWeight: 'bold', fontFamily: 'var(--font-word)' }}>{g.tu} {g.phienAm && <span style={{ color: 'var(--color-ink-2)', fontSize: '0.9em', fontWeight: 'normal' }}>{g.phienAm}</span>}</div>
+              <div style={{ fontSize: 'var(--font-size-sm)' }}>{g.nghiaVi}</div>
+              {g.viDuEn && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px' }} lang="en">{g.viDuEn}</div>}
+              {g.soSanh?.length > 0 && (
+                <ul style={{ marginTop: 'var(--space-2)', fontSize: 'var(--font-size-sm)', display: 'grid', gap: '2px' }}>
+                  {g.soSanh.map(x => (
+                    <li key={x.tu}><strong lang="en">{x.tu}</strong>: {x.nghiaVi}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -111,7 +157,7 @@ function PracticeResultContent() {
       <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
-            <span>Kết quả</span> <span>&bull;</span> <span>{A.loaiBai}{A.laLuyenLai ? ', luyện lại' : ''}</span>
+            <span>Kết quả</span> <span>&bull;</span> <span>{label(PRACTICE_TYPE, A.loaiBai)}{A.laLuyenLai ? ', luyện lại' : ''}</span>
           </div>
           <h1 style={{ fontSize: 'var(--font-size-3xl)', marginBottom: 'var(--space-2)' }}>Đúng {A.soCauDung}/{A.tongSoCau} câu</h1>
           <p style={{ color: 'var(--color-ink-2)' }}>{A.boTheTen}. Nộp lúc {new Date(A.nopAt).toLocaleString('vi-VN')}</p>
@@ -147,9 +193,11 @@ function PracticeResultContent() {
           {A.ketQua.map(renderResultRow)}
         </div>
 
+        {retryError && <p className="notice notice-danger" role="alert" style={{ marginBottom: 'var(--space-3)' }}>{retryError}</p>}
+
         <div className="action-bar" style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)' }}>
           {wrongCount > 0 && (
-            <Button variant="accent" size="lg" onClick={() => retryMutation.mutate(A.lanLamId)} loading={retryMutation.isPending}>
+            <Button variant="accent" size="lg" onClick={() => { setRetryError(''); retryMutation.mutate(A.lanLamId); }} loading={retryMutation.isPending}>
               {retryMutation.isPending ? 'Đang tạo bài...' : `Luyện lại ${wrongCount} câu sai`}
             </Button>
           )}
@@ -165,11 +213,11 @@ function PracticeResultContent() {
             {A.theoKyNang?.map(k => (
               <div key={k.kyNang}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-1)' }}>
-                  <span style={{ fontWeight: 'bold' }}>{k.kyNang}</span>
+                  <span style={{ fontWeight: 'bold' }}>{label(SKILL, k.kyNang)}</span>
                   <span style={{ fontWeight: 'bold' }}>{k.dung}/{k.tong}</span>
                 </div>
                 <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', background: 'var(--color-primary)', width: `${(k.dung / k.tong) * 100}%` }} />
+                  <div style={{ height: '100%', background: 'var(--color-primary)', width: `${k.tong ? (k.dung / k.tong) * 100 : 0}%` }} />
                 </div>
               </div>
             ))}
@@ -179,7 +227,7 @@ function PracticeResultContent() {
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Câu sai đi đâu?</h2>
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-            Mỗi câu sai được lưu với nhóm lỗi (nghĩa, chính tả, nghe, cặp dễ nhầm) và hiện trong <Link href="/so-tay" style={{ color: 'var(--color-primary-strong)' }}>Sổ tay</Link>. 
+            Mỗi câu sai được lưu với nhóm lỗi (nghĩa, chính tả, nghe, cặp dễ nhầm) và hiện trong <Link href="/so-tay" style={{ color: 'var(--color-primary-strong)' }}>Sổ tay</Link>.
             Bài luyện không tự đổi lịch ôn thẻ.
           </p>
         </section>

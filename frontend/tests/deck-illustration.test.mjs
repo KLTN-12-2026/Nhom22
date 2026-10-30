@@ -12,9 +12,9 @@ test('specific title takes precedence over broader topic', () => {
   assert.equal(deckIllustration({ ten: 'Office vocabulary', tenChuDe: 'Y tế và sức khỏe cộng đồng' }), 'office-cover.png');
 });
 
-test('topic supplies art when title has no identifiable subject, including mockups', () => {
+test('topic supplies art when title has no identifiable subject', () => {
   assert.equal(deckIllustration({ ten: 'Test', tenChuDe: 'Y tế và sức khỏe cộng đồng' }), 'health-cover.png');
-  assert.equal(deckIllustration({ name: 'Bộ 1', topicName: 'Khoa học và Công nghệ' }), 'science-cover.png');
+  assert.equal(deckIllustration({ ten: 'Bộ 1', chuDeId: '3' }, 'Khoa học và Công nghệ'), 'science-cover.png');
   assert.equal(deckIllustration({ ten: 'Bộ từ vựng 1', tenChuDe: 'Y tế và sức khỏe cộng đồng' }), 'health-cover.png');
 });
 

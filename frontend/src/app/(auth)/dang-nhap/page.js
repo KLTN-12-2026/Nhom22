@@ -9,6 +9,13 @@ import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
 import { useState } from 'react';
 
+const GOOGLE_ERRORS = {
+  OAUTH_LINK_REQUIRED: 'Email này đã có tài khoản. Đăng nhập bằng mật khẩu để liên kết Google, lần sau bạn có thể dùng Google.',
+  EMAIL_NOT_VERIFIED: 'Email Google này chưa được xác minh. Hãy dùng tài khoản Google khác hoặc đăng ký bằng email.',
+  ACCOUNT_LOCKED: 'Tài khoản đã bị khóa. Liên hệ quản trị viên để được hỗ trợ.',
+  GOOGLE_THAT_BAI: 'Không đăng nhập được bằng Google. Vui lòng thử lại.',
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,7 +47,7 @@ export default function LoginPage() {
 
   const cooldown = useCooldown(loginMutation.error);
   const googleError = searchParams.get('loi');
-  const oauthMessage = googleError === 'OAUTH_LINK_REQUIRED' ? 'Email Google đã có tài khoản. Đăng nhập bằng mật khẩu của email đó trong 10 phút để liên kết Google.' : googleError ? 'Không đăng nhập được bằng Google. Thử lại hoặc đăng nhập bằng email.' : '';
+  const oauthMessage = googleError ? GOOGLE_ERRORS[googleError] || GOOGLE_ERRORS.GOOGLE_THAT_BAI : '';
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -85,7 +92,9 @@ export default function LoginPage() {
 
       <p className="or-divider">hoặc dùng email</p>
 
-      {oauthMessage && <p className="notice notice-warning" role="alert">{oauthMessage}</p>}
+      {oauthMessage && <p className={`notice ${googleError === 'ACCOUNT_LOCKED' ? 'notice-error' : 'notice-warning'}`} role="alert">{oauthMessage}</p>}
+      {googleError === 'EMAIL_NOT_VERIFIED' && <Link className="btn btn-quiet" href="/dang-ky">Đăng ký bằng email</Link>}
+      {googleError === 'OAUTH_LINK_REQUIRED' && loginMutation.error?.code === 'EMAIL_NOT_VERIFIED' && <p className="notice notice-warning" role="alert">Hãy xác thực email trước, rồi đăng nhập để liên kết Google.</p>}
       {loginMutation.error?.code === 'EMAIL_NOT_VERIFIED' && <Link className="btn btn-secondary" href={`/xac-thuc-email?email=${encodeURIComponent(email)}`}>Gửi lại thư xác thực</Link>}
       {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
       <form id="form" onSubmit={handleLogin}>
@@ -118,6 +127,7 @@ export default function LoginPage() {
               name="password" maxLength={72}
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              autoFocus={googleError === 'OAUTH_LINK_REQUIRED'}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

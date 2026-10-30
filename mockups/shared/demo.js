@@ -167,7 +167,8 @@
     put("2", card("21", "uncharacteristically"), "EN_VI", { trangThai: "DANG_HOC", buocHoc: 1, hanOnAt: iso(now - 20 * MIN), version: 1 });
     put("2", card("21", "complementary"), "EN_VI", { trangThai: "ON_TAP", ef: 2.36, khoangOnNgay: 1, chuoiThanhCong: 1, soLanQuen: 1, hanOnAt: iso(sod - DAY), version: 4 });
     put("2", card("22", "How's it going?"), "EN_VI", { trangThai: "ON_TAP", ef: 2.6, khoangOnNgay: 15, chuoiThanhCong: 3, hanOnAt: iso(sod + 4 * DAY), version: 3 });
-    put("2", card("22", "I'm running late"), "EN_VI", { trangThai: "TAM_NGUNG", truocTamNgung: { trangThai: "ON_TAP", hanOnAt: iso(sod + DAY) }, ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod + DAY), version: 2 });
+    put("2", card("22", "I'm running late"), "EN_VI", { trangThai: "TAM_NGUNG", ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod + DAY), version: 2 });
+    put("2", card("22", "I'm running late"), "VI_EN", { trangThai: "TAM_NGUNG", version: 0 });
     put("2", card("22", "get along with"), "EN_VI", { trangThai: "ON_TAP", ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod - DAY), version: 2 });
 
     s.cards.filter((x) => x.deckId === "31").forEach((x, i) => {
@@ -194,6 +195,19 @@
       { id: "p2", uid: "2", the1Id: rc, the2Id: rp, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(15, 20) }
     );
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
+
+    const pp = card("21", "postpone");
+    const t0 = Math.max(sod + MIN, now - 6 * MIN);
+    const done = (i) => Math.min(now - 1000, t0 + (i + 1) * 40000);
+    put("2", pp, "EN_VI", { trangThai: "ON_TAP", ef: 2.5, khoangOnNgay: 15, chuoiThanhCong: 3, soLanQuen: 0, hanOnAt: iso(sod + 15 * DAY + 9 * 3600000), version: 4 });
+    put("2", cm, "EN_VI", { trangThai: "ON_TAP", ef: 2.22, khoangOnNgay: 2, chuoiThanhCong: 2, soLanQuen: 1, hanOnAt: iso(sod + 2 * DAY + 9 * 3600000), version: 5 });
+    s.reviews.push(
+      { id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "phienmau1", theId: pp, chieuHoc: "EN_VI", danhGia: "NHO", thoiGianTraLoiMs: 9200, createdAt: iso(done(0)), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO },
+      { id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "phienmau1", theId: cm, chieuHoc: "EN_VI", danhGia: "KHO", thoiGianTraLoiMs: 17400, createdAt: iso(done(1)), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO }
+    );
+    s.usage["2|" + localDate(now, tz)] = { soTheMoi: 0, soLuotHopLe: 2 };
+    s.sessions["phienmau1"] = { id: "phienmau1", uid: "2", boTheId: "21", chieuHoc: "EN_VI", quyThoiGian: 10, cheDo: "THUONG", muiGio: tz, batDauAt: iso(t0), hetGioAt: iso(t0 + 10 * MIN), trangThai: "DANG_HOC",
+      hangDoi: [pp, cm, cp, un, rc].map((theId, i) => ({ theId, thuTu: i + 1, trangThai: i < 2 ? "DA_TRA_LOI" : "CHUA_TRA_LOI" })) };
 
     const admin = { id: "1", tenHienThi: "Quản trị viên" };
     s.audit.push(
@@ -348,7 +362,7 @@
   function physicallyNew(uid, theId) {
     return DIRS.every((d) => {
       const p = db.progress[pkey(uid, theId, d)];
-      return !p || p.trangThai === "MOI" || (p.trangThai === "TAM_NGUNG" && p.truocTamNgung && p.truocTamNgung.trangThai === "MOI");
+      return !p || p.trangThai === "MOI";
     });
   }
   function usageOf(uid, day) { const k = uid + "|" + day; return db.usage[k] || (db.usage[k] = { soTheMoi: 0, soLuotHopLe: 0 }); }
@@ -402,9 +416,8 @@
     const ok = new Set();
     db.reviews.filter((r) => r.uid === uid).forEach((r) => {
       const d = localDate(Date.parse(r.createdAt), tz);
-      const k = d + "|" + r.phienId;
-      cnt[k] = (cnt[k] || 0) + 1;
-      if (cnt[k] >= 5) ok.add(d);
+      cnt[d] = (cnt[d] || 0) + 1;
+      if (cnt[d] >= 5) ok.add(d);
     });
     const t = Date.now();
     const today = localDate(t, tz);
@@ -413,6 +426,22 @@
     let n = 0;
     while (ok.has(localDate(cursor, tz))) { n++; cursor -= DAY; }
     return { chuoiNgay: n, homNayDaTinh: ok.has(today) };
+  }
+
+  const minutesOf = (ms) => Math.floor(ms / MIN);
+  function studyMsOf(uid, day, tz) {
+    const rv = db.reviews.filter((r) => r.uid === uid && localDate(Date.parse(r.createdAt), tz) === day).reduce((a, r) => a + r.thoiGianTraLoiMs, 0);
+    const pr = db.attempts.filter((a) => a.uid === uid && localDate(Date.parse(a.nopAt), tz) === day).reduce((a, x) => a + x.thoiGianMs, 0);
+    return rv + pr;
+  }
+
+  function openSessionOf(u, sod) {
+    const s = Object.values(db.sessions)
+      .filter((x) => x.uid === u.id && x.trangThai === "DANG_HOC" && Date.parse(x.batDauAt) >= sod)
+      .sort((a, b) => b.batDauAt.localeCompare(a.batDauAt))[0];
+    if (!s) return null;
+    const left = s.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI").length;
+    return { id: s.id, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi", chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian, batDauAt: s.batDauAt, hetGioAt: s.hetGioAt, soDaTraLoi: s.hangDoi.length - left, soChuaTraLoi: left };
   }
 
   function todayPlan(u, q) {
@@ -425,6 +454,9 @@
     let quaHan = 0;
     let denHan = 0;
     const perDeck = {};
+    const duBaoOn = [];
+    for (let i = 1; i <= 7; i++) duBaoOn.push({ ngay: localDate(sod + i * DAY + 12 * 3600000, tz), soCanOn: 0 });
+    const aheadOf = Object.fromEntries(duBaoOn.map((x) => [x.ngay, x]));
     cards.forEach((x) => {
       const deck = perDeck[x.deckId] = perDeck[x.deckId] || { soCanOn: 0, soMoi: 0 };
       if (physicallyNew(u.id, x.id)) deck.soMoi++;
@@ -432,7 +464,7 @@
         const p = progressOf(u.id, x.id, dir);
         if (p.trangThai === "MOI" || p.trangThai === "TAM_NGUNG" || !p.hanOnAt) return;
         const h = Date.parse(p.hanOnAt);
-        if (h < sod) { quaHan++; deck.soCanOn++; } else if (h < eod) { denHan++; deck.soCanOn++; }
+        if (h < sod) { quaHan++; deck.soCanOn++; } else if (h < eod) { denHan++; deck.soCanOn++; } else { const f = aheadOf[localDate(h, tz)]; if (f) f.soCanOn++; }
       });
     });
     const today = localDate(t, tz);
@@ -457,12 +489,15 @@
     const soMoiConLai = rescue && rescue.tamDungTuMoi ? 0 : Math.min(Math.max(0, l.newCardsPerDay - used.soTheMoi), newPhys);
     const todays = db.reviews.filter((r) => r.uid === u.id && localDate(Date.parse(r.createdAt), tz) === today);
     const st = streakOf(u.id, tz);
+    const ms = studyMsOf(u.id, today, tz);
     return {
       ngay: today, soQuaHan: quaHan, soDenHan: denHan, soMoiConLai, tuMoiMoiNgay: l.newCardsPerDay, soTheMoiDaHoc: used.soTheMoi, phutMoiNgay: l.minutesPerDay,
       uocTinhPhut: Math.ceil((canOn + soMoiConLai) * AVG_SECONDS / 60), giayMoiLuot: AVG_SECONDS,
-      daHocHomNay: { soLuot: todays.length, soPhut: Math.round(todays.reduce((a, r) => a + r.thoiGianTraLoiMs, 0) / MIN) },
+      daHocHomNay: { soLuot: todays.length, thoiGian: ms, soPhut: minutesOf(ms) },
       chuoiNgay: st.chuoiNgay, homNayDaTinhChuoi: st.homNayDaTinh, luotToiThieuChuoi: 5, tongSoThe: cards.length,
       boThe: Object.keys(perDeck).map((id) => ({ boTheId: id, ten: deckName(id), soCanOn: perDeck[id].soCanOn, soMoi: perDeck[id].soMoi })),
+      phienDangDo: openSessionOf(u, sod),
+      duBaoOn,
       cuuLichOn: rescue
     };
   }
@@ -499,22 +534,22 @@
         const x = cardById(h.theId);
         const p = progressOf(u.id, h.theId, s.chieuHoc);
         return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), duKien: previewOf(p, t, s.muiGio), the: x ? studyCard(x) : null };
-      }),
-      tongKet: s.tongKet || null
+      })
     };
   }
 
-  function summaryOf(s, u) {
-    const t = Date.now();
+  function summaryOf(s) {
     const rs = db.reviews.filter((r) => r.phienId === s.id);
     const by = { QUEN: 0, KHO: 0, NHO: 0, DE: 0 };
     rs.forEach((r) => { by[r.danhGia]++; });
     const ids = [...new Set(rs.map((r) => r.theId))];
-    const st = streakOf(u.id, s.muiGio);
+    const last = (id) => rs.filter((r) => r.theId === id).pop();
     return {
-      phienId: s.id, chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi",
-      soLuot: rs.length, soThe: ids.length, soTheMoi: ids.filter((id) => { const first = rs.find((r) => r.theId === id); return first && first.truoc.trangThai === "MOI"; }).length,
-      thoiGianGiay: Math.max(0, Math.round((Date.parse(s.ketThucAt) - Date.parse(s.batDauAt)) / 1000)),
+      phienId: s.id, boTheId: s.boTheId || null, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi", chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian,
+      batDauAt: s.batDauAt, hetGioAt: s.hetGioAt, ketThucAt: s.ketThucAt, trangThai: s.trangThai,
+      soLuot: rs.length, soThe: ids.length, soTheMoi: ids.filter((id) => rs.find((r) => r.theId === id).truoc.trangThai === "MOI").length,
+      soChuaTraLoi: s.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI").length,
+      thoiGian: rs.reduce((sum, r) => sum + r.thoiGianTraLoiMs, 0),
       theoDanhGia: by,
       tuCanLuyen: ids.filter((id) => rs.some((r) => r.theId === id && (r.danhGia === "QUEN" || r.danhGia === "KHO"))).map((id) => {
         const x = cardById(id);
@@ -522,10 +557,9 @@
       }).filter(Boolean),
       lichTiepTheo: ids.map((id) => {
         const x = cardById(id);
-        const p = progressOf(u.id, id, s.chieuHoc);
-        return x && { theId: id, tu: x.word, trangThai: p.trangThai, hanOnAt: p.hanOnAt, khoangHienThi: intervalLabel(t, p.hanOnAt, s.muiGio) };
-      }).filter(Boolean).sort((a, b) => Date.parse(a.hanOnAt) - Date.parse(b.hanOnAt)),
-      chuoiNgay: st.chuoiNgay, homNayDaTinhChuoi: st.homNayDaTinh, luotToiThieuChuoi: 5
+        const r = last(id);
+        return x && { theId: id, tu: x.word, trangThai: r.sau.trangThai, hanOnAt: r.sau.hanOnAt };
+      }).filter(Boolean).sort((a, b) => Date.parse(a.hanOnAt) - Date.parse(b.hanOnAt))
     };
   }
 
@@ -1275,21 +1309,31 @@
       const s = db.sessions[m[1]];
       if (!s || s.uid !== u.id) notFound();
       if (s.trangThai === "DANG_HOC") {
-        s.trangThai = "DA_KET_THUC";
+        s.trangThai = "KET_THUC";
         s.ketThucAt = new Date().toISOString();
-        s.tongKet = summaryOf(s, u);
       }
-      return s.tongKet;
+      return summaryOf(s);
     }],
     ["GET", /^\/learning\/history$/, (m, b, q) => {
       const u = requireMe();
+      const tz = tzOf(u);
+      const ymd = /^\d{4}-\d{2}-\d{2}$/;
+      const errors = [];
+      if (q.chieuHoc && !DIRS.includes(q.chieuHoc)) errors.push(fe("chieuHoc", "Chiều học phải là EN_VI hoặc VI_EN"));
+      if (q.tuNgay && !ymd.test(q.tuNgay)) errors.push(fe("tuNgay", "Ngày phải có dạng YYYY-MM-DD"));
+      if (q.denNgay && !ymd.test(q.denNgay)) errors.push(fe("denNgay", "Ngày phải có dạng YYYY-MM-DD"));
+      if (!errors.length && q.tuNgay && q.denNgay && q.tuNgay > q.denNgay) errors.push(fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi"));
+      if (errors.length) bad(errors);
       let list = db.reviews.filter((r) => r.uid === u.id && cardById(r.theId));
-      if (q.boTheId) { ownDeck(q.boTheId); list = list.filter((r) => cardById(r.theId).deckId === q.boTheId); }
+      if (q.boTheId) list = list.filter((r) => cardById(r.theId).deckId === q.boTheId);
       if (q.theId) list = list.filter((r) => r.theId === q.theId);
       if (q.phienId) list = list.filter((r) => r.phienId === q.phienId);
-      const items = list.slice().sort((a, c2) => c2.createdAt.localeCompare(a.createdAt)).map((r) => {
+      if (q.chieuHoc) list = list.filter((r) => r.chieuHoc === q.chieuHoc);
+      if (q.tuNgay) list = list.filter((r) => localDate(Date.parse(r.createdAt), tz) >= q.tuNgay);
+      if (q.denNgay) list = list.filter((r) => localDate(Date.parse(r.createdAt), tz) <= q.denNgay);
+      const items = list.slice().sort((a, c2) => c2.createdAt.localeCompare(a.createdAt) || Number(c2.id) - Number(a.id)).map((r) => {
         const x = cardById(r.theId);
-        return { id: r.id, createdAt: r.createdAt, phienId: r.phienId, theId: r.theId, tu: x.word, chieuHoc: r.chieuHoc, danhGia: r.danhGia, thoiGianTraLoiMs: r.thoiGianTraLoiMs, truoc: { trangThai: r.truoc.trangThai }, sau: { trangThai: r.sau.trangThai, hanOnAt: r.sau.hanOnAt || null }, phienBanThuatToan: r.phienBanThuatToan };
+        return { id: r.id, phienId: r.phienId, theId: r.theId, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, nghiaVi: x.meaningVi, chieuHoc: r.chieuHoc, danhGia: r.danhGia, thoiGian: r.thoiGianTraLoiMs, truoc: r.truoc, sau: r.sau, phienBanThuatToan: r.phienBanThuatToan, createdAt: r.createdAt };
       });
       return page(items, Object.assign({ size: "20" }, q));
     }],
@@ -1308,46 +1352,46 @@
         return "DANG_HOC";
       };
       const tongHop = { MOI: 0, DANG_HOC: 0, DEN_HAN: 0, QUA_HAN: 0, TAM_NGUNG: 0 };
-      let items = db.cards.filter((x) => x.deckId === d.id).map((x) => {
+      const cards = db.cards.filter((x) => x.deckId === d.id);
+      let items = cards.map((x) => {
         const chieu = {};
-        DIRS.forEach((dir) => { const p = progressOf(u.id, x.id, dir); const g = group(p); tongHop[g]++; chieu[dir] = Object.assign(progressView(p), { nhom: g, khoangHienThi: p.hanOnAt ? intervalLabel(t, p.hanOnAt, tz) : null }); });
+        DIRS.forEach((dir) => { const p = progressOf(u.id, x.id, dir); const g = group(p); tongHop[g]++; chieu[dir] = Object.assign(progressView(p), { nhom: g }); });
         return { theId: x.id, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, tamNgung: DIRS.every((dir) => chieu[dir].trangThai === "TAM_NGUNG"), chieu };
       });
       if (q.nhom) items = items.filter((it) => DIRS.some((dir) => it.chieu[dir].nhom === q.nhom));
       if (q.q) { const k = strip(q.q); items = items.filter((it) => strip(it.tu).includes(k) || strip(it.nghiaVi).includes(k)); }
-      return Object.assign({ boTheId: d.id, ten: d.name, tongHop, muiGio: tz }, page(items, Object.assign({ size: "20" }, q)));
+      return Object.assign({ boTheId: d.id, ten: d.name, muiGio: tz, tongSoThe: cards.length, tongHop }, page(items, Object.assign({ size: "20" }, q)));
     }],
     ["PUT", /^\/cards\/(\w+)\/progress\/suspend$/, (m, b) => {
       const card = cardById(m[1]);
       if (!card) notFound();
       const { u } = ownDeck(card.deckId);
       if (typeof b.tamNgung !== "boolean") bad([fe("tamNgung", "Thiếu trạng thái tạm ngưng")]);
+      const resumed = (p) => !p.hanOnAt ? "MOI" : p.khoangOnNgay > 0 ? "ON_TAP" : p.soLanQuen > 0 ? "HOC_LAI" : "DANG_HOC";
       DIRS.forEach((dir) => {
+        const stored = db.progress[pkey(u.id, card.id, dir)];
         const p = progressOf(u.id, card.id, dir);
-        if (b.tamNgung && p.trangThai !== "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: "TAM_NGUNG", truocTamNgung: { trangThai: p.trangThai, hanOnAt: p.hanOnAt }, version: p.version + 1 }));
-        if (!b.tamNgung && p.trangThai === "TAM_NGUNG") {
-          const prev = p.truocTamNgung || { trangThai: "MOI", hanOnAt: null };
-          const n = Object.assign({}, p, { trangThai: prev.trangThai, hanOnAt: prev.hanOnAt, version: p.version + 1 });
-          delete n.truocTamNgung;
-          setProgress(u.id, card.id, dir, n);
-        }
+        if (b.tamNgung && p.trangThai !== "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: "TAM_NGUNG", version: stored ? p.version + 1 : 0 }));
+        if (!b.tamNgung && p.trangThai === "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: resumed(p), version: p.version + 1 }));
       });
       const out = {};
       DIRS.forEach((dir) => { out[dir] = progressView(progressOf(u.id, card.id, dir)); });
-      return { theId: card.id, tamNgung: b.tamNgung, chieu: out };
+      return { theId: card.id, tamNgung: DIRS.every((dir) => out[dir].trangThai === "TAM_NGUNG"), chieu: out };
     }],
-    ["POST", /^\/cards\/(\w+)\/progress\/reset$/, (m) => {
+    ["POST", /^\/cards\/(\w+)\/progress\/reset$/, (m, b) => {
       const card = cardById(m[1]);
       if (!card) notFound();
       const { u } = ownDeck(card.deckId);
+      if (!b || b.xacNhan !== true) bad([fe("xacNhan", "Cần xác nhận đặt lại tiến độ")]);
       const out = {};
       DIRS.forEach((dir) => {
         const p = progressOf(u.id, card.id, dir);
-        const n = Object.assign(newProgress(), { version: p.version + 1 });
-        setProgress(u.id, card.id, dir, n);
+        const fresh = Object.assign(newProgress(), { version: p.version });
+        const n = JSON.stringify(progressView(fresh)) === JSON.stringify(progressView(p)) ? p : Object.assign(newProgress(), { version: p.version + 1 });
+        if (n !== p) setProgress(u.id, card.id, dir, n);
         out[dir] = progressView(n);
       });
-      return { theId: card.id, chieu: out };
+      return { theId: card.id, tamNgung: false, chieu: out };
     }],
 
     ["POST", /^\/practice\/sessions$/, (m, b) => {
@@ -1439,7 +1483,7 @@
         const dr = rs.filter((x) => x.ngay === d);
         const da = as.filter((a) => a.ngay === d);
         const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGianMs, 0);
-        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: Math.round(ms / MIN) };
+        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: minutesOf(ms) };
       });
       const tong = as.reduce((acc, a) => acc + a.tongSoCau, 0);
       const dung = as.reduce((acc, a) => acc + a.soCauDung, 0);

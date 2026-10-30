@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import styles from './page.module.css';
 
 const TYPES = [
@@ -29,9 +30,9 @@ function PracticeForm() {
   const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { data: myDecks } = useQuery({
-    queryKey: ['my-decks'],
-    queryFn: () => apiFetch('/api/v1/decks').catch(() => ({ items: [] }))
+  const { data: myDecks = [] } = useQuery({
+    queryKey: ['my-decks', 'all'],
+    queryFn: () => fetchAllPages('/api/v1/decks')
   });
 
   const { data: history, isLoading: isHistoryLoading } = useQuery({
@@ -91,15 +92,11 @@ function PracticeForm() {
             <select className="select" id="source" name="source" value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="">Tất cả bộ của tôi</option>
               <option value="SO_TAY">Sổ tay từ khó</option>
-              {myDecks?.items?.map(deck => {
-                const name = deck.ten || deck.name || 'Bộ thẻ';
-                const count = deck.soThe ?? deck.cardCount ?? 0;
-                return (
-                  <option key={deck.id} value={`deck:${deck.id}`}>
-                    {name.length > 80 ? name.slice(0, 80) + '…' : name} ({count} thẻ)
-                  </option>
-                );
-              })}
+              {myDecks.map(deck => (
+                <option key={deck.id} value={`deck:${deck.id}`}>
+                  {deck.ten.length > 80 ? deck.ten.slice(0, 80) + '…' : deck.ten}
+                </option>
+              ))}
             </select>
             <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
           </div>

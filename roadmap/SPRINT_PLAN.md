@@ -16,7 +16,7 @@
 | **S3** | 12/10–18/10 | Đợt 1 | Tài khoản & hồ sơ chạy thật | B1.1–B1.6 | F1.1–F1.6 | FR-01, 02 · TC-01 | |
 | **S4** | 19/10–25/10 | Đợt 1 | Bộ/thẻ, thư viện, sao chép, CSV | B1.7–B1.12 | F1.7–F1.12 | FR-03, 04, 05 · TC-02, 03, 04 | 🎯 **Demo Đợt 1** (25/10): vòng quản lý nội dung · 📦 `DOT1` |
 | **S5** | 26/10–01/11 | Đợt 2 | Học SRS đầu-cuối | B2.1–B2.6 | F2.1–F2.4 | FR-06 · TC-05…10 | |
-| **S6** | 02/11–08/11 | Đợt 2 | Luyện tập, sổ tay, thống kê nền, quản trị nền | B2.7–B2.11 | F2.5–F2.8 | FR-07, 08, 11, 13 · TC-11, 17 | 🎯 **Demo Đợt 2** (08/11): học đầu-cuối · 📦 `DOT2` |
+| **S6** | 02/11–08/11 | Đợt 2 | Luyện tập, sổ tay, thống kê nền, quản trị nền, bảng điều khiển | B2.7–B2.12 | F2.5–F2.8, F2.1 (mở rộng) | FR-07, 08, 11, 13 · TC-09, 11, 17 | 🎯 **Demo Đợt 2** (08/11): học đầu-cuối · 📦 `DOT2` |
 | **S7** | 09/11–15/11 | Đợt 3 | AI: tác vụ nền, hạn mức, xưởng thẻ, viết câu, gợi ý | B3.1–B3.3, B3.5 | F3.1–F3.4 | FR-08, 09 · TC-12, 13 | |
 | **S8** | 16/11–22/11 | Đợt 3 | Phát âm, điểm thưởng, thông báo/nhắc | B3.4, B3.6, B3.7 | F3.5–F3.7 | FR-10, 12 · TC-14, 15 | |
 | **S9** | 23/11–29/11 | Đợt 3 | Kiểm duyệt, tổng kết tuần, xóa dữ liệu, quản trị vận hành | B3.8–B3.11 | F3.8–F3.11 | FR-11, 13, 14 · TC-16, 17 | 🎯 **Demo Đợt 3** (29/11): đủ chức năng · 📦 `DOT3` |
@@ -117,8 +117,11 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B2.9 Sổ tay & cặp nhầm | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` | F2.6 | UI27 `/so-tay` |
 | B2.10 Thống kê nền | `GET /statistics/overview`, `GET /statistics/skills` | F2.7 | UI35 `/thong-ke` |
 | B2.11 Quản trị nền | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `/admin/cards`, `GET /admin/audit-logs` | F2.8 | UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` |
+| B2.12 Bảng điều khiển người học | Mở rộng `GET /learning/today`: `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`; hoạt động 7 ngày đọc `GET /statistics/overview` | F2.1 (mở rộng) | UI12 `/hom-nay` (bảng điều khiển, TK §9.1) |
 
-**Xong khi:** TC-11, TC-17 qua. **Demo Đợt 2:** kế hoạch hôm nay → ôn hai chiều → tổng kết → luyện nghe viết sai một từ → sổ tay → thống kê → Admin khóa tài khoản có nhật ký.
+**Phạm vi B2.12 (đề xuất 28/10/2026, chưa code):** UI12 là bảng điều khiển duy nhất của người học; không tạo route hay endpoint `/dashboard` riêng. Thêm khối "Tiếp tục phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn 7 ngày tới"; phút đã học tính từ thời gian thật, cùng cách tính với UI35 (TK §7.3). Trang chủ sau đăng nhập và logo chuyển về `/hom-nay`. FE ghi bước F2.1 mở rộng vào roadmap FE. Chi tiết: roadmap BE B2.12.
+
+**Xong khi:** TC-11, TC-17 qua; số phút/lượt hôm nay trên UI12 khớp UI35 (TC-09). **Demo Đợt 2:** bảng điều khiển hôm nay → ôn hai chiều → tổng kết → luyện nghe viết sai một từ → sổ tay → thống kê → Admin khóa tài khoản có nhật ký.
 
 ### S7 · 09/11–15/11 · AI & gợi ý — FR-08, FR-09
 | BE | API | FE | Màn hình |
@@ -177,12 +180,12 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | FR-03 | Bộ/thẻ | P0 | B1.6–B1.9 | F1.6, F1.8, F1.9, F1.12 | S3, S4 | TC-02 |
 | FR-04 | Thư viện/chia sẻ | P0 | B1.10, B1.11 | F1.7, F1.10 | S4 | TC-03 |
 | FR-05 | CSV | P0 | B1.12 | F1.11 | S4 | TC-04 |
-| FR-06 | SRS/phiên học | P0 | B2.1–B2.6 | F2.1–F2.4 | S5 | TC-05…10 |
+| FR-06 | SRS/phiên học | P0 | B2.1–B2.6, B2.12 | F2.1–F2.4 | S5, S6 | TC-05…10 |
 | FR-07 | Bài cố định | P0 | B2.7, B2.8 | F2.5 | S6 | TC-11 |
 | FR-08 | Từ khó/gợi ý | P1 | B2.9, B3.5 | F2.6, F3.4 | S6, S7 | — |
 | FR-09 | AI | P1 | B3.1–B3.3 | F3.1–F3.3 | S7 | TC-12, 13 |
 | FR-10 | Phát âm | P1 | B3.4 | F3.5 | S8 | TC-14 |
-| FR-11 | Thống kê | P0/P1 | B2.10, B3.9 | F2.7, F3.9 | S6, S9 | TC-09 |
+| FR-11 | Thống kê | P0/P1 | B2.10, B2.12, B3.9 | F2.7, F2.1, F3.9 | S6, S9 | TC-09 |
 | FR-12 | Thưởng/nhắc | P1 | B3.6, B3.7 | F3.6, F3.7 | S8 | TC-15 |
 | FR-13 | Quản trị | P0/P1 | B1.7, B2.11, B3.8, B3.11 | F1.12, F2.8, F3.8, F3.11 | S4, S6, S9 | TC-17 |
 | FR-14 | Dữ liệu cá nhân | P1 | B3.10 | F3.10 | S9 | TC-16 |
@@ -205,7 +208,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI09 | Quên mật khẩu | `/quen-mat-khau` | G | S3 |
 | UI10 | Đặt lại mật khẩu | `/dat-lai-mat-khau` | G | S3 |
 | UI11 | Khởi đầu (mục tiêu, trình độ, chủ đề, thời gian, bộ khởi động) | `/bat-dau` | L | S3–S4 |
-| UI12 | Hôm nay học gì? (dashboard) | `/hom-nay` | L | S5 |
+| UI12 | Hôm nay học gì? — bảng điều khiển (TK §9.1; trang chủ sau đăng nhập) | `/hom-nay` | L | S5, S6 (B2.12) |
 | UI13 | Bộ của tôi & yêu thích | `/bo-the` | L | S4 |
 | UI14 | Tạo/sửa bộ | `/bo-the/tao` (sửa: `/bo-the/tao?id=`) | O | S4 |
 | UI15 | Chi tiết bộ + danh sách thẻ | `/bo-the/[id]` | O | S4 |
@@ -277,6 +280,7 @@ Mỗi PR có một người review khác module. Kiểm thử và tài liệu l�
 | Chia sẻ liên kết bộ (TK §4.1) | Link công khai `/thu-vien/[id]`, nút "Sao chép liên kết" | B1.10, F1.7 |
 | Trang giới thiệu/hướng dẫn/chính sách (TK §4.3) | Trang tĩnh FE | F0.5 |
 | Nghe từ/câu trước khi có TTS | Âm thanh tải lên (B1.6) hoặc Web Speech API; thay bằng `GET /cards/{id}/audio` ở S8 | F2.2 → F3.5 |
+| Bảng điều khiển đủ khối TK §10 (TK §9.1), **đề xuất** 28/10/2026 | UI12 `/hom-nay` là bảng điều khiển, không route mới; mở rộng `GET /learning/today` (`phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`); hoạt động 7 ngày từ `GET /statistics/overview`; trang chủ sau đăng nhập về `/hom-nay` | B2.12, F2.1 |
 
 ## 7. Việc cần chốt với GVHD (TK §2.4) — hạn cuối S2
 
@@ -293,5 +297,6 @@ Mỗi PR có một người review khác module. Kiểm thử và tài liệu l�
 | S5 | SRS sai hoặc ghi trùng — lõi của đề tài | B2.1 làm và test đầu tiên bằng `Instant` cố định truyền vào calculator; service dùng `Clock` cố định khi test. B2.4 test đồng thời trước khi FE nối |
 | S7 | Chưa có khóa AI / chi phí | `FakeAiClient` từ đầu S7; FE dựng bằng Fake, nối thật cuối sprint |
 | S8 | API phát âm thiếu chỉ số | Chỉ số nullable; FE hiện "Chưa có dữ liệu"; dữ liệu giả gắn nhãn "Mô phỏng" |
+| S6 | B2.12 phụ thuộc B2.5, B2.8, B2.10; bảng điều khiển và thống kê lệch số | Làm B2.12 sau B2.10; dùng chung hàm thời gian học; khối chưa có API thì ẩn, không hiện số minh họa |
 | S9 | Dồn nhiều màn quản trị | Dùng chung bảng dữ liệu + bộ lọc admin từ S6 |
 | S10 | Không kịp sửa lỗi | Đóng băng tính năng từ 30/11; chỉ sửa lỗi |
