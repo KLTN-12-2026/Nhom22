@@ -1,462 +1,342 @@
-'use strict';
 import { NextResponse } from 'next/server';
+import { backendJson, jsonError, proxyOrMock } from '@/app/api/v1/_mock/backend';
+import { mockStore, newId, recordMistake, visibleNotebook } from '@/app/api/v1/_mock/store';
+import { CONFUSING_PAIRS, DEFAULT_CARDS, SKILL_OF } from '@/app/api/v1/_mock/seed';
 
-// In-memory mock store for when BE practice endpoints are not yet deployed (Sprint 6)
-if (!globalThis.__practiceSessions) {
-  globalThis.__practiceSessions = new Map();
-}
-if (!globalThis.__practiceHistory) {
-  globalThis.__practiceHistory = [];
-}
+const TYPES = [...Object.keys(SKILL_OF), 'TONG_HOP'];
+const MIX = ['CHON_NGHIA', 'DIEN_CHO_TRONG', 'NGHE_VIET', 'CHON_TU', 'NHAP_TU_THEO_NGHIA'];
+const ALL_DECKS = 'Tất cả bộ của tôi';
+const NOTEBOOK = 'Sổ tay từ khó';
 
-const DEFAULT_CARDS = [
-  { id: 'c1', tu: 'invoice', tuLoai: 'n', phienAm: '/ˈɪn.vɔɪs/', nghiaVi: 'hóa đơn', viDuEn: 'Please check the invoice before making payment.', dichVi: 'Vui lòng kiểm tra hóa đơn trước khi thanh toán.' },
-  { id: 'c2', tu: 'schedule', tuLoai: 'n', phienAm: '/ˈskedʒ.uːl/', nghiaVi: 'lịch trình', viDuEn: 'The meeting schedule has been updated.', dichVi: 'Lịch trình cuộc họp đã được cập nhật.' },
-  { id: 'c3', tu: 'contract', tuLoai: 'n', phienAm: '/ˈkɑːn.trækt/', nghiaVi: 'hợp đồng', viDuEn: 'They signed a two-year contract yesterday.', dichVi: 'Họ đã ký hợp đồng hai năm vào hôm qua.' },
-  { id: 'c4', tu: 'confirm', tuLoai: 'v', phienAm: '/kənˈfɝːm/', nghiaVi: 'xác nhận', viDuEn: 'Please confirm your attendance by Friday.', dichVi: 'Vui lòng xác nhận sự tham gia trước thứ Sáu.' },
-  { id: 'c5', tu: 'negotiate', tuLoai: 'v', phienAm: '/nəˈɡoʊ.ʃi.eɪt/', nghiaVi: 'đàm phán, thương lượng', viDuEn: 'We need to negotiate a better price.', dichVi: 'Chúng ta cần đàm phán để có mức giá tốt hơn.' },
-  { id: 'c6', tu: 'applicant', tuLoai: 'n', phienAm: '/ˈæp.lə.kənt/', nghiaVi: 'người nộp đơn, ứng viên', viDuEn: 'Each applicant must submit a resume.', dichVi: 'Mỗi ứng viên phải nộp một bản sơ yếu lý lịch.' },
-  { id: 'c7', tu: 'budget', tuLoai: 'n', phienAm: '/ˈbʌdʒ.ɪt/', nghiaVi: 'ngân sách', viDuEn: 'The project exceeded its allocated budget.', dichVi: 'Dự án đã vượt quá ngân sách được phân bổ.' },
-  { id: 'c8', tu: 'deadline', tuLoai: 'n', phienAm: '/ˈded.laɪn/', nghiaVi: 'hạn chót', viDuEn: 'The deadline for submission is 5 PM tomorrow.', dichVi: 'Hạn chót nộp bài là 5 giờ chiều ngày mai.' },
-  { id: 'c9', tu: 'feedback', tuLoai: 'n', phienAm: '/ˈfiːd.bæk/', nghiaVi: 'phản hồi, ý kiến đóng góp', viDuEn: 'Customer feedback helps improve product quality.', dichVi: 'Phản hồi của khách hàng giúp cải thiện chất lượng sản phẩm.' },
-  { id: 'c10', tu: 'promotion', tuLoai: 'n', phienAm: '/prəˈmoʊ.ʃən/', nghiaVi: 'thăng tiến, khuyến mãi', viDuEn: 'She earned a promotion after exceptional performance.', dichVi: 'Cô ấy được thăng chức sau thành tích xuất sắc.' }
-];
-
-const SKILL_MAP = {
-  CHON_NGHIA: 'Nhận nghĩa',
-  CHON_TU: 'Nhận nghĩa',
-  GHEP_TU: 'Nhận nghĩa',
-  DIEN_CHO_TRONG: 'Dùng từ trong câu',
-  NHAP_TU_THEO_NGHIA: 'Viết đúng chính tả',
-  NGHE_VIET: 'Nghe và viết',
-  PHAN_BIET_CAP: 'Phân biệt cặp dễ nhầm',
-  TONG_HOP: 'Nhiều kỹ năng'
-};
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+function shuffle(list) {
+  const result = [...list];
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [result[i], result[j]] = [result[j], result[i]];
   }
-  return a;
+  return result;
 }
 
-async function tryProxyToBackend(req, slug) {
-  const beBase = (process.env.API_URL || 'http://localhost:8080').replace(/\/$/, '');
-  const url = `${beBase}/api/v1/practice/${slug.join('/')}${req.nextUrl.search}`;
-  try {
-    const headers = new Headers();
-    const cookie = req.headers.get('cookie');
-    if (cookie) headers.set('cookie', cookie);
-    const contentType = req.headers.get('content-type');
-    if (contentType) headers.set('content-type', contentType);
-    const xsrf = req.headers.get('x-xsrf-token');
-    if (xsrf) headers.set('x-xsrf-token', xsrf);
+const normalize = value => String(value || '').normalize('NFC').replace(/[’‘`]/g, "'").trim().replace(/\s+/g, ' ').toLowerCase();
 
-    const init = {
-      method: req.method,
-      headers,
+function editDistance(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function blankOf(card) {
+  const sentence = card.viDuEn || '';
+  const word = card.tu.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = sentence.match(new RegExp(`\\b(${word}[a-z]*)`, 'i'));
+  if (!match) return null;
+  return { cau: sentence.slice(0, match.index) + '_____' + sentence.slice(match.index + match[1].length), dapAn: match[1] };
+}
+
+const snapshot = card => ({ theId: card.id, tu: card.tu, phienAm: card.phienAm || null, tuLoai: card.tuLoai || null, nghiaVi: card.nghiaVi, viDuEn: card.viDuEn || null, dichVi: card.dichVi || null, boTheId: card.boTheId || null, boTheTen: card.boTheTen || null });
+const explanation = snap => ({ tu: snap.tu, phienAm: snap.phienAm, tuLoai: snap.tuLoai, nghiaVi: snap.nghiaVi, viDuEn: snap.viDuEn, dichVi: snap.dichVi });
+
+async function loadCards(req, deck) {
+  const page = await backendJson(req, `/api/v1/decks/${encodeURIComponent(deck.id)}/cards?size=100`);
+  return (page?.items || []).map(card => ({ ...card, boTheId: String(deck.id), boTheTen: deck.ten }));
+}
+
+async function loadPool(req, body, store) {
+  if (body.nguon === 'SO_TAY') {
+    return { name: NOTEBOOK, pool: visibleNotebook(store).map(item => ({ id: item.theId, tu: item.tu, tuLoai: item.tuLoai, phienAm: item.phienAm, nghiaVi: item.nghiaVi, boTheId: item.boTheId, boTheTen: item.boTheTen })) };
+  }
+  if (body.boTheId) {
+    const deck = await backendJson(req, `/api/v1/decks/${encodeURIComponent(body.boTheId)}`);
+    if (deck) return { name: deck.ten, pool: await loadCards(req, deck) };
+    return { name: 'Bộ thẻ minh họa', pool: DEFAULT_CARDS };
+  }
+  const decks = await backendJson(req, '/api/v1/decks?size=100');
+  const pool = (await Promise.all((decks?.items || []).slice(0, 10).map(deck => loadCards(req, deck)))).flat();
+  return { name: ALL_DECKS, pool: pool.length >= 4 ? pool : DEFAULT_CARDS };
+}
+
+async function audioUrl(req, card) {
+  if (!card.amTuId || !card.boTheId) return null;
+  const file = await backendJson(req, `/api/v1/decks/${encodeURIComponent(card.boTheId)}/cards/${encodeURIComponent(card.id)}/files/AM_TU`);
+  return file?.downloadUrl || null;
+}
+
+async function makeQuestion(req, type, card, distract, thuTu) {
+  const base = { id: newId('q'), thuTu, loaiCau: type, theId: card.id, snap: snapshot(card) };
+  if (type === 'CHON_NGHIA' || type === 'CHON_TU') {
+    const others = shuffle(distract.filter(other => normalize(other.tu) !== normalize(card.tu) && normalize(other.nghiaVi) !== normalize(card.nghiaVi))).slice(0, 3);
+    if (others.length < 3) return null;
+    const options = shuffle([card, ...others]).map((item, i) => ({ id: `o${i + 1}`, noiDung: type === 'CHON_NGHIA' ? item.nghiaVi : item.tu, theId: item.id }));
+    return {
+      ...base,
+      deBai: type === 'CHON_NGHIA' ? { tu: card.tu, phienAm: card.phienAm || null, tuLoai: card.tuLoai || null } : { nghiaVi: card.nghiaVi, tuLoai: card.tuLoai || null },
+      phuongAn: options.map(({ id, noiDung }) => ({ id, noiDung })),
+      options,
+      answer: { luaChonId: options.find(option => option.theId === card.id).id, noiDung: type === 'CHON_NGHIA' ? card.nghiaVi : card.tu }
     };
-    if (!['GET', 'HEAD'].includes(req.method)) {
-      const bodyText = await req.clone().text();
-      if (bodyText) init.body = bodyText;
-    }
-    const beRes = await fetch(url, init);
-    // If backend implemented it (not 404, not 502, not 503)
-    if (beRes.status !== 404 && beRes.status !== 502 && beRes.status !== 503) {
-      const resBody = await beRes.text();
-      return new NextResponse(resBody, {
-        status: beRes.status,
-        headers: {
-          'content-type': beRes.headers.get('content-type') || 'application/json'
-        }
-      });
-    }
-  } catch (e) {
-    // Backend unreachable or not implemented, continue to local practice handler
+  }
+  if (type === 'DIEN_CHO_TRONG') {
+    const blank = blankOf(card);
+    if (!blank) return null;
+    return { ...base, deBai: { cau: blank.cau, goiY: card.nghiaVi, tuLoai: card.tuLoai || null }, answer: { chapNhan: [blank.dapAn], noiDung: blank.dapAn } };
+  }
+  if (type === 'NHAP_TU_THEO_NGHIA') {
+    return { ...base, deBai: { nghiaVi: card.nghiaVi, tuLoai: card.tuLoai || null, viDuVi: card.dichVi || null }, answer: { chapNhan: [card.tu], noiDung: card.tu } };
+  }
+  if (type === 'NGHE_VIET') {
+    const url = await audioUrl(req, card);
+    if (!url) return null;
+    return { ...base, deBai: { amThanhUrl: url, tuLoai: card.tuLoai || null }, answer: { chapNhan: [card.tu], noiDung: card.tu } };
   }
   return null;
 }
 
+function matchQuestion(group, thuTu) {
+  const left = shuffle(group).map((card, i) => ({ id: `t${i + 1}`, noiDung: card.tu, theId: card.id }));
+  const right = shuffle(group).map((card, i) => ({ id: `n${i + 1}`, noiDung: card.nghiaVi, theId: card.id }));
+  return {
+    id: newId('q'), thuTu, loaiCau: 'GHEP_TU', theIds: group.map(card => card.id), cards: group.map(snapshot),
+    deBai: { cotTrai: left.map(({ id, noiDung }) => ({ id, noiDung })), cotPhai: right.map(({ id, noiDung }) => ({ id, noiDung })) },
+    left, right,
+    answer: { cap: left.map(l => ({ traiId: l.id, phaiId: right.find(r => r.theId === l.theId).id })) }
+  };
+}
+
+function pairQuestion(target, other, thuTu) {
+  const blank = blankOf(target);
+  const options = shuffle([target, other]).map((card, i) => ({ id: `o${i + 1}`, noiDung: card.tu, theId: card.id }));
+  return {
+    id: newId('q'), thuTu, loaiCau: 'PHAN_BIET_CAP', theId: target.id, snap: snapshot(target), other: explanation(snapshot(other)),
+    deBai: blank ? { cau: blank.cau, goiY: null } : { cau: null, goiY: target.nghiaVi },
+    phuongAn: options.map(({ id, noiDung }) => ({ id, noiDung })),
+    options,
+    answer: { luaChonId: options.find(option => option.theId === target.id).id, noiDung: blank ? blank.dapAn : target.tu }
+  };
+}
+
+const publicQuestion = q => ({ id: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, deBai: q.deBai, phuongAn: q.phuongAn || null });
+
+const attemptView = a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, theoKyNang: a.theoKyNang, ketQua: a.ketQua });
+
+function practiceView(store, session) {
+  const attempt = session.lanLamId ? store.attempts.find(a => a.lanLamId === session.lanLamId) : null;
+  return {
+    id: session.id, loaiBai: session.loaiBai, boTheId: session.boTheId, boTheTen: session.boTheTen, nguon: session.nguon,
+    soCau: session.cauHoi.length, soCauYeuCau: session.soCauYeuCau, taoAt: session.taoAt, laLuyenLai: session.laLuyenLai,
+    daNop: !!attempt, lanLamId: session.lanLamId, cauHoi: session.cauHoi.map(publicQuestion), ketQua: attempt ? attemptView(attempt) : null
+  };
+}
+
+function pairCards(theIds) {
+  return CONFUSING_PAIRS
+    .filter(pair => !theIds?.length || (theIds.includes(pair.the1.id) && theIds.includes(pair.the2.id)))
+    .map(pair => [pair.the1, pair.the2]);
+}
+
+async function createSession(req, store) {
+  const body = await req.json().catch(() => ({}));
+  const errors = [];
+  if (!TYPES.includes(body.loaiBai)) errors.push({ field: 'loaiBai', message: 'Chọn dạng bài' });
+  if (![5, 10, 20].includes(Number(body.soCau))) errors.push({ field: 'soCau', message: 'Chọn 5, 10 hoặc 20 câu' });
+  if (errors.length) return jsonError(400, 'VALIDATION_FAILED', 'Dữ liệu không hợp lệ', errors);
+  const n = Number(body.soCau);
+  const theIds = Array.isArray(body.theIds) ? body.theIds.map(String) : [];
+  const questions = [];
+  let name = ALL_DECKS;
+
+  if (body.loaiBai === 'PHAN_BIET_CAP') {
+    const pairs = pairCards(theIds);
+    if (!pairs.length) return jsonError(422, 'BUSINESS_RULE', 'Bạn chưa có cặp từ dễ nhầm. Cặp được ghi nhận khi bạn chọn nhầm giữa hai từ trong bài luyện.');
+    shuffle(pairs).forEach(([a, b]) => [[a, b], [b, a]].forEach(([x, y]) => { if (questions.length < n) questions.push(pairQuestion(x, y, questions.length + 1)); }));
+  } else {
+    const loaded = await loadPool(req, body, store);
+    name = loaded.name;
+    const pool = theIds.length ? loaded.pool.filter(card => theIds.includes(String(card.id))) : loaded.pool;
+    if (!pool.length) return jsonError(422, 'BUSINESS_RULE', body.nguon === 'SO_TAY' ? 'Sổ tay đang trống, chưa có từ nào để luyện.' : 'Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước.');
+    const distract = [...loaded.pool, ...DEFAULT_CARDS.filter(card => !loaded.pool.some(item => normalize(item.tu) === normalize(card.tu)))];
+    const order = shuffle(pool);
+    if (body.loaiBai === 'GHEP_TU') {
+      const chosen = order.slice(0, n);
+      for (let i = 0; i < chosen.length; i += 5) {
+        let group = chosen.slice(i, i + 5);
+        if (group.length < 3) group = group.concat(shuffle(distract.filter(card => !group.some(item => normalize(item.tu) === normalize(card.tu)))).slice(0, 3 - group.length));
+        questions.push(matchQuestion(group, questions.length + 1));
+      }
+    } else {
+      const types = body.loaiBai === 'TONG_HOP' ? MIX : [body.loaiBai];
+      for (let i = 0; i < order.length && questions.length < n; i++) {
+        for (let k = 0; k < types.length; k++) {
+          const question = await makeQuestion(req, types[(i + k) % types.length], order[i], distract, questions.length + 1);
+          if (question) { questions.push(question); break; }
+        }
+      }
+    }
+  }
+  if (!questions.length) {
+    const message = body.loaiBai === 'DIEN_CHO_TRONG'
+      ? 'Các thẻ đã chọn chưa có câu ví dụ chứa đúng từ, nên chưa tạo được câu điền chỗ trống.'
+      : body.loaiBai === 'NGHE_VIET' ? 'Các thẻ đã chọn chưa có âm thanh phát âm, nên chưa tạo được câu nghe viết.' : 'Chưa tạo được câu hỏi từ các thẻ đã chọn.';
+    return jsonError(422, 'BUSINESS_RULE', message);
+  }
+  const session = {
+    id: newId('bai'), loaiBai: body.loaiBai, boTheId: body.boTheId ? String(body.boTheId) : null,
+    boTheTen: body.loaiBai === 'PHAN_BIET_CAP' ? NOTEBOOK : name, nguon: body.nguon || 'BO_THE',
+    soCauYeuCau: n, taoAt: new Date().toISOString(), laLuyenLai: false, lanLamId: null, cauHoi: questions
+  };
+  store.sessions.set(session.id, session);
+  return NextResponse.json(practiceView(store, session), { status: 201 });
+}
+
+function grade(store, session, given, createdAt) {
+  return session.cauHoi.map(q => {
+    const reply = given[q.id] || {};
+    let dung = false;
+    let diem = 0;
+    let nhomLoi = null;
+    let traLoi;
+    let giaiThich;
+    if (q.loaiCau === 'GHEP_TU') {
+      const pairs = Array.isArray(reply.cap) ? reply.cap : [];
+      const chiTiet = q.answer.cap.map(correct => {
+        const got = pairs.find(pair => pair.traiId === correct.traiId);
+        const left = q.left.find(l => l.id === correct.traiId);
+        const chosen = got ? q.right.find(r => r.id === got.phaiId) : null;
+        return { traiId: correct.traiId, tu: left.noiDung, phaiIdDaChon: got?.phaiId || null, nghiaDaChon: chosen?.noiDung || null, nghiaDung: q.right.find(r => r.id === correct.phaiId).noiDung, dung: !!got && got.phaiId === correct.phaiId, theId: left.theId };
+      });
+      const good = chiTiet.filter(item => item.dung).length;
+      diem = good / chiTiet.length;
+      dung = good === chiTiet.length;
+      nhomLoi = dung ? null : 'NGHIA';
+      traLoi = { cap: pairs };
+      giaiThich = { cap: chiTiet };
+      chiTiet.filter(item => !item.dung).forEach(item => recordMistake(store, q.cards.find(card => card.theId === item.theId), { nhomLoi: 'NGHIA', traLoi: item.nghiaDaChon, dapAn: item.nghiaDung, baiLuyenId: session.id, createdAt }));
+    } else if (q.phuongAn) {
+      const chosen = q.options.find(option => option.id === reply.luaChonId);
+      dung = reply.luaChonId === q.answer.luaChonId;
+      if (!dung) nhomLoi = q.loaiCau === 'PHAN_BIET_CAP' ? 'CAP_NHAM' : 'NGHIA';
+      traLoi = { luaChonId: reply.luaChonId || null, noiDung: chosen?.noiDung || null };
+      const base = explanation(q.snap);
+      giaiThich = q.other ? { ...base, soSanh: [{ tu: base.tu, nghiaVi: base.nghiaVi }, { tu: q.other.tu, nghiaVi: q.other.nghiaVi }] } : base;
+    } else {
+      const text = String(reply.noiDung || '').slice(0, 200);
+      const got = normalize(text);
+      traLoi = { noiDung: text };
+      dung = !!got && q.answer.chapNhan.some(accepted => normalize(accepted) === got);
+      if (!dung) {
+        const near = got && editDistance(got, normalize(q.answer.noiDung)) <= 2;
+        nhomLoi = near ? 'CHINH_TA' : q.loaiCau === 'NGHE_VIET' ? 'NGHE' : q.loaiCau === 'DIEN_CHO_TRONG' ? 'NGU_CANH' : 'NGHIA';
+      }
+      giaiThich = explanation(q.snap);
+    }
+    if (q.loaiCau !== 'GHEP_TU') {
+      diem = dung ? 1 : 0;
+      if (!dung) recordMistake(store, q.snap, { nhomLoi, traLoi: traLoi.noiDung, dapAn: q.answer.noiDung, baiLuyenId: session.id, createdAt });
+    }
+    return {
+      cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi,
+      dapAn: { luaChonId: q.answer.luaChonId || null, noiDung: q.answer.noiDung || null, cap: q.answer.cap || null },
+      dung, diem, nhomLoi, giaiThich, theId: q.theId || null, theIds: q.theIds || null
+    };
+  });
+}
+
+async function submit(req, store, session) {
+  const body = await req.json().catch(() => ({}));
+  const existing = session.lanLamId ? store.attempts.find(a => a.lanLamId === session.lanLamId) : null;
+  if (existing) {
+    if (body.submitKey && body.submitKey === existing.submitKey) return NextResponse.json(attemptView(existing));
+    return NextResponse.json({ code: 'CONFLICT', message: 'Bài này đã được nộp', lanLamId: existing.lanLamId }, { status: 409 });
+  }
+  if (!body.submitKey || !/^[A-Za-z0-9._:-]{1,128}$/.test(body.submitKey)) {
+    return jsonError(400, 'VALIDATION_FAILED', 'Dữ liệu không hợp lệ', [{ field: 'submitKey', message: 'Thiếu mã nộp bài' }]);
+  }
+  const given = {};
+  (Array.isArray(body.traLoi) ? body.traLoi : []).forEach(reply => { if (reply?.cauHoiId) given[reply.cauHoiId] = reply; });
+  const lanLamId = newId('lan');
+  const nopAt = new Date().toISOString();
+  const ketQua = grade(store, session, given, nopAt);
+  const bySkill = {};
+  ketQua.forEach(item => {
+    const kyNang = SKILL_OF[item.loaiCau];
+    bySkill[kyNang] ??= { kyNang, dung: 0, tong: 0 };
+    bySkill[kyNang].tong++;
+    if (item.dung) bySkill[kyNang].dung++;
+  });
+  const soCauDung = ketQua.filter(item => item.dung).length;
+  const attempt = {
+    lanLamId, baiLuyenId: session.id, loaiBai: session.loaiBai, boTheId: session.boTheId, boTheTen: session.boTheTen,
+    submitKey: body.submitKey, soCauDung, tongSoCau: ketQua.length,
+    diem: Math.round(ketQua.reduce((sum, item) => sum + item.diem, 0) / ketQua.length * 100),
+    thoiGianMs: Math.max(0, Math.min(Number(body.thoiGianMs) || 0, 3 * 3600000)), nopAt, laLuyenLai: session.laLuyenLai,
+    theoKyNang: Object.values(bySkill), ketQua
+  };
+  store.attempts.push(attempt);
+  session.lanLamId = lanLamId;
+  return NextResponse.json(attemptView(attempt), { status: 201 });
+}
+
+async function retry(req, store) {
+  const body = await req.json().catch(() => ({}));
+  const previous = store.attempts.find(a => a.lanLamId === body.lanLamId);
+  const source = previous && store.sessions.get(previous.baiLuyenId);
+  if (!previous || !source) return jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài làm cần luyện lại');
+  const wrong = source.cauHoi.filter(q => previous.ketQua.some(item => item.cauHoiId === q.id && !item.dung));
+  if (!wrong.length) return jsonError(422, 'BUSINESS_RULE', 'Bài này không có câu sai để luyện lại.');
+  const session = {
+    ...source, id: newId('bai'), taoAt: new Date().toISOString(), laLuyenLai: true, lanLamId: null,
+    soCauYeuCau: wrong.length, cauHoi: wrong.map((q, i) => ({ ...q, id: newId('q'), thuTu: i + 1 }))
+  };
+  store.sessions.set(session.id, session);
+  return NextResponse.json(practiceView(store, session), { status: 201 });
+}
+
+function history(req, store) {
+  const params = req.nextUrl.searchParams;
+  const page = Math.max(0, Number.parseInt(params.get('page') || '0', 10) || 0);
+  const size = Math.min(100, Math.max(1, Number.parseInt(params.get('size') || '20', 10) || 20));
+  const loaiBai = params.get('loaiBai') || '';
+  const items = store.attempts
+    .filter(a => !loaiBai || a.loaiBai === loaiBai)
+    .slice()
+    .reverse()
+    .map(a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, laLuyenLai: a.laLuyenLai, boTheTen: a.boTheTen, nopAt: a.nopAt, thoiGianMs: a.thoiGianMs, soCauDung: a.soCauDung, soCauSai: a.tongSoCau - a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem }));
+  return NextResponse.json({ items: items.slice(page * size, (page + 1) * size), page, size, totalElements: items.length, totalPages: Math.ceil(items.length / size) });
+}
+
+function mockGet(req, slug) {
+  const store = mockStore(req);
+  if (slug.length === 1 && slug[0] === 'history') return history(req, store);
+  if (slug.length === 2 && slug[0] === 'sessions') {
+    const session = store.sessions.get(slug[1]);
+    return session ? NextResponse.json(practiceView(store, session)) : jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài luyện');
+  }
+  return jsonError(404, 'NOT_FOUND', 'Không tìm thấy đường dẫn');
+}
+
+function mockPost(req, slug) {
+  const store = mockStore(req);
+  if (slug.length === 1 && slug[0] === 'sessions') return createSession(req, store);
+  if (slug.length === 3 && slug[0] === 'sessions' && slug[2] === 'submissions') {
+    const session = store.sessions.get(slug[1]);
+    return session ? submit(req, store, session) : jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài luyện');
+  }
+  if (slug.length === 2 && slug[0] === 'mistakes' && slug[1] === 'retry') return retry(req, store);
+  return jsonError(404, 'NOT_FOUND', 'Không tìm thấy đường dẫn');
+}
+
+const pathOf = slug => `/api/v1/practice/${slug.map(encodeURIComponent).join('/')}`;
+
 export async function GET(req, { params }) {
   const { slug = [] } = await params;
-  const proxy = await tryProxyToBackend(req, slug);
-  if (proxy) return proxy;
-
-  // 1. GET /api/v1/practice/history
-  if (slug.length === 1 && slug[0] === 'history') {
-    const searchParams = req.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '0', 10);
-    const size = parseInt(searchParams.get('size') || '10', 10);
-    const loaiBai = searchParams.get('loaiBai') || '';
-
-    let items = globalThis.__practiceHistory.slice().reverse();
-    if (loaiBai) {
-      items = items.filter(a => a.loaiBai === loaiBai);
-    }
-    const totalElements = items.length;
-    const totalPages = Math.ceil(totalElements / size) || 1;
-    const pagedItems = items.slice(page * size, (page + 1) * size);
-
-    return NextResponse.json({
-      items: pagedItems,
-      page,
-      size,
-      totalElements,
-      totalPages
-    });
-  }
-
-  // 2. GET /api/v1/practice/sessions/[id]
-  if (slug.length === 2 && slug[0] === 'sessions') {
-    const id = slug[1];
-    const session = globalThis.__practiceSessions.get(id);
-    if (!session) {
-      return NextResponse.json({ code: 'NOT_FOUND', message: 'Không tìm thấy phiên luyện tập' }, { status: 404 });
-    }
-
-    // If already submitted, include result
-    if (session.daNop && session.lanLamId) {
-      const attempt = globalThis.__practiceHistory.find(h => h.lanLamId === session.lanLamId);
-      return NextResponse.json({
-        ...session,
-        ketQua: attempt || session.ketQua
-      });
-    }
-
-    // Otherwise return questions for taking exam (remove sensitive answers for security)
-    const safeCauHoi = session.cauHoi.map(q => {
-      const { dapAnDung, ...safeQ } = q;
-      return safeQ;
-    });
-
-    return NextResponse.json({
-      id: session.id,
-      loaiBai: session.loaiBai,
-      boTheId: session.boTheId,
-      boTheTen: session.boTheTen,
-      soCau: safeCauHoi.length,
-      soCauYeuCau: session.soCauYeuCau,
-      taoAt: session.taoAt,
-      laLuyenLai: session.laLuyenLai,
-      daNop: false,
-      cauHoi: safeCauHoi
-    });
-  }
-
-  return NextResponse.json({ code: 'NOT_FOUND', message: 'API not found' }, { status: 404 });
+  return proxyOrMock(req, pathOf(slug), () => mockGet(req, slug));
 }
 
 export async function POST(req, { params }) {
   const { slug = [] } = await params;
-  const proxy = await tryProxyToBackend(req, slug);
-  if (proxy) return proxy;
-
-  // 1. POST /api/v1/practice/sessions
-  if (slug.length === 1 && slug[0] === 'sessions') {
-    const body = await req.json().catch(() => ({}));
-    const loaiBai = body.loaiBai || 'CHON_NGHIA';
-    const soCau = [5, 10, 20].includes(Number(body.soCau)) ? Number(body.soCau) : 10;
-    const boTheId = body.boTheId || null;
-
-    let pool = [...DEFAULT_CARDS];
-    let boTheTen = 'Tất cả bộ của tôi';
-
-    // If user selected a specific deck, try to fetch cards from backend
-    if (boTheId) {
-      try {
-        const beBase = (process.env.API_URL || 'http://localhost:8080').replace(/\/$/, '');
-        const cookie = req.headers.get('cookie') || '';
-        const cardsRes = await fetch(`${beBase}/api/v1/decks/${boTheId}/cards?size=100`, {
-          headers: { cookie }
-        });
-        if (cardsRes.ok) {
-          const cardsData = await cardsRes.json();
-          if (cardsData.items && cardsData.items.length >= 2) {
-            pool = cardsData.items.map(c => ({
-              id: c.id,
-              tu: c.tu,
-              tuLoai: c.tuLoai || 'n',
-              phienAm: c.phienAm || '',
-              nghiaVi: c.nghiaVi,
-              viDuEn: c.viDuEn || `This is an example for ${c.tu}.`,
-              dichVi: c.dichVi || ''
-            }));
-          }
-        }
-        const deckRes = await fetch(`${beBase}/api/v1/decks/${boTheId}`, {
-          headers: { cookie }
-        });
-        if (deckRes.ok) {
-          const deckData = await deckRes.json();
-          if (deckData.ten) boTheTen = deckData.ten;
-        }
-      } catch (err) {
-        // Fallback to default cards
-      }
-    }
-
-    const availablePool = shuffle(pool);
-    const chosenCards = availablePool.slice(0, Math.min(soCau, availablePool.length));
-
-    const cauHoi = chosenCards.map((card, idx) => {
-      const qId = `q_${idx + 1}_${card.id}`;
-      const currentType = loaiBai === 'TONG_HOP'
-        ? ['CHON_NGHIA', 'CHON_TU', 'DIEN_CHO_TRONG', 'NHAP_TU_THEO_NGHIA'][idx % 4]
-        : loaiBai;
-
-      // Distractors from other cards
-      const otherCards = pool.filter(c => c.id !== card.id);
-      const distractors = shuffle(otherCards).slice(0, 3);
-
-      if (currentType === 'CHON_NGHIA') {
-        const options = shuffle([
-          { id: 'opt_correct', noiDung: card.nghiaVi },
-          ...distractors.map((d, i) => ({ id: `opt_${i}`, noiDung: d.nghiaVi }))
-        ]);
-        return {
-          id: qId,
-          theId: card.id,
-          loaiCau: 'CHON_NGHIA',
-          deBai: { tu: card.tu, phienAm: card.phienAm, tuLoai: card.tuLoai },
-          phuongAn: options,
-          dapAnDung: 'opt_correct',
-          dapAnNoiDung: card.nghiaVi,
-          giaiThich: { tu: card.tu, phienAm: card.phienAm, nghiaVi: card.nghiaVi }
-        };
-      }
-
-      if (currentType === 'CHON_TU' || currentType === 'PHAN_BIET_CAP') {
-        const options = shuffle([
-          { id: 'opt_correct', noiDung: card.tu },
-          ...distractors.map((d, i) => ({ id: `opt_${i}`, noiDung: d.tu }))
-        ]);
-        return {
-          id: qId,
-          theId: card.id,
-          loaiCau: currentType,
-          deBai: { nghiaVi: card.nghiaVi, tuLoai: card.tuLoai },
-          phuongAn: options,
-          dapAnDung: 'opt_correct',
-          dapAnNoiDung: card.tu,
-          giaiThich: { tu: card.tu, phienAm: card.phienAm, nghiaVi: card.nghiaVi }
-        };
-      }
-
-      if (currentType === 'DIEN_CHO_TRONG') {
-        const regex = new RegExp(`\\b${card.tu}\\b`, 'gi');
-        const sentence = (card.viDuEn || `We need to _____ immediately.`).replace(regex, '_____');
-        return {
-          id: qId,
-          theId: card.id,
-          loaiCau: 'DIEN_CHO_TRONG',
-          deBai: { cau: sentence.includes('_____') ? sentence : `_____: ${card.viDuEn}`, goiY: card.nghiaVi, tuLoai: card.tuLoai },
-          dapAnDung: card.tu.toLowerCase().trim(),
-          dapAnNoiDung: card.tu,
-          giaiThich: { tu: card.tu, phienAm: card.phienAm, nghiaVi: card.nghiaVi }
-        };
-      }
-
-      if (currentType === 'GHEP_TU') {
-        const pairCards = [card, ...distractors.slice(0, 3)];
-        const cotTrai = pairCards.map(c => ({ id: `left_${c.id}`, noiDung: c.tu }));
-        const cotPhai = shuffle(pairCards.map(c => ({ id: `right_${c.id}`, noiDung: c.nghiaVi })));
-        return {
-          id: qId,
-          theId: card.id,
-          loaiCau: 'GHEP_TU',
-          deBai: { cotTrai, cotPhai },
-          dapAnDung: pairCards.map(c => ({ traiId: `left_${c.id}`, phaiId: `right_${c.id}` })),
-          dapAnNoiDung: pairCards.map(c => `${c.tu} = ${c.nghiaVi}`).join(', '),
-          giaiThich: { tu: card.tu, phienAm: card.phienAm, nghiaVi: card.nghiaVi }
-        };
-      }
-
-      // Default to NHAP_TU_THEO_NGHIA or NGHE_VIET
-      return {
-        id: qId,
-        theId: card.id,
-        loaiCau: currentType,
-        deBai: {
-          nghiaVi: card.nghiaVi,
-          tuLoai: card.tuLoai,
-          phienAm: card.phienAm,
-          goiY: currentType === 'NGHE_VIET' ? 'Nghe phát âm hoặc dựa vào phiên âm' : 'Nhập từ tiếng Anh tương ứng'
-        },
-        dapAnDung: card.tu.toLowerCase().trim(),
-        dapAnNoiDung: card.tu,
-        giaiThich: { tu: card.tu, phienAm: card.phienAm, nghiaVi: card.nghiaVi }
-      };
-    });
-
-    const sessionId = 'ses_' + Date.now();
-    const session = {
-      id: sessionId,
-      loaiBai,
-      boTheId,
-      boTheTen,
-      soCau: cauHoi.length,
-      soCauYeuCau: soCau,
-      taoAt: new Date().toISOString(),
-      laLuyenLai: false,
-      daNop: false,
-      cauHoi
-    };
-
-    globalThis.__practiceSessions.set(sessionId, session);
-
-    return NextResponse.json({
-      id: sessionId,
-      loaiBai,
-      boTheId,
-      boTheTen,
-      soCau: cauHoi.length,
-      soCauYeuCau: soCau,
-      taoAt: session.taoAt,
-      laLuyenLai: false,
-      daNop: false
-    }, { status: 201 });
-  }
-
-  // 2. POST /api/v1/practice/sessions/[id]/submissions
-  if (slug.length === 3 && slug[0] === 'sessions' && slug[2] === 'submissions') {
-    const id = slug[1];
-    const session = globalThis.__practiceSessions.get(id);
-    if (!session) {
-      return NextResponse.json({ code: 'NOT_FOUND', message: 'Không tìm thấy phiên luyện tập' }, { status: 404 });
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const traLoiList = Array.isArray(body.traLoi) ? body.traLoi : [];
-    const thoiGianMs = Number(body.thoiGianMs) || 60000;
-
-    let soCauDung = 0;
-    const ketQuaChiTiet = session.cauHoi.map((q, idx) => {
-      const userAns = traLoiList.find(t => t.cauHoiId === q.id);
-      let isCorrect = false;
-      let userDisplay = '';
-
-      if (q.loaiCau === 'GHEP_TU') {
-        const userPairs = userAns?.cap || [];
-        const correctPairs = q.dapAnDung || [];
-        isCorrect = correctPairs.length > 0 && correctPairs.every(cp => {
-          return userPairs.some(up => up.traiId === cp.traiId && up.phaiId === cp.phaiId);
-        });
-        userDisplay = isCorrect ? 'Đã ghép đúng tất cả' : 'Ghép chưa chính xác';
-      } else if (q.phuongAn) {
-        isCorrect = userAns?.luaChonId === q.dapAnDung;
-        const chosenOpt = q.phuongAn.find(o => o.id === userAns?.luaChonId);
-        userDisplay = chosenOpt ? chosenOpt.noiDung : '';
-      } else {
-        const val = String(userAns?.noiDung || '').trim().toLowerCase();
-        isCorrect = val.length > 0 && val === String(q.dapAnDung).trim().toLowerCase();
-        userDisplay = userAns?.noiDung || '';
-      }
-
-      if (isCorrect) soCauDung++;
-
-      return {
-        thuTu: idx + 1,
-        cauHoiId: q.id,
-        theId: q.theId,
-        loaiCau: q.loaiCau,
-        deBai: q.deBai,
-        dung: isCorrect,
-        nhomLoi: isCorrect ? null : (q.loaiCau === 'NHAP_TU_THEO_NGHIA' || q.loaiCau === 'NGHE_VIET' ? 'Chính tả' : 'Nghĩa'),
-        traLoi: { noiDung: userDisplay },
-        dapAn: { noiDung: q.dapAnNoiDung },
-        giaiThich: q.giaiThich
-      };
-    });
-
-    const tongSoCau = session.cauHoi.length;
-    const diem = tongSoCau ? Math.round((soCauDung / tongSoCau) * 100) : 0;
-    const lanLamId = 'lan_' + Date.now();
-    const nopAt = new Date().toISOString();
-
-    // Skill breakdown
-    const skills = {};
-    ketQuaChiTiet.forEach(item => {
-      const skillName = SKILL_MAP[item.loaiCau] || 'Nhận nghĩa';
-      if (!skills[skillName]) skills[skillName] = { dung: 0, tong: 0 };
-      skills[skillName].tong++;
-      if (item.dung) skills[skillName].dung++;
-    });
-    const theoKyNang = Object.entries(skills).map(([kyNang, stat]) => ({
-      kyNang,
-      dung: stat.dung,
-      tong: stat.tong
-    }));
-
-    const attempt = {
-      lanLamId,
-      baiLuyenId: session.id,
-      loaiBai: session.loaiBai,
-      boTheTen: session.boTheTen,
-      soCauDung,
-      tongSoCau,
-      soCauSai: tongSoCau - soCauDung,
-      diem,
-      thoiGianMs,
-      nopAt,
-      laLuyenLai: session.laLuyenLai,
-      theoKyNang,
-      ketQua: ketQuaChiTiet
-    };
-
-    session.daNop = true;
-    session.lanLamId = lanLamId;
-    session.ketQua = attempt;
-
-    globalThis.__practiceHistory.push(attempt);
-
-    return NextResponse.json(attempt, { status: 201 });
-  }
-
-  // 3. POST /api/v1/practice/mistakes/retry
-  if (slug.length === 2 && slug[0] === 'mistakes' && slug[1] === 'retry') {
-    const body = await req.json().catch(() => ({}));
-    const lanLamId = body.lanLamId;
-    const prevAttempt = globalThis.__practiceHistory.find(h => h.lanLamId === lanLamId);
-    if (!prevAttempt) {
-      return NextResponse.json({ code: 'NOT_FOUND', message: 'Không tìm thấy bài làm cần luyện lại' }, { status: 404 });
-    }
-
-    const prevSession = globalThis.__practiceSessions.get(prevAttempt.baiLuyenId);
-    const wrongQuestions = (prevSession?.cauHoi || []).filter(q => {
-      const res = prevAttempt.ketQua.find(k => k.cauHoiId === q.id);
-      return res && !res.dung;
-    });
-
-    const newId = 'ses_retry_' + Date.now();
-    const newSession = {
-      id: newId,
-      loaiBai: prevAttempt.loaiBai,
-      boTheId: prevSession?.boTheId || null,
-      boTheTen: prevAttempt.boTheTen,
-      soCau: wrongQuestions.length,
-      soCauYeuCau: wrongQuestions.length,
-      taoAt: new Date().toISOString(),
-      laLuyenLai: true,
-      daNop: false,
-      cauHoi: wrongQuestions
-    };
-
-    globalThis.__practiceSessions.set(newId, newSession);
-
-    return NextResponse.json({
-      id: newId,
-      loaiBai: newSession.loaiBai,
-      boTheId: newSession.boTheId,
-      boTheTen: newSession.boTheTen,
-      soCau: wrongQuestions.length,
-      soCauYeuCau: wrongQuestions.length,
-      taoAt: newSession.taoAt,
-      laLuyenLai: true,
-      daNop: false
-    }, { status: 201 });
-  }
-
-  return NextResponse.json({ code: 'NOT_FOUND', message: 'API not found' }, { status: 404 });
+  return proxyOrMock(req, pathOf(slug), () => mockPost(req, slug));
 }

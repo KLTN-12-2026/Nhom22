@@ -1,4 +1,4 @@
-# Sơ đồ luồng backend B0.1–B1.12
+# Sơ đồ luồng backend B0.1–B2.5
 
 Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải thích từng bước và nhánh lỗi. Ảnh SVG hiển thị trực tiếp; có thể mở phần mã Mermaid dưới mỗi ảnh để sửa sơ đồ.
 
@@ -35,6 +35,7 @@ Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải t
 - [B2.2 — Kế hoạch hôm nay](B2.2-ke-hoach-hom-nay.md)
 - [B2.3 — Tạo phiên học](B2.3-tao-phien-hoc.md)
 - [B2.4 — Ghi kết quả ôn](B2.4-ghi-ket-qua-on.md)
+- [B2.5 — Kết thúc phiên, lịch sử, tạm ngưng/đặt lại](B2.5-ket-thuc-phien-lich-su-tien-do.md)
 
 ## Redis
 
@@ -54,4 +55,4 @@ Mở file Markdown bằng trình xem có hỗ trợ ảnh SVG. Nếu trình xem 
 
 Sau khi sửa Mermaid, chạy `python docs/luong-backend/render-diagrams.py` từ thư mục gốc dự án. Cần Node.js và Mermaid CLI (`mmdc`); công cụ chỉ cập nhật Markdown và SVG trong thư mục tài liệu này, kiểm tra mọi sơ đồ render thành công trước khi ghi Markdown.
 
-Danh sách hiện có 20 tài liệu giai đoạn và một tài liệu Redis. B0.6 và B0.7 chưa có file luồng riêng trong thư mục này.
+Danh sách hiện có 23 tài liệu giai đoạn và một tài liệu Redis. B0.6 và B0.7 chưa có file luồng riêng trong thư mục này.

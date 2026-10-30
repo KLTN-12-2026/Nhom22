@@ -7,13 +7,11 @@ const TOPICS = [
   { pattern: /\b(giao tiep|doi song|hang ngay|ca phe|mua sam|communication|everyday|daily|coffee|shopping)\b/, file: 'everyday-cover.png' },
 ];
 
-// The title wins over the broader topic. A goal alone is not a cover subject.
-export function deckIllustration(deck) {
-  for (const text of [deck.ten ?? deck.name, deck.tenChuDe ?? deck.topicName]) {
+export function deckIllustration(deck, topicName = deck.tenChuDe) {
+  for (const text of [deck.ten, topicName]) {
     const normalized = normalize(text);
     const match = TOPICS.find(topic => topic.pattern.test(normalized));
     if (match) return match.file;
   }
-  // Generic words like "vocabulary" do not override a specific named topic.
-  return /\b(hoc|tu vung|learning|vocabulary)\b/.test(normalize(deck.ten ?? deck.name)) ? 'learning-desk.png' : null;
+  return /\b(hoc|tu vung|learning|vocabulary)\b/.test(normalize(deck.ten)) ? 'learning-desk.png' : null;
 }

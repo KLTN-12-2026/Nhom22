@@ -36,7 +36,7 @@ export default function TodayPage() {
     });
   };
 
-  const todayStr = plan?.ngay ? new Date(plan.ngay).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN');
+  const todayStr = plan?.ngay ? plan.ngay.split('-').reverse().join('/') : '';
   const totalCardsToday = (plan?.soQuaHan || 0) + (plan?.soDenHan || 0) + (plan?.soMoiConLai || 0);
 
   return (
@@ -82,7 +82,7 @@ export default function TodayPage() {
         </section>
       )}
 
-      {!isLoading && !error && (plan?.tongSoThe > 0 || plan) && (
+      {!isLoading && !error && plan?.tongSoThe > 0 && (
         <>
           <section className="sheet" data-when="ready" aria-labelledby="page-title">
             <div className="form-head">

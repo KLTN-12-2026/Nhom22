@@ -183,7 +183,7 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 | FR-08 | Từ khó/gợi ý | P1 | Gợi ý có mã lý do và thẻ/lỗi liên quan; không gợi ý nội dung đã xóa/tạm ngưng |
 | FR-09 | AI | P1 | Chỉ lưu thẻ đã chọn; xác thực cấu trúc; có hạn mức; lỗi AI không chặn ôn bình thường |
 | FR-10 | Phát âm | P1 | Xin quyền micro; nghe lại trước gửi; lưu kết quả có/thiếu chỉ số; xóa được bản ghi |
-| FR-11 | Thống kê | P0/P1 | Tổng số lấy từ sự kiện hợp lệ; không cộng trùng; bộ lọc ngày theo múi giờ người học |
+| FR-11 | Thống kê | P0/P1 | Tổng số lấy từ sự kiện hợp lệ; không cộng trùng; bộ lọc ngày theo múi giờ người học; bảng điều khiển và trang thống kê dùng cùng cách tính |
 | FR-12 | Thưởng/nhắc | P1 | Thưởng có giới hạn; nhận một lần; nhắc đúng cài đặt và không gửi trùng |
 | FR-13 | Quản trị | P0/P1 | Phân quyền máy chủ; thao tác quan trọng có người thực hiện, thời gian và lý do |
 | FR-14 | Dữ liệu cá nhân | P1 | Có yêu cầu xóa, trạng thái xử lý, xóa tệp và dữ liệu phụ thuộc theo chính sách |
@@ -197,7 +197,7 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 3. Người dùng xác thực bằng token một lần; token sai/hết hạn có thông báo và khả năng gửi lại.
 4. Người học chọn mục tiêu giao tiếp/TOEIC, trình độ tự đánh giá, chủ đề, thời gian/ngày, số từ mới và giờ nhắc.
 5. Hệ thống đề xuất bộ mẫu theo mục tiêu/trình độ đã lưu trong ho_so_hoc_tap: GET /library/decks?nguon=MAU&mucTieu={mucTieu}&trinhDo={trinhDo}. B1.10 chỉ gợi ý và xem bộ, người học có thể bỏ qua; không tự sao chép.
-6. Chuyển đến bảng điều khiển với một hành động rõ ràng: “Bắt đầu phiên học đầu tiên”.
+6. Chuyển đến bảng điều khiển (UI12 `/hom-nay`, §9.1) với một hành động rõ ràng: “Bắt đầu phiên học đầu tiên”.
 
 Đăng nhập Google xác minh danh tính từ nhà cung cấp; không tự nối tài khoản chỉ vì email trùng khi chưa có bằng chứng và quy trình liên kết an toàn.
 
@@ -282,7 +282,7 @@ Các trạng thái:
 - `HOC_LAI`: trả lời quên ở giai đoạn ôn.
 - `TAM_NGUNG`: không đưa vào hàng đợi.
 
-“Đến hạn” và “quá hạn” là trạng thái tính từ `han_on_at`, không cần hai trạng thái lưu riêng. Thẻ quá hạn khi `han_on_at < now`; hiển thị mức trễ theo ngày địa phương khi cần. Hiện thực có ba cách đếm: thống kê theo bộ (`dueByDeck`) coi quá hạn là `han_on_at` trước đầu ngày địa phương; hàng đợi học (`dueQueue`) lấy thẻ `han_on_at <= now`; hiển thị chi tiết dùng `< now`. Khi viết UI cần chọn đúng định nghĩa cho từng màn hình.
+“Đến hạn” và “quá hạn” là trạng thái tính từ `han_on_at`, không cần hai trạng thái lưu riêng. Thẻ quá hạn khi `han_on_at < now`; hiển thị mức trễ theo ngày địa phương khi cần. Hiện thực có ba cách đếm: thống kê theo bộ (`dueByDeck`) coi quá hạn là `han_on_at` trước đầu ngày địa phương; hàng đợi học (`dueQueue`) lấy thẻ `han_on_at <= now`; hiển thị chi tiết dùng `< now`. Khi viết UI cần chọn đúng định nghĩa cho từng màn hình. Tiến độ theo bộ (UI21, `GET /decks/{id}/progress`, B2.5 dự kiến, **đề xuất**) dùng quy tắc của `dueByDeck` theo ngày địa phương và đếm theo thẻ-chiều; `TAM_NGUNG` và thẻ chưa có tiến độ (`MOI`) tách nhóm riêng.
 
 ### 7.2. Biến thể SM-2 đề xuất [Thiết kế]
 
@@ -317,6 +317,7 @@ Quy ước triển khai B2.1 (**đề xuất**, phiên bản thuật toán `SM2-
 - Giới hạn từ mới tính theo thẻ vật lý lần đầu học trong ngày, không tính hai lần vì học cả hai chiều; hai chiều vẫn có tiến độ riêng.
 - Thẻ đến hạn không bị mất chỉ vì hết hạn mức từ mới.
 - Khối lượng phiên dựa trên quỹ thời gian và thời gian trung bình của các lượt gần đây; chưa có dữ liệu thì dùng giá trị mặc định và ghi là ước tính.
+- Phút học của một ngày (**đề xuất**, B2.12): tổng `lich_su_on.thoi_gian` của các lượt ôn trong ngày địa phương (mỗi lượt đã cắt ở 120000 ms khi ghi), cộng thời gian bài luyện đã nộp khi B2.8 lưu được thời gian. `soPhut` làm tròn xuống phút; “đạt mục tiêu” so tổng mili giây với `phutMoiNgay × 60000`. `GET /learning/today` (`daHocHomNay`) và `GET /statistics/overview` (`theoNgay`, `tongPhut`) dùng chung một cách tính. Ước tính 20 giây/lượt chỉ dùng cho khối lượng còn lại (`uocTinhPhut`), không dùng cho thời gian đã học.
 - Không thêm thẻ tạm ngưng, đã xóa hoặc không còn quyền truy cập.
 - Tự đánh giá có thể chủ quan; bài luyện kỹ năng được lưu riêng để bổ sung minh chứng.
 
@@ -377,6 +378,22 @@ Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 tr
 
 Một màn hình gom thẻ đến hạn, số từ mới, mục tiêu và quỹ thời gian. Người học chọn “5 phút / 10 phút / 20 phút” rồi bắt đầu. Sau phiên, hệ thống nói rõ đã hoàn thành gì và nên làm gì tiếp theo.
 
+Màn hình này chính là **bảng điều khiển của người học**: UI12 `/hom-nay`, trang đầu tiên sau đăng nhập và sau khởi đầu (§6.1 bước 6). Không tạo thêm route hay trang “dashboard” riêng, để không trùng với UI35 `/thong-ke`. Phần mở rộng dưới đây đã được chọn ngày 28/10/2026, là **đề xuất** và chưa triển khai (B2.12):
+
+| Khối | Nội dung | Nguồn dữ liệu | Bước |
+|---|---|---|---|
+| Kế hoạch hôm nay | Quá hạn, đến hạn, từ mới còn lại, thời gian ước tính, nút bắt đầu | `GET /learning/today` | B2.2 |
+| Tiếp tục phiên đang dở | Phiên `DANG_HOC` mới nhất bắt đầu trong ngày địa phương hôm nay: số đã trả lời/còn lại, nút “Tiếp tục” hoặc “Xem tổng kết” | `phienDangDo` trong `GET /learning/today` | B2.12 |
+| Mục tiêu ngày | Phút đã học thật so với mục tiêu phút/ngày | `daHocHomNay` trong `GET /learning/today` | B2.2, đổi cách tính ở B2.12 |
+| Chuỗi ngày | Số ngày liên tiếp đủ điều kiện | `GET /learning/today` | B2.2, thay ở B3.6 |
+| Cứu lịch ôn | Phương án chia N ngày khi quá hạn vượt ngưỡng | `cuuLichOn` trong `GET /learning/today` | B2.6 |
+| Hoạt động 7 ngày | Số phút và số lượt mỗi ngày, vạch mục tiêu | `theoNgay` của `GET /statistics/overview` (7 ngày đến hôm nay) | B2.10 |
+| Dự báo ôn 7 ngày tới | Số lượt đến hạn mỗi ngày từ ngày mai | `duBaoOn` trong `GET /learning/today` | B2.12 |
+| Theo bộ thẻ | Số cần ôn và số từ chưa học của từng bộ | `boThe` trong `GET /learning/today` | B2.2 |
+| Gợi ý có lý do | Đề xuất kèm mã lý do và minh chứng (UI28) | `GET /learning/recommendations` | B3.5 |
+
+Nguyên tắc: số phút, số lượt và chuỗi ngày trên bảng điều khiển phải khớp với UI35 vì cùng cách tính (§7.3); khối chưa có API hoặc chưa đủ dữ liệu thì ẩn hoặc ghi “Chưa đủ dữ liệu”, không hiện số minh họa; không gộp thành endpoint `/dashboard` riêng, FE gọi song song các endpoint trên.
+
 ### 9.2. Bản đồ làm chủ từ vựng [Thiết kế từ yêu cầu thống kê]
 
 Mỗi chủ đề là một nhóm; màu thể hiện mức hoàn thành và thiếu dữ liệu. Bấm một từ xem lịch sử nhận nghĩa, viết, nghe, phát âm, cặp nhầm và lịch ôn. Không dùng màu xanh để ngụ ý thành thạo khi chỉ mới nhận nghĩa đúng một lần.
@@ -419,7 +436,7 @@ Hiển thị từ đã học, kỹ năng tiến bộ, ba từ khó và mục ti�
 | Công khai | Trang chủ, thư viện, chi tiết bộ công khai, hướng dẫn, chính sách |
 | Xác thực | Đăng ký, đăng nhập, xác thực, quên/đặt lại mật khẩu |
 | Khởi đầu | Chọn mục tiêu, trình độ, chủ đề, thời gian/ngày và bộ khởi động |
-| Bảng điều khiển | Kế hoạch hôm nay, đến hạn/quá hạn, mục tiêu, chuỗi ngày, gợi ý có lý do |
+| Bảng điều khiển (UI12 `/hom-nay`, §9.1) | Kế hoạch hôm nay, đến hạn/quá hạn, tiếp tục phiên đang dở, mục tiêu, chuỗi ngày, cứu lịch ôn, hoạt động 7 ngày, dự báo ôn 7 ngày tới, theo bộ thẻ, gợi ý có lý do |
 | Bộ của tôi | Danh sách, bộ yêu thích, tạo/sửa bộ, quyền chia sẻ |
 | Biên tập thẻ | Form thẻ, tệp, nguồn, nhãn, kiểm tra trùng, xem trước |
 | CSV | Chọn tệp, ánh xạ cột, xem trước, lỗi từng dòng, kết quả nhập |
@@ -608,6 +625,8 @@ erDiagram
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
+Bảng điều khiển (§9.1) không có endpoint riêng. B2.12 (**đề xuất**, chưa triển khai) mở rộng response `GET /learning/today`, không thêm route: `phienDangDo` (null hoặc `{id, boTheId, boTheTen, chieuHoc, quyThoiGian, batDauAt, hetGioAt, soDaTraLoi, soChuaTraLoi}`), `duBaoOn` (7 phần tử `{ngay, soCanOn}` từ ngày mai) và `daHocHomNay.thoiGian` (ms). Khối hoạt động 7 ngày đọc `GET /statistics/overview?tuNgay=…&denNgay=…` (B2.10).
+
 Các endpoint là hợp đồng đề xuất; cần đặc tả request/response và quyền cụ thể trong OpenAPI khi lập trình. Duyệt bài AI được dùng cho bản nháp đã kiểm tra, không gửi trực tiếp nội dung AI chưa duyệt thành bài kiểm tra có đáp án cố định.
 
 ### 13.3. Ví dụ ghi kết quả học
@@ -663,7 +682,7 @@ Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạ
 - Một thẻ/chiều chỉ có một lượt thưởng SRS chính trong ngày; các bước học lại vẫn lưu nhưng không khai thác điểm bằng bấm liên tục.
 - Điểm tối đa/ngày là cấu hình; ví dụ minh họa 100 điểm/ngày, phải thống nhất trước triển khai.
 - Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ.
-- Chuỗi ngày tăng khi hoàn thành ít nhất một phiên có tối thiểu 5 lượt hợp lệ là quy tắc đề xuất; không cam kết ngày có một cú bấm là ngày học.
+- Chuỗi ngày tăng khi hoàn thành ít nhất một phiên có tối thiểu 5 lượt hợp lệ là quy tắc đề xuất; không cam kết ngày có một cú bấm là ngày học. Hiện thực tạm ở B2.2 tính theo **ngày**: ngày địa phương có tổng ≥5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; B3.6 chốt quy tắc cuối. Giao diện mô tả đúng quy tắc đang chạy.
 - Sổ điểm là dữ liệu gốc; tổng điểm có thể tái tạo. Không nhận điểm lại khi gửi trùng hoặc chạy lại tác vụ.
 
 ### 15.2. Nhắc học

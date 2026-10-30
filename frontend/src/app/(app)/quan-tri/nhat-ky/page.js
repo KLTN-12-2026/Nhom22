@@ -17,14 +17,14 @@ const KIND = { NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ mẫu', THE_TU_VUNG: 'T
 const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ' };
 const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Đã xuất bản', RIENG_TU: 'Bản nháp', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn' };
 const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
-const LEVEL = { A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
+const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 
 function AdminAuditContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { me } = useMe();
+  const { data: me } = useMe();
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA');
 
   const defaultQ = searchParams.get('q') || '';
   const defaultHanhDong = searchParams.get('hanhDong') || '';
@@ -40,14 +40,14 @@ function AdminAuditContent() {
   const [denNgay, setDenNgay] = useState(defaultDenNgay);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-audit', q, hanhDong, loai, tuNgay, denNgay, page],
+    queryKey: ['admin-audit', defaultQ, defaultHanhDong, defaultLoai, defaultTuNgay, defaultDenNgay, page],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (q) params.set('q', q);
-      if (hanhDong) params.set('hanhDong', hanhDong);
-      if (loai) params.set('loai', loai);
-      if (tuNgay) params.set('tuNgay', tuNgay);
-      if (denNgay) params.set('denNgay', denNgay);
+      if (defaultQ) params.set('q', defaultQ);
+      if (defaultHanhDong) params.set('hanhDong', defaultHanhDong);
+      if (defaultLoai) params.set('loai', defaultLoai);
+      if (defaultTuNgay) params.set('tuNgay', defaultTuNgay);
+      if (defaultDenNgay) params.set('denNgay', defaultDenNgay);
       params.set('page', page.toString());
       params.set('size', '20');
       return apiFetch(`/api/v1/admin/audit-logs?${params.toString()}`);
@@ -145,6 +145,8 @@ function AdminAuditContent() {
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
             {data.items.map((l, i) => {
               const keys = [...new Set(Object.keys(l.truoc || {}).concat(Object.keys(l.sau || {})))];
+              const target = l.doiTuong || {};
+              const targetName = target.ten || (target.id ? `#${target.id}` : '(không rõ)');
               return (
                 <li key={l.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
                   <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
@@ -152,18 +154,18 @@ function AdminAuditContent() {
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px', marginBottom: 'var(--space-1)' }}>
                       <strong style={{ fontSize: '1.125rem' }}>{ACTION[l.hanhDong] || l.hanhDong}</strong>
                       <span>
-                        {KIND[l.doiTuong.loai]}: {l.doiTuong.loai === 'NGUOI_DUNG' ? (
-                          <Link href={`/quan-tri/tai-khoan?q=${encodeURIComponent(l.doiTuong.ten)}`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
-                        ) : l.doiTuong.loai === 'BO_THE' ? (
-                          <Link href={`/quan-tri/bo-mau?id=${l.doiTuong.id}`} style={{ color: 'var(--color-primary-strong)' }}>{l.doiTuong.ten}</Link>
+                        {KIND[target.loai] || target.loai || 'Đối tượng'}: {target.loai === 'NGUOI_DUNG' && target.ten ? (
+                          <Link href={`/quan-tri/tai-khoan?q=${encodeURIComponent(target.ten)}`} style={{ color: 'var(--color-primary-strong)' }}>{targetName}</Link>
+                        ) : target.loai === 'BO_THE' && target.id ? (
+                          <Link href={`/quan-tri/bo-mau?id=${target.id}`} style={{ color: 'var(--color-primary-strong)' }}>{targetName}</Link>
                         ) : (
-                          l.doiTuong.ten
+                          targetName
                         )}
                       </span>
                     </div>
                     
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>
-                      <span style={{ fontWeight: 'bold' }}>{l.nguoiThucHien.tenHienThi}</span>
+                      <span style={{ fontWeight: 'bold' }}>{l.nguoiThucHien?.tenHienThi || 'Hệ thống'}</span>
                       <span style={{ margin: '0 8px' }}>&bull;</span>
                       <span>{new Date(l.createdAt).toLocaleString('vi-VN')}</span>
                     </div>

@@ -130,6 +130,13 @@ public class GlobalExceptionHandler {
                     ))
             );
         }
+        if (mentionsConstraint(ex, "uk_tien_do_the_nguoi_the_chieu")) {
+            return build(
+                    ErrorCode.VERSION_CONFLICT,
+                    "Tiến độ thẻ vừa được cập nhật ở nơi khác, vui lòng tải lại",
+                    List.of()
+            );
+        }
         if (mentionsConstraint(ex, "fk_the_nhan_nhan")) {
             return build(
                     ErrorCode.CONFLICT,

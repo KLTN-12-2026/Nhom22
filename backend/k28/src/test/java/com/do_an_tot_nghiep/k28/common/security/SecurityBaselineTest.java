@@ -38,7 +38,7 @@ class SecurityBaselineTest {
     void tc02_postWithoutCsrfReturns403Json() throws Exception {
         mockMvc.perform(post("/api/v1/auth/csrf"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                .andExpect(jsonPath("$.code").value("CSRF_INVALID"));
     }
 
     @Test
