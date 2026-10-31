@@ -18,6 +18,9 @@ public record TodayPlanResponse(
         int luotToiThieuChuoi,
         DaHocHomNayResponse daHocHomNay,
         int tongSoThe,
-        List<DeckPlanResponse> boThe
+        List<DeckPlanResponse> boThe,
+        CuuLichOnResponse cuuLichOn,
+        PhienDangDoResponse phienDangDo,
+        List<DuBaoNgayResponse> duBaoOn
 ) {
 }

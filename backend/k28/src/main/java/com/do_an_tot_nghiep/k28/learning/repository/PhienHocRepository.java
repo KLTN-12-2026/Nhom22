@@ -1,8 +1,10 @@
 package com.do_an_tot_nghiep.k28.learning.repository;
 
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHoc;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHoc;
 
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +15,10 @@ import org.springframework.data.repository.query.Param;
 public interface PhienHocRepository extends JpaRepository<PhienHoc, Long> {
 
     Optional<PhienHoc> findByIdAndNguoiDungId(Long id, Long nguoiDungId);
+
+    Optional<PhienHoc> findFirstByNguoiDungIdAndTrangThaiAndBatDauAtGreaterThanEqualOrderByBatDauAtDescIdDesc(
+            Long nguoiDungId, TrangThaiPhienHoc trangThai, Instant batDauAt
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

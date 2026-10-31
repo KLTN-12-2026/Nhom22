@@ -12,6 +12,10 @@ import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
+import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
+import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
+import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
@@ -56,6 +60,12 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     TienDoTheRepository progress;
     @Autowired
     SuDungHocNgayRepository usage;
+    @Autowired
+    PhienHocRepository sessions;
+    @Autowired
+    PhienHocTheRepository queue;
+    @Autowired
+    LichSuOnRepository history;
 
     @Test
     void tc09_dayBoundariesFollowUserTimeZone() throws Exception {
@@ -184,7 +194,8 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
         assertThat(plan.homNayDaTinhChuoi()).isTrue();
         assertThat(plan.luotToiThieuChuoi()).isEqualTo(5);
         assertThat(plan.daHocHomNay().soLuot()).isEqualTo(5);
-        assertThat(plan.daHocHomNay().soPhut()).isEqualTo(2);
+        assertThat(plan.daHocHomNay().thoiGian()).isZero();
+        assertThat(plan.daHocHomNay().soPhut()).isZero();
 
         jdbc.update("UPDATE su_dung_hoc_ngay SET so_luot_hop_le = ? WHERE nguoi_dung_id = ? AND ngay_dia_phuong = ?",
                 4, learner.id(), LocalDate.parse("2026-10-19"));
@@ -214,8 +225,9 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
 
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
-        return new LearningPlanService(fixed, accountService, settingsService, progress, usage)
-                .today(learner.id());
+        return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
+                sessions, queue, history)
+                .today(learner.id(), new TodayQuery(null, null));
     }
 
     private Learner learner(String zone) throws Exception {
