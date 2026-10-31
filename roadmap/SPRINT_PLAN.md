@@ -101,7 +101,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B2.3 Tạo phiên học | `POST /learning/sessions`, `GET /learning/sessions/{id}` | F2.2 | UI18 chọn chiều/thời gian |
 | B2.4 Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.2 | UI19 `/hoc/[sessionId]` (lật thẻ, phím tắt 1–4/Space, trạng thái "đã lưu / chưa đồng bộ") |
 | B2.5 Kết thúc, lịch sử, tạm ngưng/đặt lại | `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20 tổng kết, UI21 `/bo-the/[id]/tien-do` |
-| B2.6 Cứu lịch ôn | trong `GET /learning/today` | F2.4 | UI22 khối "Cứu lịch ôn" trên UI12 |
+| B2.6 Cứu lịch ôn | `cuuLichOn` + query `phut`, `giuTuMoi` trong `GET /learning/today`; `cheDo` (`THUONG`/`CUU_LICH`) ở `POST /learning/sessions` và `GET /learning/sessions/{id}` (migration V10) | F2.4 | UI22 khối "Cứu lịch ôn" trên UI12 |
 
 **Phạm vi B2.1:** migration learning dùng số tiếp theo chưa sử dụng sau khi kiểm tra checkout; không sửa migration đã áp dụng. Calculator Java thuần nhận trạng thái cũ, QUEN/KHO/NHO/DE và `Instant now`, trả trạng thái mới bất biến theo TK §7.2; EF ban đầu 2.5, min 1.3, trần khoảng ôn 365 ngày. TC-06 kiểm chuỗi Nhớ 10 phút → 1 ngày → 6 ngày → 15 ngày; TC-07 kiểm học lại, EF và số lần quên. Kiểm thưởng lặp thuộc bước ghi kết quả/thưởng, không nằm trong calculator. Chốt cách làm tròn và xung đột giữa lịch địa phương §7.3 với đầu vào calculator trước code; đề xuất trong chat chưa phải quyết định đã áp dụng. Không đưa API, ownership, quota, thống kê hoặc luyện tập vào calculator. B2.1 chưa được đánh dấu hoàn tất.
 
@@ -112,14 +112,14 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 ### S6 · 02/11–08/11 · Luyện tập, sổ tay, thống kê, quản trị — FR-07, 08, 11, 13
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B2.7 Tạo bài luyện | `POST /practice/sessions`, `GET /practice/sessions/{id}` | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap/[id]` (8 dạng bài) |
+| B2.7 Tạo bài luyện (✅ 31/10) | `POST /practice/sessions`, `GET /practice/sessions/{id}` (migration V11, 7 bảng) | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap/[id]` (8 dạng bài) |
 | B2.8 Nộp & chấm | `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` | F2.5 | UI25 kết quả + giải thích, UI26 `/luyen-tap/lich-su` |
 | B2.9 Sổ tay & cặp nhầm | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` | F2.6 | UI27 `/so-tay` |
 | B2.10 Thống kê nền | `GET /statistics/overview`, `GET /statistics/skills` | F2.7 | UI35 `/thong-ke` |
 | B2.11 Quản trị nền | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `/admin/cards`, `GET /admin/audit-logs` | F2.8 | UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` |
 | B2.12 Bảng điều khiển người học | Mở rộng `GET /learning/today`: `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`; hoạt động 7 ngày đọc `GET /statistics/overview` | F2.1 (mở rộng) | UI12 `/hom-nay` (bảng điều khiển, TK §9.1) |
 
-**Phạm vi B2.12 (đề xuất 28/10/2026, chưa code):** UI12 là bảng điều khiển duy nhất của người học; không tạo route hay endpoint `/dashboard` riêng. Thêm khối "Tiếp tục phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn 7 ngày tới"; phút đã học tính từ thời gian thật, cùng cách tính với UI35 (TK §7.3). Trang chủ sau đăng nhập và logo chuyển về `/hom-nay`. FE ghi bước F2.1 mở rộng vào roadmap FE. Chi tiết: roadmap BE B2.12.
+**Phạm vi B2.12 (đề xuất 28/10/2026, đã code 31/10/2026 phần `/learning/today`; khối 7 ngày chờ B2.10):** UI12 là bảng điều khiển duy nhất của người học; không tạo route hay endpoint `/dashboard` riêng. Thêm khối "Tiếp tục phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn 7 ngày tới"; phút đã học tính từ thời gian thật, cùng cách tính với UI35 (TK §7.3). Trang chủ sau đăng nhập và logo chuyển về `/hom-nay`. FE ghi bước F2.1 mở rộng vào roadmap FE. Chi tiết: roadmap BE B2.12.
 
 **Xong khi:** TC-11, TC-17 qua; số phút/lượt hôm nay trên UI12 khớp UI35 (TC-09). **Demo Đợt 2:** bảng điều khiển hôm nay → ôn hai chiều → tổng kết → luyện nghe viết sai một từ → sổ tay → thống kê → Admin khóa tài khoản có nhật ký.
 

@@ -122,6 +122,26 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
     );
 
     @Query("""
+            select t.hanOnAt
+            from TienDoThe t
+            join TheTuVung c on c.id = t.theId
+            join BoThe b on b.id = c.boTheId
+            where t.nguoiDungId = :userId
+              and t.trangThai in :trangThais
+              and t.hanOnAt >= :batDau
+              and t.hanOnAt < :ketThuc
+              and c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+            """)
+    List<Instant> dueTimes(
+            @Param("userId") Long userId,
+            @Param("trangThais") Collection<TrangThaiTienDo> trangThais,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc
+    );
+
+    @Query("""
             select new com.do_an_tot_nghiep.k28.learning.repository.DeckCardRow(
                 b.id,
                 b.ten,
@@ -158,6 +178,30 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
             order by t.hanOnAt, t.id
             """)
     List<TienDoThe> dueQueue(
+            @Param("userId") Long userId,
+            @Param("chieu") ChieuHoc chieu,
+            @Param("trangThais") Collection<TrangThaiTienDo> trangThais,
+            @Param("now") Instant now,
+            @Param("boTheId") Long boTheId,
+            Pageable pageable
+    );
+
+    @Query("""
+            select t
+            from TienDoThe t
+            join TheTuVung c on c.id = t.theId
+            join BoThe b on b.id = c.boTheId
+            where t.nguoiDungId = :userId
+              and t.chieuHoc = :chieu
+              and t.trangThai in :trangThais
+              and t.hanOnAt <= :now
+              and c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+              and (:boTheId is null or b.id = :boTheId)
+            order by t.soLanQuen desc, t.hanOnAt, t.id
+            """)
+    List<TienDoThe> rescueQueue(
             @Param("userId") Long userId,
             @Param("chieu") ChieuHoc chieu,
             @Param("trangThais") Collection<TrangThaiTienDo> trangThais,

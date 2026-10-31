@@ -328,11 +328,11 @@
     if (!r) return;
     document.getElementById("rescue-lead").innerHTML = "Có <strong>" + r.soTheCanOn + "</strong> thẻ cần ôn; hôm nay bạn có <strong>" + r.phutMoiNgay + "</strong> phút. Chia thành " + r.soNgay + " ngày là vừa sức.";
     if (!document.querySelector('[name="rescueMin"]')) {
-      document.getElementById("rescue-minutes").innerHTML = [5, 10, 20].map((v) => '<label class="choice choice-card"><input type="radio" name="rescueMin" value="' + v + '"' + (v === r.phutMoiNgay ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + v + ' phút mỗi ngày</span><span class="choice-desc">khoảng ' + Math.floor(v * 60 / r.giayMoiLuot) + " lượt</span></span></label>").join("");
+      document.getElementById("rescue-minutes").innerHTML = [5, 10, 20].map((v) => '<label class="choice choice-card"><input type="radio" name="rescueMin" value="' + v + '"' + (v === r.phutMoiNgay ? " checked" : "") + '><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">' + v + ' phút mỗi ngày</span><span class="choice-desc">khoảng ' + Math.floor(v * 60 / plan.giayMoiLuot) + " lượt</span></span></label>").join("");
     }
     document.getElementById("rescue-plan").innerHTML = r.keHoach.map((d, i) =>
       '<li class="answer-row"><span class="answer-no">' + (i + 1) + '</span><div class="answer-main"><span class="answer-title">' + (i === 0 ? "Hôm nay" : i === 1 ? "Ngày mai" : VL.fmtDay(d.ngay, true)) + '</span><span class="answer-meta"><span>' + VL.fmtDay(d.ngay) + '</span></span></div><span class="when">' + d.soThe + " thẻ, khoảng " + d.phut + " phút</span></li>").join("");
-    document.getElementById("rescue-note").textContent = "Đây là ước tính, tính theo khoảng " + r.giayMoiLuot + " giây mỗi lượt và sẽ chỉnh theo tốc độ làm bài thực tế. Ngày đến hạn gốc của thẻ vẫn được giữ, nên thống kê vẫn cho thấy đúng số thẻ đang trễ.";
+    document.getElementById("rescue-note").textContent = "Đây là ước tính, tính theo khoảng " + plan.giayMoiLuot + " giây mỗi lượt và sẽ chỉnh theo tốc độ làm bài thực tế. Ngày đến hạn gốc của thẻ vẫn được giữ, nên thống kê vẫn cho thấy đúng số thẻ đang trễ.";
   }
 
   function render(d) {
@@ -408,7 +408,7 @@
   document.getElementById("rescue-start").addEventListener("click", (e) => {
     const r = plan.cuuLichOn;
     const dir = document.querySelector('[name="rescueDir"]:checked').value;
-    start(e.currentTarget, { boTheId: null, chieuHoc: dir, quyThoiGian: nearest(r.phutMoiNgay) });
+    start(e.currentTarget, { boTheId: null, chieuHoc: dir, quyThoiGian: nearest(r.phutMoiNgay), cheDo: r.tamDungTuMoi ? "CUU_LICH" : "THUONG" });
   });
 })();
 </script>
