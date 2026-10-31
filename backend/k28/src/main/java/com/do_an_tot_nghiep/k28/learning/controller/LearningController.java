@@ -10,6 +10,7 @@ import com.do_an_tot_nghiep.k28.learning.dto.ReviewResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.SessionSummaryResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.StudySessionResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
 import com.do_an_tot_nghiep.k28.learning.service.HistoryService;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
 import com.do_an_tot_nghiep.k28.learning.service.ReviewService;
@@ -34,8 +35,8 @@ public class LearningController {
     private final HistoryService historyService;
 
     @GetMapping("/today")
-    public TodayPlanResponse today() {
-        return planService.today(currentUser.id());
+    public TodayPlanResponse today(@Valid @ModelAttribute TodayQuery query) {
+        return planService.today(currentUser.id(), query);
     }
 
     @PostMapping("/sessions")

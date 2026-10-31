@@ -378,7 +378,7 @@ Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 tr
 
 Một màn hình gom thẻ đến hạn, số từ mới, mục tiêu và quỹ thời gian. Người học chọn “5 phút / 10 phút / 20 phút” rồi bắt đầu. Sau phiên, hệ thống nói rõ đã hoàn thành gì và nên làm gì tiếp theo.
 
-Màn hình này chính là **bảng điều khiển của người học**: UI12 `/hom-nay`, trang đầu tiên sau đăng nhập và sau khởi đầu (§6.1 bước 6). Không tạo thêm route hay trang “dashboard” riêng, để không trùng với UI35 `/thong-ke`. Phần mở rộng dưới đây đã được chọn ngày 28/10/2026, là **đề xuất** và chưa triển khai (B2.12):
+Màn hình này chính là **bảng điều khiển của người học**: UI12 `/hom-nay`, trang đầu tiên sau đăng nhập và sau khởi đầu (§6.1 bước 6). Không tạo thêm route hay trang “dashboard” riêng, để không trùng với UI35 `/thong-ke`. Phần mở rộng dưới đây đã được chọn ngày 28/10/2026, là **đề xuất**; B2.12 đã triển khai ngày 31/10/2026 (`phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`), khối hoạt động 7 ngày chờ B2.10:
 
 | Khối | Nội dung | Nguồn dữ liệu | Bước |
 |---|---|---|---|
@@ -386,7 +386,7 @@ Màn hình này chính là **bảng điều khiển của người học**: UI12
 | Tiếp tục phiên đang dở | Phiên `DANG_HOC` mới nhất bắt đầu trong ngày địa phương hôm nay: số đã trả lời/còn lại, nút “Tiếp tục” hoặc “Xem tổng kết” | `phienDangDo` trong `GET /learning/today` | B2.12 |
 | Mục tiêu ngày | Phút đã học thật so với mục tiêu phút/ngày | `daHocHomNay` trong `GET /learning/today` | B2.2, đổi cách tính ở B2.12 |
 | Chuỗi ngày | Số ngày liên tiếp đủ điều kiện | `GET /learning/today` | B2.2, thay ở B3.6 |
-| Cứu lịch ôn | Phương án chia N ngày khi quá hạn vượt ngưỡng | `cuuLichOn` trong `GET /learning/today` | B2.6 |
+| Cứu lịch ôn | Phương án chia N ngày khi quá hạn vượt ngưỡng (đã triển khai §13.2) | `cuuLichOn` trong `GET /learning/today` | B2.6 |
 | Hoạt động 7 ngày | Số phút và số lượt mỗi ngày, vạch mục tiêu | `theoNgay` của `GET /statistics/overview` (7 ngày đến hôm nay) | B2.10 |
 | Dự báo ôn 7 ngày tới | Số lượt đến hạn mỗi ngày từ ngày mai | `duBaoOn` trong `GET /learning/today` | B2.12 |
 | Theo bộ thẻ | Số cần ôn và số từ chưa học của từng bộ | `boThe` trong `GET /learning/today` | B2.2 |
@@ -400,7 +400,7 @@ Mỗi chủ đề là một nhóm; màu thể hiện mức hoàn thành và thi�
 
 ### 9.3. “Cứu lịch ôn” [Gốc + Thiết kế]
 
-Khi quay lại sau nghỉ, giao diện không gây áp lực bằng hàng trăm thẻ. Nó đề xuất lộ trình vài ngày theo thời gian thực tế và cho phép giảm từ mới. Ngày đến hạn gốc vẫn được giữ để thống kê trung thực.
+Khi quay lại sau nghỉ, giao diện không gây áp lực bằng hàng trăm thẻ. Nó đề xuất lộ trình vài ngày theo thời gian thực tế và cho phép giảm từ mới. Ngày đến hạn gốc vẫn được giữ để thống kê trung thực. Hợp đồng API (B2.6): xem §13.2.
 
 ### 9.4. Xưởng thẻ AI có bàn duyệt [Gốc + Thiết kế]
 
@@ -532,15 +532,15 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `yeu_cau_nhap_csv` | V7 B1.12: nguoi_dung_id, idempotency_key ascii_bin, import_id (UUID), bo_the_id, request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key) và (người dùng, import_id) |
 | `yeu_cau_sao_chep_bo` | V6 B1.11: nguoi_dung_id, idempotency_key ascii_bin, bo_nguon_id, bo_ket_qua_id nullable, response_json JSON nullable, hoan_tat_at nullable; unique người dùng/key; kết quả cùng null hoặc cùng hoàn tất |
 | `tien_do_the` | nguoi_dung_id, the_id, chieu_hoc, trang_thai, buoc_hoc, ef, khoang_on_ngay, chuoi_thanh_cong, so_lan_quen, han_on_at, version |
-| `phien_hoc` | nguoi_dung_id, bo_the_id (null = tất cả bộ), chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian, version |
+| `phien_hoc` | nguoi_dung_id, bo_the_id (null = tất cả bộ), chieu_hoc, mui_gio, bat_dau_at, ket_thuc_at, trang_thai, quy_thoi_gian, che_do (V10 B2.6: `THUONG`/`CUU_LICH`, mặc định `THUONG`), version |
 | `phien_hoc_the` | phien_id, the_id, chieu_hoc, thu_tu, trang_thai; hàng đợi đã cấp; unique (phien_id, the_id, chieu_hoc) và (phien_id, thu_tu); thẻ học lại trong phiên tái dùng dòng cũ, đặt lại `CHUA_TRA_LOI` và `thu_tu` cuối hàng đợi |
 | `lich_su_on` | client_event_id, phien_id, tien_do_id, danh_gia, thoi_gian, truoc_json, sau_json, phien_ban_thuat_toan |
 | `su_dung_hoc_ngay` | nguoi_dung_id, ngay_dia_phuong, so_the_moi, so_luot_hop_le, diem, version; unique người/ngày |
-| `bai_luyen`, `cau_hoi_bai_luyen` | đề đã sinh, loại bài, thẻ nguồn, câu hỏi và đáp án lưu tại máy chủ |
-| `lan_lam_bai`, `tra_loi_bai_luyen` | nguoi_dung_id, bai_id, submit_key, câu trả lời, đúng/sai, điểm và thời gian |
-| `loi_hoc_tap` | nguoi_dung_id, the_id, nhom_loi, nguon_su_kien, bang_chung_json |
-| `so_tay_tu_kho` | nguoi_dung_id, the_id, ghi_chu, danh_dau_thu_cong |
-| `cap_tu_de_nham` | the_1_id, the_2_id, loại nhầm; liên kết bằng chứng theo người học |
+| `bai_luyen`, `cau_hoi_bai_luyen` | đề đã sinh, loại bài, thẻ nguồn, câu hỏi và đáp án lưu tại máy chủ. V11 (B2.7): `bai_luyen(nguoi_dung_id, loai_bai, bo_the_id, nguon BO_THE/SO_TAY, so_cau_yeu_cau 5/10/20, la_luyen_lai, bai_goc_id)`; `cau_hoi_bai_luyen(bai_id, thu_tu, loai_cau, the_id, de_bai_json, phuong_an_json, dap_an_json, giai_thich_json)`, unique `(bai_id, thu_tu)` |
+| `lan_lam_bai`, `tra_loi_bai_luyen` | nguoi_dung_id, bai_id, submit_key, câu trả lời, đúng/sai, điểm và thời gian. V11 tạo sẵn (B2.8 ghi): `lan_lam_bai(so_cau_dung, tong_so_cau, diem 0–100, thoi_gian ms, nop_at)`, unique `(nguoi_dung_id, submit_key)` và `(bai_id)`; `tra_loi_bai_luyen(lan_lam_id, cau_hoi_id, tra_loi_json, dung, ket_qua_json)` |
+| `loi_hoc_tap` | nguoi_dung_id, the_id, nhom_loi, nguon_su_kien, bang_chung_json (V11, thêm `su_kien_id`; `nhom_loi` NGHIA/CHINH_TA/NGHE/NGU_CANH/CAP_NHAM/PHAT_AM) |
+| `so_tay_tu_kho` | nguoi_dung_id, the_id, ghi_chu, danh_dau_thu_cong (V11, unique người/thẻ, `version`) |
+| `cap_tu_de_nham` | the_1_id, the_2_id, loại nhầm; liên kết bằng chứng theo người học (V11: `nguoi_dung_id`, `so_lan_nham`, `lan_cuoi_at`, `the_1_id < the_2_id`, unique người/cặp; loại nhầm chưa có cột, B2.8 thêm nếu cần) |
 | `yeu_cau_ai` | nguoi_dung_id, loai, trang_thai, input_ref, ket_qua_json, phien_ban_prompt, provider_request_id |
 | `ban_nhap_the_ai` | yeu_cau_id, noi_dung_json, trang_thai_duyet, the_da_luu_id |
 | `han_muc_dich_vu`, `su_dung_dich_vu` | hạn mức, lượt giữ chỗ/đã dùng, token nếu có, chi phí nullable, nguồn định giá |
@@ -625,7 +625,11 @@ erDiagram
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
-Bảng điều khiển (§9.1) không có endpoint riêng. B2.12 (**đề xuất**, chưa triển khai) mở rộng response `GET /learning/today`, không thêm route: `phienDangDo` (null hoặc `{id, boTheId, boTheTen, chieuHoc, quyThoiGian, batDauAt, hetGioAt, soDaTraLoi, soChuaTraLoi}`), `duBaoOn` (7 phần tử `{ngay, soCanOn}` từ ngày mai) và `daHocHomNay.thoiGian` (ms). Khối hoạt động 7 ngày đọc `GET /statistics/overview?tuNgay=…&denNgay=…` (B2.10).
+Cứu lịch ôn (§9.3, B2.6, đã triển khai): `GET /learning/today` nhận query `phut` (1–240, mặc định `phutMoiNgay`) và `giuTuMoi` (`true`/`false`, mặc định `false`), trả `cuuLichOn` = `null` hoặc `{soTheCanOn, soQuaHan, phutMoiNgay, luotMoiNgay, soNgay, keHoach[{ngay, soThe, phut}], tamDungTuMoi}`. Bật khi `soQuaHan > phutMoiNgay(cài đặt)×60/20`; `keHoach` tối đa 14 ngày từ hôm nay, đếm theo thẻ-chiều; khi tạm dừng từ mới `soMoiConLai = 0`. `POST /learning/sessions` nhận `cheDo` (`THUONG`/`CUU_LICH`, mặc định `THUONG`); `CUU_LICH` lấy bước học/học lại đến hạn rồi thẻ ôn đến hạn theo số lần quên giảm dần, không lấy thẻ mới. `GET /learning/sessions/{id}` trả `cheDo`. Không đổi `han_on_at`, không xóa nợ ôn (TC-10).
+
+Luyện tập (B2.7, đã triển khai 31/10/2026, **đề xuất**): `POST /practice/sessions` body `{loaiBai, soCau (5/10/20), boTheId?, nguon? (BO_THE/SO_TAY), theIds? (≤20)}` → 201 `{id, loaiBai, boTheId, boTheTen, nguon, soCau, soCauYeuCau, createdAt, cauHoi[{id, thuTu, loaiCau, deBai, phuongAn}]}`, không chứa đáp án; `GET /practice/sessions/{id}` trả bản chụp (chỉ chủ bài). Nghe viết trả `deBai.amTuId`, chỉ thẻ có âm từ. Thiếu dữ liệu → 422. Chi tiết: [flow B2.7](luong-backend/B2.7-tao-bai-luyen.md).
+
+Bảng điều khiển (§9.1) không có endpoint riêng. B2.12 (**đề xuất**, đã triển khai 31/10/2026) mở rộng response `GET /learning/today`, không thêm route: `phienDangDo` (null hoặc `{id, boTheId, boTheTen, chieuHoc, quyThoiGian, batDauAt, hetGioAt, soDaTraLoi, soChuaTraLoi}`), `duBaoOn` (7 phần tử `{ngay, soCanOn}` từ ngày mai) và `daHocHomNay.thoiGian` (ms, tổng `lich_su_on.thoi_gian` hôm nay; `soPhut = floor(thoiGian/60000)`; thời gian bài luyện cộng thêm ở B2.8). Khối hoạt động 7 ngày đọc `GET /statistics/overview?tuNgay=…&denNgay=…` (B2.10).
 
 Các endpoint là hợp đồng đề xuất; cần đặc tả request/response và quyền cụ thể trong OpenAPI khi lập trình. Duyệt bài AI được dùng cho bản nháp đã kiểm tra, không gửi trực tiếp nội dung AI chưa duyệt thành bài kiểm tra có đáp án cố định.
 

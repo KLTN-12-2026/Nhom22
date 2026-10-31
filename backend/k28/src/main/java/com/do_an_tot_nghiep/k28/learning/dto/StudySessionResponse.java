@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.learning.dto;
 
+import com.do_an_tot_nghiep.k28.learning.entity.enums.CheDoPhien;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHoc;
 import java.time.Instant;
@@ -11,6 +12,7 @@ public record StudySessionResponse(
         String boTheTen,
         ChieuHoc chieuHoc,
         int quyThoiGian,
+        CheDoPhien cheDo,
         Instant batDauAt,
         Instant hetGioAt,
         Instant ketThucAt,

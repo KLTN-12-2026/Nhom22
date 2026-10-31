@@ -299,7 +299,7 @@ class FR06StudySessionTest extends AbstractIntegrationTest {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new StudySessionService(fixed, accountService, settingsService, progress, usage,
                 sessions, queue, cardService, history, jsonMapper)
-                .create(learner.id(), new CreateSessionRequest(deckId, direction, minutes));
+                .create(learner.id(), new CreateSessionRequest(deckId, direction, minutes, null));
     }
 
     private List<String> ids(StudySessionResponse session) {

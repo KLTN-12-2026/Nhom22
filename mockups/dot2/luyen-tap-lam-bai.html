@@ -99,7 +99,7 @@
     if (q.loaiCau === "PHAN_BIET_CAP") body = (d.cau ? sentence(d.cau) : '<p class="q-prompt">Từ nào nghĩa là “' + VL.esc(d.goiY) + "”?</p>") + options(q, true);
     if (q.loaiCau === "DIEN_CHO_TRONG") body = sentence(d.cau) + '<p class="hint">Gợi ý: ' + VL.esc(d.goiY) + ' <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span></p>" + textInput(q, "Từ cần điền");
     if (q.loaiCau === "NHAP_TU_THEO_NGHIA") body = '<p class="q-prompt">' + VL.esc(d.nghiaVi) + '</p><p class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</p>" + (d.viDuVi ? '<p class="hint">Ví dụ: ' + VL.esc(d.viDuVi) + "</p>" : "") + textInput(q, "Từ tiếng Anh");
-    if (q.loaiCau === "NGHE_VIET") body = '<div class="listen"><button type="button" class="btn btn-secondary" data-play="' + VL.esc(d.amThanhUrl) + '">' + VL.icon("volume") + 'Nghe</button><button type="button" class="btn btn-quiet" data-play="' + VL.esc(d.amThanhUrl) + '" data-rate="0.6">Nghe chậm</button></div><p class="hint">Từ loại <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span>, nghe bao nhiêu lần cũng được</p>" + textInput(q, "Từ bạn nghe được");
+    if (q.loaiCau === "NGHE_VIET") body = '<div class="listen"><button type="button" class="btn btn-secondary" data-play="' + VL.esc(d.amTuId) + '">' + VL.icon("volume") + 'Nghe</button><button type="button" class="btn btn-quiet" data-play="' + VL.esc(d.amTuId) + '" data-rate="0.6">Nghe chậm</button></div><p class="hint">Từ loại <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span>, nghe bao nhiêu lần cũng được</p>" + textInput(q, "Từ bạn nghe được");
     if (q.loaiCau === "GHEP_TU") {
       label = "Ghép mỗi từ với nghĩa đúng";
       body = '<div class="match">' + d.cotTrai.map((l) => '<div class="match-row"><label for="m-' + q.id + "-" + l.id + '" lang="en">' + VL.esc(l.noiDung) + '</label><select class="select" id="m-' + q.id + "-" + l.id + '" name="' + q.id + '" data-left="' + l.id + '"><option value="">Chọn nghĩa</option>' + d.cotPhai.map((r) => '<option value="' + r.id + '">' + VL.esc(r.noiDung) + "</option>").join("") + "</select></div>").join("") + "</div>";
@@ -162,6 +162,13 @@
   form.addEventListener("click", (e) => {
     const b = e.target.closest("[data-play]");
     if (!b) return;
+    const f = VLDemo.db.files[b.dataset.play];
+    if (f && f.url) {
+      const audio = new Audio(f.url);
+      audio.playbackRate = Number(b.dataset.rate) || 1;
+      audio.play().catch(() => VL.toast("Không phát được âm thanh", "error"));
+      return;
+    }
     if (!VLDemo.play(b.dataset.play, Number(b.dataset.rate) || 0.9)) VL.toast("Trình duyệt chưa phát được âm thanh", "error");
   });
 
