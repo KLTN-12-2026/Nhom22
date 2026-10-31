@@ -53,6 +53,19 @@ public interface LichSuOnRepository extends JpaRepository<LichSuOn, Long> {
             Pageable pageable
     );
 
+    @Query("""
+            select coalesce(sum(l.thoiGian), 0)
+            from LichSuOn l
+            where l.nguoiDungId = :userId
+              and l.createdAt >= :batDau
+              and l.createdAt < :ketThuc
+            """)
+    long studyTime(
+            @Param("userId") Long userId,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc
+    );
+
     @Query(HISTORY_SELECT + HISTORY_FROM + "  and l.phienId = :phienId order by l.id")
     List<HistoryRow> sessionEvents(
             @Param("userId") Long userId,

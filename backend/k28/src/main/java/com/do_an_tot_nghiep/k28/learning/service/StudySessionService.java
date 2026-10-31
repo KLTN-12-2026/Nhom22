@@ -17,6 +17,7 @@ import com.do_an_tot_nghiep.k28.learning.entity.PhienHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.PhienHocThe;
 import com.do_an_tot_nghiep.k28.learning.entity.SuDungHocNgay;
 import com.do_an_tot_nghiep.k28.learning.entity.TienDoThe;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.CheDoPhien;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.DanhGia;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHocThe;
@@ -52,7 +53,7 @@ import tools.jackson.databind.json.JsonMapper;
 @RequiredArgsConstructor
 public class StudySessionService {
 
-    private static final String TAT_CA_BO = "Tất cả bộ của tôi";
+    static final String TAT_CA_BO = "Tất cả bộ của tôi";
     private static final Set<Integer> QUY_THOI_GIAN = Set.of(5, 10, 20);
     private static final List<TrangThaiTienDo> TRANG_THAI_BUOC = List.of(
             TrangThaiTienDo.DANG_HOC,
@@ -100,22 +101,26 @@ public class StudySessionService {
         Instant now = clock.instant();
         LocalDate homNay = LocalDate.ofInstant(now, zone);
         ChieuHoc chieu = request.chieuHoc();
+        CheDoPhien cheDo = request.mode();
         int cap = quyThoiGian * 60 / LearningPlanService.GIAY_MOI_LUOT;
 
         List<Long> cardIds = pickCardIds(
-                userId, chieu, boTheId, now, homNay, cap
+                userId, chieu, boTheId, now, homNay, cap, cheDo
         );
         if (cardIds.isEmpty()) {
             throw new ApiException(
                     ErrorCode.BUSINESS_RULE,
-                    "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. "
-                            + "Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, "
-                            + "hoặc thêm thẻ mới vào bộ."
+                    cheDo == CheDoPhien.CUU_LICH
+                            ? "Chưa có thẻ nào đến hạn ôn ở chiều đã chọn. "
+                                    + "Chế độ học lại sau thời gian nghỉ không lấy thẻ mới."
+                            : "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. "
+                                    + "Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, "
+                                    + "hoặc thêm thẻ mới vào bộ."
             );
         }
 
         PhienHoc session = sessions.save(PhienHoc.start(
-                userId, boTheId, chieu, zone.getId(), now, quyThoiGian
+                userId, boTheId, chieu, zone.getId(), now, quyThoiGian, cheDo
         ));
         List<PhienHocThe> rows = queue.saveAll(
                 IntStream.range(0, cardIds.size())
@@ -246,13 +251,21 @@ public class StudySessionService {
             Long boTheId,
             Instant now,
             LocalDate homNay,
-            int cap
+            int cap,
+            CheDoPhien cheDo
     ) {
         Pageable page = PageRequest.ofSize(cap);
         LinkedHashSet<Long> picked = new LinkedHashSet<>();
 
         progress.dueQueue(userId, chieu, TRANG_THAI_BUOC, now, boTheId, page)
                 .forEach(row -> picked.add(row.getTheId()));
+
+        if (cheDo == CheDoPhien.CUU_LICH) {
+            progress.rescueQueue(userId, chieu, TRANG_THAI_ON, now, boTheId, page)
+                    .forEach(row -> picked.add(row.getTheId()));
+            return picked.stream().limit(cap).toList();
+        }
+
         progress.dueQueue(userId, chieu, TRANG_THAI_ON, now, boTheId, page)
                 .forEach(row -> picked.add(row.getTheId()));
 
@@ -316,6 +329,7 @@ public class StudySessionService {
                 boTheTen,
                 session.getChieuHoc(),
                 session.getQuyThoiGian(),
+                session.getCheDo(),
                 session.getBatDauAt(),
                 session.hetGioAt(),
                 session.getKetThucAt(),

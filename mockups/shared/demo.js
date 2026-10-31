@@ -474,7 +474,7 @@
     const canOn = quaHan + denHan;
     let rescue = null;
     if (quaHan > cap) {
-      const phut = [5, 10, 15, 20, 30].includes(Number(q.phut)) ? Number(q.phut) : l.minutesPerDay;
+      const phut = q.phut ? Number(q.phut) : l.minutesPerDay;
       const perDay = Math.max(1, Math.floor(phut * 60 / AVG_SECONDS));
       const soNgay = Math.ceil(canOn / perDay);
       const keHoach = [];
@@ -484,7 +484,7 @@
         left -= n;
         keHoach.push({ ngay: localDate(sod + i * DAY + 12 * 3600000, tz), soThe: n, phut: Math.ceil(n * AVG_SECONDS / 60) });
       }
-      rescue = { soTheCanOn: canOn, soQuaHan: quaHan, phutMoiNgay: phut, luotMoiNgay: perDay, soNgay, keHoach, tamDungTuMoi: q.giuTuMoi !== "true", uuTien: "QUEN_NHIEU_VA_QUA_HAN_LAU", laUocTinh: true, giayMoiLuot: AVG_SECONDS };
+      rescue = { soTheCanOn: canOn, soQuaHan: quaHan, phutMoiNgay: phut, luotMoiNgay: perDay, soNgay, keHoach, tamDungTuMoi: q.giuTuMoi !== "true" };
     }
     const soMoiConLai = rescue && rescue.tamDungTuMoi ? 0 : Math.min(Math.max(0, l.newCardsPerDay - used.soTheMoi), newPhys);
     const todays = db.reviews.filter((r) => r.uid === u.id && localDate(Date.parse(r.createdAt), tz) === today);
@@ -512,8 +512,8 @@
     const byDue = (a, b) => Date.parse(a.p.hanOnAt) - Date.parse(b.p.hanOnAt);
     const steps = items.filter((it) => (it.p.trangThai === "DANG_HOC" || it.p.trangThai === "HOC_LAI") && due(it)).sort(byDue);
     const reviews = items.filter((it) => it.p.trangThai === "ON_TAP" && due(it)).sort(mode === "CUU_LICH" ? (a, b) => b.p.soLanQuen - a.p.soLanQuen || byDue(a, b) : byDue);
-    const plan = todayPlan(u, {});
-    const newLimit = mode === "CUU_LICH" || (plan.cuuLichOn && plan.cuuLichOn.tamDungTuMoi) ? 0 : Math.max(0, l.newCardsPerDay - usageOf(u.id, localDate(t, tz)).soTheMoi);
+    if (mode === "CUU_LICH") return steps.concat(reviews).slice(0, cap);
+    const newLimit = Math.max(0, l.newCardsPerDay - usageOf(u.id, localDate(t, tz)).soTheMoi);
     let used = 0;
     const fresh = [];
     items.filter((it) => it.p.trangThai === "MOI").forEach((it) => {
@@ -604,7 +604,7 @@
       return Object.assign(base, { deBai: { cau: bl.cau, goiY: x.meaningVi, tuLoai: x.pos }, dapAn: { chapNhan: [bl.dapAn], noiDung: bl.dapAn } });
     }
     if (type === "NHAP_TU_THEO_NGHIA") return Object.assign(base, { deBai: { nghiaVi: x.meaningVi, tuLoai: x.pos, viDuVi: x.exampleVi || null }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
-    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amThanhUrl: "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
+    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amTuId: x.amTuId || "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
     return null;
   }
   function matchQuestion(group, thuTu) {
@@ -694,7 +694,7 @@
     const a = s.lanLamId ? db.attempts.find((x) => x.id === s.lanLamId) : null;
     return {
       id: s.id, loaiBai: s.loaiBai, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : (s.nguon === "SO_TAY" ? "Sổ tay từ khó" : "Tất cả bộ của tôi"), nguon: s.nguon,
-      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, taoAt: s.taoAt, laLuyenLai: s.laLuyenLai, daNop: !!a, lanLamId: s.lanLamId,
+      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, createdAt: s.taoAt, laLuyenLai: s.laLuyenLai, daNop: !!a, lanLamId: s.lanLamId,
       cauHoi: s.cauHoi.map(publicQuestion), ketQua: a ? attemptView(a) : null
     };
   }
@@ -1237,13 +1237,20 @@
     }],
     ["DELETE", /^\/admin\/tags\/(\w+)$/, (m) => { requireAdmin(); db.tags = db.tags.filter((x) => x.id !== m[1]); db.cards.forEach((x) => { x.tagIds = (x.tagIds || []).filter((t) => t !== m[1]); }); return { status: 204 }; }],
 
-    ["GET", /^\/learning\/today$/, (m, b, q) => todayPlan(requireMe(), q)],
+    ["GET", /^\/learning\/today$/, (m, b, q) => {
+      const u = requireMe();
+      const errors = [];
+      if (q.phut && !/^([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$/.test(q.phut)) errors.push(fe("phut", "Số phút mỗi ngày từ 1 đến 240"));
+      if (q.giuTuMoi && !["true", "false"].includes(q.giuTuMoi)) errors.push(fe("giuTuMoi", "giuTuMoi phải là true hoặc false"));
+      if (errors.length) bad(errors);
+      return todayPlan(u, q);
+    }],
     ["POST", /^\/learning\/sessions$/, (m, b) => {
       const u = requireMe();
       const errors = [];
       if (!DIRS.includes(b.chieuHoc)) errors.push(fe("chieuHoc", "Chọn chiều học Anh → Việt hoặc Việt → Anh"));
       if (![5, 10, 20].includes(Number(b.quyThoiGian))) errors.push(fe("quyThoiGian", "Chọn 5, 10 hoặc 20 phút"));
-      if (b.cheDo && !["THUONG", "CUU_LICH"].includes(b.cheDo)) errors.push(fe("cheDo", "Chế độ học không hợp lệ"));
+      if (b.cheDo && !["THUONG", "CUU_LICH"].includes(b.cheDo)) errors.push(fe("cheDo", "Chế độ học phải là THUONG hoặc CUU_LICH"));
       if (errors.length) bad(errors);
       if (b.boTheId) ownDeck(b.boTheId);
       const mode = b.cheDo || "THUONG";

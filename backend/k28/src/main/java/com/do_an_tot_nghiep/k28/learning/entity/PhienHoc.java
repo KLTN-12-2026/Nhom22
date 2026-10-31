@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.learning.entity;
 
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.CheDoPhien;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHoc;
 import jakarta.persistence.Column;
@@ -54,6 +55,11 @@ public class PhienHoc extends BaseEntity {
     @Column(nullable = false)
     private int quyThoiGian;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
+    private CheDoPhien cheDo;
+
     @Version
     private Long version;
 
@@ -63,7 +69,8 @@ public class PhienHoc extends BaseEntity {
             ChieuHoc chieuHoc,
             String muiGio,
             Instant batDauAt,
-            int quyThoiGian
+            int quyThoiGian,
+            CheDoPhien cheDo
     ) {
         PhienHoc session = new PhienHoc();
         session.nguoiDungId = nguoiDungId;
@@ -73,6 +80,7 @@ public class PhienHoc extends BaseEntity {
         session.batDauAt = batDauAt;
         session.trangThai = TrangThaiPhienHoc.DANG_HOC;
         session.quyThoiGian = quyThoiGian;
+        session.cheDo = cheDo;
         return session;
     }
 

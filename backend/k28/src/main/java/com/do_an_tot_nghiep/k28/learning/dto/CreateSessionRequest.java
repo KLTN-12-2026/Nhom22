@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.learning.dto;
 
+import com.do_an_tot_nghiep.k28.learning.entity.enums.CheDoPhien;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,13 @@ public record CreateSessionRequest(
         ChieuHoc chieuHoc,
 
         @NotNull(message = "Chọn 5, 10 hoặc 20 phút")
-        Integer quyThoiGian
+        Integer quyThoiGian,
+
+        @Pattern(regexp = "THUONG|CUU_LICH", message = "Chế độ học phải là THUONG hoặc CUU_LICH")
+        String cheDo
 ) {
+
+    public CheDoPhien mode() {
+        return cheDo == null ? CheDoPhien.THUONG : CheDoPhien.valueOf(cheDo);
+    }
 }
