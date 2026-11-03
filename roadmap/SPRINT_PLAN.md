@@ -113,7 +113,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | BE | API | FE | Màn hình |
 |---|---|---|---|
 | B2.7 Tạo bài luyện (✅ 31/10) | `POST /practice/sessions`, `GET /practice/sessions/{id}` (migration V11, 7 bảng) | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap/[id]` (8 dạng bài) |
-| B2.8 Nộp & chấm | `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` | F2.5 | UI25 kết quả + giải thích, UI26 `/luyen-tap/lich-su` |
+| B2.8 Nộp & chấm | `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` | F2.5 | UI25 kết quả + giải thích `/luyen-tap-ket-qua`, UI26 `/luyen-tap-lich-su` |
 | B2.9 Sổ tay & cặp nhầm | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` | F2.6 | UI27 `/so-tay` |
 | B2.10 Thống kê nền | `GET /statistics/overview`, `GET /statistics/skills` | F2.7 | UI35 `/thong-ke` |
 | B2.11 Quản trị nền | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `/admin/cards`, `GET /admin/audit-logs` | F2.8 | UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` |

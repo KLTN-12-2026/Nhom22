@@ -144,6 +144,14 @@ public class GlobalExceptionHandler {
                     List.of()
             );
         }
+        if (mentionsConstraint(ex, "uk_lan_lam_bai_nguoi_submit")
+                || mentionsConstraint(ex, "uk_lan_lam_bai_bai")) {
+            return build(
+                    ErrorCode.CONFLICT,
+                    "Bài này vừa được nộp ở nơi khác. Mở lại bài để xem kết quả.",
+                    List.of()
+            );
+        }
         return handleUnexpected(ex);
     }
 

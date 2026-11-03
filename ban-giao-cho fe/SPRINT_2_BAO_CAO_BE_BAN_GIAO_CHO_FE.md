@@ -3,17 +3,18 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 2 — Học, luyện tập, thống kê & quản trị (26/10 – 08/11/2026) |
-| Ngày cập nhật | 03/11/2026 — sửa theo rà soát (RS-002, RS-005, RS-007, RS-008, RS-011, RS-016, RS-017, RS-025, RS-046, RS-050, RS-064, RS-065): bộ test đầy đủ 363/363 pass; trước đó 31/10/2026 — B2.7 (mục 5.8), B2.12 (mục 5.7), B2.6 (mục 5.6); 28/10/2026 — B2.5 (mục 5.5) |
-| Trạng thái BE | 🟡 B2.1–B2.7 và B2.12 xong theo test: **bộ test đầy đủ `./mvnw -B test` 363/363 pass ngày 03/11/2026** (gồm `FR06StudySessionTest` 8, `FR06ReviewTest` 12, `FR06FinishHistoryTest` 4, `FR06ProgressTest` 6, `FR06RescuePlanTest` 5, `FR06DashboardTest` 7, `FR06TodayPlanTest` 6, `FR06QueueQueryTest` 4, `FR06SrsCalculatorTest` 35, `RescuePlanTest` 3, `StreakCalculatorTest` 6, `FR07PracticeSessionTest` 4, `PracticeGeneratorTest` 3). **Chưa gọi HTTP thật**; Postman có request nhưng chưa chạy. B2.8–B2.11 chưa làm. Lịch sử từng lần chạy ở mục 10 |
+| Ngày cập nhật | 03/11/2026 — B2.8 nộp bài, chấm, lịch sử, luyện lại (mục 5.9), bộ test đầy đủ 382/382 pass; trước đó cùng ngày sửa theo rà soát (RS-002, RS-005, RS-007, RS-008, RS-011, RS-016, RS-017, RS-025, RS-046, RS-050, RS-064, RS-065): bộ test đầy đủ 363/363 pass; trước đó 31/10/2026 — B2.7 (mục 5.8), B2.12 (mục 5.7), B2.6 (mục 5.6); 28/10/2026 — B2.5 (mục 5.5) |
+| Trạng thái BE | 🟡 B2.1–B2.8 và B2.12 xong theo test: **bộ test đầy đủ `./mvnw -B test` 382/382 pass ngày 03/11/2026 sau B2.8** (thêm `FR07SubmissionTest` 4, `PracticeGraderTest` 11, `AnswerNormalizerTest` 4); lần trước 363/363 (gồm `FR06StudySessionTest` 8, `FR06ReviewTest` 12, `FR06FinishHistoryTest` 4, `FR06ProgressTest` 6, `FR06RescuePlanTest` 5, `FR06DashboardTest` 7, `FR06TodayPlanTest` 6, `FR06QueueQueryTest` 4, `FR06SrsCalculatorTest` 35, `RescuePlanTest` 3, `StreakCalculatorTest` 6, `FR07PracticeSessionTest` 4, `PracticeGeneratorTest` 3). **Chưa gọi HTTP thật**; Postman có request nhưng chưa chạy. B2.9–B2.11 chưa làm. Lịch sử từng lần chạy ở mục 10 |
 | FE làm tương ứng | F2.1 (kèm mở rộng bảng điều khiển), F2.2 phần chọn phiên, F2.3, F2.4 (`roadmap/TienDoDuKien_fronend.md`), UI12 `/hom-nay` (kèm UI22 khối cứu lịch ôn), UI18 `/hoc` |
 | Báo cáo trước | [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó |
 
 > **Đọc nhanh:**
-> - Báo cáo này có **11 API** (tiền tố `/api/v1`): `GET /learning/today` (5.1, mở rộng ở 5.6, 5.7); `POST /learning/sessions`, `GET /learning/sessions/{id}` (5.2, 5.3); `POST /learning/sessions/{id}/reviews` (5.4); `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (5.5); `POST /practice/sessions`, `GET /practice/sessions/{id}` (5.8).
-> - Chưa có API (gọi BE thật nhận 404): nộp/chấm, lịch sử và luyện lại bài luyện (B2.8), sổ tay (B2.9), thống kê (B2.10), quản trị (B2.11). MSW chỉ còn mock `GET /public/ping`.
+> - Báo cáo này có **14 API** (tiền tố `/api/v1`): `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` (5.9, B2.8); `GET /learning/today` (5.1, mở rộng ở 5.6, 5.7); `POST /learning/sessions`, `GET /learning/sessions/{id}` (5.2, 5.3); `POST /learning/sessions/{id}/reviews` (5.4); `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (5.5); `POST /practice/sessions`, `GET /practice/sessions/{id}` (5.8).
+> - Chưa có API (gọi BE thật nhận 404): sổ tay và cặp nhầm (B2.9), thống kê (B2.10), quản trị (B2.11). MSW chỉ còn mock `GET /public/ping`.
 > - Hợp đồng ở mục 5 là **contract từ code**, test BE đã chạy (MockMvc) nhưng chưa gọi HTTP thật nên JSON mẫu chưa phải response thật (mục 10).
 > - B2.6 (31/10) không thêm route: `GET /learning/today` nhận `phut`, `giuTuMoi` và trả `cuuLichOn`; `POST /learning/sessions` nhận `cheDo`, phiên trả `cheDo` (mục 5.6).
-> - B2.7 (31/10) thêm `POST /api/v1/practice/sessions`, `GET /api/v1/practice/sessions/{id}` (mục 5.8); nộp bài/chấm (B2.8) chưa có.
+> - B2.7 (31/10) thêm `POST /api/v1/practice/sessions`, `GET /api/v1/practice/sessions/{id}` (mục 5.8).
+> - B2.8 (03/11) thêm nộp bài/chấm, lịch sử, luyện lại (mục 5.9); `GET /practice/sessions/{id}` thêm `laLuyenLai`, `baiGocId`, `daNop`, `lanLamId`, `ketQua`; `daHocHomNay.thoiGian` của `/learning/today` cộng thời gian bài luyện đã nộp hôm nay.
 > - B2.12 (31/10) không thêm route: `GET /learning/today` thêm `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`; `daHocHomNay.soPhut` đổi sang thời gian thật (mục 5.7).
 > - Từ B2.4, `POST .../reviews` là API duy nhất ghi `tien_do_the` và `su_dung_hoc_ngay`; số liệu `/learning/today` chỉ khác 0 sau khi có lượt ôn được ghi.
 
@@ -30,9 +31,10 @@
 | B2.5 Kết thúc phiên, lịch sử, tạm ngưng/đặt lại | ✅ `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset`; `FR06FinishHistoryTest` (4), `FR06ProgressTest` (6) pass sau khi sửa `ketThucAt` (28/10); chưa HTTP thật | F2.3 UI20 `/hoc/[sessionId]/tong-ket`, UI21 `/bo-the/[id]/tien-do` | Nối theo mục 5.5; chuỗi ngày lấy từ `/learning/today` |
 | B2.6 Cứu lịch ôn | ✅ `cuuLichOn` + query `phut`, `giuTuMoi` trong `GET /learning/today`; `cheDo` ở `POST /learning/sessions` và `GET /learning/sessions/{id}`; migration `V10__phien_hoc_che_do.sql`; `FR06RescuePlanTest` (5), `RescuePlanTest` (3) pass (31/10); chưa HTTP thật | F2.4 UI22 khối "Cứu lịch ôn" trên UI12 | Nối theo mục 5.6 |
 | B2.12 Bảng điều khiển người học | ✅ `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian` trong `GET /learning/today`; `soPhut` theo thời gian thật; `FR06DashboardTest` (7) pass (03/11); chưa HTTP thật | F2.1 mở rộng UI12 | Nối theo mục 5.7; khối "Hoạt động 7 ngày" chờ B2.10 |
-| B2.7 Tạo bài luyện | ✅ `POST /practice/sessions`, `GET /practice/sessions/{id}`; migration `V11__practice.sql`; `FR07PracticeSessionTest` (4) pass (31/10); chưa HTTP thật | F2.5 UI23, UI24 | Nối theo mục 5.8; nút nộp chờ B2.8 |
+| B2.7 Tạo bài luyện | ✅ `POST /practice/sessions`, `GET /practice/sessions/{id}`; migration `V11__practice.sql`; `FR07PracticeSessionTest` (4) pass (31/10); chưa HTTP thật | F2.5 UI23, UI24 | Nối theo mục 5.8 |
+| B2.8 Nộp bài & chấm | ✅ `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry`; `GET /practice/sessions/{id}` có `ketQua`; không migration; `FR07SubmissionTest` (4), `PracticeGraderTest` (11), `AnswerNormalizerTest` (4) pass, bộ đầy đủ 382/382 (03/11); chưa HTTP thật | F2.5 UI24 (nộp), UI25 `/luyen-tap-ket-qua`, UI26 `/luyen-tap-lich-su` | Nối theo mục 5.9; đổi `thoiGianMs` → `thoiGian`; ghép đọc `chiTiet`; `traLoi` có thể `null` |
 
-**Chưa có** (BE chưa có endpoint, FE gọi sẽ 404): nộp/chấm, lịch sử, luyện lại bài luyện (B2.8), sổ tay (B2.9), thống kê (B2.10), quản trị (B2.11).
+**Chưa có** (BE chưa có endpoint, FE gọi sẽ 404): sổ tay và cặp nhầm (B2.9), thống kê (B2.10), quản trị (B2.11).
 
 ## 2. Chạy BE
 
@@ -388,7 +390,7 @@ Hợp đồng từ code ngày 31/10/2026 ([flow B2.12](../docs/luong-backend/B2.
 
 | Trường | Quy tắc |
 |---|---|
-| `daHocHomNay.thoiGian` | ms, tổng `thoiGianTraLoiMs` đã ghi hôm nay (mỗi lượt tối đa 120000), ngày theo múi giờ hiện tại của người dùng. Chưa gồm bài luyện (B2.8) |
+| `daHocHomNay.thoiGian` | ms, tổng `thoiGianTraLoiMs` đã ghi hôm nay (mỗi lượt tối đa 120000), ngày theo múi giờ hiện tại của người dùng. Từ B2.8 (03/11/2026) cộng `thoiGian` của bài luyện nộp hôm nay (theo `nopAt`, đã cắt ở server) |
 | `daHocHomNay.soPhut` | `floor(thoiGian / 60000)`; **đổi nghĩa** so với B2.2 (ước tính từ số lượt) |
 | `phienDangDo` | `null` hoặc phiên `DANG_HOC` mới nhất của mình bắt đầu từ đầu ngày hôm nay. Phiên hôm qua chưa kết thúc không hiện. `boTheId = null` → `boTheTen` = "Tất cả bộ của tôi". Không có `cheDo`, `hangDoi` (gọi `GET /learning/sessions/{id}`) |
 | `soDaTraLoi`, `soChuaTraLoi` | Số dòng hàng đợi theo trạng thái hiện tại; thẻ học lại trong phiên tính là chưa trả lời |
@@ -454,13 +456,87 @@ Hợp đồng từ code ngày 31/10/2026 ([flow B2.7](../docs/luong-backend/B2.7
 
 - Response **không có đáp án/giải thích**; `GET` trả bản chụp lúc tạo kể cả khi thẻ đã sửa/xóa (TC-11).
 - `soCau` = số câu tạo được, có thể nhỏ hơn `soCauYeuCau`.
-- Chưa có `daNop`, `lanLamId`, `ketQua`, `laLuyenLai` (B2.8). UI24 coi như chưa nộp.
+- Từ B2.8 response có thêm `laLuyenLai`, `baiGocId`, `daNop`, `lanLamId`, `ketQua` (mục 5.9). `daNop = true` → UI24 chuyển sang UI25.
 
 | HTTP | `code` | Khi nào |
 |---|---|---|
 | 400 | `VALIDATION_FAILED` | Field sai hoặc tổ hợp nguồn sai; `fieldErrors[].field` đúng tên |
 | 404 | `NOT_FOUND` | Bộ/thẻ/bài của người khác hoặc đã xóa |
-| 422 | `BUSINESS_RULE` | Chưa có thẻ; sổ tay trống; < 4 thẻ cho dạng chọn; < 3 thẻ cho ghép; không thẻ có ví dụ/âm từ; chưa có cặp nhầm (luôn 422 đến B2.8) |
+| 422 | `BUSINESS_RULE` | Chưa có thẻ; sổ tay trống; < 4 thẻ cho dạng chọn; < 3 thẻ cho ghép; không thẻ có ví dụ/âm từ; chưa có cặp nhầm (từ B2.8 cặp được ghi khi chọn/ghép nhầm sang thẻ khác) |
+
+### 5.9 B2.8 — nộp bài, chấm, lịch sử, luyện lại
+
+| Quyền | FE bước | UI | Trang |
+|---|---|---|---|
+| L (đăng nhập; `POST` cần CSRF) | F2.5 | UI24 (nộp), UI25, UI26 | `/luyen-tap-lam-bai`, `/luyen-tap-ket-qua`, `/luyen-tap-lich-su` |
+
+Hợp đồng từ code ngày 03/11/2026 ([flow B2.8](../docs/luong-backend/B2.8-nop-bai-cham.md)); quyết định a–q **đề xuất**, chốt 03/11/2026. Không đổi lịch SRS, chưa có điểm thưởng (B3.6).
+
+**`POST /api/v1/practice/sessions/{id}/submissions`** — 201 lần đầu, 200 khi gửi lại cùng `submitKey`.
+
+```json
+{ "submitKey": "9f2c4c1e-…", "thoiGian": 184000,
+  "traLoi": [
+    { "cauHoiId": "201", "luaChonId": "o3" },
+    { "cauHoiId": "202", "noiDung": "receit" },
+    { "cauHoiId": "203", "cap": [ { "traiId": "t1", "phaiId": "n2" } ] } ] }
+```
+
+| Field | Quy tắc |
+|---|---|
+| `submitKey` | Bắt buộc, ≤ 128, `A-Za-z0-9._:-`. FE sinh một lần cho mỗi bài và **giữ nguyên khi gửi lại** |
+| `thoiGian` | Bắt buộc, ms, ≥ 0. Server lưu `min(gửi lên, nộp − tạo bài, số đơn vị × 120000)` (câu ghép tính theo số cặp) |
+| `traLoi` | Bắt buộc (có thể rỗng), ≤ 20. Câu không gửi = bỏ trống, tính sai |
+| `cauHoiId` | Thuộc bài, không lặp; sai → 400 `traLoi[i].cauHoiId` |
+| `luaChonId` / `noiDung` / `cap` | Chỉ field đúng `loaiCau` được đọc. `luaChonId` phải nằm trong `phuongAn`; `noiDung` ≤ 200; `cap` ≤ 5, `traiId`/`phaiId` thuộc đề và không lặp |
+
+**Response** (cũng là `ketQua` của `GET /practice/sessions/{id}` sau khi nộp):
+
+```json
+{
+  "lanLamId": "88", "baiLuyenId": "31", "loaiBai": "TONG_HOP", "boTheId": "12", "boTheTen": "TOEIC 1",
+  "laLuyenLai": false, "soCauDung": 7, "tongSoCau": 10, "diem": 74, "thoiGian": 184000,
+  "nopAt": "2026-11-03T02:10:00.123Z",
+  "theoKyNang": [ { "kyNang": "NHAN_NGHIA", "dung": 3, "tong": 4 } ],
+  "ketQua": [
+    { "cauHoiId": "202", "thuTu": 2, "loaiCau": "NGHE_VIET", "theId": "55",
+      "deBai": { "amTuId": "18", "tuLoai": "n." }, "phuongAn": null,
+      "traLoi": { "noiDung": "receit" },
+      "dapAn": { "noiDung": "receipt", "chapNhan": ["receipt"] },
+      "dung": false, "diem": 0, "nhomLoi": "CHINH_TA", "chiTiet": null,
+      "giaiThich": { "theId": "55", "tu": "receipt", "phienAm": null, "tuLoai": "n.", "nghiaVi": "biên lai", "viDuEn": null, "dichVi": null } }
+  ]
+}
+```
+
+(Contract từ code, rút gọn, **không phải response thật**.)
+
+| `loaiCau` | `traLoi` (null nếu bỏ trống) | `dapAn` | `chiTiet` | `nhomLoi` khi sai |
+|---|---|---|---|---|
+| `CHON_NGHIA`, `CHON_TU` | `{luaChonId, noiDung}` | `{luaChonId, noiDung}` | `null` | `NGHIA` |
+| `PHAN_BIET_CAP` | `{luaChonId, noiDung}` | `{luaChonId, noiDung}` | `null` | `CAP_NHAM` |
+| `NHAP_TU_THEO_NGHIA` | `{noiDung}` | `{noiDung, chapNhan}` | `null` | `CHINH_TA` (gần đúng) hoặc `NGHIA` |
+| `NGHE_VIET` | `{noiDung}` | `{noiDung, chapNhan}` | `null` | `CHINH_TA` hoặc `NGHE` |
+| `DIEN_CHO_TRONG` | `{noiDung}` | `{noiDung, chapNhan}` | `null` | `CHINH_TA` hoặc `NGU_CANH` (gõ dạng gốc cũng `NGU_CANH`) |
+| `GHEP_TU` | `{cap[{traiId, phaiId}]}` | `{cap[{traiId, phaiId}]}` | `[{traiId, tu, phaiIdDaChon, nghiaDaChon, phaiId, nghiaDung, dung}]` | `NGHIA` |
+
+- So khớp không phân biệt hoa/thường, gộp khoảng trắng, đổi `’` → `'`; giữ dấu câu và gạch nối. "Gần đúng" = sai tối đa 1/2/3 ký tự (đáp án ≤ 4 / 5–8 / ≥ 9 ký tự).
+- `diem` câu 0–100 (ghép chấm từng cặp); `diem` bài = trung bình tỷ lệ đúng × 100, làm tròn. `soCauDung` chỉ đếm câu đúng hết.
+- `giaiThich` là bản chụp lúc tạo bài: object `{theId, tu, phienAm, tuLoai, nghiaVi, viDuEn, dichVi}`; **mảng** các object đó với `GHEP_TU`; `{the, theKhac}` với `PHAN_BIET_CAP`. Không còn `giaiThich.cap`, `giaiThich.soSanh` của demo cũ.
+- `theoKyNang`: `NHAN_NGHIA` (chọn nghĩa/chọn từ/ghép), `VIET` (nhập từ), `NGHE` (nghe viết), `NGU_CANH` (điền chỗ trống), `CAP_NHAM` (phân biệt cặp); theo thứ tự này, chỉ kỹ năng có trong bài.
+- `GET /practice/sessions/{id}` thêm `laLuyenLai`, `baiGocId`, `daNop`, `lanLamId`, `ketQua` (`null` khi chưa nộp). `cauHoi` vẫn không có đáp án.
+
+**`GET /api/v1/practice/history`** — query `loaiBai?`, `tuNgay?`, `denNgay?` (YYYY-MM-DD, múi giờ người dùng), `page` (0), `size` (20, tối đa 100). `PageResponse` `items[{lanLamId, baiLuyenId, loaiBai, boTheTen, soCauDung, tongSoCau, soCauSai, diem, thoiGian, nopAt, laLuyenLai}]`, mới nhất trước. Link sang UI25 bằng `baiLuyenId`.
+
+**`POST /api/v1/practice/mistakes/retry`** `{ "lanLamId": "88" }` → 201 + `Location`, body như `POST /practice/sessions` (bài mới, `laLuyenLai = true`, `baiGocId`, `daNop = false`). Lấy thẻ của câu sai còn dùng được; ghép → `CHON_NGHIA`; kế thừa `nguon`, `boTheId`, `soCauYeuCau`; `soCau` = số câu tạo được. Không có khóa chống trùng: bấm 2 lần tạo 2 bài.
+
+| HTTP | `code` | Khi nào |
+|---|---|---|
+| 400 | `VALIDATION_FAILED` | `submitKey`/`thoiGian`/`traLoi` sai; `traLoi[i].cauHoiId` lạ hoặc trùng; `traLoi[i].luaChonId`, `traLoi[i].cap[j].traiId/phaiId` không thuộc đề; lịch sử: ngày sai, `tuNgay > denNgay` (`denNgay`), `size` > 100; retry: `lanLamId` sai |
+| 401 | `UNAUTHENTICATED` | Chưa đăng nhập |
+| 404 | `NOT_FOUND` | Bài/lần làm của người khác hoặc không tồn tại |
+| 409 | `CONFLICT` | Bài đã nộp với khóa khác (FE gọi lại `GET /practice/sessions/{id}` để lấy `ketQua`); khóa đã dùng cho bài khác (`fieldErrors[submitKey]`). **Không kèm `lanLamId`** |
+| 422 | `BUSINESS_RULE` | Retry: không có câu sai; thẻ của câu sai đã xóa/tạm ngưng hết; không tạo lại được câu |
 
 ## 6. Mã FE mẫu
 
@@ -491,7 +567,10 @@ Chưa có seed cho tiến độ thẻ. Từ B2.4, `tien_do_the` được tạo q
 - [ ] F2.1 mở rộng: khối "Phiên đang dở" ẩn khi `phienDangDo = null`; `soChuaTraLoi > 0` → "Tiếp tục" mở phiên, bằng 0 → gọi `POST .../finish` rồi mở tổng kết
 - [ ] Thanh mục tiêu ngày so `daHocHomNay.thoiGian` với `phutMoiNgay × 60000`; hiển thị `soPhut` (không tự tính từ `soLuot`)
 - [ ] Dự báo 7 ngày đọc `duBaoOn`; cột hôm nay = `soQuaHan + soDenHan`; khối "Hoạt động 7 ngày" ẩn đến khi có B2.10
-- [ ] F2.5 UI23 gửi `{loaiBai, soCau, nguon, boTheId}`; 422 hiện message của BE; UI24 dựng câu theo `loaiCau`, nghe viết phát tệp `deBai.amTuId`; không đọc `daNop`/`ketQua` trước B2.8
+- [ ] F2.5 UI23 gửi `{loaiBai, soCau, nguon, boTheId}`; 422 hiện message của BE; UI24 dựng câu theo `loaiCau`, nghe viết phát tệp `deBai.amTuId`; `daNop = true` thì chuyển sang UI25
+- [ ] F2.5 UI24 nộp `{submitKey, thoiGian, traLoi}` (đổi `thoiGianMs` → `thoiGian`); giữ `submitKey` khi gửi lại; 409 `CONFLICT` → mở UI25
+- [ ] F2.5 UI25 đọc `ketQua` của `GET /practice/sessions/{id}`: `traLoi` có thể `null`, ghép đọc `chiTiet`, cặp đọc `giaiThich.the`/`giaiThich.theKhac`; nút luyện lại gọi `POST /practice/mistakes/retry {lanLamId}`
+- [ ] F2.5 UI26 `GET /practice/history` (mặc định 20/trang; muốn 10 thì gửi `size=10`), hiển thị `thoiGian` (ms)
 - [ ] UI21: `GET /decks/{id}/progress` với `nhom`, `q`, `page`, `size`; nút tạm ngưng gửi `{tamNgung}`; nút đặt lại hỏi xác nhận rồi gửi `{xacNhan: true}`
 
 ## 9. Sắp có ở Đợt 2 — hợp đồng dự kiến
@@ -540,6 +619,10 @@ Khối "Hoạt động 7 ngày" dùng `theoNgay[{ngay, soLuotOn, soPhut}]`; `soP
 | Kiểm chứng B2.7 (31/10/2026) | `mvnw test -Dtest='FR07*Test,FR06*Test,RescuePlanTest,StreakCalculatorTest,FR03*Test,FR04*Test'` 220 test, 0 lỗi, BUILD SUCCESS (31/10) (JAVA_TOOL_OPTIONS như mục 2), gồm `FR07PracticeSessionTest` 4/4. Migration V11 áp được, schema validate qua. Chưa chạy bộ đầy đủ, chưa gọi HTTP thật |
 | Quyết định B2.7 (đề xuất, chốt 31/10) | V11 tạo đủ 7 bảng; nghe viết cần âm từ (không dùng giọng đọc trình duyệt vì lộ đáp án); cặp nhầm 422 đến B2.8; `createdAt` thay `taoAt`; response chưa có field B2.8. Sửa nền: thời điểm auditing cắt về mili giây (ảnh hưởng mọi `createdAt`/`updatedAt`) |
 | Mockup/Postman B2.7 (31/10) | `demo.js`: `createdAt`, `deBai.amTuId` (demo thiếu tệp thì dùng giọng đọc); `luyen-tap-lam-bai.html` phát tệp theo `amTuId`, đã mở trên trình duyệt, console không lỗi. **Lệch còn lại:** demo trả thêm `daNop`, `lanLamId`, `ketQua`, `laLuyenLai` (B2.8) và cho nghe viết với thẻ không có âm (BE bỏ thẻ đó). Postman: 4 request trong "04 Luyện tập", chưa chạy |
+| Kiểm chứng B2.8 (03/11/2026) | `mvnw test -Dtest="FR07*Test,FR06*Test,PracticeGraderTest,AnswerNormalizerTest,PracticeGeneratorTest,RescuePlanTest,StreakCalculatorTest"`: 122 test, 1 lỗi ở chính test mới (truy vấn `CAP_NHAM` trả 2 dòng vì câu bỏ trống cũng ghi lỗi); sửa test, chạy lại FR07 + test thuần 26/26 pass. Sau đó bộ đầy đủ `./mvnw -B test` **382/382 pass, BUILD SUCCESS**. `FR07SubmissionTest` 4/4: TC-11 sửa thẻ sau khi tạo vẫn chấm theo bản chụp; nhóm lỗi `CHINH_TA`/`NGHIA`, câu bỏ trống; gửi lại 200, khóa khác 409, khóa dùng cho bài khác 409; `GET` có `ketQua`; thời gian cộng vào `StudyTimeService`; cặp nhầm upsert 1 → 2, `PHAN_BIET_CAP` tạo được; ghép điểm phần 60; luyện lại 2 thẻ, retry khi không còn câu sai/thẻ đã xóa → 422; lịch sử + lọc + 400; 400 từng field, 401, 404. Chưa gọi HTTP thật bằng `curl`, chưa chạy request Postman |
+| Quyết định B2.8 (đề xuất, chốt 03/11) | Chi tiết a–q ở [flow B2.8](../docs/luong-backend/B2.8-nop-bai-cham.md). Đáng chú ý cho FE: field `thoiGian` (không phải `thoiGianMs`); 409 không kèm `lanLamId`; lịch sử mặc định 20; bài luyện lại kế thừa `nguon`/`boTheId` (không có `nguon = LUYEN_LAI`); không thêm cột `loai_nham`; B2.8 **không ghi `so_tay_tu_kho`**, nên `nguon = SO_TAY` vẫn 422 "Sổ tay đang trống" đến khi B2.9 chốt mô hình sổ tay (suy từ `loi_hoc_tap`) |
+| Mockup B2.8 (03/11) | `demo.js` (đổi khóa lưu `vl-demo-v5` để bỏ dữ liệu cũ): nộp bài nhận `thoiGian`, cắt như BE; `submitKey` ≤ 128 + regex; 409 không kèm `lanLamId`, khóa dùng cho bài khác → 409 `submitKey`; `traLoi` null khi bỏ trống; `dapAn` theo loại câu; `chiTiet` cho ghép; `giaiThich` = bản chụp (mảng với ghép, `{the, theKhac}` với cặp); `diem` câu 0–100; `theoKyNang` theo thứ tự BE; ngưỡng gần đúng theo độ dài + đổi chỗ ký tự; lịch sử mặc định 20, lọc `tuNgay`/`denNgay`, trả `thoiGian`; luyện lại kế thừa `nguon`/`boTheId`/`soCauYeuCau`, trả `baiGocId`. `luyen-tap-lam-bai.html` gửi `thoiGian`; `luyen-tap-ket-qua.html` đọc `chiTiet`, `giaiThich.the/theKhac`, `traLoi` null, `thoiGian`; `luyen-tap-lich-su.html` đọc `thoiGian`. **Kiểm chứng 03/11:** mở `luyen-tap-lich-su.html?as=an` (6 bài, có bài luyện lại), `luyen-tap-ket-qua.html` bài phân biệt cặp và bài ghép tạo mới (chi tiết 5 cặp, nộp lại khóa khác → 409, luyện lại → `CHON_NGHIA`, `baiGocId`), `hom-nay.html?as=an` không `NaN`; console không lỗi. **Lệch còn lại:** demo `cap.loaiNham` và API cặp nhầm/sổ tay thuộc B2.9; demo luyện lại câu cặp đưa cả hai thẻ vào `theIds` (BE tạo một câu cho mỗi thẻ đích) |
+| Postman B2.8 (03/11) | Thêm 10 request vào "04 Luyện tập": `Tạo bài để nộp (B2.8 · chuẩn bị)` (lưu `practiceId`, `practiceQuestionId`, `practiceChoiceId`, `practiceSubmitKey`), `Nộp bài luyện (B2.8 · FR-07 · TC-11)` (lưu `lanLamId`), `Nộp lại cùng submitKey → 200`, `Nộp bằng khóa khác → 409`, `Nộp bài khóa sai ký tự → 400`, `Xem bài đã nộp`, `Lịch sử bài luyện`, `Lịch sử size vượt giới hạn → 400`, `Luyện lại câu sai`, `Luyện lại lần làm không tồn tại → 404`. **Chưa chạy.** Biến do test script tự tạo khi chạy, chưa khai báo sẵn trong hai environment (không ghi đè environment vì API thay toàn bộ danh sách, có biến secret). Registry `synced` thêm 3 endpoint |
 | Ngoại lệ module | Truy vấn của `learning` join entity `content` (chỉ đọc); đã ghi vào conventions |
 | Đối chiếu trước B2.5 (27/10, chưa code) | Quyết định **đề xuất** ghi ở roadmap B2.5 và mục 9: suspend/reset áp cả thẻ; resume suy trạng thái từ field còn giữ; reset giữ lịch sử, không hoàn suất; finish lặp lại trả cùng tổng kết, không tự đóng phiên quá hạn, giữ dòng `CHUA_TRA_LOI`. Lỗ hổng phát hiện khi đọc code (chưa kiểm chứng): `uk_tien_do_the_nguoi_the_chieu` chưa được map nên hai request cùng tạo hàng tiến độ (hai phiên khác nhau, hoặc suspend và review) trả 500; sẽ map sang 409 `VERSION_CONFLICT` trong B2.5. `daHocHomNay.soPhut` vẫn là ước tính, không thuộc B2.5 |
 | Mockup B2.5 (sửa 27/10 trước khi code BE) | `demo.js`: phiên kết thúc là `KET_THUC`; `GET /sessions/{id}` không còn `tongKet`; tổng kết `finish` đổi `thoiGianGiay` → `thoiGian` (ms), thêm `soChuaTraLoi`, bỏ `khoangHienThi` và chuỗi ngày; history có lọc `chieuHoc`, `tuNgay`, `denNgay`, trả `thoiGian`, `truoc`/`sau` đầy đủ, ID bộ lạ trả trang rỗng; progress bỏ `khoangHienThi`, thêm `tongSoThe`; suspend bỏ `truocTamNgung`, khôi phục suy trạng thái như BE; reset bắt buộc `xacNhan`. `hoc-tong-ket.html` lấy tổng kết bằng `POST .../finish` khi phiên đã `KET_THUC` và lấy chuỗi ngày từ `/learning/today`; `bo-the-tien-do.html` gửi `{xacNhan: true}`. **Lệch còn lại của demo:** demo xóa hẳn thẻ nên history không hiện lượt của thẻ đã xóa (BE vẫn hiện); `page()` của demo giới hạn size 50 (BE 100); `hoc-phien.html` vẫn đọc `khoangHienThi`/`duKien` của B2.4. **Kiểm chứng 27/10:** chạy các route demo bằng Node (progress, suspend/resume/reset, history, finish lặp lại, review sau finish → 409) cho đúng hợp đồng trên, và kiểm cú pháp script của hai trang; **chưa mở trên trình duyệt** (cổng 5173 bị chặn, tab `file://` chỉ là ảnh tĩnh không chạy script) |
@@ -557,8 +640,8 @@ BE không sửa `frontend/`. Các mục dưới đây đã kiểm lại trên m�
 | Mã | Vị trí FE | Hiện trạng | Việc FE cần làm |
 |---|---|---|---|
 | RS-060 (Cao) | `frontend/src/app/(app)/luyen-tap-lam-bai/page.js:211` | Đọc `q.deBai?.amThanhUrl`; BE trả `deBai.amTuId` (mục 5.8). Câu `NGHE_VIET` trên BE thật không có âm thanh | Lấy URL qua `GET /api/v1/decks/{boTheId}/cards/{theId}/files/AM_TU` (bàn giao Đợt 1 §5.39a) khi có `amTuId`; không dùng giọng đọc trình duyệt cho câu nghe viết |
-| RS-066 | `frontend/src/app/api/v1/practice/[...slug]/route.js:324-326`, `_mock/backend.js` | Khi có BE, `POST /practice/sessions` đi BE thật nhưng `POST .../submissions` rơi về mock không biết phiên đó → 404 | Đến khi B2.8 xong: mock cả bước tạo bài (không proxy) hoặc ẩn nút nộp khi phiên do BE tạo. Sau B2.8 bỏ mock `submissions` |
-| RS-018 | `frontend/README.md` mục "Trang chờ backend" | Ghi phiên học, `/decks/{id}/progress`, luyện tập là endpoint chưa tồn tại | Sửa README: B2.2–B2.7 và B2.12 đã có (mục 1); còn chờ B2.8–B2.11 |
+| RS-066 | `frontend/src/app/api/v1/practice/[...slug]/route.js:324-326`, `_mock/backend.js` | Khi có BE, `POST /practice/sessions` đi BE thật nhưng `POST .../submissions` rơi về mock không biết phiên đó → 404 | B2.8 đã có (03/11/2026, mục 5.9): bỏ mock `submissions`, `history`, `mistakes/retry`, proxy thẳng BE |
+| RS-018 | `frontend/README.md` mục "Trang chờ backend" | Ghi phiên học, `/decks/{id}/progress`, luyện tập là endpoint chưa tồn tại | Sửa README: B2.2–B2.8 và B2.12 đã có (mục 1); còn chờ B2.9–B2.11 |
 
 ## 11. Báo lỗi cho BE
 

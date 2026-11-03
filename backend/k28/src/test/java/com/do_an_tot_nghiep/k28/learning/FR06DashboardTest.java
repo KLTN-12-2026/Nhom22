@@ -16,7 +16,6 @@ import com.do_an_tot_nghiep.k28.learning.dto.PhienDangDoResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.ChieuHoc;
-import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
@@ -74,7 +73,7 @@ class FR06DashboardTest extends AbstractIntegrationTest {
     @Autowired
     PhienHocTheRepository queue;
     @Autowired
-    LichSuOnRepository history;
+    StudyTimeService studyTime;
 
     @Test
     void fr06_openSessionIsLatestDangHocStartedTodayAndCountsAnswers() throws Exception {
@@ -230,8 +229,7 @@ class FR06DashboardTest extends AbstractIntegrationTest {
         review(learner, sessionId, progressId, 61000, "2026-10-19T04:00:00Z");
         review(learner, sessionId, progressId, 59000, "2026-10-19T04:30:00Z");
 
-        StudyTimeService service = new StudyTimeService(history);
-        Map<LocalDate, StudyTimeService.StudyTime> days = service.days(
+        Map<LocalDate, StudyTimeService.StudyTime> days = studyTime.days(
                 learner.id(), LocalDate.parse("2026-10-16"), LocalDate.parse("2026-10-19"), ZoneId.of(HCM));
 
         assertThat(days.keySet()).containsExactly(LocalDate.parse("2026-10-16"), LocalDate.parse("2026-10-17"),
@@ -257,7 +255,7 @@ class FR06DashboardTest extends AbstractIntegrationTest {
         review(learner, sessionId, progressId, 60000, "2026-11-02T04:30:00Z");
         review(learner, sessionId, progressId, 60000, "2026-11-02T05:00:00Z");
 
-        Map<LocalDate, StudyTimeService.StudyTime> days = new StudyTimeService(history).days(
+        Map<LocalDate, StudyTimeService.StudyTime> days = studyTime.days(
                 learner.id(), LocalDate.parse("2026-10-31"), LocalDate.parse("2026-11-02"), ZoneId.of(newYork));
 
         assertThat(days.values()).extracting(StudyTimeService.StudyTime::thoiGian)
@@ -267,7 +265,7 @@ class FR06DashboardTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, new StudyTimeService(history))
+                sessions, queue, studyTime)
                 .today(learner.id(), new TodayQuery(null, null));
     }
 
