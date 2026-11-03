@@ -43,7 +43,7 @@ class IntegrationSetupTest extends AbstractIntegrationTest {
     @Test
     void xsrfHelperPassesCsrfFilter() throws Exception {
         mockMvc.perform(post("/api/v1/public/ping").with(xsrf()).with(randomIp()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
     }
 }

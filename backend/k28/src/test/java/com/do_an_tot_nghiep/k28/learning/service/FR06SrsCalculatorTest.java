@@ -83,6 +83,34 @@ class FR06SrsCalculatorTest {
         assertThat(result.hanOnAt()).isEqualTo(NOW.plus(days, ChronoUnit.DAYS));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "1,KHO,2",
+            "1,NHO,6",
+            "1,DE,8",
+            "4,NHO,6",
+            "4,DE,8"
+    })
+    void tc06_secondReviewEasyIsLongerThanGood(int interval, String rating, int days) {
+        SrsState result = calculator.calculate(onTap(interval, "2.50", 1), DanhGia.valueOf(rating), NOW);
+
+        assertThat(result.khoangOnNgay()).isEqualTo(days);
+        assertThat(result.chuoiThanhCong()).isEqualTo(2);
+        assertThat(result.hanOnAt()).isEqualTo(NOW.plus(days, ChronoUnit.DAYS));
+    }
+
+    @Test
+    void tc06_halfDayRoundsUp() {
+        SrsState result = calculator.calculate(onTap(5, "2.50", 2), DanhGia.NHO, NOW);
+
+        assertThat(result.khoangOnNgay()).isEqualTo(13);
+    }
+
+    @Test
+    void versionIsSm2Vn2() {
+        assertThat(SrsCalculator.VERSION).isEqualTo("SM2-VN-2");
+    }
+
     @Test
     void tc07_quenAtOnTapGoesToRelearning() {
         SrsState result = calculator.calculate(onTap(6, "2.50", 2), DanhGia.QUEN, NOW);

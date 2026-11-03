@@ -106,8 +106,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
-<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
+<script src="../shared/contract-demo.js?v=3e6ee35bf107"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -119,6 +119,7 @@
   const submit = document.getElementById("submit");
   let version;
   let topics = [];
+  let settings = null;
 
   function preview() {
     const fd = new FormData(form);
@@ -139,6 +140,7 @@
   VL.load(region, {
     fetch: async () => {
       topics = (await VL.api("GET", "/public/topics?size=100")).items;
+      if (!id) settings = await VL.api("GET", "/me/learning-settings");
       return id ? VL.api("GET", "/decks/" + encodeURIComponent(id)) : null;
     },
     render: (deck) => {
@@ -161,9 +163,7 @@
         form.querySelector('[name="quyenTruyCap"][value="' + deck.quyenTruyCap + '"]').checked = true;
         document.getElementById("danger").hidden = false;
       } else {
-        const s = VLDemo.db.learning[VL.me().id];
-
-        if (s && s.level) form.querySelector('[name="trinhDo"][value="' + s.level + '"]').checked = true;
+        if (settings && settings.trinhDo) form.querySelector('[name="trinhDo"][value="' + settings.trinhDo + '"]').checked = true;
       }
       preview();
     }

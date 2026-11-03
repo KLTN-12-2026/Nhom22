@@ -128,7 +128,7 @@ backend/k28/
 
 ### [x] B0.2 Docker Compose môi trường dev
 - `docker-compose.yml`: `mysql:8.4` (cổng host 3307, `utf8mb4`, TZ UTC, healthcheck), `redis` (6379), `s3` = RustFS (9000/9001) + `s3-init` tạo bucket bằng aws-cli, `mailpit` (1025/8025), `api` (chỉ khi `--profile app`).
-- `.env.example` chỉ có tên biến và giá trị dev giả: `DB_NAME, DB_USER, DB_PASSWORD, DB_ROOT_PASSWORD, REDIS_HOST, S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, MAIL_HOST, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AI_API_KEY, SPEECH_KEY, APP_FRONTEND_URL`. Bản thực tế của `.env.example` (nguồn duy nhất, không nhắc lại ở nơi khác) gồm thêm `API_PORT, DB_PORT, S3_PUBLIC_ENDPOINT, FORWARD_HEADERS_STRATEGY, COOKIE_SECURE, SWAGGER_ENABLED, GOOGLE_REDIRECT_URI` (MAIL_HOST do Compose đặt, MAIL_PORT mặc định 1025); `REDIS_HOST` và `S3_ENDPOINT` do Compose đặt cho container `api`.
+- `.env.example` chỉ có tên biến và giá trị dev giả: `DB_NAME, DB_USER, DB_PASSWORD, DB_ROOT_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AI_API_KEY, SPEECH_KEY, APP_FRONTEND_URL`. Bản thực tế của `.env.example` (nguồn duy nhất, không nhắc lại ở nơi khác) gồm thêm `API_PORT, DB_PORT, S3_PUBLIC_ENDPOINT, FORWARD_HEADERS_STRATEGY, COOKIE_SECURE, SWAGGER_ENABLED, GOOGLE_REDIRECT_URI` (MAIL_HOST do Compose đặt, MAIL_PORT mặc định 1025); `REDIS_HOST` và `S3_ENDPOINT` do Compose đặt cho container `api`.
 - `Dockerfile` multi-stage:
 
 ```dockerfile
@@ -150,15 +150,17 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ```
 - Profile mặc định dev kết nối localhost:3307; Compose truyền DB_HOST/REDIS_HOST/S3_ENDPOINT/MAIL_HOST, không có profile docker riêng (cấu hình host qua biến môi trường). Test dùng profile test và Testcontainers.
 - **Xong khi:** `docker compose up -d` → các service có healthcheck healthy, Mailpit chạy và s3-init hoàn tất thành công; `docker compose --profile app up -d --build` → `GET /actuator/health` trả `UP`.
+- **Sửa 03/11/2026 (RS-041, RS-042, RS-043, RS-044):** ghim image `rustfs/rustfs:1.0.3`, `amazon/aws-cli:2.38.5`, `axllent/mailpit:v1.32.0`; cổng MySQL/Redis/S3/Mailpit chỉ mở trên `127.0.0.1`; mật khẩu DB và khóa S3 bắt buộc lấy từ `.env` (`:?`); container `api` đọc `.env` bằng `env_file`, vẫn mặc định profile `dev`; CORS bucket sinh từ `S3_CORS_ORIGINS` (`docker/s3-init.sh`, bỏ `s3-cors.json`); README dùng `docker compose` và có bước copy `.env`. Đã chạy `docker compose config` và `docker compose up -d`: 5 dịch vụ healthy, s3-init exit 0, `get-bucket-cors` trả đúng 4 origin.
 
 ### [x] B0.3 Cấu hình ứng dụng & Flyway
 - `application.yaml`: datasource, `spring.jpa.hibernate.ddl-auto=validate`, `open-in-view=false`, `hibernate.jdbc.time_zone=UTC`, naming snake_case mặc định, Flyway bật, `spring.session.data.redis`, multipart giới hạn, Jackson ISO-8601.
 - `V1__account.sql`: `nguoi_dung`, `vai_tro`, `nguoi_dung_vai_tro`, `danh_tinh_oauth`, `token_tai_khoan`, `ho_so_hoc_tap`, `cai_dat_thong_bao` (TK §12.2). Seed 2 vai trò `USER`, `ADMIN`.
 - Dev seed tách riêng `db/seed/` (chỉ bật khi kích hoạt tường minh profile `dev`, không còn profile mặc định; Compose `api` đặt `SPRING_PROFILES_ACTIVE=dev` mặc định, ghi đè khi triển khai): 1 Admin, 3 User mẫu.
 - **Xong khi:** app khởi động, Flyway áp V1, `validate` không báo lỗi.
+- **Sửa 03/11/2026 (RS-013, RS-057):** `application.yaml` bỏ giá trị mặc định cho `DB_USER`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID/SECRET`, `S3_ACCESS_KEY/SECRET`; `COOKIE_SECURE` mặc định `true`, `SWAGGER_ENABLED` mặc định `false`. Giá trị dev chuyển sang `application-dev.yaml`, giá trị test sang `src/test/resources/application-test.yaml`. `RequiredSettingsConfig` dừng app khi thiếu hoặc rỗng (test `RequiredSettingsConfigTest`). Kiểm chứng 03/11/2026: `./mvnw -B test` 363/363; container `api` (profile dev) readiness 200, Flyway lên V12, `nhac_hoc DEFAULT '0'`; chạy không profile với `S3_SECRET_KEY` rỗng thì app dừng với `Missing required setting app.s3.secret-key`. `V12__nhac_hoc_default_false.sql` đổi default `cai_dat_thong_bao.nhac_hoc` thành `FALSE` cho khớp `CaiDatThongBao.defaultFor`; migration quản trị B2.11 dùng số kế tiếp.
 
 ### [x] B0.4 Xử lý lỗi & tiện ích web chung
-- `ErrorCode` (enum 17 mã, thêm `UNSUPPORTED_MEDIA_TYPE` 415 và `METHOD_NOT_ALLOWED` 405 ở cuối danh sách; nhóm 15 mã gốc: `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, VERSION_CONFLICT, BUSINESS_RULE, RATE_LIMITED, DEPENDENCY_DOWN, INTERNAL_ERROR` (500), `TOKEN_INVALID, INVALID_CREDENTIALS, EMAIL_NOT_VERIFIED, ACCOUNT_LOCKED`, `OAUTH_LINK_REQUIRED` (chỉ dùng làm tham số redirect `?loi=`)) → HTTP 400/401/403/404/409/409/422/429/503/500/400/401/403/403/409 theo đúng thứ tự liệt kê. Lỗi `RATE_LIMITED` (429) kèm header `Retry-After` (giây còn lại của cửa sổ, đọc từ TTL Redis). Thiếu header bắt buộc trả `VALIDATION_FAILED` kèm `fieldErrors[].field` là tên header; tệp quá giới hạn trả thông điệp riêng. `POST /decks/{id}/cards` trả `Location: /api/v1/cards/{id}` dù chưa có `GET /cards/{id}` (giữ có chủ đích, FE không nên gọi).
+- `ErrorCode` (enum 18 mã từ 30/10/2026 khi thêm `CSRF_INVALID` 403; trước đó 17 mã, thêm `UNSUPPORTED_MEDIA_TYPE` 415 và `METHOD_NOT_ALLOWED` 405 ở cuối danh sách; nhóm 15 mã gốc: `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, VERSION_CONFLICT, BUSINESS_RULE, RATE_LIMITED, DEPENDENCY_DOWN, INTERNAL_ERROR` (500), `TOKEN_INVALID, INVALID_CREDENTIALS, EMAIL_NOT_VERIFIED, ACCOUNT_LOCKED`, `OAUTH_LINK_REQUIRED` (chỉ dùng làm tham số redirect `?loi=`)) → HTTP 400/401/403/404/409/409/422/429/503/500/400/401/403/403/409 theo đúng thứ tự liệt kê. Lỗi `RATE_LIMITED` (429) kèm header `Retry-After` (giây còn lại của cửa sổ, đọc từ TTL Redis). Thiếu header bắt buộc trả `VALIDATION_FAILED` kèm `fieldErrors[].field` là tên header; tệp quá giới hạn trả thông điệp riêng. `POST /decks/{id}/cards` trả `Location: /api/v1/cards/{id}` dù chưa có `GET /cards/{id}` (giữ có chủ đích, FE không nên gọi).
 - `ApiException(ErrorCode, message)`; `GlobalExceptionHandler` trả `{code, message, fieldErrors, requestId}` (TK §13.1), **không** trả stack trace.
 - `RequestIdFilter`: sinh `X-Request-Id`, đưa vào MDC log.
 - `PageResponse<T>(items, page, size, totalElements, totalPages)`; `BaseEntity` với `createdAt`, `updatedAt` (JPA Auditing).
@@ -171,15 +173,28 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - 401/403 trả JSON theo B0.4. `PasswordEncoder` = BCrypt. `CurrentUser` lấy id người đang đăng nhập.
 - `RateLimiter` đơn giản: đếm `INCR` + `EXPIRE` trên Redis theo khóa (IP/user + hành động).
 - **Xong khi:** gọi API cần đăng nhập → 401 JSON; POST thiếu CSRF → 403.
+- **Sửa bảo mật lô 2 (03/11/2026; RS-001, RS-012, RS-014, RS-015, RS-032, RS-034, RS-051, RS-053; các ngưỡng là đề xuất):**
+  - `RateLimiter` dùng Lua script nguyên tử (INCR + PEXPIRE khi khóa chưa có TTL), thêm `requireBelow`/`hit`.
+  - `FORWARD_HEADERS_STRATEGY` mặc định `native` (application.yaml, compose, .env.example), để IP client lấy từ `X-Forwarded-For` do proxy nội bộ gửi.
+  - Đăng nhập khóa theo email+IP 5/15′, IP 30 lần sai/15′, email 20 lần sai/1 giờ; `resetPassword` nhận IP.
+  - `@MaxUtf8Bytes(72)` cho mật khẩu ở đăng ký, đăng nhập, đặt lại và đổi mật khẩu.
+  - Cookie `XSRF-TOKEN` đặt `SameSite=Lax` và `Secure` theo `COOKIE_SECURE`; CORS expose `Retry-After`.
+  - URL PUT ký `contentLength` bằng `kichThuoc`.
+  - PKCE đã có sẵn (Spring Security 7), nay có test khẳng định.
+  - Test mới: `FR01LoginTest` (5), `FR01ForwardedIpTest` (1), `RateLimiterTest.tc04`, `StorageServiceTest.signedPutRejectsBodyLargerThanDeclared`, assert PKCE trong `FR01GoogleLoginTest`.
+  - **Kiểm chứng:** `./mvnw -B test` 340 test, 0 lỗi, BUILD SUCCESS. **Chưa kiểm chứng:** gọi HTTP qua Next.js thật, Postman.
 
 ### [x] B0.6 OpenAPI & quy ước API
 - springdoc: nhóm theo module, mô tả cookie session + CSRF. Tiền tố `/api/v1`, JSON camelCase, **tên trường DTO = tên field entity** (`tenHienThi`, `trangThai`…), ID trả dạng string.
 - **Xong khi:** Swagger UI mở được, có endpoint `GET /api/v1/public/ping`.
+- **Đã làm (GĐ0, ghi bổ sung 03/11/2026, RS-020):** `OpenApiConfig` (nhóm `all` và 7 nhóm module, scheme cookie `SESSION` và header `X-XSRF-TOKEN` gắn theo route), `PingController` (`GET /api/v1/public/ping`). Test `ApiDocsTest` 4/4 trong bộ đầy đủ 363/363 ngày 03/11/2026. Swagger mặc định tắt từ 03/11/2026, bật ở profile `dev`/`test`. Flow: [B0.6](../docs/luong-backend/B0.6-openapi-quy-uoc-api.md).
 
 ### [x] B0.7 Nền kiểm thử
 - `AbstractIntegrationTest`: `@SpringBootTest` + MockMvc + Testcontainers (MySQL 8.4, Redis) dùng `@ServiceConnection`.
-- Tên test theo mã: `FR01RegisterTest`, phương thức đặt theo mã yêu cầu thực tế (`fr02_...`, `fr03_...`; tiền tố `tcNN_` chỉ ở các test cũ). Swagger UI mở ở `/swagger-ui/index.html` (cũng chuyển hướng từ `/swagger-ui.html`); health dùng `/actuator/health/readiness`. Dockerfile trong roadmap chỉ là mẫu, bản thật nằm ở `backend/k28/Dockerfile`. CORS của S3 cho phép origin cổng 3000 và 3100 (`docker/s3-cors.json`).
+- Tên test theo mã: `FR01RegisterTest`, phương thức đặt theo mã yêu cầu thực tế (`fr02_...`, `fr03_...`; tiền tố `tcNN_` chỉ ở các test cũ). Swagger UI mở ở `/swagger-ui/index.html` (cũng chuyển hướng từ `/swagger-ui.html`); health dùng `/actuator/health/readiness`. Dockerfile trong roadmap chỉ là mẫu, bản thật nằm ở `backend/k28/Dockerfile`. CORS của S3 cho phép origin cổng 3000 và 3100 (từ 03/11/2026 sinh từ `S3_CORS_ORIGINS` bằng `docker/s3-init.sh`).
 - **Xong khi:** `./mvnw -q verify` chạy qua với Docker đang bật.
+- **Sửa nền test (03/11/2026, RS-003/RS-004/RS-040):** `pom.xml` thêm profile `windows-tests` (`-Djdk.net.unixdomain.tmpdir=${env.PUBLIC}`) và cho surefire nạp `-javaagent` Mockito qua `maven-dependency-plugin:properties`. Sửa 2 test đã cũ theo hành vi đúng: `FR05CsvTest.tc04_…` kỳ vọng 415 `UNSUPPORTED_MEDIA_TYPE` (TK §13.2: `mapping` là JSON), `IntegrationSetupTest.xsrfHelperPassesCsrfFilter` kỳ vọng 405 `METHOD_NOT_ALLOWED`. **Kiểm chứng:** `./mvnw -B test` không đặt `JAVA_TOOL_OPTIONS`: 332 test, 0 lỗi, BUILD SUCCESS.
+- **Đã làm (GĐ0, ghi bổ sung 03/11/2026, RS-020):** `AbstractIntegrationTest` khởi động MySQL, Redis, RustFS, Mailpit một lần cho cả lượt chạy, tạo bucket, nối qua `@ServiceConnection`/`@DynamicPropertySource`; tiện ích `xsrf()`, `randomIp()`, `toJson()`. Ngày 03/11/2026 ghim image test `rustfs/rustfs:1.0.3`, `axllent/mailpit:v1.32.0` và thêm profile `test` (`application-test.yaml`). Flow: [B0.7](../docs/luong-backend/B0.7-nen-kiem-thu.md).
 
 ### [x] B0.8 Kho lưu tệp & email
 - `StorageService`: tạo presigned PUT/GET (hết hạn ngắn), xóa object; bucket riêng tư.
@@ -194,13 +209,13 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `POST /auth/register`, `POST /auth/verify-email`, `POST /auth/resend-verification`.
 - Tạo `nguoi_dung` trạng thái `CHUA_XAC_THUC`; token ngẫu nhiên, **chỉ lưu `token_hash`** (SHA-256), có `het_han_at`, `da_dung_at` (dùng một lần). Email trùng → 409. Rate limit đăng ký/gửi lại.
 - **Xong khi:** token sai/hết hạn/dùng lần 2 bị từ chối; mật khẩu lưu BCrypt.
-- **Đã làm:** `FR01RegisterTest` 8 test xanh.
+- **Đã làm:** `FR01RegisterTest` 8 test xanh (nay 9, bộ đầy đủ 03/11/2026).
 
 ### [x] B1.2 Đăng nhập, đăng xuất, thông tin phiên — FR-01
 - API: `POST /auth/login`, `POST /auth/logout`, `GET /me`, `GET /auth/csrf`.
 - Chưa xác thực email hoặc bị khóa → từ chối có mã lỗi riêng; sai mật khẩu nhiều lần → 429. Đăng nhập thành công đổi session id (chống fixation). Logout xóa session Redis.
 - **Xong khi:** sau logout, cookie cũ gọi `/me` → 401.
-- **Đã làm:** `FR01LoginTest` 9 test xanh; mã lỗi `INVALID_CREDENTIALS` 401, `EMAIL_NOT_VERIFIED` 403, `ACCOUNT_LOCKED` 403; khóa 5 lần sai/15 phút theo email.
+- **Đã làm:** `FR01LoginTest` 9 test xanh (nay 15 sau lô 2 rà soát, bộ đầy đủ 03/11/2026); mã lỗi `INVALID_CREDENTIALS` 401, `EMAIL_NOT_VERIFIED` 403, `ACCOUNT_LOCKED` 403; khóa 5 lần sai/15 phút theo email.
 
 ### [x] B1.3 Quên / đặt lại / đổi mật khẩu — FR-01, TC-01
 - API: `POST /auth/forgot-password`, `POST /auth/reset-password`, `PUT /me/password`.
@@ -225,6 +240,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Bảng `tep_tin`. API: `POST /files/upload-requests` (trả URL ký + fileId), `POST /files/{id}/complete` (kiểm tra kích thước, MIME thực, checksum), `DELETE /files/{id}`.
 - Giới hạn ảnh ≤ 2 MB (jpg/png/webp), âm thanh ≤ 5 MB. Không cho client chỉ định đường dẫn/URL tùy ý.
 - Đã hoàn tất 02/10/2026: MIME thực, SHA-256, kiểm tra ảnh/âm thanh, ảnh đại diện, xóa và retry/dọn tệp nền, CORS bucket cho browser. 22 test FR-03 + 13 test hồi quy pass. Luồng/API: `docs/luong-backend/B1.6-tep-tin-anh-dai-dien.md`.
+- **Sửa lỗi RS-052 (03/11/2026):** `TepTin.objectKey` bị thêm `updatable = false` ở commit `ca5f78d` (20/10), nên `complete` không lưu key `files/…`. Đã bỏ ràng buộc này và thêm 2 test vào `FR03FilesTest`. Trên entity cũ có 3 test fail; sau khi sửa `FR03FilesTest` 15/15 pass. Chạy `FR03*,FR04*,FR05*,FR07*`: 175 test, 1 fail đã biết (`FR05CsvTest.tc04_…`, RS-004). Không đổi API, không migration. Chi tiết: [rà soát](../docs/ra-soat/RA_SOAT_2026-10-31.md).
 
 ### [x] B1.7 Chủ đề, nhãn, trình độ — FR-03, FR-13
 - `V4__content.sql`: `chu_de`, `chu_de_yeu_thich`, `nhan`, `bo_the`, `the_tu_vung`, `the_nhan`, `the_tep`, `bo_yeu_thich` (8 bảng). V2/V3 đã dùng cho tệp và cleanup.
@@ -240,20 +256,20 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Đã triển khai 04/10/2026:** 7 API; quản lý chỉ bộ của mình; yêu thích bộ của mình hoặc bộ công khai `BINH_THUONG`. PATCH nhận `version` trong body; DELETE bộ nhận query `version`. Dùng schema V4 hiện có, không thêm/sửa migration; xóa mềm mọi bộ bằng `xoa_at`.
 - **Kiểm chứng lịch sử 04/10:** 6a đạt 8/8 và 6b đạt 26/26 lượt HTTP trên localhost:8080 (tổng 34/34, không tính bước đăng nhập). Đã kiểm tra phiên bản cũ, thiếu version, phân quyền cả bộ riêng tư/công khai và thao tác yêu thích lặp lại. `FR03DeckTest` có 11 lượt dự kiến nhưng chưa xác nhận kết quả chạy; không tuyên bố suite pass.
 - **Đã bổ sung 05/10/2026:** FR03DeckTest 11/11 pass: xóa mềm bảo toàn thẻ/favorite/bộ nguồn, version cũ, sai chủ sở hữu, bộ ẩn và hai transaction cập nhật. Newman trên BE8081 xác nhận DELETE204, GET sau xóa404 và version cũ409. B1.8 đã đủ bằng chứng để đánh dấu hoàn tất; lịch sử bị429 không còn là trạng thái hiện tại.
-- **Báo cáo và bàn giao:** [báo cáo Đợt1](../report/DOT1_BAO_CAO_FE.md) mục 5.32–5.38 và mục10; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
+- **Báo cáo và bàn giao:** báo cáo Đợt1 (không còn trong repo) mục 5.32–5.38 và mục10; `docs/luong-backend/B1.8-bo-the-ca-nhan.md`; Postman thêm 12 request, biến `deckVersion`, `deckOldVersion`, `foreignDeckId` trong cả hai môi trường.
 
 
-- **Còn mở (20/10/2026):** `DeckResponse` chưa có `soThe` và chưa có API liệt kê bộ yêu thích (`?favorite=true`); UI13 phụ thuộc hai thứ này nên phải chốt (thêm vào BE hoặc bỏ khỏi UI13) trước khi nối FE.
+- **Đã chốt và làm 03/11/2026 (RS-056):** `DeckResponse.soThe` (số thẻ chưa xóa, ở list/get/create/copy) và `GET /decks?yeuThich=true` (bộ đã yêu thích: của mình hoặc công khai `BINH_THUONG` chưa xóa của người khác, sắp theo lúc yêu thích mới nhất; `yeuThich` không phải boolean → 400). Test `FR03DeckTest.fr03_favoriteListShowsVisibleFavoritesWithCardCounts`. Mockup UI13 đã gọi query mới.
 - **Phạm vi bước sau:** mục tiêu bộ, số thẻ, tìm kiếm toàn bộ thư viện và favorite listing phải chốt trước B1.9/B1.10. Mục tiêu hồ sơ không tự trở thành mục tiêu bộ.
 
 ### [x] B1.9 Thẻ từ vựng — FR-03, TC-02
 - API: `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`.
 - Trường: từ, từ loại, nghĩa, IPA, ví dụ EN, bản dịch, độ khó, nguồn, ảnh/âm (`the_tep`). Kiểm tra quyền **cả bộ cha**. Cảnh báo trùng theo từ + từ loại đã chuẩn hóa (không chặn).
 - **Triển khai 06/10/2026:** đã có controller/service bốn API thẻ; nhãn qua `the_nhan`, tệp qua `the_tep`; khóa bộ cha khi ghi, xóa mềm giữ liên kết, PATCH tăng version cả khi chỉ sửa liên kết. Bổ sung `GET /public/tags` phân trang để đọc nhãn và chuẩn hóa khoảng trắng Unicode. Dùng schema V4 hiện có, không sửa migration.
-- **Kiểm chứng 06/10/2026:** người dùng xác nhận build/test đã pass, chưa cung cấp log hoặc số lượng. Lượt HTTP riêng B1.9 tại localhost:8080 đạt 77/77 lượt HTTP và 19/19 assertion dữ liệu/kết quả; không cộng thành số test JUnit. Bằng chứng: [HTTP B1.9](../report/evidence/B1.9-http-603099a05ed3.json). Đã kiểm tra CRUD, quyền USER, Unicode/trùng, nhãn/tệp, rollback, version/no-op, xóa mềm giữ liên kết và hai PATCH đồng thời cùng version. Bộ cha xóa mềm được chuẩn bị bằng SQL trên bộ thử mới; không gọi lại HTTP xóa bộ B1.8.
+- **Kiểm chứng 06/10/2026:** người dùng xác nhận build/test đã pass, chưa cung cấp log hoặc số lượng. Lượt HTTP riêng B1.9 tại localhost:8080 đạt 77/77 lượt HTTP và 19/19 assertion dữ liệu/kết quả; không cộng thành số test JUnit. Bằng chứng: HTTP B1.9 (không còn trong repo). Đã kiểm tra CRUD, quyền USER, Unicode/trùng, nhãn/tệp, rollback, version/no-op, xóa mềm giữ liên kết và hai PATCH đồng thời cùng version. Bộ cha xóa mềm được chuẩn bị bằng SQL trên bộ thử mới; không gọi lại HTTP xóa bộ B1.8.
 - **Suite bổ sung 06/10/2026:** Sau sửa baseline, người dùng xác nhận FR03CardTest đã pass toàn bộ; agent không chạy JUnit và chưa có log để xác nhận số lượt thực chạy. Source có16 phương thức/22 lượt dự kiến, không ghi thành22/22 quan sát được. Bao phủ CRUD/validation/Unicode/trùng, USER/ADMIN/guest/CSRF, bộ cha xóa mềm, nhãn/tệp/version, rollback JPA+JDBC, bảo toàn liên kết/avatar/S3 và hai PATCH đồng thời.
-- **HTTP ADMIN 06/10/2026:** đạt9/9 kiểm tra riêng (own CRUD4, foreign public404 cả4 API, xác nhận role1). [Evidence](../report/evidence/B1.9-http-ec263badc3c9.json). Quyền ADMIN thử đã thu hồi và logout. Chờ hạn mức hết tự nhiên, không sửa/xóa rate limit; không chạy lại B1.8 đã bỏ qua. Postman đã bàn giao theo ghi nhận bên dưới; B1.9 hoàn tất trong phạm vi BE, kiểm chứng và đồng bộ.
-- **Bàn giao:** báo cáo Đợt 1 mục5.39 và mục10 đối chiếu06/10; [luồng B1.9](../docs/luong-backend/B1.9-the-tu-vung.md). Postman thêm28 request cho5 API, collection108 request; cả hai environment thêm12 biến, giữ biến cũ. Đã khôi phục registry/export và [README](../postman/README.md). [Evidence đồng bộ](../report/evidence/B1.9-postman-sync-20261006.json), [HTTP mẫu5/5](../report/evidence/B1.9-http-edc71d632f85.json); chưa chạy script Postman/Newman mới. Không sửa FE/mockup.
+- **HTTP ADMIN 06/10/2026:** đạt9/9 kiểm tra riêng (own CRUD4, foreign public404 cả4 API, xác nhận role1). Evidence (không còn trong repo). Quyền ADMIN thử đã thu hồi và logout. Chờ hạn mức hết tự nhiên, không sửa/xóa rate limit; không chạy lại B1.8 đã bỏ qua. Postman đã bàn giao theo ghi nhận bên dưới; B1.9 hoàn tất trong phạm vi BE, kiểm chứng và đồng bộ.
+- **Bàn giao:** báo cáo Đợt 1 mục5.39 và mục10 đối chiếu06/10; [luồng B1.9](../docs/luong-backend/B1.9-the-tu-vung.md). Postman thêm28 request cho5 API, collection108 request; cả hai environment thêm12 biến, giữ biến cũ. Đã khôi phục registry/export và README (không còn trong repo). Evidence đồng bộ (không còn trong repo), HTTP mẫu5/5 (không còn trong repo); chưa chạy script Postman/Newman mới. Không sửa FE/mockup.
 - **Đối chiếu bổ sung06/10:** DTO/entity khớp V4; giữ4 API quản lý thẻ (không có GET riêng /cards/{id}), ownership cả bộ cha, cảnh báo trùng không chặn, PATCH thẻ tăng version kể cả no-op. Suite CRUD đã pass theo người dùng; HTTP ADMIN9/9 đã kiểm chứng; Postman đã đồng bộ, đủ đóng bước B1.9; quét trùng toàn bộ bộ là điểm tối ưu sau khi đo.
 
 ### [x] B1.10 Thư viện công khai — FR-04
@@ -263,21 +279,22 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Media guest: `GET /library/decks/{id}/cards/{cardId}/files/{role}` cho ANH/AM_TU/AM_CAU; kiểm tra bộ/thẻ/tệp/liên kết, không mở quyền endpoint files chung.
 - Hoàn tất08/10/2026: compile BE, FR04 Library/Media/Onboarding/Seed41/41 (19+11+2+9 trong lượt cuối), FE9/9, build thành công, lint0 error/3 warning. Newman BE8081 đạt28 request/79 assertion; Next3000 đạt28/79 ở lượt riêng. HTTP media6 kiểm tra và3 download/hash đạt. Không cộng các lượt riêng, không chạy lại HTTP6 B1.8.
 - FE thật: danh sách/chi tiết/link/media, URL filter/paging; onboarding lấy bộ mẫu từ mục tiêu/trình độ đã lưu. Seed dev8 bộ/24 thẻ tự biên soạn, đủ2×4; production không tự seed. Không kéo sao chép/admin sang B1.10.
-- Postman cloud thêm28 request, tổng136; giữ108 cũ và collection events. Hai environment52 biến, giữ45 cũ, thêm7 B1.10. [Runner/registry](../postman/README.md), [evidence](../report/evidence/B1.10-postman-sync-20261008.json).
-- [Luồng B1.10](../docs/luong-backend/B1.10-thu-vien-cong-khai.md), [báo cáo bàn giao hiện có](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>), [kiểm chứng tổng hợp](../report/evidence/B1.10-verification-20261008.json), [UI](../report/evidence/B1.10-ui-20261008.json).
+- Postman cloud thêm28 request, tổng136; giữ108 cũ và collection events. Hai environment52 biến, giữ45 cũ, thêm7 B1.10. Runner/registry (không còn trong repo), evidence (không còn trong repo).
+- [Luồng B1.10](../docs/luong-backend/B1.10-thu-vien-cong-khai.md), [báo cáo bàn giao hiện có](<../ban-giao-cho fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md>), kiểm chứng tổng hợp (không còn trong repo), UI (không còn trong repo).
 
 
 ### [x] B1.11 Sao chép bộ — FR-04, TC-03
 - API: `POST /decks/{id}/copy` với header `Idempotency-Key`.
 - Tạo bộ + thẻ mới, giữ `bo_nguon_id`; **không** sao chép tiến độ/lịch sử/điểm. Gửi lại cùng key → trả kết quả cũ.
+- **Sửa 03/11/2026 (RS-059):** copy bộ sao chép từng tệp thành `tep_tin` mới của người gọi (S3 CopyObject); `countCardReferences` chỉ đếm thẻ và bộ chưa xóa; snapshot cũ không có `soThe` được bù khi replay. Test `FR04DeckCopyTest.tc03_copyOwnsItsMediaSoAuthorCanDeleteSourceFile`, `tc03_copyResponseCountsCardsAndOldSnapshotsStillReplay`.
 - **Triển khai10/10:** V6 ghi key theo người dùng và snapshot DeckResponse; copy chỉ nguồn công khai bình thường chưa xóa, bộ mới riêng tư/không mẫu. Nhãn dùng liên kết mới, tệp dùng chung có kiểm tra quyền qua bộ đích. Gửi cùng key khác nguồn409; rollback toàn bộ khi tệp nguồn lỗi. FE nối API thật, giữ key khi retry/reload, mở và sửa/xóa thẻ bản sao; bố cục theo mockup.
-- **Kiểm chứng10/10:** compile BE đạt; lượt đầu73/73, lượt cuối riêng22/22 (B1.11 20 + onboarding2), hồi quy DTO bộ riêng11/11; không cộng các lượt. FE12/12/build đạt; lint phạm vi sửa0 lỗi, toàn frontend0 lỗi/14 cảnh báo ngoài phần sửa. Browser thật13 kiểm tra đạt: desktop1280/mobile390/360, copy/reload/retry sau mất phản hồi, sửa độc lập/media/nguồn riêng tư, empty/404/guest/reduced motion. [Evidence](../report/evidence/B1.11-verification-20261010.json).
+- **Kiểm chứng10/10:** compile BE đạt; lượt đầu73/73, lượt cuối riêng22/22 (B1.11 20 + onboarding2), hồi quy DTO bộ riêng11/11; không cộng các lượt. FE12/12/build đạt; lint phạm vi sửa0 lỗi, toàn frontend0 lỗi/14 cảnh báo ngoài phần sửa. Browser thật13 kiểm tra đạt: desktop1280/mobile390/360, copy/reload/retry sau mất phản hồi, sửa độc lập/media/nguồn riêng tư, empty/404/guest/reduced motion. Evidence (không còn trong repo).
 - **Bàn giao:** [luồng B1.11](../docs/luong-backend/B1.11-sao-chep-bo.md); báo cáo Đợt 1 hiện có. Không chạy HTTP6 B1.8 hoặc thay trạng thái các bước trước; CSV/quản trị thuộc bước riêng.
 
 ### [x] B1.12 Nhập/xuất CSV — FR-05, TC-04
 - API: `POST /decks/{id}/imports/preview` (lưu tạm kết quả trong Redis 30 phút), `POST /imports/{id}/commit`, `GET /decks/{id}/export`.
 - Giới hạn 1 MB / 1000 dòng; báo lỗi **từng dòng**; đánh dấu trùng; commit chỉ ghi dòng hợp lệ đã chọn. Export chống công thức (ô bắt đầu `= + - @` → thêm `'`).
-- Hoàn tất13/10/2026: owner-only; multipart/mapping, Redis30m, atomic selection, V7 idempotency/replay, RFC4180 UTF-8 BOM và guard công thức; FE/mockup thật đã nối. CSV35 test+handler3 pass; hồi quy ngoài CSV/handler193 test riêng; Newman25 HTTP (13 chính+12 CSRF)/31 assertion pass; browser7 nhóm pass. Giữ B1.8/HTTP6. [Luồng CSV](../docs/luong-backend/B1.12-csv.md), [bằng chứng](../verification/B1.12/browser.json), [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+- Hoàn tất13/10/2026: owner-only; multipart/mapping, Redis30m, atomic selection, V7 idempotency/replay, RFC4180 UTF-8 BOM và guard công thức; FE/mockup thật đã nối. CSV35 test+handler3 pass; hồi quy ngoài CSV/handler193 test riêng; Newman25 HTTP (13 chính+12 CSRF)/31 assertion pass; browser7 nhóm pass. Giữ B1.8/HTTP6. [Luồng CSV](../docs/luong-backend/B1.12-csv.md), bằng chứng (không còn trong repo), [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 - **Cuối Đợt 1 →** `/fe-report DOT1`.
 
 ---
@@ -289,6 +306,23 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `SrsCalculator` (class thuần, không Spring): nhận trạng thái cũ + mức (QUEN/KHO/NHO/DE) + `Instant now` → trạng thái mới, theo **đúng bảng TK §7.2** (EF 2.5, min 1.3, trần 365 ngày).
 - **Xong khi:** unit test chuỗi Nhớ: mới → 10 phút → 1 ngày → 6 ngày → 15 ngày; Quên ở ON_TAP → HOC_LAI, tăng số lần quên.
 - **Đã làm (16/10/2026):** `V8__learning.sql`, `SrsState`, `SrsCalculator` (phiên bản `SM2-VN-1`), `FR06SrsCalculatorTest` 28 test. Kiểm chứng: `./mvnw -q verify` thoát 0 (271 test tại thời điểm chạy, chưa chạy lại; số `@Test` trong mã nguồn khác tổng này vì có test tham số hóa; 0 lỗi) khi chạy với `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\Users\Public`; không có tùy chọn này, 181 test tích hợp lỗi do Netty loopback trên Windows. Không có API/HTTP/Postman ở bước này. Làm tròn HALF_UP và `now + N×24h` là **đề xuất**. Flow: [B2.1](../docs/luong-backend/B2.1-srs-calculator.md).
+
+- **Sửa lô 3 rà soát (03/11/2026):** các mã RS-005, RS-007, RS-008, RS-010, RS-031, RS-050, RS-058 cùng các test RS-009, RS-028–RS-030, RS-054, RS-055.
+  - `SrsCalculator` lên `SM2-VN-2`: Dễ ở chuỗi thành công 1 = round(6×1,3) = 8 ngày. Quy tắc này do người dùng chốt; đã sửa TK §7.2/§7.3 và srs-domain.
+  - `Clock.tickMillis` thay `Clock.systemUTC`.
+  - `SuDungHocNgayRepository.lockDay` (`PESSIMISTIC_WRITE`) dùng trong `ReviewService`. Trên code cũ, test hai tab ghi đồng thời cho `[201, 500]`.
+  - `PhienHocTheRepository.countAnswerable` cho `phienDangDo.soChuaTraLoi`.
+  - `PracticeGenerator.blankOf`: khớp nguyên từ kèm đuôi biến tố, che mọi lần xuất hiện. `PracticeService` có thông điệp riêng khi các thẻ chọn đều tạm ngưng.
+  - `NguoiDungRepository.recordLogin` (UPDATE trực tiếp, không tăng `version`).
+  - Test mới:
+    - `FR06SrsCalculatorTest`: 5 ca chuỗi 1, làm tròn HALF_UP, phiên bản.
+    - `FR06ReviewTest`: độ chính xác mili giây, 2 ca đồng thời.
+    - `FR06DashboardTest`: `soChuaTraLoi` bỏ thẻ xóa/tạm ngưng, dự báo bỏ bộ đã xóa.
+    - `PracticeGeneratorTest` (3).
+    - `FR07PracticeSessionTest`: không lộ đáp án ở mọi dạng.
+    - `FR04DeckCopyTest`: không sao chép tiến độ/lịch sử.
+    - `FR02SettingsTest`: `chuDeIds`.
+  - **Kiểm chứng:** `./mvnw -B test` 357 test, 0 lỗi, BUILD SUCCESS. **Chưa kiểm chứng:** Postman, HTTP thật.
 
 ### [x] B2.2 Kế hoạch hôm nay — FR-02, FR-06, TC-09
 - API: `GET /learning/today` (cần đăng nhập): `ngay`, `soQuaHan`, `soDenHan`, `soTheMoiDaHoc`, `tuMoiMoiNgay`, `soMoiConLai`, `giayMoiLuot`, `uocTinhPhut`, `phutMoiNgay`, `chuoiNgay`, `homNayDaTinhChuoi`, `luotToiThieuChuoi`, `daHocHomNay{soLuot,soPhut}`, `tongSoThe`, `boThe[{boTheId,ten,soCanOn,soMoi}]`.
@@ -305,7 +339,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Hàng đợi tối đa `quyThoiGian×60/20` thẻ (20 giây/lượt là ước tính): bước học lại đến hạn → ôn đến hạn (`han_on_at <= now`) → thẻ mới thật trong hạn mức → thẻ đã học chiều kia (không tốn hạn mức). Bỏ thẻ tạm ngưng/đã xóa/bộ không thuộc người dùng. Lưu vào `phien_hoc_the`; `mui_gio` = múi giờ người dùng lúc tạo.
 - Hàng đợi rỗng → 422 `BUSINESS_RULE`, không lưu phiên. B2.3 không trừ hạn mức (B2.4 làm). Response: `hetGioAt` (tính ra, không lưu), `hangDoi[].trangThai` (`CHUA_TRA_LOI`/`DA_TRA_LOI`), `hangDoi[].the` (media là ID tệp `anhId`/`amTuId`/`amCauId`), `hangDoi[].tienDo` (kèm `version`). Chưa có `duKien`.
 - **Xong khi:** test hàng đợi đúng thứ tự và giới hạn, hạn mức không nhân đôi hai chiều, thẻ/bộ xóa và tạm ngưng, người khác → 404, rỗng → 422, `GET` đúng chủ.
-- **Đã làm (26/10/2026):** `PhienHoc`, `PhienHocThe`, `TienDoThe` (map đủ cột + `@Version`), `PhienHocRepository`, `PhienHocTheRepository`, 4 query mới ở `TienDoTheRepository`, `TheTuVungRepository.findOwnedActive`, `CardService.studyCards`, `StudyCardResponse`, `CreateSessionRequest`, `StudySessionResponse`, `StudyQueueItemResponse`, `TienDoResponse`, `StudySessionService`, `LearningController`; migration `V9` đã có từ commit B2.2. Chiều còn lại không tốn hạn mức, nhiều phiên cùng lúc và 20 giây/lượt là **đề xuất**. **Kiểm chứng:** ngày 26/10/2026 chạy `FR06StudySessionTest` 8/8 pass cùng `FR06TodayPlanTest`, `StreakCalculatorTest`, `FR06SrsCalculatorTest` (40 test, BUILD SUCCESS). **Chưa kiểm chứng:** bộ test đầy đủ, gọi HTTP thật bằng `curl`, chạy request Postman. Flow: [B2.3](../docs/luong-backend/B2.3-tao-phien-hoc.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+- **Đã làm (26/10/2026):** `PhienHoc`, `PhienHocThe`, `TienDoThe` (map đủ cột + `@Version`), `PhienHocRepository`, `PhienHocTheRepository`, 4 query mới ở `TienDoTheRepository`, `TheTuVungRepository.findOwnedActive`, `CardService.studyCards`, `StudyCardResponse`, `CreateSessionRequest`, `StudySessionResponse`, `StudyQueueItemResponse`, `TienDoResponse`, `StudySessionService`, `LearningController`; migration `V9` đã có từ commit B2.2. Chiều còn lại không tốn hạn mức, nhiều phiên cùng lúc và 20 giây/lượt là **đề xuất**. **Kiểm chứng:** ngày 26/10/2026 chạy `FR06StudySessionTest` 8/8 pass cùng `FR06TodayPlanTest`, `StreakCalculatorTest`, `FR06SrsCalculatorTest` (48 test = 8 + 6 + 6 + 28, BUILD SUCCESS; trước ghi nhầm 40, sửa 03/11/2026). **Chưa kiểm chứng:** bộ test đầy đủ, gọi HTTP thật bằng `curl`, chạy request Postman. Flow: [B2.3](../docs/luong-backend/B2.3-tao-phien-hoc.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [x] B2.4 Ghi kết quả ôn — FR-06, TC-05, TC-08, TC-09
 - API: `POST /learning/sessions/{id}/reviews` body `{clientEventId, theId, chieuHoc, danhGia, expectedVersion, thoiGianTraLoiMs}` (TK §13.3; `danhGia` là `QUEN`/`KHO`/`NHO`/`DE`, `chieuHoc` là `EN_VI`/`VI_EN`).
@@ -315,7 +349,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Thẻ học lại trong phiên: **đã chốt (20/10/2026) tái dùng dòng cũ, không migration**. Sau khi ghi kết quả, nếu thẻ còn bước học lại/học trong phiên (`han_on_at <= hetGioAt`) thì đặt dòng `phien_hoc_the` về `CHUA_TRA_LOI` và `thu_tu = max(thu_tu) + 1` (cuối hàng đợi); ngược lại đặt `DA_TRA_LOI`. Giữ nguyên unique `(phien_id, the_id, chieu_hoc)` và `(phien_id, thu_tu)` của V8. Lịch sử từng lượt nằm ở `lich_su_on`, nên dòng hàng đợi chỉ là trạng thái hiện tại. Thêm `duKien` (xem trước lịch 4 mức, tính bằng `SrsCalculator`) vào response phiên khi F2.2 cần.
 - Thẻ chưa có hàng `tien_do_the` có `version` 0 ở response B2.3; tạo hàng khi `expectedVersion=0` và chưa có hàng (unique `(nguoi_dung_id, the_id, chieu_hoc)` chặn hai tab).
 - **Xong khi:** `FR06ReviewTest` (TC-05 hai chiều độc lập, TC-08 replay và hai tab version cũ, TC-09 hạn mức khi ghi và ngày theo múi giờ phiên, thẻ học lại xuống cuối hàng đợi, người khác/sai chiều/ngoài hàng đợi/đã trả lời/thẻ xóa/tạm ngưng/phiên kết thúc, 400 và 401) pass.
-- **Đã làm (26/10/2026):** `ReviewService`, `ReviewRequest`, `ReviewResponse`, `LichSuOn` (entity chỉ đọc, JSON ghi bằng native SQL), `LichSuOnRepository`, `ReviewEventRow`; sửa `TienDoThe` (`create`, `toState`, `apply`), `PhienHocThe` (`markAnswered`, `requeue`), `SuDungHocNgay` (`record`), `PhienHocRepository.lockOwned` (khóa dòng phiên), `PhienHocTheRepository`, `TienDoTheRepository`, `SuDungHocNgayRepository.ensureRow`, `CardService.isStudyable`, `LearningController`; không migration. Quyết định **đề xuất**: mọi lượt mới ghi thành công tính hợp lệ, cắt `thoiGianTraLoiMs` ở 120000, phiên kết thúc → 409, vẫn nhận lượt sau `hetGioAt`, ngày theo `phien_hoc.mui_gio`, chưa có `duKien`. **Kiểm chứng:** người dùng báo đã chạy xong `FR06ReviewTest` ngày 26/10/2026 (không đính kèm log hay số lượng test). **Chưa kiểm chứng:** bộ test đầy đủ, gọi HTTP thật bằng `curl`, chạy request Postman, mở mockup trên trình duyệt. Flow: [B2.4](../docs/luong-backend/B2.4-ghi-ket-qua-on.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+- **Đã làm (26/10/2026):** `ReviewService`, `ReviewRequest`, `ReviewResponse`, `LichSuOn` (entity chỉ đọc, JSON ghi bằng native SQL), `LichSuOnRepository`, `ReviewEventRow`; sửa `TienDoThe` (`create`, `toState`, `apply`), `PhienHocThe` (`markAnswered`, `requeue`), `SuDungHocNgay` (`record`), `PhienHocRepository.lockOwned` (khóa dòng phiên), `PhienHocTheRepository`, `TienDoTheRepository`, `SuDungHocNgayRepository.ensureRow`, `CardService.isStudyable`, `LearningController`; không migration. Quyết định **đề xuất**: mọi lượt mới ghi thành công tính hợp lệ, cắt `thoiGianTraLoiMs` ở 120000, phiên kết thúc → 409, vẫn nhận lượt sau `hetGioAt`, ngày theo `phien_hoc.mui_gio`, chưa có `duKien`. **Kiểm chứng:** người dùng báo đã chạy xong `FR06ReviewTest` ngày 26/10/2026 (không đính kèm log hay số lượng test). Có log sau đó: pass trong lượt `FR06*Test` 79 test ngày 31/10/2026 và 12/12 trong bộ đầy đủ 363/363 ngày 03/11/2026 (RS-025). **Chưa kiểm chứng:** bộ test đầy đủ, gọi HTTP thật bằng `curl`, chạy request Postman, mở mockup trên trình duyệt. Flow: [B2.4](../docs/luong-backend/B2.4-ghi-ket-qua-on.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [x] B2.5 Kết thúc phiên, lịch sử, tạm ngưng/đặt lại — FR-06
 - API: `POST /learning/sessions/{id}/finish` (tổng kết khớp lịch sử), `GET /learning/history`, `GET /decks/{id}/progress` (UI21: `tongHop` theo `MOI/DANG_HOC/DEN_HAN/QUA_HAN/TAM_NGUNG`, danh sách thẻ kèm tiến độ từng chiều, phân trang; nhóm quá hạn/đến hạn theo cùng quy tắc ngày địa phương của B2.2), `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (cần xác nhận).
@@ -352,9 +386,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Xong khi:** `FR07PracticeSessionTest` pass (TC-11 sửa/xóa thẻ không đổi đề, không lộ đáp án, các loại câu, nguồn, 400/404/422/401).
 - **Đã làm (31/10/2026):** `V11__practice.sql` (7 bảng); module `practice`: `BaiLuyen`, `CauHoiBaiLuyen`, enum `LoaiBai`, `LoaiCau`, `NguonBaiLuyen`, `BaiLuyenRepository`, `CauHoiBaiLuyenRepository`, `CreatePracticeRequest`, `PracticeSessionResponse`, `PracticeQuestionResponse`, `PracticeGenerator`, `PracticeService`, `PracticeController`; sửa nền `TimeConfig` cắt thời điểm auditing về mili giây (cùng lỗi `ketThucAt` B2.5). **Kiểm chứng:** `mvnw test -Dtest='FR07*Test,FR06*Test,RescuePlanTest,StreakCalculatorTest,FR03*Test,FR04*Test'` 220 test, 0 lỗi, BUILD SUCCESS (31/10), gồm `FR07PracticeSessionTest` 4/4. **Chưa kiểm chứng:** bộ test đầy đủ, HTTP thật, chạy Postman. Mockup: `demo.js` trả `createdAt`, `NGHE_VIET` trả `deBai.amTuId` (demo không có tệp thì dùng `demo-audio://` + giọng đọc); `luyen-tap-lam-bai.html` phát tệp theo `amTuId`; mở trang trên trình duyệt 31/10 với bài nghe viết, bấm "Nghe chậm" không lỗi console. Demo vẫn còn `daNop`, `ketQua`, `laLuyenLai` (B2.8). Postman: thêm 4 request vào "04 Luyện tập" (tạo, xem, 400 `soCau`, 404), chưa chạy. Flow: [B2.7](../docs/luong-backend/B2.7-tao-bai-luyen.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
-### [ ] B2.8 Nộp bài & chấm — FR-07, TC-11
+### [x] B2.8 Nộp bài & chấm — FR-07, TC-11
 - API: `POST /practice/sessions/{id}/submissions` (`submitKey` chống trùng), `GET /practice/history`, `POST /practice/mistakes/retry`.
 - `AnswerNormalizer` (Unicode NFC, khoảng trắng, hoa/thường theo dạng bài); chấm tại server theo bản chụp; lưu `loi_hoc_tap` với nhóm lỗi (NGHIA, CHINH_TA, NGHE, CAP_NHAM…).
+- Thời gian bài luyện đã nộp cộng vào `StudyTimeService` (TK §7.3, RS-011), không tính riêng ở `/learning/today` hay `/statistics`.
+- **Quyết định (chốt 03/11/2026, đề xuất):** (a) `submitKey` bắt buộc ≤ 128 `[A-Za-z0-9._:-]`, cùng khóa + cùng bài → 200 kết quả cũ, khác → 409 không kèm `lanLamId`; (b) bỏ trống = sai, `cauHoiId` lạ/trùng → 400, `noiDung` ≤ 200; (c) chuẩn hóa NFC, nháy, gạch nối, khoảng trắng Unicode, chữ thường, giữ dấu câu; (d) gần đúng theo độ dài (1/2/3), OSA; (e) ghép điểm phần, điểm bài từ phân số gốc; (f) upsert `cap_tu_de_nham` nguyên tử, sắp thứ tự; (g) `loi_hoc_tap` `BAI_LUYEN`, ghép một dòng mỗi cặp sai, câu bỏ trống có ghi; (h) field `thoiGian`, cắt theo giờ server, cộng vào `StudyTimeService`; (i) `LoaiCau.kyNang()`; (j) lịch sử lọc `loaiBai`/`tuNgay`/`denNgay`, mặc định 20; (k) luyện lại kế thừa nguồn/bộ/số câu yêu cầu; (l) không ghi `so_tay_tu_kho` (B2.9); (m) không migration; (n) lưu kết quả chấm, không chấm lại; (o) thứ tự 400 → 404 → gửi lại → 409 → 400; (p) không thưởng; (q) trả `baiGocId`.
+- **Đã làm (03/11/2026):** entity `LanLamBai`, `TraLoiBaiLuyen`, `LoiHocTap`; enum `NhomLoi`, `KyNang`, `NguonSuKien`, `LoaiCau.kyNang()`; `BaiLuyen.createRetry`; `LanLamBaiRepository` (lịch sử, `studyTimes`), `TraLoiBaiLuyenRepository`, `LoiHocTapRepository`, `BaiLuyenRepository.lockOwned`/`addConfusion`; DTO `SubmitPracticeRequest`, `PracticeAnswerRequest`, `PracticePairRequest`, `PracticeResultResponse`, `PracticeResultItemResponse`, `SkillScoreResponse`, `PracticeHistoryQuery`, `PracticeHistoryResponse`, `RetryPracticeRequest`, `PracticeSessionResponse` thêm 5 field; `AnswerNormalizer`, `PracticeGrader`, `PracticeResults`, `PracticeSubmissionService`, `PracticeHistoryService`, `PracticeService.retry`, `PracticeGenerator.retry`; `StudyTimeService` cộng thời gian bài luyện; `GlobalExceptionHandler` map `uk_lan_lam_bai_*` → 409; test mới `FR07SubmissionTest` (4), `PracticeGraderTest` (11), `AnswerNormalizerTest` (4); 3 test FR06 dùng bean `StudyTimeService`. Không migration. **Kiểm chứng:** `./mvnw -B test` 382/382, BUILD SUCCESS (03/11). **Chưa kiểm chứng:** HTTP thật, chạy Postman. Mockup: `demo.js` + `luyen-tap-lam-bai/ket-qua/lich-su.html` khớp DTO, mở trên trình duyệt, console không lỗi. Postman: thêm 10 request vào "04 Luyện tập", chưa chạy. Tài liệu: TK §7.3, §12.2, §13.2; `SPRINT_PLAN` route UI26. Flow: [B2.8](../docs/luong-backend/B2.8-nop-bai-cham.md); bàn giao: [Đợt 2 §5.9](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [ ] B2.9 Sổ tay từ khó & cặp dễ nhầm — FR-08
 - API: `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs`.
@@ -362,10 +399,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B2.10 Thống kê nền — FR-11
 - API: `GET /statistics/overview` (từ đã học, lượt ôn, tỷ lệ đúng, thời gian, chuỗi ngày), `GET /statistics/skills` (mức làm chủ theo kỹ năng, tối đa 20 lượt gần nhất, thiếu dữ liệu → "Chưa đủ dữ liệu").
 - Tính từ `lich_su_on`, `tra_loi_bai_luyen` bằng truy vấn tổng hợp; lọc ngày theo múi giờ User.
-- Phút mỗi ngày dùng cùng nguồn và cách làm tròn với `/learning/today` (`LichSuOnRepository.studyTime`, `floor(ms/60000)`, xem B2.12). **Xong khi** có thêm: `theoNgay` hôm nay khớp `daHocHomNay.soPhut` của `/learning/today` (chuyển từ B2.12). Bảng điều khiển UI12 (TK §9.1) gọi `overview` với `tuNgay = ngay − 6`, `denNgay = ngay` cho khối hoạt động 7 ngày: `theoNgay` phải đủ mọi ngày trong khoảng (ngày không học = 0), mỗi phần tử có `ngay`, `soLuotOn`, `soPhut`. Thời gian học theo ngày dùng chung một hàm với `/learning/today` (TK §7.3, **đề xuất**), để hai màn hình không lệch số.
+- Phút mỗi ngày dùng cùng nguồn và cách làm tròn với `/learning/today` (`StudyTimeService.days`, `floor(ms/60000)`, xem B2.12; tách 03/11/2026, RS-011). **Xong khi** có thêm: `theoNgay` hôm nay khớp `daHocHomNay.soPhut` của `/learning/today` (chuyển từ B2.12). Bảng điều khiển UI12 (TK §9.1) gọi `overview` với `tuNgay = ngay − 6`, `denNgay = ngay` cho khối hoạt động 7 ngày: `theoNgay` phải đủ mọi ngày trong khoảng (ngày không học = 0), mỗi phần tử có `ngay`, `soLuotOn`, `soPhut`. Thời gian học theo ngày dùng chung một hàm với `/learning/today` (TK §7.3, **đề xuất**), để hai màn hình không lệch số.
 
 ### [ ] B2.11 Quản trị nền — FR-13, TC-17
-- `V12__admin.sql` (hoặc số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
+- `V13__admin.sql` (V12 đã dùng cho RS-057; lấy số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
 - API: `GET /admin/users`, `PATCH /admin/users/{id}/status` (khóa/mở → hủy phiên), `PUT /admin/users/{id}/roles` (**không bỏ quyền Admin cuối cùng**), CRUD `/admin/decks`, `/admin/cards` (bộ mẫu: xuất bản/ẩn), `GET /admin/audit-logs`.
 - Mọi thao tác quan trọng ghi nhật ký: người làm, hành động, đối tượng, lý do, trước/sau (đã lọc dữ liệu nhạy cảm).
 
@@ -381,6 +418,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Mockup: `mockups/dot2/hom-nay.html` và `mockups/shared/demo.js` đã có các khối và field trên (28/10/2026, trước khi code BE).
 - **Xong khi:** `FR06DashboardTest` (hoặc thêm vào `FR06TodayPlanTest`) pass: `phienDangDo` là `null` khi không có phiên, phiên đã `KET_THUC` hoặc phiên bắt đầu hôm qua; chọn phiên mới nhất; đếm đúng đã trả lời/còn lại; không lộ phiên của người khác. `duBaoOn` có đủ 7 ngày, đúng ranh giới nửa đêm theo múi giờ (TC-09), loại thẻ xóa/tạm ngưng, ngày rỗng bằng 0. `thoiGian` bằng tổng `lich_su_on.thoi_gian` hôm nay, `soPhut` làm tròn xuống (phần khớp `theoNgay` của `/statistics/overview` chuyển sang B2.10).
 - **Đã làm (31/10/2026):** `PhienDangDoResponse`, `DuBaoNgayResponse` (mới); `DaHocHomNayResponse.thoiGian`; `TodayPlanResponse.phienDangDo`/`duBaoOn` sau `cuuLichOn`; `LearningPlanService.openSession`/`forecast` và `soPhut = floor(thoiGian/60000)`; `PhienHocRepository.findFirstByNguoiDungIdAndTrangThaiAndBatDauAtGreaterThanEqualOrderByBatDauAtDescIdDesc`; `TienDoTheRepository.dueTimes`; `LichSuOnRepository.studyTime`; `StudySessionService.TAT_CA_BO` package-private; test mới `FR06DashboardTest` (3); sửa `FR06TodayPlanTest` (constructor, `soPhut` 2 → 0) và `FR06RescuePlanTest` (constructor). Không migration. Gom `duBaoOn` theo ngày bằng Java (không `CONVERT_TZ`). **Kiểm chứng:** `mvnw -q test -Dtest='FR06*Test,RescuePlanTest,StreakCalculatorTest'` exit 0 (31/10), không đọc được báo cáo surefire nên không có tổng số test. **Chưa kiểm chứng:** bộ test đầy đủ, gọi HTTP thật bằng `curl`, chạy request Postman. Mockup `hom-nay.html?as=an` mở lại 31/10: response demo có đủ field cùng tên với DTO, khối "Phiên đang dở" hiện, console không lỗi; demo `studyMsOf` có cộng thời gian bài luyện (BE chưa, chờ B2.8). Postman: request "Kế hoạch hôm nay (B2.2 · B2.12 · FR-06)" cập nhật description và test (`phienDangDo`, `duBaoOn` 7 ngày, `soPhut = floor(thoiGian/60000)`), chưa chạy. Flow: [B2.12](../docs/luong-backend/B2.12-bang-dieu-khien.md); bàn giao: [Đợt 2](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
+- **Sửa 03/11/2026 (RS-011):** tách `StudyTimeService.day/days` (gom `lich_su_on` theo ngày địa phương bằng Java, ngày trống = 0); `today()` dùng `day`; thay `LichSuOnRepository.studyTime` bằng `studyTimes`. Test: `FR06DashboardTest.fr06_studyTimeDaysFillsEveryDayAndMatchesToday`, `fr06_studyTimeDayFollowsDaylightSavingBoundaries`.
 - **Cuối Đợt 2 →** `/fe-report DOT2`.
 
 ---
@@ -388,7 +426,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 3 — AI, phát âm, động lực & vận hành (09/11–29/11) · FR-08, 09, 10, 12, 14
 
 ### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
-- `V13__jobs_ai.sql` (V8 là learning; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
+- `V14__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 dự kiến cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
 
@@ -428,6 +466,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
 - `V17__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
+- Tệp: từ 03/11/2026 (RS-059) bản sao bộ có tệp riêng nên xóa tệp của tác giả không ảnh hưởng bản sao. Còn phải xử lý bản sao tạo trước ngày này (dùng chung `tep_id` với nguồn): sao chép tệp cho bản sao trước khi xóa, hoặc gỡ media khỏi bản sao.
 - Admin: `GET /admin/deletion-requests` theo dõi tiến độ xóa (TK §4.2).
 
 ### [ ] B3.11 Quản trị vận hành — FR-13

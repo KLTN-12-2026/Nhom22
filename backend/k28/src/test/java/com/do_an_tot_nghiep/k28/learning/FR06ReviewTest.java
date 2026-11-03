@@ -13,11 +13,18 @@ import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -122,6 +129,74 @@ class FR06ReviewTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.tienDo.trangThai").value("ON_TAP"))
                 .andExpect(jsonPath("$.tienDo.khoangOnNgay").value(1))
                 .andExpect(jsonPath("$.tienDo.version").value(2));
+    }
+
+    @Test
+    void fr06_reviewResponseMatchesStoredProgressToTheMillisecond() throws Exception {
+        Learner learner = learner();
+        long card = card(learner, "word");
+        String session = createSession(learner, "EN_VI");
+
+        String reviewed = review(learner, session, "evt-" + uuid(), card, "EN_VI", "DE", 0)
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String stored = mockMvc.perform(get("/api/v1/learning/sessions/" + session).cookie(learner.session()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        String hanOnAt = jsonMapper.readTree(reviewed).at("/tienDo/hanOnAt").asText();
+        assertThat(jsonMapper.readTree(stored).at("/hangDoi/0/tienDo/hanOnAt").asText()).isEqualTo(hanOnAt);
+        assertThat(Instant.parse(hanOnAt).getNano() % 1_000_000).isZero();
+    }
+
+    @Test
+    void tc08_concurrentReviewsOfDifferentCardsInTwoTabsBothSucceed() throws Exception {
+        Learner learner = learner();
+        long first = card(learner, "first");
+        long second = card(learner, "second");
+        String tabA = createSession(learner, "EN_VI");
+        String tabB = createSession(learner, "EN_VI");
+
+        List<Integer> statuses = concurrently(
+                () -> review(learner, tabA, "evt-" + uuid(), first, "EN_VI", "NHO", 0),
+                () -> review(learner, tabB, "evt-" + uuid(), second, "EN_VI", "NHO", 0));
+
+        assertThat(statuses).containsExactly(201, 201);
+        assertThat(usageSum(learner, "so_luot_hop_le")).isEqualTo(2);
+        assertThat(usageSum(learner, "so_the_moi")).isEqualTo(2);
+    }
+
+    @Test
+    void tc08_concurrentFirstReviewOfSameCardGivesOneConflictNotServerError() throws Exception {
+        Learner learner = learner();
+        long card = card(learner, "same");
+        String tabA = createSession(learner, "EN_VI");
+        String tabB = createSession(learner, "EN_VI");
+
+        List<Integer> statuses = concurrently(
+                () -> review(learner, tabA, "evt-" + uuid(), card, "EN_VI", "NHO", 0),
+                () -> review(learner, tabB, "evt-" + uuid(), card, "EN_VI", "DE", 0));
+
+        assertThat(statuses).containsExactlyInAnyOrder(201, 409);
+        assertThat(count("lich_su_on", learner)).isEqualTo(1);
+        assertThat(usageSum(learner, "so_the_moi")).isEqualTo(1);
+    }
+
+    private List<Integer> concurrently(Callable<ResultActions> a, Callable<ResultActions> b) throws Exception {
+        CountDownLatch start = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            List<Future<Integer>> results = new ArrayList<>();
+            for (Callable<ResultActions> call : List.of(a, b)) {
+                results.add(executor.submit(() -> {
+                    start.await();
+                    return call.call().andReturn().getResponse().getStatus();
+                }));
+            }
+            start.countDown();
+            List<Integer> statuses = new ArrayList<>();
+            for (Future<Integer> result : results) {
+                statuses.add(result.get());
+            }
+            return statuses;
+        }
     }
 
     @Test

@@ -23,7 +23,7 @@ public class TepTin extends BaseEntity {
 
     @Column(nullable = false, updatable = false)
     private Long chuSoHuuId;
-    @Column(nullable = false, updatable = false, length = 200)
+    @Column(nullable = false, length = 200)
     private String objectKey;
     @Column(nullable = false, length = 50)
     private String mimeType;
@@ -62,6 +62,12 @@ public class TepTin extends BaseEntity {
         file.checksum = checksum;
         file.loai = loai;
         file.trangThaiXoa = TrangThaiXoaTep.CON_HIEU_LUC;
+        return file;
+    }
+
+    public static TepTin copyOf(TepTin source, Long chuSoHuuId, String objectKey, Instant now) {
+        TepTin file = pending(chuSoHuuId, objectKey, source.mimeType, source.kichThuoc, source.checksum, source.loai);
+        file.hoanTatAt = now;
         return file;
     }
 

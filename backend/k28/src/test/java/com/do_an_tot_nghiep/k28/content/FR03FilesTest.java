@@ -130,7 +130,7 @@ class FR03FilesTest extends AbstractIntegrationTest {
                                 "checksum", "0".repeat(64)))))
                 .andExpect(status().isUnprocessableContent());
         var request = request(new byte[1], "ANH", "image/png", "0".repeat(64));
-        upload(request, new byte[2097153], "image/png");
+        assertThat(uploadStatus(request, new byte[2097153], "image/png")).isGreaterThanOrEqualTo(400);
         complete(request.fileId(), 422);
     }
 
@@ -155,10 +155,44 @@ class FR03FilesTest extends AbstractIntegrationTest {
         var request = request(png, "ANH", "image/png", sha(png));
         upload(request, png, "image/png");
         String response = complete(request.fileId(), 200);
-        upload(request, new byte[]{1, 2, 3}, "image/png");
+        upload(request, new byte[png.length], "image/png");
         String repeated = complete(request.fileId(), 200);
         assertThat(download(jsonMapper.readTree(response).get("downloadUrl").asText())).isEqualTo(png);
         assertThat(jsonMapper.readTree(repeated).get("checksum").asText()).isEqualTo(sha(png));
+    }
+
+    @Test
+    void fr03_completePersistsVerifiedKeyAndOldSignedPutCannotChangeServedContent() throws Exception {
+        byte[] png = FileFixtures.image("png");
+        var request = request(png, "ANH", "image/png", sha(png));
+        upload(request, png, "image/png");
+        complete(request.fileId(), 200);
+        String stored = jdbc.queryForObject("select object_key from tep_tin where id = ?", String.class,
+                Long.valueOf(request.fileId()));
+        assertThat(stored).startsWith("files/" + userId + "/");
+        upload(request, new byte[png.length], "image/png");
+        String served = mockMvc.perform(get("/api/v1/files/" + request.fileId()).cookie(session))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(download(jsonMapper.readTree(served).get("downloadUrl").asText())).isEqualTo(png);
+        assertThat(jsonMapper.readTree(complete(request.fileId(), 200)).get("downloadUrl").asText())
+                .doesNotContain("pending/");
+    }
+
+    @Test
+    void fr03_cleanupKeepsVerifiedObjectAndRemovesPendingUpload() throws Exception {
+        byte[] png = FileFixtures.image("png");
+        var request = request(png, "ANH", "image/png", sha(png));
+        upload(request, png, "image/png");
+        Long id = Long.valueOf(request.fileId());
+        String pendingKey = files.findById(id).orElseThrow().getObjectKey();
+        complete(request.fileId(), 200);
+        String verifiedKey = files.findById(id).orElseThrow().getObjectKey();
+        assertThat(verifiedKey).isNotEqualTo(pendingKey).startsWith("files/");
+        var later = java.time.Clock.offset(java.time.Clock.systemUTC(), java.time.Duration.ofDays(3));
+        new FileCleanupWorker(files, storage, s3Properties, later).cleanup();
+        assertThat(storage.head(verifiedKey)).isPresent();
+        assertThat(storage.head(pendingKey)).isEmpty();
+        mockMvc.perform(get("/api/v1/files/" + request.fileId()).cookie(session)).andExpect(status().isOk());
     }
 
     @Test
@@ -173,6 +207,9 @@ class FR03FilesTest extends AbstractIntegrationTest {
             assertThat(download(first.get().downloadUrl())).isEqualTo(png);
             assertThat(download(second.get().downloadUrl())).isEqualTo(png);
         }
+        String stored = files.findById(Long.valueOf(request.fileId())).orElseThrow().getObjectKey();
+        assertThat(stored).startsWith("files/");
+        assertThat(storage.head(stored)).isPresent();
     }
 
     @Test
@@ -308,10 +345,13 @@ class FR03FilesTest extends AbstractIntegrationTest {
     }
 
     private void upload(UploadRequestResponse request, byte[] bytes, String mime) throws Exception {
-        var response = http.send(HttpRequest.newBuilder(URI.create(request.uploadUrl()))
+        assertThat(uploadStatus(request, bytes, mime)).isEqualTo(200);
+    }
+
+    private int uploadStatus(UploadRequestResponse request, byte[] bytes, String mime) throws Exception {
+        return http.send(HttpRequest.newBuilder(URI.create(request.uploadUrl()))
                 .header("Content-Type", mime).PUT(HttpRequest.BodyPublishers.ofByteArray(bytes)).build(),
-                HttpResponse.BodyHandlers.discarding());
-        assertThat(response.statusCode()).isEqualTo(200);
+                HttpResponse.BodyHandlers.discarding()).statusCode();
     }
 
     private String complete(String id, int expected) throws Exception {

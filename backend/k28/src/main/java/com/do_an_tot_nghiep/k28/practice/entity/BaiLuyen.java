@@ -63,4 +63,11 @@ public class BaiLuyen extends BaseEntity {
         practice.soCauYeuCau = soCauYeuCau;
         return practice;
     }
+
+    public static BaiLuyen createRetry(BaiLuyen goc, LoaiBai loaiBai) {
+        BaiLuyen practice = create(goc.nguoiDungId, loaiBai, goc.boTheId, goc.nguon, goc.soCauYeuCau);
+        practice.laLuyenLai = true;
+        practice.baiGocId = goc.id;
+        return practice;
+    }
 }

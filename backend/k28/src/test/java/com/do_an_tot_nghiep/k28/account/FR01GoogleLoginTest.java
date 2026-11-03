@@ -56,7 +56,9 @@ class FR01GoogleLoginTest extends AbstractIntegrationTest {
                 .andExpect(header().string("Location", allOf(
                         startsWith("https://accounts.google.com/o/oauth2/v2/auth"),
                         containsString("/api/v1/auth/google/callback"),
-                        containsString("state="))));
+                        containsString("state="),
+                        containsString("code_challenge="),
+                        containsString("code_challenge_method=S256"))));
     }
 
     @Test

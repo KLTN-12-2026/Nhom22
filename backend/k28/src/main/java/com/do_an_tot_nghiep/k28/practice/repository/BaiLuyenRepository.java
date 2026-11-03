@@ -2,15 +2,45 @@ package com.do_an_tot_nghiep.k28.practice.repository;
 
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import com.do_an_tot_nghiep.k28.practice.entity.BaiLuyen;
+import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BaiLuyenRepository extends JpaRepository<BaiLuyen, Long> {
 
     Optional<BaiLuyen> findByIdAndNguoiDungId(Long id, Long nguoiDungId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select b
+            from BaiLuyen b
+            where b.id = :id
+              and b.nguoiDungId = :userId
+            """)
+    Optional<BaiLuyen> lockOwned(@Param("id") Long id, @Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = """
+            insert into cap_tu_de_nham
+                (nguoi_dung_id, the_1_id, the_2_id, so_lan_nham, lan_cuoi_at, created_at, updated_at)
+            values (:userId, :the1Id, :the2Id, 1, :at, :at, :at)
+            on duplicate key update
+                so_lan_nham = so_lan_nham + 1,
+                lan_cuoi_at = :at,
+                updated_at = :at
+            """, nativeQuery = true)
+    void addConfusion(
+            @Param("userId") Long userId,
+            @Param("the1Id") Long the1Id,
+            @Param("the2Id") Long the2Id,
+            @Param("at") Instant at
+    );
 
     @Query("""
             select c.id

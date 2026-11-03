@@ -13,9 +13,13 @@ import com.do_an_tot_nghiep.k28.content.mapper.DeckMapper;
 import com.do_an_tot_nghiep.k28.content.repository.BoTheRepository;
 import com.do_an_tot_nghiep.k28.content.repository.ChuDeRepository;
 import com.do_an_tot_nghiep.k28.content.repository.DeckFavoriteRepository;
+import com.do_an_tot_nghiep.k28.content.repository.TheTuVungRepository;
 import java.time.Clock;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,10 +34,11 @@ public class DeckService {
     private final BoTheRepository decks;
     private final ChuDeRepository topics;
     private final DeckFavoriteRepository favorites;
+    private final TheTuVungRepository cards;
     private final DeckMapper mapper;
     private final Clock clock;
 
-    public PageResponse<DeckResponse> list(Long userId, int page, int size) {
+    public PageResponse<DeckResponse> list(Long userId, boolean yeuThich, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ApiException(
                     ErrorCode.VALIDATION_FAILED,
@@ -41,18 +46,22 @@ public class DeckService {
             );
         }
 
-        Page<BoThe> result =
-                decks.findByChuSoHuuIdAndXoaAtIsNullOrderByCreatedAtDescIdDesc(
+        Page<BoThe> result = yeuThich
+                ? decks.findFavorites(userId, PageRequest.of(page, size))
+                : decks.findByChuSoHuuIdAndXoaAtIsNullOrderByCreatedAtDescIdDesc(
                         userId, PageRequest.of(page, size)
                 );
-        Set<Long> favoriteIds = favorites.findFavoriteDeckIds(
-                userId,
-                result.getContent().stream().map(BoThe::getId).toList()
-        );
+        List<Long> deckIds = result.getContent().stream().map(BoThe::getId).toList();
+        Set<Long> favoriteIds = yeuThich
+                ? Set.copyOf(deckIds)
+                : favorites.findFavoriteDeckIds(userId, deckIds);
+        Map<Long, Long> cardCounts = cardCounts(deckIds);
 
-        return PageResponse.of(result.map(deck ->
-                mapper.toResponse(deck, favoriteIds.contains(deck.getId()))
-        ));
+        return PageResponse.of(result.map(deck -> mapper.toResponse(
+                deck,
+                favoriteIds.contains(deck.getId()),
+                Math.toIntExact(cardCounts.getOrDefault(deck.getId(), 0L))
+        )));
     }
 
     public DeckResponse get(Long userId, Long id) {
@@ -70,7 +79,7 @@ public class DeckService {
                 request.quyenTruyCap()
         );
         deck.updateGoal(request.mucTieu());
-        return mapper.toResponse(decks.saveAndFlush(deck), false);
+        return mapper.toResponse(decks.saveAndFlush(deck), false, 0);
     }
 
     @Transactional
@@ -150,8 +159,21 @@ public class DeckService {
 
     private DeckResponse response(Long userId, BoThe deck) {
         return mapper.toResponse(
-                deck, favorites.exists(userId, deck.getId())
+                deck,
+                favorites.exists(userId, deck.getId()),
+                Math.toIntExact(cardCounts(List.of(deck.getId())).getOrDefault(deck.getId(), 0L))
         );
+    }
+
+    private Map<Long, Long> cardCounts(List<Long> deckIds) {
+        if (deckIds.isEmpty()) {
+            return Map.of();
+        }
+        return cards.countActiveByDeckId(deckIds).stream()
+                .collect(Collectors.toMap(
+                        TheTuVungRepository.DeckCardCount::getBoTheId,
+                        TheTuVungRepository.DeckCardCount::getSoThe
+                ));
     }
 
     private Long validatedTopicId(String value) {

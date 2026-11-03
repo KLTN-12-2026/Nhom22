@@ -18,6 +18,7 @@ public record DeckResponse(
         TrangThaiKiemDuyet trangThaiKiemDuyet,
         String boNguonId,
         boolean yeuThich,
+        int soThe,
         Instant createdAt,
         Instant updatedAt,
         Long version

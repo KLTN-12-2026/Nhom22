@@ -28,7 +28,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="practice" data-auth="required" class="no-bottom-nav">
-<!-- F2.5 · UI24 · API: GET /practice/sessions/{id} (B2.7, không có đáp án), POST /practice/sessions/{id}/submissions {submitKey, traLoi[], thoiGianMs} (B2.8) -->
+<!-- F2.5 · UI24 · API: GET /practice/sessions/{id} (B2.7, không có đáp án), POST /practice/sessions/{id}/submissions {submitKey, traLoi[], thoiGian} (B2.8) -->
 <div class="session">
   <header class="session-bar">
     <a class="btn btn-quiet btn-icon" href="luyen-tap.html" id="exit" aria-label="Thoát bài làm"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
@@ -62,7 +62,7 @@
   </main>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -182,7 +182,7 @@
     VL.clearErrors(form);
     VL.busy($("submit"), async () => {
       try {
-        await VL.api("POST", "/practice/sessions/" + id + "/submissions", { submitKey, traLoi: all, thoiGianMs: Date.now() - started });
+        await VL.api("POST", "/practice/sessions/" + id + "/submissions", { submitKey, traLoi: all, thoiGian: Date.now() - started });
         try { sessionStorage.removeItem(draftKey); sessionStorage.removeItem(keyKey); } catch (x) {}
         location.replace("luyen-tap-ket-qua.html?id=" + id);
       } catch (err) {

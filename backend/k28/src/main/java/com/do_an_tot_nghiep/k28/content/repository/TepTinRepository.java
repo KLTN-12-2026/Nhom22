@@ -49,8 +49,12 @@ public interface TepTinRepository extends JpaRepository<TepTin, Long> {
 
     @Query(value = """
             SELECT COUNT(*)
-            FROM the_tep
-            WHERE tep_id = :fileId
+            FROM the_tep l
+            JOIN the_tu_vung c ON c.id = l.the_id
+            JOIN bo_the d ON d.id = c.bo_the_id
+            WHERE l.tep_id = :fileId
+              AND c.xoa_at IS NULL
+              AND d.xoa_at IS NULL
             """, nativeQuery = true)
     long countCardReferences(@Param("fileId") Long fileId);
 }

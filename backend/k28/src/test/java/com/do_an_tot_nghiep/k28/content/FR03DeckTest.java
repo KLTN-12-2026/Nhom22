@@ -31,6 +31,8 @@ import java.sql.Timestamp;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.do_an_tot_nghiep.k28.content.repository.BoTheRepository;
+import com.do_an_tot_nghiep.k28.content.repository.TheTuVungRepository;
+import com.do_an_tot_nghiep.k28.content.entity.TheTuVung;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -62,6 +64,9 @@ class FR03DeckTest extends AbstractIntegrationTest {
 
     @Autowired
     BoTheRepository decks;
+
+    @Autowired
+    TheTuVungRepository cards;
 
     @Autowired
     PlatformTransactionManager transactionManager;
@@ -294,6 +299,64 @@ class FR03DeckTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void fr03_favoriteListShowsVisibleFavoritesWithCardCounts() throws Exception {
+        String own = createDeck().get("id").asText();
+        String notFavorite = createDeck().get("id").asText();
+        String deleted = createDeck().get("id").asText();
+        JsonNode shared = createDeck();
+        String sharedId = shared.get("id").asText();
+        long sharedVersion = jsonMapper.readTree(send(owner, patch(PATH + "/" + sharedId), Map.of(
+                "quyenTruyCap", "CONG_KHAI", "version", shared.get("version").asLong()
+        )).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("version").asLong();
+        card(own, "one");
+        card(own, "two");
+        Long removed = card(own, "removed");
+        jdbc.update("UPDATE the_tu_vung SET xoa_at = CURRENT_TIMESTAMP(3) WHERE id = ?", removed);
+        card(sharedId, "shared");
+        for (String id : List.of(own, deleted)) {
+            mockMvc.perform(put(PATH + "/" + id + "/favorite").cookie(owner.session()).with(xsrf()))
+                    .andExpect(status().isNoContent());
+        }
+        mockMvc.perform(put(PATH + "/" + sharedId + "/favorite").cookie(other.session()).with(xsrf()))
+                .andExpect(status().isNoContent());
+        jdbc.update("UPDATE bo_the SET xoa_at = CURRENT_TIMESTAMP(3) WHERE id = ?", Long.valueOf(deleted));
+
+        mockMvc.perform(get(PATH).param("yeuThich", "true").cookie(owner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(own))
+                .andExpect(jsonPath("$.items[0].yeuThich").value(true))
+                .andExpect(jsonPath("$.items[0].soThe").value(2));
+        mockMvc.perform(get(PATH).cookie(owner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.items[?(@.id == '" + own + "')].soThe").value(2))
+                .andExpect(jsonPath("$.items[?(@.id == '" + notFavorite + "')].yeuThich").value(false))
+                .andExpect(jsonPath("$.items[?(@.id == '" + sharedId + "')].soThe").value(1));
+        mockMvc.perform(get(PATH + "/" + own).cookie(owner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.soThe").value(2));
+
+        mockMvc.perform(get(PATH).param("yeuThich", "true").cookie(other.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(sharedId))
+                .andExpect(jsonPath("$.items[0].chuSoHuuId").value(owner.id().toString()))
+                .andExpect(jsonPath("$.items[0].soThe").value(1));
+        mockMvc.perform(get(PATH).cookie(other.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        send(owner, patch(PATH + "/" + sharedId), Map.of("quyenTruyCap", "RIENG_TU", "version", sharedVersion))
+                .andExpect(status().isOk());
+        mockMvc.perform(get(PATH).param("yeuThich", "true").cookie(other.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mockMvc.perform(get(PATH).param("yeuThich", "abc").cookie(other.session()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void fr03_softDeletePreservesCardsFavoritesAndSourceReferences()
             throws Exception {
         JsonNode source = createDeck();
@@ -508,6 +571,11 @@ class FR03DeckTest extends AbstractIntegrationTest {
                 firstFinished.countDown();
             }
         }
+    }
+
+    private Long card(String deckId, String term) {
+        return cards.saveAndFlush(TheTuVung.create(Long.valueOf(deckId), term, "noun", "quả táo", "/ˈæpəl/",
+                "An apple.", "Một quả táo.", 2, "Tài liệu tự soạn")).getId();
     }
 
     private long favoriteCount(Actor actor, String deckId) {

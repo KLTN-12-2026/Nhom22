@@ -1,0 +1,1 @@
+ALTER TABLE cai_dat_thong_bao ALTER COLUMN nhac_hoc SET DEFAULT FALSE;
