@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    username: test
+    password: test
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+
+app:
+  cookie-secure: false
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

@@ -54,13 +54,13 @@ public interface LichSuOnRepository extends JpaRepository<LichSuOn, Long> {
     );
 
     @Query("""
-            select coalesce(sum(l.thoiGian), 0)
+            select new com.do_an_tot_nghiep.k28.learning.repository.StudyTimeRow(l.createdAt, l.thoiGian)
             from LichSuOn l
             where l.nguoiDungId = :userId
               and l.createdAt >= :batDau
               and l.createdAt < :ketThuc
             """)
-    long studyTime(
+    List<StudyTimeRow> studyTimes(
             @Param("userId") Long userId,
             @Param("batDau") Instant batDau,
             @Param("ketThuc") Instant ketThuc

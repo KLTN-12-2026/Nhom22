@@ -107,7 +107,7 @@ docker compose up -d
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
 
-Profile `dev` nạp dữ liệu mẫu (`db/seed`, gồm tài khoản ADMIN) và phải bật tường minh; không có profile mặc định. Container API trong Compose đặt `SPRING_PROFILES_ACTIVE=dev` mặc định, ghi đè bằng biến môi trường khi triển khai.
+Profile `dev` nạp dữ liệu mẫu (`db/seed`, gồm tài khoản ADMIN) và các giá trị dev (mật khẩu DB, khóa S3, Google giả, cookie không `Secure`, Swagger). Không có profile thì app bắt buộc có đủ bí mật qua biến môi trường và dừng khi thiếu. Container API trong Compose đọc `backend/k28/.env` và mặc định `SPRING_PROFILES_ACTIVE=dev`; khi triển khai thật, đặt profile khác và bí mật riêng. Chi tiết: [backend/README.md](backend/README.md#cấu-hình-và-profile).
 
 Nếu container API đang chạy, dừng nó trước bằng `docker compose --profile app stop api` để giải phóng cổng `8080`. Frontend vẫn chạy theo hướng dẫn ở trên.
 

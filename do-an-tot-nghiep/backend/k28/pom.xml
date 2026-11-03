@@ -21,6 +21,8 @@
 		<springdoc.version>3.1.1</springdoc.version>
 		<awssdk.version>2.55.6</awssdk.version>
 		<commons-csv.version>1.10.0</commons-csv.version>
+		<argLine></argLine>
+		<test.jvm.unixTmp></test.jvm.unixTmp>
 	</properties>
 
 	<dependencies>
@@ -184,6 +186,24 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} "-javaagent:${org.mockito:mockito-core:jar}" ${test.jvm.unixTmp}</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
@@ -197,5 +217,19 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>windows-tests</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<test.jvm.unixTmp>-Djdk.net.unixdomain.tmpdir=${env.PUBLIC}</test.jvm.unixTmp>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>

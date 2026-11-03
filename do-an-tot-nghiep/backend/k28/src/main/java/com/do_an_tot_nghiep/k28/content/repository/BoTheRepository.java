@@ -18,6 +18,26 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
 
     Optional<BoThe> findByIdAndChuSoHuuIdAndXoaAtIsNull(Long id, Long chuSoHuuId);
 
+    @Query(value = """
+            SELECT d.*
+            FROM bo_the d
+            JOIN bo_yeu_thich f ON f.bo_the_id = d.id
+            WHERE f.nguoi_dung_id = :userId
+              AND d.xoa_at IS NULL
+              AND (d.chu_so_huu_id = :userId
+                   OR (d.quyen_truy_cap = 'CONG_KHAI' AND d.trang_thai_kiem_duyet = 'BINH_THUONG'))
+            ORDER BY f.created_at DESC, d.id DESC
+            """, countQuery = """
+            SELECT COUNT(*)
+            FROM bo_the d
+            JOIN bo_yeu_thich f ON f.bo_the_id = d.id
+            WHERE f.nguoi_dung_id = :userId
+              AND d.xoa_at IS NULL
+              AND (d.chu_so_huu_id = :userId
+                   OR (d.quyen_truy_cap = 'CONG_KHAI' AND d.trang_thai_kiem_duyet = 'BINH_THUONG'))
+            """, nativeQuery = true)
+    Page<BoThe> findFavorites(@Param("userId") Long userId, Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_READ)
     Optional<BoThe> findByIdAndXoaAtIsNull(Long id);
 

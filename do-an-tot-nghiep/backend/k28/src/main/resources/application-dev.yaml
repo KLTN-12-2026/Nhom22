@@ -1,3 +1,25 @@
 spring:
   flyway:
     locations: classpath:db/migration,classpath:db/seed
+  datasource:
+    username: ${DB_USER:vocab}
+    password: ${DB_PASSWORD:123456}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dev-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dev-google-client-secret}
+
+app:
+  cookie-secure: ${COOKIE_SECURE:false}
+  s3:
+    access-key: ${S3_ACCESS_KEY:s3admin}
+    secret-key: ${S3_SECRET_KEY:s3admin_dev_pw}
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}

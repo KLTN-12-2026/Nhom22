@@ -17,7 +17,6 @@ import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiPhienHocThe;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import com.do_an_tot_nghiep.k28.learning.repository.DeckCardRow;
 import com.do_an_tot_nghiep.k28.learning.repository.DeckDueRow;
-import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
@@ -45,7 +44,6 @@ public class LearningPlanService {
     static final int SO_NGAY_TOI_DA = 1000;
     static final int SO_NGAY_KE_HOACH_TOI_DA = 14;
     static final int SO_NGAY_DU_BAO = 7;
-    static final long MS_MOI_PHUT = 60_000;
 
     private static final List<TrangThaiTienDo> TRANG_THAI_CO_HAN = List.of(
             TrangThaiTienDo.DANG_HOC,
@@ -60,7 +58,7 @@ public class LearningPlanService {
     private final SuDungHocNgayRepository usage;
     private final PhienHocRepository sessions;
     private final PhienHocTheRepository queue;
-    private final LichSuOnRepository history;
+    private final StudyTimeService studyTime;
 
     @Transactional
     public TodayPlanResponse today(Long userId, TodayQuery query) {
@@ -83,7 +81,7 @@ public class LearningPlanService {
         SuDungHocNgay homNayDung = usage.findByNguoiDungIdAndNgayDiaPhuong(userId, homNay).orElse(null);
         int soTheMoiDaHoc = homNayDung == null ? 0 : homNayDung.getSoTheMoi();
         int soLuot = homNayDung == null ? 0 : homNayDung.getSoLuotHopLe();
-        long thoiGian = history.studyTime(userId, batDau, ketThuc);
+        StudyTimeService.StudyTime thoiGian = studyTime.day(userId, homNay, zone);
 
         int luotMoiNgayCaiDat = settings.phutMoiNgay() * 60 / GIAY_MOI_LUOT;
         CuuLichOnResponse cuuLichOn = soQuaHan > luotMoiNgayCaiDat
@@ -127,7 +125,7 @@ public class LearningPlanService {
                 chuoiNgay,
                 homNayDaTinhChuoi,
                 LUOT_TOI_THIEU_CHUOI,
-                new DaHocHomNayResponse(soLuot, thoiGian, Math.toIntExact(thoiGian / MS_MOI_PHUT)),
+                new DaHocHomNayResponse(soLuot, thoiGian.thoiGian(), thoiGian.soPhut()),
                 tongSoThe,
                 boThe,
                 cuuLichOn,
@@ -152,8 +150,8 @@ public class LearningPlanService {
                         session.hetGioAt(),
                         Math.toIntExact(queue.countByPhienIdAndTrangThai(
                                 session.getId(), TrangThaiPhienHocThe.DA_TRA_LOI)),
-                        Math.toIntExact(queue.countByPhienIdAndTrangThai(
-                                session.getId(), TrangThaiPhienHocThe.CHUA_TRA_LOI))))
+                        Math.toIntExact(queue.countAnswerable(
+                                session.getId(), TrangThaiPhienHocThe.CHUA_TRA_LOI, TrangThaiTienDo.TAM_NGUNG))))
                 .orElse(null);
     }
 

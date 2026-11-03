@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v4";
+  const KEY = "vl-demo-v5";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -63,8 +63,8 @@
   const days = (n) => new Date(now - n * 86400000).toISOString();
   const MIN = 60000;
   const DAY = 86400000;
-  const ALGO = "sm2-vl-1";
-  const AVG_SECONDS = 15;
+  const ALGO = "SM2-VN-2";
+  const AVG_SECONDS = 20;
   const RATINGS = ["QUEN", "KHO", "NHO", "DE"];
   const RATING_Q = { QUEN: 1, KHO: 3, NHO: 4, DE: 5 };
   const DIRS = ["EN_VI", "VI_EN"];
@@ -167,7 +167,8 @@
     put("2", card("21", "uncharacteristically"), "EN_VI", { trangThai: "DANG_HOC", buocHoc: 1, hanOnAt: iso(now - 20 * MIN), version: 1 });
     put("2", card("21", "complementary"), "EN_VI", { trangThai: "ON_TAP", ef: 2.36, khoangOnNgay: 1, chuoiThanhCong: 1, soLanQuen: 1, hanOnAt: iso(sod - DAY), version: 4 });
     put("2", card("22", "How's it going?"), "EN_VI", { trangThai: "ON_TAP", ef: 2.6, khoangOnNgay: 15, chuoiThanhCong: 3, hanOnAt: iso(sod + 4 * DAY), version: 3 });
-    put("2", card("22", "I'm running late"), "EN_VI", { trangThai: "TAM_NGUNG", truocTamNgung: { trangThai: "ON_TAP", hanOnAt: iso(sod + DAY) }, ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod + DAY), version: 2 });
+    put("2", card("22", "I'm running late"), "EN_VI", { trangThai: "TAM_NGUNG", ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod + DAY), version: 2 });
+    put("2", card("22", "I'm running late"), "VI_EN", { trangThai: "TAM_NGUNG", version: 0 });
     put("2", card("22", "get along with"), "EN_VI", { trangThai: "ON_TAP", ef: 2.5, khoangOnNgay: 1, chuoiThanhCong: 1, hanOnAt: iso(sod - DAY), version: 2 });
 
     s.cards.filter((x) => x.deckId === "31").forEach((x, i) => {
@@ -194,6 +195,19 @@
       { id: "p2", uid: "2", the1Id: rc, the2Id: rp, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(15, 20) }
     );
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
+
+    const pp = card("21", "postpone");
+    const t0 = Math.max(sod + MIN, now - 6 * MIN);
+    const done = (i) => Math.min(now - 1000, t0 + (i + 1) * 40000);
+    put("2", pp, "EN_VI", { trangThai: "ON_TAP", ef: 2.5, khoangOnNgay: 15, chuoiThanhCong: 3, soLanQuen: 0, hanOnAt: iso(sod + 15 * DAY + 9 * 3600000), version: 4 });
+    put("2", cm, "EN_VI", { trangThai: "ON_TAP", ef: 2.22, khoangOnNgay: 2, chuoiThanhCong: 2, soLanQuen: 1, hanOnAt: iso(sod + 2 * DAY + 9 * 3600000), version: 5 });
+    s.reviews.push(
+      { id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "phienmau1", theId: pp, chieuHoc: "EN_VI", danhGia: "NHO", thoiGianTraLoiMs: 9200, createdAt: iso(done(0)), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO },
+      { id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "phienmau1", theId: cm, chieuHoc: "EN_VI", danhGia: "KHO", thoiGianTraLoiMs: 17400, createdAt: iso(done(1)), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO }
+    );
+    s.usage["2|" + localDate(now, tz)] = { soTheMoi: 0, soLuotHopLe: 2 };
+    s.sessions["phienmau1"] = { id: "phienmau1", uid: "2", boTheId: "21", chieuHoc: "EN_VI", quyThoiGian: 10, cheDo: "THUONG", muiGio: tz, batDauAt: iso(t0), hetGioAt: iso(t0 + 10 * MIN), trangThai: "DANG_HOC",
+      hangDoi: [pp, cm, cp, un, rc].map((theId, i) => ({ theId, thuTu: i + 1, trangThai: i < 2 ? "DA_TRA_LOI" : "CHUA_TRA_LOI" })) };
 
     const admin = { id: "1", tenHienThi: "Quản trị viên" };
     s.audit.push(
@@ -269,12 +283,20 @@
   }
   function publicUser(u) {
     const l = db.learning[u.id];
-    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienId: u.anhDaiDienId || null, trangThai: u.trangThai, daHoanTatKhoiDau: !!(l && l.onboardingDone) };
+    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienId: u.anhDaiDienId || null, trangThai: u.trangThai, emailXacThucAt: u.trangThai === "CHUA_XAC_THUC" ? null : (u.emailXacThucAt || u.createdAt || null), daHoanTatKhoiDau: !!(l && l.onboardingDone) };
   }
   function topicName(id) { const t = db.topics.find((x) => x.id === id); return t ? t.name : "Chưa phân loại"; }
   function deckView(d, uid) {
     const count = db.cards.filter((x) => x.deckId === d.id).length;
     return Object.assign({}, d, { cardCount: count, topicName: topicName(d.topicId), favorite: !!(uid && (db.favorites[uid] || []).includes(d.id)) });
+  }
+  function topicDto(t) { return { id: t.id, ten: t.name, moTa: t.description || null, version: t.version ?? 0 }; }
+  function libraryDeck(d) {
+    const owner = db.users.find((x) => x.id === d.ownerId);
+    return { id: d.id, ten: d.name, moTa: d.description || null, chuDeId: d.topicId || null, tenChuDe: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level || null, mucTieu: d.goal || null, nguon: d.kind === "MAU" ? "MAU" : "CHIA_SE", chuSoHuuId: d.ownerId, tenTacGia: d.kind === "MAU" ? null : (owner ? owner.tenHienThi : null), soThe: db.cards.filter((x) => x.deckId === d.id && !x.deleted).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt };
+  }
+  function libraryCard(c) {
+    return { id: c.id, boTheId: c.deckId, tu: c.word, tuLoai: c.pos || null, nghiaVi: c.meaningVi, phienAm: c.ipa || null, viDuEn: c.exampleEn || null, dichVi: c.exampleVi || null, doKho: c.difficulty || 1, nguon: c.source || null, nhanIds: c.tagIds || [], anhId: c.anhId || null, amTuId: c.amTuId || null, amCauId: c.amCauId || null };
   }
   function ownDeck(id) {
     const u = requireMe();
@@ -332,6 +354,9 @@
   function theView(x) {
     return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn, dichVi: x.exampleVi, anhUrl: x.imageUrl, amThanhUrl: x.audioUrl, version: x.version };
   }
+  function studyCard(x) {
+    return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn, dichVi: x.exampleVi, anhId: x.anhId || null, amTuId: x.amTuId || null, amCauId: x.amCauId || null, version: x.version };
+  }
   function ownCards(uid, deckId) {
     const ids = db.decks.filter((d) => d.ownerId === uid && !d.deleted && (!deckId || d.id === deckId)).map((d) => d.id);
     return db.cards.filter((x) => ids.includes(x.deckId));
@@ -345,7 +370,7 @@
   function physicallyNew(uid, theId) {
     return DIRS.every((d) => {
       const p = db.progress[pkey(uid, theId, d)];
-      return !p || p.trangThai === "MOI" || (p.trangThai === "TAM_NGUNG" && p.truocTamNgung && p.truocTamNgung.trangThai === "MOI");
+      return !p || p.trangThai === "MOI";
     });
   }
   function usageOf(uid, day) { const k = uid + "|" + day; return db.usage[k] || (db.usage[k] = { soTheMoi: 0, soLuotHopLe: 0 }); }
@@ -376,7 +401,7 @@
         let d;
         if (rating === "KHO") d = Math.max(I + 1, Math.round(I * 1.2));
         else if (rating === "NHO") d = p.chuoiThanhCong === 1 ? 6 : Math.max(I + 1, Math.round(I * ef));
-        else d = Math.max(I + 1, Math.round(I * ef * 1.3));
+        else d = p.chuoiThanhCong === 1 ? Math.round(6 * 1.3) : Math.max(I + 1, Math.round(I * ef * 1.3));
         n.chuoiThanhCong = p.chuoiThanhCong + 1;
         n.hanOnAt = inDays(d);
       }
@@ -392,16 +417,14 @@
     if (d <= 0) return Math.round(mins / 60) + " giờ";
     return d + " ngày";
   }
-  function previewOf(p, t, tz) { const o = {}; RATINGS.forEach((r) => { o[r] = intervalLabel(t, srsNext(p, r, t, tz).hanOnAt, tz); }); return o; }
 
   function streakOf(uid, tz) {
     const cnt = {};
     const ok = new Set();
     db.reviews.filter((r) => r.uid === uid).forEach((r) => {
       const d = localDate(Date.parse(r.createdAt), tz);
-      const k = d + "|" + r.phienId;
-      cnt[k] = (cnt[k] || 0) + 1;
-      if (cnt[k] >= 5) ok.add(d);
+      cnt[d] = (cnt[d] || 0) + 1;
+      if (cnt[d] >= 5) ok.add(d);
     });
     const t = Date.now();
     const today = localDate(t, tz);
@@ -410,6 +433,22 @@
     let n = 0;
     while (ok.has(localDate(cursor, tz))) { n++; cursor -= DAY; }
     return { chuoiNgay: n, homNayDaTinh: ok.has(today) };
+  }
+
+  const minutesOf = (ms) => Math.floor(ms / MIN);
+  function studyMsOf(uid, day, tz) {
+    const rv = db.reviews.filter((r) => r.uid === uid && localDate(Date.parse(r.createdAt), tz) === day).reduce((a, r) => a + r.thoiGianTraLoiMs, 0);
+    const pr = db.attempts.filter((a) => a.uid === uid && localDate(Date.parse(a.nopAt), tz) === day).reduce((a, x) => a + x.thoiGian, 0);
+    return rv + pr;
+  }
+
+  function openSessionOf(u, sod) {
+    const s = Object.values(db.sessions)
+      .filter((x) => x.uid === u.id && x.trangThai === "DANG_HOC" && Date.parse(x.batDauAt) >= sod)
+      .sort((a, b) => b.batDauAt.localeCompare(a.batDauAt))[0];
+    if (!s) return null;
+    const left = s.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI").length;
+    return { id: s.id, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi", chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian, batDauAt: s.batDauAt, hetGioAt: s.hetGioAt, soDaTraLoi: s.hangDoi.length - left, soChuaTraLoi: left };
   }
 
   function todayPlan(u, q) {
@@ -422,6 +461,9 @@
     let quaHan = 0;
     let denHan = 0;
     const perDeck = {};
+    const duBaoOn = [];
+    for (let i = 1; i <= 7; i++) duBaoOn.push({ ngay: localDate(sod + i * DAY + 12 * 3600000, tz), soCanOn: 0 });
+    const aheadOf = Object.fromEntries(duBaoOn.map((x) => [x.ngay, x]));
     cards.forEach((x) => {
       const deck = perDeck[x.deckId] = perDeck[x.deckId] || { soCanOn: 0, soMoi: 0 };
       if (physicallyNew(u.id, x.id)) deck.soMoi++;
@@ -429,7 +471,7 @@
         const p = progressOf(u.id, x.id, dir);
         if (p.trangThai === "MOI" || p.trangThai === "TAM_NGUNG" || !p.hanOnAt) return;
         const h = Date.parse(p.hanOnAt);
-        if (h < sod) { quaHan++; deck.soCanOn++; } else if (h < eod) { denHan++; deck.soCanOn++; }
+        if (h < sod) { quaHan++; deck.soCanOn++; } else if (h < eod) { denHan++; deck.soCanOn++; } else { const f = aheadOf[localDate(h, tz)]; if (f) f.soCanOn++; }
       });
     });
     const today = localDate(t, tz);
@@ -439,7 +481,7 @@
     const canOn = quaHan + denHan;
     let rescue = null;
     if (quaHan > cap) {
-      const phut = [5, 10, 15, 20, 30].includes(Number(q.phut)) ? Number(q.phut) : l.minutesPerDay;
+      const phut = q.phut ? Number(q.phut) : l.minutesPerDay;
       const perDay = Math.max(1, Math.floor(phut * 60 / AVG_SECONDS));
       const soNgay = Math.ceil(canOn / perDay);
       const keHoach = [];
@@ -449,17 +491,20 @@
         left -= n;
         keHoach.push({ ngay: localDate(sod + i * DAY + 12 * 3600000, tz), soThe: n, phut: Math.ceil(n * AVG_SECONDS / 60) });
       }
-      rescue = { soTheCanOn: canOn, soQuaHan: quaHan, phutMoiNgay: phut, luotMoiNgay: perDay, soNgay, keHoach, tamDungTuMoi: q.giuTuMoi !== "true", uuTien: "QUEN_NHIEU_VA_QUA_HAN_LAU", laUocTinh: true, giayMoiLuot: AVG_SECONDS };
+      rescue = { soTheCanOn: canOn, soQuaHan: quaHan, phutMoiNgay: phut, luotMoiNgay: perDay, soNgay, keHoach, tamDungTuMoi: q.giuTuMoi !== "true" };
     }
     const soMoiConLai = rescue && rescue.tamDungTuMoi ? 0 : Math.min(Math.max(0, l.newCardsPerDay - used.soTheMoi), newPhys);
     const todays = db.reviews.filter((r) => r.uid === u.id && localDate(Date.parse(r.createdAt), tz) === today);
     const st = streakOf(u.id, tz);
+    const ms = studyMsOf(u.id, today, tz);
     return {
-      ngay: today, muiGio: tz, soQuaHan: quaHan, soDenHan: denHan, soMoiConLai, tuMoiMoiNgay: l.newCardsPerDay, soTheMoiDaHoc: used.soTheMoi, phutMoiNgay: l.minutesPerDay,
-      uocTinhPhut: Math.ceil((canOn + soMoiConLai) * AVG_SECONDS / 60), laUocTinh: true, giayMoiLuot: AVG_SECONDS,
-      daHocHomNay: { soLuot: todays.length, soPhut: Math.round(todays.reduce((a, r) => a + r.thoiGianTraLoiMs, 0) / MIN) },
+      ngay: today, soQuaHan: quaHan, soDenHan: denHan, soMoiConLai, tuMoiMoiNgay: l.newCardsPerDay, soTheMoiDaHoc: used.soTheMoi, phutMoiNgay: l.minutesPerDay,
+      uocTinhPhut: Math.ceil((canOn + soMoiConLai) * AVG_SECONDS / 60), giayMoiLuot: AVG_SECONDS,
+      daHocHomNay: { soLuot: todays.length, thoiGian: ms, soPhut: minutesOf(ms) },
       chuoiNgay: st.chuoiNgay, homNayDaTinhChuoi: st.homNayDaTinh, luotToiThieuChuoi: 5, tongSoThe: cards.length,
       boThe: Object.keys(perDeck).map((id) => ({ boTheId: id, ten: deckName(id), soCanOn: perDeck[id].soCanOn, soMoi: perDeck[id].soMoi })),
+      phienDangDo: openSessionOf(u, sod),
+      duBaoOn,
       cuuLichOn: rescue
     };
   }
@@ -474,8 +519,8 @@
     const byDue = (a, b) => Date.parse(a.p.hanOnAt) - Date.parse(b.p.hanOnAt);
     const steps = items.filter((it) => (it.p.trangThai === "DANG_HOC" || it.p.trangThai === "HOC_LAI") && due(it)).sort(byDue);
     const reviews = items.filter((it) => it.p.trangThai === "ON_TAP" && due(it)).sort(mode === "CUU_LICH" ? (a, b) => b.p.soLanQuen - a.p.soLanQuen || byDue(a, b) : byDue);
-    const plan = todayPlan(u, {});
-    const newLimit = mode === "CUU_LICH" || (plan.cuuLichOn && plan.cuuLichOn.tamDungTuMoi) ? 0 : Math.max(0, l.newCardsPerDay - usageOf(u.id, localDate(t, tz)).soTheMoi);
+    if (mode === "CUU_LICH") return steps.concat(reviews).slice(0, cap);
+    const newLimit = Math.max(0, l.newCardsPerDay - usageOf(u.id, localDate(t, tz)).soTheMoi);
     let used = 0;
     const fresh = [];
     items.filter((it) => it.p.trangThai === "MOI").forEach((it) => {
@@ -495,23 +540,23 @@
       hangDoi: s.hangDoi.map((h) => {
         const x = cardById(h.theId);
         const p = progressOf(u.id, h.theId, s.chieuHoc);
-        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), duKien: previewOf(p, t, s.muiGio), the: x ? theView(x) : null };
-      }),
-      tongKet: s.tongKet || null
+        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), the: x ? studyCard(x) : null };
+      })
     };
   }
 
-  function summaryOf(s, u) {
-    const t = Date.now();
+  function summaryOf(s) {
     const rs = db.reviews.filter((r) => r.phienId === s.id);
     const by = { QUEN: 0, KHO: 0, NHO: 0, DE: 0 };
     rs.forEach((r) => { by[r.danhGia]++; });
     const ids = [...new Set(rs.map((r) => r.theId))];
-    const st = streakOf(u.id, s.muiGio);
+    const last = (id) => rs.filter((r) => r.theId === id).pop();
     return {
-      phienId: s.id, chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi",
-      soLuot: rs.length, soThe: ids.length, soTheMoi: ids.filter((id) => { const first = rs.find((r) => r.theId === id); return first && first.truoc.trangThai === "MOI"; }).length,
-      thoiGianGiay: Math.max(0, Math.round((Date.parse(s.ketThucAt) - Date.parse(s.batDauAt)) / 1000)),
+      phienId: s.id, boTheId: s.boTheId || null, boTheTen: s.boTheId ? deckName(s.boTheId) : "Tất cả bộ của tôi", chieuHoc: s.chieuHoc, quyThoiGian: s.quyThoiGian,
+      batDauAt: s.batDauAt, hetGioAt: s.hetGioAt, ketThucAt: s.ketThucAt, trangThai: s.trangThai,
+      soLuot: rs.length, soThe: ids.length, soTheMoi: ids.filter((id) => rs.find((r) => r.theId === id).truoc.trangThai === "MOI").length,
+      soChuaTraLoi: s.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI").length,
+      thoiGian: rs.reduce((sum, r) => sum + r.thoiGianTraLoiMs, 0),
       theoDanhGia: by,
       tuCanLuyen: ids.filter((id) => rs.some((r) => r.theId === id && (r.danhGia === "QUEN" || r.danhGia === "KHO"))).map((id) => {
         const x = cardById(id);
@@ -519,10 +564,9 @@
       }).filter(Boolean),
       lichTiepTheo: ids.map((id) => {
         const x = cardById(id);
-        const p = progressOf(u.id, id, s.chieuHoc);
-        return x && { theId: id, tu: x.word, trangThai: p.trangThai, hanOnAt: p.hanOnAt, khoangHienThi: intervalLabel(t, p.hanOnAt, s.muiGio) };
-      }).filter(Boolean).sort((a, b) => Date.parse(a.hanOnAt) - Date.parse(b.hanOnAt)),
-      chuoiNgay: st.chuoiNgay, homNayDaTinhChuoi: st.homNayDaTinh, luotToiThieuChuoi: 5
+        const r = last(id);
+        return x && { theId: id, tu: x.word, trangThai: r.sau.trangThai, hanOnAt: r.sau.hanOnAt };
+      }).filter(Boolean).sort((a, b) => Date.parse(a.hanOnAt) - Date.parse(b.hanOnAt))
     };
   }
 
@@ -531,11 +575,15 @@
   const SKILLS = ["NHAN_NGHIA", "VIET", "NGHE", "NGU_CANH", "CAP_NHAM"];
 
   function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = r[i]; r[i] = r[j]; r[j] = tmp; } return r; }
-  const answerNorm = (s) => (s || "").toString().normalize("NFC").replace(/[’‘`]/g, "'").trim().replace(/\s+/g, " ").toLowerCase();
+  const answerNorm = (s) => (s || "").toString().normalize("NFC").replace(/[’‘`´]/g, "'").replace(/[‐‑]/g, "-").replace(/\s+/g, " ").trim().toLowerCase();
+  const nearLimit = (n) => (n <= 4 ? 1 : n <= 8 ? 2 : 3);
   function editDistance(a, b) {
     const dp = Array.from({ length: a.length + 1 }, (_, i) => [i].concat(Array(b.length).fill(0)));
     for (let j = 1; j <= b.length; j++) dp[0][j] = j;
-    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+    }
     return dp[a.length][b.length];
   }
   function blankOf(x) {
@@ -567,7 +615,7 @@
       return Object.assign(base, { deBai: { cau: bl.cau, goiY: x.meaningVi, tuLoai: x.pos }, dapAn: { chapNhan: [bl.dapAn], noiDung: bl.dapAn } });
     }
     if (type === "NHAP_TU_THEO_NGHIA") return Object.assign(base, { deBai: { nghiaVi: x.meaningVi, tuLoai: x.pos, viDuVi: x.exampleVi || null }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
-    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amThanhUrl: "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
+    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amTuId: x.amTuId || "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
     return null;
   }
   function matchQuestion(group, thuTu) {
@@ -576,7 +624,7 @@
     return {
       id: "q" + nextId(), thuTu, loaiCau: "GHEP_TU", theIds: group.map((y) => y.id),
       deBai: { cotTrai: left.map((o) => ({ id: o.id, noiDung: o.noiDung })), cotPhai: right.map((o) => ({ id: o.id, noiDung: o.noiDung })) },
-      _left: left, _right: right,
+      _left: left, _right: right, _snaps: left.map((l) => explain(group.find((y) => y.id === l.theId))),
       dapAn: { cap: left.map((l) => ({ traiId: l.id, phaiId: right.find((r) => r.theId === l.theId).id })) }
     };
   }
@@ -649,7 +697,7 @@
     }
     if (!qs.length) throw new ApiError(422, "BUSINESS_RULE", b.loaiBai === "DIEN_CHO_TRONG" ? "Các thẻ đã chọn chưa có câu ví dụ chứa đúng từ, nên chưa tạo được câu điền chỗ trống." : "Chưa tạo được câu hỏi từ các thẻ đã chọn.");
     const id = nextId();
-    const s = { id, uid: u.id, loaiBai: b.loaiBai, boTheId: b.boTheId || null, nguon: b.nguon || "BO_THE", taoAt: iso(t), soCauYeuCau: n, cauHoi: qs, lanLamId: null, laLuyenLai: !!b.laLuyenLai };
+    const s = { id, uid: u.id, loaiBai: b.loaiBai, boTheId: b.boTheId || null, nguon: b.nguon || "BO_THE", taoAt: iso(t), soCauYeuCau: n, cauHoi: qs, lanLamId: null, laLuyenLai: !!b.laLuyenLai, baiGocId: b.baiGocId || null };
     db.practice[id] = s;
     return s;
   }
@@ -657,14 +705,15 @@
     const a = s.lanLamId ? db.attempts.find((x) => x.id === s.lanLamId) : null;
     return {
       id: s.id, loaiBai: s.loaiBai, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : (s.nguon === "SO_TAY" ? "Sổ tay từ khó" : "Tất cả bộ của tôi"), nguon: s.nguon,
-      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, taoAt: s.taoAt, laLuyenLai: s.laLuyenLai, daNop: !!a, lanLamId: s.lanLamId,
+      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, createdAt: s.taoAt, laLuyenLai: s.laLuyenLai, baiGocId: s.baiGocId || null, daNop: !!a, lanLamId: s.lanLamId,
       cauHoi: s.cauHoi.map(publicQuestion), ketQua: a ? attemptView(a) : null
     };
   }
   function attemptView(a) {
     return {
-      lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem,
-      thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, theoKyNang: a.theoKyNang, ketQua: a.ketQua
+      lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheId: a.boTheId || null, boTheTen: a.boTheTen, laLuyenLai: a.laLuyenLai,
+      soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGian: a.thoiGian, nopAt: a.nopAt, theoKyNang: a.theoKyNang,
+      ketQua: a.ketQua.map((r) => { const v = Object.assign({}, r); delete v._ty; delete v._sai; delete v._otherId; return v; })
     };
   }
   function explain(x, extra) {
@@ -680,63 +729,86 @@
     const given = {};
     (Array.isArray(b.traLoi) ? b.traLoi : []).forEach((r) => { if (r && r.cauHoiId) given[r.cauHoiId] = r; });
     const lanLamId = nextId();
+    let units = 0;
     const results = s.cauHoi.map((q) => {
       const r = given[q.id] || {};
       let dung = false;
-      let diem = 0;
+      let ty = 0;
       let nhomLoi = null;
       let traLoi = null;
+      let dapAn;
+      let chiTiet = null;
       let giaiThich;
+      let sai = [];
+      let otherId = null;
       if (q.loaiCau === "GHEP_TU") {
+        units += q.dapAn.cap.length;
         const pairs = Array.isArray(r.cap) ? r.cap : [];
-        const chiTiet = q.dapAn.cap.map((c) => {
+        chiTiet = q.dapAn.cap.map((c) => {
           const got = pairs.find((pp) => pp.traiId === c.traiId);
           const lt = q._left.find((l) => l.id === c.traiId);
           const chosen = got ? q._right.find((rr) => rr.id === got.phaiId) : null;
           const ok = !!got && got.phaiId === c.phaiId;
-          if (!ok && chosen) addPair(u.id, lt.theId, chosen.theId, t);
-          return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, nghiaDung: q._right.find((rr) => rr.id === c.phaiId).noiDung, dung: ok, theId: lt.theId };
+          const nghiaDung = q._right.find((rr) => rr.id === c.phaiId).noiDung;
+          if (!ok) {
+            sai.push(lt.theId);
+            if (chosen) addPair(u.id, lt.theId, chosen.theId, t);
+            db.errors.push({ uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung, lanLamId } });
+          }
+          return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, phaiId: c.phaiId, nghiaDung, dung: ok };
         });
         const good = chiTiet.filter((c) => c.dung).length;
-        diem = good / chiTiet.length;
+        ty = good / chiTiet.length;
         dung = good === chiTiet.length;
         nhomLoi = dung ? null : "NGHIA";
-        traLoi = { cap: pairs };
-        giaiThich = { cap: chiTiet };
-        chiTiet.filter((c) => !c.dung).forEach((c) => db.errors.push({ uid: u.id, theId: c.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: c.nghiaDaChon, dapAn: c.nghiaDung, lanLamId } }));
+        traLoi = pairs.length ? { cap: pairs.map((pp) => ({ traiId: pp.traiId, phaiId: pp.phaiId })) } : null;
+        dapAn = { cap: q.dapAn.cap.map((c) => ({ traiId: c.traiId, phaiId: c.phaiId })) };
+        giaiThich = q._snaps || [];
       } else if (q.phuongAn) {
-        traLoi = { luaChonId: r.luaChonId || null };
-        dung = r.luaChonId === q.dapAn.luaChonId;
-        const chosen = q._opts.find((o) => o.id === r.luaChonId);
+        units += 1;
+        const chosen = r.luaChonId ? q._opts.find((o) => o.id === r.luaChonId) : null;
+        dung = !!chosen && chosen.id === q.dapAn.luaChonId;
+        traLoi = chosen ? { luaChonId: chosen.id, noiDung: chosen.noiDung } : null;
         if (!dung) {
           nhomLoi = q.loaiCau === "PHAN_BIET_CAP" ? "CAP_NHAM" : "NGHIA";
           if (chosen) addPair(u.id, q.theId, chosen.theId, t);
         }
-        giaiThich = Object.assign({}, q._snap, q._other ? { soSanh: [{ tu: q._snap.tu, nghiaVi: q._snap.nghiaVi }, { tu: q._other.tu, nghiaVi: q._other.nghiaVi }] } : {});
-        traLoi.noiDung = chosen ? chosen.noiDung : null;
+        if (q._other) otherId = (q._opts.find((o) => o.id !== q.dapAn.luaChonId) || {}).theId || null;
+        dapAn = { luaChonId: q.dapAn.luaChonId, noiDung: q.dapAn.noiDung };
+        giaiThich = q._other ? { the: q._snap, theKhac: q._other } : q._snap;
       } else {
-        const text = (r.noiDung || "").toString().slice(0, 200);
-        traLoi = { noiDung: text };
+        units += 1;
+        const text = (r.noiDung || "").toString().slice(0, 200).trim();
         const got = answerNorm(text);
-        dung = !!got && q.dapAn.chapNhan.some((a) => answerNorm(a) === got);
+        traLoi = got ? { noiDung: text } : null;
+        const accepted = q.dapAn.chapNhan.map(answerNorm);
+        dung = !!got && accepted.includes(got);
         if (!dung) {
-          const near = got && editDistance(got, answerNorm(q.dapAn.noiDung)) <= 2;
+          const base = q.loaiCau === "DIEN_CHO_TRONG" && q._snap && got === answerNorm(q._snap.tu);
+          const near = !!got && !base && accepted.some((x) => editDistance(got, x) <= nearLimit(x.length));
           nhomLoi = near ? "CHINH_TA" : q.loaiCau === "NGHE_VIET" ? "NGHE" : q.loaiCau === "DIEN_CHO_TRONG" ? "NGU_CANH" : "NGHIA";
         }
-        giaiThich = Object.assign({}, q._snap);
+        dapAn = { noiDung: q.dapAn.noiDung, chapNhan: q.dapAn.chapNhan };
+        giaiThich = q._snap;
       }
-      if (q.loaiCau !== "GHEP_TU") diem = dung ? 1 : 0;
-      if (!dung && q.loaiCau !== "GHEP_TU") db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi.noiDung || null, dapAn: q.dapAn.noiDung, lanLamId } });
+      if (q.loaiCau !== "GHEP_TU") {
+        ty = dung ? 1 : 0;
+        if (!dung) {
+          sai = [q.theId];
+          db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung, lanLamId } });
+        }
+      }
       db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
-      return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn: { luaChonId: q.dapAn.luaChonId || null, noiDung: q.dapAn.noiDung || null, cap: q.dapAn.cap || null }, dung, diem, nhomLoi, giaiThich, theId: q.theId || null, theIds: q.theIds || null };
+      return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, theId: q.theId || null, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn, dung, diem: Math.round(ty * 100), nhomLoi, chiTiet, giaiThich, _ty: ty, _sai: sai, _otherId: otherId };
     });
     const bySkill = {};
     results.forEach((r) => { const k = SKILL_OF[r.loaiCau]; bySkill[k] = bySkill[k] || { kyNang: k, dung: 0, tong: 0 }; bySkill[k].tong++; if (r.dung) bySkill[k].dung++; });
     const good = results.filter((r) => r.dung).length;
     const a = {
       id: lanLamId, uid: u.id, baiLuyenId: s.id, loaiBai: s.loaiBai, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : (s.nguon === "SO_TAY" ? "Sổ tay từ khó" : "Tất cả bộ của tôi"),
-      submitKey: b.submitKey, soCauDung: good, tongSoCau: results.length, diem: Math.round(results.reduce((acc, r) => acc + r.diem, 0) / results.length * 100),
-      thoiGianMs: Math.max(0, Math.min(Number(b.thoiGianMs) || 0, 3 * 3600000)), nopAt: iso(t), laLuyenLai: s.laLuyenLai, theoKyNang: Object.values(bySkill), ketQua: results
+      submitKey: b.submitKey, soCauDung: good, tongSoCau: results.length, diem: Math.round(results.reduce((acc, r) => acc + r._ty, 0) / results.length * 100),
+      thoiGian: Math.max(0, Math.min(Number(b.thoiGian) || 0, t - Date.parse(s.taoAt), units * 120000)), nopAt: iso(t), laLuyenLai: s.laLuyenLai,
+      theoKyNang: SKILLS.filter((k) => bySkill[k]).map((k) => bySkill[k]), ketQua: results
     };
     db.attempts.push(a);
     s.lanLamId = a.id;
@@ -902,7 +974,7 @@
       if (!t || t.type !== "XAC_THUC_EMAIL" || t.used || t.expiresAt < Date.now()) throw new ApiError(400, "TOKEN_INVALID", "Liên kết xác thực không hợp lệ hoặc đã hết hạn");
       t.used = true;
       const u = db.users.find((x) => x.id === t.userId);
-      if (u && u.trangThai === "CHUA_XAC_THUC") u.trangThai = "HOAT_DONG";
+      if (u && u.trangThai === "CHUA_XAC_THUC") { u.trangThai = "HOAT_DONG"; u.emailXacThucAt = new Date().toISOString(); }
       return { status: 204 };
     }],
     ["POST", /^\/auth\/resend-verification$/, (m, b) => {
@@ -1044,30 +1116,28 @@
       return { status: 204 };
     }],
 
-    ["GET", /^\/public\/topics$/, () => db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && d.visibility === "CONG_KHAI" && !d.deleted && d.trangThaiKiemDuyet !== "DA_AN").length }))],
+    ["GET", /^\/public\/topics$/, (m, b, q) => page(db.topics.map(topicDto), Object.assign({ size: "20" }, q))],
     ["GET", /^\/public\/tags$/, () => db.tags],
 
     ["GET", /^\/library\/decks$/, (m, b, q) => {
-      const u = me();
       let list = db.decks.filter((d) => d.visibility === "CONG_KHAI" && !d.deleted && d.trangThaiKiemDuyet !== "DA_AN");
-      if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k) || strip(d.description).includes(k) || db.cards.some((x) => x.deckId === d.id && strip(x.word).includes(k))); }
-      if (q.goal) list = list.filter((d) => d.goal === q.goal);
-      if (q.topicId) list = list.filter((d) => d.topicId === q.topicId);
-      if (q.level) list = list.filter((d) => d.level === q.level);
-      if (q.source === "MAU") list = list.filter((d) => d.kind === "MAU");
-      if (q.source === "CHIA_SE") list = list.filter((d) => d.kind === "CHIA_SE");
-      if (q.recommended === "true" && u && db.learning[u.id]) { const l = db.learning[u.id]; list = list.filter((d) => d.goal === l.goal || (l.topicIds || []).includes(d.topicId)); }
-      const views = list.map((d) => deckView(d, u && u.id));
-      if (q.sort === "name") views.sort((a, b2) => a.name.localeCompare(b2.name, "vi"));
-      else if (q.sort === "size") views.sort((a, b2) => b2.cardCount - a.cardCount);
+      if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k) || strip(d.description).includes(k)); }
+      if (q.mucTieu) list = list.filter((d) => d.goal === q.mucTieu);
+      if (q.chuDeId) list = list.filter((d) => d.topicId === q.chuDeId);
+      if (q.trinhDo) list = list.filter((d) => d.level === q.trinhDo);
+      if (q.nguon === "MAU") list = list.filter((d) => d.kind === "MAU");
+      if (q.nguon === "CHIA_SE") list = list.filter((d) => d.kind !== "MAU");
+      const views = list.map(libraryDeck);
+      if (q.sort === "name") views.sort((a, b2) => a.ten.localeCompare(b2.ten, "vi"));
+      else if (q.sort === "size") views.sort((a, b2) => b2.soThe - a.soThe);
       else views.sort((a, b2) => b2.updatedAt.localeCompare(a.updatedAt));
-      return page(views, q);
+      return page(views, Object.assign({ size: "20" }, q));
     }],
-    ["GET", /^\/library\/decks\/(\w+)$/, (m) => {
-      const u = me();
+    ["GET", /^\/library\/decks\/(\w+)$/, (m, b, q) => {
       const d = db.decks.find((x) => x.id === m[1] && x.visibility === "CONG_KHAI" && !x.deleted && x.trangThaiKiemDuyet !== "DA_AN");
       if (!d) notFound();
-      return Object.assign(deckView(d, u && u.id), { sampleCards: db.cards.filter((x) => x.deckId === d.id).slice(0, 6) });
+      const cards = db.cards.filter((x) => x.deckId === d.id && !x.deleted).sort((a, b2) => Number(b2.id) - Number(a.id));
+      return { boThe: libraryDeck(d), the: page(cards.map(libraryCard), Object.assign({ size: "20" }, q)) };
     }],
     ["POST", /^\/decks\/(\w+)\/copy$/, (m, b, q, h) => {
       const u = requireMe();
@@ -1086,7 +1156,7 @@
     ["GET", /^\/decks$/, (m, b, q) => {
       const u = requireMe();
       let list;
-      if (q.tab === "favorites") list = db.decks.filter((d) => (db.favorites[u.id] || []).includes(d.id) && !d.deleted);
+      if (q.tab === "favorites") list = db.decks.filter((d) => (db.favorites[u.id] || []).includes(d.id) && !d.deleted && (d.ownerId === u.id || (d.visibility === "CONG_KHAI" && d.trangThaiKiemDuyet !== "DA_AN")));
       else list = db.decks.filter((d) => d.ownerId === u.id && !d.deleted);
       if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k)); }
       const views = list.map((d) => deckView(d, u.id)).sort((a, b2) => b2.updatedAt.localeCompare(a.updatedAt));
@@ -1136,12 +1206,6 @@
       d.updatedAt = new Date().toISOString();
       return { status: 201, body: Object.assign({}, card, { duplicateOf: dup }) };
     }],
-    ["GET", /^\/cards\/(\w+)$/, (m) => {
-      const card = db.cards.find((x) => x.id === m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
-      return card;
-    }],
     ["PATCH", /^\/cards\/(\w+)$/, (m, b) => {
       const card = db.cards.find((x) => x.id === m[1]);
       if (!card) notFound();
@@ -1160,7 +1224,7 @@
       return { status: 204 };
     }],
 
-    ["GET", /^\/admin\/topics$/, () => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && !d.deleted).length })); }],
+    ["GET", /^\/admin\/topics$/, (m, b, q) => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return page(db.topics.map(topicDto), Object.assign({ size: "20" }, q)); }],
     ["POST", /^\/admin\/topics$/, (m, b) => {
       requireAdmin();
       const name = (b.name || "").trim();
@@ -1170,15 +1234,6 @@
       const t = { id: nextId(), name, slug: strip(name).replace(/[^a-z0-9]+/g, "-") };
       db.topics.push(t);
       return { status: 201, body: t };
-    }],
-    ["PATCH", /^\/admin\/topics\/(\w+)$/, (m, b) => {
-      requireAdmin();
-      const t = db.topics.find((x) => x.id === m[1]);
-      if (!t) notFound();
-      const name = (b.name || "").trim();
-      if (!name) bad([fe("name", "Nhập tên chủ đề")]);
-      t.name = name;
-      return t;
     }],
     ["DELETE", /^\/admin\/topics\/(\w+)$/, (m) => {
       requireAdmin();
@@ -1200,13 +1255,20 @@
     }],
     ["DELETE", /^\/admin\/tags\/(\w+)$/, (m) => { requireAdmin(); db.tags = db.tags.filter((x) => x.id !== m[1]); db.cards.forEach((x) => { x.tagIds = (x.tagIds || []).filter((t) => t !== m[1]); }); return { status: 204 }; }],
 
-    ["GET", /^\/learning\/today$/, (m, b, q) => todayPlan(requireMe(), q)],
+    ["GET", /^\/learning\/today$/, (m, b, q) => {
+      const u = requireMe();
+      const errors = [];
+      if (q.phut && !/^([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240)$/.test(q.phut)) errors.push(fe("phut", "Số phút mỗi ngày từ 1 đến 240"));
+      if (q.giuTuMoi && !["true", "false"].includes(q.giuTuMoi)) errors.push(fe("giuTuMoi", "giuTuMoi phải là true hoặc false"));
+      if (errors.length) bad(errors);
+      return todayPlan(u, q);
+    }],
     ["POST", /^\/learning\/sessions$/, (m, b) => {
       const u = requireMe();
       const errors = [];
       if (!DIRS.includes(b.chieuHoc)) errors.push(fe("chieuHoc", "Chọn chiều học Anh → Việt hoặc Việt → Anh"));
       if (![5, 10, 20].includes(Number(b.quyThoiGian))) errors.push(fe("quyThoiGian", "Chọn 5, 10 hoặc 20 phút"));
-      if (b.cheDo && !["THUONG", "CUU_LICH"].includes(b.cheDo)) errors.push(fe("cheDo", "Chế độ học không hợp lệ"));
+      if (b.cheDo && !["THUONG", "CUU_LICH"].includes(b.cheDo)) errors.push(fe("cheDo", "Chế độ học phải là THUONG hoặc CUU_LICH"));
       if (errors.length) bad(errors);
       if (b.boTheId) ownDeck(b.boTheId);
       const mode = b.cheDo || "THUONG";
@@ -1214,7 +1276,7 @@
       if (!queue.length) throw new ApiError(422, "BUSINESS_RULE", "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, hoặc thêm thẻ mới vào bộ.");
       const t = Date.now();
       const id = nextId();
-      db.sessions[id] = { id, uid: u.id, boTheId: b.boTheId || null, chieuHoc: b.chieuHoc, quyThoiGian: Number(b.quyThoiGian), cheDo: mode, muiGio: tzOf(u), batDauAt: iso(t), hetGioAt: iso(t + Number(b.quyThoiGian) * MIN), trangThai: "DANG_HOC", hangDoi: queue.map((it, i) => ({ theId: it.x.id, thuTu: i + 1, trangThai: "CHO" })) };
+      db.sessions[id] = { id, uid: u.id, boTheId: b.boTheId || null, chieuHoc: b.chieuHoc, quyThoiGian: Number(b.quyThoiGian), cheDo: mode, muiGio: tzOf(u), batDauAt: iso(t), hetGioAt: iso(t + Number(b.quyThoiGian) * MIN), trangThai: "DANG_HOC", hangDoi: queue.map((it, i) => ({ theId: it.x.id, thuTu: i + 1, trangThai: "CHUA_TRA_LOI" })) };
       return { status: 201, body: sessionView(db.sessions[id], u) };
     }],
     ["GET", /^\/learning\/sessions\/(\w+)$/, (m) => {
@@ -1236,7 +1298,7 @@
       if (typeof b.expectedVersion !== "number") errors.push(fe("expectedVersion", "Thiếu phiên bản tiến độ"));
       if (errors.length) bad(errors);
       if (s.trangThai !== "DANG_HOC") throw new ApiError(409, "CONFLICT", "Phiên học đã kết thúc. Các kết quả đã lưu vẫn được giữ.");
-      const h = s.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHO");
+      const h = s.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHUA_TRA_LOI");
       if (!h) throw new ApiError(422, "BUSINESS_RULE", "Thẻ này không có trong hàng đợi của phiên");
       const t = Date.now();
       const tz = s.muiGio;
@@ -1249,7 +1311,7 @@
         setProgress(u.id, b.theId, s.chieuHoc, other);
         p = other;
       }
-      if (b.expectedVersion !== p.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ này vừa được chấm ở một tab khác. Đã tải trạng thái mới nhất.", [], { tienDo: progressView(p), duKien: previewOf(p, t, tz) });
+      if (b.expectedVersion !== p.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ này vừa được chấm ở một tab khác. Đã tải trạng thái mới nhất.");
       const phys = physicallyNew(u.id, b.theId);
       const truoc = progressView(p);
       const n = srsNext(p, b.danhGia, t, tz);
@@ -1260,10 +1322,10 @@
       const us = usageOf(u.id, localDate(t, tz));
       us.soLuotHopLe++;
       if (phys) us.soTheMoi++;
-      h.trangThai = "DA_ON";
+      h.trangThai = "DA_TRA_LOI";
       const again = (n.trangThai === "DANG_HOC" || n.trangThai === "HOC_LAI") && Date.parse(n.hanOnAt) <= Date.parse(s.hetGioAt);
-      if (again) s.hangDoi.push({ theId: b.theId, thuTu: s.hangDoi.length + 1, trangThai: "CHO" });
-      const res = { clientEventId: b.clientEventId, theId: b.theId, chieuHoc: s.chieuHoc, danhGia: b.danhGia, truoc, tienDo: progressView(n), khoangHienThi: intervalLabel(t, n.hanOnAt, tz), laiTrongPhien: again, duKien: again ? previewOf(n, t, tz) : null };
+      if (again) s.hangDoi.push({ theId: b.theId, thuTu: s.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI" });
+      const res = { clientEventId: b.clientEventId, theId: b.theId, chieuHoc: s.chieuHoc, danhGia: b.danhGia, truoc, tienDo: progressView(n), laiTrongPhien: again };
       db.events[ek] = res;
       return { status: 201, body: res };
     }],
@@ -1272,21 +1334,31 @@
       const s = db.sessions[m[1]];
       if (!s || s.uid !== u.id) notFound();
       if (s.trangThai === "DANG_HOC") {
-        s.trangThai = "DA_KET_THUC";
+        s.trangThai = "KET_THUC";
         s.ketThucAt = new Date().toISOString();
-        s.tongKet = summaryOf(s, u);
       }
-      return s.tongKet;
+      return summaryOf(s);
     }],
     ["GET", /^\/learning\/history$/, (m, b, q) => {
       const u = requireMe();
+      const tz = tzOf(u);
+      const ymd = /^\d{4}-\d{2}-\d{2}$/;
+      const errors = [];
+      if (q.chieuHoc && !DIRS.includes(q.chieuHoc)) errors.push(fe("chieuHoc", "Chiều học phải là EN_VI hoặc VI_EN"));
+      if (q.tuNgay && !ymd.test(q.tuNgay)) errors.push(fe("tuNgay", "Ngày phải có dạng YYYY-MM-DD"));
+      if (q.denNgay && !ymd.test(q.denNgay)) errors.push(fe("denNgay", "Ngày phải có dạng YYYY-MM-DD"));
+      if (!errors.length && q.tuNgay && q.denNgay && q.tuNgay > q.denNgay) errors.push(fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi"));
+      if (errors.length) bad(errors);
       let list = db.reviews.filter((r) => r.uid === u.id && cardById(r.theId));
-      if (q.boTheId) { ownDeck(q.boTheId); list = list.filter((r) => cardById(r.theId).deckId === q.boTheId); }
+      if (q.boTheId) list = list.filter((r) => cardById(r.theId).deckId === q.boTheId);
       if (q.theId) list = list.filter((r) => r.theId === q.theId);
       if (q.phienId) list = list.filter((r) => r.phienId === q.phienId);
-      const items = list.slice().sort((a, c2) => c2.createdAt.localeCompare(a.createdAt)).map((r) => {
+      if (q.chieuHoc) list = list.filter((r) => r.chieuHoc === q.chieuHoc);
+      if (q.tuNgay) list = list.filter((r) => localDate(Date.parse(r.createdAt), tz) >= q.tuNgay);
+      if (q.denNgay) list = list.filter((r) => localDate(Date.parse(r.createdAt), tz) <= q.denNgay);
+      const items = list.slice().sort((a, c2) => c2.createdAt.localeCompare(a.createdAt) || Number(c2.id) - Number(a.id)).map((r) => {
         const x = cardById(r.theId);
-        return { id: r.id, createdAt: r.createdAt, phienId: r.phienId, theId: r.theId, tu: x.word, chieuHoc: r.chieuHoc, danhGia: r.danhGia, thoiGianTraLoiMs: r.thoiGianTraLoiMs, truoc: { trangThai: r.truoc.trangThai }, sau: { trangThai: r.sau.trangThai, hanOnAt: r.sau.hanOnAt || null }, phienBanThuatToan: r.phienBanThuatToan };
+        return { id: r.id, phienId: r.phienId, theId: r.theId, boTheId: x.deckId, tu: x.word, tuLoai: x.pos, nghiaVi: x.meaningVi, chieuHoc: r.chieuHoc, danhGia: r.danhGia, thoiGian: r.thoiGianTraLoiMs, truoc: r.truoc, sau: r.sau, phienBanThuatToan: r.phienBanThuatToan, createdAt: r.createdAt };
       });
       return page(items, Object.assign({ size: "20" }, q));
     }],
@@ -1305,46 +1377,46 @@
         return "DANG_HOC";
       };
       const tongHop = { MOI: 0, DANG_HOC: 0, DEN_HAN: 0, QUA_HAN: 0, TAM_NGUNG: 0 };
-      let items = db.cards.filter((x) => x.deckId === d.id).map((x) => {
+      const cards = db.cards.filter((x) => x.deckId === d.id);
+      let items = cards.map((x) => {
         const chieu = {};
-        DIRS.forEach((dir) => { const p = progressOf(u.id, x.id, dir); const g = group(p); tongHop[g]++; chieu[dir] = Object.assign(progressView(p), { nhom: g, khoangHienThi: p.hanOnAt ? intervalLabel(t, p.hanOnAt, tz) : null }); });
+        DIRS.forEach((dir) => { const p = progressOf(u.id, x.id, dir); const g = group(p); tongHop[g]++; chieu[dir] = Object.assign(progressView(p), { nhom: g }); });
         return { theId: x.id, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, tamNgung: DIRS.every((dir) => chieu[dir].trangThai === "TAM_NGUNG"), chieu };
       });
       if (q.nhom) items = items.filter((it) => DIRS.some((dir) => it.chieu[dir].nhom === q.nhom));
       if (q.q) { const k = strip(q.q); items = items.filter((it) => strip(it.tu).includes(k) || strip(it.nghiaVi).includes(k)); }
-      return Object.assign({ boTheId: d.id, ten: d.name, tongHop, muiGio: tz }, page(items, Object.assign({ size: "20" }, q)));
+      return Object.assign({ boTheId: d.id, ten: d.name, muiGio: tz, tongSoThe: cards.length, tongHop }, page(items, Object.assign({ size: "20" }, q)));
     }],
     ["PUT", /^\/cards\/(\w+)\/progress\/suspend$/, (m, b) => {
       const card = cardById(m[1]);
       if (!card) notFound();
       const { u } = ownDeck(card.deckId);
       if (typeof b.tamNgung !== "boolean") bad([fe("tamNgung", "Thiếu trạng thái tạm ngưng")]);
+      const resumed = (p) => !p.hanOnAt ? "MOI" : p.khoangOnNgay > 0 ? "ON_TAP" : p.soLanQuen > 0 ? "HOC_LAI" : "DANG_HOC";
       DIRS.forEach((dir) => {
+        const stored = db.progress[pkey(u.id, card.id, dir)];
         const p = progressOf(u.id, card.id, dir);
-        if (b.tamNgung && p.trangThai !== "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: "TAM_NGUNG", truocTamNgung: { trangThai: p.trangThai, hanOnAt: p.hanOnAt }, version: p.version + 1 }));
-        if (!b.tamNgung && p.trangThai === "TAM_NGUNG") {
-          const prev = p.truocTamNgung || { trangThai: "MOI", hanOnAt: null };
-          const n = Object.assign({}, p, { trangThai: prev.trangThai, hanOnAt: prev.hanOnAt, version: p.version + 1 });
-          delete n.truocTamNgung;
-          setProgress(u.id, card.id, dir, n);
-        }
+        if (b.tamNgung && p.trangThai !== "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: "TAM_NGUNG", version: stored ? p.version + 1 : 0 }));
+        if (!b.tamNgung && p.trangThai === "TAM_NGUNG") setProgress(u.id, card.id, dir, Object.assign({}, p, { trangThai: resumed(p), version: p.version + 1 }));
       });
       const out = {};
       DIRS.forEach((dir) => { out[dir] = progressView(progressOf(u.id, card.id, dir)); });
-      return { theId: card.id, tamNgung: b.tamNgung, chieu: out };
+      return { theId: card.id, tamNgung: DIRS.every((dir) => out[dir].trangThai === "TAM_NGUNG"), chieu: out };
     }],
-    ["POST", /^\/cards\/(\w+)\/progress\/reset$/, (m) => {
+    ["POST", /^\/cards\/(\w+)\/progress\/reset$/, (m, b) => {
       const card = cardById(m[1]);
       if (!card) notFound();
       const { u } = ownDeck(card.deckId);
+      if (!b || b.xacNhan !== true) bad([fe("xacNhan", "Cần xác nhận đặt lại tiến độ")]);
       const out = {};
       DIRS.forEach((dir) => {
         const p = progressOf(u.id, card.id, dir);
-        const n = Object.assign(newProgress(), { version: p.version + 1 });
-        setProgress(u.id, card.id, dir, n);
+        const fresh = Object.assign(newProgress(), { version: p.version });
+        const n = JSON.stringify(progressView(fresh)) === JSON.stringify(progressView(p)) ? p : Object.assign(newProgress(), { version: p.version + 1 });
+        if (n !== p) setProgress(u.id, card.id, dir, n);
         out[dir] = progressView(n);
       });
-      return { theId: card.id, chieu: out };
+      return { theId: card.id, tamNgung: false, chieu: out };
     }],
 
     ["POST", /^\/practice\/sessions$/, (m, b) => {
@@ -1362,32 +1434,40 @@
       const u = requireMe();
       const s = db.practice[m[1]];
       if (!s || s.uid !== u.id) notFound();
-      if (!b.submitKey || String(b.submitKey).length > 64) bad([fe("submitKey", "Thiếu khóa nộp bài")]);
+      if (!b.submitKey || String(b.submitKey).length > 128 || !/^[A-Za-z0-9._:-]+$/.test(String(b.submitKey))) bad([fe("submitKey", "Khóa nộp bài chỉ gồm chữ, số và . _ : -, tối đa 128 ký tự")]);
+      if (b.thoiGian === undefined || b.thoiGian === null || Number(b.thoiGian) < 0) bad([fe("thoiGian", "Thời gian làm bài không được âm")]);
       const prior = db.attempts.find((a) => a.uid === u.id && a.submitKey === b.submitKey);
+      if (prior && prior.baiLuyenId !== s.id) throw new ApiError(409, "CONFLICT", "Khóa nộp bài đã được dùng cho bài khác", [fe("submitKey", "Khóa nộp bài đã được dùng cho bài khác")]);
       if (prior) return attemptView(prior);
-      if (s.lanLamId) throw new ApiError(409, "CONFLICT", "Bài này đã được nộp. Mở kết quả để xem đáp án.", [], { lanLamId: s.lanLamId });
+      if (s.lanLamId) throw new ApiError(409, "CONFLICT", "Bài này đã được nộp. Mở lại bài để xem kết quả.");
       return { status: 201, body: attemptView(submitPractice(u, s, b, Date.now())) };
     }],
     ["POST", /^\/practice\/mistakes\/retry$/, (m, b) => {
       const u = requireMe();
       const a = db.attempts.find((x) => x.id === b.lanLamId && x.uid === u.id);
       if (!a) notFound();
+      const goc = db.practice[a.baiLuyenId];
       const wrong = a.ketQua.filter((r) => !r.dung);
       if (!wrong.length) throw new ApiError(422, "BUSINESS_RULE", "Bài này không có câu sai để luyện lại.");
       const theIds = [];
       const loaiCau = [];
-      wrong.forEach((r) => { (r.theIds || [r.theId]).forEach((id) => { if (id && cardById(id) && !theIds.includes(id)) { theIds.push(id); loaiCau.push(r.loaiCau === "GHEP_TU" ? "CHON_NGHIA" : r.loaiCau); } }); });
-      if (!theIds.length) throw new ApiError(422, "BUSINESS_RULE", "Các thẻ của câu sai đã bị xóa nên không luyện lại được.");
+      wrong.forEach((r) => { (r._sai || []).concat(r._otherId ? [r._otherId] : []).forEach((id) => { if (id && cardById(id) && !theIds.includes(id)) { theIds.push(id); loaiCau.push(r.loaiCau === "GHEP_TU" ? "CHON_NGHIA" : r.loaiCau); } }); });
+      if (!theIds.length) throw new ApiError(422, "BUSINESS_RULE", "Các thẻ của câu sai đã bị xóa hoặc đang tạm ngưng nên chưa luyện lại được.");
       const loaiBai = a.loaiBai === "GHEP_TU" ? "CHON_NGHIA" : a.loaiBai;
-      const s = createPractice(u, { loaiBai, soCau: 20, theIds, loaiCau: loaiBai === "TONG_HOP" ? loaiCau : null, boTheId: null, nguon: "LUYEN_LAI", laLuyenLai: true }, Date.now());
+      const s = createPractice(u, { loaiBai, soCau: goc ? goc.soCauYeuCau : 20, theIds, loaiCau: loaiBai === "TONG_HOP" ? loaiCau : null, boTheId: null, nguon: goc ? goc.nguon : "BO_THE", laLuyenLai: true, baiGocId: a.baiLuyenId }, Date.now());
+      s.boTheId = goc ? goc.boTheId : null;
       return { status: 201, body: practiceView(s) };
     }],
     ["GET", /^\/practice\/history$/, (m, b, q) => {
       const u = requireMe();
       let list = db.attempts.filter((a) => a.uid === u.id);
       if (q.loaiBai) list = list.filter((a) => a.loaiBai === q.loaiBai);
-      const items = list.slice().sort((a, c2) => c2.nopAt.localeCompare(a.nopAt)).map((a) => ({ lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, soCauSai: a.tongSoCau - a.soCauDung }));
-      return page(items, Object.assign({ size: "10" }, q));
+      if (q.tuNgay && q.denNgay && q.tuNgay > q.denNgay) bad([fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi")]);
+      const tz = tzOf(u);
+      if (q.tuNgay) list = list.filter((a) => localDate(Date.parse(a.nopAt), tz) >= q.tuNgay);
+      if (q.denNgay) list = list.filter((a) => localDate(Date.parse(a.nopAt), tz) <= q.denNgay);
+      const items = list.slice().sort((a, c2) => c2.nopAt.localeCompare(a.nopAt) || String(c2.id).localeCompare(String(a.id))).map((a) => ({ lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, soCauSai: a.tongSoCau - a.soCauDung, diem: a.diem, thoiGian: a.thoiGian, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai }));
+      return page(items, Object.assign({ size: "20" }, q));
     }],
 
     ["GET", /^\/notebook$/, (m, b, q) => {
@@ -1435,8 +1515,8 @@
       const theoNgay = r.list.map((d) => {
         const dr = rs.filter((x) => x.ngay === d);
         const da = as.filter((a) => a.ngay === d);
-        const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGianMs, 0);
-        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: Math.round(ms / MIN) };
+        const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGian, 0);
+        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: minutesOf(ms) };
       });
       const tong = as.reduce((acc, a) => acc + a.tongSoCau, 0);
       const dung = as.reduce((acc, a) => acc + a.soCauDung, 0);
@@ -1664,15 +1744,16 @@
         }
         return { cauHoiId: q.id, noiDung: bad2 === undefined ? q.dapAn.noiDung : bad2 };
       });
-      return submitPractice(u, s, { submitKey: "seed-" + s.id, traLoi, thoiGianMs: spec.phut * MIN }, at(spec.d, spec.h));
+      return submitPractice(u, s, { submitKey: "seed-" + s.id, traLoi, thoiGian: spec.phut * MIN }, at(spec.d, spec.h));
     };
     run({ loaiBai: "CHON_NGHIA", theIds: [w("receipt"), w("postpone"), w("complimentary"), w("recipe"), w("uncharacteristically")], sai: { uncharacteristically: null }, d: 12, h: 20, phut: 3 });
     run({ loaiBai: "NHAP_TU_THEO_NGHIA", theIds: [w("receipt"), w("postpone"), w("recipe"), w("complementary"), w("complimentary")], sai: { receipt: "receit" }, d: 9, h: 21, phut: 4 });
     run({ loaiBai: "PHAN_BIET_CAP", soCau: 5, theIds: [w("complimentary"), w("complementary"), w("receipt"), w("recipe")], sai: { complimentary: "complementary", recipe: "receipt" }, d: 5, h: 19, phut: 3 });
     run({ loaiBai: "TONG_HOP", soCau: 5, boTheId: "22", theIds: ["How's it going?", "I'm running late", "get along with", "run out of", "appreciate"].map((x) => w(x, "22")), sai: { appreciate: "apreciate" }, d: 3, h: 20, phut: 4 });
     const last = run({ loaiBai: "NGHE_VIET", theIds: [w("receipt"), w("postpone"), w("uncharacteristically"), w("complimentary"), w("recipe")], sai: { receipt: "reciept", postpone: "post pone", uncharacteristically: "uncharacteristicly" }, d: 1, h: 21, phut: 4 });
-    const again = createPractice(u, { loaiBai: "NGHE_VIET", soCau: 20, theIds: last.ketQua.filter((r) => !r.dung).map((r) => r.theId), laLuyenLai: true, nguon: "LUYEN_LAI" }, at(1, 21.5));
-    submitPractice(u, again, { submitKey: "seed-" + again.id, thoiGianMs: 2 * MIN, traLoi: again.cauHoi.map((q) => ({ cauHoiId: q.id, noiDung: q._snap.tu === "uncharacteristically" ? "uncharacteristicaly" : q.dapAn.noiDung })) }, at(1, 21.5));
+    const again = createPractice(u, { loaiBai: "NGHE_VIET", soCau: 5, theIds: last.ketQua.filter((r) => !r.dung).map((r) => r.theId), laLuyenLai: true, baiGocId: last.baiLuyenId }, at(1, 21.5));
+    again.taoAt = iso(at(1, 21.5) - 2 * MIN);
+    submitPractice(u, again, { submitKey: "seed-" + again.id, thoiGian: 2 * MIN, traLoi: again.cauHoi.map((q) => ({ cauHoiId: q.id, noiDung: q._snap.tu === "uncharacteristically" ? "uncharacteristicaly" : q.dapAn.noiDung })) }, at(1, 21.5));
     db.practiceSeeded = true;
     save(db);
   }

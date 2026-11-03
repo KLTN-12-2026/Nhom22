@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
-<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
-<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
 <link rel="stylesheet" href="../shared/deck-illustrations.css?v=683a5eb92aab">
 <style>
   .head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-3); flex-wrap: wrap; }
@@ -20,13 +20,13 @@
   .plan-line span:first-child { color: var(--primary); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 600; font-size: var(--fs-small); }
   .plan-line span:last-child { font-weight: 650; text-align: right; }
 </style>
-<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
-<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
-<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="decks" data-auth="required">
-<!-- F1.8 · UI13 · API: GET /decks?tab=mine|favorites&q (B1.8), GET /me/learning-settings (B1.5) -->
+<!-- F1.8 · UI13 · API: GET /decks, GET /decks?yeuThich=true (B1.8, RS-056), GET /me/learning-settings (B1.5) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -90,8 +90,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
-<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
+<script src="../shared/contract-demo.js?v=3e6ee35bf107"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script src="../shared/deck-illustration.js?v=71a56573de29"></script>
@@ -117,13 +117,13 @@
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     region.setAttribute("aria-labelledby", tab === "mine" ? "tab-mine" : "tab-fav");
     VL.load(region, {
-      fetch: async () => { const d = await VL.api("GET", "/decks?size=100"); d.items = d.items.filter(x => (tab !== "favorites" || x.yeuThich) && (!q || x.ten.toLocaleLowerCase().includes(q.toLocaleLowerCase()))); return d; },
+      fetch: async () => { const d = await VL.api("GET", "/decks?size=100" + (tab === "favorites" ? "&yeuThich=true" : "")); d.items = d.items.filter(x => !q || x.ten.toLocaleLowerCase().includes(q.toLocaleLowerCase())); return d; },
       isEmpty: (d) => !d.items.length,
       empty: () => {
         document.getElementById("count-code").textContent = "0 bộ";
         const fav = tab === "favorites";
         document.getElementById("empty-title").textContent = q ? "Không có bộ nào tên chứa “" + q + "”" : fav ? "Chưa có bộ yêu thích" : "Bạn chưa có bộ thẻ nào";
-        document.getElementById("empty-text").textContent = q ? "Thử từ khóa khác." : fav ? "Chỉ lọc các bộ bạn sở hữu trong trang đang tải." : "Tự tạo bộ đầu tiên. Thư viện sẽ có ở B1.10.";
+        document.getElementById("empty-text").textContent = q ? "Thử từ khóa khác." : fav ? "Bấm yêu thích ở bộ của bạn hoặc ở bộ công khai trong thư viện để thêm vào đây." : "Tự tạo bộ đầu tiên. Thư viện sẽ có ở B1.10.";
       },
       render: (d) => {
         document.getElementById("count-code").textContent = d.totalElements + " bộ";
@@ -134,7 +134,7 @@
             '<span class="answer-no">' + (i + 1) + "</span>" +
             '<div class="answer-main"><div class="deck-name-line">' + VLDeckThumbnail(deck) + '<a class="answer-title" href="' + href + '">' + VL.esc(deck.ten) + "</a></div>" +
             '<div class="answer-meta">' + (deck.quyenTruyCap === "CONG_KHAI" ? '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>" : '<span class="stamp stamp-quiet">' + VL.icon("lock") + "Riêng tư</span>") +
-            (deck.boNguonId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>của " + VL.esc(deck.ownerName) + "</span>" : "") + "<span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
+            (deck.boNguonId ? "<span>Sao chép từ thư viện</span>" : "") + (!mine ? "<span>Bộ công khai của người khác</span>" : "") + "<span>" + deck.soThe + " thẻ</span><span>Sửa " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
             '<div class="deck-cols">' + VL.levelHtml(deck.trinhDo) + '</div>' +
             '<div class="deck-actions">' + (mine ? '<a class="btn btn-secondary btn-sm" href="bo-the-chi-tiet.html?id=' + deck.id + '">Mở</a><a class="btn btn-edit btn-sm" href="bo-the-tao.html?id=' + deck.id + '">Sửa</a>' : '<a class="btn btn-secondary btn-sm" href="' + href + '">Xem</a>') + "</div></li>";
         }).join("");
@@ -154,6 +154,6 @@
   load();
 })();
 </script>
-<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
 </html>

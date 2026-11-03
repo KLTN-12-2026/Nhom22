@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
-<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
-<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
 <style>
   .verdict { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
   .cmp { display: grid; gap: 4px; margin: 0; font-size: var(--fs-small); }
@@ -31,10 +31,10 @@
   .skills dd { margin: 0; }
   .foot { display: flex; flex-wrap: wrap; gap: var(--sp-3); padding-top: var(--sp-4); margin-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
 </style>
-<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
-<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
-<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="practice" data-auth="required">
 <!-- F2.5 · UI25 · API: GET /practice/sessions/{id} (ketQua sau khi nộp, B2.8), POST /practice/mistakes/retry {lanLamId} (B2.8) -->
@@ -84,7 +84,7 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -102,24 +102,26 @@
     if (r.loaiCau === "GHEP_TU") return '<p class="q-prompt">Ghép từ với nghĩa</p>';
     return d.cau ? '<p class="q-sentence" lang="en">' + VL.esc(d.cau).replace("_____", '<span class="gap">?</span>') + "</p>" : '<p class="q-prompt">' + VL.esc(d.goiY) + "</p>";
   }
-  function explain(g) {
+  function explain(snap) {
+    const g = snap && snap.the ? snap.the : snap;
+    const other = snap && snap.theKhac;
     if (!g || !g.tu) return "";
     return '<div class="explain"><p><span class="entry-word" lang="en" style="font-size:1.125rem">' + VL.esc(g.tu) + '</span> <span class="ipa" lang="en">' + VL.esc(g.phienAm || "") + '</span> <span class="pos" lang="en">' + VL.esc(g.tuLoai || "") + "</span></p><p>" + VL.esc(g.nghiaVi) + "</p>" +
-      (g.soSanh ? g.soSanh.slice(1).map((s) => '<p class="small">Khác với <span class="en" lang="en">' + VL.esc(s.tu) + "</span>: " + VL.esc(s.nghiaVi) + "</p>").join("") : "") +
+      (other ? '<p class="small">Khác với <span class="en" lang="en">' + VL.esc(other.tu) + "</span>: " + VL.esc(other.nghiaVi) + "</p>" : "") +
       (g.viDuEn ? '<p class="en" lang="en">' + VL.esc(g.viDuEn) + "</p>" + (g.dichVi ? '<p class="small muted">' + VL.esc(g.dichVi) + "</p>" : "") : "") + "</div>";
   }
   function row(r) {
     const stamp = r.dung ? '<span class="stamp stamp-success">' + VL.icon("check") + "Đúng</span>" : '<span class="stamp stamp-danger">' + VL.icon("x") + "Sai</span>";
     let body;
     if (r.loaiCau === "GHEP_TU") {
-      const good = r.giaiThich.cap.filter((c) => c.dung).length;
-      body = '<table class="pairs"><thead><tr><th scope="col">Từ</th><th scope="col">Bạn ghép</th><th scope="col">Nghĩa đúng</th></tr></thead><tbody>' + r.giaiThich.cap.map((c) =>
+      const good = r.chiTiet.filter((c) => c.dung).length;
+      body = '<table class="pairs"><thead><tr><th scope="col">Từ</th><th scope="col">Bạn ghép</th><th scope="col">Nghĩa đúng</th></tr></thead><tbody>' + r.chiTiet.map((c) =>
         '<tr><td class="en" lang="en">' + VL.esc(c.tu) + "</td><td>" + (c.nghiaDaChon ? VL.esc(c.nghiaDaChon) : "<em>Để trống</em>") + (c.dung ? "" : ' <span class="stamp stamp-danger">Sai</span>') + "</td><td>" + VL.esc(c.nghiaDung) + "</td></tr>").join("") + "</tbody></table>";
-      return '<section class="q-row" data-ok="' + r.dung + '"><span class="q-no">' + r.thuTu + '</span><div class="q-body"><div class="verdict"><span class="q-kind">' + VL.PRACTICE[r.loaiCau] + "</span>" + stamp + '<span class="small muted">' + good + "/" + r.giaiThich.cap.length + " cặp đúng</span></div>" + body + "</div></section>";
+      return '<section class="q-row" data-ok="' + r.dung + '"><span class="q-no">' + r.thuTu + '</span><div class="q-body"><div class="verdict"><span class="q-kind">' + VL.PRACTICE[r.loaiCau] + "</span>" + stamp + '<span class="small muted">' + good + "/" + r.chiTiet.length + " cặp đúng</span></div>" + body + "</div></section>";
     }
     const en = ["CHON_TU", "NHAP_TU_THEO_NGHIA", "NGHE_VIET", "DIEN_CHO_TRONG", "PHAN_BIET_CAP"].includes(r.loaiCau);
     const val = (v) => v ? (en ? '<span class="en" lang="en">' + VL.esc(v) + "</span>" : VL.esc(v)) : "<em>Để trống</em>";
-    body = prompt(r) + '<dl class="cmp"><div><dt>Bạn trả lời</dt><dd>' + val(r.traLoi.noiDung) + "</dd></div>" + (r.dung ? "" : "<div><dt>Đáp án</dt><dd>" + val(r.dapAn.noiDung) + "</dd></div>") + "</dl>" + explain(r.giaiThich);
+    body = prompt(r) + '<dl class="cmp"><div><dt>Bạn trả lời</dt><dd>' + val(r.traLoi && r.traLoi.noiDung) + "</dd></div>" + (r.dung ? "" : "<div><dt>Đáp án</dt><dd>" + val(r.dapAn.noiDung) + "</dd></div>") + "</dl>" + explain(r.giaiThich);
     return '<section class="q-row" data-ok="' + r.dung + '"><span class="q-no">' + r.thuTu + '</span><div class="q-body"><div class="verdict"><span class="q-kind">' + VL.PRACTICE[r.loaiCau] + "</span>" + stamp + (r.nhomLoi ? '<span class="stamp stamp-quiet">Lỗi ' + VL.ERROR_GROUP[r.nhomLoi].toLowerCase() + "</span>" : "") + "</div>" + body + "</div></section>";
   }
 
@@ -135,7 +137,7 @@
       $("page-title").textContent = "Đúng " + A.soCauDung + "/" + A.tongSoCau + " câu";
       $("lead").textContent = A.boTheTen + ". Nộp lúc " + VL.fmtDateTime(A.nopAt) + ".";
       const wrong = A.tongSoCau - A.soCauDung;
-      $("tally").innerHTML = '<div><dt>Điểm<small>ghép từ tính theo từng cặp</small></dt><dd><span class="tally-n">' + A.diem + '</span>/100</dd></div><div><dt>Thời gian</dt><dd>' + VL.fmtDuration(Math.round(A.thoiGianMs / 1000)) + '</dd></div><div><dt>Câu đúng</dt><dd><span class="tally-n">' + A.soCauDung + '</span>câu</dd></div><div><dt>Câu sai</dt><dd><span class="tally-n">' + wrong + "</span>câu</dd></div>";
+      $("tally").innerHTML = '<div><dt>Điểm<small>ghép từ tính theo từng cặp</small></dt><dd><span class="tally-n">' + A.diem + '</span>/100</dd></div><div><dt>Thời gian</dt><dd>' + VL.fmtDuration(Math.round(A.thoiGian / 1000)) + '</dd></div><div><dt>Câu đúng</dt><dd><span class="tally-n">' + A.soCauDung + '</span>câu</dd></div><div><dt>Câu sai</dt><dd><span class="tally-n">' + wrong + "</span>câu</dd></div>";
       $("results").innerHTML = A.ketQua.map(row).join("");
       $("skills").innerHTML = A.theoKyNang.map((k) => "<div><dt><span>" + VL.SKILL[k.kyNang] + '</span><span class="num">' + k.dung + "/" + k.tong + '</span></dt><dd><div class="meter" role="img" aria-label="' + k.dung + " trên " + k.tong + ' câu đúng" style="--v:' + (k.tong ? k.dung / k.tong : 0) + '"><span></span></div></dd></div>').join("");
       const retry = $("retry");
@@ -151,6 +153,6 @@
   }));
 })();
 </script>
-<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
 </html>

@@ -12,7 +12,7 @@ import java.util.Objects;
 
 public final class SrsCalculator {
 
-    public static final String VERSION = "SM2-VN-1";
+    public static final String VERSION = "SM2-VN-2";
 
     private static final BigDecimal EF_BONUS = new BigDecimal("0.10");
     private static final BigDecimal EF_BASE = new BigDecimal("0.08");
@@ -57,7 +57,10 @@ public final class SrsCalculator {
             case KHO -> scheduled(previous, ef, grow(interval, HARD_FACTOR), now);
             case NHO -> scheduled(previous, ef,
                     previous.chuoiThanhCong() == 1 ? SECOND_REVIEW_DAYS : grow(interval, ef), now);
-            case DE -> scheduled(previous, ef, grow(interval, ef.multiply(EASY_FACTOR)), now);
+            case DE -> scheduled(previous, ef,
+                    previous.chuoiThanhCong() == 1
+                            ? grow(SECOND_REVIEW_DAYS, EASY_FACTOR)
+                            : grow(interval, ef.multiply(EASY_FACTOR)), now);
         };
     }
 

@@ -7,20 +7,30 @@ import com.do_an_tot_nghiep.k28.content.service.CardService;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeQuestionResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeSessionResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.RetryPracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.entity.BaiLuyen;
 import com.do_an_tot_nghiep.k28.practice.entity.CauHoiBaiLuyen;
+import com.do_an_tot_nghiep.k28.practice.entity.LanLamBai;
+import com.do_an_tot_nghiep.k28.practice.entity.TraLoiBaiLuyen;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.LoaiBai;
+import com.do_an_tot_nghiep.k28.practice.entity.enums.LoaiCau;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.NguonBaiLuyen;
 import com.do_an_tot_nghiep.k28.practice.repository.BaiLuyenRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.CauHoiBaiLuyenRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.LanLamBaiRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.TraLoiBaiLuyenRepository;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +47,9 @@ public class PracticeService {
 
     private final BaiLuyenRepository practices;
     private final CauHoiBaiLuyenRepository questions;
+    private final LanLamBaiRepository attempts;
+    private final TraLoiBaiLuyenRepository answers;
+    private final PracticeResults results;
     private final CardService cardService;
     private final JsonMapper json;
 
@@ -80,7 +93,9 @@ public class PracticeService {
             pool = distract;
         }
         if (pool.isEmpty()) {
-            throw new ApiException(ErrorCode.BUSINESS_RULE, nguon == NguonBaiLuyen.SO_TAY
+            throw new ApiException(ErrorCode.BUSINESS_RULE, !picked.isEmpty()
+                    ? "Các thẻ đã chọn đang tạm ngưng, chưa thể luyện."
+                    : nguon == NguonBaiLuyen.SO_TAY
                     ? "Sổ tay đang trống, chưa có từ nào để luyện."
                     : "Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước.");
         }
@@ -92,7 +107,94 @@ public class PracticeService {
                 .generate(loaiBai, request.soCau(), pool, distract, pairs);
 
         BaiLuyen practice = practices.save(BaiLuyen.create(userId, loaiBai, boTheId, nguon, request.soCau()));
-        List<CauHoiBaiLuyen> saved = questions.saveAll(IntStream.range(0, drafts.size())
+        return toResponse(practice, boTheTen, saveQuestions(practice, drafts), null);
+    }
+
+    @Transactional(readOnly = true)
+    public PracticeSessionResponse get(Long userId, Long id) {
+        BaiLuyen practice = practices.findByIdAndNguoiDungId(id, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
+        String boTheTen = results.boTheTen(practice);
+        PracticeResultResponse ketQua = attempts.findByBaiId(practice.getId())
+                .map(attempt -> results.result(practice, boTheTen, attempt))
+                .orElse(null);
+        return toResponse(practice, boTheTen, questions.findByBaiIdOrderByThuTu(practice.getId()), ketQua);
+    }
+
+    @Transactional
+    public PracticeSessionResponse retry(Long userId, RetryPracticeRequest request) {
+        LanLamBai attempt = attempts.findByIdAndNguoiDungId(request.attemptId(), userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy lần làm bài"));
+        BaiLuyen goc = practices.findByIdAndNguoiDungId(attempt.getBaiId(), userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
+        Map<Long, CauHoiBaiLuyen> rows = new HashMap<>();
+        questions.findByBaiIdOrderByThuTu(goc.getId()).forEach(row -> rows.put(row.getId(), row));
+        List<TraLoiBaiLuyen> wrong = answers.findByLanLamId(attempt.getId()).stream()
+                .filter(answer -> !answer.isDung())
+                .sorted(Comparator.comparingInt(answer -> rows.get(answer.getCauHoiId()).getThuTu()))
+                .toList();
+        if (wrong.isEmpty()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Bài này không có câu sai để luyện lại.");
+        }
+
+        List<Long> usableIds = practices.usableCardIds(userId, TrangThaiTienDo.TAM_NGUNG);
+        Map<Long, StudyCardResponse> cards = cardService.studyCards(userId, usableIds);
+        Map<Long, PracticeGenerator.Retry> items = new LinkedHashMap<>();
+        for (TraLoiBaiLuyen answer : wrong) {
+            CauHoiBaiLuyen row = rows.get(answer.getCauHoiId());
+            PracticeGrader.Question key = results.question(row);
+            switch (row.getLoaiCau()) {
+                case GHEP_TU -> {
+                    Set<Object> sai = results.stored(answer).chiTiet().stream()
+                            .filter(detail -> Boolean.FALSE.equals(detail.get("dung")))
+                            .map(detail -> detail.get("traiId"))
+                            .collect(Collectors.toSet());
+                    key.dapAn().cap().stream()
+                            .filter(link -> sai.contains(link.traiId()))
+                            .forEach(link -> addRetry(items, cards, LoaiCau.CHON_NGHIA,
+                                    Long.valueOf(link.theId()), null, null));
+                }
+                case PHAN_BIET_CAP -> {
+                    Long other = key.dapAn().luaChon().stream()
+                            .filter(choice -> !choice.id().equals(key.dapAn().luaChonId()))
+                            .map(choice -> Long.valueOf(choice.theId()))
+                            .findFirst()
+                            .orElse(null);
+                    Long capId = key.dapAn().capId() == null ? null : Long.valueOf(key.dapAn().capId());
+                    addRetry(items, cards, LoaiCau.PHAN_BIET_CAP, row.getTheId(), other, capId);
+                }
+                default -> addRetry(items, cards, row.getLoaiCau(), row.getTheId(), null, null);
+            }
+        }
+        if (items.isEmpty()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE,
+                    "Các thẻ của câu sai đã bị xóa hoặc đang tạm ngưng nên chưa luyện lại được.");
+        }
+
+        LoaiBai loaiBai = goc.getLoaiBai() == LoaiBai.GHEP_TU ? LoaiBai.CHON_NGHIA : goc.getLoaiBai();
+        List<PracticeGenerator.Draft> drafts = new PracticeGenerator(ThreadLocalRandom.current())
+                .retry(loaiBai, List.copyOf(items.values()), pick(usableIds, cards));
+        BaiLuyen practice = practices.save(BaiLuyen.createRetry(goc, loaiBai));
+        return toResponse(practice, results.boTheTen(practice), saveQuestions(practice, drafts), null);
+    }
+
+    private void addRetry(
+            Map<Long, PracticeGenerator.Retry> items,
+            Map<Long, StudyCardResponse> cards,
+            LoaiCau loaiCau,
+            Long theId,
+            Long otherId,
+            Long capId
+    ) {
+        StudyCardResponse card = cards.get(theId);
+        if (card != null && !items.containsKey(theId)) {
+            items.put(theId, new PracticeGenerator.Retry(
+                    loaiCau, card, otherId == null ? null : cards.get(otherId), capId));
+        }
+    }
+
+    private List<CauHoiBaiLuyen> saveQuestions(BaiLuyen practice, List<PracticeGenerator.Draft> drafts) {
+        return questions.saveAll(IntStream.range(0, drafts.size())
                 .mapToObj(i -> {
                     PracticeGenerator.Draft draft = drafts.get(i);
                     return CauHoiBaiLuyen.create(
@@ -106,17 +208,6 @@ public class PracticeService {
                             json.writeValueAsString(draft.giaiThich()));
                 })
                 .toList());
-        return toResponse(practice, boTheTen, saved);
-    }
-
-    @Transactional(readOnly = true)
-    public PracticeSessionResponse get(Long userId, Long id) {
-        BaiLuyen practice = practices.findByIdAndNguoiDungId(id, userId)
-                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
-        String boTheTen = practice.getBoTheId() != null
-                ? practices.deckName(practice.getBoTheId()).orElse(TAT_CA_BO)
-                : practice.getNguon() == NguonBaiLuyen.SO_TAY ? SO_TAY_TEN : TAT_CA_BO;
-        return toResponse(practice, boTheTen, questions.findByBaiIdOrderByThuTu(practice.getId()));
     }
 
     private List<PracticeGenerator.Pair> pairsWithin(Long userId, List<StudyCardResponse> pool) {
@@ -137,7 +228,12 @@ public class PracticeService {
         return ids.stream().filter(seen::add).map(cards::get).filter(Objects::nonNull).toList();
     }
 
-    private PracticeSessionResponse toResponse(BaiLuyen practice, String boTheTen, List<CauHoiBaiLuyen> rows) {
+    private PracticeSessionResponse toResponse(
+            BaiLuyen practice,
+            String boTheTen,
+            List<CauHoiBaiLuyen> rows,
+            PracticeResultResponse ketQua
+    ) {
         return new PracticeSessionResponse(
                 String.valueOf(practice.getId()),
                 practice.getLoaiBai(),
@@ -147,6 +243,10 @@ public class PracticeService {
                 rows.size(),
                 practice.getSoCauYeuCau(),
                 practice.getCreatedAt(),
+                practice.isLaLuyenLai(),
+                practice.getBaiGocId() == null ? null : String.valueOf(practice.getBaiGocId()),
+                ketQua != null,
+                ketQua == null ? null : ketQua.lanLamId(),
                 rows.stream()
                         .map(row -> new PracticeQuestionResponse(
                                 String.valueOf(row.getId()),
@@ -154,6 +254,7 @@ public class PracticeService {
                                 row.getLoaiCau(),
                                 json.readTree(row.getDeBaiJson()),
                                 row.getPhuongAnJson() == null ? null : json.readTree(row.getPhuongAnJson())))
-                        .toList());
+                        .toList(),
+                ketQua);
     }
 }

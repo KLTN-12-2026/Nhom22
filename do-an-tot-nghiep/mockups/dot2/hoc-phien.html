@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
-<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
-<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
 <style>
   .example { display: grid; gap: 2px; max-width: 52ch; margin-top: var(--sp-3); }
   .example .en { font-style: italic; color: var(--ink); font-size: 1.0625rem; }
@@ -29,10 +29,10 @@
   .key-help ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
   @media (max-width: 479px) { .bar-stamps .stamp .lbl { display: none; } .rate { font-size: 1rem; } }
 </style>
-<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
-<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
-<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="study" data-auth="required" class="no-bottom-nav">
 <!-- F2.2 · UI19 · API: GET /learning/sessions/{id} (B2.3), POST /learning/sessions/{id}/reviews {clientEventId, theId, chieuHoc, danhGia, expectedVersion, thoiGianTraLoiMs} (B2.4), POST /learning/sessions/{id}/finish (B2.5), PUT /notebook/{cardId} (B2.9) -->
@@ -75,10 +75,10 @@
             <div id="rating" hidden>
               <p class="rate-caption">Lần ôn tiếp theo</p>
               <div class="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
-                <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span><span class="rate-when" data-when-for="QUEN"></span></button>
-                <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span><span class="rate-when" data-when-for="KHO"></span></button>
-                <button type="button" class="rate" data-rate="NHO"><span class="rate-top"><span class="kbd">3</span>Nhớ</span><span class="rate-when" data-when-for="NHO"></span></button>
-                <button type="button" class="rate" data-rate="DE"><span class="rate-top"><span class="kbd">4</span>Dễ</span><span class="rate-when" data-when-for="DE"></span></button>
+                <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span></button>
+                <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span></button>
+                <button type="button" class="rate" data-rate="NHO"><span class="rate-top"><span class="kbd">3</span>Nhớ</span></button>
+                <button type="button" class="rate" data-rate="DE"><span class="rate-top"><span class="kbd">4</span>Dễ</span></button>
               </div>
               <details class="rate-help">
                 <summary>Khi nào chọn mức nào?</summary>
@@ -115,7 +115,7 @@
   </main>
 </div>
 
-<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -146,8 +146,13 @@
   });
   VL.mockAction("Mô phỏng tab khác chấm trước (409)", () => { VLDemo.flags.conflictOnce = true; VL.toast("Lần chấm tiếp theo sẽ gặp xung đột phiên bản"); });
 
+  function fileUrl(id) {
+    const f = id && VLDemo.db.files[id];
+    return f && f.url ? f.url : null;
+  }
+
   function speak(the) {
-    if (the.amThanhUrl) { new Audio(the.amThanhUrl).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
+    if (fileUrl(the.amTuId)) { new Audio(fileUrl(the.amTuId)).play().catch(() => VL.toast("Không phát được âm thanh", "error")); return; }
     VL.speak(the.tu);
   }
 
@@ -168,7 +173,7 @@
 
   function progress() {
     const real = S.hangDoi.filter((h) => h.the);
-    const done = real.filter((h) => h.trangThai === "DA_ON").length;
+    const done = real.filter((h) => h.trangThai === "DA_TRA_LOI").length;
     const total = real.length;
     const m = $("progress");
     m.style.setProperty("--v", total ? done / total : 0);
@@ -178,14 +183,14 @@
   }
 
   function dueNow(h) { return !h.tienDo.hanOnAt || h.tienDo.trangThai === "MOI" || h.tienDo.trangThai === "ON_TAP" || Date.parse(h.tienDo.hanOnAt) <= Date.now(); }
-  function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHO" && h.the); }
+  function waiting() { return S.hangDoi.filter((h) => h.trangThai === "CHUA_TRA_LOI" && h.the); }
 
   function faceHtml(the, side) {
-    const listen = '<div class="face-tools"><button type="button" class="btn btn-media btn-sm" data-say>' + VL.icon("volume") + 'Đọc từ <span class="kbd">P</span></button>' + (the.amThanhUrl ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
+    const listen = '<div class="face-tools"><button type="button" class="btn btn-media btn-sm" data-say>' + VL.icon("volume") + 'Đọc từ <span class="kbd">P</span></button>' + (fileUrl(the.amTuId) ? "" : '<span class="stamp stamp-quiet" title="Thẻ chưa có tệp âm thanh">Giọng đọc của trình duyệt</span>') + "</div>";
     const word = '<p class="flash-word" lang="en">' + VL.esc(the.tu) + "</p>" + (the.phienAm ? '<p class="ipa" lang="en">' + VL.esc(the.phienAm) + "</p>" : "") + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
     const mean = '<p class="flash-mean">' + VL.esc(the.nghiaVi) + "</p>" + (the.tuLoai ? '<p class="pos" lang="en">' + VL.esc(the.tuLoai) + "</p>" : "");
     const example = the.viDuEn ? '<div class="example"><p class="en" lang="en">' + VL.esc(the.viDuEn) + '</p><button type="button" class="btn btn-media btn-sm" data-say-example>Đọc câu ví dụ</button>' + (the.dichVi ? '<p class="vi">' + VL.esc(the.dichVi) + "</p>" : "") + "</div>" : "";
-    const img = the.anhUrl ? '<img class="back-img" src="' + VL.esc(the.anhUrl) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
+    const img = fileUrl(the.anhId) ? '<img class="back-img" src="' + VL.esc(fileUrl(the.anhId)) + '" alt="Ảnh minh họa cho ' + VL.esc(the.tu) + '">' : "";
     const mark = '<div class="face-tools"><button type="button" class="btn btn-quiet btn-sm" data-mark>' + VL.icon("star") + "Đánh dấu từ khó</button></div>";
     if (S.chieuHoc === "EN_VI") return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại nghĩa</span>' + word + listen : '<span class="face-label">Mặt sau</span>' + mean + example + img + mark;
     return side === "front" ? '<span class="face-label">Mặt trước, nhớ lại từ tiếng Anh</span>' + mean : '<span class="face-label">Mặt sau</span>' + word + listen + example + img + mark;
@@ -217,7 +222,6 @@
     $("back").innerHTML = "";
     $("flip").hidden = false;
     $("rating").hidden = true;
-    RATE_KEYS.forEach((r) => { document.querySelector('[data-when-for="' + r + '"]').textContent = cur.duKien[r] || ""; });
     $("flip").focus({ preventScroll: true });
   }
 
@@ -246,10 +250,16 @@
   }
 
   const RATE_KEYS = ["QUEN", "KHO", "NHO", "DE"];
+  async function reloadProgress(item) {
+    const fresh = await VL.api("GET", "/learning/sessions/" + encodeURIComponent(id));
+    const row = fresh.hangDoi.find((h) => h.theId === item.theId);
+    if (row) item.tienDo = row.tienDo;
+  }
+
   function applyResult(item, res) {
-    item.trangThai = "DA_ON";
+    item.trangThai = "DA_TRA_LOI";
     item.tienDo = res.tienDo;
-    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHO", tienDo: res.tienDo, duKien: res.duKien, the: item.the });
+    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI", tienDo: res.tienDo, the: item.the });
   }
 
   async function rate(r) {
@@ -263,7 +273,7 @@
     try {
       const res = await VL.api("POST", "/learning/sessions/" + id + "/reviews", body);
       applyResult(item, res);
-      announce("Đã lưu " + VL.RATING[r] + ". Gặp lại sau " + res.khoangHienThi + ".");
+      announce("Đã lưu " + VL.RATING[r] + ".");
       setSync("saved");
     } catch (err) {
       if (err.status === 0) {
@@ -273,14 +283,13 @@
         setSync("pending");
         announce("Chưa gửi được kết quả. Đã giữ lại để gửi sau.");
       } else if (err.code === "VERSION_CONFLICT") {
-        item.tienDo = err.tienDo;
-        item.duKien = err.duKien;
+        try { await reloadProgress(item); } catch (reloadErr) { VL.toast(reloadErr.message, "error"); }
         setSync("saved");
         sending = false;
         document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
         $("flash-note").hidden = false;
-        $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[err.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
-        RATE_KEYS.forEach((k) => { document.querySelector('[data-when-for="' + k + '"]').textContent = err.duKien[k] || ""; });
+        $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[item.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
+        $("card-state").textContent = VL.SRS_STATE[item.tienDo.trangThai] || "";
         return;
       } else if (err.code === "CONFLICT") {
         location.replace("hoc-tong-ket.html?id=" + id);
@@ -312,7 +321,7 @@
         } catch (err) {
           if (err.status === 0) { VL.toast("Vẫn chưa có mạng. Kết quả vẫn được giữ.", "error"); break; }
           pending = pending.filter((x) => x !== body);
-          if (item) { item.trangThai = "CHO"; if (err.tienDo) { item.tienDo = err.tienDo; item.duKien = err.duKien; } }
+          if (item) { item.trangThai = "CHUA_TRA_LOI"; if (err.code === "VERSION_CONFLICT") { try { await reloadProgress(item); } catch (reloadErr) { VL.toast(reloadErr.message, "error"); } } }
           VL.toast(err.code === "VERSION_CONFLICT" ? "Một thẻ đã được chấm ở tab khác, bạn sẽ gặp lại để chấm lại" : err.message, "error");
         }
       }
@@ -388,7 +397,7 @@
     render: (s) => {
       if (s.trangThai !== "DANG_HOC") { location.replace("hoc-tong-ket.html?id=" + id); return; }
       S = s;
-      pending.forEach((b) => { const h = S.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHO"); if (h) h.trangThai = "CHO_DONG_BO"; });
+      pending.forEach((b) => { const h = S.hangDoi.find((x) => x.theId === b.theId && x.trangThai === "CHUA_TRA_LOI"); if (h) h.trangThai = "CHO_DONG_BO"; });
       document.title = s.boTheTen + " – Đang học";
       $("bar-title").textContent = s.boTheTen;
       $("bar-dir").textContent = VL.DIR[s.chieuHoc] + (s.cheDo === "CUU_LICH" ? ", học lại sau nghỉ" : "");
@@ -399,6 +408,6 @@
   });
 })();
 </script>
-<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
 </html>

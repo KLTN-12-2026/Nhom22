@@ -50,7 +50,7 @@ public class FileService {
         String mimeType = verifier.validateRequest(request);
         String key = storage.newObjectKey("pending/" + userId);
         StorageService.PresignedUrl signed =
-                storage.presignPut(key, request.mimeType());
+                storage.presignPut(key, request.mimeType(), request.kichThuoc());
 
         TepTin file = new TransactionTemplate(txManager).execute(status ->
                 files.saveAndFlush(TepTin.pending(

@@ -142,7 +142,7 @@ class FR06FinishHistoryTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.items[0].truoc.version").value(0))
                 .andExpect(jsonPath("$.items[0].sau.trangThai").value("DANG_HOC"))
                 .andExpect(jsonPath("$.items[0].sau.version").value(1))
-                .andExpect(jsonPath("$.items[0].phienBanThuatToan").value("SM2-VN-1"));
+                .andExpect(jsonPath("$.items[0].phienBanThuatToan").value("SM2-VN-2"));
 
         history(learner, "chieuHoc=VI_EN").andExpect(jsonPath("$.totalElements").value(1));
         history(learner, "theId=" + single).andExpect(jsonPath("$.totalElements").value(1));

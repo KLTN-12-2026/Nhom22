@@ -26,7 +26,7 @@ class StorageServiceTest extends AbstractIntegrationTest {
         String key = storage.newObjectKey("test");
         byte[] content = "xin chào".getBytes(StandardCharsets.UTF_8);
 
-        PresignedUrl put = storage.presignPut(key, "text/plain");
+        PresignedUrl put = storage.presignPut(key, "text/plain", content.length);
         assertThat(put.url()).contains("X-Amz-Signature");
         assertThat(put.expiresAt()).isAfter(Instant.now());
         HttpResponse<String> uploaded = http.send(HttpRequest.newBuilder(URI.create(put.url()))
@@ -48,9 +48,21 @@ class StorageServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void signedPutRejectsBodyLargerThanDeclared() throws Exception {
+        String key = storage.newObjectKey("test");
+        PresignedUrl put = storage.presignPut(key, "text/plain", 3);
+        HttpResponse<Void> uploaded = http.send(HttpRequest.newBuilder(URI.create(put.url()))
+                .header("Content-Type", "text/plain")
+                .PUT(HttpRequest.BodyPublishers.ofByteArray(new byte[1024]))
+                .build(), HttpResponse.BodyHandlers.discarding());
+        assertThat(uploaded.statusCode()).isGreaterThanOrEqualTo(400);
+        assertThat(storage.head(key)).isEmpty();
+    }
+
+    @Test
     void bucketIsPrivate() throws Exception {
         String key = storage.newObjectKey("test");
-        http.send(HttpRequest.newBuilder(URI.create(storage.presignPut(key, "text/plain").url()))
+        http.send(HttpRequest.newBuilder(URI.create(storage.presignPut(key, "text/plain", 6).url()))
                 .header("Content-Type", "text/plain")
                 .PUT(HttpRequest.BodyPublishers.ofString("secret"))
                 .build(), HttpResponse.BodyHandlers.discarding());

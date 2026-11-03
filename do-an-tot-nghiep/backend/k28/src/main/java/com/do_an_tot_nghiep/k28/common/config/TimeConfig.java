@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.common.config;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +16,7 @@ public class TimeConfig {
 
     @Bean
     Clock clock() {
-        return Clock.systemUTC();
+        return Clock.tickMillis(ZoneOffset.UTC);
     }
 
     @Bean

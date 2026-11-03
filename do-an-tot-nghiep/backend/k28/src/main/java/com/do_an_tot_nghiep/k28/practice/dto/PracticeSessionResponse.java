@@ -14,6 +14,11 @@ public record PracticeSessionResponse(
         int soCau,
         int soCauYeuCau,
         Instant createdAt,
-        List<PracticeQuestionResponse> cauHoi
+        boolean laLuyenLai,
+        String baiGocId,
+        boolean daNop,
+        String lanLamId,
+        List<PracticeQuestionResponse> cauHoi,
+        PracticeResultResponse ketQua
 ) {
 }

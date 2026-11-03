@@ -30,6 +30,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.learning.service.StudySessionService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -84,6 +85,8 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     CardService cardService;
     @Autowired
     LichSuOnRepository history;
+    @Autowired
+    StudyTimeService studyTime;
 
     @Test
     void tc10_rescuePlanSplitsWorkloadByMinutesPerDay() throws Exception {
@@ -284,7 +287,7 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner, String phut, String giuTuMoi) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, history)
+                sessions, queue, studyTime)
                 .today(learner.id(), new TodayQuery(phut, giuTuMoi));
     }
 

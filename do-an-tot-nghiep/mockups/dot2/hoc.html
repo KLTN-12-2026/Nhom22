@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
-<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
-<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
 <style>
   .deck-choice .choice-title { overflow-wrap: anywhere; }
   .deck-choice .choice-desc { display: flex; flex-wrap: wrap; gap: 2px var(--sp-3); }
@@ -21,13 +21,13 @@
   .rate-table th { font-family: var(--font-form); font-stretch: var(--stretch-form); color: var(--primary); white-space: nowrap; }
   .queue-order { margin: 0; padding-left: 1.2rem; display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
 </style>
-<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
-<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
-<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="today" data-auth="required">
-<!-- F2.2 · UI18 · API: GET /learning/today (B2.2) để lấy danh sách bộ và số thẻ cần ôn, POST /learning/sessions {boTheId, chieuHoc, quyThoiGian, cheDo} (B2.3) -->
+<!-- F2.2 · UI18 · API: GET /learning/today (B2.2) để lấy danh sách bộ và số thẻ cần ôn, POST /learning/sessions {boTheId, chieuHoc, quyThoiGian} (B2.3) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -70,11 +70,11 @@
               <fieldset class="fieldset field" data-field="quyThoiGian">
                 <legend>Thời gian</legend>
                 <div class="choice-grid cols-3">
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 phút</span><span class="choice-desc">khoảng 20 lượt</span></span></label>
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 phút</span><span class="choice-desc">khoảng 40 lượt</span></span></label>
-                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 phút</span><span class="choice-desc">khoảng 80 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="5"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">5 phút</span><span class="choice-desc">khoảng 15 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="10" checked><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">10 phút</span><span class="choice-desc">khoảng 30 lượt</span></span></label>
+                  <label class="choice choice-card"><input type="radio" name="quyThoiGian" value="20"><span class="bubble" aria-hidden="true"></span><span class="choice-body"><span class="choice-title">20 phút</span><span class="choice-desc">khoảng 60 lượt</span></span></label>
                 </div>
-                <p class="field-hint">Số lượt là ước tính theo 15 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
+                <p class="field-hint">Số lượt là ước tính theo 20 giây mỗi lượt. Khi hết giờ, bạn chấm nốt thẻ đang mở rồi phiên kết thúc.</p>
                 <p class="field-error"></p>
               </fieldset>
               <div data-form-error hidden></div>
@@ -115,7 +115,7 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -141,13 +141,13 @@
     VL.clearErrors(form);
     VL.busy(btn, async () => {
       try {
-        const s = await VL.api("POST", "/learning/sessions", { boTheId: form.boTheId.value || null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.quyThoiGian.value), cheDo: "THUONG" });
+        const s = await VL.api("POST", "/learning/sessions", { boTheId: form.boTheId.value || null, chieuHoc: form.chieuHoc.value, quyThoiGian: Number(form.quyThoiGian.value) });
         location.href = "hoc-phien.html?id=" + s.id;
       } catch (err) { VL.showErrors(form, err); }
     });
   });
 })();
 </script>
-<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
 </html>

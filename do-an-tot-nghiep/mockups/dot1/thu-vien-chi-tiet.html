@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
-<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
-<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
 <style>
   .deck-title { overflow-wrap: anywhere; }
   .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
@@ -23,13 +23,13 @@
   .facts .bubble { width: 14px; height: 14px; border-width: 1.25px; margin-top: 3px; }
   #copied .btn { min-height: var(--tap); }
 </style>
-<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
-<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
-<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="library" data-auth="optional">
-<!-- F1.7, F1.10 · UI03 · API: GET /library/decks/{id} (B1.10), POST /decks/{id}/copy + Idempotency-Key (B1.11), PUT/DELETE /decks/{id}/favorite (B1.8) -->
+<!-- F1.7, F1.10 · UI03 · API: GET /library/decks/{id}?page&size → {boThe, the} (B1.10), POST /decks/{id}/copy + Idempotency-Key (B1.11), PUT/DELETE /decks/{id}/favorite (B1.8) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -80,8 +80,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
-<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
+<script src="../shared/contract-demo.js?v=3e6ee35bf107"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -93,28 +93,29 @@
 
   VL.load(region, {
     errorTitle: "Không mở được bộ thẻ",
-    fetch: () => VL.api("GET", "/library/decks/" + encodeURIComponent(id)),
-    isEmpty: (d) => !d.sampleCards.length,
-    render: (d) => {
-      document.title = d.name + " – VocabLearning";
+    fetch: () => VL.api("GET", "/library/decks/" + encodeURIComponent(id) + "?size=20"),
+    isEmpty: (r) => !r.the.items.length,
+    render: (r) => {
+      const d = r.boThe;
+      document.title = d.ten + " – VocabLearning";
       document.getElementById("stamps").innerHTML =
-        '<span class="stamp ' + (d.kind === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (d.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + '</span><span class="stamp">' + VL.esc(VL.GOAL[d.goal]) + '</span><span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>";
-      document.getElementById("deck-title").textContent = d.name;
-      document.getElementById("deck-desc").textContent = d.description;
+        '<span class="stamp ' + (d.nguon === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (d.nguon === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + '</span>' + (d.mucTieu ? '<span class="stamp">' + VL.esc(VL.GOAL[d.mucTieu]) + '</span>' : "") + '<span class="stamp stamp-quiet">' + VL.icon("globe") + "Công khai</span>";
+      document.getElementById("deck-title").textContent = d.ten;
+      document.getElementById("deck-desc").textContent = d.moTa || "";
       document.getElementById("kv").innerHTML =
-        "<dt>Chủ đề</dt><dd>" + VL.esc(d.topicName) + "</dd>" +
-        "<dt>Trình độ</dt><dd>" + VL.levelHtml(d.level) + "</dd>" +
-        "<dt>Số thẻ</dt><dd>" + d.cardCount + "</dd>" +
-        "<dt>Người soạn</dt><dd>" + VL.esc(d.ownerName) + "</dd>" +
-        "<dt>Nguồn</dt><dd>" + VL.esc(d.source) + "</dd>" +
+        "<dt>Chủ đề</dt><dd>" + VL.esc(d.tenChuDe || "Chưa phân loại") + "</dd>" +
+        "<dt>Trình độ</dt><dd>" + (d.trinhDo ? VL.levelHtml(d.trinhDo) : "Chưa chọn") + "</dd>" +
+        "<dt>Số thẻ</dt><dd>" + d.soThe + "</dd>" +
+        "<dt>Người soạn</dt><dd>" + VL.esc(d.tenTacGia || (d.nguon === "MAU" ? "Nhóm biên soạn VocabLearning" : "Người học")) + "</dd>" +
+        "<dt>Nguồn</dt><dd>" + (d.nguon === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</dd>" +
         "<dt>Cập nhật</dt><dd>" + VL.fmtDate(d.updatedAt) + "</dd>";
-      document.getElementById("sample-note").textContent = "Hiển thị " + d.sampleCards.length + "/" + d.cardCount + " thẻ";
-      document.getElementById("cards").innerHTML = d.sampleCards.map((c, i) =>
+      document.getElementById("sample-note").textContent = "Hiển thị " + r.the.items.length + "/" + d.soThe + " thẻ";
+      document.getElementById("cards").innerHTML = r.the.items.map((c, i) =>
         '<li class="answer-row library-card"><span class="answer-no">' + (i + 1) + '</span>' +
-        '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.word) + '</span><span class="entry-ipa" lang="en">' + VL.esc(c.ipa) + '</span><span class="pos" lang="en">' + VL.esc(c.pos) + "</span></div>" +
-        '<p class="entry-mean">' + VL.esc(c.meaningVi) + "</p>" +
-        (c.exampleEn ? '<p class="entry-example" lang="en">' + VL.esc(c.exampleEn) + '</p><p class="muted small">' + VL.esc(c.exampleVi) + "</p>" : "") + '</div><div class="library-card-media">'+VL.cardImage(c.id) +
-        '<button type="button" class="btn btn-media btn-icon" data-say="' + VL.esc(c.word) + '" aria-label="Nghe cách đọc ' + VL.esc(c.word) + '">' + VL.icon("volume") + "Đọc từ</button>"+(c.exampleEn?'<button type="button" class="btn btn-media" data-say="'+VL.esc(c.exampleEn)+'">'+VL.icon("volume")+'Đọc câu ví dụ</button>':'')+"</div></li>").join("");
+        '<div class="entry"><div class="entry-head"><span class="entry-word" lang="en">' + VL.esc(c.tu) + '</span>' + (c.phienAm ? '<span class="entry-ipa" lang="en">' + VL.esc(c.phienAm) + '</span>' : "") + (c.tuLoai ? '<span class="pos" lang="en">' + VL.esc(c.tuLoai) + "</span>" : "") + "</div>" +
+        '<p class="entry-mean">' + VL.esc(c.nghiaVi) + "</p>" +
+        (c.viDuEn ? '<p class="entry-example" lang="en">' + VL.esc(c.viDuEn) + '</p>' + (c.dichVi ? '<p class="muted small">' + VL.esc(c.dichVi) + "</p>" : "") : "") + '</div><div class="library-card-media">'+VL.cardImage(c.id) +
+        '<button type="button" class="btn btn-media btn-icon" data-say="' + VL.esc(c.tu) + '" aria-label="Nghe cách đọc ' + VL.esc(c.tu) + '">' + VL.icon("volume") + "Đọc từ</button>"+(c.viDuEn?'<button type="button" class="btn btn-media" data-say="'+VL.esc(c.viDuEn)+'">'+VL.icon("volume")+'Đọc câu ví dụ</button>':'')+"</div></li>").join("");
       VL.syncCardImages();
     }
   });
@@ -152,6 +153,6 @@
   });
 })();
 </script>
-<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
 </html>
