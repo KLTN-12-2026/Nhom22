@@ -10,3 +10,6 @@ CLAUDE.md
 node_modules/
 .next/
 out/
+
+.DS_Store
+**/.DS_Store
