@@ -13,7 +13,6 @@ import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
-import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
@@ -66,7 +65,7 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     @Autowired
     PhienHocTheRepository queue;
     @Autowired
-    LichSuOnRepository history;
+    StudyTimeService studyTime;
 
     @Test
     void tc09_dayBoundariesFollowUserTimeZone() throws Exception {
@@ -227,7 +226,7 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, new StudyTimeService(history))
+                sessions, queue, studyTime)
                 .today(learner.id(), new TodayQuery(null, null));
     }
 

@@ -2,11 +2,14 @@ package com.do_an_tot_nghiep.k28.learning.service;
 
 import com.do_an_tot_nghiep.k28.learning.repository.LichSuOnRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.StudyTimeRow;
+import com.do_an_tot_nghiep.k28.practice.service.PracticeHistoryService;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ public class StudyTimeService {
     static final long MS_MOI_PHUT = 60_000;
 
     private final LichSuOnRepository history;
+    private final PracticeHistoryService practiceHistory;
 
     public record StudyTime(long thoiGian, int soPhut) {
 
@@ -33,11 +37,11 @@ public class StudyTimeService {
 
     @Transactional(readOnly = true)
     public Map<LocalDate, StudyTime> days(Long userId, LocalDate tuNgay, LocalDate denNgay, ZoneId zone) {
-        Map<LocalDate, Long> msTheoNgay = history.studyTimes(
-                        userId,
-                        tuNgay.atStartOfDay(zone).toInstant(),
-                        denNgay.plusDays(1).atStartOfDay(zone).toInstant())
-                .stream()
+        Instant batDau = tuNgay.atStartOfDay(zone).toInstant();
+        Instant ketThuc = denNgay.plusDays(1).atStartOfDay(zone).toInstant();
+        Map<LocalDate, Long> msTheoNgay = Stream.concat(
+                        history.studyTimes(userId, batDau, ketThuc).stream(),
+                        practiceHistory.studyTimes(userId, batDau, ketThuc).stream())
                 .collect(Collectors.groupingBy(
                         row -> LocalDate.ofInstant(row.createdAt(), zone),
                         Collectors.summingLong(StudyTimeRow::thoiGian)));

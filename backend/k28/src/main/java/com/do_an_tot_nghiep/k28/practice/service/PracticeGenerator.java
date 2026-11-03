@@ -5,13 +5,12 @@ import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.LoaiBai;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.LoaiCau;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +39,9 @@ final class PracticeGenerator {
     }
 
     record Pair(Long id, StudyCardResponse first, StudyCardResponse second) {
+    }
+
+    record Retry(LoaiCau loaiCau, StudyCardResponse card, StudyCardResponse other, Long capId) {
     }
 
     private static final String INFLECTION = "(?:s|es|d|ed|ing|er|est)?";
@@ -75,10 +77,32 @@ final class PracticeGenerator {
         return drafts;
     }
 
-    static String normalize(String value) {
-        return value == null
-                ? ""
-                : Normalizer.normalize(value, Normalizer.Form.NFC).trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    List<Draft> retry(LoaiBai loaiBai, List<Retry> items, List<StudyCardResponse> distract) {
+        List<Draft> drafts = items.stream()
+                .map(item -> retryDraft(loaiBai, item, distract))
+                .filter(Objects::nonNull)
+                .toList();
+        if (drafts.isEmpty()) {
+            throw rule("Chưa tạo lại được câu hỏi từ các câu sai. Thẻ có thể đã đổi ví dụ, âm thanh hoặc thiếu thẻ nhiễu.");
+        }
+        return drafts;
+    }
+
+    private Draft retryDraft(LoaiBai loaiBai, Retry item, List<StudyCardResponse> distract) {
+        if (item.loaiCau() == LoaiCau.PHAN_BIET_CAP) {
+            return item.other() != null
+                    ? pairQuestion(item.card(), item.other(), item.capId())
+                    : single(LoaiCau.CHON_TU, item.card(), distract);
+        }
+        Draft draft = single(item.loaiCau(), item.card(), distract);
+        if (draft != null || loaiBai != LoaiBai.TONG_HOP) {
+            return draft;
+        }
+        return TONG_HOP.stream()
+                .map(type -> single(type, item.card(), distract))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
     }
 
     private List<Draft> pairDrafts(int soCau, List<Pair> pairs) {
@@ -290,8 +314,8 @@ final class PracticeGenerator {
                 break;
             }
             boolean clash = result.stream().anyMatch(card -> card.id().equals(candidate.id())
-                    || normalize(card.tu()).equals(normalize(candidate.tu()))
-                    || normalize(card.nghiaVi()).equals(normalize(candidate.nghiaVi())));
+                    || AnswerNormalizer.normalize(card.tu()).equals(AnswerNormalizer.normalize(candidate.tu()))
+                    || AnswerNormalizer.normalize(card.nghiaVi()).equals(AnswerNormalizer.normalize(candidate.nghiaVi())));
             if (!clash) {
                 result.add(candidate);
             }

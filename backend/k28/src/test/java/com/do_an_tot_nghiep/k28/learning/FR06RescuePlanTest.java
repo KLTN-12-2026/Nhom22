@@ -85,6 +85,8 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     CardService cardService;
     @Autowired
     LichSuOnRepository history;
+    @Autowired
+    StudyTimeService studyTime;
 
     @Test
     void tc10_rescuePlanSplitsWorkloadByMinutesPerDay() throws Exception {
@@ -285,7 +287,7 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner, String phut, String giuTuMoi) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, new StudyTimeService(history))
+                sessions, queue, studyTime)
                 .today(learner.id(), new TodayQuery(phut, giuTuMoi));
     }
 

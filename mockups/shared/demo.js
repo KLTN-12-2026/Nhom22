@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v4";
+  const KEY = "vl-demo-v5";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -438,7 +438,7 @@
   const minutesOf = (ms) => Math.floor(ms / MIN);
   function studyMsOf(uid, day, tz) {
     const rv = db.reviews.filter((r) => r.uid === uid && localDate(Date.parse(r.createdAt), tz) === day).reduce((a, r) => a + r.thoiGianTraLoiMs, 0);
-    const pr = db.attempts.filter((a) => a.uid === uid && localDate(Date.parse(a.nopAt), tz) === day).reduce((a, x) => a + x.thoiGianMs, 0);
+    const pr = db.attempts.filter((a) => a.uid === uid && localDate(Date.parse(a.nopAt), tz) === day).reduce((a, x) => a + x.thoiGian, 0);
     return rv + pr;
   }
 
@@ -575,11 +575,15 @@
   const SKILLS = ["NHAN_NGHIA", "VIET", "NGHE", "NGU_CANH", "CAP_NHAM"];
 
   function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = r[i]; r[i] = r[j]; r[j] = tmp; } return r; }
-  const answerNorm = (s) => (s || "").toString().normalize("NFC").replace(/[’‘`]/g, "'").trim().replace(/\s+/g, " ").toLowerCase();
+  const answerNorm = (s) => (s || "").toString().normalize("NFC").replace(/[’‘`´]/g, "'").replace(/[‐‑]/g, "-").replace(/\s+/g, " ").trim().toLowerCase();
+  const nearLimit = (n) => (n <= 4 ? 1 : n <= 8 ? 2 : 3);
   function editDistance(a, b) {
     const dp = Array.from({ length: a.length + 1 }, (_, i) => [i].concat(Array(b.length).fill(0)));
     for (let j = 1; j <= b.length; j++) dp[0][j] = j;
-    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+    }
     return dp[a.length][b.length];
   }
   function blankOf(x) {
@@ -620,7 +624,7 @@
     return {
       id: "q" + nextId(), thuTu, loaiCau: "GHEP_TU", theIds: group.map((y) => y.id),
       deBai: { cotTrai: left.map((o) => ({ id: o.id, noiDung: o.noiDung })), cotPhai: right.map((o) => ({ id: o.id, noiDung: o.noiDung })) },
-      _left: left, _right: right,
+      _left: left, _right: right, _snaps: left.map((l) => explain(group.find((y) => y.id === l.theId))),
       dapAn: { cap: left.map((l) => ({ traiId: l.id, phaiId: right.find((r) => r.theId === l.theId).id })) }
     };
   }
@@ -693,7 +697,7 @@
     }
     if (!qs.length) throw new ApiError(422, "BUSINESS_RULE", b.loaiBai === "DIEN_CHO_TRONG" ? "Các thẻ đã chọn chưa có câu ví dụ chứa đúng từ, nên chưa tạo được câu điền chỗ trống." : "Chưa tạo được câu hỏi từ các thẻ đã chọn.");
     const id = nextId();
-    const s = { id, uid: u.id, loaiBai: b.loaiBai, boTheId: b.boTheId || null, nguon: b.nguon || "BO_THE", taoAt: iso(t), soCauYeuCau: n, cauHoi: qs, lanLamId: null, laLuyenLai: !!b.laLuyenLai };
+    const s = { id, uid: u.id, loaiBai: b.loaiBai, boTheId: b.boTheId || null, nguon: b.nguon || "BO_THE", taoAt: iso(t), soCauYeuCau: n, cauHoi: qs, lanLamId: null, laLuyenLai: !!b.laLuyenLai, baiGocId: b.baiGocId || null };
     db.practice[id] = s;
     return s;
   }
@@ -701,14 +705,15 @@
     const a = s.lanLamId ? db.attempts.find((x) => x.id === s.lanLamId) : null;
     return {
       id: s.id, loaiBai: s.loaiBai, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : (s.nguon === "SO_TAY" ? "Sổ tay từ khó" : "Tất cả bộ của tôi"), nguon: s.nguon,
-      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, createdAt: s.taoAt, laLuyenLai: s.laLuyenLai, daNop: !!a, lanLamId: s.lanLamId,
+      soCau: s.cauHoi.length, soCauYeuCau: s.soCauYeuCau, createdAt: s.taoAt, laLuyenLai: s.laLuyenLai, baiGocId: s.baiGocId || null, daNop: !!a, lanLamId: s.lanLamId,
       cauHoi: s.cauHoi.map(publicQuestion), ketQua: a ? attemptView(a) : null
     };
   }
   function attemptView(a) {
     return {
-      lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem,
-      thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, theoKyNang: a.theoKyNang, ketQua: a.ketQua
+      lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheId: a.boTheId || null, boTheTen: a.boTheTen, laLuyenLai: a.laLuyenLai,
+      soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGian: a.thoiGian, nopAt: a.nopAt, theoKyNang: a.theoKyNang,
+      ketQua: a.ketQua.map((r) => { const v = Object.assign({}, r); delete v._ty; delete v._sai; delete v._otherId; return v; })
     };
   }
   function explain(x, extra) {
@@ -724,63 +729,86 @@
     const given = {};
     (Array.isArray(b.traLoi) ? b.traLoi : []).forEach((r) => { if (r && r.cauHoiId) given[r.cauHoiId] = r; });
     const lanLamId = nextId();
+    let units = 0;
     const results = s.cauHoi.map((q) => {
       const r = given[q.id] || {};
       let dung = false;
-      let diem = 0;
+      let ty = 0;
       let nhomLoi = null;
       let traLoi = null;
+      let dapAn;
+      let chiTiet = null;
       let giaiThich;
+      let sai = [];
+      let otherId = null;
       if (q.loaiCau === "GHEP_TU") {
+        units += q.dapAn.cap.length;
         const pairs = Array.isArray(r.cap) ? r.cap : [];
-        const chiTiet = q.dapAn.cap.map((c) => {
+        chiTiet = q.dapAn.cap.map((c) => {
           const got = pairs.find((pp) => pp.traiId === c.traiId);
           const lt = q._left.find((l) => l.id === c.traiId);
           const chosen = got ? q._right.find((rr) => rr.id === got.phaiId) : null;
           const ok = !!got && got.phaiId === c.phaiId;
-          if (!ok && chosen) addPair(u.id, lt.theId, chosen.theId, t);
-          return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, nghiaDung: q._right.find((rr) => rr.id === c.phaiId).noiDung, dung: ok, theId: lt.theId };
+          const nghiaDung = q._right.find((rr) => rr.id === c.phaiId).noiDung;
+          if (!ok) {
+            sai.push(lt.theId);
+            if (chosen) addPair(u.id, lt.theId, chosen.theId, t);
+            db.errors.push({ uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung, lanLamId } });
+          }
+          return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, phaiId: c.phaiId, nghiaDung, dung: ok };
         });
         const good = chiTiet.filter((c) => c.dung).length;
-        diem = good / chiTiet.length;
+        ty = good / chiTiet.length;
         dung = good === chiTiet.length;
         nhomLoi = dung ? null : "NGHIA";
-        traLoi = { cap: pairs };
-        giaiThich = { cap: chiTiet };
-        chiTiet.filter((c) => !c.dung).forEach((c) => db.errors.push({ uid: u.id, theId: c.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: c.nghiaDaChon, dapAn: c.nghiaDung, lanLamId } }));
+        traLoi = pairs.length ? { cap: pairs.map((pp) => ({ traiId: pp.traiId, phaiId: pp.phaiId })) } : null;
+        dapAn = { cap: q.dapAn.cap.map((c) => ({ traiId: c.traiId, phaiId: c.phaiId })) };
+        giaiThich = q._snaps || [];
       } else if (q.phuongAn) {
-        traLoi = { luaChonId: r.luaChonId || null };
-        dung = r.luaChonId === q.dapAn.luaChonId;
-        const chosen = q._opts.find((o) => o.id === r.luaChonId);
+        units += 1;
+        const chosen = r.luaChonId ? q._opts.find((o) => o.id === r.luaChonId) : null;
+        dung = !!chosen && chosen.id === q.dapAn.luaChonId;
+        traLoi = chosen ? { luaChonId: chosen.id, noiDung: chosen.noiDung } : null;
         if (!dung) {
           nhomLoi = q.loaiCau === "PHAN_BIET_CAP" ? "CAP_NHAM" : "NGHIA";
           if (chosen) addPair(u.id, q.theId, chosen.theId, t);
         }
-        giaiThich = Object.assign({}, q._snap, q._other ? { soSanh: [{ tu: q._snap.tu, nghiaVi: q._snap.nghiaVi }, { tu: q._other.tu, nghiaVi: q._other.nghiaVi }] } : {});
-        traLoi.noiDung = chosen ? chosen.noiDung : null;
+        if (q._other) otherId = (q._opts.find((o) => o.id !== q.dapAn.luaChonId) || {}).theId || null;
+        dapAn = { luaChonId: q.dapAn.luaChonId, noiDung: q.dapAn.noiDung };
+        giaiThich = q._other ? { the: q._snap, theKhac: q._other } : q._snap;
       } else {
-        const text = (r.noiDung || "").toString().slice(0, 200);
-        traLoi = { noiDung: text };
+        units += 1;
+        const text = (r.noiDung || "").toString().slice(0, 200).trim();
         const got = answerNorm(text);
-        dung = !!got && q.dapAn.chapNhan.some((a) => answerNorm(a) === got);
+        traLoi = got ? { noiDung: text } : null;
+        const accepted = q.dapAn.chapNhan.map(answerNorm);
+        dung = !!got && accepted.includes(got);
         if (!dung) {
-          const near = got && editDistance(got, answerNorm(q.dapAn.noiDung)) <= 2;
+          const base = q.loaiCau === "DIEN_CHO_TRONG" && q._snap && got === answerNorm(q._snap.tu);
+          const near = !!got && !base && accepted.some((x) => editDistance(got, x) <= nearLimit(x.length));
           nhomLoi = near ? "CHINH_TA" : q.loaiCau === "NGHE_VIET" ? "NGHE" : q.loaiCau === "DIEN_CHO_TRONG" ? "NGU_CANH" : "NGHIA";
         }
-        giaiThich = Object.assign({}, q._snap);
+        dapAn = { noiDung: q.dapAn.noiDung, chapNhan: q.dapAn.chapNhan };
+        giaiThich = q._snap;
       }
-      if (q.loaiCau !== "GHEP_TU") diem = dung ? 1 : 0;
-      if (!dung && q.loaiCau !== "GHEP_TU") db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi.noiDung || null, dapAn: q.dapAn.noiDung, lanLamId } });
+      if (q.loaiCau !== "GHEP_TU") {
+        ty = dung ? 1 : 0;
+        if (!dung) {
+          sai = [q.theId];
+          db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung, lanLamId } });
+        }
+      }
       db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
-      return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn: { luaChonId: q.dapAn.luaChonId || null, noiDung: q.dapAn.noiDung || null, cap: q.dapAn.cap || null }, dung, diem, nhomLoi, giaiThich, theId: q.theId || null, theIds: q.theIds || null };
+      return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, theId: q.theId || null, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn, dung, diem: Math.round(ty * 100), nhomLoi, chiTiet, giaiThich, _ty: ty, _sai: sai, _otherId: otherId };
     });
     const bySkill = {};
     results.forEach((r) => { const k = SKILL_OF[r.loaiCau]; bySkill[k] = bySkill[k] || { kyNang: k, dung: 0, tong: 0 }; bySkill[k].tong++; if (r.dung) bySkill[k].dung++; });
     const good = results.filter((r) => r.dung).length;
     const a = {
       id: lanLamId, uid: u.id, baiLuyenId: s.id, loaiBai: s.loaiBai, boTheId: s.boTheId, boTheTen: s.boTheId ? deckName(s.boTheId) : (s.nguon === "SO_TAY" ? "Sổ tay từ khó" : "Tất cả bộ của tôi"),
-      submitKey: b.submitKey, soCauDung: good, tongSoCau: results.length, diem: Math.round(results.reduce((acc, r) => acc + r.diem, 0) / results.length * 100),
-      thoiGianMs: Math.max(0, Math.min(Number(b.thoiGianMs) || 0, 3 * 3600000)), nopAt: iso(t), laLuyenLai: s.laLuyenLai, theoKyNang: Object.values(bySkill), ketQua: results
+      submitKey: b.submitKey, soCauDung: good, tongSoCau: results.length, diem: Math.round(results.reduce((acc, r) => acc + r._ty, 0) / results.length * 100),
+      thoiGian: Math.max(0, Math.min(Number(b.thoiGian) || 0, t - Date.parse(s.taoAt), units * 120000)), nopAt: iso(t), laLuyenLai: s.laLuyenLai,
+      theoKyNang: SKILLS.filter((k) => bySkill[k]).map((k) => bySkill[k]), ketQua: results
     };
     db.attempts.push(a);
     s.lanLamId = a.id;
@@ -1406,32 +1434,40 @@
       const u = requireMe();
       const s = db.practice[m[1]];
       if (!s || s.uid !== u.id) notFound();
-      if (!b.submitKey || String(b.submitKey).length > 64) bad([fe("submitKey", "Thiếu khóa nộp bài")]);
+      if (!b.submitKey || String(b.submitKey).length > 128 || !/^[A-Za-z0-9._:-]+$/.test(String(b.submitKey))) bad([fe("submitKey", "Khóa nộp bài chỉ gồm chữ, số và . _ : -, tối đa 128 ký tự")]);
+      if (b.thoiGian === undefined || b.thoiGian === null || Number(b.thoiGian) < 0) bad([fe("thoiGian", "Thời gian làm bài không được âm")]);
       const prior = db.attempts.find((a) => a.uid === u.id && a.submitKey === b.submitKey);
+      if (prior && prior.baiLuyenId !== s.id) throw new ApiError(409, "CONFLICT", "Khóa nộp bài đã được dùng cho bài khác", [fe("submitKey", "Khóa nộp bài đã được dùng cho bài khác")]);
       if (prior) return attemptView(prior);
-      if (s.lanLamId) throw new ApiError(409, "CONFLICT", "Bài này đã được nộp. Mở kết quả để xem đáp án.", [], { lanLamId: s.lanLamId });
+      if (s.lanLamId) throw new ApiError(409, "CONFLICT", "Bài này đã được nộp. Mở lại bài để xem kết quả.");
       return { status: 201, body: attemptView(submitPractice(u, s, b, Date.now())) };
     }],
     ["POST", /^\/practice\/mistakes\/retry$/, (m, b) => {
       const u = requireMe();
       const a = db.attempts.find((x) => x.id === b.lanLamId && x.uid === u.id);
       if (!a) notFound();
+      const goc = db.practice[a.baiLuyenId];
       const wrong = a.ketQua.filter((r) => !r.dung);
       if (!wrong.length) throw new ApiError(422, "BUSINESS_RULE", "Bài này không có câu sai để luyện lại.");
       const theIds = [];
       const loaiCau = [];
-      wrong.forEach((r) => { (r.theIds || [r.theId]).forEach((id) => { if (id && cardById(id) && !theIds.includes(id)) { theIds.push(id); loaiCau.push(r.loaiCau === "GHEP_TU" ? "CHON_NGHIA" : r.loaiCau); } }); });
-      if (!theIds.length) throw new ApiError(422, "BUSINESS_RULE", "Các thẻ của câu sai đã bị xóa nên không luyện lại được.");
+      wrong.forEach((r) => { (r._sai || []).concat(r._otherId ? [r._otherId] : []).forEach((id) => { if (id && cardById(id) && !theIds.includes(id)) { theIds.push(id); loaiCau.push(r.loaiCau === "GHEP_TU" ? "CHON_NGHIA" : r.loaiCau); } }); });
+      if (!theIds.length) throw new ApiError(422, "BUSINESS_RULE", "Các thẻ của câu sai đã bị xóa hoặc đang tạm ngưng nên chưa luyện lại được.");
       const loaiBai = a.loaiBai === "GHEP_TU" ? "CHON_NGHIA" : a.loaiBai;
-      const s = createPractice(u, { loaiBai, soCau: 20, theIds, loaiCau: loaiBai === "TONG_HOP" ? loaiCau : null, boTheId: null, nguon: "LUYEN_LAI", laLuyenLai: true }, Date.now());
+      const s = createPractice(u, { loaiBai, soCau: goc ? goc.soCauYeuCau : 20, theIds, loaiCau: loaiBai === "TONG_HOP" ? loaiCau : null, boTheId: null, nguon: goc ? goc.nguon : "BO_THE", laLuyenLai: true, baiGocId: a.baiLuyenId }, Date.now());
+      s.boTheId = goc ? goc.boTheId : null;
       return { status: 201, body: practiceView(s) };
     }],
     ["GET", /^\/practice\/history$/, (m, b, q) => {
       const u = requireMe();
       let list = db.attempts.filter((a) => a.uid === u.id);
       if (q.loaiBai) list = list.filter((a) => a.loaiBai === q.loaiBai);
-      const items = list.slice().sort((a, c2) => c2.nopAt.localeCompare(a.nopAt)).map((a) => ({ lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, soCauSai: a.tongSoCau - a.soCauDung }));
-      return page(items, Object.assign({ size: "10" }, q));
+      if (q.tuNgay && q.denNgay && q.tuNgay > q.denNgay) bad([fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi")]);
+      const tz = tzOf(u);
+      if (q.tuNgay) list = list.filter((a) => localDate(Date.parse(a.nopAt), tz) >= q.tuNgay);
+      if (q.denNgay) list = list.filter((a) => localDate(Date.parse(a.nopAt), tz) <= q.denNgay);
+      const items = list.slice().sort((a, c2) => c2.nopAt.localeCompare(a.nopAt) || String(c2.id).localeCompare(String(a.id))).map((a) => ({ lanLamId: a.id, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, soCauSai: a.tongSoCau - a.soCauDung, diem: a.diem, thoiGian: a.thoiGian, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai }));
+      return page(items, Object.assign({ size: "20" }, q));
     }],
 
     ["GET", /^\/notebook$/, (m, b, q) => {
@@ -1479,7 +1515,7 @@
       const theoNgay = r.list.map((d) => {
         const dr = rs.filter((x) => x.ngay === d);
         const da = as.filter((a) => a.ngay === d);
-        const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGianMs, 0);
+        const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGian, 0);
         return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: minutesOf(ms) };
       });
       const tong = as.reduce((acc, a) => acc + a.tongSoCau, 0);
@@ -1708,15 +1744,16 @@
         }
         return { cauHoiId: q.id, noiDung: bad2 === undefined ? q.dapAn.noiDung : bad2 };
       });
-      return submitPractice(u, s, { submitKey: "seed-" + s.id, traLoi, thoiGianMs: spec.phut * MIN }, at(spec.d, spec.h));
+      return submitPractice(u, s, { submitKey: "seed-" + s.id, traLoi, thoiGian: spec.phut * MIN }, at(spec.d, spec.h));
     };
     run({ loaiBai: "CHON_NGHIA", theIds: [w("receipt"), w("postpone"), w("complimentary"), w("recipe"), w("uncharacteristically")], sai: { uncharacteristically: null }, d: 12, h: 20, phut: 3 });
     run({ loaiBai: "NHAP_TU_THEO_NGHIA", theIds: [w("receipt"), w("postpone"), w("recipe"), w("complementary"), w("complimentary")], sai: { receipt: "receit" }, d: 9, h: 21, phut: 4 });
     run({ loaiBai: "PHAN_BIET_CAP", soCau: 5, theIds: [w("complimentary"), w("complementary"), w("receipt"), w("recipe")], sai: { complimentary: "complementary", recipe: "receipt" }, d: 5, h: 19, phut: 3 });
     run({ loaiBai: "TONG_HOP", soCau: 5, boTheId: "22", theIds: ["How's it going?", "I'm running late", "get along with", "run out of", "appreciate"].map((x) => w(x, "22")), sai: { appreciate: "apreciate" }, d: 3, h: 20, phut: 4 });
     const last = run({ loaiBai: "NGHE_VIET", theIds: [w("receipt"), w("postpone"), w("uncharacteristically"), w("complimentary"), w("recipe")], sai: { receipt: "reciept", postpone: "post pone", uncharacteristically: "uncharacteristicly" }, d: 1, h: 21, phut: 4 });
-    const again = createPractice(u, { loaiBai: "NGHE_VIET", soCau: 20, theIds: last.ketQua.filter((r) => !r.dung).map((r) => r.theId), laLuyenLai: true, nguon: "LUYEN_LAI" }, at(1, 21.5));
-    submitPractice(u, again, { submitKey: "seed-" + again.id, thoiGianMs: 2 * MIN, traLoi: again.cauHoi.map((q) => ({ cauHoiId: q.id, noiDung: q._snap.tu === "uncharacteristically" ? "uncharacteristicaly" : q.dapAn.noiDung })) }, at(1, 21.5));
+    const again = createPractice(u, { loaiBai: "NGHE_VIET", soCau: 5, theIds: last.ketQua.filter((r) => !r.dung).map((r) => r.theId), laLuyenLai: true, baiGocId: last.baiLuyenId }, at(1, 21.5));
+    again.taoAt = iso(at(1, 21.5) - 2 * MIN);
+    submitPractice(u, again, { submitKey: "seed-" + again.id, thoiGian: 2 * MIN, traLoi: again.cauHoi.map((q) => ({ cauHoiId: q.id, noiDung: q._snap.tu === "uncharacteristically" ? "uncharacteristicaly" : q.dapAn.noiDung })) }, at(1, 21.5));
     db.practiceSeeded = true;
     save(db);
   }
