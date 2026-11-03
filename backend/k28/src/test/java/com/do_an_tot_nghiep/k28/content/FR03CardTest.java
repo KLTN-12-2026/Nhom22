@@ -404,15 +404,23 @@ class FR03CardTest extends AbstractIntegrationTest {
         send(owner, patch(cardPath(card)), Map.of("version", 1, "nghiaVi", "không sửa"))
                 .andExpect(status().isNotFound());
         for (String fileId : List.of(image, audio)) {
-            mockMvc.perform(delete("/api/v1/files/" + fileId).cookie(owner.session()).with(xsrf()))
-                    .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CONFLICT"));
             TepTin retained = files.findById(Long.valueOf(fileId)).orElseThrow();
             assertThat(retained.getXoaAt()).isNull();
-            assertThat(retained.getDaXoaObjectAt()).isNull();
             assertThat(storage.readBounded(retained.getObjectKey(), 100000))
                     .isEqualTo(fileId.equals(image) ? png : wav);
         }
         assertThat(fileService.avatar(owner.id()).id()).isEqualTo(image);
+        JsonNode active = create(Map.of("tu", "pear", "nghiaVi", "lê", "amTuId", audio));
+        mockMvc.perform(delete("/api/v1/files/" + audio).cookie(owner.session()).with(xsrf()))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CONFLICT"));
+        mockMvc.perform(delete("/api/v1/files/" + image).cookie(owner.session()).with(xsrf()))
+                .andExpect(status().isNoContent());
+        assertThat(files.findById(Long.valueOf(image)).orElseThrow().getDaXoaObjectAt()).isNotNull();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM the_tep WHERE the_id=?",
+                Long.class, Long.valueOf(id(card)))).isEqualTo(3);
+        remove(active, 0).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/files/" + audio).cookie(owner.session()).with(xsrf()))
+                .andExpect(status().isNoContent());
         assertThat(jdbc.queryForObject("SELECT version FROM bo_the WHERE id=?",
                 Long.class, Long.valueOf(deckId))).isZero();
     }

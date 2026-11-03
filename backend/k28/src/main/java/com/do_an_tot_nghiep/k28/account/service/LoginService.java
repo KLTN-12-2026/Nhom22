@@ -34,9 +34,13 @@ public class LoginService {
     }
 
     @Transactional
-    public LoginResult login(LoginRequest request) {
+    public LoginResult login(LoginRequest request, String clientIp) {
         String email = Emails.normalize(request.email());
-        String limitKey = "email:" + TokenService.sha256(email);
+        String emailKey = emailKey(email);
+        String ipKey = "ip:" + clientIp;
+        String limitKey = pairKey(email, clientIp);
+        rateLimiter.requireBelow(RateLimiter.Policy.LOGIN_IP, ipKey);
+        rateLimiter.requireBelow(RateLimiter.Policy.LOGIN_EMAIL, emailKey);
         rateLimiter.check(RateLimiter.Policy.LOGIN, limitKey);
 
         NguoiDung user = users.findByEmail(email).orElse(null);
@@ -45,6 +49,8 @@ public class LoginService {
         boolean matches = passwordEncoder.matches(request.password(), hasPassword ? user.getPasswordHash() : DUMMY_HASH);
 
         if (!hasPassword || !matches) {
+            rateLimiter.hit(RateLimiter.Policy.LOGIN_IP, ipKey);
+            rateLimiter.hit(RateLimiter.Policy.LOGIN_EMAIL, emailKey);
             throw new ApiException(ErrorCode.INVALID_CREDENTIALS, "Sai email hoặc mật khẩu");
         }
         switch (user.getTrangThai()) {
@@ -55,8 +61,17 @@ public class LoginService {
         }
 
         rateLimiter.reset(RateLimiter.Policy.LOGIN, limitKey);
-        user.recordLogin(clock.instant());
+        rateLimiter.reset(RateLimiter.Policy.LOGIN_EMAIL, emailKey);
+        users.recordLogin(user.getId(), clock.instant());
         return new LoginResult(principalOf(user), accountService.toResponse(user));
+    }
+
+    static String emailKey(String email) {
+        return "email:" + TokenService.sha256(email);
+    }
+
+    static String pairKey(String email, String clientIp) {
+        return emailKey(email) + ":ip:" + clientIp;
     }
 
     static AuthUser principalOf(NguoiDung user) {

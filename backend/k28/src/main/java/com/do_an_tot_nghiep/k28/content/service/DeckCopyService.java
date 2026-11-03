@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.content.service;
 
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.common.storage.StorageService;
 import com.do_an_tot_nghiep.k28.content.dto.DeckResponse;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
 import com.do_an_tot_nghiep.k28.content.entity.TepTin;
@@ -28,7 +29,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class DeckCopyService {
     private final TheTuVungRepository cards;
     private final CardLinkRepository links;
     private final TepTinRepository files;
+    private final StorageService storage;
     private final DeckCopyRequestRepository requests;
     private final DeckMapper mapper;
     private final JsonMapper json;
@@ -82,27 +86,39 @@ public class DeckCopyService {
         var tagLinks = links.findTags(originalIds).stream()
                 .collect(Collectors.groupingBy(CardLinkRepository.TagLink::theId));
         var allFiles = links.findFiles(originalIds);
-        validateSourceFiles(allFiles);
+        Map<Long, TepTin> sourceFiles = validateSourceFiles(allFiles);
         var fileLinks = allFiles.stream()
                 .collect(Collectors.groupingBy(CardLinkRepository.FileLink::theId));
 
         BoThe result = decks.saveAndFlush(BoThe.createCopy(userId, source));
         Instant now = clock.instant();
+        Map<Long, Long> copiedFiles = copyFiles(userId, sourceFiles, now);
         for (TheTuVung original : originals) {
             TheTuVung copied = cards.saveAndFlush(TheTuVung.createCopy(result.getId(), original));
             links.replaceTags(copied.getId(), tagLinks.getOrDefault(original.getId(), List.of())
                     .stream().map(CardLinkRepository.TagLink::nhanId).toList(), now);
             links.replaceFiles(copied.getId(), fileLinks.getOrDefault(original.getId(), List.of())
-                    .stream().map(link -> new CardLinkRepository.FileSelection(link.tepId(), link.vaiTro()))
+                    .stream().map(link -> new CardLinkRepository.FileSelection(
+                            copiedFiles.get(link.tepId()), link.vaiTro()))
                     .toList(), now);
         }
 
-        DeckResponse response = mapper.toResponse(result, false);
+        DeckResponse response = mapper.toResponse(result, false, originals.size());
         requests.complete(reservation.id(), result.getId(), json.writeValueAsString(response), clock.instant());
         return response;
     }
 
-    private void validateSourceFiles(List<CardLinkRepository.FileLink> selections) {
+    private Map<Long, Long> copyFiles(Long userId, Map<Long, TepTin> sourceFiles, Instant now) {
+        Map<Long, Long> copied = new TreeMap<>();
+        sourceFiles.forEach((id, source) -> {
+            String key = storage.newObjectKey("files/" + userId);
+            storage.copy(source.getObjectKey(), key);
+            copied.put(id, files.save(TepTin.copyOf(source, userId, key, now)).getId());
+        });
+        return copied;
+    }
+
+    private Map<Long, TepTin> validateSourceFiles(List<CardLinkRepository.FileLink> selections) {
         Map<Long, TepTin> locked = new TreeMap<>();
         for (Long id : selections.stream().map(CardLinkRepository.FileLink::tepId).distinct().sorted().toList()) {
             TepTin file = files.findForCopy(id).orElseThrow(this::invalidSourceFile);
@@ -118,6 +134,7 @@ public class DeckCopyService {
                 throw invalidSourceFile();
             }
         }
+        return locked;
     }
 
     private DeckResponse replay(Long userId, Long sourceId, DeckCopyRequestRepository.Entry entry) {
@@ -127,7 +144,12 @@ public class DeckCopyService {
         if (!entry.completed() || entry.resultId() == null || entry.responseJson() == null) {
             throw new IllegalStateException("Committed copy request is incomplete");
         }
-        DeckResponse response = json.readValue(entry.responseJson(), DeckResponse.class);
+        JsonNode snapshot = json.readTree(entry.responseJson());
+        if (!snapshot.has("soThe") && snapshot instanceof ObjectNode legacy) {
+            legacy.put("soThe", cards.countActiveByDeckId(List.of(entry.resultId())).stream()
+                    .mapToLong(TheTuVungRepository.DeckCardCount::getSoThe).sum());
+        }
+        DeckResponse response = json.treeToValue(snapshot, DeckResponse.class);
         if (!entry.resultId().toString().equals(response.id())
                 || !sourceId.toString().equals(response.boNguonId())
                 || !userId.toString().equals(response.chuSoHuuId())) {

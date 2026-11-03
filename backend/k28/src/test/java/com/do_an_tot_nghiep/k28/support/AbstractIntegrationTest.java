@@ -42,13 +42,13 @@ public abstract class AbstractIntegrationTest {
     protected static final String S3_SECRET_KEY = "s3test_secret";
     protected static final String S3_BUCKET = "vocab-files";
 
-    protected static final GenericContainer<?> S3 = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:latest"))
+    protected static final GenericContainer<?> S3 = new GenericContainer<>(DockerImageName.parse("rustfs/rustfs:1.0.3"))
             .withEnv("RUSTFS_ACCESS_KEY", S3_ACCESS_KEY)
             .withEnv("RUSTFS_SECRET_KEY", S3_SECRET_KEY)
             .withExposedPorts(9000)
             .waitingFor(Wait.forHttp("/health").forPort(9000));
 
-    protected static final GenericContainer<?> MAILPIT = new GenericContainer<>(DockerImageName.parse("axllent/mailpit:latest"))
+    protected static final GenericContainer<?> MAILPIT = new GenericContainer<>(DockerImageName.parse("axllent/mailpit:v1.32.0"))
             .withExposedPorts(1025, 8025)
             .waitingFor(Wait.forHttp("/livez").forPort(8025));
 

@@ -14,9 +14,9 @@ flowchart LR
     G --> H["Xem điểm yếu và tiến bộ"]
 ```
 
-Mình đã đọc toàn bộ 22 mục của [tài liệu phân tích–thiết kế trong repository](C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md), đề cương PDF 7 trang, và đối chiếu các phần SRS trong thiết kế dữ liệu Word, roadmap, sprint plan, tài liệu bàn giao, mockup và bộ tài liệu ở `C:/doantotnghiep/docs`.
+Mình đã đọc toàn bộ 22 mục của [tài liệu phân tích–thiết kế trong repository](PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md), đề cương PDF 7 trang, và đối chiếu các phần SRS trong thiết kế dữ liệu Word, roadmap, sprint plan, tài liệu bàn giao, mockup và bộ tài liệu ở `C:/doantotnghiep/docs`.
 
-**Có hai bộ quy tắc SRS đang khác nhau.** Phần giải thích dưới đây theo **TK §7.2 trong repository**, vì [roadmap B2.1](C:/doantotnghiep/khoa_luan_tot_nghiep/roadmap/TienDoDuKien_backend.md:284) và TC-06/TC-07 viện dẫn trực tiếp bảng này.
+**Có hai bộ quy tắc SRS đang khác nhau.** Phần giải thích dưới đây theo **TK §7.2 trong repository**, vì [roadmap B2.1](../roadmap/TienDoDuKien_backend.md#L284) và TC-06/TC-07 viện dẫn trực tiếp bảng này.
 
 | Điểm khác nhau | TK trong repository | Bộ tài liệu ngoài repository |
 |---|---|---|
@@ -116,7 +116,7 @@ Ví dụ cùng một thẻ `receipt`:
 
 Bạn có thể nhận ra nghĩa khi nhìn tiếng Anh, nhưng chưa tự viết được từ tiếng Anh khi nhìn nghĩa tiếng Việt. Vì thế, **hai chiều cần hai tiến độ riêng**.
 
-Theo [TK §7.1](C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:271), khóa duy nhất của tiến độ là:
+Theo [TK §7.1](PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md#L271), khóa duy nhất của tiến độ là:
 
 ```text
 (nguoi_dung_id, the_id, chieu_hoc)
@@ -209,7 +209,7 @@ Bốn nút được ánh xạ như sau:
 
 **Phím tắt 1–4 là vị trí nút, không phải giá trị q.** Ví dụ phím 3 chọn Nhớ, nhưng q của Nhớ bằng 4.
 
-Theo [TK §7.2](C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:285):
+Theo [TK §7.2](PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md#L285):
 
 ```text
 EF_mới = max(
@@ -391,7 +391,7 @@ Giả sử bạn hoàn tất một bước lúc **23:50 ngày 13/10**:
 | Cộng 24 giờ | 23:50 ngày 14/10 |
 | Ngày lịch + giờ ôn giả định 20:00 | 20:00 ngày 14/10 |
 
-Theo [TK §7.3](C:/doantotnghiep/khoa_luan_tot_nghiep/docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md:309):
+Theo [TK §7.3](PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md#L309):
 
 - Bước phút: tính từ thời điểm máy chủ nhận kết quả.
 - Bước ngày: hiện cộng `N×24 giờ` (`SM2-VN-1`). Cách tính theo ngày lịch, múi giờ phiên và giờ ôn (ví dụ 20:00 ở bảng trên) là phương án chờ nhóm duyệt, chưa cài đặt.

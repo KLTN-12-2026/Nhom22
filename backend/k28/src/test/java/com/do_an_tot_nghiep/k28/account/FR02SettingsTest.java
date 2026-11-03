@@ -12,10 +12,13 @@ import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.VaiTro;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
+import com.do_an_tot_nghiep.k28.content.entity.ChuDe;
+import com.do_an_tot_nghiep.k28.content.repository.ChuDeRepository;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +41,9 @@ class FR02SettingsTest extends AbstractIntegrationTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    ChuDeRepository topics;
 
     Cookie session;
 
@@ -102,6 +108,31 @@ class FR02SettingsTest extends AbstractIntegrationTest {
         send(put("/api/v1/me/learning-settings"), missing)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors[?(@.field == 'mucTieu')]").exists());
+    }
+
+    @Test
+    void fr02_selectedTopicsAreValidatedAndSaved() throws Exception {
+        mockMvc.perform(get("/api/v1/me/learning-settings").cookie(session)).andExpect(status().isOk());
+        List<String> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            ids.add(String.valueOf(topics.saveAndFlush(ChuDe.create("Chủ đề " + UUID.randomUUID(), null)).getId()));
+        }
+
+        send(put("/api/v1/me/learning-settings"), learning(15, 20, 0, ids))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'chuDeIds')]").exists());
+        send(put("/api/v1/me/learning-settings"), learning(15, 20, 0, List.of(ids.get(0), ids.get(0))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'chuDeIds')]").exists());
+        send(put("/api/v1/me/learning-settings"), learning(15, 20, 0, List.of("999999999999")))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'chuDeIds')]").exists());
+
+        send(put("/api/v1/me/learning-settings"), learning(15, 20, 0, ids.subList(0, 5)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/me/learning-settings").cookie(session))
+                .andExpect(jsonPath("$.chuDeIds.length()").value(5))
+                .andExpect(jsonPath("$.chuDeIds[?(@ == '" + ids.get(4) + "')]").exists());
     }
 
     @Test
@@ -181,13 +212,17 @@ class FR02SettingsTest extends AbstractIntegrationTest {
     }
 
     private static Map<String, Object> learning(int phut, int tuMoi, long version) {
+        return learning(phut, tuMoi, version, List.of());
+    }
+
+    private static Map<String, Object> learning(int phut, int tuMoi, long version, List<String> chuDeIds) {
         Map<String, Object> body = new HashMap<>();
         body.put("trinhDo", "CO_BAN");
         body.put("mucTieu", "TOEIC");
         body.put("phutMoiNgay", phut);
         body.put("tuMoiMoiNgay", tuMoi);
         body.put("version", version);
-        body.put("chuDeIds", java.util.List.of());
+        body.put("chuDeIds", chuDeIds);
         return body;
     }
 

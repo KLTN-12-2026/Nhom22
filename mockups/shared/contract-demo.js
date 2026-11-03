@@ -3,7 +3,7 @@
   const original = demo.handle;
   const learning = {mucTieu:'goal',trinhDo:'level',chuDeIds:'topicIds',phutMoiNgay:'minutesPerDay',tuMoiMoiNgay:'newCardsPerDay',daHoanTatKhoiDau:'onboardingDone'};
   const notification = {nhanTrongUngDung:'inApp',nhanEmail:'email',nhacHoc:'studyReminder',gioNhac:'reminderTime'};
-  const deckFields = {ten:'name',moTa:'description',chuDeId:'topicId',trinhDo:'level',mucTieu:'goal',quyenTruyCap:'visibility',chuSoHuuId:'ownerId',boNguonId:'sourceDeckId',yeuThich:'favorite',trangThaiKiemDuyet:'trangThaiKiemDuyet'};
+  const deckFields = {ten:'name',moTa:'description',chuDeId:'topicId',trinhDo:'level',mucTieu:'goal',quyenTruyCap:'visibility',chuSoHuuId:'ownerId',boNguonId:'sourceDeckId',yeuThich:'favorite',soThe:'cardCount',trangThaiKiemDuyet:'trangThaiKiemDuyet'};
   function mapped(value, fields, reverse) {
     const out={id:value.id,version:value.version ?? 0,createdAt:value.createdAt,updatedAt:value.updatedAt};
     Object.entries(fields).forEach(([api,internal])=>{out[reverse?internal:api]=value[reverse?api:internal];});
@@ -153,7 +153,7 @@
         if(body?.boMucTieu)input.goal='GIAO_TIEP';
         if(body.boChuDe)input.topicId=null;
       }
-      const result=legacy(method,path+(id?'':'?tab=mine&size=100'),input,headers,deckFields);
+      const result=legacy(method,path+(id?'':'?tab='+(query.get('yeuThich')==='true'?'favorites':'mine')+'&size=100'),input,headers,deckFields);
       if(!result.body)return result;
       if(result.body.items)return {...result,body:page(result.body.items.map(value=>mapped(value,deckFields,false)),query)};
       if((method==='POST' && !body.mucTieu) || body?.boMucTieu){result.body.goal=null;const created=db.decks.find(value=>value.id===result.body.id);created.goal=null;original('GET','/me',null,headers);}

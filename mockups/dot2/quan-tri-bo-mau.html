@@ -139,7 +139,7 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -151,7 +151,7 @@
   const p = VL.params();
   $("create").innerHTML = VL.icon("plus") + "Tạo bộ mẫu";
   let topics = [];
-  const topicsReady = VL.api("GET", "/admin/topics").then((t) => { topics = t; });
+  const topicsReady = VL.api("GET", "/admin/topics?size=100").then((t) => { topics = t.items; });
 
   function stateOf(d) {
     if (d.trangThaiKiemDuyet === "DA_AN") return ["Đã ẩn", "stamp-warning"];
@@ -181,7 +181,7 @@
       '<div class="field"><label class="field-label" for="dd-ten">Tên bộ</label><input class="input" id="dd-ten" name="ten" maxlength="170" autocomplete="off"><p class="field-counter"></p><p class="field-error"></p></div>' +
       '<div class="field"><label class="field-label" for="dd-mota">Mô tả<span class="optional">không bắt buộc</span></label><textarea class="textarea" id="dd-mota" name="moTa" rows="3" maxlength="1100"></textarea><p class="field-error"></p></div>' +
       '<div class="dlg-grid cols-3"><div class="field"><label class="field-label" for="dd-goal">Mục tiêu</label><select class="select" id="dd-goal" name="mucTieu"><option value="">Chọn</option>' + opt(VL.GOAL, d && d.mucTieu) + '</select><p class="field-error"></p></div>' +
-      '<div class="field"><label class="field-label" for="dd-topic">Chủ đề</label><select class="select" id="dd-topic" name="chuDeId"><option value="">Chọn</option>' + topics.map((t) => '<option value="' + t.id + '"' + (d && d.chuDeId === t.id ? " selected" : "") + ">" + VL.esc(t.name) + "</option>").join("") + '</select><p class="field-error"></p></div>' +
+      '<div class="field"><label class="field-label" for="dd-topic">Chủ đề</label><select class="select" id="dd-topic" name="chuDeId"><option value="">Chọn</option>' + topics.map((t) => '<option value="' + t.id + '"' + (d && d.chuDeId === t.id ? " selected" : "") + ">" + VL.esc(t.ten) + "</option>").join("") + '</select><p class="field-error"></p></div>' +
       '<div class="field"><label class="field-label" for="dd-level">Trình độ</label><select class="select" id="dd-level" name="trinhDo"><option value="">Chọn</option>' + opt(VL.LEVEL, d && d.trinhDo) + '</select><p class="field-error"></p></div></div>' +
       (d ? "" : '<p class="small muted">Bộ mới ở trạng thái nháp. Thêm thẻ rồi xuất bản.</p>') +
       '<div data-form-error hidden></div><div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close>Hủy</button><button type="submit" class="btn btn-primary">' + (d ? "Lưu thông tin" : "Tạo bộ") + "</button></div></form>";

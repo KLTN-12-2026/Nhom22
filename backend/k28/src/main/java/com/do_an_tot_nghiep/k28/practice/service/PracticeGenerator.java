@@ -42,6 +42,8 @@ final class PracticeGenerator {
     record Pair(Long id, StudyCardResponse first, StudyCardResponse second) {
     }
 
+    private static final String INFLECTION = "(?:s|es|d|ed|ing|er|est)?";
+
     private record Blank(String cau, String dapAn) {
     }
 
@@ -267,13 +269,14 @@ final class PracticeGenerator {
             return null;
         }
         Matcher matcher = Pattern
-                .compile("(?<![A-Za-z])(" + Pattern.quote(card.tu().trim()) + "[A-Za-z]*)", Pattern.CASE_INSENSITIVE)
+                .compile("(?<![A-Za-z])(" + Pattern.quote(card.tu().trim()) + INFLECTION + ")(?![A-Za-z])",
+                        Pattern.CASE_INSENSITIVE)
                 .matcher(card.viDuEn());
         if (!matcher.find()) {
             return null;
         }
-        String cau = card.viDuEn().substring(0, matcher.start(1)) + "_____" + card.viDuEn().substring(matcher.end(1));
-        return new Blank(cau, matcher.group(1));
+        String dapAn = matcher.group(1);
+        return new Blank(matcher.replaceAll("_____"), dapAn);
     }
 
     private List<StudyCardResponse> distinctCards(

@@ -48,7 +48,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="stats" data-auth="required">
-<!-- F2.7 · UI35 · API: GET /statistics/overview?tuNgay&denNgay&boTheId (B2.10), GET /statistics/skills?boTheId (B2.10), GET /decks?tab=mine (B1.8) -->
+<!-- F2.7 · UI35 · API: GET /statistics/overview?tuNgay&denNgay&boTheId (B2.10), GET /statistics/skills?boTheId (B2.10), GET /decks?size=100 (B1.8) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -162,7 +162,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
+<script src="../shared/contract-demo.js?v=3e6ee35bf107"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -187,8 +188,8 @@
   $("dates").hidden = initRange !== "custom";
   form.addEventListener("change", (e) => { if (e.target.name === "range") { $("dates").hidden = e.target.value !== "custom"; if (e.target.value !== "custom") run(); } });
 
-  VL.api("GET", "/decks?tab=mine").then((d) => {
-    $("deck").insertAdjacentHTML("beforeend", d.items.map((x) => '<option value="' + x.id + '">' + VL.esc(x.name.length > 80 ? x.name.slice(0, 80) + "…" : x.name) + "</option>").join(""));
+  VL.api("GET", "/decks?size=100").then((d) => {
+    $("deck").insertAdjacentHTML("beforeend", d.items.map((x) => '<option value="' + x.id + '">' + VL.esc(x.ten.length > 80 ? x.ten.slice(0, 80) + "…" : x.ten) + "</option>").join(""));
     if (p.boTheId) $("deck").value = p.boTheId;
     pendingDeck = null;
   });

@@ -14,8 +14,8 @@ spring:
     ignore-migration-patterns: "repeatable:missing"
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:vocab_learn}?characterEncoding=UTF-8&connectionTimeZone=UTC
-    username: ${DB_USER:vocab}
-    password: ${DB_PASSWORD:123456}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     open-in-view: false
     hibernate:
@@ -39,8 +39,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:dev-google-client-id}
-            client-secret: ${GOOGLE_CLIENT_SECRET:dev-google-client-secret}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid,profile,email
             redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/api/v1/auth/{registrationId}/callback}
 
@@ -53,14 +53,14 @@ app:
       enabled: ${FILE_CLEANUP_ENABLED:true}
       initial-delay-ms: ${FILE_CLEANUP_INITIAL_DELAY_MS:60000}
       interval-ms: ${FILE_CLEANUP_INTERVAL_MS:60000}
-  cookie-secure: ${COOKIE_SECURE:false}
+  cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
   s3:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}
-    access-key: ${S3_ACCESS_KEY:s3admin}
-    secret-key: ${S3_SECRET_KEY:s3admin_dev_pw}
+    access-key: ${S3_ACCESS_KEY}
+    secret-key: ${S3_SECRET_KEY}
     bucket: ${S3_BUCKET:vocab-files}
     region: ${S3_REGION:us-east-1}
     presign-ttl: ${S3_PRESIGN_TTL:10m}
@@ -68,9 +68,9 @@ app:
 springdoc:
   default-produces-media-type: application/json
   api-docs:
-    enabled: ${SWAGGER_ENABLED:true}
+    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED:true}
+    enabled: ${SWAGGER_ENABLED:false}
     path: /swagger-ui.html
     urls-primary-name: all
     operations-sorter: method
@@ -94,7 +94,7 @@ management:
         enabled: true
 
 server:
-  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:native}
   servlet:
     session:
       timeout: 7d

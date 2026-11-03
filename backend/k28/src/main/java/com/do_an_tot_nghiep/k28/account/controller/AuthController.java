@@ -47,7 +47,7 @@ public class AuthController {
 
     @PostMapping("/login")
     UserResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http, HttpServletResponse response) {
-        LoginService.LoginResult result = loginService.login(request);
+        LoginService.LoginResult result = loginService.login(request, http.getRemoteAddr());
         linkPendingGoogle(http, result.principal().id());
         sessionAuthenticator.login(result.principal(), http, response);
         return result.user();
@@ -66,8 +66,8 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordService.resetPassword(request.token(), request.password());
+    void resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpServletRequest http) {
+        passwordService.resetPassword(request.token(), request.password(), http.getRemoteAddr());
     }
 
     @GetMapping("/google/start")

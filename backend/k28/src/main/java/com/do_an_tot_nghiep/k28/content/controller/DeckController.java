@@ -53,10 +53,11 @@ public class DeckController {
 
     @GetMapping
     public PageResponse<DeckResponse> list(
+            @RequestParam(value = "yeuThich", defaultValue = "false") boolean yeuThich,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        return service.list(currentUser.id(), page, size);
+        return service.list(currentUser.id(), yeuThich, page, size);
     }
 
     @PostMapping

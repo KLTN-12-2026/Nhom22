@@ -50,7 +50,7 @@ public class GoogleLoginService {
         if (user.getTrangThai() != TrangThaiNguoiDung.HOAT_DONG) {
             throw new ApiException(ErrorCode.ACCOUNT_LOCKED, "Tài khoản đã bị khóa. Liên hệ với quản trị viên để được hỗ trợ");
         }
-        user.recordLogin(clock.instant());
+        users.recordLogin(user.getId(), clock.instant());
         return new LoginService.LoginResult(LoginService.principalOf(user), accountService.toResponse(user));
     }
 

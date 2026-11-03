@@ -83,6 +83,27 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc03_copyDoesNotCarryLearningProgressOrHistory() throws Exception {
+        for (String direction : List.of("EN_VI", "VI_EN")) {
+            jdbc.update("INSERT INTO tien_do_the (nguoi_dung_id, the_id, chieu_hoc, trang_thai, han_on_at, "
+                            + "khoang_on_ngay, chuoi_thanh_cong) VALUES (?, ?, ?, 'ON_TAP', CURRENT_TIMESTAMP(3), 6, 2)",
+                    author.id(), sourceCardId, direction);
+        }
+
+        Long copiedId = body(copy(learner, sourceId, "progress").andExpect(status().isCreated()).andReturn())
+                .get("id").asLong();
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tien_do_the t JOIN the_tu_vung c ON c.id = t.the_id "
+                + "WHERE c.bo_the_id = ?", Integer.class, copiedId)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tien_do_the WHERE nguoi_dung_id = ?",
+                Integer.class, learner.id())).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM lich_su_on WHERE nguoi_dung_id = ?",
+                Integer.class, learner.id())).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tien_do_the WHERE nguoi_dung_id = ?",
+                Integer.class, author.id())).isEqualTo(2);
+    }
+
+    @Test
     void tc03_copiesActiveContentTagsAndMetadataWithNewOwnership() throws Exception {
         Long deleted = card(sourceId, "deleted");
         jdbc.update("UPDATE the_tu_vung SET xoa_at=CURRENT_TIMESTAMP(3) WHERE id=?", deleted);
@@ -209,13 +230,14 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
         copy(learner, sourceId, "rollback").andExpect(status().isUnprocessableContent());
         assertThat(countCopies()).isZero();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM yeu_cau_sao_chep_bo WHERE nguoi_dung_id=?", Long.class, learner.id())).isZero();
+        storage.putVerified(pending.getObjectKey(), FileFixtures.image("png"), "image/png");
         pending.complete(pending.getObjectKey(), "image/png", 1, "x", clock.instant());
         files.saveAndFlush(pending);
         copy(learner, sourceId, "rollback").andExpect(status().isCreated());
     }
 
     @Test
-    void tc03_sharedMediaSurvivesSourceHidingWithoutWeakeningFileOwnership() throws Exception {
+    void tc03_copyOwnsItsMediaSoAuthorCanDeleteSourceFile() throws Exception {
         byte[] content = FileFixtures.image("png");
         String objectKey = "copy-test/" + UUID.randomUUID() + ".png";
         storage.putVerified(objectKey, content, "image/png");
@@ -225,25 +247,45 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
         links.replaceFiles(sourceCardId, List.of(new CardLinkRepository.FileSelection(fileId, VaiTroTep.ANH)), clock.instant());
         Long resultId = body(copy(learner, sourceId, "media").andExpect(status().isCreated()).andReturn()).get("id").asLong();
         Long copiedCardId = jdbc.queryForObject("SELECT id FROM the_tu_vung WHERE bo_the_id=?", Long.class, resultId);
-        jdbc.update("UPDATE bo_the SET trang_thai_kiem_duyet='DA_AN' WHERE id=?", sourceId);
         String mediaPath = "/api/v1/decks/" + resultId + "/cards/" + copiedCardId + "/files/ANH";
-        JsonNode response = body(send(learner, get(mediaPath)).andExpect(status().isOk()).andReturn());
-        assertThat(response.get("id").asLong()).isEqualTo(fileId);
+        Long copiedFileId = body(send(learner, get(mediaPath)).andExpect(status().isOk()).andReturn()).get("id").asLong();
+        TepTin copiedFile = files.findById(copiedFileId).orElseThrow();
+        assertThat(copiedFileId).isNotEqualTo(fileId);
+        assertThat(copiedFile.getChuSoHuuId()).isEqualTo(learner.id());
+        assertThat(copiedFile.getObjectKey()).startsWith("files/" + learner.id() + "/").isNotEqualTo(objectKey);
+        assertThat(copiedFile.getHoanTatAt()).isNotNull();
+        assertThat(copiedFile.getKichThuoc()).isEqualTo(content.length);
         assertThat(files.findById(fileId).orElseThrow().getChuSoHuuId()).isEqualTo(author.id());
+
+        jdbc.update("UPDATE bo_the SET trang_thai_kiem_duyet='DA_AN' WHERE id=?", sourceId);
+        send(author, delete("/api/v1/files/" + fileId)).andExpect(status().isConflict());
+        jdbc.update("UPDATE the_tu_vung SET xoa_at=CURRENT_TIMESTAMP(3) WHERE id=?", sourceCardId);
+        send(author, delete("/api/v1/files/" + fileId)).andExpect(status().isNoContent());
+
+        JsonNode response = body(send(learner, get(mediaPath)).andExpect(status().isOk()).andReturn());
+        assertThat(response.get("id").asLong()).isEqualTo(copiedFileId);
         var downloaded = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(response.get("downloadUrl").asText())).GET().build(), HttpResponse.BodyHandlers.ofByteArray());
         assertThat(downloaded.statusCode()).isEqualTo(200);
         assertThat(downloaded.body()).isEqualTo(content);
         send(author, get(mediaPath)).andExpect(status().isNotFound());
         send(learner, get("/api/v1/files/" + fileId)).andExpect(status().isNotFound());
-        send(learner, get("/api/v1/decks/" + resultId + "/cards/" + sourceCardId + "/files/ANH")).andExpect(status().isNotFound());
-        send(author, delete("/api/v1/files/" + fileId)).andExpect(status().isConflict());
+        send(learner, get("/api/v1/files/" + copiedFileId)).andExpect(status().isOk());
         send(learner, patch("/api/v1/cards/" + copiedCardId).contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of("version", 0, "boAmTu", true, "nghiaVi", "nghĩa mới"))))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.anhId").value(fileId.toString()));
-        assertThat(cards.findById(sourceCardId).orElseThrow().getNghiaVi()).isEqualTo("quả táo");
+                .andExpect(status().isOk()).andExpect(jsonPath("$.anhId").value(copiedFileId.toString()));
         Long another = card(resultId, "other");
         send(learner, patch("/api/v1/cards/" + another).contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of("version", 0, "anhId", fileId.toString())))).andExpect(status().isNotFound());
+        send(learner, delete("/api/v1/files/" + copiedFileId)).andExpect(status().isConflict());
+    }
+
+    @Test
+    void tc03_copyResponseCountsCardsAndOldSnapshotsStillReplay() throws Exception {
+        card(sourceId, "second");
+        copy(learner, sourceId, "count").andExpect(status().isCreated()).andExpect(jsonPath("$.soThe").value(2));
+        jdbc.update("UPDATE yeu_cau_sao_chep_bo SET response_json=JSON_REMOVE(response_json, '$.soThe') "
+                + "WHERE nguoi_dung_id=?", learner.id());
+        copy(learner, sourceId, "count").andExpect(status().isCreated()).andExpect(jsonPath("$.soThe").value(2));
     }
 
     @Test

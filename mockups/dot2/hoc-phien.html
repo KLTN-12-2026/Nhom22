@@ -75,10 +75,10 @@
             <div id="rating" hidden>
               <p class="rate-caption">Lần ôn tiếp theo</p>
               <div class="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
-                <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span><span class="rate-when" data-when-for="QUEN"></span></button>
-                <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span><span class="rate-when" data-when-for="KHO"></span></button>
-                <button type="button" class="rate" data-rate="NHO"><span class="rate-top"><span class="kbd">3</span>Nhớ</span><span class="rate-when" data-when-for="NHO"></span></button>
-                <button type="button" class="rate" data-rate="DE"><span class="rate-top"><span class="kbd">4</span>Dễ</span><span class="rate-when" data-when-for="DE"></span></button>
+                <button type="button" class="rate" data-rate="QUEN"><span class="rate-top"><span class="kbd">1</span>Quên</span></button>
+                <button type="button" class="rate" data-rate="KHO"><span class="rate-top"><span class="kbd">2</span>Khó</span></button>
+                <button type="button" class="rate" data-rate="NHO"><span class="rate-top"><span class="kbd">3</span>Nhớ</span></button>
+                <button type="button" class="rate" data-rate="DE"><span class="rate-top"><span class="kbd">4</span>Dễ</span></button>
               </div>
               <details class="rate-help">
                 <summary>Khi nào chọn mức nào?</summary>
@@ -115,7 +115,7 @@
   </main>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -222,7 +222,6 @@
     $("back").innerHTML = "";
     $("flip").hidden = false;
     $("rating").hidden = true;
-    RATE_KEYS.forEach((r) => { document.querySelector('[data-when-for="' + r + '"]').textContent = cur.duKien[r] || ""; });
     $("flip").focus({ preventScroll: true });
   }
 
@@ -251,10 +250,16 @@
   }
 
   const RATE_KEYS = ["QUEN", "KHO", "NHO", "DE"];
+  async function reloadProgress(item) {
+    const fresh = await VL.api("GET", "/learning/sessions/" + encodeURIComponent(id));
+    const row = fresh.hangDoi.find((h) => h.theId === item.theId);
+    if (row) item.tienDo = row.tienDo;
+  }
+
   function applyResult(item, res) {
     item.trangThai = "DA_TRA_LOI";
     item.tienDo = res.tienDo;
-    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI", tienDo: res.tienDo, duKien: res.duKien, the: item.the });
+    if (res.laiTrongPhien) S.hangDoi.push({ theId: item.theId, thuTu: S.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI", tienDo: res.tienDo, the: item.the });
   }
 
   async function rate(r) {
@@ -268,7 +273,7 @@
     try {
       const res = await VL.api("POST", "/learning/sessions/" + id + "/reviews", body);
       applyResult(item, res);
-      announce("Đã lưu " + VL.RATING[r] + ". Gặp lại sau " + res.khoangHienThi + ".");
+      announce("Đã lưu " + VL.RATING[r] + ".");
       setSync("saved");
     } catch (err) {
       if (err.status === 0) {
@@ -278,14 +283,13 @@
         setSync("pending");
         announce("Chưa gửi được kết quả. Đã giữ lại để gửi sau.");
       } else if (err.code === "VERSION_CONFLICT") {
-        item.tienDo = err.tienDo;
-        item.duKien = err.duKien;
+        try { await reloadProgress(item); } catch (reloadErr) { VL.toast(reloadErr.message, "error"); }
         setSync("saved");
         sending = false;
         document.querySelectorAll(".rate").forEach((b) => { b.disabled = false; b.removeAttribute("aria-busy"); });
         $("flash-note").hidden = false;
-        $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[err.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
-        RATE_KEYS.forEach((k) => { document.querySelector('[data-when-for="' + k + '"]').textContent = err.duKien[k] || ""; });
+        $("flash-note-text").textContent = "Thẻ này vừa được chấm ở một tab khác nên trạng thái đã đổi thành " + (VL.SRS_STATE[item.tienDo.trangThai] || "") + ". Đã tải trạng thái mới, bạn chấm lại theo trí nhớ của mình.";
+        $("card-state").textContent = VL.SRS_STATE[item.tienDo.trangThai] || "";
         return;
       } else if (err.code === "CONFLICT") {
         location.replace("hoc-tong-ket.html?id=" + id);
@@ -317,7 +321,7 @@
         } catch (err) {
           if (err.status === 0) { VL.toast("Vẫn chưa có mạng. Kết quả vẫn được giữ.", "error"); break; }
           pending = pending.filter((x) => x !== body);
-          if (item) { item.trangThai = "CHUA_TRA_LOI"; if (err.tienDo) { item.tienDo = err.tienDo; item.duKien = err.duKien; } }
+          if (item) { item.trangThai = "CHUA_TRA_LOI"; if (err.code === "VERSION_CONFLICT") { try { await reloadProgress(item); } catch (reloadErr) { VL.toast(reloadErr.message, "error"); } } }
           VL.toast(err.code === "VERSION_CONFLICT" ? "Một thẻ đã được chấm ở tab khác, bạn sẽ gặp lại để chấm lại" : err.message, "error");
         }
       }

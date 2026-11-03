@@ -7,5 +7,5 @@ import org.mapstruct.Mapper;
 @Mapper
 public interface DeckMapper {
 
-    DeckResponse toResponse(BoThe deck, boolean yeuThich);
+    DeckResponse toResponse(BoThe deck, boolean yeuThich, int soThe);
 }
