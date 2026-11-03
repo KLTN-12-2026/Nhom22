@@ -63,7 +63,7 @@
   const days = (n) => new Date(now - n * 86400000).toISOString();
   const MIN = 60000;
   const DAY = 86400000;
-  const ALGO = "sm2-vl-1";
+  const ALGO = "SM2-VN-2";
   const AVG_SECONDS = 20;
   const RATINGS = ["QUEN", "KHO", "NHO", "DE"];
   const RATING_Q = { QUEN: 1, KHO: 3, NHO: 4, DE: 5 };
@@ -283,12 +283,20 @@
   }
   function publicUser(u) {
     const l = db.learning[u.id];
-    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienId: u.anhDaiDienId || null, trangThai: u.trangThai, daHoanTatKhoiDau: !!(l && l.onboardingDone) };
+    return { id: u.id, email: u.email, tenHienThi: u.tenHienThi, vaiTro: u.vaiTro, muiGio: u.muiGio, anhDaiDienId: u.anhDaiDienId || null, trangThai: u.trangThai, emailXacThucAt: u.trangThai === "CHUA_XAC_THUC" ? null : (u.emailXacThucAt || u.createdAt || null), daHoanTatKhoiDau: !!(l && l.onboardingDone) };
   }
   function topicName(id) { const t = db.topics.find((x) => x.id === id); return t ? t.name : "Chưa phân loại"; }
   function deckView(d, uid) {
     const count = db.cards.filter((x) => x.deckId === d.id).length;
     return Object.assign({}, d, { cardCount: count, topicName: topicName(d.topicId), favorite: !!(uid && (db.favorites[uid] || []).includes(d.id)) });
+  }
+  function topicDto(t) { return { id: t.id, ten: t.name, moTa: t.description || null, version: t.version ?? 0 }; }
+  function libraryDeck(d) {
+    const owner = db.users.find((x) => x.id === d.ownerId);
+    return { id: d.id, ten: d.name, moTa: d.description || null, chuDeId: d.topicId || null, tenChuDe: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level || null, mucTieu: d.goal || null, nguon: d.kind === "MAU" ? "MAU" : "CHIA_SE", chuSoHuuId: d.ownerId, tenTacGia: d.kind === "MAU" ? null : (owner ? owner.tenHienThi : null), soThe: db.cards.filter((x) => x.deckId === d.id && !x.deleted).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt };
+  }
+  function libraryCard(c) {
+    return { id: c.id, boTheId: c.deckId, tu: c.word, tuLoai: c.pos || null, nghiaVi: c.meaningVi, phienAm: c.ipa || null, viDuEn: c.exampleEn || null, dichVi: c.exampleVi || null, doKho: c.difficulty || 1, nguon: c.source || null, nhanIds: c.tagIds || [], anhId: c.anhId || null, amTuId: c.amTuId || null, amCauId: c.amCauId || null };
   }
   function ownDeck(id) {
     const u = requireMe();
@@ -393,7 +401,7 @@
         let d;
         if (rating === "KHO") d = Math.max(I + 1, Math.round(I * 1.2));
         else if (rating === "NHO") d = p.chuoiThanhCong === 1 ? 6 : Math.max(I + 1, Math.round(I * ef));
-        else d = Math.max(I + 1, Math.round(I * ef * 1.3));
+        else d = p.chuoiThanhCong === 1 ? Math.round(6 * 1.3) : Math.max(I + 1, Math.round(I * ef * 1.3));
         n.chuoiThanhCong = p.chuoiThanhCong + 1;
         n.hanOnAt = inDays(d);
       }
@@ -409,7 +417,6 @@
     if (d <= 0) return Math.round(mins / 60) + " giờ";
     return d + " ngày";
   }
-  function previewOf(p, t, tz) { const o = {}; RATINGS.forEach((r) => { o[r] = intervalLabel(t, srsNext(p, r, t, tz).hanOnAt, tz); }); return o; }
 
   function streakOf(uid, tz) {
     const cnt = {};
@@ -533,7 +540,7 @@
       hangDoi: s.hangDoi.map((h) => {
         const x = cardById(h.theId);
         const p = progressOf(u.id, h.theId, s.chieuHoc);
-        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), duKien: previewOf(p, t, s.muiGio), the: x ? studyCard(x) : null };
+        return { theId: h.theId, thuTu: h.thuTu, trangThai: h.trangThai, tienDo: progressView(p), the: x ? studyCard(x) : null };
       })
     };
   }
@@ -939,7 +946,7 @@
       if (!t || t.type !== "XAC_THUC_EMAIL" || t.used || t.expiresAt < Date.now()) throw new ApiError(400, "TOKEN_INVALID", "Liên kết xác thực không hợp lệ hoặc đã hết hạn");
       t.used = true;
       const u = db.users.find((x) => x.id === t.userId);
-      if (u && u.trangThai === "CHUA_XAC_THUC") u.trangThai = "HOAT_DONG";
+      if (u && u.trangThai === "CHUA_XAC_THUC") { u.trangThai = "HOAT_DONG"; u.emailXacThucAt = new Date().toISOString(); }
       return { status: 204 };
     }],
     ["POST", /^\/auth\/resend-verification$/, (m, b) => {
@@ -1081,30 +1088,28 @@
       return { status: 204 };
     }],
 
-    ["GET", /^\/public\/topics$/, () => db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && d.visibility === "CONG_KHAI" && !d.deleted && d.trangThaiKiemDuyet !== "DA_AN").length }))],
+    ["GET", /^\/public\/topics$/, (m, b, q) => page(db.topics.map(topicDto), Object.assign({ size: "20" }, q))],
     ["GET", /^\/public\/tags$/, () => db.tags],
 
     ["GET", /^\/library\/decks$/, (m, b, q) => {
-      const u = me();
       let list = db.decks.filter((d) => d.visibility === "CONG_KHAI" && !d.deleted && d.trangThaiKiemDuyet !== "DA_AN");
-      if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k) || strip(d.description).includes(k) || db.cards.some((x) => x.deckId === d.id && strip(x.word).includes(k))); }
-      if (q.goal) list = list.filter((d) => d.goal === q.goal);
-      if (q.topicId) list = list.filter((d) => d.topicId === q.topicId);
-      if (q.level) list = list.filter((d) => d.level === q.level);
-      if (q.source === "MAU") list = list.filter((d) => d.kind === "MAU");
-      if (q.source === "CHIA_SE") list = list.filter((d) => d.kind === "CHIA_SE");
-      if (q.recommended === "true" && u && db.learning[u.id]) { const l = db.learning[u.id]; list = list.filter((d) => d.goal === l.goal || (l.topicIds || []).includes(d.topicId)); }
-      const views = list.map((d) => deckView(d, u && u.id));
-      if (q.sort === "name") views.sort((a, b2) => a.name.localeCompare(b2.name, "vi"));
-      else if (q.sort === "size") views.sort((a, b2) => b2.cardCount - a.cardCount);
+      if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k) || strip(d.description).includes(k)); }
+      if (q.mucTieu) list = list.filter((d) => d.goal === q.mucTieu);
+      if (q.chuDeId) list = list.filter((d) => d.topicId === q.chuDeId);
+      if (q.trinhDo) list = list.filter((d) => d.level === q.trinhDo);
+      if (q.nguon === "MAU") list = list.filter((d) => d.kind === "MAU");
+      if (q.nguon === "CHIA_SE") list = list.filter((d) => d.kind !== "MAU");
+      const views = list.map(libraryDeck);
+      if (q.sort === "name") views.sort((a, b2) => a.ten.localeCompare(b2.ten, "vi"));
+      else if (q.sort === "size") views.sort((a, b2) => b2.soThe - a.soThe);
       else views.sort((a, b2) => b2.updatedAt.localeCompare(a.updatedAt));
-      return page(views, q);
+      return page(views, Object.assign({ size: "20" }, q));
     }],
-    ["GET", /^\/library\/decks\/(\w+)$/, (m) => {
-      const u = me();
+    ["GET", /^\/library\/decks\/(\w+)$/, (m, b, q) => {
       const d = db.decks.find((x) => x.id === m[1] && x.visibility === "CONG_KHAI" && !x.deleted && x.trangThaiKiemDuyet !== "DA_AN");
       if (!d) notFound();
-      return Object.assign(deckView(d, u && u.id), { sampleCards: db.cards.filter((x) => x.deckId === d.id).slice(0, 6) });
+      const cards = db.cards.filter((x) => x.deckId === d.id && !x.deleted).sort((a, b2) => Number(b2.id) - Number(a.id));
+      return { boThe: libraryDeck(d), the: page(cards.map(libraryCard), Object.assign({ size: "20" }, q)) };
     }],
     ["POST", /^\/decks\/(\w+)\/copy$/, (m, b, q, h) => {
       const u = requireMe();
@@ -1123,7 +1128,7 @@
     ["GET", /^\/decks$/, (m, b, q) => {
       const u = requireMe();
       let list;
-      if (q.tab === "favorites") list = db.decks.filter((d) => (db.favorites[u.id] || []).includes(d.id) && !d.deleted);
+      if (q.tab === "favorites") list = db.decks.filter((d) => (db.favorites[u.id] || []).includes(d.id) && !d.deleted && (d.ownerId === u.id || (d.visibility === "CONG_KHAI" && d.trangThaiKiemDuyet !== "DA_AN")));
       else list = db.decks.filter((d) => d.ownerId === u.id && !d.deleted);
       if (q.q) { const k = strip(q.q); list = list.filter((d) => strip(d.name).includes(k)); }
       const views = list.map((d) => deckView(d, u.id)).sort((a, b2) => b2.updatedAt.localeCompare(a.updatedAt));
@@ -1173,12 +1178,6 @@
       d.updatedAt = new Date().toISOString();
       return { status: 201, body: Object.assign({}, card, { duplicateOf: dup }) };
     }],
-    ["GET", /^\/cards\/(\w+)$/, (m) => {
-      const card = db.cards.find((x) => x.id === m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
-      return card;
-    }],
     ["PATCH", /^\/cards\/(\w+)$/, (m, b) => {
       const card = db.cards.find((x) => x.id === m[1]);
       if (!card) notFound();
@@ -1197,7 +1196,7 @@
       return { status: 204 };
     }],
 
-    ["GET", /^\/admin\/topics$/, () => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return db.topics.map((t) => Object.assign({}, t, { deckCount: db.decks.filter((d) => d.topicId === t.id && !d.deleted).length })); }],
+    ["GET", /^\/admin\/topics$/, (m, b, q) => { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return page(db.topics.map(topicDto), Object.assign({ size: "20" }, q)); }],
     ["POST", /^\/admin\/topics$/, (m, b) => {
       requireAdmin();
       const name = (b.name || "").trim();
@@ -1207,15 +1206,6 @@
       const t = { id: nextId(), name, slug: strip(name).replace(/[^a-z0-9]+/g, "-") };
       db.topics.push(t);
       return { status: 201, body: t };
-    }],
-    ["PATCH", /^\/admin\/topics\/(\w+)$/, (m, b) => {
-      requireAdmin();
-      const t = db.topics.find((x) => x.id === m[1]);
-      if (!t) notFound();
-      const name = (b.name || "").trim();
-      if (!name) bad([fe("name", "Nhập tên chủ đề")]);
-      t.name = name;
-      return t;
     }],
     ["DELETE", /^\/admin\/topics\/(\w+)$/, (m) => {
       requireAdmin();
@@ -1293,7 +1283,7 @@
         setProgress(u.id, b.theId, s.chieuHoc, other);
         p = other;
       }
-      if (b.expectedVersion !== p.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ này vừa được chấm ở một tab khác. Đã tải trạng thái mới nhất.", [], { tienDo: progressView(p), duKien: previewOf(p, t, tz) });
+      if (b.expectedVersion !== p.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ này vừa được chấm ở một tab khác. Đã tải trạng thái mới nhất.");
       const phys = physicallyNew(u.id, b.theId);
       const truoc = progressView(p);
       const n = srsNext(p, b.danhGia, t, tz);
@@ -1307,7 +1297,7 @@
       h.trangThai = "DA_TRA_LOI";
       const again = (n.trangThai === "DANG_HOC" || n.trangThai === "HOC_LAI") && Date.parse(n.hanOnAt) <= Date.parse(s.hetGioAt);
       if (again) s.hangDoi.push({ theId: b.theId, thuTu: s.hangDoi.length + 1, trangThai: "CHUA_TRA_LOI" });
-      const res = { clientEventId: b.clientEventId, theId: b.theId, chieuHoc: s.chieuHoc, danhGia: b.danhGia, truoc, tienDo: progressView(n), khoangHienThi: intervalLabel(t, n.hanOnAt, tz), laiTrongPhien: again, duKien: again ? previewOf(n, t, tz) : null };
+      const res = { clientEventId: b.clientEventId, theId: b.theId, chieuHoc: s.chieuHoc, danhGia: b.danhGia, truoc, tienDo: progressView(n), laiTrongPhien: again };
       db.events[ek] = res;
       return { status: 201, body: res };
     }],

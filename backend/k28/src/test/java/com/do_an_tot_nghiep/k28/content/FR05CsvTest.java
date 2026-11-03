@@ -158,7 +158,8 @@ class FR05CsvTest extends AbstractIntegrationTest {
         mockMvc.perform(multipart(path())
                 .file(new MockMultipartFile("file","a.csv","text/csv","tu,nghiaVi\na,b\n".getBytes()))
                 .file(new MockMultipartFile("mapping","","text/plain","{}".getBytes()))
-                .cookie(session).with(xsrf())).andExpect(status().isBadRequest());
+                .cookie(session).with(xsrf())).andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
     }
 
     @Test

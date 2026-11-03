@@ -207,7 +207,7 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 2. Xem số thẻ, mẫu nội dung, tác giả, nguồn và nhãn “Bộ mẫu” hoặc “Người học chia sẻ”.
 3. B1.11 triển khai10/10/2026: chọn sao chép bằng POST /api/v1/decks/{id}/copy, không có body, gửi Idempotency-Key. Tạo bộ riêng tư thuộc người gọi và thẻ mới, giữ bo_nguon_id trực tiếp; không đánh dấu bộ mẫu. Nguồn cho request mới phải CONG_KHAI + BINH_THUONG + xoa_at IS NULL. B1.10 chỉ có sao chép liên kết công khai.
 4. Không sao chép tiến độ, điểm thưởng hoặc lịch sử học.
-5. Giữ mục tiêu bộ nullable, nội dung/nguồn thẻ; tạo liên kết nhãn/tệp mới. Tệp đã hoàn tất được dùng chung, ownership tệp giữ nguyên; đọc bằng quyền chủ bộ đích qua /api/v1/decks/{id}/cards/{cardId}/files/{role}. Files chung không nới ownership; nguồn đổi riêng tư/ẩn/xóa mềm không thu hồi nội dung bản sao.
+5. Giữ mục tiêu bộ nullable, nội dung/nguồn thẻ; tạo liên kết nhãn mới. Tệp (chốt 03/11/2026, RS-059): mỗi tệp nguồn được sao chép thành `tep_tin` mới thuộc người gọi (S3 CopyObject phía server, `object_key` mới `files/<userId>/…`, cùng MIME/dung lượng/checksum, đã hoàn tất); thẻ bản sao trỏ tới tệp mới. Mỗi tệp chỉ có một chủ, nên tác giả xóa được tệp của mình và xóa tài khoản (FR-14) không làm hỏng bản sao. Đổi lại dung lượng lưu trữ tăng theo số bản sao. Đọc media bản sao qua /api/v1/decks/{id}/cards/{cardId}/files/{role} như cũ; nguồn đổi riêng tư/ẩn/xóa mềm không thu hồi nội dung bản sao. Bản sao tạo trước 03/11/2026 vẫn dùng chung tệp với nguồn; tác giả chưa xóa được tệp đó cho tới khi bản sao bỏ liên kết (B3.10 xử lý khi xóa tài khoản).
 6. Key phân biệt hoa/thường, scope người dùng + thao tác sao chép, fingerprint sourceId. Cùng key/source trả snapshot DeckResponse và201/Location cũ; cùng key khác source409. Một transaction READ_COMMITTED ghi key, nội dung và snapshot; lỗi rollback toàn bộ. Chi tiết và bằng chứng hiện tại: [luồng B1.11](luong-backend/B1.11-sao-chep-bo.md).
 5. Người học sửa bản sao độc lập; cập nhật bộ nguồn không tự ghi đè bản sao.
 
@@ -301,19 +301,19 @@ EF_moi = max(1.3, EF_cu + 0.1 - (5-q) * (0.08 + (5-q)*0.02))
 | MOI | DANG_HOC; sau 1 phút, bước 0 | DANG_HOC; sau 5 phút, bước 0 | DANG_HOC; sau 10 phút, bước 1 | ON_TAP; sau 4 ngày, lần thành công 1 |
 | DANG_HOC bước 0 | Sau 1 phút, bước 0 | Sau 5 phút, giữ bước | Sau 10 phút, bước 1 | ON_TAP; sau 4 ngày, lần thành công 1 |
 | DANG_HOC bước 1 | Sau 1 phút, về bước 0 | Sau 10 phút, giữ bước | ON_TAP; sau 1 ngày, lần thành công 1 | ON_TAP; sau 4 ngày, lần thành công 1 |
-| ON_TAP | HOC_LAI; sau 10 phút; tăng số lần quên; đặt lại chuỗi thành công | Sau max(I+1, round(I×1,2)) ngày | Nếu chuỗi thành công = 1: sau 6 ngày; nếu ≥2: max(I+1, round(I×EF_moi)) ngày | Sau max(I+1, round(I×EF_moi×1,3)) ngày |
+| ON_TAP | HOC_LAI; sau 10 phút; tăng số lần quên; đặt lại chuỗi thành công | Sau max(I+1, round(I×1,2)) ngày | Nếu chuỗi thành công = 1: sau 6 ngày; nếu ≥2: max(I+1, round(I×EF_moi)) ngày | Nếu chuỗi thành công = 1: sau round(6×1,3) = 8 ngày; nếu ≥2: max(I+1, round(I×EF_moi×1,3)) ngày |
 | HOC_LAI | Sau 1 phút, giữ HOC_LAI | Sau 10 phút, giữ HOC_LAI | ON_TAP; sau 1 ngày, lần thành công 1 | ON_TAP; sau 2 ngày, lần thành công 1 |
 
 `I` là khoảng ôn cũ theo ngày; các mức Khó/Nhớ/Dễ ở `ON_TAP` đều tăng chuỗi thành công một lần. Khoảng ôn giới hạn tối đa 365 ngày là cấu hình đề xuất cho bản minh họa. Chỉ cập nhật EF theo công thức ở `ON_TAP`, tránh giảm EF lặp trong bước học lại ngắn.
 
-Quy ước triển khai B2.1 (**đề xuất**, phiên bản thuật toán `SM2-VN-1`): `round` là làm tròn gần nhất, đúng `.5` làm tròn lên (HALF_UP); mỗi "ngày" của khoảng ôn được quy đổi thành `now + N×24 giờ` qua một hàm duy nhất, chưa dùng ngày lịch địa phương/giờ ôn. Hai quy ước này chưa được duyệt như quy tắc cố định; đổi chúng chỉ cần sửa `SrsCalculator` và nâng phiên bản thuật toán.
+Phiên bản `SM2-VN-2` (chốt 03/11/2026, RS-005): ở `ON_TAP` với chuỗi thành công = 1, mức Dễ lấy mốc 6 ngày của Nhớ rồi nhân 1,3 (8 ngày). Ở `SM2-VN-1`, mức này cho `max(I+1, round(I×EF×1,3))`, ra 3 ngày khi I = 1, ngắn hơn Nhớ. Các lượt cũ trong `lich_su_on` giữ nhãn `SM2-VN-1`. Quy ước triển khai từ B2.1 (**đề xuất**, giữ nguyên ở `SM2-VN-2`): `round` là làm tròn gần nhất, đúng `.5` làm tròn lên (HALF_UP); mỗi "ngày" của khoảng ôn được quy đổi thành `now + N×24 giờ` qua một hàm duy nhất, chưa dùng ngày lịch địa phương/giờ ôn. Hai quy ước này chưa được duyệt như quy tắc cố định; đổi chúng chỉ cần sửa `SrsCalculator` và nâng phiên bản thuật toán.
 
 **Ví dụ:** thẻ mới chọn Nhớ → 10 phút; tại bước 1 chọn Nhớ → 1 ngày; lần ôn kế tiếp chọn Nhớ → 6 ngày; sau đó chọn Nhớ với EF=2,5 → 15 ngày. Chiều Việt–Anh không thay đổi nếu chỉ học chiều Anh–Việt.
 
 ### 7.3. Quy tắc hàng đợi và thời gian
 
 - Lưu thời điểm dưới dạng UTC; quy đổi hiển thị/mục tiêu theo múi giờ IANA của User, ví dụ `Asia/Ho_Chi_Minh`.
-- Bước phút tính từ thời điểm máy chủ nhận kết quả; bước ngày hiện tính `now + N×24 giờ` (phiên bản thuật toán `SM2-VN-1`, xem §7.2), không trộn với bước phút. Ngày lịch theo múi giờ của phiên và giờ ôn là phương án chờ duyệt; chỉ áp dụng khi nhóm chốt, khi đó nâng phiên bản lên `SM2-VN-2` và thêm nơi lưu giờ ôn.
+- Bước phút tính từ thời điểm máy chủ nhận kết quả; bước ngày hiện tính `now + N×24 giờ` (phiên bản thuật toán `SM2-VN-2`, xem §7.2), không trộn với bước phút. Ngày lịch theo múi giờ của phiên và giờ ôn là phương án chờ duyệt; chỉ áp dụng khi nhóm chốt, khi đó nâng phiên bản lên `SM2-VN-3` và thêm nơi lưu giờ ôn.
 - Giới hạn từ mới tính theo thẻ vật lý lần đầu học trong ngày, không tính hai lần vì học cả hai chiều; hai chiều vẫn có tiến độ riêng.
 - Thẻ đến hạn không bị mất chỉ vì hết hạn mức từ mới.
 - Khối lượng phiên dựa trên quỹ thời gian và thời gian trung bình của các lượt gần đây; chưa có dữ liệu thì dùng giá trị mặc định và ghi là ước tính.
@@ -611,7 +611,7 @@ erDiagram
 | Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback`, `GET /auth/csrf` |
 | Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `GET/PUT/DELETE /me/avatar`, `POST /me/deletion-requests` (chưa triển khai) |
 | Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
-| Bộ/thẻ | `GET/POST /decks`, `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` (media thẻ của chủ bộ) |
+| Bộ/thẻ | `GET/POST /decks` (`GET /decks?yeuThich=true`: bộ đã yêu thích gồm bộ của mình và bộ công khai `BINH_THUONG` chưa xóa của người khác, RS-056),  `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` (media thẻ của chủ bộ) |
 | Danh mục công khai (B1.7, B1.9) | `GET /public/topics`, `GET /public/tags`; quản trị: CRUD `/admin/topics`, `/admin/tags` |
 | CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `GET/DELETE /files/{id}` |
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |

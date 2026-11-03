@@ -1,6 +1,6 @@
 # Sơ đồ luồng backend B0.1–B2.12
 
-Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải thích từng bước và nhánh lỗi. Ảnh SVG hiển thị trực tiếp; có thể mở phần mã Mermaid dưới mỗi ảnh để sửa sơ đồ.
+Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng sơ đồ (đối chiếu 03/11/2026): B0.1–B0.5, B0.8, B1.1–B1.9 và Redis có sơ đồ kèm ảnh SVG; B0.6, B0.7, B1.10, B2.1–B2.7, B2.12 có mã Mermaid nhưng **chưa sinh SVG**; B1.11, B1.12 **chưa có sơ đồ**. Có thể mở phần mã Mermaid dưới mỗi ảnh để sửa sơ đồ.
 
 ## Nền tảng B0
 
@@ -9,6 +9,8 @@ Mỗi giai đoạn có sơ đồ hoạt động, sơ đồ tuần tự, giải t
 - [B0.3 — Cấu hình ứng dụng và Flyway](B0.3-cau-hinh-flyway.md)
 - [B0.4 — Xử lý lỗi và tiện ích web](B0.4-loi-va-web-chung.md)
 - [B0.5 — Bảo mật nền](B0.5-bao-mat-nen.md)
+- [B0.6 — OpenAPI và quy ước API](B0.6-openapi-quy-uoc-api.md)
+- [B0.7 — Nền kiểm thử](B0.7-nen-kiem-thu.md)
 - [B0.8 — Kho tệp và email](B0.8-luu-tru-va-email.md)
 
 ## Tài khoản B1
@@ -53,9 +55,9 @@ Mở file Markdown bằng trình xem có hỗ trợ ảnh SVG. Nếu trình xem 
 - Sơ đồ hoạt động dùng `flowchart TD`: đi từ trên xuống, hình thoi biểu diễn điều kiện, nhánh ghi rõ lựa chọn hoặc lỗi.
 - Sơ đồ tuần tự dùng `sequenceDiagram` và `autonumber`: đọc từ trên xuống theo số bước; mũi tên liền là yêu cầu, nét đứt là phản hồi; `alt/else` tách trường hợp.
 - Mỗi sơ đồ có ảnh SVG hiển thị trực tiếp và phần mã Mermaid thu gọn ngay bên dưới. Phần giải thích giữ gần sơ đồ và các quy tắc liên quan.
-- Tất cả sơ đồ dùng cùng font, màu và khoảng cách từ `mermaid-config.json` (tệp này không còn trong thư mục; dùng cấu hình nhúng trong mã Mermaid). Cấu hình cũng được đưa vào mã Mermaid để xem trực tiếp nhất quán.
+- Tất cả sơ đồ dùng cùng font, màu và khoảng cách từ `mermaid-config.json` (dựng lại 03/11/2026 từ cấu hình nhúng trong tài liệu, RS-023). Cấu hình cũng được đưa vào mã Mermaid để xem trực tiếp nhất quán.
 - Đường dẫn ảnh dùng `assets/<tên-file>-<số-thứ-tự>.svg`; thứ tự ảnh theo thứ tự sơ đồ trong tài liệu.
 
-Sau khi sửa Mermaid, chạy `python docs/luong-backend/render-diagrams.py` từ thư mục gốc dự án. Cần Node.js và Mermaid CLI (`mmdc`); công cụ chỉ cập nhật Markdown và SVG trong thư mục tài liệu này, kiểm tra mọi sơ đồ render thành công trước khi ghi Markdown.
+Sau khi sửa Mermaid, chạy `python docs/luong-backend/render-diagrams.py` từ thư mục gốc dự án. Cần Node.js, Mermaid CLI (`npm i -g @mermaid-js/mermaid-cli`) và trình duyệt cho Puppeteer (`npx puppeteer browsers install chrome-headless-shell`; thiếu bước này script báo `Could not find chrome-headless-shell`); công cụ chỉ cập nhật Markdown và SVG trong thư mục tài liệu này, kiểm tra mọi sơ đồ render thành công trước khi ghi Markdown.
 
-Danh sách hiện có 26 tài liệu giai đoạn và một tài liệu Redis. B0.6 và B0.7 chưa có file luồng riêng trong thư mục này.
+Danh sách hiện có 28 tài liệu giai đoạn và một tài liệu Redis. B0.6, B0.7 viết bổ sung 03/11/2026 (RS-020).

@@ -35,7 +35,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="library" data-auth="optional">
-<!-- F1.7 · UI02 · API: GET /library/decks?q&goal&topicId&level&source&sort&page&size, GET /public/topics (B1.7, B1.10) -->
+<!-- F1.7 · UI02 · API: GET /library/decks?q&chuDeId&trinhDo&mucTieu&nguon&sort&page&size, GET /public/topics?size=100 (B1.7, B1.10) -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -51,27 +51,27 @@
 
           <form class="filters" id="filters" role="search" aria-label="Lọc thư viện">
             <div class="field search">
-              <label class="field-label" for="q">Tìm bộ thẻ hoặc từ</label>
+              <label class="field-label" for="q">Tìm tên hoặc mô tả bộ thẻ</label>
               <div class="input-with-icon">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-                <input class="input" id="q" name="q" type="search" placeholder="Ví dụ: invoice, sân bay…" autocomplete="off">
+                <input class="input" id="q" name="q" type="search" placeholder="Ví dụ: TOEIC, sân bay…" autocomplete="off">
               </div>
             </div>
             <div class="field">
-              <label class="field-label" for="goal">Mục tiêu</label>
-              <select class="select" id="goal" name="goal"><option value="">Tất cả</option><option value="GIAO_TIEP">Giao tiếp</option><option value="TOEIC">TOEIC</option></select>
+              <label class="field-label" for="mucTieu">Mục tiêu</label>
+              <select class="select" id="mucTieu" name="mucTieu"><option value="">Tất cả</option><option value="GIAO_TIEP">Giao tiếp</option><option value="TOEIC">TOEIC</option></select>
             </div>
             <div class="field">
-              <label class="field-label" for="topicId">Chủ đề</label>
-              <select class="select" id="topicId" name="topicId"><option value="">Tất cả</option></select>
+              <label class="field-label" for="chuDeId">Chủ đề</label>
+              <select class="select" id="chuDeId" name="chuDeId"><option value="">Tất cả</option></select>
             </div>
             <div class="field">
-              <label class="field-label" for="level">Trình độ</label>
-              <select class="select" id="level" name="level"><option value="">Tất cả</option><option value="MOI_BAT_DAU">Mới bắt đầu</option><option value="CO_BAN">Cơ bản</option><option value="TRUNG_CAP">Trung cấp</option><option value="NANG_CAO">Nâng cao</option></select>
+              <label class="field-label" for="trinhDo">Trình độ</label>
+              <select class="select" id="trinhDo" name="trinhDo"><option value="">Tất cả</option><option value="MOI_BAT_DAU">Mới bắt đầu</option><option value="CO_BAN">Cơ bản</option><option value="TRUNG_CAP">Trung cấp</option><option value="NANG_CAO">Nâng cao</option></select>
             </div>
             <div class="field">
-              <label class="field-label" for="source">Nguồn</label>
-              <select class="select" id="source" name="source"><option value="">Tất cả</option><option value="MAU">Bộ mẫu</option><option value="CHIA_SE">Người học chia sẻ</option></select>
+              <label class="field-label" for="nguon">Nguồn</label>
+              <select class="select" id="nguon" name="nguon"><option value="">Tất cả</option><option value="MAU">Bộ mẫu</option><option value="CHIA_SE">Người học chia sẻ</option></select>
             </div>
           </form>
 
@@ -122,7 +122,7 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script src="../shared/deck-illustration.js?v=71a56573de29"></script>
@@ -135,37 +135,39 @@
   const form = document.getElementById("filters");
   const sort = document.getElementById("sort");
   const region = document.getElementById("region");
-  const state = Object.assign({ q: "", goal: "", topicId: "", level: "", source: "", sort: "updated", page: "0" }, VL.params());
-  ["q", "goal", "level", "source"].forEach((k) => { form[k].value = state[k] || ""; });
+  const FILTERS = ["q", "mucTieu", "chuDeId", "trinhDo", "nguon"];
+  const state = Object.assign({ q: "", mucTieu: "", chuDeId: "", trinhDo: "", nguon: "", sort: "updated", page: "0" }, VL.params());
+  ["q", "mucTieu", "trinhDo", "nguon"].forEach((k) => { form[k].value = state[k] || ""; });
   sort.value = state.sort;
 
-  VL.api("GET", "/public/topics").then((topics) => {
-    form.topicId.insertAdjacentHTML("beforeend", topics.map((t) => '<option value="' + t.id + '">' + VL.esc(t.name) + "</option>").join(""));
-    form.topicId.value = state.topicId || "";
+  VL.api("GET", "/public/topics?size=100").then((d) => {
+    const topics = d.items;
+    form.chuDeId.insertAdjacentHTML("beforeend", topics.map((t) => '<option value="' + t.id + '">' + VL.esc(t.ten) + "</option>").join(""));
+    form.chuDeId.value = state.chuDeId || "";
     renderTopics(topics);
   });
   function renderTopics(topics) {
     document.getElementById("topic-links").innerHTML =
-      '<li><a href="?"' + (!state.topicId ? ' aria-current="true"' : "") + ' data-topic=""><span>Tất cả chủ đề</span></a></li>' +
-      topics.map((t) => '<li><a href="?topicId=' + t.id + '" data-topic="' + t.id + '"' + (state.topicId === t.id ? ' aria-current="true"' : "") + "><span>" + VL.esc(t.name) + '</span><span class="num">' + t.deckCount + "</span></a></li>").join("");
+      '<li><a href="?"' + (!state.chuDeId ? ' aria-current="true"' : "") + ' data-topic=""><span>Tất cả chủ đề</span></a></li>' +
+      topics.map((t) => '<li><a href="?chuDeId=' + t.id + '" data-topic="' + t.id + '"' + (state.chuDeId === t.id ? ' aria-current="true"' : "") + "><span>" + VL.esc(t.ten) + "</span></a></li>").join("");
   }
   document.getElementById("topic-links").addEventListener("click", (e) => {
     const a = e.target.closest("[data-topic]");
     if (!a) return;
     e.preventDefault();
-    form.topicId.value = a.dataset.topic;
-    state.topicId = a.dataset.topic;
+    form.chuDeId.value = a.dataset.topic;
+    state.chuDeId = a.dataset.topic;
     document.querySelectorAll("#topic-links a").forEach((x) => x.setAttribute("aria-current", String(x === a)));
     apply(true);
   });
 
   function query() {
     const q = new URLSearchParams();
-    ["q", "goal", "topicId", "level", "source", "sort", "page"].forEach((k) => { if (state[k] && !(k === "page" && state[k] === "0") && !(k === "sort" && state[k] === "updated")) q.set(k, state[k]); });
+    FILTERS.concat(["sort", "page"]).forEach((k) => { if (state[k] && !(k === "page" && state[k] === "0") && !(k === "sort" && state[k] === "updated")) q.set(k, state[k]); });
     return q.toString();
   }
   function apply(resetPage) {
-    ["q", "goal", "topicId", "level", "source"].forEach((k) => { state[k] = form[k].value.trim(); });
+    FILTERS.forEach((k) => { state[k] = form[k].value.trim(); });
     state.sort = sort.value;
     if (resetPage) state.page = "0";
     history.replaceState(null, "", "?" + query());
@@ -191,10 +193,10 @@
         document.getElementById("list").innerHTML = d.items.map((deck, i) =>
           '<li class="answer-row deck-row">' +
           '<span class="answer-no">' + (start + i + 1) + "</span>" +
-          '<div class="answer-main"><div class="deck-name-line">' + VLDeckThumbnail(deck) + '<a class="answer-title" href="thu-vien-chi-tiet.html?id=' + deck.id + '">' + VL.esc(deck.name) + "</a></div>" +
-          '<p class="clamp-2 muted small">' + VL.esc(deck.description) + "</p>" +
-          '<div class="answer-meta"><span class="stamp ' + (deck.kind === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (deck.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span><span>" + VL.esc(deck.topicName) + "</span><span>Cập nhật " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
-          '<div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + VL.levelHtml(deck.level) + '</span><span class="col-count">' + deck.cardCount + " thẻ</span></div></li>").join("");
+          '<div class="answer-main"><div class="deck-name-line">' + VLDeckThumbnail(deck) + '<a class="answer-title" href="thu-vien-chi-tiet.html?id=' + deck.id + '">' + VL.esc(deck.ten) + "</a></div>" +
+          (deck.moTa ? '<p class="clamp-2 muted small">' + VL.esc(deck.moTa) + "</p>" : "") +
+          '<div class="answer-meta"><span class="stamp ' + (deck.nguon === "MAU" ? "stamp-solid" : "stamp-graphite") + '">' + (deck.nguon === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span>" + (deck.tenChuDe ? "<span>" + VL.esc(deck.tenChuDe) + "</span>" : "") + (deck.tenTacGia ? "<span>" + VL.esc(deck.tenTacGia) + "</span>" : "") + "<span>Cập nhật " + VL.fmtDate(deck.updatedAt) + "</span></div></div>" +
+          '<div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.mucTieu] || "Chưa chọn") + "</span><span>" + (deck.trinhDo ? VL.levelHtml(deck.trinhDo) : "") + '</span><span class="col-count">' + deck.soThe + " thẻ</span></div></li>").join("");
         document.getElementById("pager").innerHTML = VL.pagination(d.page, d.totalPages);
       }
     });

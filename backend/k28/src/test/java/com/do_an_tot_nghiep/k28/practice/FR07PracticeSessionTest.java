@@ -157,6 +157,13 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
         mixed.get("cauHoi").forEach(question -> types.add(question.get("loaiCau").asText()));
         assertThat(types).isSubsetOf("CHON_NGHIA", "DIEN_CHO_TRONG", "NGHE_VIET", "CHON_TU", "NHAP_TU_THEO_NGHIA");
         assertThat(types.stream().distinct().count()).isGreaterThan(1);
+
+        for (JsonNode practice : List.of(blank, typing, matching, listening, mixed)) {
+            assertThat(practice.toString()).doesNotContain("dapAn", "giaiThich", "luaChon", "theId", "chapNhan");
+        }
+        for (JsonNode question : blank.get("cauHoi")) {
+            assertThat(question.get("deBai").get("cau").asText().toLowerCase()).doesNotContain("budgets");
+        }
     }
 
     @Test
@@ -201,7 +208,7 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
         }
         create(learner, Map.of("loaiBai", "NHAP_TU_THEO_NGHIA", "theIds", List.of(String.valueOf(cards.get(4))), "soCau", 5))
                 .andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.message").value("Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước."));
+                .andExpect(jsonPath("$.message").value("Các thẻ đã chọn đang tạm ngưng, chưa thể luyện."));
         create(learner, Map.of("loaiBai", "CHON_NGHIA", "soCau", 5))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.message").value("Cần ít nhất 4 thẻ trong các bộ của bạn để tạo phương án nhiễu."));

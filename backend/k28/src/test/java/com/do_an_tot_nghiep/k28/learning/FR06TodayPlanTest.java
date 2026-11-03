@@ -19,6 +19,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import java.time.Clock;
@@ -226,7 +227,7 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, history)
+                sessions, queue, new StudyTimeService(history))
                 .today(learner.id(), new TodayQuery(null, null));
     }
 

@@ -120,9 +120,7 @@ public class ReviewService {
                 userId, theId, TrangThaiTienDo.MOI
         );
         usage.ensureRow(userId, homNay, now);
-        SuDungHocNgay dayUsage = usage
-                .findByNguoiDungIdAndNgayDiaPhuong(userId, homNay)
-                .orElseThrow();
+        SuDungHocNgay dayUsage = usage.lockDay(userId, homNay).orElseThrow();
         if (theMoiVatLy
                 && dayUsage.getSoTheMoi()
                 >= settingsService.learning(userId).tuMoiMoiNgay()) {

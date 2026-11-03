@@ -52,7 +52,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-auth="required" data-onboarding="skip" class="no-bottom-nav">
-<!-- F1.5 · UI11 · API: GET /public/topics, GET/PUT /me/learning-settings, PUT /me/notification-settings (B1.5), GET /library/decks?recommended=true (B1.10), POST /decks/{id}/copy (B1.11) -->
+<!-- F1.5 · UI11 · API: GET /public/topics, GET/PUT /me/learning-settings, PUT /me/notification-settings (B1.5), GET /library/decks?nguon=MAU&mucTieu&trinhDo&size=4 (B1.10), POST /decks/{id}/copy (B1.11) -->
 <header class="onb-header">
   <div class="onb-header-inner">
     <a class="brand" href="bo-the.html"><img class="brand-mark" src="../shared/assets/mascot-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
@@ -174,8 +174,8 @@
   </div>
 </main>
 
-<script src="../shared/demo.js?v=d48cc482527d"></script>
-<script src="../shared/contract-demo.js?v=d1248b210fd9"></script>
+<script src="../shared/demo.js?v=7a64760fcbf9"></script>
+<script src="../shared/contract-demo.js?v=3e6ee35bf107"></script>
 <script src="../shared/app.js?v=8aa721dd6a29"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
@@ -260,11 +260,11 @@
   function loadStarter() {
     const region = document.getElementById("starter-region");
     VL.load(region, {
-      fetch: () => VL.api("GET", "/library/decks?recommended=true&size=4"),
+      fetch: () => { const v = values(); return VL.api("GET", "/library/decks?" + new URLSearchParams({ nguon: "MAU", mucTieu: v.mucTieu || "", trinhDo: v.trinhDo || "", size: "4" })); },
       isEmpty: (d) => !d.items.length,
       render: (d) => {
         document.getElementById("starter").innerHTML = d.items.map((deck) =>
-          '<div class="starter-item"><div class="stack-sm" style="gap:6px;min-width:0"><h3>' + VL.esc(deck.name) + '</h3><div class="answer-meta"><span class="stamp' + (deck.kind === "MAU" ? " stamp-solid" : " stamp-graphite") + '">' + (deck.kind === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span><span>" + VL.esc(VL.GOAL[deck.mucTieu]) + "</span><span>" + deck.cardCount + " thẻ</span>" + VL.levelHtml(deck.trinhDo) + '</div></div><button type="button" class="btn btn-secondary" data-copy="' + deck.id + '">' + VL.icon("copy") + "Sao chép</button></div>").join("");
+          '<div class="starter-item"><div class="stack-sm" style="gap:6px;min-width:0"><h3>' + VL.esc(deck.ten) + '</h3><div class="answer-meta"><span class="stamp' + (deck.nguon === "MAU" ? " stamp-solid" : " stamp-graphite") + '">' + (deck.nguon === "MAU" ? "Bộ mẫu" : "Người học chia sẻ") + "</span>" + (deck.mucTieu ? "<span>" + VL.esc(VL.GOAL[deck.mucTieu]) + "</span>" : "") + "<span>" + deck.soThe + " thẻ</span>" + (deck.trinhDo ? VL.levelHtml(deck.trinhDo) : "") + '</div></div><button type="button" class="btn btn-secondary" data-copy="' + deck.id + '">' + VL.icon("copy") + "Sao chép</button></div>").join("");
       }
     });
   }
@@ -295,7 +295,7 @@
           const current = await VL.api("GET", "/me/learning-settings");
           const notification = await VL.api("GET", "/me/notification-settings");
           await VL.api("PUT", "/me/learning-settings", { mucTieu: v.mucTieu, trinhDo: v.trinhDo, chuDeIds: v.chuDeIds, phutMoiNgay: v.phutMoiNgay, tuMoiMoiNgay: v.tuMoiMoiNgay, version: current.version });
-          await VL.api("PUT", "/me/notification-settings", { nhanTrongUngDung: true, email: true, nhacHoc: !!v.gioNhac, gioNhac: v.gioNhac || null, version: notification.version });
+          await VL.api("PUT", "/me/notification-settings", { nhanTrongUngDung: notification.nhanTrongUngDung, nhanEmail: notification.nhanEmail, nhacHoc: !!v.gioNhac, gioNhac: v.gioNhac || null, version: notification.version });
           await VL.api("PATCH", "/me", { muiGio: v.muiGio });
           location.href = "bo-the.html?welcome=1";
         } catch (err) {

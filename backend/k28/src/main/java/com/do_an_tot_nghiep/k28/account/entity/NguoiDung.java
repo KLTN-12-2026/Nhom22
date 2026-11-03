@@ -80,10 +80,6 @@ public class NguoiDung extends BaseEntity {
         }
     }
 
-    public void recordLogin(Instant now) {
-        dangNhapCuoiAt = now;
-    }
-
     public boolean canResetPassword() {
         return trangThai == TrangThaiNguoiDung.HOAT_DONG || trangThai == TrangThaiNguoiDung.CHUA_XAC_THUC;
     }

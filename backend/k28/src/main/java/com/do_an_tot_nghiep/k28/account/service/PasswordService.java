@@ -50,7 +50,7 @@ public class PasswordService {
     }
 
     @Transactional
-    public void resetPassword(String rawToken, String newPassword) {
+    public void resetPassword(String rawToken, String newPassword, String clientIp) {
         Long userId;
         try {
             userId = tokenService.consume(rawToken, LoaiToken.DAT_LAI_MAT_KHAU);
@@ -64,7 +64,8 @@ public class PasswordService {
             user.verifyEmail(clock.instant());
         }
         user.changePassword(passwordEncoder.encode(newPassword));
-        rateLimiter.reset(RateLimiter.Policy.LOGIN, loginKey(user));
+        rateLimiter.reset(RateLimiter.Policy.LOGIN, LoginService.pairKey(user.getEmail(), clientIp));
+        rateLimiter.reset(RateLimiter.Policy.LOGIN_EMAIL, LoginService.emailKey(user.getEmail()));
         sessionRevoker.revokeAll(user.getId(), null);
     }
 
@@ -88,10 +89,6 @@ public class PasswordService {
 
     private static ApiException invalidResetLink() {
         return new ApiException(ErrorCode.TOKEN_INVALID, "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn");
-    }
-
-    private static String loginKey(NguoiDung user) {
-        return "email:" + TokenService.sha256(user.getEmail());
     }
 
     private void sendResetLink(NguoiDung user) {

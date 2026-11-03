@@ -80,7 +80,9 @@ public class PracticeService {
             pool = distract;
         }
         if (pool.isEmpty()) {
-            throw new ApiException(ErrorCode.BUSINESS_RULE, nguon == NguonBaiLuyen.SO_TAY
+            throw new ApiException(ErrorCode.BUSINESS_RULE, !picked.isEmpty()
+                    ? "Các thẻ đã chọn đang tạm ngưng, chưa thể luyện."
+                    : nguon == NguonBaiLuyen.SO_TAY
                     ? "Sổ tay đang trống, chưa có từ nào để luyện."
                     : "Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước.");
         }

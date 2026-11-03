@@ -3,7 +3,9 @@ package com.do_an_tot_nghiep.k28.account;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,11 +20,13 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 class FR01LoginTest extends AbstractIntegrationTest {
 
@@ -39,6 +43,9 @@ class FR01LoginTest extends AbstractIntegrationTest {
 
     @Autowired
     JdbcTemplate jdbc;
+
+    @Value("${app.frontend-url}")
+    String frontendUrl;
 
     @Test
     void tc01_loginAndLogoutClearCsrfCookie() throws Exception {
@@ -163,6 +170,71 @@ class FR01LoginTest extends AbstractIntegrationTest {
         login(email, PASSWORD)
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value("RATE_LIMITED"));
+    }
+
+    @Test
+    void fr01_failuresFromAnotherIpDoNotLockOwner() throws Exception {
+        String email = newUser(true);
+        var attacker = randomIp();
+        for (int i = 0; i < 5; i++) {
+            login(email, "saimatkhau999", attacker).andExpect(status().isUnauthorized());
+        }
+        login(email, PASSWORD, attacker).andExpect(status().isTooManyRequests());
+        login(email, PASSWORD, randomIp()).andExpect(status().isOk());
+    }
+
+    @Test
+    void fr01_ipIsBlockedAfterFailuresAcrossManyEmails() throws Exception {
+        String email = newUser(true);
+        var attacker = randomIp();
+        for (int i = 0; i < 30; i++) {
+            login("x" + UUID.randomUUID() + "@vocab.local", "saimatkhau999", attacker)
+                    .andExpect(status().isUnauthorized());
+        }
+        login(email, PASSWORD, attacker)
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"));
+        login(email, PASSWORD, randomIp()).andExpect(status().isOk());
+    }
+
+    @Test
+    void fr01_emailIsBlockedAfterFailuresFromManyIps() throws Exception {
+        String email = newUser(true);
+        for (int i = 0; i < 5; i++) {
+            var ip = randomIp();
+            for (int j = 0; j < 4; j++) {
+                login(email, "saimatkhau999", ip).andExpect(status().isUnauthorized());
+            }
+        }
+        login(email, PASSWORD, randomIp()).andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void fr01_passwordOver72Utf8BytesReturns400() throws Exception {
+        String longPassword = "Abc1" + "ệ".repeat(30);
+        login(newUser(true), longPassword, randomIp())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'password')]").exists());
+        mockMvc.perform(post("/api/v1/auth/register").with(xsrf()).with(randomIp())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("email", "r" + UUID.randomUUID() + "@vocab.local",
+                                "password", longPassword, "tenHienThi", "Minh Anh", "acceptTerms", true))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'password')]").exists());
+    }
+
+    @Test
+    void fr01_csrfCookieIsSameSiteAndCorsExposesRetryAfter() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/csrf").header("Origin", frontendUrl))
+                .andExpect(cookie().sameSite("XSRF-TOKEN", "Lax"))
+                .andExpect(header().string("Access-Control-Expose-Headers", containsString("Retry-After")));
+    }
+
+    private ResultActions login(String email, String password, RequestPostProcessor ip) throws Exception {
+        return mockMvc.perform(post("/api/v1/auth/login").with(xsrf()).with(ip)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(toJson(Map.of("email", email, "password", password))));
     }
 
     private ResultActions login(String email, String password, Cookie... cookies) throws Exception {

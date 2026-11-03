@@ -22,6 +22,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import java.sql.PreparedStatement;
@@ -30,6 +31,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
@@ -151,6 +153,39 @@ class FR06DashboardTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void fr06_openSessionDoesNotCountDeletedOrSuspendedCardsAsRemaining() throws Exception {
+        Learner learner = learner(HCM);
+        long answerable = card(learner, "ok");
+        long deleted = card(learner, "deleted");
+        long paused = card(learner, "paused");
+        long open = session(learner, Long.valueOf(learner.deckId()), "DANG_HOC", "2026-10-19T03:00:00Z", null);
+        row(open, answerable, 1, "CHUA_TRA_LOI");
+        row(open, deleted, 2, "CHUA_TRA_LOI");
+        row(open, paused, 3, "CHUA_TRA_LOI");
+        jdbc.update("UPDATE the_tu_vung SET xoa_at = ? WHERE id = ?", utc(NOW), deleted);
+        addProgress(learner, paused, "EN_VI", "TAM_NGUNG", "2026-10-19T00:00:00Z");
+
+        assertThat(planAt(NOW, learner).phienDangDo().soChuaTraLoi()).isEqualTo(1);
+
+        jdbc.update("UPDATE the_tu_vung SET xoa_at = ? WHERE id = ?", utc(NOW), answerable);
+        assertThat(planAt(NOW, learner).phienDangDo().soChuaTraLoi()).isZero();
+    }
+
+    @Test
+    void tc09_forecastSkipsCardsInDeletedDeck() throws Exception {
+        Learner learner = learner(HCM);
+        addProgress(learner, card(learner, "kept"), "EN_VI", "ON_TAP", "2026-10-21T00:00:00Z");
+        long otherDeck = Long.parseLong(createDeck(learner.session()));
+        long gone = insert("INSERT INTO the_tu_vung (bo_the_id, tu, nghia_vi) VALUES (?, ?, ?)",
+                otherDeck, "gone-" + UUID.randomUUID(), "mất");
+        addProgress(learner, gone, "EN_VI", "ON_TAP", "2026-10-21T00:00:00Z");
+        jdbc.update("UPDATE bo_the SET xoa_at = ? WHERE id = ?", utc(NOW), otherDeck);
+
+        assertThat(planAt(NOW, learner).duBaoOn()).extracting(DuBaoNgayResponse::soCanOn)
+                .containsExactly(0, 1, 0, 0, 0, 0, 0);
+    }
+
+    @Test
     void fr06_studyTimeSumsTodayHistoryAndFloorsMinutes() throws Exception {
         Learner learner = learner(HCM);
         Learner stranger = learner(HCM);
@@ -185,10 +220,54 @@ class FR06DashboardTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.phienDangDo").doesNotExist());
     }
 
+    @Test
+    void fr06_studyTimeDaysFillsEveryDayAndMatchesToday() throws Exception {
+        Learner learner = learner(HCM);
+        long progressId = addProgress(learner, card(learner, "days"), "EN_VI", "ON_TAP", "2026-11-01T00:00:00Z");
+        long sessionId = session(learner, null, "KET_THUC", "2026-10-16T16:00:00Z", "2026-10-19T17:30:00Z");
+        review(learner, sessionId, progressId, 120000, "2026-10-16T16:59:59Z");
+        review(learner, sessionId, progressId, 90000, "2026-10-16T17:00:00Z");
+        review(learner, sessionId, progressId, 61000, "2026-10-19T04:00:00Z");
+        review(learner, sessionId, progressId, 59000, "2026-10-19T04:30:00Z");
+
+        StudyTimeService service = new StudyTimeService(history);
+        Map<LocalDate, StudyTimeService.StudyTime> days = service.days(
+                learner.id(), LocalDate.parse("2026-10-16"), LocalDate.parse("2026-10-19"), ZoneId.of(HCM));
+
+        assertThat(days.keySet()).containsExactly(LocalDate.parse("2026-10-16"), LocalDate.parse("2026-10-17"),
+                LocalDate.parse("2026-10-18"), LocalDate.parse("2026-10-19"));
+        assertThat(days.values()).containsExactly(
+                new StudyTimeService.StudyTime(120000, 2),
+                new StudyTimeService.StudyTime(90000, 1),
+                new StudyTimeService.StudyTime(0, 0),
+                new StudyTimeService.StudyTime(120000, 2));
+        TodayPlanResponse plan = planAt(NOW, learner);
+        assertThat(plan.daHocHomNay().thoiGian()).isEqualTo(days.get(LocalDate.parse("2026-10-19")).thoiGian());
+        assertThat(plan.daHocHomNay().soPhut()).isEqualTo(days.get(LocalDate.parse("2026-10-19")).soPhut());
+    }
+
+    @Test
+    void fr06_studyTimeDayFollowsDaylightSavingBoundaries() throws Exception {
+        String newYork = "America/New_York";
+        Learner learner = learner(newYork);
+        long progressId = addProgress(learner, card(learner, "dst"), "EN_VI", "ON_TAP", "2026-12-01T00:00:00Z");
+        long sessionId = session(learner, null, "KET_THUC", "2026-11-01T03:00:00Z", "2026-11-02T06:00:00Z");
+        review(learner, sessionId, progressId, 60000, "2026-11-01T03:59:59Z");
+        review(learner, sessionId, progressId, 60000, "2026-11-01T04:00:00Z");
+        review(learner, sessionId, progressId, 60000, "2026-11-02T04:30:00Z");
+        review(learner, sessionId, progressId, 60000, "2026-11-02T05:00:00Z");
+
+        Map<LocalDate, StudyTimeService.StudyTime> days = new StudyTimeService(history).days(
+                learner.id(), LocalDate.parse("2026-10-31"), LocalDate.parse("2026-11-02"), ZoneId.of(newYork));
+
+        assertThat(days.values()).extracting(StudyTimeService.StudyTime::thoiGian)
+                .containsExactly(60000L, 120000L, 60000L);
+    }
+
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, history)
+                sessions, queue, new StudyTimeService(history))
                 .today(learner.id(), new TodayQuery(null, null));
     }
 

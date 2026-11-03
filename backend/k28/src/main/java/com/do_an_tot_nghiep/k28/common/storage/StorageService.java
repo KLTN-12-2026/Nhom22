@@ -56,11 +56,12 @@ public class StorageService {
         return prefix + "/" + UUID.randomUUID();
     }
 
-    public PresignedUrl presignPut(String key, String contentType) {
+    public PresignedUrl presignPut(String key, String contentType, long contentLength) {
         PutObjectRequest object = PutObjectRequest.builder()
                 .bucket(props.bucket())
                 .key(key)
                 .contentType(contentType)
+                .contentLength(contentLength)
                 .build();
         String url = presigner.presignPutObject(r -> r.signatureDuration(props.presignTtl()).putObjectRequest(object))
                 .url().toString();
@@ -86,6 +87,15 @@ public class StorageService {
                 return Optional.empty();
             }
             throw unavailable(e);
+        } catch (SdkException e) {
+            throw unavailable(e);
+        }
+    }
+
+    public void copy(String sourceKey, String targetKey) {
+        try {
+            s3.copyObject(r -> r.sourceBucket(props.bucket()).sourceKey(sourceKey)
+                    .destinationBucket(props.bucket()).destinationKey(targetKey));
         } catch (SdkException e) {
             throw unavailable(e);
         }
