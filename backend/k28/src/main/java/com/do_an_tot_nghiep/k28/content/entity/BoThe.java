@@ -111,6 +111,28 @@ public class BoThe extends BaseEntity {
         this.mucTieu = mucTieu;
     }
 
+    public static BoThe createSample(
+            Long chuSoHuuId,
+            Long chuDeId,
+            String ten,
+            String moTa,
+            TrinhDo trinhDo,
+            MucTieu mucTieu
+    ) {
+        BoThe deck = create(chuSoHuuId, chuDeId, ten, moTa, trinhDo, QuyenTruyCap.RIENG_TU);
+        deck.mucTieu = mucTieu;
+        deck.boMau = true;
+        return deck;
+    }
+
+    public void moderate(TrangThaiKiemDuyet trangThaiKiemDuyet) {
+        this.trangThaiKiemDuyet = trangThaiKiemDuyet;
+    }
+
+    public boolean isPublished() {
+        return quyenTruyCap == QuyenTruyCap.CONG_KHAI && trangThaiKiemDuyet == TrangThaiKiemDuyet.BINH_THUONG;
+    }
+
     public static BoThe createCopy(Long ownerId, BoThe source) {
         BoThe copy = create(
                 ownerId,

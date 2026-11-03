@@ -917,14 +917,27 @@
   }
   function adminDeckView(d) {
     return {
-      id: d.id, ten: d.name, moTa: d.description, mucTieu: d.goal, chuDeId: d.topicId, chuDeTen: topicName(d.topicId), trinhDo: d.level, quyenTruyCap: d.visibility,
-      trangThaiKiemDuyet: d.trangThaiKiemDuyet || "BINH_THUONG", soThe: db.cards.filter((x) => x.deckId === d.id).length,
-      soBanSao: db.decks.filter((x) => x.sourceDeckId === d.id && !x.deleted).length, updatedAt: d.updatedAt, version: d.version
+      id: d.id, ten: d.name, moTa: d.description || null, mucTieu: d.goal, chuDeId: d.topicId || null, chuDeTen: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level, quyenTruyCap: d.visibility,
+      trangThaiKiemDuyet: d.trangThaiKiemDuyet || "BINH_THUONG", soThe: activeCards(d.id).length,
+      soBanSao: db.decks.filter((x) => x.sourceDeckId === d.id && !x.deleted).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt, version: d.version
     };
+  }
+  const activeCards = (deckId) => db.cards.filter((x) => x.deckId === deckId && !x.deleted);
+  function deckFields(v) {
+    return { ten: v.ten, moTa: v.moTa, mucTieu: v.mucTieu, chuDeId: v.chuDeId, trinhDo: v.trinhDo, quyenTruyCap: v.quyenTruyCap, trangThaiKiemDuyet: v.trangThaiKiemDuyet };
+  }
+  function adminCardView(x) {
+    const dup = activeCards(x.deckId).filter((c2) => c2.id !== x.id && strip(c2.word) === strip(x.word) && strip(c2.pos || "") === strip(x.pos || "")).map((c2) => c2.id);
+    return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos || null, nghiaVi: x.meaningVi, phienAm: x.ipa || null, viDuEn: x.exampleEn || null, dichVi: x.exampleVi || null, doKho: x.difficulty || 1, nguon: x.source || null, nhanIds: x.tagIds || [], anhId: x.anhId || null, amTuId: x.amTuId || null, amCauId: x.amCauId || null, trung: dup.length > 0, theTrungIds: dup, createdAt: x.createdAt, updatedAt: x.updatedAt || x.createdAt, version: x.version };
+  }
+  function cardFields(v) {
+    return { tu: v.tu, tuLoai: v.tuLoai, nghiaVi: v.nghiaVi, phienAm: v.phienAm, viDuEn: v.viDuEn, dichVi: v.dichVi, doKho: v.doKho, nguon: v.nguon, nhanIds: v.nhanIds.slice().sort(), anh: !!v.anhId, amTu: !!v.amTuId, amCau: !!v.amCauId };
   }
   function sampleDeck(id) {
     const d = db.decks.find((x) => x.id === id && x.kind === "MAU" && !x.deleted);
     if (!d) notFound();
+    if (typeof d.version !== "number") d.version = 0;
+    activeCards(d.id).forEach((x) => { if (typeof x.version !== "number") x.version = 0; });
     return d;
   }
   function validateAdminDeck(b, partial) {
@@ -933,7 +946,7 @@
     if (has("ten")) { const n = reason(b.ten); if (!n) errors.push(fe("ten", "Nhập tên bộ")); else if (n.length > 150) errors.push(fe("ten", "Tên bộ tối đa 150 ký tự")); }
     if (has("moTa") && (b.moTa || "").length > 1000) errors.push(fe("moTa", "Mô tả tối đa 1000 ký tự"));
     if (has("mucTieu") && !["GIAO_TIEP", "TOEIC"].includes(b.mucTieu)) errors.push(fe("mucTieu", "Chọn mục tiêu"));
-    if (has("chuDeId") && !db.topics.some((t) => t.id === b.chuDeId)) errors.push(fe("chuDeId", "Chọn chủ đề"));
+    if (b.chuDeId && !db.topics.some((t) => t.id === b.chuDeId)) throw new ApiError(422, "BUSINESS_RULE", "Chủ đề không còn tồn tại, vui lòng chọn lại");
     if (has("trinhDo") && !["MOI_BAT_DAU", "CO_BAN", "TRUNG_CAP", "NANG_CAO"].includes(b.trinhDo)) errors.push(fe("trinhDo", "Chọn trình độ"));
     if (errors.length) bad(errors);
   }
@@ -1569,6 +1582,7 @@
     ["GET", /^\/admin\/users$/, (m, b, q) => {
       requireAdmin();
       let list = db.users.slice();
+      list = list.filter((x) => x.email !== "library-editor@vocab.local");
       if (q.q) { const k = strip(q.q); list = list.filter((x) => strip(x.email).includes(k) || strip(x.tenHienThi).includes(k)); }
       if (q.trangThai) list = list.filter((x) => x.trangThai === q.trangThai);
       if (q.vaiTro) list = list.filter((x) => x.vaiTro.includes(q.vaiTro));
@@ -1586,7 +1600,7 @@
       if (errors.length) bad(errors);
       if (target.id === me2.id) throw new ApiError(422, "BUSINESS_RULE", "Bạn không thể tự khóa tài khoản của mình.");
       if (target.trangThai === "DANG_XOA") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản đang trong quá trình xóa, không đổi trạng thái được.");
-      if (b.trangThai === "HOAT_DONG" && target.trangThai === "CHUA_XAC_THUC") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản chưa xác thực email. Người dùng cần tự xác thực qua thư.");
+      if (target.trangThai === "CHUA_XAC_THUC") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản chưa xác thực email. Người dùng cần tự xác thực qua thư.");
       if (b.trangThai === "BI_KHOA" && target.vaiTro.includes("ADMIN") && activeAdmins().length <= 1 && target.trangThai === "HOAT_DONG") throw new ApiError(422, "BUSINESS_RULE", "Không thể khóa quản trị viên cuối cùng.");
       if (target.trangThai === b.trangThai) return Object.assign(adminUserView(target), { soPhienDaHuy: 0 });
       const before = target.trangThai;
@@ -1606,13 +1620,13 @@
       if (errors.length) bad(errors);
       const had = target.vaiTro.includes("ADMIN");
       const will = roles.includes("ADMIN");
-      if (had && !will && activeAdmins().filter((x) => x.id !== target.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Không thể thu quyền của quản trị viên cuối cùng. Cấp quyền cho một người khác trước.");
+      if (had && !will && target.trangThai === "HOAT_DONG" && activeAdmins().filter((x) => x.id !== target.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Không thể thu quyền của quản trị viên cuối cùng. Cấp quyền cho một người khác trước.");
       if (will && target.trangThai !== "HOAT_DONG") throw new ApiError(422, "BUSINESS_RULE", "Chỉ cấp quyền quản trị cho tài khoản đang hoạt động.");
-      if (had === will) return adminUserView(target);
+      if (had === will) return Object.assign(adminUserView(target), { soPhienDaHuy: 0, banThanMatQuyen: false });
       const before = target.vaiTro.slice();
       target.vaiTro = will ? ["ADMIN", "USER"] : ["USER"];
       audit(me2, will ? "CAP_QUYEN_QUAN_TRI" : "THU_QUYEN_QUAN_TRI", { loai: "NGUOI_DUNG", id: target.id, ten: target.tenHienThi }, r, { vaiTro: before }, { vaiTro: target.vaiTro });
-      return Object.assign(adminUserView(target), { banThanMatQuyen: target.id === me2.id && !will });
+      return Object.assign(adminUserView(target), { soPhienDaHuy: target.dangNhapCuoiAt ? 1 : 0, banThanMatQuyen: target.id === me2.id && !will });
     }],
 
     ["GET", /^\/admin\/decks$/, (m, b, q) => {
@@ -1633,92 +1647,103 @@
       const me2 = requireAdmin();
       validateAdminDeck(b, false);
       const t = new Date().toISOString();
-      const d = { id: nextId(), name: reason(b.ten), description: reason(b.moTa), goal: b.mucTieu, topicId: b.chuDeId, level: b.trinhDo, visibility: "RIENG_TU", kind: "MAU", ownerId: "0", ownerName: "Nhóm biên soạn VocabLearning", source: "Tự biên soạn", updatedAt: t, createdAt: t, version: 0, sourceDeckId: null, trangThaiKiemDuyet: "BINH_THUONG" };
+      const d = { id: nextId(), name: reason(b.ten), description: reason(b.moTa), goal: b.mucTieu, topicId: b.chuDeId || null, level: b.trinhDo, visibility: "RIENG_TU", kind: "MAU", ownerId: "0", ownerName: "VocabLearning", source: "Tự biên soạn", updatedAt: t, createdAt: t, version: 0, sourceDeckId: null, trangThaiKiemDuyet: "BINH_THUONG" };
       db.decks.push(d);
-      audit(me2, "TAO_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, null, null, { ten: d.name, quyenTruyCap: "RIENG_TU" });
-      return { status: 201, body: adminDeckView(d) };
+      const after = adminDeckView(d);
+      audit(me2, "TAO_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, null, null, deckFields(after));
+      return { status: 201, body: after };
     }],
     ["PATCH", /^\/admin\/decks\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const d = sampleDeck(m[1]);
-      if (b.version !== undefined && b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.");
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       validateAdminDeck(b, true);
+      if (b.quyenTruyCap !== undefined && !["CONG_KHAI", "RIENG_TU"].includes(b.quyenTruyCap)) bad([fe("quyenTruyCap", "Trạng thái xuất bản không hợp lệ")]);
+      if (b.trangThaiKiemDuyet !== undefined && !["BINH_THUONG", "DA_AN"].includes(b.trangThaiKiemDuyet)) bad([fe("trangThaiKiemDuyet", "Trạng thái không hợp lệ")]);
+      const lyDo = reason(b.lyDo) || null;
+      if (lyDo && (lyDo.length < 10 || lyDo.length > 500)) bad([fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự")]);
+      if (b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu đã thay đổi, vui lòng tải lại");
       const before = adminDeckView(d);
+      const next = Object.assign({}, d);
+      if (b.quyenTruyCap !== undefined) next.visibility = b.quyenTruyCap;
+      if (b.trangThaiKiemDuyet !== undefined) next.trangThaiKiemDuyet = b.trangThaiKiemDuyet;
+      if (b.ten !== undefined) next.name = reason(b.ten);
+      if (b.moTa !== undefined) next.description = reason(b.moTa);
+      if (b.mucTieu !== undefined) next.goal = b.mucTieu;
+      if (b.boChuDe) next.topicId = null; else if (b.chuDeId !== undefined) next.topicId = b.chuDeId;
+      if (b.trinhDo !== undefined) next.level = b.trinhDo;
+      const published = (x) => x.visibility === "CONG_KHAI" && (x.trangThaiKiemDuyet || "BINH_THUONG") === "BINH_THUONG";
+      if (published(next) && !published(d) && activeCards(d.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Bộ chưa có thẻ nào. Thêm thẻ trước khi xuất bản");
+      const tr = deckFields(before);
+      const sa = deckFields(adminDeckView(next));
+      Object.keys(tr).forEach((k) => { if (tr[k] === sa[k]) { delete tr[k]; delete sa[k]; } });
+      if (!Object.keys(tr).length) return before;
       let action = "SUA_BO_MAU";
-      let why = null;
-      if (b.quyenTruyCap !== undefined) {
-        if (!["CONG_KHAI", "RIENG_TU"].includes(b.quyenTruyCap)) bad([fe("quyenTruyCap", "Trạng thái xuất bản không hợp lệ")]);
-        if (b.quyenTruyCap === "CONG_KHAI" && !db.cards.some((x) => x.deckId === d.id)) throw new ApiError(422, "BUSINESS_RULE", "Bộ chưa có thẻ nào. Thêm thẻ trước khi xuất bản.");
-        if (b.quyenTruyCap !== d.visibility) action = b.quyenTruyCap === "CONG_KHAI" ? "XUAT_BAN_BO_MAU" : "CHUYEN_VE_NHAP";
-        if (action === "CHUYEN_VE_NHAP") why = needReason(b.lyDo);
-        d.visibility = b.quyenTruyCap;
-      }
-      if (b.trangThaiKiemDuyet !== undefined) {
-        if (!["BINH_THUONG", "DA_AN"].includes(b.trangThaiKiemDuyet)) bad([fe("trangThaiKiemDuyet", "Trạng thái không hợp lệ")]);
-        if (b.trangThaiKiemDuyet !== (d.trangThaiKiemDuyet || "BINH_THUONG")) { action = b.trangThaiKiemDuyet === "DA_AN" ? "AN_BO_MAU" : "HIEN_BO_MAU"; why = needReason(b.lyDo); }
-        d.trangThaiKiemDuyet = b.trangThaiKiemDuyet;
-      }
-      if (b.ten !== undefined) d.name = reason(b.ten);
-      if (b.moTa !== undefined) d.description = reason(b.moTa);
-      if (b.mucTieu !== undefined) d.goal = b.mucTieu;
-      if (b.chuDeId !== undefined) d.topicId = b.chuDeId;
-      if (b.trinhDo !== undefined) d.level = b.trinhDo;
-      d.version++;
-      d.updatedAt = new Date().toISOString();
-      const after = adminDeckView(d);
-      const diff = (o) => { const out = {}; Object.keys(after).forEach((k) => { if (!["version", "updatedAt", "soThe", "soBanSao", "chuDeTen", "id"].includes(k) && before[k] !== after[k]) out[k] = o[k]; }); return out; };
-      audit(me2, action, { loai: "BO_THE", id: d.id, ten: d.name }, why || reason(b.lyDo) || null, diff(before), diff(after));
-      return after;
+      if ("trangThaiKiemDuyet" in tr) action = sa.trangThaiKiemDuyet === "DA_AN" ? "AN_BO_MAU" : "HIEN_BO_MAU";
+      else if ("quyenTruyCap" in tr) action = sa.quyenTruyCap === "CONG_KHAI" ? "XUAT_BAN_BO_MAU" : "CHUYEN_VE_NHAP";
+      if (["CHUYEN_VE_NHAP", "AN_BO_MAU", "HIEN_BO_MAU"].includes(action) && !lyDo) bad([fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự")]);
+      Object.assign(d, next, { version: d.version + 1, updatedAt: new Date().toISOString() });
+      audit(me2, action, { loai: "BO_THE", id: d.id, ten: d.name }, lyDo, tr, sa);
+      return adminDeckView(d);
     }],
     ["DELETE", /^\/admin\/decks\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const d = sampleDeck(m[1]);
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       const why = needReason(b.lyDo);
+      if (b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu đã thay đổi, vui lòng tải lại");
+      const before = deckFields(adminDeckView(d));
       d.deleted = true;
-      audit(me2, "XOA_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, why, { quyenTruyCap: d.visibility }, null);
+      audit(me2, "XOA_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, why, before, null);
       return { status: 204 };
     }],
-    ["GET", /^\/admin\/cards$/, (m, b, q) => {
+    ["GET", /^\/admin\/decks\/(\w+)\/cards$/, (m, b, q) => {
       requireAdmin();
-      const d = sampleDeck(q.boTheId);
-      return db.cards.filter((x) => x.deckId === d.id).map(theView);
+      const d = sampleDeck(m[1]);
+      return page(activeCards(d.id).sort((a, c2) => Number(c2.id) - Number(a.id)).map(adminCardView), Object.assign({ size: "20" }, q));
     }],
-    ["POST", /^\/admin\/cards$/, (m, b) => {
+    ["POST", /^\/admin\/decks\/(\w+)\/cards$/, (m, b) => {
       const me2 = requireAdmin();
-      const d = sampleDeck(b.boTheId);
+      const d = sampleDeck(m[1]);
       validateAdminCard(b, false);
-      const x = { id: nextId(), deckId: d.id, word: reason(b.tu), pos: reason(b.tuLoai), ipa: reason(b.phienAm), meaningVi: reason(b.nghiaVi), exampleEn: reason(b.viDuEn), exampleVi: reason(b.dichVi), difficulty: 2, tagIds: [], imageUrl: null, audioUrl: null, version: 0, createdAt: new Date().toISOString() };
+      const x = { id: nextId(), deckId: d.id, word: reason(b.tu), pos: reason(b.tuLoai), ipa: reason(b.phienAm), meaningVi: reason(b.nghiaVi), exampleEn: reason(b.viDuEn), exampleVi: reason(b.dichVi), difficulty: b.doKho || 1, source: reason(b.nguon), tagIds: b.nhanIds || [], version: 0, createdAt: new Date().toISOString() };
+      x.updatedAt = x.createdAt;
       db.cards.push(x);
-      d.updatedAt = x.createdAt;
-      audit(me2, "TAO_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, null, { tu: x.word, nghiaVi: x.meaningVi });
-      return { status: 201, body: theView(x) };
+      const view = adminCardView(x);
+      audit(me2, "TAO_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, null, cardFields(view));
+      return { status: 201, body: view };
     }],
     ["PATCH", /^\/admin\/cards\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const x = cardById(m[1]);
-      if (!x) notFound();
-      sampleDeck(x.deckId);
-      if (b.version !== undefined && b.version !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.");
+      if (!x || x.deleted) notFound();
+      const d = sampleDeck(x.deckId);
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       validateAdminCard(b, true);
-      const before = theView(x);
-      const map = { tu: "word", tuLoai: "pos", phienAm: "ipa", nghiaVi: "meaningVi", viDuEn: "exampleEn", dichVi: "exampleVi" };
+      if (b.version !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ đã thay đổi, vui lòng tải lại");
+      const before = cardFields(adminCardView(x));
+      const map = { tu: "word", tuLoai: "pos", phienAm: "ipa", nghiaVi: "meaningVi", viDuEn: "exampleEn", dichVi: "exampleVi", nguon: "source" };
       Object.keys(map).forEach((k) => { if (b[k] !== undefined) x[map[k]] = reason(b[k]); });
+      if (b.doKho !== undefined) x.difficulty = b.doKho;
+      if (b.nhanIds !== undefined) x.tagIds = b.nhanIds;
       x.version++;
-      const after = theView(x);
-      const tr = {};
-      const sa = {};
-      Object.keys(map).forEach((k) => { if (before[k] !== after[k]) { tr[k] = before[k]; sa[k] = after[k]; } });
-      audit(me2, "SUA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + deckName(x.deckId) + ")" }, null, tr, sa);
-      return after;
+      x.updatedAt = new Date().toISOString();
+      const after = cardFields(adminCardView(x));
+      Object.keys(before).forEach((k) => { if (JSON.stringify(before[k]) === JSON.stringify(after[k])) { delete before[k]; delete after[k]; } });
+      if (Object.keys(before).length) audit(me2, "SUA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, before, after);
+      return adminCardView(x);
     }],
-    ["DELETE", /^\/admin\/cards\/(\w+)$/, (m) => {
+    ["DELETE", /^\/admin\/cards\/(\w+)$/, (m, b, q) => {
       const me2 = requireAdmin();
       const x = cardById(m[1]);
-      if (!x) notFound();
+      if (!x || x.deleted) notFound();
       const d = sampleDeck(x.deckId);
-      if (d.visibility === "CONG_KHAI" && db.cards.filter((c2) => c2.deckId === d.id).length <= 1) throw new ApiError(422, "BUSINESS_RULE", "Bộ đang xuất bản cần ít nhất một thẻ. Chuyển bộ về bản nháp trước khi xóa thẻ cuối.");
-      db.cards = db.cards.filter((c2) => c2.id !== x.id);
-      audit(me2, "XOA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, { tu: x.word, nghiaVi: x.meaningVi }, null);
+      if (q.version === undefined || q.version === "") bad([fe("version", "Gửi phiên bản không âm của thẻ")]);
+      if (d.visibility === "CONG_KHAI" && activeCards(d.id).length <= 1) throw new ApiError(422, "BUSINESS_RULE", "Bộ đang xuất bản cần ít nhất một thẻ. Chuyển bộ về bản nháp trước khi xóa thẻ cuối");
+      if (Number(q.version) !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ đã thay đổi, vui lòng tải lại");
+      const before = cardFields(adminCardView(x));
+      x.deleted = true;
+      audit(me2, "XOA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, before, null);
       return { status: 204 };
     }],
     ["GET", /^\/admin\/audit-logs$/, (m, b, q) => {

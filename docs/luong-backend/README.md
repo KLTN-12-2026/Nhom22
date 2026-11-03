@@ -1,6 +1,6 @@
 # Sơ đồ luồng backend B0.1–B2.12
 
-Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng sơ đồ (đối chiếu 03/11/2026): B0.1–B0.5, B0.8, B1.1–B1.9 và Redis có sơ đồ kèm ảnh SVG; B0.6, B0.7, B1.10, B2.1–B2.10, B2.12 có mã Mermaid nhưng **chưa sinh SVG**; B1.11, B1.12 **chưa có sơ đồ**. Có thể mở phần mã Mermaid dưới mỗi ảnh để sửa sơ đồ.
+Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng sơ đồ (đối chiếu 03/11/2026): B0.1–B0.5, B0.8, B1.1–B1.9 và Redis có sơ đồ kèm ảnh SVG; B0.6, B0.7, B1.10, B2.1–B2.12 có mã Mermaid nhưng **chưa sinh SVG**; B1.11, B1.12 **chưa có sơ đồ**. Có thể mở phần mã Mermaid dưới mỗi ảnh để sửa sơ đồ.
 
 ## Nền tảng B0
 
@@ -43,6 +43,7 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 - [B2.8 — Nộp bài & chấm](B2.8-nop-bai-cham.md)
 - [B2.9 — Sổ tay từ khó & cặp dễ nhầm](B2.9-so-tay-cap-nham.md)
 - [B2.10 — Thống kê nền](B2.10-thong-ke-nen.md)
+- [B2.11 — Quản trị nền](B2.11-quan-tri-nen.md)
 - [B2.12 — Bảng điều khiển người học](B2.12-bang-dieu-khien.md)
 
 ## Redis

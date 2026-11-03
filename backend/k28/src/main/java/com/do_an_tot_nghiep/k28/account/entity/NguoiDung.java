@@ -113,4 +113,17 @@ public class NguoiDung extends BaseEntity {
     public void changeAvatar(Long fileId) {
         anhDaiDienId = fileId;
     }
+
+    public void changeStatus(TrangThaiNguoiDung trangThai) {
+        this.trangThai = trangThai;
+    }
+
+    public boolean hasRole(String ma) {
+        return vaiTro.stream().anyMatch(role -> role.getMa().equals(ma));
+    }
+
+    public void replaceRoles(Set<VaiTro> roles) {
+        vaiTro.clear();
+        vaiTro.addAll(roles);
+    }
 }

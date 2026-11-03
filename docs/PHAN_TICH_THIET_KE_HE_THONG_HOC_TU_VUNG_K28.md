@@ -555,7 +555,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7) |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
 | `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý |
-| `nhat_ky_quan_tri` | người thực hiện, hành động, đối tượng, lý do, trước/sau đã lọc thông tin nhạy cảm |
+| `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa |
 | `tac_vu_nen` | loại, payload_ref, trạng thái, retry_count, next_run_at, khóa giữ tác vụ |
 | `yeu_cau_xoa_du_lieu` | nguoi_dung_id, trạng thái, thời điểm, phạm vi và kết quả |
 | `thong_ke_ngay` | dữ liệu tổng hợp có thể tái tạo từ lịch sử hợp lệ |
@@ -591,7 +591,7 @@ erDiagram
 - Unique `lich_su_on(nguoi_dung_id, client_event_id)`; bổ sung người dùng vào bảng lịch sử để định danh chống trùng trực tiếp.
 - Unique `lan_lam_bai(nguoi_dung_id, submit_key)` và `so_diem_thuong(nguoi_dung_id, loai_su_kien, su_kien_id)`.
 - Index `bo_the(quyen_truy_cap, trang_thai_kiem_duyet, chu_de_id, created_at)`.
-- `trang_thai_kiem_duyet = DA_AN` chưa có API đặt giá trị; chờ B2.11 (kiểm duyệt). Trước đó chỉ `BINH_THUONG` được tạo ra.
+- `trang_thai_kiem_duyet = DA_AN`: từ B2.11 Admin đặt cho **bộ mẫu** qua `PATCH /admin/decks/{id}`; ẩn bộ của người học thuộc kiểm duyệt B3.8. Bộ mẫu thuộc tài khoản hệ thống `library-editor@vocab.local` (V14). Index nhật ký quản trị `(created_at, id)`, `(hanh_dong, created_at)`, `(loai_doi_tuong, doi_tuong_id)`.
 - Index lịch sử `lich_su_on(nguoi_dung_id, created_at)` và báo cáo `(trang_thai, created_at)`.
 - Chuẩn hóa từ/từ loại để cảnh báo trùng; không unique toàn cục vì cùng từ có nhiều nghĩa và ngữ cảnh.
 - Xóa bộ đang có lịch sử: ẩn/xóa mềm trước, xử lý phụ thuộc theo chính sách; không dùng cascade thiếu kiểm soát làm mất minh chứng học.
@@ -625,7 +625,7 @@ erDiagram
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks`, `/admin/cards`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
