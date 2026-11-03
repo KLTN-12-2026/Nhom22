@@ -956,7 +956,8 @@
     const errors = [];
     if (!re.test(tu)) errors.push(fe("tuNgay", "Ngày bắt đầu không hợp lệ"));
     if (!re.test(den)) errors.push(fe("denNgay", "Ngày kết thúc không hợp lệ"));
-    if (!errors.length && tu > den) errors.push(fe("tuNgay", "Ngày bắt đầu phải trước ngày kết thúc"));
+    if (!errors.length && den > today) errors.push(fe("denNgay", "Không chọn ngày trong tương lai"));
+    if (!errors.length && tu > den) errors.push(fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi"));
     if (!errors.length && (Date.parse(den) - Date.parse(tu)) / DAY > 89) errors.push(fe("tuNgay", "Chọn khoảng tối đa 90 ngày"));
     if (errors.length) bad(errors);
     const list = [];
@@ -1545,7 +1546,7 @@
         const dr = rs.filter((x) => x.ngay === d);
         const da = as.filter((a) => a.ngay === d);
         const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGian, 0);
-        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: minutesOf(ms) };
+        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), thoiGian: ms, soPhut: minutesOf(ms) };
       });
       const tong = as.reduce((acc, a) => acc + a.tongSoCau, 0);
       const dung = as.reduce((acc, a) => acc + a.soCauDung, 0);
@@ -1554,8 +1555,8 @@
         soTuDaHoc: new Set(rs.map((x) => x.theId)).size, soLuotOn: rs.length,
         tyLeNho: rs.length ? Math.round(rs.filter((x) => x.danhGia !== "QUEN").length / rs.length * 100) : null,
         baiLuyen: { soBai: as.length, soCauDung: dung, tongSoCau: tong, tyLeDung: tong ? Math.round(dung / tong * 100) : null },
-        tongPhut: theoNgay.reduce((acc, x) => acc + x.soPhut, 0), mucTieuPhutNgay: l.minutesPerDay,
-        soNgayCoHoc: theoNgay.filter((x) => x.soLuotOn || x.soCauLuyen).length, soNgayDatMucTieu: theoNgay.filter((x) => x.soPhut >= l.minutesPerDay).length,
+        tongPhut: theoNgay.reduce((acc, x) => acc + x.soPhut, 0), phutMoiNgay: l.minutesPerDay,
+        soNgayCoHoc: theoNgay.filter((x) => x.soLuotOn || x.soCauLuyen).length, soNgayDatMucTieu: theoNgay.filter((x) => x.thoiGian >= l.minutesPerDay * 60000).length,
         chuoiNgay: streakOf(u.id, tz).chuoiNgay, theoNgay
       };
     }],

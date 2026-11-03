@@ -317,7 +317,7 @@ Phiên bản `SM2-VN-2` (chốt 03/11/2026, RS-005): ở `ON_TAP` với chuỗi 
 - Giới hạn từ mới tính theo thẻ vật lý lần đầu học trong ngày, không tính hai lần vì học cả hai chiều; hai chiều vẫn có tiến độ riêng.
 - Thẻ đến hạn không bị mất chỉ vì hết hạn mức từ mới.
 - Khối lượng phiên dựa trên quỹ thời gian và thời gian trung bình của các lượt gần đây; chưa có dữ liệu thì dùng giá trị mặc định và ghi là ước tính.
-- Phút học của một ngày (**đề xuất**, B2.12): tổng `lich_su_on.thoi_gian` của các lượt ôn trong ngày địa phương (mỗi lượt đã cắt ở 120000 ms khi ghi), cộng `lan_lam_bai.thoi_gian` của bài luyện nộp trong ngày theo `nop_at` (B2.8, đã triển khai 03/11/2026; thời gian đã cắt ở `min(client, nộp − tạo bài, số đơn vị × 120000)`). `soPhut` làm tròn xuống phút; “đạt mục tiêu” so tổng mili giây với `phutMoiNgay × 60000`. `GET /learning/today` (`daHocHomNay`) và `GET /statistics/overview` (`theoNgay`, `tongPhut`) dùng chung một cách tính. Ước tính 20 giây/lượt chỉ dùng cho khối lượng còn lại (`uocTinhPhut`), không dùng cho thời gian đã học.
+- Phút học của một ngày (**đề xuất**, B2.12): tổng `lich_su_on.thoi_gian` của các lượt ôn trong ngày địa phương (mỗi lượt đã cắt ở 120000 ms khi ghi), cộng `lan_lam_bai.thoi_gian` của bài luyện nộp trong ngày theo `nop_at` (B2.8, đã triển khai 03/11/2026; thời gian đã cắt ở `min(client, nộp − tạo bài, số đơn vị × 120000)`). `soPhut` làm tròn xuống phút; “đạt mục tiêu” so tổng mili giây với `phutMoiNgay × 60000`. `GET /learning/today` (`daHocHomNay`) và `GET /statistics/overview` (`theoNgay`, `tongPhut`; B2.10, đã triển khai 03/11/2026) dùng chung một cách tính (`StudyTimeService.days`); `tongPhut` là tổng `soPhut` các ngày. Ước tính 20 giây/lượt chỉ dùng cho khối lượng còn lại (`uocTinhPhut`), không dùng cho thời gian đã học.
 - Không thêm thẻ tạm ngưng, đã xóa hoặc không còn quyền truy cập.
 - Tự đánh giá có thể chủ quan; bài luyện kỹ năng được lưu riêng để bổ sung minh chứng.
 
@@ -360,6 +360,8 @@ Chuẩn hóa Unicode, khoảng trắng và chữ hoa theo loại bài. Không x�
 - Chỉ số làm chủ đề xuất: tỷ lệ đúng có trọng số theo độ gần của tối đa 20 lượt gần nhất; phản hồi AI/phát âm hiển thị riêng kèm nguồn.
 - Không quy đổi tự động thành trình độ CEFR/TOEIC được chứng nhận.
 
+B2.10 (chốt 03/11/2026, đề xuất) hiện thực `GET /statistics/skills` chỉ từ bài luyện: 5 kỹ năng theo `KyNang` (chưa có phát âm), một câu là một lượt theo `tra_loi_bai_luyen.dung`, 20 lượt gần nhất có trọng số tuyến tính 20…1, đủ dữ liệu khi ≥ 5 lượt (`app.statistics.*`), "lần đầu" là bài không phải luyện lại. Chi tiết ở [flow B2.10](luong-backend/B2.10-thong-ke-nen.md).
+
 ### 8.3. Gợi ý có minh chứng
 
 | Mã lý do | Điều kiện đề xuất | Hành động |
@@ -380,7 +382,7 @@ Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 tr
 
 Một màn hình gom thẻ đến hạn, số từ mới, mục tiêu và quỹ thời gian. Người học chọn “5 phút / 10 phút / 20 phút” rồi bắt đầu. Sau phiên, hệ thống nói rõ đã hoàn thành gì và nên làm gì tiếp theo.
 
-Màn hình này chính là **bảng điều khiển của người học**: UI12 `/hom-nay`, trang đầu tiên sau đăng nhập và sau khởi đầu (§6.1 bước 6). Không tạo thêm route hay trang “dashboard” riêng, để không trùng với UI35 `/thong-ke`. Phần mở rộng dưới đây đã được chọn ngày 28/10/2026, là **đề xuất**; B2.12 đã triển khai ngày 31/10/2026 (`phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`), khối hoạt động 7 ngày chờ B2.10:
+Màn hình này chính là **bảng điều khiển của người học**: UI12 `/hom-nay`, trang đầu tiên sau đăng nhập và sau khởi đầu (§6.1 bước 6). Không tạo thêm route hay trang “dashboard” riêng, để không trùng với UI35 `/thong-ke`. Phần mở rộng dưới đây đã được chọn ngày 28/10/2026, là **đề xuất**; B2.12 đã triển khai ngày 31/10/2026 (`phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`), khối hoạt động 7 ngày có API từ B2.10 (03/11/2026):
 
 | Khối | Nội dung | Nguồn dữ liệu | Bước |
 |---|---|---|---|
@@ -634,6 +636,8 @@ Luyện tập (B2.7, đã triển khai 31/10/2026, **đề xuất**): `POST /pra
 Nộp bài và chấm (B2.8, đã triển khai 03/11/2026, **đề xuất**): `POST /practice/sessions/{id}/submissions` body `{submitKey (≤128, A-Za-z0-9._:-), thoiGian (ms), traLoi[{cauHoiId, luaChonId? | noiDung? (≤200) | cap?[{traiId, phaiId}]}]}` → 201, gửi lại cùng `submitKey` → 200 kết quả cũ, bài đã nộp hoặc khóa đã dùng cho bài khác → 409. Response `{lanLamId, baiLuyenId, loaiBai, boTheId, boTheTen, laLuyenLai, soCauDung, tongSoCau, diem, thoiGian, nopAt, theoKyNang[{kyNang, dung, tong}], ketQua[{cauHoiId, thuTu, loaiCau, theId, deBai, phuongAn, traLoi, dapAn, dung, diem, nhomLoi, chiTiet, giaiThich}]}`; chấm tại máy chủ theo bản chụp (TC-11), câu bỏ trống tính sai, ghép chấm từng cặp. `GET /practice/sessions/{id}` thêm `laLuyenLai`, `baiGocId`, `daNop`, `lanLamId`, `ketQua`. `GET /practice/history?loaiBai&tuNgay&denNgay&page&size` (mặc định 20, tối đa 100) → `items[{lanLamId, baiLuyenId, loaiBai, boTheTen, soCauDung, tongSoCau, soCauSai, diem, thoiGian, nopAt, laLuyenLai}]`. `POST /practice/mistakes/retry {lanLamId}` → 201 bài mới `laLuyenLai = true`, `baiGocId`; không có câu sai hoặc thẻ đã xóa/tạm ngưng hết → 422. Không đổi lịch SRS, chưa thưởng. Chi tiết: [flow B2.8](luong-backend/B2.8-nop-bai-cham.md).
 
 Bảng điều khiển (§9.1) không có endpoint riêng. B2.12 (**đề xuất**, đã triển khai 31/10/2026) mở rộng response `GET /learning/today`, không thêm route: `phienDangDo` (null hoặc `{id, boTheId, boTheTen, chieuHoc, quyThoiGian, batDauAt, hetGioAt, soDaTraLoi, soChuaTraLoi}`), `duBaoOn` (7 phần tử `{ngay, soCanOn}` từ ngày mai) và `daHocHomNay.thoiGian` (ms, tổng `lich_su_on.thoi_gian` hôm nay; `soPhut = floor(thoiGian/60000)`; từ B2.8 cộng thêm thời gian bài luyện đã nộp hôm nay). Khối hoạt động 7 ngày đọc `GET /statistics/overview?tuNgay=…&denNgay=…` (B2.10).
+
+B2.10 (**đề xuất**, đã triển khai 03/11/2026): `GET /statistics/overview?tuNgay&denNgay&boTheId` (mặc định 7 ngày đến hôm nay, tối đa 90 ngày, ngày tương lai hoặc `tuNgay > denNgay` → 400, bộ không thuộc người dùng → 404) trả `{muiGio, tuNgay, denNgay, boTheId, soTuDaHoc, soLuotOn, tyLeNho, baiLuyen{soBai, soCauDung, tongSoCau, tyLeDung}, tongPhut, phutMoiNgay, soNgayCoHoc, soNgayDatMucTieu, chuoiNgay, theoNgay[{ngay, soLuotOn, soCauLuyen, thoiGian, soPhut}]}`; `GET /statistics/skills?boTheId` trả 5 phần tử `{kyNang, soQuanSat, soLuotTinh, duDuLieu, mucLamChu, tyLeDungLanDau, tyLeDungSauLuyenLai, soQuanSatToiThieu, nguon}`. Bộ lọc chủ đề của UI35 chưa triển khai. Chi tiết: [flow B2.10](luong-backend/B2.10-thong-ke-nen.md).
 
 Các endpoint là hợp đồng đề xuất; cần đặc tả request/response và quyền cụ thể trong OpenAPI khi lập trình. Duyệt bài AI được dùng cho bản nháp đã kiểm tra, không gửi trực tiếp nội dung AI chưa duyệt thành bài kiểm tra có đáp án cố định.
 

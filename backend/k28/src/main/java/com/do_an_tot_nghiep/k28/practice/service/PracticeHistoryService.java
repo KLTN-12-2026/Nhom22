@@ -46,8 +46,8 @@ public class PracticeHistoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<StudyTimeRow> studyTimes(Long userId, Instant batDau, Instant ketThuc) {
-        return attempts.studyTimes(userId, batDau, ketThuc);
+    public List<StudyTimeRow> studyTimes(Long userId, Instant batDau, Instant ketThuc, Long boTheId) {
+        return attempts.studyTimes(userId, batDau, ketThuc, boTheId);
     }
 
     private PracticeHistoryResponse toResponse(PracticeHistoryRow row) {

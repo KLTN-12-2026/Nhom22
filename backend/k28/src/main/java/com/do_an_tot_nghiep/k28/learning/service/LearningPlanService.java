@@ -98,8 +98,7 @@ public class LearningPlanService {
                 : Math.min(Math.max(0, settings.tuMoiMoiNgay() - soTheMoiDaHoc), soMoiKhaDung);
         int uocTinhPhut = Math.ceilDiv((soQuaHan + soDenHan + soMoiConLai) * GIAY_MOI_LUOT, 60);
 
-        List<LocalDate> days = usage.qualifyingDays(
-                userId, LUOT_TOI_THIEU_CHUOI, homNay, PageRequest.ofSize(SO_NGAY_TOI_DA));
+        List<LocalDate> days = qualifyingDays(userId, homNay);
         int chuoiNgay = StreakCalculator.current(days, homNay);
         boolean homNayDaTinhChuoi = !days.isEmpty() && days.get(0).equals(homNay);
 
@@ -132,6 +131,15 @@ public class LearningPlanService {
                 openSession(userId, batDau),
                 forecast(userId, homNay, zone, ketThuc)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public int streak(Long userId, LocalDate homNay) {
+        return StreakCalculator.current(qualifyingDays(userId, homNay), homNay);
+    }
+
+    private List<LocalDate> qualifyingDays(Long userId, LocalDate homNay) {
+        return usage.qualifyingDays(userId, LUOT_TOI_THIEU_CHUOI, homNay, PageRequest.ofSize(SO_NGAY_TOI_DA));
     }
 
     private PhienDangDoResponse openSession(Long userId, Instant batDau) {
