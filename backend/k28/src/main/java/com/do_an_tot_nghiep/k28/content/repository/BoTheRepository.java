@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecificationExecutor<BoThe> {
@@ -53,4 +55,45 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
             @Param("id") Long id,
             @Param("ownerId") Long ownerId
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select d
+            from BoThe d
+            where d.id = :id
+              and d.chuSoHuuId = :ownerId
+              and d.boMau = true
+              and d.xoaAt is null
+            """)
+    Optional<BoThe> findSampleForUpdate(
+            @Param("id") Long id,
+            @Param("ownerId") Long ownerId
+    );
+
+    Optional<BoThe> findByIdAndChuSoHuuIdAndBoMauTrueAndXoaAtIsNull(Long id, Long chuSoHuuId);
+
+    @Query("""
+            select d.boNguonId as id, count(d) as soLuong
+            from BoThe d
+            where d.boNguonId in :deckIds
+              and d.xoaAt is null
+            group by d.boNguonId
+            """)
+    List<DeckCount> countCopies(@Param("deckIds") Collection<Long> deckIds);
+
+    @Query("""
+            select d.chuSoHuuId as id, count(d) as soLuong
+            from BoThe d
+            where d.chuSoHuuId in :ownerIds
+              and d.xoaAt is null
+            group by d.chuSoHuuId
+            """)
+    List<DeckCount> countByOwners(@Param("ownerIds") Collection<Long> ownerIds);
+
+    interface DeckCount {
+
+        Long getId();
+
+        Long getSoLuong();
+    }
 }

@@ -3,16 +3,16 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 2 — Học, luyện tập, thống kê & quản trị (26/10 – 08/11/2026) |
-| Ngày cập nhật | 03/11/2026 — B2.10 thống kê nền (mục 5.11), bộ test đầy đủ 394/394 pass; trước đó cùng ngày B2.9 (mục 5.10), B2.8 nộp bài, chấm, lịch sử, luyện lại (mục 5.9), bộ test đầy đủ 382/382 pass; trước đó cùng ngày sửa theo rà soát (RS-002, RS-005, RS-007, RS-008, RS-011, RS-016, RS-017, RS-025, RS-046, RS-050, RS-064, RS-065): bộ test đầy đủ 363/363 pass; trước đó 31/10/2026 — B2.7 (mục 5.8), B2.12 (mục 5.7), B2.6 (mục 5.6); 28/10/2026 — B2.5 (mục 5.5) |
-| Trạng thái BE | 🟡 B2.1–B2.10 và B2.12 xong theo test: **bộ test đầy đủ `./mvnw -B test` 394/394 pass ngày 03/11/2026 sau B2.10** (thêm `FR11StatisticsTest` 5, `MasteryCalculatorTest` 3); B2.11 chưa làm. Trước đó: **bộ test đầy đủ `./mvnw -B test` 382/382 pass ngày 03/11/2026 sau B2.8** (thêm `FR07SubmissionTest` 4, `PracticeGraderTest` 11, `AnswerNormalizerTest` 4); lần trước 363/363 (gồm `FR06StudySessionTest` 8, `FR06ReviewTest` 12, `FR06FinishHistoryTest` 4, `FR06ProgressTest` 6, `FR06RescuePlanTest` 5, `FR06DashboardTest` 7, `FR06TodayPlanTest` 6, `FR06QueueQueryTest` 4, `FR06SrsCalculatorTest` 35, `RescuePlanTest` 3, `StreakCalculatorTest` 6, `FR07PracticeSessionTest` 4, `PracticeGeneratorTest` 3). **Chưa gọi HTTP thật**; Postman có request nhưng chưa chạy. B2.9–B2.11 chưa làm. Lịch sử từng lần chạy ở mục 10 |
-| FE làm tương ứng | F2.1 (kèm mở rộng bảng điều khiển), F2.2 phần chọn phiên, F2.3, F2.4 (`roadmap/TienDoDuKien_fronend.md`), UI12 `/hom-nay` (kèm UI22 khối cứu lịch ôn), UI18 `/hoc` |
+| Ngày cập nhật | 03/11/2026 — B2.11 quản trị nền (mục 5.12), bộ test đầy đủ 403/403 pass; trước đó cùng ngày B2.10 thống kê nền (mục 5.11), bộ test đầy đủ 394/394 pass; trước đó cùng ngày B2.9 (mục 5.10), B2.8 nộp bài, chấm, lịch sử, luyện lại (mục 5.9), bộ test đầy đủ 382/382 pass; trước đó cùng ngày sửa theo rà soát (RS-002, RS-005, RS-007, RS-008, RS-011, RS-016, RS-017, RS-025, RS-046, RS-050, RS-064, RS-065): bộ test đầy đủ 363/363 pass; trước đó 31/10/2026 — B2.7 (mục 5.8), B2.12 (mục 5.7), B2.6 (mục 5.6); 28/10/2026 — B2.5 (mục 5.5) |
+| Trạng thái BE | 🟢 B2.1–B2.12 xong theo test: **bộ test đầy đủ `./mvnw -B test` 403/403 pass ngày 03/11/2026 sau B2.11** (thêm `FR13AdminTest` 9). Trước đó: **bộ test đầy đủ `./mvnw -B test` 394/394 pass ngày 03/11/2026 sau B2.10** (thêm `FR11StatisticsTest` 5, `MasteryCalculatorTest` 3). Trước đó: **bộ test đầy đủ `./mvnw -B test` 382/382 pass ngày 03/11/2026 sau B2.8** (thêm `FR07SubmissionTest` 4, `PracticeGraderTest` 11, `AnswerNormalizerTest` 4); lần trước 363/363 (gồm `FR06StudySessionTest` 8, `FR06ReviewTest` 12, `FR06FinishHistoryTest` 4, `FR06ProgressTest` 6, `FR06RescuePlanTest` 5, `FR06DashboardTest` 7, `FR06TodayPlanTest` 6, `FR06QueueQueryTest` 4, `FR06SrsCalculatorTest` 35, `RescuePlanTest` 3, `StreakCalculatorTest` 6, `FR07PracticeSessionTest` 4, `PracticeGeneratorTest` 3). **Chưa gọi HTTP thật**; Postman có request nhưng chưa chạy. B2.9–B2.11 chưa làm. Lịch sử từng lần chạy ở mục 10 |
+| FE làm tương ứng | F2.1–F2.8 (`roadmap/TienDoDuKien_fronend.md`): UI12 `/hom-nay` (kèm UI22), UI18–UI21 học, UI23–UI26 luyện tập, UI27 `/so-tay`, UI35 `/thong-ke`, UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` |
 | Báo cáo trước | [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó |
 
 > **Đọc nhanh:**
-> - Báo cáo này có **20 API** (tiền tố `/api/v1`): `GET /statistics/overview`, `GET /statistics/skills` (5.11, B2.10); `GET /notebook`, `PUT /notebook/{cardId}`, `DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` (5.10, B2.9); `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` (5.9, B2.8); `GET /learning/today` (5.1, mở rộng ở 5.6, 5.7); `POST /learning/sessions`, `GET /learning/sessions/{id}` (5.2, 5.3); `POST /learning/sessions/{id}/reviews` (5.4); `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (5.5); `POST /practice/sessions`, `GET /practice/sessions/{id}` (5.8).
+> - Báo cáo này có **33 API** (tiền tố `/api/v1`): 13 API quản trị (5.12, B2.11); `GET /statistics/overview`, `GET /statistics/skills` (5.11, B2.10); `GET /notebook`, `PUT /notebook/{cardId}`, `DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` (5.10, B2.9); `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` (5.9, B2.8); `GET /learning/today` (5.1, mở rộng ở 5.6, 5.7); `POST /learning/sessions`, `GET /learning/sessions/{id}` (5.2, 5.3); `POST /learning/sessions/{id}/reviews` (5.4); `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` (5.5); `POST /practice/sessions`, `GET /practice/sessions/{id}` (5.8).
 > - B2.9 (03/11) thêm sổ tay và cặp nhầm: `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` (mục 5.10); `nguon = SO_TAY` của `POST /practice/sessions` dùng sổ tay suy ra; migration `V13__so_tay_an_tu.sql`.
 > - B2.10 (03/11) thêm `GET /statistics/overview` (tổng quan theo khoảng ngày, `theoNgay` cho khối "Hoạt động 7 ngày" UI12) và `GET /statistics/skills` (mức làm chủ theo kỹ năng) (mục 5.11); không migration.
-> - Chưa có API (gọi BE thật nhận 404): quản trị (B2.11). MSW chỉ còn mock `GET /public/ping`.
+> - B2.11 (03/11) thêm quản trị nền: tài khoản, vai trò, bộ/thẻ mẫu, nhật ký (mục 5.12); migration `V14__admin.sql`. MSW chỉ còn mock `GET /public/ping`.
 > - Hợp đồng ở mục 5 là **contract từ code**, test BE đã chạy (MockMvc) nhưng chưa gọi HTTP thật nên JSON mẫu chưa phải response thật (mục 10).
 > - B2.6 (31/10) không thêm route: `GET /learning/today` nhận `phut`, `giuTuMoi` và trả `cuuLichOn`; `POST /learning/sessions` nhận `cheDo`, phiên trả `cheDo` (mục 5.6).
 > - B2.7 (31/10) thêm `POST /api/v1/practice/sessions`, `GET /api/v1/practice/sessions/{id}` (mục 5.8).
@@ -38,8 +38,9 @@
 
 | B2.9 Sổ tay & cặp nhầm | ✅ `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs`; migration `V13__so_tay_an_tu.sql`; `FR08NotebookTest` (4) pass (03/11); chưa HTTP thật | F2.6 UI27 `/so-tay` | Nối theo mục 5.10; sửa tên field cặp nhầm (mục 10a) |
 | B2.10 Thống kê nền | ✅ `GET /statistics/overview`, `GET /statistics/skills`; module `stats`; không migration; `FR11StatisticsTest` (5), `MasteryCalculatorTest` (3) pass, bộ đầy đủ 394/394 (03/11); chưa HTTP thật | F2.7 UI35 `/thong-ke`; F2.1 khối "Hoạt động 7 ngày" UI12 | Nối theo mục 5.11; đổi `mucTieuPhutNgay` → `phutMoiNgay` |
+| B2.11 Quản trị nền | ✅ `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`, `GET /admin/audit-logs`; module `admin`; migration `V14__admin.sql`; `FR13AdminTest` (9) pass, bộ đầy đủ 403/403 (03/11); chưa HTTP thật | F2.8 UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` | Nối theo mục 5.12; thẻ mẫu dùng `/admin/decks/{id}/cards` (phân trang), không còn `/admin/cards?boTheId` |
 
-**Chưa có** (BE chưa có endpoint, FE gọi sẽ 404): quản trị (B2.11).
+**Chưa có** ở Đợt 2: không còn; tab "Tác vụ nền" UI53 chờ B3.11.
 
 ## 2. Chạy BE
 
@@ -47,7 +48,9 @@ Theo [backend/README.md](../backend/README.md) (cập nhật 03/11/2026): copy `
 
 ## 3. Thay đổi hợp đồng chung
 
-Không thay đổi. Không có mã lỗi mới. Điều kiện: ID trong `boThe[]` dạng chuỗi, tên field trùng tên entity/mockup (tiếng Việt không dấu).
+Không có mã lỗi mới.
+
+**B2.11 (03/11/2026):** khi Admin khóa tài khoản hoặc đổi cờ ADMIN, BE xóa mọi phiên của người bị đổi. Request kế tiếp bằng cookie cũ nhận 401 `UNAUTHENTICATED`; FE xử lý như hết phiên (về `/dang-nhap`). Đăng nhập lại khi bị khóa → 403 `ACCOUNT_LOCKED` (đã có từ B1.2). Quyền mới chỉ có sau lần đăng nhập kế tiếp. Điều kiện: ID trong `boThe[]` dạng chuỗi, tên field trùng tên entity/mockup (tiếng Việt không dấu).
 
 **Sửa lỗi 03/11/2026 (lô 3 rà soát; không đổi tên field, không thêm mã lỗi):**
 - SRS `SM2-VN-2`: ở `ON_TAP`, chuỗi thành công = 1, mức Dễ cho 8 ngày (trước đây có thể chỉ 3 ngày, ngắn hơn Nhớ 6 ngày).
@@ -73,6 +76,27 @@ sequenceDiagram
 ```
 
 Chi tiết: [luồng B2.2](../docs/luong-backend/B2.2-ke-hoach-hom-nay.md).
+
+**Quản trị (B2.11): khóa tài khoản và bộ mẫu**
+
+```mermaid
+sequenceDiagram
+  participant A as FE Admin
+  participant BE
+  participant R as Redis
+  participant U as FE người bị khóa
+  A->>BE: PATCH /admin/users/{id}/status {BI_KHOA, lyDo}
+  BE->>BE: khóa dòng vai_tro ADMIN + nguoi_dung, kiểm quy tắc, ghi nhật ký (1 transaction)
+  BE->>R: xóa mọi phiên của người bị khóa (sau commit)
+  BE-->>A: 200 {…, soPhienDaHuy}
+  U->>BE: request bằng cookie cũ
+  BE-->>U: 401
+  A->>BE: POST /admin/decks → POST /admin/decks/{id}/cards → PATCH {quyenTruyCap: CONG_KHAI, version}
+  BE-->>A: bộ mẫu xuất hiện ở GET /library/decks
+  A->>BE: GET /admin/audit-logs
+```
+
+Chi tiết: [luồng B2.11](../docs/luong-backend/B2.11-quan-tri-nen.md).
 
 ## 5. API chi tiết
 
@@ -651,18 +675,107 @@ Contract từ code (MockMvc), chưa gọi HTTP thật. Flow: [B2.10](../docs/luo
 | 401 | `UNAUTHENTICATED` | Chưa đăng nhập |
 | 404 | `NOT_FOUND` | `boTheId` của người khác hoặc đã xóa |
 
+### 5.12 B2.11 — quản trị nền
+
+Contract từ code (MockMvc), chưa gọi HTTP thật. Flow: [B2.11](../docs/luong-backend/B2.11-quan-tri-nen.md). Mọi endpoint `/api/v1/admin/**` chỉ `ADMIN`: chưa đăng nhập 401, USER 403. Ghi cần CSRF. Lý do `lyDo` 10–500 ký tự (trim).
+
+**`GET /admin/users?q&trangThai&vaiTro&page&size`** — UI47. `q` tìm email/tên (không phân biệt hoa thường, dấu), `trangThai` (`CHUA_XAC_THUC|HOAT_DONG|BI_KHOA|DANG_XOA`), `vaiTro` (`USER|ADMIN`), size mặc định 10, tối đa 100, mới tạo trước. Không trả tài khoản hệ thống của thư viện.
+
+```json
+{"items": [{"id": "42", "email": "an@vocab.local", "tenHienThi": "An", "trangThai": "HOAT_DONG", "vaiTro": ["USER"],
+  "createdAt": "2026-10-01T02:00:00Z", "dangNhapCuoiAt": "2026-11-03T01:00:00Z", "soBoThe": 3}],
+ "page": 0, "size": 10, "totalElements": 1, "totalPages": 1}
+```
+
+**`PATCH /admin/users/{id}/status`** body `{trangThai: "HOAT_DONG"|"BI_KHOA", lyDo}` → item như trên + `soPhienDaHuy`. Khóa hủy mọi phiên của người bị khóa (họ bị 401 ngay, đăng nhập lại nhận 403 `ACCOUNT_LOCKED`). Gửi trùng trạng thái → 200, không ghi nhật ký (`BI_KHOA` lặp lại vẫn hủy phiên).
+
+**`PUT /admin/users/{id}/roles`** body `{vaiTro: ["USER"] | ["USER","ADMIN"], lyDo}` → item + `soPhienDaHuy`, `banThanMatQuyen`. Đổi cờ ADMIN hủy mọi phiên của người bị đổi (đăng nhập lại để nhận quyền mới). `banThanMatQuyen = true` (tự bỏ quyền) → phiên hiện tại đã bị đăng xuất: FE xóa trạng thái người dùng và chuyển `/dang-nhap`.
+
+**Bộ mẫu** — UI49.
+
+| API | Body / query | Response |
+|---|---|---|
+| `GET /admin/decks?q&trangThai&page&size` | `trangThai` `BAN_NHAP|DA_XUAT_BAN|DA_AN`; size mặc định 10; sắp `updatedAt` mới nhất | `PageResponse<SampleDeck>` |
+| `GET /admin/decks/{id}` | — | `SampleDeck` |
+| `POST /admin/decks` | `{ten, moTa?, chuDeId?, trinhDo, mucTieu}` | 201 `SampleDeck` (luôn `RIENG_TU`, bản nháp) |
+| `PATCH /admin/decks/{id}` | `{ten?, moTa?, chuDeId?, boChuDe?, trinhDo?, mucTieu?, quyenTruyCap?, trangThaiKiemDuyet?, lyDo?, version}` | 200 `SampleDeck` |
+| `DELETE /admin/decks/{id}` | body `{version, lyDo}` | 204 (xóa mềm) |
+| `GET /admin/decks/{id}/cards?page&size` | size mặc định 20, tối đa 100 | `PageResponse<CardResponse>` (như B1.9) |
+| `POST /admin/decks/{id}/cards` | `CreateCardRequest` B1.9 | 201 `CardResponse` |
+| `PATCH /admin/cards/{id}` | `UpdateCardRequest` B1.9 (có `version`) | 200 `CardResponse` |
+| `DELETE /admin/cards/{id}?version=` | — | 204 (xóa mềm) |
+
+```json
+{"id": "91", "ten": "Tài chính cơ bản", "moTa": null, "mucTieu": "TOEIC", "chuDeId": "4", "chuDeTen": "Tài chính",
+ "trinhDo": "TRUNG_CAP", "quyenTruyCap": "CONG_KHAI", "trangThaiKiemDuyet": "BINH_THUONG", "soThe": 2, "soBanSao": 0,
+ "createdAt": "2026-11-03T02:00:00Z", "updatedAt": "2026-11-03T02:05:00Z", "version": 1}
+```
+
+- Trạng thái hiển thị: `BAN_NHAP` = `RIENG_TU`+`BINH_THUONG`; `DA_XUAT_BAN` = `CONG_KHAI`+`BINH_THUONG`; `DA_AN` = `trangThaiKiemDuyet = DA_AN`. Xuất bản: `{quyenTruyCap: "CONG_KHAI", version}`; chuyển nháp `{quyenTruyCap: "RIENG_TU", lyDo, version}`; ẩn/hiện `{trangThaiKiemDuyet: "DA_AN"|"BINH_THUONG", lyDo, version}`.
+- Ẩn/xóa → bộ biến mất khỏi `/library`; bản sao người học giữ nguyên. Bộ của người học qua các API này → 404.
+- Ảnh/âm cho thẻ mẫu: tệp do chính Admin đang thao tác tải lên qua `/files` (B1.6/B1.9).
+
+**`GET /admin/audit-logs?hanhDong&loai&q&tuNgay&denNgay&page&size`** — UI53 tab nhật ký. `loai` `NGUOI_DUNG|BO_THE|THE_TU_VUNG`; `q` tìm tên đối tượng, lý do, tên người làm; ngày `YYYY-MM-DD` theo múi giờ của Admin, tối đa 366 ngày; size mặc định 20, tối đa 100; mới nhất trước.
+
+```json
+{"items": [{"id": "7", "nguoiThucHien": {"id": "1", "tenHienThi": "Quản trị viên"}, "hanhDong": "KHOA_TAI_KHOAN",
+  "doiTuong": {"loai": "NGUOI_DUNG", "id": "42", "ten": "An"}, "lyDo": "Vi phạm quy định nội dung nhiều lần",
+  "truoc": {"trangThai": "HOAT_DONG"}, "sau": {"trangThai": "BI_KHOA"}, "createdAt": "2026-11-03T03:00:00Z"}],
+ "page": 0, "size": 20, "totalElements": 1, "totalPages": 1}
+```
+
+Mã `hanhDong`: `KHOA_TAI_KHOAN, MO_KHOA_TAI_KHOAN, CAP_QUYEN_QUAN_TRI, THU_QUYEN_QUAN_TRI, TAO_BO_MAU, SUA_BO_MAU, XUAT_BAN_BO_MAU, CHUYEN_VE_NHAP, AN_BO_MAU, HIEN_BO_MAU, XOA_BO_MAU, TAO_THE_MAU, SUA_THE_MAU, XOA_THE_MAU`. `truoc`/`sau` chỉ chứa trường đã đổi (thẻ: cờ `anh/amTu/amCau` thay cho ID tệp); `null` khi tạo/xóa tương ứng.
+
+(JSON minh họa, không phải response thật.)
+
+| Status | `code` | Khi nào |
+|---|---|---|
+| 400 | `VALIDATION_FAILED` | Thiếu/sai `lyDo`, `trangThai` ngoài `HOAT_DONG/BI_KHOA`, `vaiTro` thiếu USER/trùng/lạ, thiếu `version`, enum query sai, ngày nhật ký sai hoặc > 366 ngày |
+| 401 / 403 | `UNAUTHENTICATED` / `FORBIDDEN` | Chưa đăng nhập (hoặc phiên vừa bị hủy) / không phải ADMIN |
+| 404 | `NOT_FOUND` | Người dùng không có; bộ không phải bộ mẫu/đã xóa; thẻ không thuộc bộ mẫu |
+| 409 | `VERSION_CONFLICT` | `version` bộ/thẻ cũ |
+| 422 | `BUSINESS_RULE` | Tự khóa/mở mình; tài khoản `DANG_XOA`/`CHUA_XAC_THUC`; khóa hoặc thu quyền Admin hoạt động cuối cùng; cấp ADMIN cho tài khoản không hoạt động; xuất bản bộ 0 thẻ; xóa thẻ cuối của bộ `CONG_KHAI`; chủ đề không còn |
+| 503 | `DEPENDENCY_DOWN` | Redis lỗi khi hủy phiên (trạng thái đã lưu; gửi lại để hủy tiếp) |
+
 ## 6. Mã FE mẫu
 
 - Zod schema: các field ở mục 5.1; `boThe[].boTheId` là `z.string()`, `cuuLichOn`, `phienDangDo` là `.nullable()` (object mục 5.6, 5.7); `duBaoOn` là mảng 7 phần tử; `daHocHomNay.thoiGian` là `z.number().int()`.
 - Phiên học: `chieuHoc` là `z.enum(['EN_VI','VI_EN'])`, `hangDoi[].the` là `.nullable()`, `tienDo.hanOnAt` là `z.string().nullable()`, `ketThucAt` nullable.
 - Hook: `useQuery({ queryKey: ['learning','today'], queryFn: () => api('/learning/today') })`; làm mới sau khi kết thúc phiên (B2.5).
 - Không còn MSW cho Đợt 2: dùng JSON minh họa ở mục 5.1 làm mẫu; `/hom-nay` đọc API thật khi F2.1 được nối.
+- Quản trị (F2.8), Zod khớp giới hạn BE:
+
+```js
+const lyDo = z.string().trim().min(10, 'Nhập lý do từ 10 đến 500 ký tự').max(500, 'Nhập lý do từ 10 đến 500 ký tự');
+export const userStatusSchema = z.object({ trangThai: z.enum(['HOAT_DONG', 'BI_KHOA']), lyDo });
+export const userRolesSchema = z.object({ vaiTro: z.array(z.enum(['USER', 'ADMIN'])).min(1).max(2).refine((v) => v.includes('USER') && new Set(v).size === v.length), lyDo });
+export const sampleDeckSchema = z.object({
+  ten: z.string().trim().min(1).max(150), moTa: z.string().max(1000).optional(), chuDeId: z.string().regex(/^[1-9][0-9]{0,18}$/).optional(),
+  trinhDo: z.enum(['MOI_BAT_DAU', 'CO_BAN', 'TRUNG_CAP', 'NANG_CAO']), mucTieu: z.enum(['GIAO_TIEP', 'TOEIC'])
+});
+export const deleteSampleDeckSchema = z.object({ version: z.number().int().min(0), lyDo });
+```
+
+```js
+export const useAdminUsers = (params) => useQuery({ queryKey: ['admin', 'users', params], queryFn: () => api('/admin/users', { params }) });
+export const useChangeUserStatus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }) => api(`/admin/users/${id}/status`, { method: 'PATCH', body }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'users'] }); qc.invalidateQueries({ queryKey: ['admin', 'audit-logs'] }); }
+  });
+};
+```
+
+Sau PATCH/DELETE bộ/thẻ mẫu: invalidate `['admin','decks']`, `['admin','decks',id,'cards']`, `['admin','audit-logs']` và `['library']`. Đổi vai trò trả `banThanMatQuyen = true` → `qc.clear()` rồi chuyển `/dang-nhap`.
 
 ## 7. Dữ liệu mẫu / tài khoản demo
 
+Seed dev (`R__seed_dev.sql`, chỉ profile `dev`): `admin@vocab.local` (ADMIN) và `an@vocab.local`, `binh@vocab.local`, `chi@vocab.local` (USER), cùng mật khẩu `Vocab@12345` như báo cáo Đợt 1. Bộ mẫu dev thuộc tài khoản hệ thống `library-editor@vocab.local` (`BI_KHOA`, không đăng nhập được, ẩn khỏi `/admin/users`); V14 tạo tài khoản này ở mọi môi trường.
+
 Chưa có seed cho tiến độ thẻ. Từ B2.4, `tien_do_the` được tạo qua `POST /learning/sessions/{id}/reviews`; người dùng chưa ôn lượt nào vẫn thấy `soQuaHan=0`, `soDenHan=0`, `chuoiNgay=0`.
 
-## 8. Checklist FE hoàn thành Đợt 2 (B2.2–B2.7, B2.12)
+## 8. Checklist FE hoàn thành Đợt 2 (B2.2–B2.12)
 
 - [ ] F2.1 `/hom-nay` đọc `GET /learning/today` thật, không còn MSW
 - [ ] Hiển thị hai nhãn "Quá hạn" và "Đến hạn hôm nay" đúng ngữ nghĩa mục 5.1
@@ -685,15 +798,30 @@ Chưa có seed cho tiến độ thẻ. Từ B2.4, `tien_do_the` được tạo q
 - [ ] F2.5 UI24 nộp `{submitKey, thoiGian, traLoi}` (đổi `thoiGianMs` → `thoiGian`); giữ `submitKey` khi gửi lại; 409 `CONFLICT` → mở UI25
 - [ ] F2.5 UI25 đọc `ketQua` của `GET /practice/sessions/{id}`: `traLoi` có thể `null`, ghép đọc `chiTiet`, cặp đọc `giaiThich.the`/`giaiThich.theKhac`; nút luyện lại gọi `POST /practice/mistakes/retry {lanLamId}`
 - [ ] F2.5 UI26 `GET /practice/history` (mặc định 20/trang; muốn 10 thì gửi `size=10`), hiển thị `thoiGian` (ms)
+- [ ] F2.8 UI47 `/quan-tri/tai-khoan`: lọc `q/trangThai/vaiTro`, size 10; khóa/mở/cấp/thu quyền đều có hộp lý do 10–500; hiện `soPhienDaHuy`; `banThanMatQuyen = true` → xóa trạng thái đăng nhập, về `/dang-nhap`; 422 hiện message của BE
+- [ ] F2.8 UI49 `/quan-tri/bo-mau`: trạng thái suy từ `quyenTruyCap` + `trangThaiKiemDuyet`; mọi PATCH/DELETE gửi `version`, 409 → tải lại; thẻ mẫu đọc `GET /admin/decks/{id}/cards` (phân trang), tạo `POST /admin/decks/{id}/cards`, xóa `DELETE /admin/cards/{id}?version=`; DELETE bộ gửi body `{version, lyDo}`
+- [ ] F2.8 UI53 `/quan-tri/nhat-ky`: lọc `hanhDong`, `loai`, `q`, `tuNgay/denNgay` (≤ 366 ngày); hiển thị `truoc`/`sau` dạng khóa–giá trị; tab "Tác vụ nền" ẩn tới B3.11
 - [ ] UI21: `GET /decks/{id}/progress` với `nhom`, `q`, `page`, `size`; nút tạm ngưng gửi `{tamNgung}`; nút đặt lại hỏi xác nhận rồi gửi `{xacNhan: true}`
 
-## 9. Sắp có ở Đợt 2 — hợp đồng dự kiến
+## 9. Sắp có ở Đợt 3 — hợp đồng dự kiến
 
-| BE bước | Dự kiến có | API | FE bước | UI |
-|---|---|---|---|---|
-| B2.11 | Quản trị nền | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `/admin/cards`, `GET /admin/audit-logs` | F2.8 | UI47, UI49, UI53 |
+Đợt 2 đã đủ B2.1–B2.12. Bảng dưới là **dự kiến** theo `roadmap/TienDoDuKien_backend.md` (Đợt 3) và `roadmap/SPRINT_PLAN.md` (S7–S9), chưa có code; tên field sẽ chốt khi làm từng bước.
 
-Hợp đồng dự kiến theo TK §13 và roadmap; chưa phải đã triển khai.
+| BE bước | Sprint | Dự kiến có | API (dự kiến) | FE bước | UI |
+|---|---|---|---|---|---|
+| B3.1 | S7 (09/11–15/11) | Tác vụ nền, hạn mức dịch vụ | không có API riêng; hết hạn mức → 429 | — | — |
+| B3.2 | S7 | Tạo thẻ bằng AI | `POST /ai/card-drafts` (202 + ID), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
+| B3.3 | S7 | Giải thích ngữ cảnh, sửa câu, đề luyện AI | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/exercise-drafts`, `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai/viet-cau`, UI32 `/ai/lich-su` |
+| B3.5 | S7 | Gợi ý có lý do | `GET /learning/recommendations` → `{reasonCode, message, cardIds, evidence}` | F3.4 | UI28 trên UI12, UI27 |
+| B3.4 | S8 (16/11–22/11) | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su` |
+| B3.6 | S8 | Điểm, huy hiệu, thử thách | `GET /rewards/history`, `GET /badges`, `GET /challenges`, CRUD `/admin/badges`, `/admin/challenges` | F3.6 | UI38 `/thanh-tich`, UI54 `/quan-tri/dong-luc` |
+| B3.7 | S8 | Thông báo, nhắc học | `GET /notifications`, `PATCH /notifications/{id}`, `POST /admin/announcements` | F3.7 | UI39 `/thong-bao`, UI52 `/quan-tri/thong-bao` |
+| B3.8 | S9 (23/11–29/11) | Báo cáo nội dung, kiểm duyệt bộ người học | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45, UI50 `/quan-tri/bao-cao` |
+| B3.9 | S9 | Tổng kết tuần | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` |
+| B3.10 | S9 | Xóa tài khoản | `POST /me/deletion-requests`, `GET /admin/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
+| B3.11 | S9 | Quản trị vận hành | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/statistics`, `GET /admin/jobs` | F3.11 | UI46 `/quan-tri`, UI51 `/quan-tri/dich-vu`, UI53 tab "Tác vụ nền" |
+
+Dự kiến liên quan quản trị: thao tác của B3.8 (ẩn bộ người học), B3.6/B3.7 có thể thêm mã vào `nhat_ky_quan_tri` (CHECK ở V14 sẽ được mở rộng bằng migration mới). Tác vụ dài AI/phát âm trả 202 kèm ID và endpoint trạng thái (TK §13.1).
 
 **B2.12 — bảng điều khiển UI12 (đã code 31/10/2026, hợp đồng ở mục 5.7; đoạn dưới giữ làm bối cảnh):** UI12 `/hom-nay` là bảng điều khiển duy nhất (TK §9.1); không có route hay endpoint `/dashboard` riêng. FE gọi song song `GET /learning/today` và `GET /statistics/overview?tuNgay=<ngay−6>&denNgay=<ngay>`.
 
@@ -743,6 +871,11 @@ Khối "Hoạt động 7 ngày" dùng `theoNgay[{ngay, soLuotOn, soPhut}]`; `soP
 | Quyết định B2.10 (đề xuất, chốt 03/11) | Chi tiết a–n ở [flow B2.10](../docs/luong-backend/B2.10-thong-ke-nen.md). Cho FE: `phutMoiNgay` (không phải `mucTieuPhutNgay`); `theoNgay[].thoiGian` (ms); ngày tương lai → 400; kỹ năng chỉ từ bài luyện; lọc theo chủ đề (TK §10 UI35) chưa có |
 | Mockup + Postman B2.10 (03/11) | `demo.js`: `overview` trả `phutMoiNgay`, `theoNgay[].thoiGian`, `soNgayDatMucTieu` so ms, `denNgay` tương lai → 400, thông báo lỗi như BE; `thong-ke.html` đọc `phutMoiNgay`. Mở `thong-ke.html?as=an` và `hom-nay.html?as=an` (cổng 5174): không lỗi console, không `undefined`/`NaN`, ngày hôm nay của `overview` khớp `daHocHomNay`. Postman: thêm `Thống kê tổng quan (B2.10 · FR-11)`, `Thống kê kỹ năng (B2.10 · FR-11)` vào "06 Tương tác & thống kê", chưa chạy |
 | Ngoại lệ module | Truy vấn của `learning` join entity `content` (chỉ đọc); đã ghi vào conventions |
+| Kiểm chứng B2.11 (03/11/2026) | `mvnw -B test -Dtest=FR13AdminTest`: lần đầu 9 test, 1 fail (500 ở `GET /admin/decks` vì `Map.of().get(null)` khi bộ không có chủ đề; sửa `SampleDeckService.page`). Chạy lại cùng `FR01*`, `FR03*`, `FR04*`: 190 test, 1 fail ở `FR04LibrarySeedTest.tc03_seedCanRunAgainWithoutDuplicateDecksOrCards` (đếm mọi bộ của tài khoản hệ thống = 8, nay bộ mẫu do Admin tạo cũng thuộc tài khoản này; sửa test chỉ đếm bộ "Khởi động —"). Bộ đầy đủ `./mvnw -B test`: **403 test, 0 lỗi, BUILD SUCCESS**. Chưa gọi HTTP thật, chưa chạy Postman |
+| Quyết định B2.11 (đề xuất, chốt 03/11) | Chi tiết a–n ở [flow B2.11](../docs/luong-backend/B2.11-quan-tri-nen.md). Cho FE: thẻ mẫu dùng `/admin/decks/{id}/cards` (phân trang) thay cho `/admin/cards?boTheId`; xóa thẻ là xóa mềm, cần `version`; DELETE bộ gửi `{version, lyDo}`; đổi vai trò/khóa hủy phiên người bị đổi; bộ mẫu thuộc tài khoản hệ thống `library-editor@vocab.local` (ẩn khỏi danh sách người dùng); B1.7 (topics/tags) không ghi nhật ký. Nợ: `PasswordService` (B1.3) vẫn hủy phiên trong transaction |
+| Mockup B2.11 (03/11) | `demo.js`: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards` trả `CardResponse` đủ field và phân trang, xóa mềm, `version` bắt buộc (bộ và thẻ, 409), DELETE bộ cần `version`; nhật ký trước/sau chỉ trường đổi; khóa `CHUA_XAC_THUC` → 422; roles trả `soPhienDaHuy`; ẩn tài khoản hệ thống; `adminDeckView` thêm `createdAt`. `quan-tri-bo-mau.html` gọi endpoint mới. Mở 3 trang `quan-tri-*.html` (cổng 5174, đăng nhập admin demo): không lỗi console; trên `?id=16` xóa thẻ → 204, xóa thẻ cuối → 422, PATCH thiếu `version` → 400, ẩn thiếu lý do → 400, ẩn có lý do → `DA_AN` và nhật ký `AN_BO_MAU`. Demo không có tệp cho thẻ mẫu |
+| Đóng Đợt 2 (`/fe-report DOT2`, 03/11/2026) | Không có BE đang chạy ở `localhost:8080` nên **không chụp response HTTP thật**; mọi JSON ở mục 5 là hợp đồng theo mã nguồn, đã kiểm bằng MockMvc (bộ đầy đủ 403/403), chưa kiểm chứng bằng HTTP. Mục 9 chuyển sang hợp đồng dự kiến Đợt 3; đoạn B2.12 bên dưới mục 9 chỉ là bối cảnh lịch sử |
+| Postman B2.11 (03/11) | Thêm 22 request vào "07 Quản trị" (13 endpoint: luồng chính + ca lỗi 400/409/422), test script lưu `targetUserId`, `sampleDeckId`, `sampleDeckVersion`, `sampleCardId`, `sampleCardVersion` (chưa khai báo sẵn trong environment). Cần đăng nhập Admin dev trước. **Chưa chạy.** Registry `synced` thêm 13 endpoint |
 | Đối chiếu trước B2.5 (27/10, chưa code) | Quyết định **đề xuất** ghi ở roadmap B2.5 và mục 9: suspend/reset áp cả thẻ; resume suy trạng thái từ field còn giữ; reset giữ lịch sử, không hoàn suất; finish lặp lại trả cùng tổng kết, không tự đóng phiên quá hạn, giữ dòng `CHUA_TRA_LOI`. Lỗ hổng phát hiện khi đọc code (chưa kiểm chứng): `uk_tien_do_the_nguoi_the_chieu` chưa được map nên hai request cùng tạo hàng tiến độ (hai phiên khác nhau, hoặc suspend và review) trả 500; sẽ map sang 409 `VERSION_CONFLICT` trong B2.5. `daHocHomNay.soPhut` vẫn là ước tính, không thuộc B2.5 |
 | Mockup B2.5 (sửa 27/10 trước khi code BE) | `demo.js`: phiên kết thúc là `KET_THUC`; `GET /sessions/{id}` không còn `tongKet`; tổng kết `finish` đổi `thoiGianGiay` → `thoiGian` (ms), thêm `soChuaTraLoi`, bỏ `khoangHienThi` và chuỗi ngày; history có lọc `chieuHoc`, `tuNgay`, `denNgay`, trả `thoiGian`, `truoc`/`sau` đầy đủ, ID bộ lạ trả trang rỗng; progress bỏ `khoangHienThi`, thêm `tongSoThe`; suspend bỏ `truocTamNgung`, khôi phục suy trạng thái như BE; reset bắt buộc `xacNhan`. `hoc-tong-ket.html` lấy tổng kết bằng `POST .../finish` khi phiên đã `KET_THUC` và lấy chuỗi ngày từ `/learning/today`; `bo-the-tien-do.html` gửi `{xacNhan: true}`. **Lệch còn lại của demo:** demo xóa hẳn thẻ nên history không hiện lượt của thẻ đã xóa (BE vẫn hiện); `page()` của demo giới hạn size 50 (BE 100); `hoc-phien.html` vẫn đọc `khoangHienThi`/`duKien` của B2.4. **Kiểm chứng 27/10:** chạy các route demo bằng Node (progress, suspend/resume/reset, history, finish lặp lại, review sau finish → 409) cho đúng hợp đồng trên, và kiểm cú pháp script của hai trang; **chưa mở trên trình duyệt** (cổng 5173 bị chặn, tab `file://` chỉ là ảnh tĩnh không chạy script) |
 | Test B2.5 (28/10, code chưa commit) | Lần chạy đầu: 71 test learning, 1 fail ở `FR06FinishHistoryTest.fr06_finishClosesSessionAndRepeatReturnsSameSummary` (lần `finish` đầu trả `ketThucAt` có nano giây, lần gọi lại trả mili giây do cột `DATETIME(3)`). Đã sửa `PhienHoc.finish` cắt về mili giây; chạy lại `-Dtest='FR06*Test,StreakCalculatorTest,FR05CsvTest,IntegrationSetupTest'`: 88 test, 71 test learning pass, chỉ còn 2 fail ngoài B2.5 (dòng dưới). FE nhận `ketThucAt` luôn có độ chính xác mili giây |
@@ -761,7 +894,7 @@ BE không sửa `frontend/`. Các mục dưới đây đã kiểm lại trên m�
 | RS-060 (Cao) | `frontend/src/app/(app)/luyen-tap-lam-bai/page.js:211` | Đọc `q.deBai?.amThanhUrl`; BE trả `deBai.amTuId` (mục 5.8). Câu `NGHE_VIET` trên BE thật không có âm thanh | Lấy URL qua `GET /api/v1/decks/{boTheId}/cards/{theId}/files/AM_TU` (bàn giao Đợt 1 §5.39a) khi có `amTuId`; không dùng giọng đọc trình duyệt cho câu nghe viết |
 | RS-066 | `frontend/src/app/api/v1/practice/[...slug]/route.js:324-326`, `_mock/backend.js` | Khi có BE, `POST /practice/sessions` đi BE thật nhưng `POST .../submissions` rơi về mock không biết phiên đó → 404 | B2.8 đã có (03/11/2026, mục 5.9): bỏ mock `submissions`, `history`, `mistakes/retry`, proxy thẳng BE |
 | RS-067 | `frontend/src/app/(app)/so-tay/page.js:307-308` | Đọc `pr.loaiNham`, `pr.soLan`; BE trả `soLanNham`, `lanCuoiAt`, không có `loaiNham` (mục 5.10) | Đổi sang `pr.soLanNham`; bỏ nhãn loại nhầm hoặc hiện cố định "Dễ nhầm"; nếu hiện ngày dùng `pr.lanCuoiAt`. Bằng chứng (nếu hiển thị liên kết lần làm) đọc `suKienId` |
-| RS-018 | `frontend/README.md` mục "Trang chờ backend" | Ghi phiên học, `/decks/{id}/progress`, luyện tập là endpoint chưa tồn tại | Sửa README: B2.2–B2.9 và B2.12 đã có (mục 1); còn chờ B2.10–B2.11 |
+| RS-018 | `frontend/README.md` mục "Trang chờ backend" | Ghi phiên học, `/decks/{id}/progress`, luyện tập là endpoint chưa tồn tại | Sửa README: B2.2–B2.12 đã có (mục 1) |
 
 ## 11. Báo lỗi cho BE
 

@@ -141,12 +141,17 @@ public class CardService {
 
     @Transactional
     public CardResponse create(Long userId, Long deckId, CreateCardRequest request) {
-        BoThe deck = writableDeck(userId, deckId);
+        return create(userId, userId, deckId, request);
+    }
+
+    @Transactional
+    public CardResponse create(Long ownerId, Long fileOwnerId, Long deckId, CreateCardRequest request) {
+        BoThe deck = writableDeck(ownerId, deckId);
 
         List<Long> tagIds = validatedTagIds(request.nhanIds());
         List<FileSelection> selections = createFileSelections(request);
 
-        validateFiles(userId, selections);
+        validateFiles(fileOwnerId, selections);
 
         TheTuVung card = TheTuVung.builder()
                 .boTheId(deck.getId())
@@ -173,7 +178,12 @@ public class CardService {
 
     @Transactional
     public CardResponse update(Long userId, Long cardId, UpdateCardRequest request) {
-        TheTuVung card = ownedCardForUpdate(userId, cardId);
+        return update(userId, userId, cardId, request);
+    }
+
+    @Transactional
+    public CardResponse update(Long ownerId, Long fileOwnerId, Long cardId, UpdateCardRequest request) {
+        TheTuVung card = ownedCardForUpdate(ownerId, cardId);
         checkVersion(card, request.version());
 
         List<Long> tagIds = request.nhanIds() == null ? null :
@@ -187,7 +197,7 @@ public class CardService {
         if (changeFiles) {
             Map<VaiTroTep, Long> retained = new EnumMap<>(VaiTroTep.class);
             links.findFiles(List.of(cardId)).forEach(link -> retained.put(link.vaiTro(), link.tepId()));
-            validateFiles(userId, selections, retained);
+            validateFiles(fileOwnerId, selections, retained);
         }
 
         applyDetails(card, request);
@@ -230,6 +240,16 @@ public class CardService {
 
         card.markDeleted(clock.instant());
         cards.flush();
+    }
+
+    public CardResponse get(Long ownerId, Long cardId) {
+        TheTuVung card = cards.findByIdAndXoaAtIsNull(cardId).orElseThrow(this::cardNotFound);
+        ownedDeck(ownerId, card.getBoTheId());
+        return toResponse(card);
+    }
+
+    public Long deckIdOf(Long cardId) {
+        return cards.findByIdAndXoaAtIsNull(cardId).orElseThrow(this::cardNotFound).getBoTheId();
     }
 
     public boolean isStudyable(Long userId, Long cardId) {

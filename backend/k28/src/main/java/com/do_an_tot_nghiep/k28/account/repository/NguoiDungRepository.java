@@ -1,7 +1,10 @@
 package com.do_an_tot_nghiep.k28.account.repository;
 
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -35,6 +38,37 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
             """)
     List<PublicDisplayName> findPublicDisplayName(
             @Param("ids") Collection<Long> ids
+    );
+
+    @Query("""
+            select u
+            from NguoiDung u
+            where u.email <> :systemEmail
+              and (:pattern is null
+                   or lower(u.email) like lower(:pattern) escape '!'
+                   or lower(u.tenHienThi) like lower(:pattern) escape '!')
+              and (:trangThai is null or u.trangThai = :trangThai)
+              and (:vaiTro is null or exists (
+                    select 1 from NguoiDung x join x.vaiTro r
+                    where x.id = u.id and r.ma = :vaiTro))
+            order by u.createdAt desc, u.id desc
+            """)
+    Page<NguoiDung> adminPage(
+            @Param("systemEmail") String systemEmail,
+            @Param("pattern") String pattern,
+            @Param("trangThai") TrangThaiNguoiDung trangThai,
+            @Param("vaiTro") String vaiTro,
+            Pageable pageable
+    );
+
+    @Query("""
+            select count(u)
+            from NguoiDung u join u.vaiTro r
+            where r.ma = :vaiTro and u.trangThai = :trangThai
+            """)
+    long countByRoleAndStatus(
+            @Param("vaiTro") String vaiTro,
+            @Param("trangThai") TrangThaiNguoiDung trangThai
     );
 
     interface PublicDisplayName {

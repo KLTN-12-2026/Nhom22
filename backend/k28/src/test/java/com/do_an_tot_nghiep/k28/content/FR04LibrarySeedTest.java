@@ -60,12 +60,12 @@ class FR04LibrarySeedTest extends AbstractIntegrationTest {
         seed.execute(dataSource);
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM bo_the b JOIN nguoi_dung u ON u.id = b.chu_so_huu_id
-                WHERE u.email = 'library-editor@vocab.local'
+                WHERE u.email = 'library-editor@vocab.local' AND b.ten LIKE 'Khởi động —%'
                 """, Long.class)).isEqualTo(8);
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM the_tu_vung t JOIN bo_the b ON b.id = t.bo_the_id
                 JOIN nguoi_dung u ON u.id = b.chu_so_huu_id
-                WHERE u.email = 'library-editor@vocab.local'
+                WHERE u.email = 'library-editor@vocab.local' AND b.ten LIKE 'Khởi động —%'
                 """, Long.class)).isEqualTo(24);
         assertThat(jdbc.queryForObject("""
                 SELECT password_hash FROM nguoi_dung WHERE email = 'library-editor@vocab.local'

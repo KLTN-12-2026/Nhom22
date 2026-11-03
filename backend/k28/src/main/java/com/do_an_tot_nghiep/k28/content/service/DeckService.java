@@ -152,6 +152,17 @@ public class DeckService {
         favorites.remove(userId, id);
     }
 
+    public Map<Long, Long> countByOwners(List<Long> ownerIds) {
+        if (ownerIds.isEmpty()) {
+            return Map.of();
+        }
+        return decks.countByOwners(ownerIds).stream()
+                .collect(Collectors.toMap(
+                        BoTheRepository.DeckCount::getId,
+                        BoTheRepository.DeckCount::getSoLuong
+                ));
+    }
+
     private BoThe ownedDeck(Long userId, Long id) {
         return decks.findByIdAndChuSoHuuIdAndXoaAtIsNull(id, userId)
                 .orElseThrow(this::notFound);
