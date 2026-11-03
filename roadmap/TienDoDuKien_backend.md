@@ -393,8 +393,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Quyết định (chốt 03/11/2026, đề xuất):** (a) `submitKey` bắt buộc ≤ 128 `[A-Za-z0-9._:-]`, cùng khóa + cùng bài → 200 kết quả cũ, khác → 409 không kèm `lanLamId`; (b) bỏ trống = sai, `cauHoiId` lạ/trùng → 400, `noiDung` ≤ 200; (c) chuẩn hóa NFC, nháy, gạch nối, khoảng trắng Unicode, chữ thường, giữ dấu câu; (d) gần đúng theo độ dài (1/2/3), OSA; (e) ghép điểm phần, điểm bài từ phân số gốc; (f) upsert `cap_tu_de_nham` nguyên tử, sắp thứ tự; (g) `loi_hoc_tap` `BAI_LUYEN`, ghép một dòng mỗi cặp sai, câu bỏ trống có ghi; (h) field `thoiGian`, cắt theo giờ server, cộng vào `StudyTimeService`; (i) `LoaiCau.kyNang()`; (j) lịch sử lọc `loaiBai`/`tuNgay`/`denNgay`, mặc định 20; (k) luyện lại kế thừa nguồn/bộ/số câu yêu cầu; (l) không ghi `so_tay_tu_kho` (B2.9); (m) không migration; (n) lưu kết quả chấm, không chấm lại; (o) thứ tự 400 → 404 → gửi lại → 409 → 400; (p) không thưởng; (q) trả `baiGocId`.
 - **Đã làm (03/11/2026):** entity `LanLamBai`, `TraLoiBaiLuyen`, `LoiHocTap`; enum `NhomLoi`, `KyNang`, `NguonSuKien`, `LoaiCau.kyNang()`; `BaiLuyen.createRetry`; `LanLamBaiRepository` (lịch sử, `studyTimes`), `TraLoiBaiLuyenRepository`, `LoiHocTapRepository`, `BaiLuyenRepository.lockOwned`/`addConfusion`; DTO `SubmitPracticeRequest`, `PracticeAnswerRequest`, `PracticePairRequest`, `PracticeResultResponse`, `PracticeResultItemResponse`, `SkillScoreResponse`, `PracticeHistoryQuery`, `PracticeHistoryResponse`, `RetryPracticeRequest`, `PracticeSessionResponse` thêm 5 field; `AnswerNormalizer`, `PracticeGrader`, `PracticeResults`, `PracticeSubmissionService`, `PracticeHistoryService`, `PracticeService.retry`, `PracticeGenerator.retry`; `StudyTimeService` cộng thời gian bài luyện; `GlobalExceptionHandler` map `uk_lan_lam_bai_*` → 409; test mới `FR07SubmissionTest` (4), `PracticeGraderTest` (11), `AnswerNormalizerTest` (4); 3 test FR06 dùng bean `StudyTimeService`. Không migration. **Kiểm chứng:** `./mvnw -B test` 382/382, BUILD SUCCESS (03/11). **Chưa kiểm chứng:** HTTP thật, chạy Postman. Mockup: `demo.js` + `luyen-tap-lam-bai/ket-qua/lich-su.html` khớp DTO, mở trên trình duyệt, console không lỗi. Postman: thêm 10 request vào "04 Luyện tập", chưa chạy. Tài liệu: TK §7.3, §12.2, §13.2; `SPRINT_PLAN` route UI26. Flow: [B2.8](../docs/luong-backend/B2.8-nop-bai-cham.md); bàn giao: [Đợt 2 §5.9](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
-### [ ] B2.9 Sổ tay từ khó & cặp dễ nhầm — FR-08
+### [x] B2.9 Sổ tay từ khó & cặp dễ nhầm — FR-08
 - API: `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs`.
+- `V13__so_tay_an_tu.sql`: thêm `so_tay_tu_kho.an_tu_at` (mốc bỏ khỏi sổ). Các migration sau dời +1 (admin V14, jobs_ai V15, engagement V16, notification V17, privacy V18).
+- **Quyết định (chốt 03/11/2026, đề xuất):** (a) sổ tay suy ra: có `loi_hoc_tap` sau mốc ∪ ≥ 3 lần Quên từ `ON_TAP` trong 30 ngày ∪ đánh dấu; một hàm dùng chung UI27 và `nguon = SO_TAY`; (b) DELETE đặt `an_tu_at`, bỏ đánh dấu, giữ ghi chú, 204 idempotent; lỗi mới làm thẻ hiện lại; PUT không xóa mốc; (c) PUT `{ghiChu?, danhDauThuCong?}` không `version`, trim, rỗng → `null`, ≤ 500, luôn 200; (d) `lyDo` theo TK §8.3: QUEN_NHIEU, SAI_CHINH_TA (2/5 lượt nhập, bỏ trống không tính), CAP_DE_NHAM (`so_lan_nham ≥ 2`), DANH_DAU_THU_CONG; ngưỡng `app.notebook.*`; (e) ẩn thẻ/bộ xóa, bộ người khác, thẻ tạm ngưng; (f) `tongHop` theo thẻ, bằng chứng ≤ 3, sắp `lanGanNhatAt desc, theId desc`, mặc định 20, tối đa 100, lọc `nhomLoi`; (g) tổng hợp SQL, ghép Java; (h) `notebookCardIds` → `NotebookService.cardIds`; (i) cặp nhầm: controller module `practice`, field `soLanNham`/`lanCuoiAt`, bỏ `loaiNham`, `so_lan_nham ≥ 1`, tối đa 20, bỏ cặp có thẻ xóa/tạm ngưng; (j) V13; (k) sửa demo theo DTO; (l) `FR08NotebookTest`.
+- **Xong khi:** `FR08NotebookTest` pass (sổ tay suy ra, ẩn theo mốc rồi hiện lại, `lyDo`, `tongHop`, phân trang, 400/401/404, ẩn thẻ xóa/tạm ngưng, cặp nhầm); `nguon = SO_TAY` tạo được bài khi sổ có thẻ; bộ test đầy đủ pass.
+- **Đã làm (03/11/2026):** `V13__so_tay_an_tu.sql`; entity `SoTayTuKho`, `SoTayTuKhoRepository` (tổng hợp JPQL + native `ROW_NUMBER()`), row `MistakeStatRow`/`LapseStatRow`/`NotebookCardRow`, enum `MaLyDo`; `NotebookService`, `NotebookController`; DTO `NotebookQuery`, `UpdateNotebookRequest`, `NotebookResponse`, `NotebookItemResponse`, `NhomLoiCountResponse`, `BangChungResponse`, `ConfusingPairResponse`, `PairCardResponse`; `app.notebook.*` trong `application.yaml`; `PracticeService` lấy `NotebookService.cardIds`, bỏ `BaiLuyenRepository.notebookCardIds`; test `FR08NotebookTest` (4), sửa dữ liệu `FR07PracticeSessionTest`. **Kiểm chứng:** `mvnw -q test -Dtest="FR08NotebookTest,FR07PracticeSessionTest"` exit 0; bộ đầy đủ `./mvnw -B test` 386 test, 0 lỗi (03/11). **Chưa kiểm chứng:** HTTP thật bằng `curl`, chạy request Postman. Flow: [B2.9](../docs/luong-backend/B2.9-so-tay-cap-nham.md); bàn giao: [Đợt 2 mục 5.10](../ban-giao-cho%20fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
 
 ### [ ] B2.10 Thống kê nền — FR-11
 - API: `GET /statistics/overview` (từ đã học, lượt ôn, tỷ lệ đúng, thời gian, chuỗi ngày), `GET /statistics/skills` (mức làm chủ theo kỹ năng, tối đa 20 lượt gần nhất, thiếu dữ liệu → "Chưa đủ dữ liệu").
@@ -402,7 +406,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Phút mỗi ngày dùng cùng nguồn và cách làm tròn với `/learning/today` (`StudyTimeService.days`, `floor(ms/60000)`, xem B2.12; tách 03/11/2026, RS-011). **Xong khi** có thêm: `theoNgay` hôm nay khớp `daHocHomNay.soPhut` của `/learning/today` (chuyển từ B2.12). Bảng điều khiển UI12 (TK §9.1) gọi `overview` với `tuNgay = ngay − 6`, `denNgay = ngay` cho khối hoạt động 7 ngày: `theoNgay` phải đủ mọi ngày trong khoảng (ngày không học = 0), mỗi phần tử có `ngay`, `soLuotOn`, `soPhut`. Thời gian học theo ngày dùng chung một hàm với `/learning/today` (TK §7.3, **đề xuất**), để hai màn hình không lệch số.
 
 ### [ ] B2.11 Quản trị nền — FR-13, TC-17
-- `V13__admin.sql` (V12 đã dùng cho RS-057; lấy số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
+- `V14__admin.sql` (V12 đã dùng cho RS-057, V13 cho sổ tay B2.9; lấy số kế tiếp chưa dùng): `nhat_ky_quan_tri`.
 - API: `GET /admin/users`, `PATCH /admin/users/{id}/status` (khóa/mở → hủy phiên), `PUT /admin/users/{id}/roles` (**không bỏ quyền Admin cuối cùng**), CRUD `/admin/decks`, `/admin/cards` (bộ mẫu: xuất bản/ẩn), `GET /admin/audit-logs`.
 - Mọi thao tác quan trọng ghi nhật ký: người làm, hành động, đối tượng, lý do, trước/sau (đã lọc dữ liệu nhạy cảm).
 
@@ -426,7 +430,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ## Đợt 3 — AI, phát âm, động lực & vận hành (09/11–29/11) · FR-08, 09, 10, 12, 14
 
 ### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
-- `V14__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 dự kiến cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
+- `V15__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 cho sổ tay B2.9, V14 dự kiến cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
 
@@ -448,12 +452,12 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, PHAT_AM_THAP, QUA_HAN_NHIEU (TK §8.3). Ngưỡng trong `application.yaml`.
 
 ### [ ] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
-- `V15__engagement.sql` (số thực tế lấy số kế tiếp chưa dùng): `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
+- `V16__engagement.sql` (số thực tế lấy số kế tiếp chưa dùng): `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
 - `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày; chuỗi ngày khi phiên có ≥ 5 lượt hợp lệ (TK §15.1). B2.2 đang tính chuỗi theo **ngày** có ≥ 5 lượt (`su_dung_hoc_ngay`); khi làm bước này phải chốt theo phiên hay theo ngày rồi sửa `LearningPlanService`/`StreakCalculator` và `/learning/today` cho cùng một định nghĩa.
 - API: `GET /rewards/history`, `GET /badges`, `GET /challenges`; Admin: CRUD `/admin/badges`, `/admin/challenges` (TK §4.2).
 
 ### [ ] B3.7 Thông báo & nhắc học — FR-12, TC-15
-- `V16__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
+- `V17__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
 - API: `GET /notifications`, `PATCH /notifications/{id}`; `POST /admin/announcements`.
 - Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
 
@@ -464,7 +468,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `GET /statistics/weekly-summary`: từ đã học, kỹ năng tiến bộ, 3 từ khó, mục tiêu tuần sau. Văn bản từ mẫu; số liệu không lấy từ AI.
 
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
-- `V17__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
+- `V18__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
 - Tệp: từ 03/11/2026 (RS-059) bản sao bộ có tệp riêng nên xóa tệp của tác giả không ảnh hưởng bản sao. Còn phải xử lý bản sao tạo trước ngày này (dùng chung `tep_id` với nguồn): sao chép tệp cho bản sao trước khi xóa, hoặc gỡ media khỏi bản sao.
 - Admin: `GET /admin/deletion-requests` theo dõi tiến độ xóa (TK §4.2).

@@ -51,6 +51,7 @@ public class PracticeService {
     private final TraLoiBaiLuyenRepository answers;
     private final PracticeResults results;
     private final CardService cardService;
+    private final NotebookService notebookService;
     private final JsonMapper json;
 
     @Transactional
@@ -85,7 +86,7 @@ public class PracticeService {
         if (!picked.isEmpty()) {
             pool = pick(picked, cards);
         } else if (nguon == NguonBaiLuyen.SO_TAY) {
-            pool = pick(practices.notebookCardIds(userId), cards);
+            pool = pick(notebookService.cardIds(userId), cards);
         } else if (boTheId != null) {
             String deck = String.valueOf(boTheId);
             pool = distract.stream().filter(card -> card.boTheId().equals(deck)).toList();

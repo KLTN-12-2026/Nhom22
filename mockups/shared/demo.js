@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v5";
+  const KEY = "vl-demo-v7";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -191,9 +191,10 @@
     const rc = card("21", "receipt"), cp = card("21", "complimentary"), cm = card("21", "complementary"), rp = card("21", "recipe"), un = card("21", "uncharacteristically");
     const at = (d, h) => iso(sod - d * DAY + h * 3600000);
     s.pairs.push(
-      { id: "p1", uid: "2", the1Id: cp, the2Id: cm, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(14, 20) },
-      { id: "p2", uid: "2", the1Id: rc, the2Id: rp, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(15, 20) }
+      { id: "p1", uid: "2", the1Id: cp, the2Id: cm, soLanNham: 2, lanCuoiAt: at(14, 20) },
+      { id: "p2", uid: "2", the1Id: rc, the2Id: rp, soLanNham: 1, lanCuoiAt: at(15, 20) }
     );
+    [3, 9, 20].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-" + d, theId: rc, chieuHoc: i === 1 ? "VI_EN" : "EN_VI", danhGia: "QUEN", thoiGianTraLoiMs: 12000, createdAt: at(d, 20.5), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "HOC_LAI" }, phienBanThuatToan: ALGO }));
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
 
     const pp = card("21", "postpone");
@@ -650,7 +651,7 @@
     if (![5, 10, 20].includes(Number(b.soCau))) errors.push(fe("soCau", "Chọn 5, 10 hoặc 20 câu"));
     if (errors.length) bad(errors);
     if (b.boTheId) { const own = db.decks.find((d) => d.id === b.boTheId); if (!own || own.ownerId !== u.id || own.deleted) notFound(); }
-    const usable = (x) => !DIRS.every((d) => progressOf(u.id, x.id, d).trangThai === "TAM_NGUNG");
+    const usable = (x) => !DIRS.some((d) => progressOf(u.id, x.id, d).trangThai === "TAM_NGUNG");
     const distract = ownCards(u.id).filter(usable);
     let pool;
     if (Array.isArray(b.theIds) && b.theIds.length) pool = b.theIds.map(cardById).filter((x) => x && distract.includes(x));
@@ -722,8 +723,8 @@
   function addPair(uid, a, b2, t) {
     if (!a || !b2 || a === b2) return;
     const p = db.pairs.find((x) => x.uid === uid && ((x.the1Id === a && x.the2Id === b2) || (x.the1Id === b2 && x.the2Id === a)));
-    if (p) { p.soLan++; p.ganNhatAt = iso(t); }
-    else db.pairs.push({ id: "p" + nextId(), uid, the1Id: a, the2Id: b2, loaiNham: "NGHIA_GAN_NHAU", soLan: 1, ganNhatAt: iso(t) });
+    if (p) { p.soLanNham++; p.lanCuoiAt = iso(t); }
+    else db.pairs.push({ id: "p" + nextId(), uid, the1Id: a, the2Id: b2, soLanNham: 1, lanCuoiAt: iso(t) });
   }
   function submitPractice(u, s, b, t) {
     const given = {};
@@ -753,7 +754,7 @@
           if (!ok) {
             sai.push(lt.theId);
             if (chosen) addPair(u.id, lt.theId, chosen.theId, t);
-            db.errors.push({ uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung, lanLamId } });
+            db.errors.push({ id: nextId(), uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguonSuKien: "BAI_LUYEN", suKienId: lanLamId, createdAt: iso(t), bangChung: { baiLuyenId: s.id, cauHoiId: q.id, loaiCau: q.loaiCau, traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung } });
           }
           return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, phaiId: c.phaiId, nghiaDung, dung: ok };
         });
@@ -795,10 +796,10 @@
         ty = dung ? 1 : 0;
         if (!dung) {
           sai = [q.theId];
-          db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung, lanLamId } });
+          db.errors.push({ id: nextId(), uid: u.id, theId: q.theId, nhomLoi, nguonSuKien: "BAI_LUYEN", suKienId: lanLamId, createdAt: iso(t), bangChung: { baiLuyenId: s.id, cauHoiId: q.id, loaiCau: q.loaiCau, traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung } });
         }
       }
-      db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
+      db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], loaiCau: q.loaiCau, coTraLoi: !!traLoi, nhomLoi, dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
       return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, theId: q.theId || null, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn, dung, diem: Math.round(ty * 100), nhomLoi, chiTiet, giaiThich, _ty: ty, _sai: sai, _otherId: otherId };
     });
     const bySkill = {};
@@ -815,57 +816,74 @@
     return a;
   }
 
+  const NB = { quenNhieu: 3, quenNgay: 30, chinhTaLuot: 5, chinhTaSai: 2, capNham: 2 };
+  const NB_GROUPS = ["NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "PHAT_AM"];
+  const TYPED = ["NHAP_TU_THEO_NGHIA", "NGHE_VIET", "DIEN_CHO_TRONG"];
+  function notebookCard(uid, theId, withSuspended) {
+    const x = cardById(theId);
+    if (!x || x.deleted) return null;
+    const deck = db.decks.find((d) => d.id === x.deckId);
+    if (!deck || deck.deleted || deck.ownerId !== uid) return null;
+    if (!withSuspended && DIRS.some((d) => progressOf(uid, theId, d).trangThai === "TAM_NGUNG")) return null;
+    return { x, deck };
+  }
   function notebookItems(uid, filter) {
-    const map = {};
     const nb = db.notebook[uid] || {};
-    const touch = (theId) => {
-      const x = cardById(theId);
-      if (!x) return null;
-      const deck = db.decks.find((d) => d.id === x.deckId);
-      if (!deck || deck.deleted || deck.ownerId !== uid) return null;
-      return map[theId] = map[theId] || { theId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, boTheId: x.deckId, boTheTen: deck.name, nhomLoi: {}, lyDo: [], bangChung: [], soLanQuen: 0, ghiChu: "", danhDauThuCong: false, lanGanNhatAt: null };
-    };
-    const hiddenAt = (theId) => (nb[theId] && nb[theId].anTu) || null;
-    db.errors.filter((e) => e.uid === uid).forEach((e) => {
-      const h = hiddenAt(e.theId);
-      if (h && Date.parse(e.createdAt) <= Date.parse(h)) return;
-      const it = touch(e.theId);
-      if (!it) return;
-      it.nhomLoi[e.nhomLoi] = (it.nhomLoi[e.nhomLoi] || 0) + 1;
-      it.bangChung.push({ nhomLoi: e.nhomLoi, traLoi: e.bangChung.traLoi, dapAn: e.bangChung.dapAn, lanLamId: e.bangChung.lanLamId, baiLuyenId: (db.attempts.find((a) => a.id === e.bangChung.lanLamId) || {}).baiLuyenId || null, createdAt: e.createdAt });
-      if (!it.lanGanNhatAt || e.createdAt > it.lanGanNhatAt) it.lanGanNhatAt = e.createdAt;
+    const after = (theId, at) => { const h = nb[theId] && nb[theId].anTu; return !h || Date.parse(at) > Date.parse(h); };
+    const stats = {};
+    const st = (theId) => stats[theId] = stats[theId] || { groups: {}, errors: [], lapses: 0, last: null };
+    const touch = (o, at) => { if (at && (!o.last || at > o.last)) o.last = at; };
+    db.errors.filter((e) => e.uid === uid && after(e.theId, e.createdAt)).forEach((e) => {
+      const o = st(e.theId);
+      o.groups[e.nhomLoi] = (o.groups[e.nhomLoi] || 0) + 1;
+      o.errors.push(e);
+      touch(o, e.createdAt);
     });
-    Object.keys(db.progress).filter((k) => k.startsWith(uid + "|")).forEach((k) => {
-      const p = db.progress[k];
-      const theId = k.split("|")[1];
-      if (p.soLanQuen < 3 || p.trangThai === "TAM_NGUNG") return;
-      const h = hiddenAt(theId);
-      if (h) return;
-      const it = touch(theId);
-      if (!it) return;
-      it.soLanQuen = Math.max(it.soLanQuen, p.soLanQuen);
+    const since = Date.now() - NB.quenNgay * DAY;
+    db.reviews.filter((r) => r.uid === uid && r.danhGia === "QUEN" && r.truoc && r.truoc.trangThai === "ON_TAP" && Date.parse(r.createdAt) >= since && after(r.theId, r.createdAt)).forEach((r) => {
+      const o = st(r.theId);
+      o.lapses++;
+      touch(o, r.createdAt);
     });
+    const members = Object.keys(stats).filter((theId) => stats[theId].errors.length || stats[theId].lapses >= NB.quenNhieu);
     Object.keys(nb).forEach((theId) => {
-      const n = nb[theId];
-      if (!n.danhDauThuCong && !n.ghiChu) return;
-      if (!n.danhDauThuCong && !map[theId]) return;
-      const it = touch(theId);
-      if (!it) return;
-      it.ghiChu = n.ghiChu || "";
-      it.danhDauThuCong = !!n.danhDauThuCong;
-      if (n.capNhatAt && (!it.lanGanNhatAt || n.capNhatAt > it.lanGanNhatAt)) it.lanGanNhatAt = n.capNhatAt;
+      if (!nb[theId].danhDauThuCong) return;
+      if (!members.includes(theId)) members.push(theId);
+      touch(st(theId), nb[theId].capNhatAt);
     });
-    let list = Object.values(map).map((it) => {
-      if (it.soLanQuen >= 3) it.lyDo.push("QUEN_NHIEU");
-      if ((it.nhomLoi.CHINH_TA || 0) >= 2) it.lyDo.push("SAI_CHINH_TA");
-      if (it.nhomLoi.CAP_NHAM) it.lyDo.push("CAP_DE_NHAM");
-      if (it.danhDauThuCong) it.lyDo.push("DANH_DAU_THU_CONG");
-      it.nhomLoi = Object.keys(it.nhomLoi).map((k) => ({ nhomLoi: k, soLan: it.nhomLoi[k] }));
-      it.bangChung = it.bangChung.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
-      return it;
-    });
-    if (filter) list = list.filter((it) => filter === "DANH_DAU" ? it.danhDauThuCong : filter === "QUEN_NHIEU" ? it.soLanQuen >= 3 : it.nhomLoi.some((g) => g.nhomLoi === filter));
-    return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || ""));
+    const typed = {};
+    db.answers.filter((a) => a.uid === uid && a.theId && a.coTraLoi && TYPED.includes(a.loaiCau) && after(a.theId, a.createdAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .forEach((a) => { (typed[a.theId] = typed[a.theId] || []).push(a); });
+    const paired = (theId) => db.pairs.some((p) => p.uid === uid && (p.the1Id === theId || p.the2Id === theId) && p.soLanNham >= NB.capNham && after(theId, p.lanCuoiAt));
+    let list = members.map((theId) => {
+      const c = notebookCard(uid, theId, false);
+      if (!c) return null;
+      const o = stats[theId];
+      const n = nb[theId] || {};
+      const lyDo = [];
+      if (o.lapses >= NB.quenNhieu) lyDo.push("QUEN_NHIEU");
+      if ((typed[theId] || []).slice(0, NB.chinhTaLuot).filter((a) => a.nhomLoi === "CHINH_TA").length >= NB.chinhTaSai) lyDo.push("SAI_CHINH_TA");
+      if (paired(theId)) lyDo.push("CAP_DE_NHAM");
+      if (n.danhDauThuCong) lyDo.push("DANH_DAU_THU_CONG");
+      return {
+        theId, tu: c.x.word, tuLoai: c.x.pos || null, phienAm: c.x.ipa || null, nghiaVi: c.x.meaningVi, boTheId: c.deck.id, boTheTen: c.deck.name,
+        nhomLoi: NB_GROUPS.filter((g) => o.groups[g]).map((g) => ({ nhomLoi: g, soLan: o.groups[g] })),
+        lyDo,
+        bangChung: o.errors.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt) || Number(b.id) - Number(a.id)).slice(0, 3).map((e) => ({
+          nhomLoi: e.nhomLoi, nguonSuKien: e.nguonSuKien, suKienId: e.suKienId, baiLuyenId: e.bangChung.baiLuyenId || null, cauHoiId: e.bangChung.cauHoiId || null,
+          loaiCau: e.bangChung.loaiCau || null, traLoi: e.bangChung.traLoi, dapAn: e.bangChung.dapAn, createdAt: e.createdAt })),
+        soLanQuen: o.lapses, ghiChu: n.ghiChu || null, danhDauThuCong: !!n.danhDauThuCong, lanGanNhatAt: o.last
+      };
+    }).filter(Boolean);
+    if (filter) list = list.filter((it) => notebookIn(it, filter));
+    return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || "") || Number(b.theId) - Number(a.theId));
+  }
+  function notebookIn(it, key) {
+    if (key === "TAT_CA") return true;
+    if (key === "QUEN_NHIEU") return it.lyDo.includes("QUEN_NHIEU");
+    if (key === "DANH_DAU") return it.danhDauThuCong;
+    return it.nhomLoi.some((g) => g.nhomLoi === key);
   }
 
   function skillStats(uid, deckId) {
@@ -1472,35 +1490,46 @@
 
     ["GET", /^\/notebook$/, (m, b, q) => {
       const u = requireMe();
+      const errs = [];
+      if (q.nhomLoi && !["NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "QUEN_NHIEU", "DANH_DAU"].includes(q.nhomLoi)) errs.push(fe("nhomLoi", "Nhóm lỗi không hợp lệ"));
+      const size = q.size === undefined || q.size === "" ? 20 : Number(q.size);
+      const pg = q.page === undefined || q.page === "" ? 0 : Number(q.page);
+      if (!Number.isInteger(size) || size < 1 || size > 100) errs.push(fe("size", "size từ 1 đến 100"));
+      if (!Number.isInteger(pg) || pg < 0) errs.push(fe("page", "page phải không âm"));
+      if (errs.length) bad(errs);
       const all = notebookItems(u.id);
-      const tongHop = { TAT_CA: all.length, NGHIA: 0, CHINH_TA: 0, NGHE: 0, NGU_CANH: 0, CAP_NHAM: 0, QUEN_NHIEU: 0, DANH_DAU: 0 };
-      all.forEach((it) => { it.nhomLoi.forEach((g) => { tongHop[g.nhomLoi] = (tongHop[g.nhomLoi] || 0) + 1; }); if (it.soLanQuen >= 3) tongHop.QUEN_NHIEU++; if (it.danhDauThuCong) tongHop.DANH_DAU++; });
-      return Object.assign({ tongHop }, page(q.nhomLoi ? notebookItems(u.id, q.nhomLoi) : all, Object.assign({ size: "20" }, q)));
+      const tongHop = {};
+      ["TAT_CA", "NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "QUEN_NHIEU", "DANH_DAU"].forEach((k) => { tongHop[k] = all.filter((it) => notebookIn(it, k)).length; });
+      const list = q.nhomLoi ? all.filter((it) => notebookIn(it, q.nhomLoi)) : all;
+      return { tongHop, items: list.slice(pg * size, pg * size + size), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) };
     }],
     ["PUT", /^\/notebook\/(\w+)$/, (m, b) => {
       const u = requireMe();
-      const card = cardById(m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
-      if ((b.ghiChu || "").length > 500) bad([fe("ghiChu", "Ghi chú tối đa 500 ký tự")]);
+      if ((b.ghiChu === undefined || b.ghiChu === null) && (b.danhDauThuCong === undefined || b.danhDauThuCong === null)) bad([]);
+      const note = b.ghiChu === undefined || b.ghiChu === null ? null : String(b.ghiChu).trim();
+      if (note !== null && Array.from(note).length > 500) bad([fe("ghiChu", "Ghi chú tối đa 500 ký tự")]);
+      const c = notebookCard(u.id, m[1], true);
+      if (!c) notFound();
       const nb = db.notebook[u.id] = db.notebook[u.id] || {};
-      const cur = nb[card.id] || {};
-      nb[card.id] = { ghiChu: b.ghiChu !== undefined ? reason(b.ghiChu) : (cur.ghiChu || ""), danhDauThuCong: b.danhDauThuCong !== undefined ? !!b.danhDauThuCong : !!cur.danhDauThuCong, anTu: null, capNhatAt: new Date().toISOString() };
-      return notebookItems(u.id).find((it) => it.theId === card.id) || { theId: card.id, ghiChu: nb[card.id].ghiChu, danhDauThuCong: nb[card.id].danhDauThuCong };
+      const cur = nb[m[1]] || { ghiChu: null, danhDauThuCong: false, anTu: null };
+      nb[m[1]] = Object.assign({}, cur, note !== null ? { ghiChu: note || null } : {}, b.danhDauThuCong !== undefined && b.danhDauThuCong !== null ? { danhDauThuCong: !!b.danhDauThuCong } : {}, { capNhatAt: new Date().toISOString() });
+      const n = nb[m[1]];
+      return notebookItems(u.id).find((it) => it.theId === m[1]) || { theId: m[1], tu: c.x.word, tuLoai: c.x.pos || null, phienAm: c.x.ipa || null, nghiaVi: c.x.meaningVi, boTheId: c.deck.id, boTheTen: c.deck.name, nhomLoi: [], lyDo: [], bangChung: [], soLanQuen: 0, ghiChu: n.ghiChu || null, danhDauThuCong: !!n.danhDauThuCong, lanGanNhatAt: null };
     }],
     ["DELETE", /^\/notebook\/(\w+)$/, (m) => {
       const u = requireMe();
-      const card = cardById(m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
+      if (!notebookCard(u.id, m[1], true)) notFound();
       const nb = db.notebook[u.id] = db.notebook[u.id] || {};
-      nb[card.id] = Object.assign({}, nb[card.id] || {}, { danhDauThuCong: false, anTu: new Date().toISOString() });
+      nb[m[1]] = Object.assign({ ghiChu: null }, nb[m[1]] || {}, { danhDauThuCong: false, anTu: new Date().toISOString(), capNhatAt: new Date().toISOString() });
       return { status: 204 };
     }],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();
-      const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn });
-      return pairsOf(u.id).sort((a, c2) => c2.soLan - a.soLan || c2.ganNhatAt.localeCompare(a.ganNhatAt)).map((p) => ({ id: p.id, the1: v(cardById(p.the1Id)), the2: v(cardById(p.the2Id)), loaiNham: p.loaiNham, soLan: p.soLan, ganNhatAt: p.ganNhatAt }));
+      const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos || null, phienAm: x.ipa || null, nghiaVi: x.meaningVi, viDuEn: x.exampleEn || null });
+      return db.pairs.filter((p) => p.uid === u.id && p.soLanNham > 0 && notebookCard(u.id, p.the1Id, false) && notebookCard(u.id, p.the2Id, false))
+        .sort((a, c2) => c2.soLanNham - a.soLanNham || c2.lanCuoiAt.localeCompare(a.lanCuoiAt) || Number(a.id.replace(/\D/g, "")) - Number(c2.id.replace(/\D/g, "")))
+        .slice(0, 20)
+        .map((p) => ({ id: p.id, the1: v(cardById(p.the1Id)), the2: v(cardById(p.the2Id)), soLanNham: p.soLanNham, lanCuoiAt: p.lanCuoiAt }));
     }],
 
     ["GET", /^\/statistics\/overview$/, (m, b, q) => {

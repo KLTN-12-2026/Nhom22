@@ -74,10 +74,6 @@ public interface BaiLuyenRepository extends JpaRepository<BaiLuyen, Long> {
     @Query("select b.ten from BoThe b where b.id = :id")
     Optional<String> deckName(@Param("id") Long id);
 
-    @Query(value = "select s.the_id from so_tay_tu_kho s where s.nguoi_dung_id = :userId order by s.id",
-            nativeQuery = true)
-    List<Long> notebookCardIds(@Param("userId") Long userId);
-
     @Query(value = """
             select p.id as id, p.the_1_id as the1Id, p.the_2_id as the2Id
             from cap_tu_de_nham p
