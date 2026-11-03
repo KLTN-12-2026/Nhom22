@@ -1,0 +1,34 @@
+.page { max-width: 1440px; }
+.demoBar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-4); color: var(--ink-2); font-size: var(--fs-small); }
+.breadcrumb { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-4); font-size: var(--fs-small); }
+.breadcrumb span:last-child { color: var(--ink-2); }
+.filter { display: flex; align-items: end; flex-wrap: wrap; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.filter .field { flex: 1 1 15rem; max-width: 24rem; }
+.metricsSection { display: grid; gap: var(--sp-4); }
+.metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.metric { padding-block: var(--sp-3); border-bottom: var(--rule) solid var(--primary-line); }
+.metric strong { display: block; font-size: var(--fs-h1); line-height: 1.25; color: var(--ink); }
+.metric span { color: var(--ink-2); font-size: var(--fs-small); }
+.section { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule) solid var(--primary-line); }
+.section > .btn { justify-self: start; }
+.tableWrap { overflow-x: auto; border: var(--rule) solid var(--primary-line); border-radius: var(--radius-btn); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+.table caption { text-align: left; color: var(--ink-2); padding: var(--sp-3); }
+.table th, .table td { text-align: left; padding: var(--sp-3); border-bottom: var(--rule) solid var(--primary-line); vertical-align: middle; }
+.table th { background: var(--primary-tint); color: var(--primary-strong); font-weight: 650; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table td strong { font-family: var(--font-word); font-size: var(--fs-lead); }
+@media (max-width: 639px) {
+  .demoBar { align-items: flex-start; }
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .table tbody tr { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-bottom: var(--rule) solid var(--primary-line); }
+  .table tbody tr:last-child { border-bottom: 0; }
+  .table td { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: var(--sp-2); padding: var(--sp-1) 0; border: 0; }
+  .table td::before { content: attr(data-label); color: var(--ink-2); font-weight: 650; }
+  .table td[data-label="Bước tiếp theo"] { display: block; padding-top: var(--sp-2); }
+  .table td[data-label="Bước tiếp theo"]::before { display: none; }
+  .table td[data-label="Bước tiếp theo"] .btn { width: 100%; }
+}
+@media (min-width: 1280px) {
+  .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

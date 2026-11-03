@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VocabLearning – Học từ vựng tiếng Anh, ôn đúng lúc</title>
+<meta name="description" content="Học từ vựng Giao tiếp và TOEIC với lịch ôn riêng cho từng từ, từng chiều Anh–Việt và Việt–Anh.">
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css?v=ad61f2900596">
+<link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+<link rel="stylesheet" href="../shared/components.css?v=967fa78d7f8f">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=6fbc8475a647">
+<link rel="stylesheet" href="../shared/public-learning.css?v=325370fccaad">
+<script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+<script src="../shared/speech.js?v=2c80c8c32a54"></script>
+</head>
+<body data-root=".." data-nav="home">
+<!-- F0.5 · UI01 · API: GET /library/decks?size=3 (B1.10). Câu hỏi mẫu chạy hoàn toàn ở trình duyệt. -->
+<header class="site-header"></header>
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="sheet hero-sheet">
+        <div class="sheetTop"><strong>Phiếu học từ vựng tiếng Anh</strong><span>Mẫu dành cho người học Giao tiếp và TOEIC</span></div>
+        <div class="hero-grid">
+          <div>
+            <h1>Học từ vựng tiếng Anh, ôn đúng lúc sắp quên.</h1>
+            <p class="lead">Chọn bộ Giao tiếp hoặc TOEIC, học vài phút mỗi ngày. Mỗi từ có hai lịch ôn riêng: Anh → Việt và Việt → Anh, để bạn vừa hiểu nghĩa vừa nhớ được cách dùng.</p>
+
+            <form class="fill-grid" id="plan" aria-label="Điền thử kế hoạch của bạn">
+              <div class="fill-row">
+                <span>Mục tiêu</span>
+                <fieldset><legend>Mục tiêu</legend>
+                  <label class="choice"><input type="radio" name="goal" value="GIAO_TIEP"><span class="bubble" aria-hidden="true">A</span><span>Giao tiếp</span></label>
+                  <label class="choice"><input type="radio" name="goal" value="TOEIC"><span class="bubble" aria-hidden="true">B</span><span>TOEIC</span></label>
+                </fieldset>
+              </div>
+              <div class="fill-row">
+                <span>Mỗi ngày</span>
+                <fieldset><legend>Thời gian mỗi ngày</legend>
+                  <label class="choice"><input type="radio" name="minutes" value="5"><span class="bubble" aria-hidden="true"></span><span>5 phút</span></label>
+                  <label class="choice"><input type="radio" name="minutes" value="10" checked><span class="bubble" aria-hidden="true"></span><span>10 phút</span></label>
+                  <label class="choice"><input type="radio" name="minutes" value="20"><span class="bubble" aria-hidden="true"></span><span>20 phút</span></label>
+                </fieldset>
+              </div>
+            </form>
+            <p class="muted small" id="plan-note" aria-live="polite" style="margin-top:var(--sp-2)">Tô thử hai ô trên. Lựa chọn sẽ được điền sẵn khi bạn tạo tài khoản.</p>
+
+            <div class="cta-row">
+              <a class="btn btn-primary btn-lg" href="../dot1/dang-ky.html">Bắt đầu học miễn phí</a>
+              <a class="btn btn-secondary btn-lg" href="../dot1/thu-vien.html">Xem thư viện</a>
+            </div>
+          </div>
+
+          <section class="quiz" aria-labelledby="quiz-title" aria-live="polite">
+            <div class="quiz-head"><span id="quiz-title">Thử một câu</span><span id="quiz-code">Câu 1 (Anh → Việt)</span></div>
+            <div class="quiz-body" id="quiz-body"></div>
+            <div class="quiz-foot"><p class="verdict" role="status" id="verdict">Chọn một đáp án.</p><button type="button" class="btn btn-secondary" id="next" hidden>Câu tiếp</button></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="loop-title" style="background:var(--sheet)">
+    <div class="wrap">
+      <h2 id="loop-title">Một vòng học khép kín</h2>
+      <p class="intro">Mỗi bước dùng kết quả của bước trước. Lịch ôn, chấm bài và điểm do máy chủ tính theo quy tắc cố định, bạn xem được lý do.</p>
+      <ol class="loop">
+        <li><span class="no">1</span><h3>Chọn hoặc tạo bộ thẻ</h3><p>Sao chép bộ mẫu Giao tiếp, TOEIC, hoặc tự tạo và nhập từ tệp CSV.</p></li>
+        <li><span class="no">2</span><h3>Học từ mới</h3><p>Lật thẻ, nghe phát âm, xem ví dụ. Số từ mới mỗi ngày do bạn đặt.</p></li>
+        <li><span class="no">3</span><h3>Ôn đúng lúc</h3><p>Tự đánh giá Quên, Khó, Nhớ, Dễ. Từ hay quên quay lại sớm, từ đã chắc giãn dần.</p></li>
+        <li><span class="no">4</span><h3>Luyện kỹ năng</h3><p>Chọn nghĩa, nghe viết, điền chỗ trống, phân biệt từ dễ nhầm.</p></li>
+        <li><span class="no">5</span><h3>Xem tiến độ</h3><p>Thống kê từ dữ liệu thật; chưa đủ dữ liệu thì hiện là chưa đủ, không đoán.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="dir-title">
+    <div class="wrap">
+      <h2 id="dir-title">Hai chiều học, hai lịch ôn riêng</h2>
+      <p class="intro">Nhận ra nghĩa không có nghĩa là nhớ được từ. Hai chiều được theo dõi độc lập, học chiều này không làm lịch chiều kia thay đổi.</p>
+      <div class="sched-grid">
+        <div class="sched">
+          <div class="sched-head"><span class="word" lang="en">receipt</span><span class="stamp">Anh → Việt</span></div>
+          <table><caption>Ví dụ lịch ôn khi bạn chọn Nhớ ở mỗi lần gặp</caption>
+            <thead><tr><th scope="col">Lần gặp</th><th scope="col">Bạn chọn</th><th scope="col">Gặp lại sau</th></tr></thead>
+            <tbody><tr><td>1</td><td>Nhớ</td><td class="when">10 phút</td></tr><tr><td>2</td><td>Nhớ</td><td class="when">1 ngày</td></tr><tr><td>3</td><td>Nhớ</td><td class="when">6 ngày</td></tr><tr><td>4</td><td>Nhớ</td><td class="when">15 ngày</td></tr></tbody>
+          </table>
+        </div>
+        <div class="sched">
+          <div class="sched-head"><span class="word" lang="en">receipt</span><span class="stamp">Việt → Anh</span></div>
+          <table><caption>Chiều này mới gặp lần đầu nên lịch bắt đầu lại từ bước học</caption>
+            <thead><tr><th scope="col">Lần gặp</th><th scope="col">Bạn chọn</th><th scope="col">Gặp lại sau</th></tr></thead>
+            <tbody><tr><td>1</td><td>Quên</td><td class="when">1 phút</td></tr><tr><td>2</td><td>Khó</td><td class="when">5 phút</td></tr><tr><td>3</td><td>Nhớ</td><td class="when">10 phút</td></tr><tr><td>4</td><td>Nhớ</td><td class="when">1 ngày</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="lib-title" style="background:var(--sheet)">
+    <div class="wrap">
+      <div class="row-between"><h2 id="lib-title">Bắt đầu với bộ mẫu</h2><a class="btn btn-quiet" href="../dot1/thu-vien.html">Xem cả thư viện</a></div>
+      <ol class="answer-list" id="decks" role="list" style="margin-top:var(--sp-5)"><li class="answer-row"><span class="answer-no">…</span><div class="skeleton"><div class="sk sk-line"></div></div></li></ol>
+    </div>
+  </section>
+
+  <section class="close" aria-labelledby="close-title">
+    <div class="wrap">
+      <h2 id="close-title">Bắt đầu với 10 phút hôm nay.</h2>
+      <p>Tạo tài khoản, chọn mục tiêu, sao chép một bộ mẫu. Bạn có thể đổi mọi thiết lập sau.</p>
+      <div><a class="btn btn-on-dark btn-lg" href="../dot1/dang-ky.html">Tạo tài khoản</a></div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <a class="brand" href="trang-chu.html"><img class="brand-mark" src="../shared/assets/mascot-mark.svg" alt="" width="28" height="28"><span>Vocab<span class="brand-accent">Learning</span></span></a>
+    <nav aria-label="Chân trang"><a href="../dot1/thu-vien.html">Thư viện</a><a href="huong-dan.html">Cách học</a><a href="chinh-sach.html">Quyền riêng tư</a><a href="chinh-sach.html#dieu-khoan">Điều khoản</a></nav>
+    <p class="small muted">Website minh họa khóa luận tốt nghiệp K28.</p>
+  </div>
+</footer>
+
+<script src="../shared/demo.js?v=2d30dbf03ae6"></script>
+<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
+<script>
+(function () {
+  if (!VL.ready) return;
+  const QUIZ = [
+    { dir: "Anh → Việt", prompt: "receipt", sub: "/rɪˈsiːt/  n.", en: true, options: ["lời mời", "biên lai, giấy biên nhận", "công thức nấu ăn", "người nhận"], answer: 1, note: "receipt là biên lai; recipe mới là công thức nấu ăn." },
+    { dir: "Việt → Anh", prompt: "hoãn lại", sub: "động từ", en: false, options: ["postpone", "prepare", "propose", "purchase"], answer: 0, note: "The meeting has been postponed until Friday." },
+    { dir: "Anh → Việt", prompt: "complimentary", sub: "/ˌkɑːmplɪˈmentri/  adj.", en: true, options: ["bổ sung cho nhau", "miễn phí, tặng kèm", "phức tạp", "khen ngợi quá mức"], answer: 1, note: "Dễ nhầm với complementary (bổ sung cho nhau)." }
+  ];
+  let i = 0;
+  const body = document.getElementById("quiz-body");
+  const verdict = document.getElementById("verdict");
+  const next = document.getElementById("next");
+  function render() {
+    const q = QUIZ[i];
+    document.getElementById("quiz-code").textContent = "Câu " + (i + 1) + " (" + q.dir + ")";
+    body.classList.remove("swap"); void body.offsetWidth; body.classList.add("swap");
+    body.innerHTML = '<p class="quiz-prompt' + (q.en ? "" : " vi") + '"' + (q.en ? ' lang="en"' : "") + ">" + VL.esc(q.prompt) + '</p><p class="quiz-sub"' + (q.en ? ' lang="en"' : "") + ">" + VL.esc(q.sub) + "</p>" +
+      '<ol class="quiz-options" role="list">' + q.options.map((o, k) => '<li><button type="button" data-k="' + k + '"><span class="bubble" aria-hidden="true">' + "ABCD"[k] + "</span><span" + (q.en ? "" : ' class="en" lang="en"') + ">" + VL.esc(o) + "</span></button></li>").join("") + "</ol>";
+    verdict.textContent = "Chọn một đáp án.";
+    verdict.removeAttribute("data-kind");
+    next.hidden = true;
+  }
+  body.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-k]");
+    if (!b || b.disabled) return;
+    const q = QUIZ[i];
+    const k = Number(b.dataset.k);
+    const buttons = body.querySelectorAll("[data-k]");
+    buttons.forEach((x) => { x.disabled = true; });
+    b.querySelector(".bubble").classList.add("is-filled");
+    const ok = k === q.answer;
+    b.setAttribute("data-result", ok ? "correct" : "wrong");
+    if (!ok) buttons[q.answer].setAttribute("data-result", "answer");
+    verdict.dataset.kind = ok ? "ok" : "no";
+    verdict.textContent = (ok ? "Đúng. " : "Chưa đúng, đáp án là " + "ABCD"[q.answer] + ". ") + q.note;
+    next.hidden = false;
+    next.textContent = i < QUIZ.length - 1 ? "Câu tiếp" : "Làm lại";
+    next.focus();
+  });
+  next.addEventListener("click", () => { i = (i + 1) % QUIZ.length; render(); });
+  render();
+
+  const plan = document.getElementById("plan");
+  plan.addEventListener("change", () => {
+    const fd = new FormData(plan);
+    try { sessionStorage.setItem("vl-plan", JSON.stringify({ goal: fd.get("goal"), minutes: fd.get("minutes") })); } catch (e) {}
+    const parts = [];
+    if (fd.get("goal")) parts.push(fd.get("goal") === "TOEIC" ? "luyện TOEIC" : "giao tiếp");
+    if (fd.get("minutes")) parts.push(fd.get("minutes") + " phút mỗi ngày");
+    document.getElementById("plan-note").textContent = "Kế hoạch của bạn: " + parts.join(", ") + ". Sẽ được điền sẵn sau khi tạo tài khoản.";
+  });
+
+  VL.api("GET", "/library/decks?source=MAU&size=3").then((d) => {
+    document.getElementById("decks").innerHTML = d.items.map((deck, k) =>
+      '<li class="answer-row deck-row"><span class="answer-no">' + (k + 1) + '</span><div class="answer-main"><a class="answer-title" href="../dot1/thu-vien-chi-tiet.html?id=' + deck.id + '">' + VL.esc(deck.name) + '</a><p class="clamp-2 muted small">' + VL.esc(deck.description) + '</p></div><div class="deck-cols"><span>' + VL.esc(VL.GOAL[deck.goal]) + "</span><span>" + VL.levelHtml(deck.level) + '</span><span class="col-count">' + deck.cardCount + " thẻ</span></div></li>").join("");
+  }).catch(() => { document.getElementById("decks").innerHTML = '<li class="answer-row"><span></span><p class="muted">Chưa tải được thư viện. <a href="../dot1/thu-vien.html">Mở thư viện</a></p></li>'; });
+})();
+</script>
+<script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+</body>
+</html>
