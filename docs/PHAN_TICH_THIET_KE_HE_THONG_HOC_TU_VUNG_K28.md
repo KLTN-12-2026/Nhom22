@@ -370,6 +370,8 @@ Chuẩn hóa Unicode, khoảng trắng và chữ hoa theo loại bài. Không x�
 | PHAT_AM_THAP | Kết quả dịch vụ dưới ngưỡng cấu hình | Nghe mẫu và ghi âm lại |
 | QUA_HAN_NHIEU | Lượng ôn vượt khả năng một phiên | Chia kế hoạch học lại |
 
+B2.9 (chốt 03/11/2026, đề xuất) dùng ba mã đầu cho sổ tay UI27, ngưỡng trong `app.notebook.*`: QUEN_NHIEU = ≥ 3 lượt `lich_su_on` Quên từ `ON_TAP` (cả hai chiều) trong 30 ngày; SAI_CHINH_TA = ≥ 2 lỗi `CHINH_TA` trong 5 lượt nhập gần nhất (câu bỏ trống không tính lượt); CAP_DE_NHAM = thẻ thuộc cặp có `so_lan_nham ≥ 2`; thêm `DANH_DAU_THU_CONG` khi người học tự đánh dấu. Sổ tay là kết quả suy ra từ lỗi, lần quên và đánh dấu; chi tiết ở [flow B2.9](luong-backend/B2.9-so-tay-cap-nham.md).
+
 Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây”, có liên kết xem các lượt liên quan. Ngưỡng là cấu hình thiết kế, không phải kết luận nghiên cứu.
 
 ## 9. Thiết kế trải nghiệm nổi bật — “wow” có giá trị học tập
@@ -539,7 +541,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bai_luyen`, `cau_hoi_bai_luyen` | đề đã sinh, loại bài, thẻ nguồn, câu hỏi và đáp án lưu tại máy chủ. V11 (B2.7): `bai_luyen(nguoi_dung_id, loai_bai, bo_the_id, nguon BO_THE/SO_TAY, so_cau_yeu_cau 5/10/20, la_luyen_lai, bai_goc_id)`; `cau_hoi_bai_luyen(bai_id, thu_tu, loai_cau, the_id, de_bai_json, phuong_an_json, dap_an_json, giai_thich_json)`, unique `(bai_id, thu_tu)` |
 | `lan_lam_bai`, `tra_loi_bai_luyen` | nguoi_dung_id, bai_id, submit_key, câu trả lời, đúng/sai, điểm và thời gian. V11 tạo sẵn (B2.8 ghi): `lan_lam_bai(so_cau_dung, tong_so_cau, diem 0–100, thoi_gian ms, nop_at)`, unique `(nguoi_dung_id, submit_key)` và `(bai_id)`; `tra_loi_bai_luyen(lan_lam_id, cau_hoi_id, tra_loi_json, dung, ket_qua_json)` |
 | `loi_hoc_tap` | nguoi_dung_id, the_id, nhom_loi, nguon_su_kien, bang_chung_json (V11, thêm `su_kien_id`; `nhom_loi` NGHIA/CHINH_TA/NGHE/NGU_CANH/CAP_NHAM/PHAT_AM) |
-| `so_tay_tu_kho` | nguoi_dung_id, the_id, ghi_chu, danh_dau_thu_cong (V11, unique người/thẻ, `version`) |
+| `so_tay_tu_kho` | nguoi_dung_id, the_id, ghi_chu, danh_dau_thu_cong (V11, unique người/thẻ, `version`); `an_tu_at` (V13, B2.9): mốc “bỏ khỏi sổ”, lỗi/lần quên trước mốc bị ẩn. Hàng chỉ lưu ghi chú, đánh dấu và mốc ẩn; thành viên sổ tay suy từ `loi_hoc_tap`, `lich_su_on` và đánh dấu |
 | `cap_tu_de_nham` | the_1_id, the_2_id, loại nhầm; liên kết bằng chứng theo người học (V11: `nguoi_dung_id`, `so_lan_nham`, `lan_cuoi_at`, `the_1_id < the_2_id`, unique người/cặp). B2.8 (03/11/2026) không thêm cột loại nhầm vì hệ thống chỉ ghi nhận một loại (chọn/ghép nhầm sang thẻ khác); bằng chứng từng lần nằm ở `loi_hoc_tap.bang_chung_json.theNhamId` |
 | `yeu_cau_ai` | nguoi_dung_id, loai, trang_thai, input_ref, ket_qua_json, phien_ban_prompt, provider_request_id |
 | `ban_nhap_the_ai` | yeu_cau_id, noi_dung_json, trang_thai_duyet, the_da_luu_id |

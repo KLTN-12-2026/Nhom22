@@ -117,7 +117,6 @@
   const p = VL.params();
   const GROUPS = [["", "Tất cả", "TAT_CA"], ["NGHIA", "Nghĩa"], ["CHINH_TA", "Chính tả"], ["NGHE", "Nghe"], ["NGU_CANH", "Dùng từ trong câu"], ["CAP_NHAM", "Cặp dễ nhầm"], ["QUEN_NHIEU", "Quên nhiều"], ["DANH_DAU", "Tự đánh dấu"]];
   const REASON = { QUEN_NHIEU: "Quên nhiều lần", SAI_CHINH_TA: "Sai chính tả lặp lại", CAP_DE_NHAM: "Hay nhầm với từ khác", DANH_DAU_THU_CONG: "Bạn tự đánh dấu" };
-  const MIX = { HINH_THUC_GAN_GIONG: "Viết gần giống", NGHIA_GAN_NHAU: "Nghĩa gần nhau" };
   let nhom = GROUPS.some((g) => g[0] === p.nhomLoi) ? (p.nhomLoi || "") : "";
   let pageNo = Number(p.page || 0);
   let items = [];
@@ -170,7 +169,7 @@
     const box = document.createElement("form");
     box.className = "nb-edit";
     box.noValidate = true;
-    box.innerHTML = '<div class="field" data-field="ghiChu"><label class="field-label" for="note-' + it.theId + '">Ghi chú cho ' + VL.esc(it.tu) + '<span class="optional">tối đa 500 ký tự</span></label><textarea class="textarea" id="note-' + it.theId + '" name="ghiChu" rows="3" maxlength="600">' + VL.esc(it.ghiChu) + '</textarea><p class="field-counter" aria-live="polite"></p><p class="field-error"></p></div><div class="row"><button type="submit" class="btn btn-primary">Lưu ghi chú</button><button type="button" class="btn btn-quiet" data-cancel>Hủy</button></div>';
+    box.innerHTML = '<div class="field" data-field="ghiChu"><label class="field-label" for="note-' + it.theId + '">Ghi chú cho ' + VL.esc(it.tu) + '<span class="optional">tối đa 500 ký tự</span></label><textarea class="textarea" id="note-' + it.theId + '" name="ghiChu" rows="3" maxlength="600">' + VL.esc(it.ghiChu || "") + '</textarea><p class="field-counter" aria-live="polite"></p><p class="field-error"></p></div><div class="row"><button type="submit" class="btn btn-primary">Lưu ghi chú</button><button type="button" class="btn btn-quiet" data-cancel>Hủy</button></div>';
     li.querySelector(".nb-tools").before(box);
     const ta = box.querySelector("textarea");
     const counter = box.querySelector(".field-counter");
@@ -229,7 +228,7 @@
     render: (d) => {
       $("pairs").innerHTML = d.map((pr) =>
         '<li><div class="pair-words"><div><b lang="en">' + VL.esc(pr.the1.tu) + "</b><span>" + VL.esc(pr.the1.nghiaVi) + '</span></div><span class="pair-vs" aria-label="và">/</span><div><b lang="en">' + VL.esc(pr.the2.tu) + "</b><span>" + VL.esc(pr.the2.nghiaVi) + "</span></div></div>" +
-        '<div class="answer-meta"><span>' + (MIX[pr.loaiNham] || "Dễ nhầm") + "</span><span>Nhầm " + pr.soLan + " lần</span><span>" + VL.fmtDate(pr.ganNhatAt) + "</span></div>" +
+        '<div class="answer-meta"><span>Dễ nhầm</span><span>Nhầm ' + pr.soLanNham + " lần</span>" + (pr.lanCuoiAt ? "<span>" + VL.fmtDate(pr.lanCuoiAt) + "</span>" : "") + "</div>" +
         '<button type="button" class="btn btn-secondary" data-pair="' + pr.the1.id + "," + pr.the2.id + '" style="justify-self:start">Luyện phân biệt</button></li>').join("");
     }
   });

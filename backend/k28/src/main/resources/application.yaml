@@ -56,6 +56,12 @@ app:
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
+  notebook:
+    quen-nhieu: 3
+    quen-nhieu-ngay: 30
+    chinh-ta-luot: 5
+    chinh-ta-sai: 2
+    cap-nham: 2
   s3:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}

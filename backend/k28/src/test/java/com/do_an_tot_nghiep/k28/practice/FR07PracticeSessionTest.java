@@ -178,7 +178,7 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE"));
 
-        jdbc.update("INSERT INTO so_tay_tu_kho (nguoi_dung_id, the_id) VALUES (?, ?)", learner.id(), cards.get(0));
+        jdbc.update("INSERT INTO so_tay_tu_kho (nguoi_dung_id, the_id, danh_dau_thu_cong) VALUES (?, ?, TRUE)", learner.id(), cards.get(0));
         JsonNode notebook = body(create(learner, Map.of("loaiBai", "NHAP_TU_THEO_NGHIA", "nguon", "SO_TAY", "soCau", 5))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nguon").value("SO_TAY"))
