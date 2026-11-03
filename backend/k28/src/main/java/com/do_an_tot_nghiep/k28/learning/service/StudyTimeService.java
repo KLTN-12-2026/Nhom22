@@ -37,11 +37,17 @@ public class StudyTimeService {
 
     @Transactional(readOnly = true)
     public Map<LocalDate, StudyTime> days(Long userId, LocalDate tuNgay, LocalDate denNgay, ZoneId zone) {
+        return days(userId, tuNgay, denNgay, zone, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<LocalDate, StudyTime> days(
+            Long userId, LocalDate tuNgay, LocalDate denNgay, ZoneId zone, Long boTheId) {
         Instant batDau = tuNgay.atStartOfDay(zone).toInstant();
         Instant ketThuc = denNgay.plusDays(1).atStartOfDay(zone).toInstant();
         Map<LocalDate, Long> msTheoNgay = Stream.concat(
-                        history.studyTimes(userId, batDau, ketThuc).stream(),
-                        practiceHistory.studyTimes(userId, batDau, ketThuc).stream())
+                        history.studyTimes(userId, batDau, ketThuc, boTheId).stream(),
+                        practiceHistory.studyTimes(userId, batDau, ketThuc, boTheId).stream())
                 .collect(Collectors.groupingBy(
                         row -> LocalDate.ofInstant(row.createdAt(), zone),
                         Collectors.summingLong(StudyTimeRow::thoiGian)));

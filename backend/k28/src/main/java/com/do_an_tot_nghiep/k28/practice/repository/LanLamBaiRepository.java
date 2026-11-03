@@ -53,13 +53,16 @@ public interface LanLamBaiRepository extends JpaRepository<LanLamBai, Long> {
     @Query("""
             select new com.do_an_tot_nghiep.k28.learning.repository.StudyTimeRow(a.nopAt, a.thoiGian)
             from LanLamBai a
+            join BaiLuyen b on b.id = a.baiId
             where a.nguoiDungId = :userId
               and a.nopAt >= :batDau
               and a.nopAt < :ketThuc
+              and (:boTheId is null or b.boTheId = :boTheId)
             """)
     List<StudyTimeRow> studyTimes(
             @Param("userId") Long userId,
             @Param("batDau") Instant batDau,
-            @Param("ketThuc") Instant ketThuc
+            @Param("ketThuc") Instant ketThuc,
+            @Param("boTheId") Long boTheId
     );
 }

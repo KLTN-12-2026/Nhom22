@@ -212,12 +212,12 @@
       ["Lượt ôn", "mỗi chiều tính riêng", '<span class="tally-n">' + d.soLuotOn + "</span>lượt"],
       ["Tỷ lệ nhớ", "Khó, Nhớ, Dễ trên tổng lượt", '<span class="tally-n">' + pct(d.tyLeNho) + "</span>"],
       ["Bài luyện", d.baiLuyen.soBai + " bài, " + d.baiLuyen.soCauDung + "/" + d.baiLuyen.tongSoCau + " câu đúng", '<span class="tally-n">' + pct(d.baiLuyen.tyLeDung) + "</span>đúng"],
-      ["Thời gian học", "mục tiêu " + d.mucTieuPhutNgay + " phút mỗi ngày", '<span class="tally-n">' + d.tongPhut + "</span>phút"],
+      ["Thời gian học", "mục tiêu " + d.phutMoiNgay + " phút mỗi ngày", '<span class="tally-n">' + d.tongPhut + "</span>phút"],
       ["Ngày đạt mục tiêu", "có học " + d.soNgayCoHoc + "/" + days + " ngày", '<span class="tally-n">' + d.soNgayDatMucTieu + "</span>/" + days + " ngày"],
       ["Chuỗi ngày hiện tại", "tính đến hôm nay", '<span class="tally-n">' + d.chuoiNgay + "</span>ngày"]
     ].map((t) => "<div><dt>" + t[0] + "<small>" + t[1] + "</small></dt><dd>" + t[2] + "</dd></div>").join("");
 
-    const goal = d.mucTieuPhutNgay;
+    const goal = d.phutMoiNgay;
     const top = Math.max(goal, ...d.theoNgay.map((x) => x.soPhut), 1);
     const scale = Math.ceil(top * 1.15 / 4) * 4;
     $("axis").innerHTML = [scale, scale * 3 / 4, scale / 2, scale / 4, 0].map((v) => "<span>" + Math.round(v) + "</span>").join("");

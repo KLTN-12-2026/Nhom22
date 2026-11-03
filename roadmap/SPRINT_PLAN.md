@@ -115,11 +115,11 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B2.7 Tạo bài luyện (✅ 31/10) | `POST /practice/sessions`, `GET /practice/sessions/{id}` (migration V11, 7 bảng) | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap/[id]` (8 dạng bài) |
 | B2.8 Nộp & chấm | `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` | F2.5 | UI25 kết quả + giải thích `/luyen-tap-ket-qua`, UI26 `/luyen-tap-lich-su` |
 | B2.9 Sổ tay & cặp nhầm | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` | F2.6 | UI27 `/so-tay` |
-| B2.10 Thống kê nền | `GET /statistics/overview`, `GET /statistics/skills` | F2.7 | UI35 `/thong-ke` |
+| B2.10 Thống kê nền (BE xong 03/11/2026) | `GET /statistics/overview`, `GET /statistics/skills` | F2.7, F2.1 (khối 7 ngày) | UI35 `/thong-ke`, UI12 |
 | B2.11 Quản trị nền | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `/admin/cards`, `GET /admin/audit-logs` | F2.8 | UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` |
 | B2.12 Bảng điều khiển người học | Mở rộng `GET /learning/today`: `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`; hoạt động 7 ngày đọc `GET /statistics/overview` | F2.1 (mở rộng) | UI12 `/hom-nay` (bảng điều khiển, TK §9.1) |
 
-**Phạm vi B2.12 (đề xuất 28/10/2026, đã code 31/10/2026 phần `/learning/today`; khối 7 ngày chờ B2.10):** UI12 là bảng điều khiển duy nhất của người học; không tạo route hay endpoint `/dashboard` riêng. Thêm khối "Tiếp tục phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn 7 ngày tới"; phút đã học tính từ thời gian thật, cùng cách tính với UI35 (TK §7.3). Trang chủ sau đăng nhập và logo chuyển về `/hom-nay`. FE ghi bước F2.1 mở rộng vào roadmap FE. Chi tiết: roadmap BE B2.12.
+**Phạm vi B2.12 (đề xuất 28/10/2026, đã code 31/10/2026 phần `/learning/today`; khối 7 ngày có API từ B2.10 ngày 03/11/2026):** UI12 là bảng điều khiển duy nhất của người học; không tạo route hay endpoint `/dashboard` riêng. Thêm khối "Tiếp tục phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn 7 ngày tới"; phút đã học tính từ thời gian thật, cùng cách tính với UI35 (TK §7.3). Trang chủ sau đăng nhập và logo chuyển về `/hom-nay`. FE ghi bước F2.1 mở rộng vào roadmap FE. Chi tiết: roadmap BE B2.12.
 
 **Xong khi:** TC-11, TC-17 qua; số phút/lượt hôm nay trên UI12 khớp UI35 (TC-09). **Demo Đợt 2:** bảng điều khiển hôm nay → ôn hai chiều → tổng kết → luyện nghe viết sai một từ → sổ tay → thống kê → Admin khóa tài khoản có nhật ký.
 

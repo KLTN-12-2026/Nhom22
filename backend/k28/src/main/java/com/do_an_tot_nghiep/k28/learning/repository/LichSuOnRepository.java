@@ -56,14 +56,18 @@ public interface LichSuOnRepository extends JpaRepository<LichSuOn, Long> {
     @Query("""
             select new com.do_an_tot_nghiep.k28.learning.repository.StudyTimeRow(l.createdAt, l.thoiGian)
             from LichSuOn l
+            join TienDoThe t on t.id = l.tienDoId
+            join TheTuVung c on c.id = t.theId
             where l.nguoiDungId = :userId
               and l.createdAt >= :batDau
               and l.createdAt < :ketThuc
+              and (:boTheId is null or c.boTheId = :boTheId)
             """)
     List<StudyTimeRow> studyTimes(
             @Param("userId") Long userId,
             @Param("batDau") Instant batDau,
-            @Param("ketThuc") Instant ketThuc
+            @Param("ketThuc") Instant ketThuc,
+            @Param("boTheId") Long boTheId
     );
 
     @Query(HISTORY_SELECT + HISTORY_FROM + "  and l.phienId = :phienId order by l.id")

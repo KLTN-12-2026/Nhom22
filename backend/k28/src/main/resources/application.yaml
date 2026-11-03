@@ -62,6 +62,9 @@ app:
     chinh-ta-luot: 5
     chinh-ta-sai: 2
     cap-nham: 2
+  statistics:
+    so-luot-toi-da: 20
+    so-quan-sat-toi-thieu: 5
   s3:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}
