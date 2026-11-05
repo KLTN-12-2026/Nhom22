@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v5";
+  const KEY = "vl-demo-v7";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -191,9 +191,10 @@
     const rc = card("21", "receipt"), cp = card("21", "complimentary"), cm = card("21", "complementary"), rp = card("21", "recipe"), un = card("21", "uncharacteristically");
     const at = (d, h) => iso(sod - d * DAY + h * 3600000);
     s.pairs.push(
-      { id: "p1", uid: "2", the1Id: cp, the2Id: cm, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(14, 20) },
-      { id: "p2", uid: "2", the1Id: rc, the2Id: rp, loaiNham: "HINH_THUC_GAN_GIONG", soLan: 1, ganNhatAt: at(15, 20) }
+      { id: "p1", uid: "2", the1Id: cp, the2Id: cm, soLanNham: 2, lanCuoiAt: at(14, 20) },
+      { id: "p2", uid: "2", the1Id: rc, the2Id: rp, soLanNham: 1, lanCuoiAt: at(15, 20) }
     );
+    [3, 9, 20].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-" + d, theId: rc, chieuHoc: i === 1 ? "VI_EN" : "EN_VI", danhGia: "QUEN", thoiGianTraLoiMs: 12000, createdAt: at(d, 20.5), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "HOC_LAI" }, phienBanThuatToan: ALGO }));
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
 
     const pp = card("21", "postpone");
@@ -650,7 +651,7 @@
     if (![5, 10, 20].includes(Number(b.soCau))) errors.push(fe("soCau", "Chọn 5, 10 hoặc 20 câu"));
     if (errors.length) bad(errors);
     if (b.boTheId) { const own = db.decks.find((d) => d.id === b.boTheId); if (!own || own.ownerId !== u.id || own.deleted) notFound(); }
-    const usable = (x) => !DIRS.every((d) => progressOf(u.id, x.id, d).trangThai === "TAM_NGUNG");
+    const usable = (x) => !DIRS.some((d) => progressOf(u.id, x.id, d).trangThai === "TAM_NGUNG");
     const distract = ownCards(u.id).filter(usable);
     let pool;
     if (Array.isArray(b.theIds) && b.theIds.length) pool = b.theIds.map(cardById).filter((x) => x && distract.includes(x));
@@ -722,8 +723,8 @@
   function addPair(uid, a, b2, t) {
     if (!a || !b2 || a === b2) return;
     const p = db.pairs.find((x) => x.uid === uid && ((x.the1Id === a && x.the2Id === b2) || (x.the1Id === b2 && x.the2Id === a)));
-    if (p) { p.soLan++; p.ganNhatAt = iso(t); }
-    else db.pairs.push({ id: "p" + nextId(), uid, the1Id: a, the2Id: b2, loaiNham: "NGHIA_GAN_NHAU", soLan: 1, ganNhatAt: iso(t) });
+    if (p) { p.soLanNham++; p.lanCuoiAt = iso(t); }
+    else db.pairs.push({ id: "p" + nextId(), uid, the1Id: a, the2Id: b2, soLanNham: 1, lanCuoiAt: iso(t) });
   }
   function submitPractice(u, s, b, t) {
     const given = {};
@@ -753,7 +754,7 @@
           if (!ok) {
             sai.push(lt.theId);
             if (chosen) addPair(u.id, lt.theId, chosen.theId, t);
-            db.errors.push({ uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung, lanLamId } });
+            db.errors.push({ id: nextId(), uid: u.id, theId: lt.theId, nhomLoi: "NGHIA", nguonSuKien: "BAI_LUYEN", suKienId: lanLamId, createdAt: iso(t), bangChung: { baiLuyenId: s.id, cauHoiId: q.id, loaiCau: q.loaiCau, traLoi: chosen ? chosen.noiDung : null, dapAn: nghiaDung } });
           }
           return { traiId: c.traiId, tu: lt.noiDung, phaiIdDaChon: got ? got.phaiId : null, nghiaDaChon: chosen ? chosen.noiDung : null, phaiId: c.phaiId, nghiaDung, dung: ok };
         });
@@ -795,10 +796,10 @@
         ty = dung ? 1 : 0;
         if (!dung) {
           sai = [q.theId];
-          db.errors.push({ uid: u.id, theId: q.theId, nhomLoi, nguon: "BAI_LUYEN", createdAt: iso(t), bangChung: { traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung, lanLamId } });
+          db.errors.push({ id: nextId(), uid: u.id, theId: q.theId, nhomLoi, nguonSuKien: "BAI_LUYEN", suKienId: lanLamId, createdAt: iso(t), bangChung: { baiLuyenId: s.id, cauHoiId: q.id, loaiCau: q.loaiCau, traLoi: traLoi ? traLoi.noiDung : null, dapAn: q.dapAn.noiDung } });
         }
       }
-      db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
+      db.answers.push({ uid: u.id, lanLamId, kyNang: SKILL_OF[q.loaiCau], loaiCau: q.loaiCau, coTraLoi: !!traLoi, nhomLoi, dung, lanDau: !s.laLuyenLai, createdAt: iso(t), theId: q.theId || null });
       return { cauHoiId: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, theId: q.theId || null, deBai: q.deBai, phuongAn: q.phuongAn || null, traLoi, dapAn, dung, diem: Math.round(ty * 100), nhomLoi, chiTiet, giaiThich, _ty: ty, _sai: sai, _otherId: otherId };
     });
     const bySkill = {};
@@ -815,57 +816,74 @@
     return a;
   }
 
+  const NB = { quenNhieu: 3, quenNgay: 30, chinhTaLuot: 5, chinhTaSai: 2, capNham: 2 };
+  const NB_GROUPS = ["NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "PHAT_AM"];
+  const TYPED = ["NHAP_TU_THEO_NGHIA", "NGHE_VIET", "DIEN_CHO_TRONG"];
+  function notebookCard(uid, theId, withSuspended) {
+    const x = cardById(theId);
+    if (!x || x.deleted) return null;
+    const deck = db.decks.find((d) => d.id === x.deckId);
+    if (!deck || deck.deleted || deck.ownerId !== uid) return null;
+    if (!withSuspended && DIRS.some((d) => progressOf(uid, theId, d).trangThai === "TAM_NGUNG")) return null;
+    return { x, deck };
+  }
   function notebookItems(uid, filter) {
-    const map = {};
     const nb = db.notebook[uid] || {};
-    const touch = (theId) => {
-      const x = cardById(theId);
-      if (!x) return null;
-      const deck = db.decks.find((d) => d.id === x.deckId);
-      if (!deck || deck.deleted || deck.ownerId !== uid) return null;
-      return map[theId] = map[theId] || { theId, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, boTheId: x.deckId, boTheTen: deck.name, nhomLoi: {}, lyDo: [], bangChung: [], soLanQuen: 0, ghiChu: "", danhDauThuCong: false, lanGanNhatAt: null };
-    };
-    const hiddenAt = (theId) => (nb[theId] && nb[theId].anTu) || null;
-    db.errors.filter((e) => e.uid === uid).forEach((e) => {
-      const h = hiddenAt(e.theId);
-      if (h && Date.parse(e.createdAt) <= Date.parse(h)) return;
-      const it = touch(e.theId);
-      if (!it) return;
-      it.nhomLoi[e.nhomLoi] = (it.nhomLoi[e.nhomLoi] || 0) + 1;
-      it.bangChung.push({ nhomLoi: e.nhomLoi, traLoi: e.bangChung.traLoi, dapAn: e.bangChung.dapAn, lanLamId: e.bangChung.lanLamId, baiLuyenId: (db.attempts.find((a) => a.id === e.bangChung.lanLamId) || {}).baiLuyenId || null, createdAt: e.createdAt });
-      if (!it.lanGanNhatAt || e.createdAt > it.lanGanNhatAt) it.lanGanNhatAt = e.createdAt;
+    const after = (theId, at) => { const h = nb[theId] && nb[theId].anTu; return !h || Date.parse(at) > Date.parse(h); };
+    const stats = {};
+    const st = (theId) => stats[theId] = stats[theId] || { groups: {}, errors: [], lapses: 0, last: null };
+    const touch = (o, at) => { if (at && (!o.last || at > o.last)) o.last = at; };
+    db.errors.filter((e) => e.uid === uid && after(e.theId, e.createdAt)).forEach((e) => {
+      const o = st(e.theId);
+      o.groups[e.nhomLoi] = (o.groups[e.nhomLoi] || 0) + 1;
+      o.errors.push(e);
+      touch(o, e.createdAt);
     });
-    Object.keys(db.progress).filter((k) => k.startsWith(uid + "|")).forEach((k) => {
-      const p = db.progress[k];
-      const theId = k.split("|")[1];
-      if (p.soLanQuen < 3 || p.trangThai === "TAM_NGUNG") return;
-      const h = hiddenAt(theId);
-      if (h) return;
-      const it = touch(theId);
-      if (!it) return;
-      it.soLanQuen = Math.max(it.soLanQuen, p.soLanQuen);
+    const since = Date.now() - NB.quenNgay * DAY;
+    db.reviews.filter((r) => r.uid === uid && r.danhGia === "QUEN" && r.truoc && r.truoc.trangThai === "ON_TAP" && Date.parse(r.createdAt) >= since && after(r.theId, r.createdAt)).forEach((r) => {
+      const o = st(r.theId);
+      o.lapses++;
+      touch(o, r.createdAt);
     });
+    const members = Object.keys(stats).filter((theId) => stats[theId].errors.length || stats[theId].lapses >= NB.quenNhieu);
     Object.keys(nb).forEach((theId) => {
-      const n = nb[theId];
-      if (!n.danhDauThuCong && !n.ghiChu) return;
-      if (!n.danhDauThuCong && !map[theId]) return;
-      const it = touch(theId);
-      if (!it) return;
-      it.ghiChu = n.ghiChu || "";
-      it.danhDauThuCong = !!n.danhDauThuCong;
-      if (n.capNhatAt && (!it.lanGanNhatAt || n.capNhatAt > it.lanGanNhatAt)) it.lanGanNhatAt = n.capNhatAt;
+      if (!nb[theId].danhDauThuCong) return;
+      if (!members.includes(theId)) members.push(theId);
+      touch(st(theId), nb[theId].capNhatAt);
     });
-    let list = Object.values(map).map((it) => {
-      if (it.soLanQuen >= 3) it.lyDo.push("QUEN_NHIEU");
-      if ((it.nhomLoi.CHINH_TA || 0) >= 2) it.lyDo.push("SAI_CHINH_TA");
-      if (it.nhomLoi.CAP_NHAM) it.lyDo.push("CAP_DE_NHAM");
-      if (it.danhDauThuCong) it.lyDo.push("DANH_DAU_THU_CONG");
-      it.nhomLoi = Object.keys(it.nhomLoi).map((k) => ({ nhomLoi: k, soLan: it.nhomLoi[k] }));
-      it.bangChung = it.bangChung.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
-      return it;
-    });
-    if (filter) list = list.filter((it) => filter === "DANH_DAU" ? it.danhDauThuCong : filter === "QUEN_NHIEU" ? it.soLanQuen >= 3 : it.nhomLoi.some((g) => g.nhomLoi === filter));
-    return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || ""));
+    const typed = {};
+    db.answers.filter((a) => a.uid === uid && a.theId && a.coTraLoi && TYPED.includes(a.loaiCau) && after(a.theId, a.createdAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .forEach((a) => { (typed[a.theId] = typed[a.theId] || []).push(a); });
+    const paired = (theId) => db.pairs.some((p) => p.uid === uid && (p.the1Id === theId || p.the2Id === theId) && p.soLanNham >= NB.capNham && after(theId, p.lanCuoiAt));
+    let list = members.map((theId) => {
+      const c = notebookCard(uid, theId, false);
+      if (!c) return null;
+      const o = stats[theId];
+      const n = nb[theId] || {};
+      const lyDo = [];
+      if (o.lapses >= NB.quenNhieu) lyDo.push("QUEN_NHIEU");
+      if ((typed[theId] || []).slice(0, NB.chinhTaLuot).filter((a) => a.nhomLoi === "CHINH_TA").length >= NB.chinhTaSai) lyDo.push("SAI_CHINH_TA");
+      if (paired(theId)) lyDo.push("CAP_DE_NHAM");
+      if (n.danhDauThuCong) lyDo.push("DANH_DAU_THU_CONG");
+      return {
+        theId, tu: c.x.word, tuLoai: c.x.pos || null, phienAm: c.x.ipa || null, nghiaVi: c.x.meaningVi, boTheId: c.deck.id, boTheTen: c.deck.name,
+        nhomLoi: NB_GROUPS.filter((g) => o.groups[g]).map((g) => ({ nhomLoi: g, soLan: o.groups[g] })),
+        lyDo,
+        bangChung: o.errors.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt) || Number(b.id) - Number(a.id)).slice(0, 3).map((e) => ({
+          nhomLoi: e.nhomLoi, nguonSuKien: e.nguonSuKien, suKienId: e.suKienId, baiLuyenId: e.bangChung.baiLuyenId || null, cauHoiId: e.bangChung.cauHoiId || null,
+          loaiCau: e.bangChung.loaiCau || null, traLoi: e.bangChung.traLoi, dapAn: e.bangChung.dapAn, createdAt: e.createdAt })),
+        soLanQuen: o.lapses, ghiChu: n.ghiChu || null, danhDauThuCong: !!n.danhDauThuCong, lanGanNhatAt: o.last
+      };
+    }).filter(Boolean);
+    if (filter) list = list.filter((it) => notebookIn(it, filter));
+    return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || "") || Number(b.theId) - Number(a.theId));
+  }
+  function notebookIn(it, key) {
+    if (key === "TAT_CA") return true;
+    if (key === "QUEN_NHIEU") return it.lyDo.includes("QUEN_NHIEU");
+    if (key === "DANH_DAU") return it.danhDauThuCong;
+    return it.nhomLoi.some((g) => g.nhomLoi === key);
   }
 
   function skillStats(uid, deckId) {
@@ -899,14 +917,27 @@
   }
   function adminDeckView(d) {
     return {
-      id: d.id, ten: d.name, moTa: d.description, mucTieu: d.goal, chuDeId: d.topicId, chuDeTen: topicName(d.topicId), trinhDo: d.level, quyenTruyCap: d.visibility,
-      trangThaiKiemDuyet: d.trangThaiKiemDuyet || "BINH_THUONG", soThe: db.cards.filter((x) => x.deckId === d.id).length,
-      soBanSao: db.decks.filter((x) => x.sourceDeckId === d.id && !x.deleted).length, updatedAt: d.updatedAt, version: d.version
+      id: d.id, ten: d.name, moTa: d.description || null, mucTieu: d.goal, chuDeId: d.topicId || null, chuDeTen: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level, quyenTruyCap: d.visibility,
+      trangThaiKiemDuyet: d.trangThaiKiemDuyet || "BINH_THUONG", soThe: activeCards(d.id).length,
+      soBanSao: db.decks.filter((x) => x.sourceDeckId === d.id && !x.deleted).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt, version: d.version
     };
+  }
+  const activeCards = (deckId) => db.cards.filter((x) => x.deckId === deckId && !x.deleted);
+  function deckFields(v) {
+    return { ten: v.ten, moTa: v.moTa, mucTieu: v.mucTieu, chuDeId: v.chuDeId, trinhDo: v.trinhDo, quyenTruyCap: v.quyenTruyCap, trangThaiKiemDuyet: v.trangThaiKiemDuyet };
+  }
+  function adminCardView(x) {
+    const dup = activeCards(x.deckId).filter((c2) => c2.id !== x.id && strip(c2.word) === strip(x.word) && strip(c2.pos || "") === strip(x.pos || "")).map((c2) => c2.id);
+    return { id: x.id, boTheId: x.deckId, tu: x.word, tuLoai: x.pos || null, nghiaVi: x.meaningVi, phienAm: x.ipa || null, viDuEn: x.exampleEn || null, dichVi: x.exampleVi || null, doKho: x.difficulty || 1, nguon: x.source || null, nhanIds: x.tagIds || [], anhId: x.anhId || null, amTuId: x.amTuId || null, amCauId: x.amCauId || null, trung: dup.length > 0, theTrungIds: dup, createdAt: x.createdAt, updatedAt: x.updatedAt || x.createdAt, version: x.version };
+  }
+  function cardFields(v) {
+    return { tu: v.tu, tuLoai: v.tuLoai, nghiaVi: v.nghiaVi, phienAm: v.phienAm, viDuEn: v.viDuEn, dichVi: v.dichVi, doKho: v.doKho, nguon: v.nguon, nhanIds: v.nhanIds.slice().sort(), anh: !!v.anhId, amTu: !!v.amTuId, amCau: !!v.amCauId };
   }
   function sampleDeck(id) {
     const d = db.decks.find((x) => x.id === id && x.kind === "MAU" && !x.deleted);
     if (!d) notFound();
+    if (typeof d.version !== "number") d.version = 0;
+    activeCards(d.id).forEach((x) => { if (typeof x.version !== "number") x.version = 0; });
     return d;
   }
   function validateAdminDeck(b, partial) {
@@ -915,7 +946,7 @@
     if (has("ten")) { const n = reason(b.ten); if (!n) errors.push(fe("ten", "Nhập tên bộ")); else if (n.length > 150) errors.push(fe("ten", "Tên bộ tối đa 150 ký tự")); }
     if (has("moTa") && (b.moTa || "").length > 1000) errors.push(fe("moTa", "Mô tả tối đa 1000 ký tự"));
     if (has("mucTieu") && !["GIAO_TIEP", "TOEIC"].includes(b.mucTieu)) errors.push(fe("mucTieu", "Chọn mục tiêu"));
-    if (has("chuDeId") && !db.topics.some((t) => t.id === b.chuDeId)) errors.push(fe("chuDeId", "Chọn chủ đề"));
+    if (b.chuDeId && !db.topics.some((t) => t.id === b.chuDeId)) throw new ApiError(422, "BUSINESS_RULE", "Chủ đề không còn tồn tại, vui lòng chọn lại");
     if (has("trinhDo") && !["MOI_BAT_DAU", "CO_BAN", "TRUNG_CAP", "NANG_CAO"].includes(b.trinhDo)) errors.push(fe("trinhDo", "Chọn trình độ"));
     if (errors.length) bad(errors);
   }
@@ -938,7 +969,8 @@
     const errors = [];
     if (!re.test(tu)) errors.push(fe("tuNgay", "Ngày bắt đầu không hợp lệ"));
     if (!re.test(den)) errors.push(fe("denNgay", "Ngày kết thúc không hợp lệ"));
-    if (!errors.length && tu > den) errors.push(fe("tuNgay", "Ngày bắt đầu phải trước ngày kết thúc"));
+    if (!errors.length && den > today) errors.push(fe("denNgay", "Không chọn ngày trong tương lai"));
+    if (!errors.length && tu > den) errors.push(fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi"));
     if (!errors.length && (Date.parse(den) - Date.parse(tu)) / DAY > 89) errors.push(fe("tuNgay", "Chọn khoảng tối đa 90 ngày"));
     if (errors.length) bad(errors);
     const list = [];
@@ -1472,35 +1504,46 @@
 
     ["GET", /^\/notebook$/, (m, b, q) => {
       const u = requireMe();
+      const errs = [];
+      if (q.nhomLoi && !["NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "QUEN_NHIEU", "DANH_DAU"].includes(q.nhomLoi)) errs.push(fe("nhomLoi", "Nhóm lỗi không hợp lệ"));
+      const size = q.size === undefined || q.size === "" ? 20 : Number(q.size);
+      const pg = q.page === undefined || q.page === "" ? 0 : Number(q.page);
+      if (!Number.isInteger(size) || size < 1 || size > 100) errs.push(fe("size", "size từ 1 đến 100"));
+      if (!Number.isInteger(pg) || pg < 0) errs.push(fe("page", "page phải không âm"));
+      if (errs.length) bad(errs);
       const all = notebookItems(u.id);
-      const tongHop = { TAT_CA: all.length, NGHIA: 0, CHINH_TA: 0, NGHE: 0, NGU_CANH: 0, CAP_NHAM: 0, QUEN_NHIEU: 0, DANH_DAU: 0 };
-      all.forEach((it) => { it.nhomLoi.forEach((g) => { tongHop[g.nhomLoi] = (tongHop[g.nhomLoi] || 0) + 1; }); if (it.soLanQuen >= 3) tongHop.QUEN_NHIEU++; if (it.danhDauThuCong) tongHop.DANH_DAU++; });
-      return Object.assign({ tongHop }, page(q.nhomLoi ? notebookItems(u.id, q.nhomLoi) : all, Object.assign({ size: "20" }, q)));
+      const tongHop = {};
+      ["TAT_CA", "NGHIA", "CHINH_TA", "NGHE", "NGU_CANH", "CAP_NHAM", "QUEN_NHIEU", "DANH_DAU"].forEach((k) => { tongHop[k] = all.filter((it) => notebookIn(it, k)).length; });
+      const list = q.nhomLoi ? all.filter((it) => notebookIn(it, q.nhomLoi)) : all;
+      return { tongHop, items: list.slice(pg * size, pg * size + size), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) };
     }],
     ["PUT", /^\/notebook\/(\w+)$/, (m, b) => {
       const u = requireMe();
-      const card = cardById(m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
-      if ((b.ghiChu || "").length > 500) bad([fe("ghiChu", "Ghi chú tối đa 500 ký tự")]);
+      if ((b.ghiChu === undefined || b.ghiChu === null) && (b.danhDauThuCong === undefined || b.danhDauThuCong === null)) bad([]);
+      const note = b.ghiChu === undefined || b.ghiChu === null ? null : String(b.ghiChu).trim();
+      if (note !== null && Array.from(note).length > 500) bad([fe("ghiChu", "Ghi chú tối đa 500 ký tự")]);
+      const c = notebookCard(u.id, m[1], true);
+      if (!c) notFound();
       const nb = db.notebook[u.id] = db.notebook[u.id] || {};
-      const cur = nb[card.id] || {};
-      nb[card.id] = { ghiChu: b.ghiChu !== undefined ? reason(b.ghiChu) : (cur.ghiChu || ""), danhDauThuCong: b.danhDauThuCong !== undefined ? !!b.danhDauThuCong : !!cur.danhDauThuCong, anTu: null, capNhatAt: new Date().toISOString() };
-      return notebookItems(u.id).find((it) => it.theId === card.id) || { theId: card.id, ghiChu: nb[card.id].ghiChu, danhDauThuCong: nb[card.id].danhDauThuCong };
+      const cur = nb[m[1]] || { ghiChu: null, danhDauThuCong: false, anTu: null };
+      nb[m[1]] = Object.assign({}, cur, note !== null ? { ghiChu: note || null } : {}, b.danhDauThuCong !== undefined && b.danhDauThuCong !== null ? { danhDauThuCong: !!b.danhDauThuCong } : {}, { capNhatAt: new Date().toISOString() });
+      const n = nb[m[1]];
+      return notebookItems(u.id).find((it) => it.theId === m[1]) || { theId: m[1], tu: c.x.word, tuLoai: c.x.pos || null, phienAm: c.x.ipa || null, nghiaVi: c.x.meaningVi, boTheId: c.deck.id, boTheTen: c.deck.name, nhomLoi: [], lyDo: [], bangChung: [], soLanQuen: 0, ghiChu: n.ghiChu || null, danhDauThuCong: !!n.danhDauThuCong, lanGanNhatAt: null };
     }],
     ["DELETE", /^\/notebook\/(\w+)$/, (m) => {
       const u = requireMe();
-      const card = cardById(m[1]);
-      if (!card) notFound();
-      ownDeck(card.deckId);
+      if (!notebookCard(u.id, m[1], true)) notFound();
       const nb = db.notebook[u.id] = db.notebook[u.id] || {};
-      nb[card.id] = Object.assign({}, nb[card.id] || {}, { danhDauThuCong: false, anTu: new Date().toISOString() });
+      nb[m[1]] = Object.assign({ ghiChu: null }, nb[m[1]] || {}, { danhDauThuCong: false, anTu: new Date().toISOString(), capNhatAt: new Date().toISOString() });
       return { status: 204 };
     }],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();
-      const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos, phienAm: x.ipa, nghiaVi: x.meaningVi, viDuEn: x.exampleEn });
-      return pairsOf(u.id).sort((a, c2) => c2.soLan - a.soLan || c2.ganNhatAt.localeCompare(a.ganNhatAt)).map((p) => ({ id: p.id, the1: v(cardById(p.the1Id)), the2: v(cardById(p.the2Id)), loaiNham: p.loaiNham, soLan: p.soLan, ganNhatAt: p.ganNhatAt }));
+      const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos || null, phienAm: x.ipa || null, nghiaVi: x.meaningVi, viDuEn: x.exampleEn || null });
+      return db.pairs.filter((p) => p.uid === u.id && p.soLanNham > 0 && notebookCard(u.id, p.the1Id, false) && notebookCard(u.id, p.the2Id, false))
+        .sort((a, c2) => c2.soLanNham - a.soLanNham || c2.lanCuoiAt.localeCompare(a.lanCuoiAt) || Number(a.id.replace(/\D/g, "")) - Number(c2.id.replace(/\D/g, "")))
+        .slice(0, 20)
+        .map((p) => ({ id: p.id, the1: v(cardById(p.the1Id)), the2: v(cardById(p.the2Id)), soLanNham: p.soLanNham, lanCuoiAt: p.lanCuoiAt }));
     }],
 
     ["GET", /^\/statistics\/overview$/, (m, b, q) => {
@@ -1516,7 +1559,7 @@
         const dr = rs.filter((x) => x.ngay === d);
         const da = as.filter((a) => a.ngay === d);
         const ms = dr.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + da.reduce((acc, a) => acc + a.thoiGian, 0);
-        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), soPhut: minutesOf(ms) };
+        return { ngay: d, soLuotOn: dr.length, soCauLuyen: da.reduce((acc, a) => acc + a.tongSoCau, 0), thoiGian: ms, soPhut: minutesOf(ms) };
       });
       const tong = as.reduce((acc, a) => acc + a.tongSoCau, 0);
       const dung = as.reduce((acc, a) => acc + a.soCauDung, 0);
@@ -1525,8 +1568,8 @@
         soTuDaHoc: new Set(rs.map((x) => x.theId)).size, soLuotOn: rs.length,
         tyLeNho: rs.length ? Math.round(rs.filter((x) => x.danhGia !== "QUEN").length / rs.length * 100) : null,
         baiLuyen: { soBai: as.length, soCauDung: dung, tongSoCau: tong, tyLeDung: tong ? Math.round(dung / tong * 100) : null },
-        tongPhut: theoNgay.reduce((acc, x) => acc + x.soPhut, 0), mucTieuPhutNgay: l.minutesPerDay,
-        soNgayCoHoc: theoNgay.filter((x) => x.soLuotOn || x.soCauLuyen).length, soNgayDatMucTieu: theoNgay.filter((x) => x.soPhut >= l.minutesPerDay).length,
+        tongPhut: theoNgay.reduce((acc, x) => acc + x.soPhut, 0), phutMoiNgay: l.minutesPerDay,
+        soNgayCoHoc: theoNgay.filter((x) => x.soLuotOn || x.soCauLuyen).length, soNgayDatMucTieu: theoNgay.filter((x) => x.thoiGian >= l.minutesPerDay * 60000).length,
         chuoiNgay: streakOf(u.id, tz).chuoiNgay, theoNgay
       };
     }],
@@ -1539,6 +1582,7 @@
     ["GET", /^\/admin\/users$/, (m, b, q) => {
       requireAdmin();
       let list = db.users.slice();
+      list = list.filter((x) => x.email !== "library-editor@vocab.local");
       if (q.q) { const k = strip(q.q); list = list.filter((x) => strip(x.email).includes(k) || strip(x.tenHienThi).includes(k)); }
       if (q.trangThai) list = list.filter((x) => x.trangThai === q.trangThai);
       if (q.vaiTro) list = list.filter((x) => x.vaiTro.includes(q.vaiTro));
@@ -1556,7 +1600,7 @@
       if (errors.length) bad(errors);
       if (target.id === me2.id) throw new ApiError(422, "BUSINESS_RULE", "Bạn không thể tự khóa tài khoản của mình.");
       if (target.trangThai === "DANG_XOA") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản đang trong quá trình xóa, không đổi trạng thái được.");
-      if (b.trangThai === "HOAT_DONG" && target.trangThai === "CHUA_XAC_THUC") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản chưa xác thực email. Người dùng cần tự xác thực qua thư.");
+      if (target.trangThai === "CHUA_XAC_THUC") throw new ApiError(422, "BUSINESS_RULE", "Tài khoản chưa xác thực email. Người dùng cần tự xác thực qua thư.");
       if (b.trangThai === "BI_KHOA" && target.vaiTro.includes("ADMIN") && activeAdmins().length <= 1 && target.trangThai === "HOAT_DONG") throw new ApiError(422, "BUSINESS_RULE", "Không thể khóa quản trị viên cuối cùng.");
       if (target.trangThai === b.trangThai) return Object.assign(adminUserView(target), { soPhienDaHuy: 0 });
       const before = target.trangThai;
@@ -1576,13 +1620,13 @@
       if (errors.length) bad(errors);
       const had = target.vaiTro.includes("ADMIN");
       const will = roles.includes("ADMIN");
-      if (had && !will && activeAdmins().filter((x) => x.id !== target.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Không thể thu quyền của quản trị viên cuối cùng. Cấp quyền cho một người khác trước.");
+      if (had && !will && target.trangThai === "HOAT_DONG" && activeAdmins().filter((x) => x.id !== target.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Không thể thu quyền của quản trị viên cuối cùng. Cấp quyền cho một người khác trước.");
       if (will && target.trangThai !== "HOAT_DONG") throw new ApiError(422, "BUSINESS_RULE", "Chỉ cấp quyền quản trị cho tài khoản đang hoạt động.");
-      if (had === will) return adminUserView(target);
+      if (had === will) return Object.assign(adminUserView(target), { soPhienDaHuy: 0, banThanMatQuyen: false });
       const before = target.vaiTro.slice();
       target.vaiTro = will ? ["ADMIN", "USER"] : ["USER"];
       audit(me2, will ? "CAP_QUYEN_QUAN_TRI" : "THU_QUYEN_QUAN_TRI", { loai: "NGUOI_DUNG", id: target.id, ten: target.tenHienThi }, r, { vaiTro: before }, { vaiTro: target.vaiTro });
-      return Object.assign(adminUserView(target), { banThanMatQuyen: target.id === me2.id && !will });
+      return Object.assign(adminUserView(target), { soPhienDaHuy: target.dangNhapCuoiAt ? 1 : 0, banThanMatQuyen: target.id === me2.id && !will });
     }],
 
     ["GET", /^\/admin\/decks$/, (m, b, q) => {
@@ -1603,92 +1647,103 @@
       const me2 = requireAdmin();
       validateAdminDeck(b, false);
       const t = new Date().toISOString();
-      const d = { id: nextId(), name: reason(b.ten), description: reason(b.moTa), goal: b.mucTieu, topicId: b.chuDeId, level: b.trinhDo, visibility: "RIENG_TU", kind: "MAU", ownerId: "0", ownerName: "Nhóm biên soạn VocabLearning", source: "Tự biên soạn", updatedAt: t, createdAt: t, version: 0, sourceDeckId: null, trangThaiKiemDuyet: "BINH_THUONG" };
+      const d = { id: nextId(), name: reason(b.ten), description: reason(b.moTa), goal: b.mucTieu, topicId: b.chuDeId || null, level: b.trinhDo, visibility: "RIENG_TU", kind: "MAU", ownerId: "0", ownerName: "VocabLearning", source: "Tự biên soạn", updatedAt: t, createdAt: t, version: 0, sourceDeckId: null, trangThaiKiemDuyet: "BINH_THUONG" };
       db.decks.push(d);
-      audit(me2, "TAO_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, null, null, { ten: d.name, quyenTruyCap: "RIENG_TU" });
-      return { status: 201, body: adminDeckView(d) };
+      const after = adminDeckView(d);
+      audit(me2, "TAO_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, null, null, deckFields(after));
+      return { status: 201, body: after };
     }],
     ["PATCH", /^\/admin\/decks\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const d = sampleDeck(m[1]);
-      if (b.version !== undefined && b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.");
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       validateAdminDeck(b, true);
+      if (b.quyenTruyCap !== undefined && !["CONG_KHAI", "RIENG_TU"].includes(b.quyenTruyCap)) bad([fe("quyenTruyCap", "Trạng thái xuất bản không hợp lệ")]);
+      if (b.trangThaiKiemDuyet !== undefined && !["BINH_THUONG", "DA_AN"].includes(b.trangThaiKiemDuyet)) bad([fe("trangThaiKiemDuyet", "Trạng thái không hợp lệ")]);
+      const lyDo = reason(b.lyDo) || null;
+      if (lyDo && (lyDo.length < 10 || lyDo.length > 500)) bad([fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự")]);
+      if (b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu đã thay đổi, vui lòng tải lại");
       const before = adminDeckView(d);
+      const next = Object.assign({}, d);
+      if (b.quyenTruyCap !== undefined) next.visibility = b.quyenTruyCap;
+      if (b.trangThaiKiemDuyet !== undefined) next.trangThaiKiemDuyet = b.trangThaiKiemDuyet;
+      if (b.ten !== undefined) next.name = reason(b.ten);
+      if (b.moTa !== undefined) next.description = reason(b.moTa);
+      if (b.mucTieu !== undefined) next.goal = b.mucTieu;
+      if (b.boChuDe) next.topicId = null; else if (b.chuDeId !== undefined) next.topicId = b.chuDeId;
+      if (b.trinhDo !== undefined) next.level = b.trinhDo;
+      const published = (x) => x.visibility === "CONG_KHAI" && (x.trangThaiKiemDuyet || "BINH_THUONG") === "BINH_THUONG";
+      if (published(next) && !published(d) && activeCards(d.id).length === 0) throw new ApiError(422, "BUSINESS_RULE", "Bộ chưa có thẻ nào. Thêm thẻ trước khi xuất bản");
+      const tr = deckFields(before);
+      const sa = deckFields(adminDeckView(next));
+      Object.keys(tr).forEach((k) => { if (tr[k] === sa[k]) { delete tr[k]; delete sa[k]; } });
+      if (!Object.keys(tr).length) return before;
       let action = "SUA_BO_MAU";
-      let why = null;
-      if (b.quyenTruyCap !== undefined) {
-        if (!["CONG_KHAI", "RIENG_TU"].includes(b.quyenTruyCap)) bad([fe("quyenTruyCap", "Trạng thái xuất bản không hợp lệ")]);
-        if (b.quyenTruyCap === "CONG_KHAI" && !db.cards.some((x) => x.deckId === d.id)) throw new ApiError(422, "BUSINESS_RULE", "Bộ chưa có thẻ nào. Thêm thẻ trước khi xuất bản.");
-        if (b.quyenTruyCap !== d.visibility) action = b.quyenTruyCap === "CONG_KHAI" ? "XUAT_BAN_BO_MAU" : "CHUYEN_VE_NHAP";
-        if (action === "CHUYEN_VE_NHAP") why = needReason(b.lyDo);
-        d.visibility = b.quyenTruyCap;
-      }
-      if (b.trangThaiKiemDuyet !== undefined) {
-        if (!["BINH_THUONG", "DA_AN"].includes(b.trangThaiKiemDuyet)) bad([fe("trangThaiKiemDuyet", "Trạng thái không hợp lệ")]);
-        if (b.trangThaiKiemDuyet !== (d.trangThaiKiemDuyet || "BINH_THUONG")) { action = b.trangThaiKiemDuyet === "DA_AN" ? "AN_BO_MAU" : "HIEN_BO_MAU"; why = needReason(b.lyDo); }
-        d.trangThaiKiemDuyet = b.trangThaiKiemDuyet;
-      }
-      if (b.ten !== undefined) d.name = reason(b.ten);
-      if (b.moTa !== undefined) d.description = reason(b.moTa);
-      if (b.mucTieu !== undefined) d.goal = b.mucTieu;
-      if (b.chuDeId !== undefined) d.topicId = b.chuDeId;
-      if (b.trinhDo !== undefined) d.level = b.trinhDo;
-      d.version++;
-      d.updatedAt = new Date().toISOString();
-      const after = adminDeckView(d);
-      const diff = (o) => { const out = {}; Object.keys(after).forEach((k) => { if (!["version", "updatedAt", "soThe", "soBanSao", "chuDeTen", "id"].includes(k) && before[k] !== after[k]) out[k] = o[k]; }); return out; };
-      audit(me2, action, { loai: "BO_THE", id: d.id, ten: d.name }, why || reason(b.lyDo) || null, diff(before), diff(after));
-      return after;
+      if ("trangThaiKiemDuyet" in tr) action = sa.trangThaiKiemDuyet === "DA_AN" ? "AN_BO_MAU" : "HIEN_BO_MAU";
+      else if ("quyenTruyCap" in tr) action = sa.quyenTruyCap === "CONG_KHAI" ? "XUAT_BAN_BO_MAU" : "CHUYEN_VE_NHAP";
+      if (["CHUYEN_VE_NHAP", "AN_BO_MAU", "HIEN_BO_MAU"].includes(action) && !lyDo) bad([fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự")]);
+      Object.assign(d, next, { version: d.version + 1, updatedAt: new Date().toISOString() });
+      audit(me2, action, { loai: "BO_THE", id: d.id, ten: d.name }, lyDo, tr, sa);
+      return adminDeckView(d);
     }],
     ["DELETE", /^\/admin\/decks\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const d = sampleDeck(m[1]);
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       const why = needReason(b.lyDo);
+      if (b.version !== d.version) throw new ApiError(409, "VERSION_CONFLICT", "Bộ mẫu đã thay đổi, vui lòng tải lại");
+      const before = deckFields(adminDeckView(d));
       d.deleted = true;
-      audit(me2, "XOA_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, why, { quyenTruyCap: d.visibility }, null);
+      audit(me2, "XOA_BO_MAU", { loai: "BO_THE", id: d.id, ten: d.name }, why, before, null);
       return { status: 204 };
     }],
-    ["GET", /^\/admin\/cards$/, (m, b, q) => {
+    ["GET", /^\/admin\/decks\/(\w+)\/cards$/, (m, b, q) => {
       requireAdmin();
-      const d = sampleDeck(q.boTheId);
-      return db.cards.filter((x) => x.deckId === d.id).map(theView);
+      const d = sampleDeck(m[1]);
+      return page(activeCards(d.id).sort((a, c2) => Number(c2.id) - Number(a.id)).map(adminCardView), Object.assign({ size: "20" }, q));
     }],
-    ["POST", /^\/admin\/cards$/, (m, b) => {
+    ["POST", /^\/admin\/decks\/(\w+)\/cards$/, (m, b) => {
       const me2 = requireAdmin();
-      const d = sampleDeck(b.boTheId);
+      const d = sampleDeck(m[1]);
       validateAdminCard(b, false);
-      const x = { id: nextId(), deckId: d.id, word: reason(b.tu), pos: reason(b.tuLoai), ipa: reason(b.phienAm), meaningVi: reason(b.nghiaVi), exampleEn: reason(b.viDuEn), exampleVi: reason(b.dichVi), difficulty: 2, tagIds: [], imageUrl: null, audioUrl: null, version: 0, createdAt: new Date().toISOString() };
+      const x = { id: nextId(), deckId: d.id, word: reason(b.tu), pos: reason(b.tuLoai), ipa: reason(b.phienAm), meaningVi: reason(b.nghiaVi), exampleEn: reason(b.viDuEn), exampleVi: reason(b.dichVi), difficulty: b.doKho || 1, source: reason(b.nguon), tagIds: b.nhanIds || [], version: 0, createdAt: new Date().toISOString() };
+      x.updatedAt = x.createdAt;
       db.cards.push(x);
-      d.updatedAt = x.createdAt;
-      audit(me2, "TAO_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, null, { tu: x.word, nghiaVi: x.meaningVi });
-      return { status: 201, body: theView(x) };
+      const view = adminCardView(x);
+      audit(me2, "TAO_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, null, cardFields(view));
+      return { status: 201, body: view };
     }],
     ["PATCH", /^\/admin\/cards\/(\w+)$/, (m, b) => {
       const me2 = requireAdmin();
       const x = cardById(m[1]);
-      if (!x) notFound();
-      sampleDeck(x.deckId);
-      if (b.version !== undefined && b.version !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ vừa được sửa ở nơi khác. Tải lại để xem bản mới nhất.");
+      if (!x || x.deleted) notFound();
+      const d = sampleDeck(x.deckId);
+      if (typeof b.version !== "number") bad([fe("version", "Thiếu phiên bản, vui lòng tải lại")]);
       validateAdminCard(b, true);
-      const before = theView(x);
-      const map = { tu: "word", tuLoai: "pos", phienAm: "ipa", nghiaVi: "meaningVi", viDuEn: "exampleEn", dichVi: "exampleVi" };
+      if (b.version !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ đã thay đổi, vui lòng tải lại");
+      const before = cardFields(adminCardView(x));
+      const map = { tu: "word", tuLoai: "pos", phienAm: "ipa", nghiaVi: "meaningVi", viDuEn: "exampleEn", dichVi: "exampleVi", nguon: "source" };
       Object.keys(map).forEach((k) => { if (b[k] !== undefined) x[map[k]] = reason(b[k]); });
+      if (b.doKho !== undefined) x.difficulty = b.doKho;
+      if (b.nhanIds !== undefined) x.tagIds = b.nhanIds;
       x.version++;
-      const after = theView(x);
-      const tr = {};
-      const sa = {};
-      Object.keys(map).forEach((k) => { if (before[k] !== after[k]) { tr[k] = before[k]; sa[k] = after[k]; } });
-      audit(me2, "SUA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + deckName(x.deckId) + ")" }, null, tr, sa);
-      return after;
+      x.updatedAt = new Date().toISOString();
+      const after = cardFields(adminCardView(x));
+      Object.keys(before).forEach((k) => { if (JSON.stringify(before[k]) === JSON.stringify(after[k])) { delete before[k]; delete after[k]; } });
+      if (Object.keys(before).length) audit(me2, "SUA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, before, after);
+      return adminCardView(x);
     }],
-    ["DELETE", /^\/admin\/cards\/(\w+)$/, (m) => {
+    ["DELETE", /^\/admin\/cards\/(\w+)$/, (m, b, q) => {
       const me2 = requireAdmin();
       const x = cardById(m[1]);
-      if (!x) notFound();
+      if (!x || x.deleted) notFound();
       const d = sampleDeck(x.deckId);
-      if (d.visibility === "CONG_KHAI" && db.cards.filter((c2) => c2.deckId === d.id).length <= 1) throw new ApiError(422, "BUSINESS_RULE", "Bộ đang xuất bản cần ít nhất một thẻ. Chuyển bộ về bản nháp trước khi xóa thẻ cuối.");
-      db.cards = db.cards.filter((c2) => c2.id !== x.id);
-      audit(me2, "XOA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, { tu: x.word, nghiaVi: x.meaningVi }, null);
+      if (q.version === undefined || q.version === "") bad([fe("version", "Gửi phiên bản không âm của thẻ")]);
+      if (d.visibility === "CONG_KHAI" && activeCards(d.id).length <= 1) throw new ApiError(422, "BUSINESS_RULE", "Bộ đang xuất bản cần ít nhất một thẻ. Chuyển bộ về bản nháp trước khi xóa thẻ cuối");
+      if (Number(q.version) !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Thẻ đã thay đổi, vui lòng tải lại");
+      const before = cardFields(adminCardView(x));
+      x.deleted = true;
+      audit(me2, "XOA_THE_MAU", { loai: "THE_TU_VUNG", id: x.id, ten: x.word + " (" + d.name + ")" }, null, before, null);
       return { status: 204 };
     }],
     ["GET", /^\/admin\/audit-logs$/, (m, b, q) => {
