@@ -4,12 +4,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { Button, Icon } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
-const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
-const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
+const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC', IELTS: 'IELTS' };
+const LEVEL = { A1: 'A1 - Sơ cấp', A2: 'A2 - Sơ trung cấp', B1: 'B1 - Trung cấp', B2: 'B2 - Thượng trung cấp', C1: 'C1 - Cao cấp', C2: 'C2 - Thành thạo' };
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -70,7 +69,7 @@ function DeckDialog({ deck, topics, onClose, onSave }) {
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Chủ đề *</label>
             <select required value={formData.chuDeId} onChange={e => setFormData({ ...formData, chuDeId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px' }}>
               <option value="">Chọn</option>
-              {topics?.map(t => <option key={t.id} value={t.id}>{t.ten}</option>)}
+              {topics?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
           <div>
@@ -162,7 +161,7 @@ function AdminDecksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { data: me } = useMe();
+  const { me } = useMe();
 
   const id = searchParams.get('id');
   const defaultQ = searchParams.get('q') || '';
@@ -177,19 +176,12 @@ function AdminDecksContent() {
 
   const { data: topics } = useQuery({
     queryKey: ['admin-topics'],
-    queryFn: () => fetchAllPages('/api/v1/admin/topics')
+    queryFn: () => apiFetch('/api/v1/admin/topics')
   });
 
   const { data: listData, isLoading: listLoading } = useQuery({
-    queryKey: ['admin-decks', defaultQ, defaultStatus, page],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (defaultQ) params.set('q', defaultQ);
-      if (defaultStatus) params.set('trangThai', defaultStatus);
-      params.set('page', page.toString());
-      params.set('size', '20');
-      return apiFetch(`/api/v1/admin/decks?${params.toString()}`);
-    },
+    queryKey: ['admin-decks', q, trangThai, page],
+    queryFn: () => apiFetch(`/api/v1/admin/decks?q=${encodeURIComponent(q)}&trangThai=${trangThai}&page=${page}&size=20`),
     enabled: !id
   });
 
@@ -215,17 +207,12 @@ function AdminDecksContent() {
         if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
       }
     },
-    onError: (err) => alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.')
+    onError: (err) => alert(err.message || 'Lỗi')
   });
 
   const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
-    if (reason === undefined) return undefined;
-    if (reason.length < 10 || reason.length > 500) {
-      alert('Lý do cần từ 10 đến 500 ký tự.');
-      return undefined;
-    }
-    return reason;
+    const reason = window.prompt('Nhập lý do thực hiện thao tác (bắt buộc):');
+    return reason?.trim();
   };
 
   const handleDeckAction = (act, d) => {

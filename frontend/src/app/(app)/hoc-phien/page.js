@@ -2,26 +2,13 @@
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useState, useEffect, useRef, Suspense } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
 
-const ALWAYS_DUE = ['MOI', 'ON_TAP'];
-const currentTime = () => Date.now();
-
-function generateClientEventId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'ev_' + currentTime() + '_' + Math.random().toString(36).substring(2, 9);
-}
-
-function isDue(item, now) {
-  const hanOnAt = item.tienDo?.hanOnAt;
-  return !hanOnAt || ALWAYS_DUE.includes(item.tienDo?.trangThai) || Date.parse(hanOnAt) <= now;
-}
+const QUEUED = 'CHUA_TRA_LOI';
+const ANSWERED = 'DA_TRA_LOI';
 
 function FlashcardSessionContent() {
   const router = useRouter();
@@ -29,15 +16,14 @@ function FlashcardSessionContent() {
   const id = searchParams.get('id');
   const flipButton = useRef(null);
   const rateButtons = useRef([]);
-  const cardStartTimeRef = useRef(0);
-  const finishStarted = useRef(false);
 
-  const [flippedKey, setFlippedKey] = useState(null);
+  const [flipped, setFlipped] = useState(false);
   const [queueDraft, setQueue] = useState(null);
-  const [notice, setNotice] = useState('');
-  const [now, setNow] = useState(currentTime);
+  const [secondsLeft, setSecondsLeft] = useState(null);
+  const [waitSeconds, setWaitSeconds] = useState(0);
 
-  const { data, isLoading, error, refetch } = useQuery({
+
+  const { data, isLoading, error } = useQuery({
     queryKey: ['session', id],
     queryFn: () => apiFetch(`/api/v1/learning/sessions/${id}`),
     enabled: !!id
@@ -46,21 +32,26 @@ function FlashcardSessionContent() {
   const session = data;
   const queue = queueDraft ?? data?.hangDoi ?? [];
 
+  useEffect(() => {
+    if (!session?.hetGioAt) return undefined;
+    const update = () => setSecondsLeft(Math.max(0, Math.ceil((Date.parse(session.hetGioAt) - Date.now()) / 1000)));
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [session?.hetGioAt]);
+
+
   const reviewMutation = useMutation({
     mutationFn: (body) => apiFetch(`/api/v1/learning/sessions/${id}/reviews`, { method: 'POST', body: JSON.stringify(body) }),
   });
 
   const finishMutation = useMutation({
     mutationFn: () => apiFetch(`/api/v1/learning/sessions/${id}/finish`, { method: 'POST' }),
-    onSuccess: () => router.replace(`/hoc-tong-ket?id=${id}`),
-    onError: () => { finishStarted.current = false; }
+    onSuccess: (summary) => {
+      sessionStorage.setItem(`learning-summary:${id}`, JSON.stringify(summary));
+      router.push(`/hoc-tong-ket?id=${id}`);
+    }
   });
-
-  const startFinish = () => {
-    if (finishStarted.current) return;
-    finishStarted.current = true;
-    finishMutation.mutate();
-  };
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -73,201 +64,172 @@ function FlashcardSessionContent() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const active = session?.trangThai === 'DANG_HOC';
-  const pending = queue.filter(q => q.trangThai === 'CHUA_TRA_LOI' && q.the);
-  const currentItem = pending.find(q => isDue(q, now));
+  const currentItem = queue.find(q => q.trangThai === QUEUED && (!q.tienDo?.hanOnAt || new Date(q.tienDo.hanOnAt) <= new Date()));
   const realItems = queue.filter(q => q.the);
-  const doneCount = realItems.filter(q => q.trangThai !== 'CHUA_TRA_LOI').length;
+  const doneCount = realItems.filter(q => q.trangThai === ANSWERED).length;
   const progressPercent = realItems.length ? (doneCount / realItems.length) * 100 : 0;
-  const timeUp = !!session?.hetGioAt && Date.parse(session.hetGioAt) <= now;
-  const nextDueAt = !currentItem && pending.length ? Math.min(...pending.map(q => Date.parse(q.tienDo.hanOnAt))) : null;
-  const shouldFinish = active && !currentItem && (pending.length === 0 || timeUp);
-  const currentKey = currentItem ? `${currentItem.theId}:${currentItem.thuTu}` : null;
-  const flipped = flippedKey !== null && flippedKey === currentKey;
+  const nextDueAt = queue
+    .filter(q => q.trangThai === QUEUED && q.the && q.tienDo?.hanOnAt && Date.parse(q.tienDo.hanOnAt) > Date.now())
+    .map(q => Date.parse(q.tienDo.hanOnAt))
+    .sort((a, b) => a - b)[0];
+  const timerText = secondsLeft == null
+    ? '--:--'
+    : `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
 
   useEffect(() => {
-    cardStartTimeRef.current = currentTime();
-  }, [currentKey]);
+    if (!nextDueAt) {
+      setWaitSeconds(0);
+      return undefined;
+    }
+    const update = () => setWaitSeconds(Math.max(0, Math.ceil((nextDueAt - Date.now()) / 1000)));
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [nextDueAt]);
 
-  useEffect(() => {
-    if (!active) return undefined;
-    const timer = setInterval(() => setNow(currentTime()), 1000);
-    return () => clearInterval(timer);
-  }, [active]);
-
-  useEffect(() => {
-    if (session?.trangThai === 'KET_THUC') router.replace(`/hoc-tong-ket?id=${id}`);
-  }, [session?.trangThai, router, id]);
-
-  useEffect(() => {
-    if (shouldFinish && finishMutation.isIdle) startFinish();
-  });
-
-  if (!id) return <div className="flash-note" role="alert">Thiếu mã phiên học. <Link href="/hoc">Chọn phiên học</Link></div>;
-  if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải phiên học...</div>;
-  if (error || !session) {
-    return (
-      <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-danger)' }} role="alert">
-        {error?.status === 404 ? 'Không tìm thấy phiên học.' : 'Lỗi tải phiên học.'} <Link href="/hoc">Chọn phiên học khác</Link>
-      </div>
-    );
-  }
+  if (!id) return <main className="session-main"><div className="sheet error-state"><h3>Không tìm thấy phiên học</h3><Button variant="secondary" onClick={() => router.push('/hom-nay')}>Về Hôm nay</Button></div></main>;
+  if (isLoading) return <main className="session-main"><div className="sheet"><div className="skeleton"><div className="sk sk-title"></div><div className="sk" style={{ height: 220 }}></div><div className="sk sk-row"></div></div></div></main>;
+  if (error || !session) return <main className="session-main"><div className="sheet error-state"><h3>Chưa tải được phiên học</h3><p>{error?.message || 'Vui lòng thử lại.'}</p><Button variant="secondary" onClick={() => router.refresh()}>Thử lại</Button></div></main>;
 
   const handleFlip = () => {
-    setFlippedKey(currentKey);
+    setFlipped(true);
+  };
+
+  const handleFinish = () => {
+    if (!finishMutation.isPending) finishMutation.mutate();
   };
 
   const handleRate = async (rate) => {
     if (!currentItem || !flipped || reviewMutation.isPending) return;
-    const item = currentItem;
-    setNotice('');
     try {
-      const thoiGianTraLoiMs = Math.min(120000, Math.max(100, currentTime() - cardStartTimeRef.current));
       const res = await reviewMutation.mutateAsync({
-        clientEventId: generateClientEventId(),
-        theId: item.theId,
+        clientEventId: `${id}:${currentItem.theId}:${Date.now()}:${crypto.randomUUID()}`,
+        theId: currentItem.theId,
         chieuHoc: session.chieuHoc,
         danhGia: rate,
-        expectedVersion: item.tienDo?.version ?? 0,
-        thoiGianTraLoiMs
+        expectedVersion: currentItem.tienDo.version,
+        thoiGianTraLoiMs: 1500
       });
-      const next = queue.map(q => (q === item ? { ...q, trangThai: 'DA_TRA_LOI', tienDo: res.tienDo ?? q.tienDo } : q));
+
+      const newQueue = [...queue];
+      const index = newQueue.findIndex(q => q.theId === currentItem.theId && q.trangThai === QUEUED);
+      if (index !== -1) {
+        newQueue[index].trangThai = ANSWERED;
+        newQueue[index].tienDo = res.tienDo;
+      }
+
       if (res.laiTrongPhien) {
-        next.push({
-          theId: item.theId,
-          thuTu: Math.max(0, ...queue.map(q => q.thuTu || 0)) + 1,
-          trangThai: 'CHUA_TRA_LOI',
-          tienDo: res.tienDo ?? item.tienDo,
-          the: item.the
+        newQueue.push({
+          theId: currentItem.theId,
+          thuTu: newQueue.length + 1,
+          trangThai: QUEUED,
+          tienDo: res.tienDo,
+          duKien: res.duKien,
+          the: currentItem.the
         });
       }
-      setQueue(next);
-      setFlippedKey(null);
-      setNow(currentTime());
-      if (session.hetGioAt && Date.parse(session.hetGioAt) <= currentTime()) startFinish();
-    } catch (err) {
-      if (err.code === 'VERSION_CONFLICT') {
-        setQueue(null);
-        await refetch();
-        setNotice('Thẻ này vừa được chấm ở nơi khác nên trạng thái đã đổi. Đã tải lại, bạn chấm lại theo trí nhớ của mình.');
-      } else if (err.code === 'CONFLICT') {
-        router.replace(`/hoc-tong-ket?id=${id}`);
-      } else if (err.status === 404) {
-        router.replace('/hoc');
-      } else if (err.status === 422) {
-        setQueue(queue.map(q => (q === item ? { ...q, trangThai: 'BO_QUA' } : q)));
-        setNotice(err.message || 'Thẻ này không còn trong phiên, chuyển sang thẻ tiếp theo.');
-      } else {
-        setNotice(err.message || 'Lỗi khi lưu kết quả ôn');
+
+      setQueue(newQueue);
+      setFlipped(false);
+
+      const remaining = newQueue.filter(q => q.trangThai === QUEUED);
+      if (remaining.length === 0) {
+        finishMutation.mutate();
       }
+    } catch (err) {
+      alert(err.message || 'Lỗi khi lưu kết quả');
     }
   };
 
-  const handleExit = () => {
-    if (window.confirm('Kết thúc phiên học? Các thẻ đã chấm vẫn được lưu. Thẻ chưa chấm sẽ quay lại ở phiên sau.')) startFinish();
-  };
 
   const the = currentItem?.the;
   const englishFront = session.chieuHoc === 'EN_VI';
   const ratings = [['QUEN', 'Quên'], ['KHO', 'Khó'], ['NHO', 'Nhớ'], ['DE', 'Dễ']];
-  const waitSeconds = nextDueAt ? Math.max(0, Math.round((nextDueAt - now) / 1000)) : 0;
-  const finishing = finishMutation.isPending || finishMutation.isSuccess || (shouldFinish && !finishMutation.isError);
 
   return (
     <div className="session">
       <header className="session-bar">
-        <Button variant="ghost" className="btn-icon" aria-label="Kết thúc phiên học" onClick={handleExit} disabled={finishing}><Icon name="x" /></Button>
+        <Button variant="ghost" className="btn-icon" aria-label="Kết thúc phiên" title="Kết thúc phiên" onClick={handleFinish}><Icon name="x" /></Button>
         <div className="grow">
-          <p className="bar-title">{session.boTheTen || 'Tất cả bộ thẻ'}</p>
-          <p className="bar-sub">{englishFront ? 'Anh → Việt' : 'Việt → Anh'}<span>{doneCount} / {realItems.length} thẻ</span></p>
+          <p className="bar-title">{session.boTheTen}</p>
+          <p className="bar-sub"><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span><span>Đã chấm {doneCount}/{realItems.length}</span></p>
         </div>
-        <span className="stamp" role="status">{reviewMutation.isPending ? 'Đang lưu…' : finishing ? 'Đang kết thúc…' : 'Đã lưu'}</span>
-        <ThemeToggle className="theme-session" />
-      </header>
+        <div className="bar-stamps">
+          <span className="stamp" role="timer" aria-live="off"><Icon name="clock" />{timerText}</span>
+          <span className={`stamp ${reviewMutation.isPending ? '' : 'stamp-success'}`} role="status"><Icon name={reviewMutation.isPending ? 'clock' : 'check'} /><span className="lbl">{reviewMutation.isPending ? 'Đang lưu' : 'Đã lưu'}</span></span>
+        </div>
+      <ThemeToggle className="theme-session" /></header>
       <div className="meter is-progress session-meter" role="progressbar" aria-label="Tiến độ phiên học" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressPercent)}>
         <span style={{ '--v': progressPercent / 100 }} />
       </div>
       <main className="session-main" id="main">
+        {secondsLeft === 0 && currentItem && <p className="notice notice-warning" role="status"><Icon name="info" /><span>Đã hết {session.quyThoiGian} phút. Chấm nốt thẻ này rồi phiên sẽ kết thúc.</span></p>}
         <div className="sheet flash">
-          {notice && <p className="notice notice-danger study-error" role="alert">{notice}</p>}
-          {finishMutation.isError && (
-            <p className="notice notice-danger study-error" role="alert">{finishMutation.error.message || 'Chưa kết thúc được phiên. Hãy thử lại.'}</p>
-          )}
-          {currentItem && the && !finishing ? (
-            <>
-              {timeUp && <p className="flash-note" role="status">Đã hết {session.quyThoiGian} phút. Chấm nốt thẻ này rồi phiên sẽ kết thúc.</p>}
-              <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
-                <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
-              </div>
-              <div className="face">
-                <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
-                <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
-                {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-                {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
-              </div>
-              {flipped && (
-                <div className="face back" role="region" aria-label="Mặt sau" aria-live="polite">
-                  <p className="face-label">Mặt sau</p>
-                  <div className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</div>
-                  {!englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-                  {the.viDuEn && <p className="example en" lang="en">“{the.viDuEn}”</p>}
+          {currentItem ? <>
+            <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
+              <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
+            </div>
+            <div className="face">
+              <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
+              <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
+              {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
+              {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
+            </div>
+            {flipped && <div className="face back" role="region" aria-label="Mặt sau" aria-live="polite">
+              <p className="face-label">Mặt sau</p>
+              <div className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</div>
+              {!englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
+              {the.viDuEn && (
+                <div className="example">
+                  <p className="en" lang="en">“{the.viDuEn}”</p>
+                  {the.dichVi && <p className="vi" lang="vi">{the.dichVi}</p>}
+                  <SpeakButton sentence text={the.viDuEn} />
                 </div>
               )}
-              <div className="row">
-                {(englishFront || flipped) && <SpeakButton text={the.tu} />}
-                {flipped && the.viDuEn && <SpeakButton sentence text={the.viDuEn} />}
-              </div>
-              <div className="actions">
-                {!flipped ? (
-                  <Button ref={flipButton} variant="primary" className="flip" onClick={handleFlip}>
-                    Lật thẻ <span className="kbd">Space</span>
-                  </Button>
-                ) : (
-                  <div>
-                    <p className="rate-caption">Đánh giá khả năng nhớ</p>
-                    <div className="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
-                      {ratings.map(([rate, label], index) => (
-                        <button
-                          type="button"
-                          className="rate"
-                          key={rate}
-                          ref={element => { rateButtons.current[index] = element; }}
-                          onClick={() => handleRate(rate)}
-                          disabled={reviewMutation.isPending}
-                        >
-                          <span className="rate-top"><span className="kbd">{index + 1}</span>{label}</span>
-                        </button>
-                      ))}
-                    </div>
+            </div>}
+            <div className="face-tools">{(englishFront || flipped) && <SpeakButton text={the.tu} />}</div>
+            <div className="actions">
+              {!flipped ? <Button ref={flipButton} variant="primary" className="flip" onClick={handleFlip}>Lật thẻ <span className="kbd">Space</span></Button> :
+                <div>
+                  <p className="rate-caption">Lần ôn tiếp theo</p>
+                  <div className="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
+                    {ratings.map(([rate, label], index) => <button type="button" className="rate" key={rate} ref={element => { rateButtons.current[index] = element; }} onClick={() => handleRate(rate)} disabled={reviewMutation.isPending}>
+                      <span className="rate-top"><span className="kbd">{index + 1}</span>{label}</span>
+                      {currentItem.duKien?.[rate] && <span className="rate-when">{currentItem.duKien[rate]}</span>}
+                    </button>)}
                   </div>
-                )}
-              </div>
-            </>
-          ) : nextDueAt && !finishing ? (
-            <div className="wait" role="status" style={{ textAlign: 'center', padding: 'var(--space-6) var(--space-4)' }}>
-              <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-2)' }}>Thẻ tiếp theo chưa đến giờ ôn</h2>
-              <p><span className="tally-n">{waitSeconds >= 60 ? Math.ceil(waitSeconds / 60) : waitSeconds}</span> {waitSeconds >= 60 ? 'phút nữa' : 'giây nữa'}</p>
-              <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Các thẻ vừa học lại cần nghỉ ngắn trước khi gặp lại. Bạn có thể đợi hoặc kết thúc phiên ngay.</p>
-              <Button variant="primary" onClick={startFinish}>Kết thúc phiên</Button>
+                  <details className="rate-help">
+                    <summary>Khi nào chọn mức nào?</summary>
+                    <ul>
+                      <li><strong>Quên</strong>: không nhớ ra, hoặc nhớ sai.</li>
+                      <li><strong>Khó</strong>: nhớ ra nhưng phải nghĩ lâu.</li>
+                      <li><strong>Nhớ</strong>: nhớ đúng trong vài giây.</li>
+                      <li><strong>Dễ</strong>: biết ngay, không cần nghĩ.</li>
+                      <li>Thời gian dưới mỗi nút là lần ôn tiếp theo do máy chủ tính.</li>
+                    </ul>
+                  </details>
+                </div>}
             </div>
-          ) : (
-            <div className="wait" role="status" style={{ textAlign: 'center', padding: 'var(--space-6) var(--space-4)' }}>
-              <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-2)' }}>
-                {finishMutation.isError ? 'Chưa kết thúc được phiên học' : 'Đang kết thúc phiên học…'}
-              </h2>
-              {finishMutation.isError && <Button variant="primary" onClick={startFinish}>Thử kết thúc lại</Button>}
-            </div>
-          )}
+          </> : <div className="wait" role="status">
+            <h2>Thẻ tiếp theo chưa đến giờ ôn</h2>
+            <p><span className="tally-n">{waitSeconds >= 60 ? Math.ceil(waitSeconds / 60) : waitSeconds}</span><span>{waitSeconds >= 60 ? ' phút nữa' : ' giây nữa'}</span></p>
+            <p className="muted">Các thẻ vừa học lại cần nghỉ ngắn trước khi gặp lại. Bạn có thể đợi hoặc kết thúc phiên ngay.</p>
+            <Button variant="primary" onClick={handleFinish} disabled={finishMutation.isPending}>{finishMutation.isPending ? 'Đang kết thúc...' : 'Kết thúc phiên'}</Button>
+          </div>}
         </div>
+        <details className="key-help">
+          <summary><Icon name="keyboard" />Phím tắt</summary>
+          <ul>
+            <li><span className="kbd">Space</span> Lật thẻ</li>
+            <li><span className="kbd">1</span> <span className="kbd">2</span> <span className="kbd">3</span> <span className="kbd">4</span> Quên, Khó, Nhớ, Dễ sau khi lật</li>
+            <li>Phím tắt không hoạt động khi con trỏ đang ở ô nhập.</li>
+          </ul>
+        </details>
       </main>
     </div>
   );
 }
 
 export default function FlashcardSessionPage() {
-  return (
-    <Suspense fallback={<div className="flash-note" role="status">Đang tải phiên học…</div>}>
-      <FlashcardSessionContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="flash-note" role="status">Đang tải phiên học…</div>}><FlashcardSessionContent /></Suspense>;
 }

@@ -1,4 +1,13 @@
 .stack { display: grid; gap: var(--sp-4); margin-top: var(--sp-5); }
+.dropzoneActive { border-color: var(--primary) !important; background: var(--primary-tint); box-shadow: var(--focus); }
+.uploadIcon { width: 2rem; height: 2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; color: var(--primary); }
+.progressBlock { display: grid; gap: 6px; }
+.progressLabel { display: flex; justify-content: space-between; gap: var(--sp-3); color: var(--ink-2); font-size: var(--fs-small); }
+.progress { width: 100%; height: 8px; accent-color: var(--primary); }
+.fileCard { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3); border: 1px solid var(--primary-line); border-radius: var(--radius-field); background: var(--primary-tint); }
+.fileCard > div { min-width: 0; display: grid; gap: 3px; }
+.fileCard strong, .fileCard span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fileCard span { color: var(--ink-2); font-size: var(--fs-small); }
 .mapping { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--sp-3); }
 .mapping label { display: grid; gap: var(--sp-2); min-width: 0; }
 .mapping select { min-height: 44px; width: 100%; color: var(--ink); background: var(--field); border: 1px solid var(--primary-line); border-radius: 8px; padding: 8px; }
@@ -6,6 +15,8 @@
 .tableWrap table { min-width: 660px; }
 .tableWrap input { width: 22px; height: 22px; }
 .meaning { min-width: 160px; white-space: pre-wrap; }
+.errorRow td { background: var(--danger-bg); }
+.errorMessage { margin: 0; color: var(--danger); font-weight: 600; }
 .actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); border-top: var(--rule-strong) solid var(--primary-line); padding-top: var(--sp-4); }
 .result { font-size: 3rem; font-weight: 800; }
 @media(max-width: 600px) { .mapping { grid-template-columns: 1fr; } .actions > * { flex: 1 1 100%; } }

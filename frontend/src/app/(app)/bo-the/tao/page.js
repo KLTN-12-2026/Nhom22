@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
-import { ErrorState, Icon } from '@/components/ui';
+import { ErrorState, Icon, Modal } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function CreateDeckPage() {
@@ -28,13 +28,16 @@ function DeckForm({ deck }) {
   const [level, setLevel] = useState(deck?.trinhDo || 'MOI_BAT_DAU');
   const [visibility, setVisibility] = useState(deck?.quyenTruyCap || 'RIENG_TU');
   const [goal, setGoal] = useState(deck?.mucTieu || '');
+  const [isCsvWarningOpen, setIsCsvWarningOpen] = useState(false);
+  const importAfterCreate = useRef(false);
 
   const createMutation = useMutation({
     mutationFn: (data) => apiFetch(deck ? `/api/v1/decks/${deck.id}` : '/api/v1/decks', { method: deck ? 'PATCH' : 'POST', body: JSON.stringify(data) }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-decks'] });
       queryClient.setQueryData(['deck', res.id], res);
-      router.push(`/bo-the/${res.id}`);
+      router.push(importAfterCreate.current ? `/bo-the/${res.id}/nhap-csv` : `/bo-the/${res.id}`);
+      importAfterCreate.current = false;
     },
     onError: (err) => {
       setErrorMsg(err.message);
@@ -53,6 +56,24 @@ function DeckForm({ deck }) {
     });
   };
 
+  const openCsvImport = () => {
+    if (createMutation.isPending) return;
+    if (deck) {
+      router.push(`/bo-the/${deck.id}/nhap-csv`);
+      return;
+    }
+    if (!name.trim()) {
+      setIsCsvWarningOpen(true);
+      return;
+    }
+    importAfterCreate.current = true;
+    createMutation.mutate({
+      ten: name, moTa: desc, trinhDo: level, quyenTruyCap: visibility,
+      ...(topicId ? { chuDeId: topicId } : {}),
+      ...(goal ? { mucTieu: goal } : {})
+    });
+  };
+
   const currentTopic = topics.find(t => t.id === topicId);
   const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 
@@ -64,7 +85,20 @@ function DeckForm({ deck }) {
           <Link className="btn btn-quiet" id="back" href="/bo-the" style={{ margin: '0 0 var(--sp-2) -12px', justifySelf: 'start' }}>
             <Icon name="arrow-left" /><span>Bộ của tôi</span>
           </Link>
-          <h1 id="page-title">{deck ? 'Sửa bộ thẻ' : 'Tạo bộ thẻ'}</h1>
+          <div className="row-between">
+            <h1 id="page-title">{deck ? 'Sửa bộ thẻ' : 'Tạo bộ thẻ'}</h1>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={openCsvImport}
+              disabled={createMutation.isPending}
+              title="Nhập hàng loạt thẻ từ file CSV"
+              aria-label="Nhập hàng loạt thẻ từ file CSV"
+            >
+              <Icon name="upload" />
+              <span>Nhập CSV</span>
+            </button>
+          </div>
         </div>
 
         <form id="form" className={styles.formGrid} onSubmit={handleSubmit}>
@@ -166,7 +200,7 @@ function DeckForm({ deck }) {
           </fieldset>
 
           {errorMsg && <p role="alert" className="notice notice-error">{errorMsg}</p>}
-          {deck && createMutation.error?.code === 'VERSION_CONFLICT' && <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['deck', deck.id] })}>Tải lại bộ thẻ</button>}
+          {createMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['deck', deck.id] })}>Tải lại bộ thẻ</button>}
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>
@@ -212,6 +246,31 @@ function DeckForm({ deck }) {
           </ol>
         </section>
       </aside>
+
+      <Modal
+        isOpen={isCsvWarningOpen}
+        onClose={() => setIsCsvWarningOpen(false)}
+        title="Chưa có tên bộ thẻ"
+        footer={(
+          <>
+            <button type="button" className="btn btn-quiet" onClick={() => setIsCsvWarningOpen(false)}>
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setIsCsvWarningOpen(false);
+                document.getElementById('name')?.focus();
+              }}
+            >
+              Nhập tên bộ thẻ
+            </button>
+          </>
+        )}
+      >
+        <p>Vui lòng nhập tên bộ thẻ trước khi nhập dữ liệu từ file CSV.</p>
+      </Modal>
     </div>
   );
 }

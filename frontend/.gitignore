@@ -5,4 +5,11 @@
 
 lint-result.json
 
+CLAUDE.md
 .next-fe011-dev/
+node_modules/
+.next/
+out/
+
+.DS_Store
+**/.DS_Store

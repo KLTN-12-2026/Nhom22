@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { Button, Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 const TYPES = [
@@ -30,14 +30,14 @@ function PracticeForm() {
   const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { data: myDecks = [] } = useQuery({
-    queryKey: ['my-decks', 'all'],
-    queryFn: () => fetchAllPages('/api/v1/decks')
+  const { data: myDecks, isLoading: isDecksLoading, error: decksError } = useQuery({
+    queryKey: ['my-decks'],
+    queryFn: () => apiFetch('/api/v1/decks?tab=mine')
   });
 
-  const { data: history, isLoading: isHistoryLoading } = useQuery({
+  const { data: history, isLoading: isHistoryLoading, error: historyError } = useQuery({
     queryKey: ['practice-history'],
-    queryFn: () => apiFetch('/api/v1/practice/history?size=3').catch(() => ({ items: [] }))
+    queryFn: () => apiFetch('/api/v1/practice/history?size=3')
   });
 
   const sessionMutation = useMutation({
@@ -92,13 +92,21 @@ function PracticeForm() {
             <select className="select" id="source" name="source" value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="">Tất cả bộ của tôi</option>
               <option value="SO_TAY">Sổ tay từ khó</option>
-              {myDecks.map(deck => (
+              {myDecks?.items?.map(deck => {
+                const name = deck.name || deck.ten || 'Bộ thẻ chưa đặt tên';
+                const cardCount = deck.cardCount ?? deck.soThe ?? 0;
+                return (
                 <option key={deck.id} value={`deck:${deck.id}`}>
-                  {deck.ten.length > 80 ? deck.ten.slice(0, 80) + '…' : deck.ten}
+                  {name.length > 80 ? name.slice(0, 80) + '…' : name} ({cardCount} thẻ)
                 </option>
-              ))}
+                );
+              })}
             </select>
-            <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
+            {isDecksLoading
+              ? <p className="field-hint" role="status">Đang tải danh sách bộ thẻ...</p>
+              : decksError
+                ? <p className="field-error" role="alert">Chưa tải được danh sách bộ thẻ. Bạn vẫn có thể chọn nguồn mặc định hoặc Sổ tay từ khó.</p>
+                : <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>}
           </div>
 
           <fieldset className="fieldset field" data-field="soCau">
@@ -119,12 +127,17 @@ function PracticeForm() {
             <p className="field-error"></p>
           </fieldset>
 
-          <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
+          {errorMsg && (
+            <div className="notice notice-danger" role="alert">
+              <Icon name="info" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
           <div className={styles.formFoot}>
-            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending}>
+            <Button type="submit" variant="accent" size="lg" loading={sessionMutation.isPending}>
               {sessionMutation.isPending ? 'Đang tạo...' : 'Làm bài'}
-            </button>
+            </Button>
             <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>
           </div>
         </form>
@@ -133,7 +146,7 @@ function PracticeForm() {
       <aside className="side-col">
         <section className="panel" aria-labelledby="recent-title">
           <h2 className="panel-title" id="recent-title">Bài gần đây</h2>
-          <div data-view={isHistoryLoading ? "loading" : (history?.items?.length > 0 ? "ready" : "empty")} id="recent-region">
+          <div data-view={isHistoryLoading ? "loading" : historyError ? "error" : (history?.items?.length > 0 ? "ready" : "empty")} id="recent-region">
             <div data-when="loading">
               <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
             </div>
@@ -155,7 +168,9 @@ function PracticeForm() {
             <div data-when="empty">
               <p className="small muted">Bạn chưa làm bài nào.</p>
             </div>
-            <div data-when="error"></div>
+            <div data-when="error">
+              <p className="small notice notice-danger" role="alert">Chưa tải được bài gần đây.</p>
+            </div>
           </div>
           <Link className="btn btn-quiet" href="/luyen-tap-lich-su" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
             Tất cả bài làm

@@ -7,10 +7,15 @@
 .planLine { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px dashed var(--color-primary-line); }
 .planLine span:first-child { color: var(--color-primary); font-weight: 600; font-size: var(--font-size-sm); }
 .planLine span:last-child { font-weight: 650; text-align: right; }
+.levelValue { display: inline-flex; align-items: center; gap: var(--space-2); }
+.levelValue .bubble-row { display: inline-flex; gap: 4px; }
+.levelValue .bubble { width: 14px; height: 14px; }
 
 .sideCol { display: grid; gap: var(--space-5); }
 .panel { background: var(--color-primary-tint); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); }
 .panelTitle { font-size: var(--font-size-md); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-primary-tint); }
+.continuePanel { grid-column: 1 / -1; }
+.continueActions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 
 .deckHead {
   display: grid;

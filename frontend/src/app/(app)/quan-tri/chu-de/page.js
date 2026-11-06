@@ -9,14 +9,13 @@ export default function AdminTopicsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const dialogRef = useRef(null);
-  const [kind, setKind] = useState('topics');
+  const [kind, setKind] = useState('topics'); // 'topics' or 'tags'
   const [nameInput, setNameInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   const [renamingId, setRenamingId] = useState(null);
   const [newName, setNewName] = useState('');
-  const [renameError, setRenameError] = useState('');
 
   useEffect(() => { if (renamingId && dialogRef.current && !dialogRef.current.open) dialogRef.current.showModal(); }, [renamingId]);
   const { data, isLoading, isError, error, refetch } = useQuery({
@@ -70,16 +69,10 @@ export default function AdminTopicsPage() {
       queryClient.invalidateQueries({ queryKey: ['public-topics'] });
       queryClient.invalidateQueries({ queryKey: ['public-tags'] });
       setRenamingId(null);
-      setRenameError('');
       setSuccessMsg('Đã lưu tên');
     },
     onError: (err) => {
-      if (err.code === 'VERSION_CONFLICT') {
-        setRenameError('');
-        setErrorMsg(err.message || 'Danh mục vừa được người khác sửa. Hãy tải lại.');
-        return;
-      }
-      setRenameError(err.fieldErrors?.find(f => f.field === 'ten')?.message || err.data?.message || err.message || 'Lỗi đổi tên');
+      setErrorMsg(err.message || 'Lỗi đổi tên');
     }
   });
 
@@ -101,7 +94,6 @@ export default function AdminTopicsPage() {
   const openRename = (item) => {
     setRenamingId(item.id);
     setNewName(item.ten);
-    setRenameError('');
   };
 
   const handleRename = (e) => {
@@ -111,8 +103,8 @@ export default function AdminTopicsPage() {
   };
 
   const LABEL = {
-    topics: ["Tên chủ đề mới", "Thêm chủ đề", "Ví dụ: Y tế và sức khỏe", "Danh sách chủ đề"],
-    tags: ["Tên nhãn mới", "Thêm nhãn", "Ví dụ: Part 6", "Danh sách nhãn"]
+    topics: ["Tên chủ đề mới", "Thêm chủ đề", "Số bộ thẻ", "Ví dụ: Y tế và sức khỏe", "Danh sách chủ đề"],
+    tags: ["Tên nhãn mới", "Thêm nhãn", "Số thẻ", "Ví dụ: Part 6", "Danh sách nhãn"]
   };
   const L = LABEL[kind];
 
@@ -125,7 +117,7 @@ export default function AdminTopicsPage() {
             <h1 id="page-title">Chủ đề và nhãn</h1>
             {successMsg && <p className="notice notice-success" role="status">{successMsg}</p>}
             {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}
-            {renameMutation.error?.code === 'VERSION_CONFLICT' && <button type="button" className="btn btn-secondary" onClick={() => { setRenamingId(null); refetch(); }}>Tải lại danh mục</button>}
+            {renameMutation.error?.status === 409 && <button type="button" className="btn btn-secondary" onClick={() => { setRenamingId(null); refetch(); }}>Tải lại danh mục</button>}
             <p>Chủ đề dùng để lọc thư viện. Nhãn gắn vào từng thẻ, ví dụ “Part 5” hay “Cụm động từ”.</p>
           </div>
 
@@ -157,7 +149,7 @@ export default function AdminTopicsPage() {
                 name="name"
                 maxLength={kind === 'topics' ? 100 : 50}
                 autoComplete="off"
-                placeholder={L[2]}
+                placeholder={L[3]}
                 value={nameInput}
                 onChange={e => setNameInput(e.target.value)}
               />
@@ -185,11 +177,12 @@ export default function AdminTopicsPage() {
             <div data-when="ready">
               <div className="table-wrap">
                 <table className={`data-table admin-table ${styles.adminTable}`}>
-                  <caption className="sr-only">{L[3]}</caption>
+                  <caption className="sr-only">{L[4]}</caption>
                   <thead>
                     <tr>
                       <th scope="col" style={{ width: '3rem' }}>Số</th>
                       <th scope="col">Tên</th>
+                      <th scope="col">{L[2]}</th>
                       <th scope="col"><span className="sr-only">Thao tác</span></th>
                     </tr>
                   </thead>
@@ -198,6 +191,7 @@ export default function AdminTopicsPage() {
                       <tr key={item.id}>
                         <td className="num">{i + 1}</td>
                         <td className={styles.name}>{item.ten}</td>
+                        <td>{'—'}</td>
                         <td>
                           <div className="table-actions">
                           {(
@@ -243,6 +237,7 @@ export default function AdminTopicsPage() {
         </aside>
       </div>
 
+      {/* Rename Dialog */}
       {renamingId && (
         <dialog ref={dialogRef} className="dialog" onCancel={() => setRenamingId(null)}>
           <form className="dialog-body" noValidate onSubmit={handleRename}>
@@ -258,11 +253,8 @@ export default function AdminTopicsPage() {
                 maxLength={kind === 'topics' ? 100 : 50}
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                aria-invalid={renameError ? 'true' : undefined}
-                aria-describedby={renameError ? 'rn-error' : undefined}
                 autoFocus
               />
-              {renameError && <p className="field-error" id="rn-error">{renameError}</p>}
             </div>
             <div className="dialog-actions">
               <button type="button" className="btn btn-quiet" onClick={() => setRenamingId(null)}>Hủy</button>

@@ -13,15 +13,10 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const registerMutation = useMutation({
-    mutationFn: async (data) => {
-      const send = (body) => apiFetch('/api/v1/auth/register', { method: 'POST', body: JSON.stringify(body) });
-      try {
-        return await send(data);
-      } catch (err) {
-        if (!data.muiGio || err.code !== 'VALIDATION_FAILED' || !err.fieldErrors.some(f => f.field === 'muiGio')) throw err;
-        return send({ ...data, muiGio: undefined });
-      }
-    },
+    mutationFn: (data) => apiFetch('/api/v1/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: (data, variables) => {
       router.push(`/xac-thuc-email?email=${encodeURIComponent(variables.email)}`);
     },

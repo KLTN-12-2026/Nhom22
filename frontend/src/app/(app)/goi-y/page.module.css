@@ -1,0 +1,17 @@
+.page { max-width: 1440px; }
+.demoBar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-4); color: var(--ink-2); font-size: var(--fs-small); }
+.breadcrumb { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-4); font-size: var(--fs-small); }
+.breadcrumb span:last-child { color: var(--ink-2); }
+.section { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule) solid var(--primary-line); }
+.sectionHeader { display: flex; justify-content: space-between; align-items: end; gap: var(--sp-4); flex-wrap: wrap; }
+.sectionHeader h2 { margin-bottom: var(--sp-2); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.card, .notebookCard { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: var(--rule) solid var(--primary-line); border-radius: var(--radius-btn); background: var(--field); }
+.card h3 { font-size: var(--fs-h2); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.evidence { display: flex; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-3); border-left: var(--rule-strong) solid var(--primary); background: var(--primary-tint); color: var(--ink-2); font-size: var(--fs-small); }
+.evidence .icon { flex: 0 0 auto; color: var(--primary); }
+.notebookCard { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.notebookCard h3 { margin: var(--sp-2) 0; }
+@media (max-width: 719px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 539px) { .demoBar { align-items: flex-start; } .sectionHeader { align-items: flex-start; } .notebookCard { grid-template-columns: 1fr; } .actions > .btn { flex: 1 1 auto; } }
