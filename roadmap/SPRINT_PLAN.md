@@ -17,11 +17,11 @@
 | **S4** | 19/10–25/10 | Đợt 1 | Bộ/thẻ, thư viện, sao chép, CSV | B1.7–B1.12 | F1.7–F1.12 | FR-03, 04, 05 · TC-02, 03, 04 | 🎯 **Demo Đợt 1** (25/10): vòng quản lý nội dung · 📦 `DOT1` |
 | **S5** | 26/10–01/11 | Đợt 2 | Học SRS đầu-cuối | B2.1–B2.6 | F2.1–F2.4 | FR-06 · TC-05…10 | |
 | **S6** | 02/11–08/11 | Đợt 2 | Luyện tập, sổ tay, thống kê nền, quản trị nền, bảng điều khiển | B2.7–B2.12 | F2.5–F2.8, F2.1 (mở rộng) | FR-07, 08, 11, 13 · TC-09, 11, 17 | 🎯 **Demo Đợt 2** (08/11): học đầu-cuối · 📦 `DOT2` |
-| **S7** | 09/11–15/11 | Đợt 3 | AI: tác vụ nền, hạn mức, xưởng thẻ, viết câu, gợi ý | B3.1–B3.3, B3.5 | F3.1–F3.4 | FR-08, 09 · TC-12, 13 | |
-| **S8** | 16/11–22/11 | Đợt 3 | Phát âm, điểm thưởng, thông báo/nhắc | B3.4, B3.6, B3.7 | F3.5–F3.7 | FR-10, 12 · TC-14, 15 | |
-| **S9** | 23/11–29/11 | Đợt 3 | Kiểm duyệt, tổng kết tuần, xóa dữ liệu, quản trị vận hành | B3.8–B3.11 | F3.8–F3.11 | FR-11, 13, 14 · TC-16, 17 | 🎯 **Demo Đợt 3** (29/11): đủ chức năng · 📦 `DOT3` |
+| **S7** | 09/11–15/11 | Đợt 3 | Tác vụ nền, hạn mức, xưởng thẻ AI, TTS, thư viện mẫu 200–300 thẻ | B3.1, B3.2, B3.4a, B5.2a | F2.2 (tồn), F3.1, F3.5 (nghe) | FR-09, 10 · TC-12, 13 | |
+| **S8** | 16/11–22/11 | Đợt 3 | AI hỗ trợ + tự điền thẻ, gợi ý có lý do, điểm/chuỗi, nhắc học | B3.3, B3.5, B3.6, B3.7 | F3.2–F3.4, F3.6, F3.7 | FR-08, 09, 12 · TC-15 | |
+| **S9** | 23/11–29/11 | Đợt 3 | Đánh giá phát âm, kiểm duyệt, tổng kết tuần, xóa dữ liệu, quản trị vận hành (gọn) | B3.4b, B3.8–B3.11 | F3.5, F3.8–F3.11 | FR-10, 11, 13, 14 · TC-14, 16, 17 | 🎯 **Demo Đợt 3** (29/11): đủ chức năng · 📦 `DOT3` |
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
-| **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
+| **S11** | 07/12–14/12 | GĐ5 | Triển khai, tài khoản demo, tài liệu, diễn tập; đóng băng mã từ 11/12 | B5.1, B5.2b, B5.3, B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
 Ghi chú: "Đợt 2" = S5–S6; sprint S2 thuộc GĐ0.
 
@@ -125,39 +125,44 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 
 **Xong khi:** TC-11, TC-17 qua; số phút/lượt hôm nay trên UI12 khớp UI35 (TC-09). **Demo Đợt 2:** bảng điều khiển hôm nay → ôn hai chiều → tổng kết → luyện nghe viết sai một từ → sổ tay → thống kê → Admin khóa tài khoản có nhật ký.
 
-### S7 · 09/11–15/11 · AI & gợi ý — FR-08, FR-09
+**Cắt phạm vi S7–S11 (áp 07/11/2026):** theo [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md). Bảng S7–S9 dưới đây là lịch đã cắt. Mốc quyết định: 12/11 khóa AI · 16/11 Azure Speech · 22/11 tiến độ S8 · 29/11 dư thời gian cho mục Hoãn (web push + PWA → `POST /ai/exercise-drafts` → kế hoạch theo ngày thi TOEIC).
+
+### S7 · 09/11–15/11 · AI tạo thẻ, âm thanh, nội dung mẫu — FR-09, FR-10
 | BE | API | FE | Màn hình |
 |---|---|---|---|
+| — (tồn Đợt 2) | — | F2.2 | UI19 hàng đợi chưa đồng bộ khi mất mạng, nhánh 409 |
 | B3.1 Tác vụ nền & hạn mức | (hạ tầng `tac_vu_nen`, `QuotaService`) | — | — |
 | B3.2 Tạo thẻ bằng AI | `POST /ai/card-drafts` (202), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` | F3.1 | UI29 `/ai/xuong-the` (trái đoạn văn, phải thẻ nháp, "Lưu N thẻ đã chọn") |
-| B3.3 Tác vụ AI khác | `POST /ai/context-explanations`, `/ai/sentence-feedback`, `/ai/exercise-drafts`, `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30 giải thích ngữ cảnh (trên UI19/UI15), UI31 `/ai/viet-cau`, UI32 `/ai/lich-su` |
-| B3.5 Gợi ý có lý do | `GET /learning/recommendations` | F3.4 | UI28 thẻ gợi ý trên UI12 và UI27 |
+| B3.4a TTS | `GET /cards/{id}/audio` | F3.5 (phần nghe) | Nút nghe trên UI19, bài nghe viết UI24 dùng audio thật |
+| B5.2a Thư viện mẫu (R-01) | (seed 200–300 thẻ có IPA) | — | UI02, UI03 |
 
-**Xong khi:** TC-12, TC-13 qua với `FakeAiClient`; tắt AI → học và bài cố định vẫn chạy.
+**Xong khi:** TC-12, TC-13 qua với `FakeAiClient`; tắt AI → học và bài cố định vẫn chạy; mọi bộ mẫu tạo được bài nghe viết.
 
-### S8 · 16/11–22/11 · Phát âm, động lực, thông báo — FR-10, FR-12
+### S8 · 16/11–22/11 · AI hỗ trợ, gợi ý, động lực, nhắc học — FR-08, FR-09, FR-12
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B3.4 Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su`; nút nghe trên UI19 dùng audio thật |
-| B3.6 Điểm, chuỗi, huy hiệu, thử thách | `GET /rewards/history`, `GET /badges`, `GET /challenges`, CRUD `/admin/badges`, `/admin/challenges` | F3.6 | UI38 `/thanh-tich`, chuỗi ngày trên UI12, UI54 `/quan-tri/dong-luc` |
-| B3.7 Thông báo & nhắc học | `GET /notifications`, `PATCH /notifications/{id}`, `POST /admin/announcements` | F3.7 | UI39 chuông + `/thong-bao`, UI52 `/quan-tri/thong-bao` |
+| B3.3 Tác vụ AI khác (gọn) | `POST /ai/context-explanations`, `/ai/sentence-feedback`, `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai/viet-cau`, UI32 `/ai/lich-su`, nút "Gợi ý" tự điền trên UI16 (R-02) |
+| B3.5 Gợi ý có lý do | `GET /learning/recommendations` (+ `TIEN_BO`, R-04) | F3.4 | UI28 thẻ gợi ý trên UI12 và UI27 |
+| B3.6 Điểm, chuỗi, huy hiệu, thử thách (gọn) | `GET /rewards/history`, `GET /badges`, `GET /challenges` | F3.6 | UI38 `/thanh-tich`, chuỗi ngày + ngày đóng băng trên UI12 (R-03) |
+| B3.7 Thông báo & nhắc học (gọn) | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 chuông + `/thong-bao` |
 
-**Xong khi:** TC-14, TC-15 qua; micro bị từ chối có thông báo đúng; chạy lại job không cộng điểm/gửi mail trùng.
+**Xong khi:** TC-15 qua; chạy lại job không cộng điểm/gửi mail trùng; AI lỗi vẫn lưu thẻ tay được.
 
-### S9 · 23/11–29/11 · Kiểm duyệt, tổng kết, dữ liệu cá nhân, vận hành — FR-11, 13, 14
+### S9 · 23/11–29/11 · Phát âm, kiểm duyệt, tổng kết, dữ liệu cá nhân, vận hành — FR-10, 11, 13, 14
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B3.8 Báo cáo & kiểm duyệt | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45 hộp "Báo cáo" (bộ/thẻ/đầu ra AI), UI50 `/quan-tri/bao-cao` |
-| B3.9 Tổng kết tuần | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` (bản đồ làm chủ) |
-| B3.10 Xóa tài khoản | `POST /me/deletion-requests`, `GET /admin/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
-| B3.11 Quản trị vận hành | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/statistics`, `GET /admin/jobs` | F3.11 | UI46 `/quan-tri`, UI51 `/quan-tri/dich-vu`, UI53 tab "Tác vụ nền" |
+| B3.4b Đánh giá phát âm (gọn) | `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su` |
+| B3.8 Báo cáo & kiểm duyệt (gọn) | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` (giữ/ẩn) | F3.8 | UI45 hộp "Báo cáo" (bộ/thẻ/đầu ra AI), UI50 `/quan-tri/bao-cao` |
+| B3.9 Tổng kết tuần (gọn) | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` (bảng bộ thẻ × kỹ năng) |
+| B3.10 Xóa tài khoản (gọn) | `POST /me/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
+| B3.11 Quản trị vận hành (gọn mạnh) | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
 
-**Xong khi:** TC-16, TC-17 qua. **Demo Đợt 3:** chạy đủ 10 bước TK §20.2 trên dữ liệu minh họa.
+**Xong khi:** TC-14, TC-16, TC-17 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 trên dữ liệu minh họa.
 
 ### S10 · 30/11–06/12 · Kiểm thử & ổn định — TC-01…20
 | BE | FE | Kết quả |
 |---|---|---|
-| B4.1 Test tự động cho mỗi TC + bảng truy vết FR ↔ API ↔ TC | F4.1 E2E Playwright cho luồng demo (TK §20.2) | Bảng truy vết đủ 14 FR / 20 TC |
+| B4.1 Test tự động cho mỗi TC + bảng truy vết FR ↔ API ↔ TC | F4.1 E2E Playwright cho luồng demo (TK §20.2 bước 1–4, 8) | Bảng truy vết đủ 14 FR / 20 TC |
 | B4.2 Rà soát bảo mật (`/security-review`) | F4.2 Responsive 360px, bàn phím, focus, tương phản, `prefers-reduced-motion` (TC-18) | Không lỗi mức cao |
 | B4.3 Hiệu năng 50 User (TC-20) | F4.3 Mạng chậm/API lỗi: không mất kết quả đã lưu, nút thử lại (TC-18) | Báo cáo p95, tỷ lệ lỗi |
 | B4.4 Sao lưu & khôi phục (TC-19) | F4.4 Lighthouse, kích thước bundle, không lộ khóa trong bundle | Biên bản khôi phục |
@@ -167,7 +172,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | BE | FE | Kết quả |
 |---|---|---|
 | B5.1 Compose production + Nginx cùng domain + HTTPS | F5.1 Build production Next.js sau Nginx `/` và `/api` | Một lệnh chạy toàn hệ thống |
-| B5.2 Dữ liệu demo (1 Admin, 3 User, 6–10 bộ, 200–300 thẻ) | F5.2 Kiểm tra mọi màn hình với dữ liệu demo | Tài khoản demo trong `README.md` |
+| B5.2b Tài khoản demo (1 Admin, 3 User có lịch sử; thư viện 200–300 thẻ đã làm ở B5.2a, S7) | F5.2 Kiểm tra mọi màn hình với dữ liệu demo | Tài khoản demo trong `README.md` |
 | B5.3 `openapi.json`, hướng dẫn cài đặt/vận hành | F5.3 Hướng dẫn sử dụng có ảnh chụp màn hình | `huong-dan/` đầy đủ |
 | B5.4 Diễn tập demo | F5.4 Diễn tập demo, slide | Video/biên bản demo 8–10 phút |
 
@@ -184,9 +189,9 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | FR-05 | CSV | P0 | B1.12 | F1.11 | S4 | TC-04 |
 | FR-06 | SRS/phiên học | P0 | B2.1–B2.6, B2.12 | F2.1–F2.4 | S5, S6 | TC-05…10 |
 | FR-07 | Bài cố định | P0 | B2.7, B2.8 | F2.5 | S6 | TC-11 |
-| FR-08 | Từ khó/gợi ý | P1 | B2.9, B3.5 | F2.6, F3.4 | S6, S7 | — |
-| FR-09 | AI | P1 | B3.1–B3.3 | F3.1–F3.3 | S7 | TC-12, 13 |
-| FR-10 | Phát âm | P1 | B3.4 | F3.5 | S8 | TC-14 |
+| FR-08 | Từ khó/gợi ý | P1 | B2.9, B3.5 | F2.6, F3.4 | S6, S8 | — |
+| FR-09 | AI | P1 | B3.1–B3.3 | F3.1–F3.3 | S7, S8 | TC-12, 13 |
+| FR-10 | Phát âm | P1 | B3.4a, B3.4b | F3.5 | S7, S9 | TC-14 |
 | FR-11 | Thống kê | P0/P1 | B2.10, B2.12, B3.9 | F2.7, F2.1, F3.9 | S6, S9 | TC-09 |
 | FR-12 | Thưởng/nhắc | P1 | B3.6, B3.7 | F3.6, F3.7 | S8 | TC-15 |
 | FR-13 | Quản trị | P0/P1 | B1.7, B2.11, B3.8, B3.11 | F1.12, F2.8, F3.8, F3.11 | S4, S6, S9 | TC-17 |
@@ -226,13 +231,13 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI25 | Kết quả, đáp án, giải thích | `/luyen-tap-ket-qua` | O | S6 |
 | UI26 | Lịch sử bài luyện | `/luyen-tap-lich-su` | L | S6 |
 | UI27 | Sổ tay từ khó & cặp nhầm | `/so-tay` | L | S6 |
-| UI28 | Gợi ý có lý do | khối trên `/hom-nay`, `/so-tay` | L | S7 |
+| UI28 | Gợi ý có lý do | khối trên `/hom-nay`, `/so-tay` | L | S8 |
 | UI29 | Xưởng thẻ AI | `/ai/xuong-the` | L | S7 |
-| UI30 | Giải thích theo ngữ cảnh | ngăn bên trên UI15/UI19 | L | S7 |
-| UI31 | Viết câu "dùng thử" | `/ai/viet-cau` | L | S7 |
-| UI32 | Lịch sử AI & hạn mức | `/ai/lich-su` | L | S7 |
-| UI33 | Góc phát âm | `/phat-am` | L | S8 |
-| UI34 | Lịch sử phát âm | `/phat-am/lich-su` | L | S8 |
+| UI30 | Giải thích theo ngữ cảnh (+ tự điền thẻ trên UI16, R-02) | ngăn bên trên UI15/UI19 | L | S8 |
+| UI31 | Viết câu "dùng thử" | `/ai/viet-cau` | L | S8 |
+| UI32 | Lịch sử AI & hạn mức | `/ai/lich-su` | L | S8 |
+| UI33 | Góc phát âm | `/phat-am` | L | S9 |
+| UI34 | Lịch sử phát âm | `/phat-am/lich-su` | L | S9 |
 | UI35 | Thống kê tổng quan & kỹ năng | `/thong-ke` | L | S6 |
 | UI36 | Bản đồ làm chủ | `/thong-ke/ban-do` | L | S9 |
 | UI37 | Tổng kết tuần | `/thong-ke/tuan` | L | S9 |
@@ -244,15 +249,15 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI43 | Thông báo & giờ nhắc | `/ca-nhan/thong-bao` | L | S3 |
 | UI44 | Dữ liệu & xóa tài khoản | `/ca-nhan/du-lieu` | L | S9 |
 | UI45 | Báo cáo nội dung (hộp thoại) | trên UI03/UI15/UI29 | L | S9 |
-| UI46 | Quản trị — tổng quan | `/quan-tri` (hiện chuyển hướng sang `/quan-tri/chu-de`) | A | S9 |
+| UI46 | Quản trị — tổng quan | `/quan-tri` (giữ chuyển hướng sang `/quan-tri/chu-de`) | A | **Cắt** |
 | UI47 | Quản trị — tài khoản & vai trò | `/quan-tri/tai-khoan` | A | S6 |
 | UI48 | Quản trị — chủ đề & nhãn | `/quan-tri/chu-de` | A | S4 |
 | UI49 | Quản trị — bộ/thẻ mẫu | `/quan-tri/bo-mau` | A | S6 |
 | UI50 | Quản trị — hàng đợi báo cáo | `/quan-tri/bao-cao` | A | S9 |
 | UI51 | Quản trị — hạn mức & sử dụng dịch vụ | `/quan-tri/dich-vu` | A | S9 |
-| UI52 | Quản trị — thông báo hệ thống | `/quan-tri/thong-bao` | A | S8 |
-| UI53 | Quản trị — nhật ký & tác vụ nền | `/quan-tri/nhat-ky` | A | S6, S9 |
-| UI54 | Quản trị — huy hiệu & thử thách | `/quan-tri/dong-luc` | A | S8 |
+| UI52 | Quản trị — thông báo hệ thống | `/quan-tri/thong-bao` | A | **Cắt** |
+| UI53 | Quản trị — nhật ký (tab "Tác vụ nền": **Cắt**) | `/quan-tri/nhat-ky` | A | S6 |
+| UI54 | Quản trị — huy hiệu & thử thách | `/quan-tri/dong-luc` | A | **Cắt** |
 
 Quyền: G khách · L đã đăng nhập · O chủ sở hữu · A Admin.
 
@@ -276,12 +281,12 @@ Mỗi PR có một người review khác module. Kiểm thử và tài liệu l�
 
 | Thiếu trong kế hoạch cũ | Bổ sung | Bước |
 |---|---|---|
-| Admin quản lý huy hiệu & thử thách (TK §4.2) | CRUD `/admin/badges`, `/admin/challenges` + UI54 | B3.6, F3.6 |
-| Admin theo dõi yêu cầu xóa dữ liệu (TK §4.2) | `GET /admin/deletion-requests` | B3.10, F3.10 |
+| Admin quản lý huy hiệu & thử thách (TK §4.2) | **Cắt 07/11/2026** (KE_HOACH_CAT_DOT3): huy hiệu/thử thách cố định bằng migration | B3.6, F3.6 |
+| Admin theo dõi yêu cầu xóa dữ liệu (TK §4.2) | **Cắt 07/11/2026** (KE_HOACH_CAT_DOT3): theo dõi qua nhật ký thao tác | B3.10, F3.10 |
 | Bộ khởi động sau onboarding (TK §6.1 bước 5) | `GET /library/decks` lọc theo mục tiêu/trình độ của User | B1.10, F1.7 |
 | Chia sẻ liên kết bộ (TK §4.1) | Link công khai `/thu-vien/[id]`, nút "Sao chép liên kết" | B1.10, F1.7 |
 | Trang giới thiệu/hướng dẫn/chính sách (TK §4.3) | Trang tĩnh FE | F0.5 |
-| Nghe từ/câu trước khi có TTS | Âm thanh tải lên (B1.6) hoặc Web Speech API; thay bằng `GET /cards/{id}/audio` ở S8 | F2.2 → F3.5 |
+| Nghe từ/câu trước khi có TTS | Âm thanh tải lên (B1.6) hoặc Web Speech API; thay bằng `GET /cards/{id}/audio` ở S7 (B3.4a) | F2.2 → F3.5 |
 | Bảng điều khiển đủ khối TK §10 (TK §9.1), **đề xuất** 28/10/2026 | UI12 `/hom-nay` là bảng điều khiển, không route mới; mở rộng `GET /learning/today` (`phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian`); hoạt động 7 ngày từ `GET /statistics/overview`; trang chủ sau đăng nhập về `/hom-nay` | B2.12, F2.1 |
 
 ## 7. Việc cần chốt với GVHD (TK §2.4) — hạn cuối S2

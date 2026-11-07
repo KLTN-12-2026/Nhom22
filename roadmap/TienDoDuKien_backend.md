@@ -41,6 +41,8 @@
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
 Sau bước cuối mỗi giai đoạn: chạy `/fe-report <GĐ>` để bàn giao cho FE.
+
+**Cắt phạm vi Đợt 3 → GĐ5 (áp 07/11/2026):** theo [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md). Mỗi bước ghi nhãn **Giữ / Gọn / Cắt / Hoãn**; phần "Cắt"/"Hoãn" không làm trong đợt này và được ghi vào hạn chế đã biết (B5.3). Việc giữ chân người dùng R-01…R-04 gắn vào B3.3, B3.4a, B3.5, B3.6, B3.9, B5.2a.
 Lịch theo tuần (S1–S11) ghép BE ↔ FE: `roadmap/SPRINT_PLAN.md`; bước FE: `roadmap/TienDoDuKien_fronend.md`.
 
 ---
@@ -436,48 +438,65 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `V15__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 cho sổ tay B2.9, V14 cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
+- **Giữ** (S7). Hạn mức theo user/ngày từ một bảng cấu hình phẳng; không tách hạn mức theo nhà cung cấp/loại tác vụ.
+- Mốc 12/11/2026: chốt nhà cung cấp AI; chưa có khóa thì demo bằng `FakeAiClient` có nhãn, vẫn giữ 1 lượt gọi thật cho nghiệm thu.
 
 ### [ ] B3.2 Adapter AI & tạo thẻ từ đoạn văn — FR-09, TC-12, TC-13
 - Interface `AiClient` + `OpenAiClient` (gọi bằng `RestClient`, timeout) + `FakeAiClient` (profile dev/test, dùng cho demo "AI lỗi").
 - API: `POST /ai/card-drafts` → 202 + requestId; `GET /ai/requests/{id}`; `POST /ai/card-drafts/{id}/commit` (chỉ lưu thẻ đã chọn, `Idempotency-Key`).
 - Prompt có phiên bản, tách chỉ dẫn hệ thống với đoạn văn User; kiểm schema JSON đầu ra, bỏ mục không hợp lệ, đánh dấu trùng.
+- **Giữ** (S7).
 
 ### [ ] B3.3 Các tác vụ AI khác — FR-09
-- API: `POST /ai/context-explanations`, `POST /ai/sentence-feedback` (giải thích tiếng Việt), `POST /ai/exercise-drafts`, `GET /ai/history`, `GET /me/service-quota`.
+- API: `POST /ai/context-explanations`, `POST /ai/sentence-feedback` (giải thích tiếng Việt), `GET /ai/history` (danh sách), `GET /me/service-quota`.
 - AI lỗi/timeout **không chặn** học SRS và bài cố định.
+- **Gọn** (S8). `context-explanations` nhận từ (+ ngữ cảnh tùy chọn) và trả IPA, nghĩa, ví dụ, bản dịch, mẹo nhớ; dùng lại cho **R-02** tự điền thẻ trong trình sửa thẻ (người học sửa rồi mới lưu; AI lỗi vẫn lưu tay được).
+- **Hoãn:** `POST /ai/exercise-drafts` (chỉ làm khi dư thời gian sau 29/11).
 
-### [ ] B3.4 Phát âm — FR-10, TC-14
+### [ ] B3.4a Âm thanh TTS — FR-10, TC-14
+- `GET /cards/{id}/audio` (TTS, cache theo nội dung+giọng+phiên bản); bài `NGHE_VIET` dùng âm thanh này khi thẻ chưa có tệp âm thanh riêng.
+- **Giữ**, kéo lên S7: mở bài nghe viết cho mọi thẻ, kể cả thư viện mẫu R-01.
+
+### [ ] B3.4b Đánh giá phát âm — FR-10, TC-14
 - `V<n>__speaking.sql` (số kế tiếp chưa dùng khi tới bước này): `ket_qua_phat_am`.
-- API: `GET /cards/{id}/audio` (TTS, cache theo nội dung+giọng+phiên bản), `POST /pronunciation/assessments` (multipart, ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}`.
+- API: `POST /pronunciation/assessments` (multipart, ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}`.
 - Interface `SpeechClient` + Azure Speech adapter + Fake (gắn nhãn "Mô phỏng"). Chỉ số thiếu → `null`, không sinh điểm giả.
+- **Gọn** (S9): so sánh trước–sau = 2 lần gần nhất cùng từ; không có biểu đồ tiến bộ. Mốc 16/11/2026: Azure Speech không chạy được thì dùng Fake gắn nhãn (TK §20.1).
 
 ### [ ] B3.5 Gợi ý có lý do — FR-08
-- API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, PHAT_AM_THAP, QUA_HAN_NHIEU (TK §8.3). Ngưỡng trong `application.yaml`.
+- API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, QUA_HAN_NHIEU, TIEN_BO (TK §8.3); PHAT_AM_THAP chỉ bật khi B3.4b dùng dịch vụ thật. Ngưỡng trong `application.yaml`.
+- **Giữ** (S8). **R-04:** `TIEN_BO` khi một thẻ từng sai nhiều mà các lượt gần đây đúng (ví dụ "sai 3/5 lượt tháng trước, đúng 5/5 tuần này"); chỉ trả khi đủ ngưỡng lượt quan sát.
 
 ### [ ] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
 - `V16__engagement.sql` (số thực tế lấy số kế tiếp chưa dùng): `so_diem_thuong`, `huy_hieu`, `nguoi_dung_huy_hieu`, `thu_thach`, `tien_do_thu_thach`.
-- `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày; chuỗi ngày khi phiên có ≥ 5 lượt hợp lệ (TK §15.1). B2.2 đang tính chuỗi theo **ngày** có ≥ 5 lượt (`su_dung_hoc_ngay`); khi làm bước này phải chốt theo phiên hay theo ngày rồi sửa `LearningPlanService`/`StreakCalculator` và `/learning/today` cho cùng một định nghĩa.
-- API: `GET /rewards/history`, `GET /badges`, `GET /challenges`; Admin: CRUD `/admin/badges`, `/admin/challenges` (TK §4.2).
+- `RewardService` gọi từ B2.4/B2.8: unique `(nguoi_dung_id, loai_su_kien, su_kien_id)`; trần điểm/ngày. Chuỗi ngày **chốt theo ngày** (07/11/2026, TK §15.1): ngày địa phương có ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay`), giữ cách B2.2 đang chạy.
+- **R-03 ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày nghỉ để không đứt chuỗi; `/learning/today` trả thêm trạng thái đã dùng ngày nghỉ tuần này. Test: nghỉ 1 ngày, nghỉ 2 ngày liên tiếp, qua nửa đêm, đổi múi giờ.
+- API: `GET /rewards/history`, `GET /badges`, `GET /challenges`.
+- **Gọn** (S8): 5–6 huy hiệu và 1 thử thách tuần cố định, seed bằng migration. **Cắt:** CRUD `/admin/badges`, `/admin/challenges`.
 
 ### [ ] B3.7 Thông báo & nhắc học — FR-12, TC-15
 - `V17__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
-- API: `GET /notifications`, `PATCH /notifications/{id}`; `POST /admin/announcements`.
-- Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
+- API: `GET /notifications`, `PATCH /notifications/{id}`.
+- Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User qua email và trong ứng dụng, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
+- **Gọn** (S8). **Cắt:** `POST /admin/announcements`. **Hoãn:** web push + PWA (mục hoãn ưu tiên 1).
 
 ### [ ] B3.8 Báo cáo nội dung & kiểm duyệt — FR-13
-- API: `POST /reports` (bộ/thẻ/đầu ra AI, chống gửi trùng), `GET /admin/reports`, `POST /admin/reports/{id}/resolve` (giữ/ẩn/yêu cầu sửa/từ chối + lý do, ghi nhật ký, thông báo người liên quan).
+- API: `POST /reports` (bộ/thẻ/đầu ra AI, chống gửi trùng), `GET /admin/reports`, `POST /admin/reports/{id}/resolve` (giữ/ẩn + lý do, ghi nhật ký).
+- **Gọn** (S9). **Cắt:** trạng thái "yêu cầu sửa", "từ chối" và thông báo người liên quan.
 
 ### [ ] B3.9 Tổng kết tuần — FR-11
-- API: `GET /statistics/weekly-summary`: từ đã học, kỹ năng tiến bộ, 3 từ khó, mục tiêu tuần sau. Văn bản từ mẫu; số liệu không lấy từ AI.
+- API: `GET /statistics/weekly-summary`: từ đã học, kỹ năng tiến bộ, 3 từ khó, **từ đã vượt qua** (R-04, cùng quy tắc `TIEN_BO` của B3.5), mục tiêu tuần sau. Văn bản từ mẫu; số liệu không lấy từ AI.
+- **Gọn** (S9): bản đồ làm chủ UI36 dùng `/statistics/skills` theo bộ thẻ × kỹ năng; **Cắt** lưới màu từng từ.
 
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
 - `V18__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
-- Tệp: từ 03/11/2026 (RS-059) bản sao bộ có tệp riêng nên xóa tệp của tác giả không ảnh hưởng bản sao. Còn phải xử lý bản sao tạo trước ngày này (dùng chung `tep_id` với nguồn): sao chép tệp cho bản sao trước khi xóa, hoặc gỡ media khỏi bản sao.
-- Admin: `GET /admin/deletion-requests` theo dõi tiến độ xóa (TK §4.2).
+- Tệp: từ 03/11/2026 (RS-059) bản sao bộ có tệp riêng nên xóa tệp của tác giả không ảnh hưởng bản sao. Bản sao tạo trước ngày này (dùng chung `tep_id` với nguồn): **gỡ media khỏi bản sao** (chốt 07/11/2026).
+- **Gọn** (S9). **Cắt:** `GET /admin/deletion-requests`; Admin theo dõi qua nhật ký thao tác.
 
 ### [ ] B3.11 Quản trị vận hành — FR-13
-- API: `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi, thời gian, chi phí; chưa có đơn giá → "Chưa xác định"), `GET /admin/statistics`, `GET /admin/jobs`.
+- API: `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi).
+- **Gọn mạnh** (S9). **Cắt:** `GET /admin/statistics`, `GET /admin/jobs`, thời gian phản hồi và chi phí. Mốc 22/11/2026: S8 chậm thì chỉ còn `GET /admin/service-usage`.
 - **Cuối Đợt 3 →** `/fe-report DOT3`.
 
 ---
@@ -492,13 +511,16 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Chạy `/security-review`; kiểm rate limit (đăng nhập, quên mật khẩu, upload, AI, báo cáo), kiểm quyền cha–con, không log token/mật khẩu/khóa, CORS/CSRF, header bảo mật.
 
 ### [ ] B4.3 Hiệu năng — TC-20
-- Dữ liệu minh họa + k6/JMeter 50 User đồng thời; ghi p95, tỷ lệ lỗi. Thêm index thiếu theo `EXPLAIN`.
+- Dữ liệu minh họa + 1 kịch bản k6, 50 User đồng thời, 3 endpoint phổ biến; ghi p95, tỷ lệ lỗi. Thêm index thiếu theo `EXPLAIN`.
+- **Gọn:** không đo riêng upload/AI.
 
 ### [ ] B4.4 Sao lưu & khôi phục — TC-19
-- Script `mysqldump` hằng ngày + `aws s3 sync` kho S3; thử khôi phục sang môi trường mới, ghi biên bản thời gian/kết quả.
+- Script `mysqldump` + `aws s3 sync` kho S3; thử khôi phục 1 lần sang môi trường mới, ghi biên bản thời gian/kết quả.
+- **Gọn:** không lập lịch tự động hằng ngày.
 
 ### [ ] B4.5 Log & giám sát
-- Log JSON có `requestId`; Actuator health/metrics; cảnh báo job lỗi nhiều.
+- Log JSON có `requestId`; Actuator health.
+- **Gọn:** không làm cảnh báo job lỗi.
 - **Cuối GĐ4 →** `/fe-report GD4`.
 
 ---
@@ -508,11 +530,15 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B5.1 Compose production
 - `docker-compose.prod.yml`: Nginx reverse proxy (FE + `/api` cùng domain), HTTPS, không mở cổng MySQL/Redis/S3 ra ngoài, biến bí mật qua `.env` không commit. Đặt `FORWARD_HEADERS_STRATEGY=native` cho service `api` (Nginx gửi `X-Forwarded-For`/`-Proto`) để rate limit theo IP thật; nếu không, mọi người dùng chung một IP proxy. Bật `COOKIE_SECURE=true`, `SPRING_PROFILES_ACTIVE` khác `dev`.
 
-### [ ] B5.2 Dữ liệu demo — TK §20.1
-- 1 Admin, 3 User có lịch sử khác nhau, 6–10 bộ giao tiếp/TOEIC (200–300 thẻ), thẻ quá hạn, cặp nhầm, AI nháp, một báo cáo, một ca dịch vụ lỗi.
+### [ ] B5.2a Thư viện mẫu (R-01) — TK §20.1, kéo lên S7
+- 6–10 bộ giao tiếp/TOEIC, 200–300 thẻ tự biên soạn (có thể nháp bằng AI B3.2 rồi duyệt tay), đủ IPA, ví dụ, bản dịch; âm thanh từ B3.4a. Thay nội dung `R__library_starter.sql` (hiện 8 bộ × 3 thẻ, chưa có IPA).
+- Xong khi: mọi bộ mẫu tạo được bài `NGHE_VIET`; không thẻ mẫu nào thiếu IPA.
+
+### [ ] B5.2b Tài khoản & lịch sử demo — TK §20.1
+- 1 Admin, 3 User có lịch sử khác nhau, thẻ quá hạn, cặp nhầm, AI nháp, một báo cáo, một ca dịch vụ lỗi.
 
 ### [ ] B5.3 Tài liệu
-- Xuất `openapi.json`; hướng dẫn cài đặt/vận hành trong `huong-dan/`; danh sách hạn chế đã biết.
+- Xuất `openapi.json`; hướng dẫn cài đặt/vận hành trong `huong-dan/`; danh sách hạn chế đã biết, gồm mọi mục **Cắt/Hoãn** của [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md).
 
 ### [ ] B5.4 Diễn tập demo — TK §20.2
 - Chạy kịch bản 10 bước trên môi trường sạch; sửa lỗi phát sinh.
