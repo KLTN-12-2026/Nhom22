@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button } from '@/components/ui';
+import { Button, ErrorState } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const ACTION = {
@@ -39,7 +39,7 @@ function AdminAuditContent() {
   const [tuNgay, setTuNgay] = useState(defaultTuNgay);
   const [denNgay, setDenNgay] = useState(defaultDenNgay);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['admin-audit', defaultQ, defaultHanhDong, defaultLoai, defaultTuNgay, defaultDenNgay, page],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -141,6 +141,8 @@ function AdminAuditContent() {
 
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : isError ? (
+          <ErrorState title="Chưa tải được nhật ký" description={error?.message} onRetry={() => refetch()} />
         ) : data?.items?.length > 0 ? (
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
             {data.items.map((l, i) => {

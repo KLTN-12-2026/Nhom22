@@ -46,7 +46,7 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | FE-09 | ✅ 07/11 | FE | UI22 "Cứu lịch ôn" chưa làm | Vừa |
 | FE-10 | ✅ 07/11 | FE | UI12 thiếu khối "Phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn" | Vừa |
 | FE-11 | ✅ 07/11 | FE | Logo/"Trở về" về `/bo-the` thay vì `/hom-nay` | Nhỏ |
-| FE-12 | P1 | FE | Đối chiếu 14 trang với mockup, 360px, trạng thái tải/rỗng/lỗi | Lớn |
+| FE-12 | ✅ 07/11 | FE | Đối chiếu 14 trang với mockup, 360px, trạng thái tải/rỗng/lỗi; tick F2.1, F2.3–F2.8 (F2.2 còn mất mạng/409) | Lớn |
 | FE-13 | P1 | FE | Xóa mock route Next.js Đợt 2 sau khi BE thật chạy | Vừa |
 | BE-02 | ✅ | BE | Postman thống kê thêm 5 ca lỗi (xong 07/11, đã `curl` đúng) | Nhỏ |
 | BE-03 | 🟡 | BE | Biến environment xong 07/11; mô tả collection phải sửa tay trong Postman (MCP không sửa riêng `info`) | Nhỏ |
@@ -382,7 +382,7 @@ Ràng buộc khi sửa tài liệu: không tick roadmap khi chưa có bằng ch�
 - [ ] FE-09, FE-10, FE-11: UI12 đủ khối theo TK §9.1.
 - [ ] VER-02: Postman Đợt 2 chạy, có file bằng chứng trong `report/evidence/`.
 - [x] VER-03: 7 bước demo pass (07/11/2026).
-- [ ] FE-12: 14 trang khớp mockup, đủ tải/rỗng/lỗi, 360px; tick F2.1–F2.8 kèm "Đã làm".
+- [x] FE-12: 14 trang khớp mockup, đủ tải/rỗng/lỗi, 360px (07/11/2026); F2.2 chưa tick vì chưa kiểm mất mạng/409.
 - [ ] DOC-01 … DOC-11: tài liệu khớp code.
 
 ## 8. Câu hỏi cần chốt

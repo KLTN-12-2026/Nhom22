@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon, Pagination } from '@/components/ui';
+import { Button, ErrorState, Icon, Pagination } from '@/components/ui';
 
 const TYPES = {
   CHON_NGHIA: 'Chọn nghĩa',
@@ -26,7 +26,7 @@ function PracticeHistoryContent() {
   const [page, setPage] = useState(defaultPage);
   const [loaiBai, setLoaiBai] = useState(defaultLoaiBai);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['practice-history', page, loaiBai],
     queryFn: () => apiFetch(`/api/v1/practice/history?page=${page}&size=10${loaiBai ? `&loaiBai=${loaiBai}` : ''}`)
   });
@@ -81,6 +81,8 @@ function PracticeHistoryContent() {
 
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : isError ? (
+          <ErrorState title="Chưa tải được lịch sử bài làm" description={error?.message} onRetry={() => refetch()} />
         ) : data?.items?.length > 0 ? (
           <>
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>

@@ -7,6 +7,7 @@ const eslintConfig = defineConfig([
     files: ['src/**/*.{js,mjs}'],
     rules: {
       'no-unused-vars': ['error', { args: 'none', caughtErrors: 'none', ignoreRestSiblings: true }],
+      'no-undef': 'error',
     },
   },
   globalIgnores([

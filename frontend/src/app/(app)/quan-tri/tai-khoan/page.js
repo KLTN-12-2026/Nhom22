@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Pagination } from '@/components/ui';
+import { Button, ErrorState, Pagination } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const STATUS = {
@@ -36,7 +36,7 @@ function AdminUsersContent() {
   const [trangThai, setTrangThai] = useState(defaultStatus);
   const [vaiTro, setVaiTro] = useState(defaultRole);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['admin-users', defaultQ, defaultStatus, defaultRole, page],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -180,6 +180,8 @@ function AdminUsersContent() {
 
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : isError ? (
+          <ErrorState title="Chưa tải được danh sách tài khoản" description={error?.message} onRetry={() => refetch()} />
         ) : data?.items?.length > 0 ? (
           <>
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>

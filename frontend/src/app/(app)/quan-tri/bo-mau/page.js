@@ -5,11 +5,26 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
-import { Button, Icon } from '@/components/ui';
+import { Button, ErrorState, Icon } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
+
+function DeckRules() {
+  return (
+    <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
+      <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
+      <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
+        <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
+        <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
+        <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
+        <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
+        <li>Nếu hai người cùng sửa một bộ, người lưu sau được báo tải lại để không ghi đè.</li>
+      </ul>
+    </section>
+  );
+}
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -179,7 +194,7 @@ function AdminDecksContent() {
     queryFn: () => fetchAllPages('/api/v1/admin/topics')
   });
 
-  const { data: listData, isLoading: listLoading } = useQuery({
+  const { data: listData, isLoading: listLoading, isError: listIsError, error: listError, refetch: refetchList } = useQuery({
     queryKey: ['admin-decks', defaultQ, defaultStatus, page],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -192,13 +207,13 @@ function AdminDecksContent() {
     enabled: !id
   });
 
-  const { data: deckDetail, isLoading: deckLoading } = useQuery({
+  const { data: deckDetail, isLoading: deckLoading, isError: deckIsError, error: deckError, refetch: refetchDeck } = useQuery({
     queryKey: ['admin-deck', id],
     queryFn: () => apiFetch(`/api/v1/admin/decks/${id}`),
     enabled: !!id
   });
 
-  const { data: cards, isLoading: cardsLoading } = useQuery({
+  const { data: cards, isLoading: cardsLoading, isError: cardsIsError, error: cardsError, refetch: refetchCards } = useQuery({
     queryKey: ['admin-cards', id],
     queryFn: () => fetchAllPages(`/api/v1/admin/decks/${id}/cards`),
     enabled: !!id
@@ -317,6 +332,7 @@ function AdminDecksContent() {
 
   if (id) {
     if (deckLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>;
+    if (deckIsError) return <ErrorState title="Chưa tải được bộ mẫu" description={deckError?.message} onRetry={() => refetchDeck()} />;
     return (
       <div className="page page-grid with-side">
         <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
@@ -340,6 +356,8 @@ function AdminDecksContent() {
           <h2 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-3)' }}>Danh sách thẻ</h2>
           {cardsLoading ? (
             <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>Đang tải thẻ...</div>
+          ) : cardsIsError ? (
+            <ErrorState title="Chưa tải được danh sách thẻ" description={cardsError?.message} onRetry={() => refetchCards()} />
           ) : cards?.length > 0 ? (
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-3)' }}>
               {cards.map((c, i) => (
@@ -375,15 +393,7 @@ function AdminDecksContent() {
         </section>
 
         <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-          <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
-            <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-              <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
-              <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
-              <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
-              <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
-            </ul>
-          </section>
+          <DeckRules />
         </aside>
 
         {editingCard !== null && (
@@ -452,6 +462,8 @@ function AdminDecksContent() {
 
         {listLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : listIsError ? (
+          <ErrorState title="Chưa tải được danh sách bộ mẫu" description={listError?.message} onRetry={() => refetchList()} />
         ) : listData?.items?.length > 0 ? (
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
             {listData.items.map((d, i) => (
@@ -475,6 +487,7 @@ function AdminDecksContent() {
       </section>
 
       <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
+        <DeckRules />
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Nhật ký</h2>
           <Button variant="ghost" onClick={() => router.push('/quan-tri/nhat-ky?loai=BO_THE')} style={{ marginLeft: '-12px' }}>Mở nhật ký bộ mẫu</Button>

@@ -230,11 +230,12 @@ function SummaryContent() {
           </p>
         </section>
 
-        {t.tuCanLuyen?.length > 0 && (
-          <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Gợi ý tiếp theo</h2>
+        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
+          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Gợi ý tiếp theo</h2>
+          {t.tuCanLuyen?.length > 0 ? (
+          <>
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-              Bạn chọn Quên hoặc Khó với {t.tuCanLuyen.length} từ. Gõ lại từ theo nghĩa giúp nhớ chắc hơn.
+              Bạn chọn Quên hoặc Khó với {t.tuCanLuyen.length} từ. Gõ lại từ theo nghĩa giúp nhớ chắc hơn. Bài luyện được lưu riêng, không đổi lịch ôn thẻ.
             </p>
             <Button
               variant="primary"
@@ -245,8 +246,13 @@ function SummaryContent() {
               {practiceMutation.isPending ? 'Đang tạo bài luyện…' : `Luyện ${t.tuCanLuyen.length} từ này`}
             </Button>
             {practiceError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>{practiceError}</p>}
-          </section>
-        )}
+          </>
+          ) : (
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
+              {t.soLuot ? 'Không có từ nào cần luyện thêm. Quay lại khi có thẻ đến hạn.' : 'Bắt đầu một phiên mới khi bạn sẵn sàng.'}
+            </p>
+          )}
+        </section>
       </aside>
     </div>
   );

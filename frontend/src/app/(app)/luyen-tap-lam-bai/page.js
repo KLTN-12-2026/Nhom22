@@ -204,10 +204,10 @@ function PracticeSessionContent() {
         return (
           <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
             {q.deBai.cotTrai.map(left => (
-              <div key={left.id} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 'var(--space-3)', alignItems: 'center' }}>
+              <div key={left.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 150px) minmax(0, 1fr)', gap: 'var(--space-3)', alignItems: 'center' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
                 <select
-                  style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  style={{ width: '100%', minWidth: 0, padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
                   value={answers[q.id]?.[left.id] || ''}
                   onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
                 >

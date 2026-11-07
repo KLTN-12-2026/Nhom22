@@ -208,7 +208,7 @@ function PracticeResultContent() {
 
       <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Theo kỹ năng trong bài</h2>
+          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Theo kỹ năng trong bài này</h2>
           <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
             {A.theoKyNang?.map(k => (
               <div key={k.kyNang}>

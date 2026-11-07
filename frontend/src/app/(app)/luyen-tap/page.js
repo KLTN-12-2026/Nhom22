@@ -35,9 +35,9 @@ function PracticeForm() {
     queryFn: () => fetchAllPages('/api/v1/decks')
   });
 
-  const { data: history, isLoading: isHistoryLoading } = useQuery({
+  const { data: history, isLoading: isHistoryLoading, isError: isHistoryError, refetch: refetchHistory } = useQuery({
     queryKey: ['practice-history'],
-    queryFn: () => apiFetch('/api/v1/practice/history?size=3').catch(() => ({ items: [] }))
+    queryFn: () => apiFetch('/api/v1/practice/history?size=3')
   });
 
   const sessionMutation = useMutation({
@@ -133,9 +133,12 @@ function PracticeForm() {
       <aside className="side-col">
         <section className="panel" aria-labelledby="recent-title">
           <h2 className="panel-title" id="recent-title">Bài gần đây</h2>
-          <div data-view={isHistoryLoading ? "loading" : (history?.items?.length > 0 ? "ready" : "empty")} id="recent-region">
+          <div data-view={isHistoryLoading ? "loading" : isHistoryError ? "error" : (history?.items?.length > 0 ? "ready" : "empty")} id="recent-region">
             <div data-when="loading">
               <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
+            </div>
+            <div data-when="error">
+              <p className="notice notice-danger" role="alert">Chưa tải được bài gần đây. <button type="button" className="link-btn" onClick={() => refetchHistory()}>Thử lại</button></p>
             </div>
             <div data-when="ready">
               <ul className={styles.recent} id="recent" role="list">
@@ -155,7 +158,6 @@ function PracticeForm() {
             <div data-when="empty">
               <p className="small muted">Bạn chưa làm bài nào.</p>
             </div>
-            <div data-when="error"></div>
           </div>
           <Link className="btn btn-quiet" href="/luyen-tap-lich-su" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
             Tất cả bài làm
