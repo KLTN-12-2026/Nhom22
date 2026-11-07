@@ -909,6 +909,8 @@ Khối "Hoạt động 7 ngày" dùng `theoNgay[{ngay, soLuotOn, soPhut}]`; `soP
 
 BE không sửa `frontend/`. Các mục dưới đây đã kiểm lại trên mã FE ngày 03/11/2026 và vẫn còn; RS-068…RS-072 thêm theo rà soát 06/11/2026 (`docs/BAO_CAO_RA_SOAT_DOT2.md`, `docs/KE_HOACH_SUA_DOT2.md`).
 
+**07/11/2026 (được phép sửa FE):** đã sửa RS-060, RS-066 (tắt mock mặc định), RS-067, RS-068…RS-072 trong `frontend/`; `npm test` 46/46, `npm run build` qua; kiểm trên BE Docker qua Next.js dev (`NEXT_PUBLIC_DOT2_MOCK=disabled`): UI49 GET `/admin/decks/30/cards` 200, POST 201, PATCH 200, DELETE `?version=` 204; câu `NGHE_VIET` gọi `.../questions/1/audio` 200, không lỗi console; nộp bài 201, UI25/UI26 hiện `0p 21s`; UI27 "Nhầm 1 lần · Gần nhất 07/11/2026"; UI35 "Mục tiêu 10p", số ngày đạt khớp `soNgayDatMucTieu`; `/quan-tri/tai-khoan`, `/quan-tri/nhat-ky`, `/quan-tri/bo-mau` không còn trang chặn. Chưa kiểm 360px, chưa thử nhánh BE tắt (lỗi 502). Còn RS-018 (README FE) và UI22/khối B2.12 trên UI12.
+
 | Mã | Vị trí FE | Hiện trạng | Việc FE cần làm |
 |---|---|---|---|
 | RS-060 (Cao) | `frontend/src/app/(app)/luyen-tap-lam-bai/page.js:211` | Đọc `q.deBai?.amThanhUrl`; BE trả `deBai.amTuId` (mục 5.8). Câu `NGHE_VIET` trên BE thật không có âm thanh. Hướng dẫn cũ (dùng `/decks/{boTheId}/cards/{theId}/files/AM_TU`) không làm được vì đề không có `theId`/`boTheId` | Từ 06/11/2026 BE có `GET /api/v1/practice/sessions/{id}/questions/{cauHoiId}/audio` (mục 5.8): bấm "Nghe" thì gọi API này và phát `downloadUrl`; không dùng giọng đọc trình duyệt cho câu nghe viết |

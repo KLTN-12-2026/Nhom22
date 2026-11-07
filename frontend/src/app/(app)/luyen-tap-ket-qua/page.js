@@ -170,7 +170,7 @@ function PracticeResultContent() {
           </div>
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Thời gian</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{Math.floor(A.thoiGianMs / 60000)}p {Math.floor((A.thoiGianMs % 60000) / 1000)}s</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{Math.floor(A.thoiGian / 60000)}p {Math.floor((A.thoiGian % 60000) / 1000)}s</div>
           </div>
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Câu đúng</div>

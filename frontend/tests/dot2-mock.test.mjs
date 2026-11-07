@@ -3,11 +3,10 @@ import assert from 'node:assert/strict';
 import { dot2MockEnabled, isDot2Route, NO_ROUTE_MESSAGE, shouldUseMock } from '../src/lib/dot2-mock.mjs';
 import { splitBlank } from '../src/lib/practice-labels.mjs';
 
-test('Đợt 2 mock flag defaults to development only and honours explicit values', () => {
-  assert.equal(dot2MockEnabled(undefined, 'development'), true);
-  assert.equal(dot2MockEnabled(undefined, 'production'), false);
-  assert.equal(dot2MockEnabled('enabled', 'production'), true);
-  assert.equal(dot2MockEnabled('disabled', 'development'), false);
+test('Đợt 2 mock is off unless explicitly enabled', () => {
+  assert.equal(dot2MockEnabled(undefined), false);
+  assert.equal(dot2MockEnabled('disabled'), false);
+  assert.equal(dot2MockEnabled('enabled'), true);
 });
 
 test('Đợt 2 routes cover practice, notebook and statistics pages only', () => {

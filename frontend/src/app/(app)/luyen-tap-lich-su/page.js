@@ -97,7 +97,7 @@ function PracticeHistoryContent() {
                       {item.laLuyenLai && <span style={{ padding: '2px 8px', background: 'var(--color-border)', borderRadius: '4px', fontWeight: 'bold' }}>Luyện lại</span>}
                       <span>{item.boTheTen}</span>
                       <span>{new Date(item.nopAt).toLocaleString('vi-VN')}</span>
-                      <span>{Math.floor(item.thoiGianMs / 60000)}p {Math.floor((item.thoiGianMs % 60000) / 1000)}s</span>
+                      <span>{Math.floor(item.thoiGian / 60000)}p {Math.floor((item.thoiGian % 60000) / 1000)}s</span>
                       {item.soCauSai > 0 ? (
                         <span style={{ color: 'var(--color-danger)' }}>{item.soCauSai} câu sai</span>
                       ) : (

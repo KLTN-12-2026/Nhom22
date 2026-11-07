@@ -5,7 +5,7 @@
 | Ngày lập | 06/11/2026 |
 | Dựa trên | [BAO_CAO_RA_SOAT_DOT2.md](BAO_CAO_RA_SOAT_DOT2.md) + đọc lại mã ngày 06/11/2026 |
 | Phạm vi | Đợt 2 = S5 + S6: B2.1–B2.12, F2.1–F2.8 |
-| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09; BE-03 một phần. Mục FE-xx do FE làm |
+| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09, FE-01…FE-08 (kiểm trên BE thật qua Next.js); BE-03 một phần |
 | Hạn | Demo Đợt 2: 08/11/2026 |
 
 Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài liệu), `VER-xx` (kiểm chứng). Ưu tiên P0 = chặn demo, P1 = cần cho Đợt 2 đủ DoD, P2 = dọn dẹp.
@@ -34,14 +34,14 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | Mã | Ưu tiên | Bên | Tóm tắt | Cỡ |
 |---|---|---|---|---|
 | VER-01 | ✅ | BE | Dựng lại Docker stack (xong 07/11: `compose down` + `up --build`; nguyên nhân: hạ tầng không có restart policy, chỉ `api` tự khởi động lại) | Vừa |
-| FE-01 | P0 | FE | `FeatureGate` còn chặn 3 trang quản trị và chặn luyện tập/sổ tay/thống kê khi tắt mock | Nhỏ |
-| FE-02 | P0 | FE | Mock tự thay BE ở dev; banner "máy chủ chưa có chức năng này" sai sự thật | Nhỏ |
-| FE-03 | P0 | FE | UI49 gọi `/admin/cards?boTheId`, `POST /admin/cards` (BE không có) | Nhỏ |
-| FE-04 | P0 | FE | Xóa thẻ mẫu không gửi `version` | Nhỏ |
-| FE-05 | P0 | FE+BE | Nghe viết đọc `deBai.amThanhUrl`; BE trả `amTuId` | Vừa |
-| FE-06 | P0 | FE | Bài luyện gửi/đọc `thoiGianMs`; BE dùng `thoiGian` | Nhỏ |
-| FE-07 | P0 | FE | Thống kê đọc `mucTieuPhutNgay`; BE trả `phutMoiNgay` | Nhỏ |
-| FE-08 | P0 | FE | Sổ tay cặp nhầm đọc `loaiNham`, `soLan`; BE trả `soLanNham`, `lanCuoiAt` | Nhỏ |
+| FE-01 | ✅ 07/11 | FE | `FeatureGate` còn chặn 3 trang quản trị và chặn luyện tập/sổ tay/thống kê khi tắt mock | Nhỏ |
+| FE-02 | ✅ 07/11 | FE | Mock tự thay BE ở dev; banner "máy chủ chưa có chức năng này" sai sự thật | Nhỏ |
+| FE-03 | ✅ 07/11 | FE | UI49 gọi `/admin/cards?boTheId`, `POST /admin/cards` (BE không có) | Nhỏ |
+| FE-04 | ✅ 07/11 | FE | Xóa thẻ mẫu không gửi `version` | Nhỏ |
+| FE-05 | ✅ 07/11 | FE+BE | Nghe viết đọc `deBai.amThanhUrl`; BE trả `amTuId` | Vừa |
+| FE-06 | ✅ 07/11 | FE | Bài luyện gửi/đọc `thoiGianMs`; BE dùng `thoiGian` | Nhỏ |
+| FE-07 | ✅ 07/11 | FE | Thống kê đọc `mucTieuPhutNgay`; BE trả `phutMoiNgay` | Nhỏ |
+| FE-08 | ✅ 07/11 | FE | Sổ tay cặp nhầm đọc `loaiNham`, `soLan`; BE trả `soLanNham`, `lanCuoiAt` | Nhỏ |
 | BE-01 | ✅ | BE | API âm thanh câu nghe viết `GET /practice/sessions/{id}/questions/{cauHoiId}/audio` (xong 06/11) | Nhỏ |
 | FE-09 | P1 | FE | UI22 "Cứu lịch ôn" chưa làm | Vừa |
 | FE-10 | P1 | FE | UI12 thiếu khối "Phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn" | Vừa |

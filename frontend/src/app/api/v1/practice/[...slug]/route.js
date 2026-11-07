@@ -91,7 +91,7 @@ async function makeQuestion(req, type, card, distract, thuTu) {
   if (type === 'NGHE_VIET') {
     const url = await audioUrl(req, card);
     if (!url) return null;
-    return { ...base, deBai: { amThanhUrl: url, tuLoai: card.tuLoai || null }, answer: { chapNhan: [card.tu], noiDung: card.tu } };
+    return { ...base, deBai: { amTuId: url ? String(card.amTuId || card.id) : null, tuLoai: card.tuLoai || null }, answer: { chapNhan: [card.tu], noiDung: card.tu } };
   }
   return null;
 }
@@ -121,7 +121,7 @@ function pairQuestion(target, other, thuTu) {
 
 const publicQuestion = q => ({ id: q.id, thuTu: q.thuTu, loaiCau: q.loaiCau, deBai: q.deBai, phuongAn: q.phuongAn || null });
 
-const attemptView = a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGianMs: a.thoiGianMs, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, theoKyNang: a.theoKyNang, ketQua: a.ketQua });
+const attemptView = a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, boTheTen: a.boTheTen, soCauDung: a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem, thoiGian: a.thoiGian, nopAt: a.nopAt, laLuyenLai: a.laLuyenLai, theoKyNang: a.theoKyNang, ketQua: a.ketQua });
 
 function practiceView(store, session) {
   const attempt = session.lanLamId ? store.attempts.find(a => a.lanLamId === session.lanLamId) : null;
@@ -272,7 +272,7 @@ async function submit(req, store, session) {
     lanLamId, baiLuyenId: session.id, loaiBai: session.loaiBai, boTheId: session.boTheId, boTheTen: session.boTheTen,
     submitKey: body.submitKey, soCauDung, tongSoCau: ketQua.length,
     diem: Math.round(ketQua.reduce((sum, item) => sum + item.diem, 0) / ketQua.length * 100),
-    thoiGianMs: Math.max(0, Math.min(Number(body.thoiGianMs) || 0, 3 * 3600000)), nopAt, laLuyenLai: session.laLuyenLai,
+    thoiGian: Math.max(0, Math.min(Number(body.thoiGian) || 0, 3 * 3600000)), nopAt, laLuyenLai: session.laLuyenLai,
     theoKyNang: Object.values(bySkill), ketQua
   };
   store.attempts.push(attempt);
@@ -304,7 +304,7 @@ function history(req, store) {
     .filter(a => !loaiBai || a.loaiBai === loaiBai)
     .slice()
     .reverse()
-    .map(a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, laLuyenLai: a.laLuyenLai, boTheTen: a.boTheTen, nopAt: a.nopAt, thoiGianMs: a.thoiGianMs, soCauDung: a.soCauDung, soCauSai: a.tongSoCau - a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem }));
+    .map(a => ({ lanLamId: a.lanLamId, baiLuyenId: a.baiLuyenId, loaiBai: a.loaiBai, laLuyenLai: a.laLuyenLai, boTheTen: a.boTheTen, nopAt: a.nopAt, thoiGian: a.thoiGian, soCauDung: a.soCauDung, soCauSai: a.tongSoCau - a.soCauDung, tongSoCau: a.tongSoCau, diem: a.diem }));
   return NextResponse.json({ items: items.slice(page * size, (page + 1) * size), page, size, totalElements: items.length, totalPages: Math.ceil(items.length / size) });
 }
 

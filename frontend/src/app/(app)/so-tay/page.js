@@ -27,9 +27,10 @@ const REASON = {
   DANH_DAU_THU_CONG: 'Bạn tự đánh dấu'
 };
 
-const MIX = {
-  HINH_THUC_GAN_GIONG: 'Viết gần giống',
-  NGHIA_GAN_NHAU: 'Nghĩa gần nhau'
+const lastSeen = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 function NotebookContent() {
@@ -304,8 +305,9 @@ function NotebookContent() {
                       </div>
                     </div>
                     <div className="row small muted">
-                      <strong>{MIX[pr.loaiNham] || 'Dễ nhầm'}</strong>
-                      <span>Nhầm {pr.soLan} lần</span>
+                      <strong>Dễ nhầm</strong>
+                      <span>Nhầm {pr.soLanNham} lần</span>
+                      {lastSeen(pr.lanCuoiAt) && <span>Gần nhất {lastSeen(pr.lanCuoiAt)}</span>}
                     </div>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>
                       Luyện phân biệt

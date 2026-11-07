@@ -52,9 +52,9 @@ async function overview(req) {
   attempts.forEach(a => {
     const day = byDay[dayInZone(a.nopAt, muiGio)];
     day.soCauLuyen += a.tongSoCau;
-    day.ms += a.thoiGianMs;
+    day.ms += a.thoiGian;
   });
-  const mucTieuPhutNgay = today?.phutMoiNgay || 10;
+  const phutMoiNgay = today?.phutMoiNgay || 10;
   const theoNgay = range.days.map(ngay => ({ ngay, soLuotOn: byDay[ngay].soLuotOn, soCauLuyen: byDay[ngay].soCauLuyen, soPhut: Math.floor(byDay[ngay].ms / 60000) }));
   const soCauDung = attempts.reduce((sum, a) => sum + a.soCauDung, 0);
   const tongSoCau = attempts.reduce((sum, a) => sum + a.tongSoCau, 0);
@@ -68,9 +68,9 @@ async function overview(req) {
     tyLeNho: counted.length ? Math.round(counted.filter(row => row.danhGia !== 'QUEN').length / counted.length * 100) : null,
     baiLuyen: { soBai: attempts.length, soCauDung, tongSoCau, tyLeDung: tongSoCau ? Math.round(soCauDung / tongSoCau * 100) : null },
     tongPhut: Math.floor(Object.values(byDay).reduce((sum, day) => sum + day.ms, 0) / 60000),
-    mucTieuPhutNgay,
+    phutMoiNgay,
     soNgayCoHoc: theoNgay.filter(day => day.soLuotOn || day.soCauLuyen).length,
-    soNgayDatMucTieu: theoNgay.filter(day => day.soPhut >= mucTieuPhutNgay).length,
+    soNgayDatMucTieu: theoNgay.filter(day => day.soPhut >= phutMoiNgay).length,
     chuoiNgay: today?.chuoiNgay || 0,
     theoNgay
   });

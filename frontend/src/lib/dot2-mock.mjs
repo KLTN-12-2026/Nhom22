@@ -2,10 +2,8 @@ const DOT2_ROUTES = ['/luyen-tap', '/luyen-tap-lam-bai', '/luyen-tap-ket-qua', '
 const FALLBACK_STATUS = [404, 405, 501, 502, 503];
 export const NO_ROUTE_MESSAGE = 'Không tìm thấy đường dẫn';
 
-export function dot2MockEnabled(flag = process.env.NEXT_PUBLIC_DOT2_MOCK, nodeEnv = process.env.NODE_ENV) {
-  if (flag === 'enabled') return true;
-  if (flag === 'disabled') return false;
-  return nodeEnv === 'development';
+export function dot2MockEnabled(flag = process.env.NEXT_PUBLIC_DOT2_MOCK) {
+  return flag === 'enabled';
 }
 
 export function isDot2Route(path) {

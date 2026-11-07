@@ -35,18 +35,36 @@ function BlankSentence({ sentence, mark = '' }) {
   return <>{before}<span style={{ display: 'inline-block', minWidth: '50px', borderBottom: '2px solid var(--color-ink)', margin: '0 4px', textAlign: 'center' }}>{mark}</span>{after}</>;
 }
 
-function ListenPrompt({ url, tuLoai }) {
+function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
   const [error, setError] = useState('');
-  if (!url) return <p className="notice notice-warning" style={{ marginBottom: 'var(--space-3)' }}>Câu này chưa có âm thanh.</p>;
-  const listen = (rate) => {
+  const [loadingAudio, setLoadingAudio] = useState(false);
+  const cached = useRef(null);
+  if (!hasAudio) return <p className="notice notice-warning" style={{ marginBottom: 'var(--space-3)' }}>Câu này chưa có âm thanh.</p>;
+  const audioUrl = async () => {
+    const c = cached.current;
+    if (c && (!c.expiresAt || new Date(c.expiresAt).getTime() - 30000 > now())) return c.downloadUrl;
+    const file = await apiFetch(`/api/v1/practice/sessions/${practiceId}/questions/${questionId}/audio`);
+    cached.current = file;
+    return file.downloadUrl;
+  };
+  const listen = async (rate) => {
     setError('');
-    playAudio(url, rate).catch(() => setError('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'));
+    setLoadingAudio(true);
+    try {
+      const url = await audioUrl();
+      await playAudio(url, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
+    } catch (err) {
+      cached.current = null;
+      setError(err.message || 'Không tải được âm thanh. Thử lại.');
+    } finally {
+      setLoadingAudio(false);
+    }
   };
   return (
     <div style={{ marginBottom: 'var(--space-3)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <Button type="button" variant="secondary" onClick={() => listen(1)}><Icon name="volume" /> Nghe</Button>
-        <Button type="button" variant="ghost" onClick={() => listen(0.6)}>Nghe chậm</Button>
+        <Button type="button" variant="secondary" onClick={() => listen(1)} disabled={loadingAudio}><Icon name="volume" /> Nghe</Button>
+        <Button type="button" variant="ghost" onClick={() => listen(0.6)} disabled={loadingAudio}>Nghe chậm</Button>
       </div>
       <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>
         {tuLoai && <>Từ loại <span style={{ color: 'var(--color-primary)' }}>[{tuLoai}]</span>, </>}nghe bao nhiêu lần cũng được
@@ -152,7 +170,7 @@ function PracticeSessionContent() {
     submitMutation.mutate({
       submitKey: submitKey.current,
       traLoi,
-      thoiGianMs: now() - startRef.current
+      thoiGian: now() - startRef.current
     });
   };
 
@@ -208,7 +226,7 @@ function PracticeSessionContent() {
       return (
         <div>
           {listening ? (
-            <ListenPrompt url={q.deBai?.amThanhUrl} tuLoai={q.deBai?.tuLoai} />
+            <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!q.deBai?.amTuId} tuLoai={q.deBai?.tuLoai} />
           ) : q.deBai?.cau ? (
             <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}><BlankSentence sentence={q.deBai.cau} /></div>
           ) : (

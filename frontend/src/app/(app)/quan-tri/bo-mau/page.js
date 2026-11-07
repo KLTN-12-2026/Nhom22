@@ -114,9 +114,8 @@ function CardDialog({ card, deckId, onClose, onSave }) {
     try {
       const body = { ...formData };
       if (card) body.version = card.version;
-      else body.boTheId = deckId;
 
-      const res = await apiFetch(`/api/v1/admin/cards${card ? `/${card.id}` : ''}`, {
+      const res = await apiFetch(card ? `/api/v1/admin/cards/${card.id}` : `/api/v1/admin/decks/${deckId}/cards`, {
         method: card ? 'PATCH' : 'POST',
         body: JSON.stringify(body)
       });
@@ -201,7 +200,7 @@ function AdminDecksContent() {
 
   const { data: cards, isLoading: cardsLoading } = useQuery({
     queryKey: ['admin-cards', id],
-    queryFn: () => apiFetch(`/api/v1/admin/cards?boTheId=${id}`),
+    queryFn: () => fetchAllPages(`/api/v1/admin/decks/${id}/cards`),
     enabled: !!id
   });
 
@@ -215,7 +214,10 @@ function AdminDecksContent() {
         if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
       }
     },
-    onError: (err) => alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.')
+    onError: (err, vars) => {
+      if (err.status === 409 && vars.url.includes('/admin/cards')) queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
+      alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.');
+    }
   });
 
   const promptReason = () => {
@@ -270,7 +272,7 @@ function AdminDecksContent() {
 
   const handleDeleteCard = (c) => {
     if (!window.confirm(`Xóa thẻ ${c.tu}?`)) return;
-    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}` });
+    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}?version=${c.version}` });
   };
 
   if (!me?.vaiTro?.includes('ADMIN')) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;

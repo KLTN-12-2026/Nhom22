@@ -95,9 +95,9 @@ function StatsContent() {
   const renderChart = () => {
     if (!overview || !overview.theoNgay || overview.theoNgay.length === 0) return null;
 
-    const maxVal = Math.max(overview.mucTieuPhutNgay || 1, ...overview.theoNgay.map(d => d.soPhut));
+    const maxVal = Math.max(overview.phutMoiNgay || 1, ...overview.theoNgay.map(d => d.soPhut));
     const maxGrid = Math.ceil(maxVal * 1.2) || 1;
-    const goalH = ((overview.mucTieuPhutNgay || 0) / maxGrid) * 100;
+    const goalH = ((overview.phutMoiNgay || 0) / maxGrid) * 100;
 
     return (
       <div id="chart-box">
@@ -110,7 +110,7 @@ function StatsContent() {
           <div className={styles.chartPlot} role="img">
             {overview.theoNgay.map((d, i) => {
               const h = (d.soPhut / maxGrid);
-              const isGoal = d.soPhut >= overview.mucTieuPhutNgay && d.soPhut > 0;
+              const isGoal = d.thoiGian > 0 && d.thoiGian >= (overview.phutMoiNgay || 0) * 60000;
               return (
                 <div key={i} className={styles.chartBar} data-goal={isGoal ? "" : undefined} title={`${formatDay(d.ngay, true)}: ${d.soPhut} phút`}>
                   <i style={{ '--v': h }}></i>
@@ -118,7 +118,7 @@ function StatsContent() {
               );
             })}
             <div className={styles.chartGoal} style={{ '--g': `${goalH}%` }}>
-              <span>Mục tiêu {overview.mucTieuPhutNgay || 0}p</span>
+              <span>Mục tiêu {overview.phutMoiNgay || 0}p</span>
             </div>
           </div>
           <div className={styles.chartX} aria-hidden="true">
@@ -162,7 +162,7 @@ function StatsContent() {
             </thead>
             <tbody>
               {[...overview.theoNgay].reverse().map((x, i) => {
-                const isGoal = x.soPhut >= overview.mucTieuPhutNgay && x.soPhut > 0;
+                const isGoal = x.thoiGian > 0 && x.thoiGian >= (overview.phutMoiNgay || 0) * 60000;
                 return (
                   <tr key={i}>
                     <td>{formatDay(x.ngay, true)}{x.ngay === today ? ' (hôm nay)' : ''}</td>
