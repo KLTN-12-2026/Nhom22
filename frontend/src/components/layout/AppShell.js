@@ -31,6 +31,8 @@ const NAV = [
   ] },
   { group: "Tài khoản", items: [
     { key: "profile", label: "Hồ sơ", icon: "user", href: "/ca-nhan" },
+    { key: "plans", label: "Gói dịch vụ", icon: "file", href: "/thanh-toan-goi" },
+    { key: "payment-history", label: "Lịch sử thanh toán", icon: "clock", href: "/thanh-toan-lich-su" },
     { key: "learning", label: "Thiết lập học", icon: "target", href: "/ca-nhan/hoc-tap" },
     { key: "security", label: "Bảo mật", icon: "shield", href: "/ca-nhan/bao-mat" },
     { key: "notify", label: "Thông báo", icon: "bell", href: "/ca-nhan/thong-bao" }
