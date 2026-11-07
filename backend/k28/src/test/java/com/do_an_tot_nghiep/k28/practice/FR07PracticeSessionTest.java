@@ -249,6 +249,49 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
                 Integer.class, stranger.id())).isZero();
     }
 
+    @Test
+    void fr07_listeningAudioIsServedPerQuestionWithoutRevealingCard() throws Exception {
+        Learner learner = learner();
+        Learner stranger = learner();
+        List<Long> cards = cards(learner, 5);
+        long audio = audioFile(learner, cards.get(1));
+
+        JsonNode listening = body(create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 5))
+                .andExpect(status().isCreated()));
+        String practiceId = listening.get("id").asText();
+        String questionId = listening.get("cauHoi").get(0).get("id").asText();
+        String audioPath = "/api/v1/practice/sessions/" + practiceId + "/questions/" + questionId + "/audio";
+
+        JsonNode file = body(mockMvc.perform(get(audioPath).cookie(learner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.downloadUrl").isNotEmpty()));
+        assertThat(file.get("id").asText()).isEqualTo(String.valueOf(audio));
+        assertThat(file.get("loai").asText()).isEqualTo("AM_THANH");
+        assertThat(file.toString()).doesNotContain("theId", "boTheId");
+
+        mockMvc.perform(get(audioPath).cookie(stranger.session()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+
+        JsonNode choice = body(create(learner, Map.of("loaiBai", "CHON_NGHIA", "soCau", 5))
+                .andExpect(status().isCreated()));
+        String choiceId = choice.get("id").asText();
+        String choiceQuestion = choice.get("cauHoi").get(0).get("id").asText();
+        mockMvc.perform(get("/api/v1/practice/sessions/" + choiceId + "/questions/" + choiceQuestion + "/audio")
+                        .cookie(learner.session()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Câu hỏi không có âm thanh"));
+
+        mockMvc.perform(get("/api/v1/practice/sessions/" + choiceId + "/questions/" + questionId + "/audio")
+                        .cookie(learner.session()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Không tìm thấy câu hỏi"));
+
+        jdbc.update("UPDATE tep_tin SET trang_thai_xoa = 'DA_XOA' WHERE id = ?", audio);
+        mockMvc.perform(get(audioPath).cookie(learner.session()))
+                .andExpect(status().isNotFound());
+    }
+
     private void expectField(Learner learner, Map<String, Object> body, String field) throws Exception {
         create(learner, body)
                 .andExpect(status().isBadRequest())

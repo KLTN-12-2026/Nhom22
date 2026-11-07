@@ -2,8 +2,10 @@ package com.do_an_tot_nghiep.k28.practice.service;
 
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.service.CardService;
+import com.do_an_tot_nghiep.k28.content.service.FileService;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeQuestionResponse;
@@ -35,6 +37,7 @@ import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
@@ -51,6 +54,7 @@ public class PracticeService {
     private final TraLoiBaiLuyenRepository answers;
     private final PracticeResults results;
     private final CardService cardService;
+    private final FileService fileService;
     private final NotebookService notebookService;
     private final JsonMapper json;
 
@@ -120,6 +124,24 @@ public class PracticeService {
                 .map(attempt -> results.result(practice, boTheTen, attempt))
                 .orElse(null);
         return toResponse(practice, boTheTen, questions.findByBaiIdOrderByThuTu(practice.getId()), ketQua);
+    }
+
+    public FileResponse audio(Long userId, Long id, Long questionId) {
+        BaiLuyen practice = practices.findByIdAndNguoiDungId(id, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
+        CauHoiBaiLuyen question = questions.findByIdAndBaiId(questionId, practice.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy câu hỏi"));
+        JsonNode amTuId = question.getLoaiCau() == LoaiCau.NGHE_VIET
+                ? json.readTree(question.getDeBaiJson()).get("amTuId")
+                : null;
+        if (amTuId == null || amTuId.isNull()) {
+            throw new ApiException(ErrorCode.NOT_FOUND, "Câu hỏi không có âm thanh");
+        }
+        try {
+            return fileService.get(userId, Long.valueOf(amTuId.asText()));
+        } catch (NumberFormatException e) {
+            throw new ApiException(ErrorCode.NOT_FOUND, "Câu hỏi không có âm thanh");
+        }
     }
 
     @Transactional
