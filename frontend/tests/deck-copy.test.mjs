@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deckCopyKey, copyDeck } from '../src/lib/deck-copy.mjs';
+import { deckCopyKey, copyDeck, clearDeckCopyKey } from '../src/lib/deck-copy.mjs';
 
 function storage() {
   const values = new Map();
-  return { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+  return { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
 }
 
 test('copy retries and reloads reuse the same user and source key', () => {
@@ -13,6 +13,15 @@ test('copy retries and reloads reuse the same user and source key', () => {
   assert.equal(deckCopyKey(store, '1', '11', () => 'second'), 'copy-first');
   assert.equal(deckCopyKey(store, '2', '11', () => 'other-user'), 'copy-other-user');
   assert.equal(deckCopyKey(store, '1', '12', () => 'other-deck'), 'copy-other-deck');
+});
+
+test('a successful copy clears only its own key so the next copy gets a new key', () => {
+  const store = storage();
+  assert.equal(deckCopyKey(store, '1', '11', () => 'first'), 'copy-first');
+  assert.equal(deckCopyKey(store, '1', '12', () => 'kept'), 'copy-kept');
+  clearDeckCopyKey(store, '1', '11');
+  assert.equal(deckCopyKey(store, '1', '11', () => 'second'), 'copy-second');
+  assert.equal(deckCopyKey(store, '1', '12', () => 'unused'), 'copy-kept');
 });
 
 test('copy sends an empty POST and its idempotency header and uses the real response', async () => {

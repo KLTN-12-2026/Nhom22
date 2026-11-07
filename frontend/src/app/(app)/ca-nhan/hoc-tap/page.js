@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import styles from './page.module.css';
 import { SpeechSettings } from '@/components/content/SpeechSettings';
 import { ErrorState, Icon } from '@/components/ui';
@@ -18,7 +19,7 @@ export default function LearningSettingsPage() {
 
   const { data: topics } = useQuery({
     queryKey: ['public-topics'],
-    queryFn: () => apiFetch('/api/v1/public/topics?size=100').then(data => data.items)
+    queryFn: () => fetchAllPages('/api/v1/public/topics')
   });
 
   const [draft, setFormState] = useState(null);

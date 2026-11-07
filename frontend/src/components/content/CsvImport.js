@@ -9,13 +9,6 @@ import { apiFetch } from '@/lib/api-client';
 import { CSV_FIELDS, CSV_LABELS, CSV_TEMPLATE, csvHeaders, saveDownload } from '@/lib/csv.mjs';
 import styles from './CsvImport.module.css';
 
-const SAMPLE_WITH_ERRORS = [
-  'tu,tuLoai,nghiaVi,phienAm,viDuEn,dichVi,doKho,nguon,nhanIds',
-  'invoice,noun,hóa đơn,/ˈɪnvɔɪs/,Please send the invoice.,Vui lòng gửi hóa đơn.,1,,',
-  'invoice,noun,hóa đơn,/ˈɪnvɔɪs/,Please send the invoice.,Vui lòng gửi hóa đơn.,1,,',
-  ',adjective,nhanh,,,,1,,'
-].join('\r\n');
-
 export function CsvImport({ deckId }) {
   const deck = useDeck(deckId);
   const me = useMe();
@@ -29,7 +22,6 @@ export function CsvImport({ deckId }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [dragging, setDragging] = useState(false);
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [now, setNow] = useState(Date.now);
@@ -66,10 +58,6 @@ export function CsvImport({ deckId }) {
       setPreview(null); setResult(null); setSelected([]); sessionStorage.removeItem(storageKey);
     } catch (failure) { setError(failure); }
     finally { locked.current = false; setBusy(false); }
-  }
-
-  function trySample() {
-    pick(new File([SAMPLE_WITH_ERRORS], 'du-lieu-mau-co-loi.csv', { type: 'text/csv' }));
   }
 
   async function readPreview() {
@@ -126,35 +114,22 @@ export function CsvImport({ deckId }) {
   return <div className="page page-grid with-side">
     <section className="sheet">
       <Link href={`/bo-the/${deckId}`} className="btn btn-quiet">← {deck.data?.ten || 'Bộ thẻ'}</Link>
-      <div className="form-head"><div className="form-code"><span>Phiếu nhập thẻ từ CSV</span><span>{deck.data?.ten}</span></div><h1 ref={heading} tabIndex={-1}>{result ? 'Đã nhập thẻ' : 'Nhập thẻ từ tệp CSV'}</h1><p>Xem trước từng dòng trước khi nhập. Dòng lỗi không bao giờ được ghi vào bộ thẻ.</p></div>
+      <div className="form-head"><div className="form-code">Phiếu nhập thẻ từ CSV</div><h1 ref={heading} tabIndex={-1}>{result ? 'Đã nhập thẻ' : 'Nhập thẻ từ tệp CSV'}</h1><p>Xem trước và chọn dòng hợp lệ. Dòng trùng được cảnh báo và vẫn có thể nhập.</p></div>
       <ol className="steps" aria-label="Các bước">{['Chọn tệp', 'Xem trước', 'Kết quả'].map((label, index) => <li key={label} data-state={(result ? 2 : preview ? 1 : 0) === index ? 'current' : undefined}><span className="bubble">{index + 1}</span><span className="step-label">{label}</span></li>)}</ol>
       {error && <div className="notice notice-danger" role="alert">{error.message}</div>}
       {result ? <div className={styles.stack}><p className={styles.result}>{result.importedCount}</p><h2>thẻ đã được thêm vào bộ</h2><p>Các dòng không chọn không được nhập.</p><div className="row"><Link className="btn btn-primary" href={`/bo-the/${deckId}?imported=${result.importedCount}`}>Mở bộ thẻ</Link><Button variant="ghost" onClick={restart}>Nhập tệp khác</Button></div></div> : !preview ? <div className={styles.stack}>
-        <label
-          className={`dropzone ${dragging ? styles.dropzoneActive : ''}`}
-          onDragEnter={event => { event.preventDefault(); setDragging(true); }}
-          onDragOver={event => event.preventDefault()}
-          onDragLeave={event => { if (event.currentTarget === event.target) setDragging(false); }}
-          onDrop={event => { event.preventDefault(); setDragging(false); pick(event.dataTransfer.files[0]); }}
-        >
-          <svg className={styles.uploadIcon} viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></svg>
-          <strong>Kéo thả file CSV vào đây hoặc bấm để chọn file</strong>
-          <span>UTF-8, định dạng .csv, tối đa 1 MB và 1000 dòng dữ liệu</span>
-          <input disabled={busy} type="file" accept=".csv,text/csv" onChange={event => { pick(event.target.files[0]); event.target.value = ''; }} />
-        </label>
-        {busy && <div className={styles.progressBlock} role="status" aria-live="polite"><div className={styles.progressLabel}><span>Đang đọc tệp…</span><span>Đang xử lý</span></div><progress className={styles.progress} /></div>}
-        {file && !busy && <div className={styles.fileCard}><div><strong>{file.name}</strong><span>{(file.size / 1024).toFixed(1)} KB · Đã sẵn sàng</span></div><Button variant="ghost" onClick={restart}>Xóa file</Button></div>}
-        <div className="row"><Button variant="ghost" onClick={() => saveDownload(new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' }), 'mau-nhap-the.csv')}>Tải tệp mẫu</Button><Button variant="ghost" onClick={trySample}>Thử với dữ liệu có lỗi</Button></div>
+        <label className="dropzone" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); pick(event.dataTransfer.files[0]); }}><strong>Chọn tệp CSV</strong><span>UTF-8, tối đa 1 MB và 1000 dòng dữ liệu</span><input disabled={busy} type="file" accept=".csv,text/csv" onChange={event => { pick(event.target.files[0]); event.target.value = ''; }} /></label>
+        <Button variant="ghost" onClick={() => saveDownload(new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' }), 'mau-nhap-the.csv')}>Tải tệp mẫu</Button>
         {file && <><p>{file.name}</p><h2>Ánh xạ cột</h2><div className={styles.mapping}>{CSV_FIELDS.map(field => <label key={field}>{CSV_LABELS[field]}{['tu', 'nghiaVi'].includes(field) ? ' *' : ''}<select aria-label={CSV_LABELS[field] + (['tu', 'nghiaVi'].includes(field) ? ' *' : '')} disabled={busy} value={mapping[field] || ''} onChange={event => setMapping({ ...mapping, [field]: event.target.value })}><option value="">Không nhập</option>{headers.map(header => <option key={header}>{header}</option>)}</select></label>)}</div><Button loading={busy} onClick={readPreview}>Xem trước tệp</Button></>}
       </div> : <div className={styles.stack}>
-        <div className="row"><span className="stamp">Tổng: {preview.rows.length}</span><span className="stamp stamp-success">{preview.validRows} hợp lệ</span><span className="stamp stamp-danger">{preview.invalidRows} lỗi</span><span className="stamp stamp-warning">{preview.rows.filter(row => row.valid && row.trung).length} trùng</span></div>
+        <div className="row"><span className="stamp stamp-success">{preview.validRows} hợp lệ</span><span className="stamp stamp-danger">{preview.invalidRows} lỗi</span><span className="stamp stamp-warning">{preview.rows.filter(row => row.valid && row.trung).length} trùng</span></div>
         <p className="small muted">{expired ? 'Bản xem trước đã hết hạn.' : `Hết hạn lúc ${new Date(preview.expiresAt).toLocaleTimeString('vi-VN')}.`} {preview.ignoredColumns.length > 0 && `Bỏ qua cột: ${preview.ignoredColumns.join(', ')}.`}</p>
         {attempt && <p className="notice notice-warning">Yêu cầu đã được gửi. Giữ nguyên lựa chọn để thử lại an toàn, kể cả khi bản xem trước hết hạn.</p>}
         <div className="row">{[['all', 'Tất cả'], ['valid', 'Hợp lệ'], ['duplicate', 'Trùng'], ['error', 'Lỗi']].map(([value, label]) => <Button key={value} variant="ghost" aria-pressed={filter === value} onClick={() => { setFilter(value); setPage(1); }}>{label}</Button>)}</div>
         <label className="row"><input type="checkbox" disabled={busy || !!attempt || !preview.validRows} checked={!!preview.validRows && selected.length === preview.validRows} onChange={event => choose(event.target.checked ? preview.rows.filter(row => row.valid).map(row => row.rowNumber) : [])} />Chọn tất cả dòng hợp lệ</label>
-        <div className={styles.tableWrap}><table className="data-table"><caption className="sr-only">Các dòng trong tệp CSV</caption><thead><tr><th>Chọn</th><th>STT</th><th>Từ</th><th>Từ loại</th><th>Nghĩa</th><th>Trạng thái</th></tr></thead><tbody>{visible.slice((page - 1) * 10, page * 10).map(row => <tr key={row.rowNumber} className={!row.valid ? styles.errorRow : undefined}><td><input type="checkbox" aria-label={`Chọn dòng ${row.rowNumber}`} disabled={!row.valid || busy || !!attempt} checked={selected.includes(row.rowNumber)} onChange={event => choose(event.target.checked ? [...selected, row.rowNumber] : selected.filter(number => number !== row.rowNumber))} /></td><td>{row.rowNumber}</td><td lang="en">{row.data.tu || '—'}</td><td>{row.data.tuLoai}</td><td className={styles.meaning}>{row.data.nghiaVi || '—'}</td><td>{row.fieldErrors.map(item => <p className={styles.errorMessage} title={`${item.field}: ${item.message}`} key={`${item.field}:${item.message}`}>{item.field}: {item.message}</p>)}{row.valid && (row.trung ? `Có thể trùng${row.dongTrungNumbers.length ? ` dòng ${row.dongTrungNumbers.join(', ')}` : ' thẻ trong bộ'}` : 'Hợp lệ')}</td></tr>)}</tbody></table>{!visible.length && <p>Không có dòng trong nhóm này.</p>}</div>
-        <Pagination page={page} totalPages={Math.ceil(visible.length / 10)} onPageChange={setPage} />
-        <div className={styles.actions}><Button variant="ghost" disabled={busy} onClick={restart}>{attempt ? 'Kết thúc lượt này' : 'Tải lại file'}</Button><Button loading={busy} disabled={!selected.length || (expired && !attempt)} onClick={commit}>{attempt ? 'Thử lại yêu cầu nhập' : `Xác nhận nhập ${selected.length} dòng`}</Button></div>
+        <div className={styles.tableWrap}><table className="data-table"><caption className="sr-only">Các dòng trong tệp CSV</caption><thead><tr><th>Chọn</th><th>Dòng</th><th>Từ</th><th>Từ loại</th><th>Nghĩa</th><th>Ghi chú</th></tr></thead><tbody>{visible.slice((page - 1) * 50, page * 50).map(row => <tr key={row.rowNumber}><td><input type="checkbox" aria-label={`Chọn dòng ${row.rowNumber}`} disabled={!row.valid || busy || !!attempt} checked={selected.includes(row.rowNumber)} onChange={event => choose(event.target.checked ? [...selected, row.rowNumber] : selected.filter(number => number !== row.rowNumber))} /></td><td>{row.rowNumber}</td><td lang="en">{row.data.tu || '—'}</td><td>{row.data.tuLoai}</td><td className={styles.meaning}>{row.data.nghiaVi || '—'}</td><td>{row.fieldErrors.map(item => <p key={`${item.field}:${item.message}`}>{item.field}: {item.message}</p>)}{row.valid && (row.trung ? `Có thể trùng${row.dongTrungNumbers.length ? ` dòng ${row.dongTrungNumbers.join(', ')}` : ' thẻ trong bộ'}` : 'Hợp lệ')}</td></tr>)}</tbody></table>{!visible.length && <p>Không có dòng trong nhóm này.</p>}</div>
+        <Pagination page={page} totalPages={Math.ceil(visible.length / 50)} onPageChange={setPage} />
+        <div className={styles.actions}><Button variant="ghost" disabled={busy} onClick={restart}>{attempt ? 'Kết thúc lượt này' : 'Chọn tệp khác'}</Button><Button loading={busy} disabled={!selected.length || (expired && !attempt)} onClick={commit}>{attempt ? 'Thử lại yêu cầu nhập' : `Nhập ${selected.length} dòng đã chọn`}</Button></div>
       </div>}
     </section>
     <aside className="side-col"><section className="panel"><h2 className="panel-title">Cột trong tệp</h2><dl>{CSV_FIELDS.map(field => <div key={field}><dt><strong>{field}</strong></dt><dd>{CSV_LABELS[field]}{['tu', 'nghiaVi'].includes(field) ? ' (bắt buộc)' : ''}</dd></div>)}</dl><p className="small muted">Dấu phẩy phân cột; dùng dấu ngoặc kép cho nội dung có dấu phẩy hoặc xuống dòng. ID nhãn cách nhau bằng dấu chấm phẩy. Không nhập ảnh, âm thanh hoặc tiến độ học.</p><p className="small muted">Export thêm dấu nháy đơn vào ô có nguy cơ công thức. Nhập lại giữ nguyên dấu này.</p></section></aside>

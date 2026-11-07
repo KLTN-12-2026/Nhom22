@@ -4,11 +4,27 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { Button, ErrorState, Icon } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
-const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC', IELTS: 'IELTS' };
-const LEVEL = { A1: 'A1 - Sơ cấp', A2: 'A2 - Sơ trung cấp', B1: 'B1 - Trung cấp', B2: 'B2 - Thượng trung cấp', C1: 'C1 - Cao cấp', C2: 'C2 - Thành thạo' };
+const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
+const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
+
+function DeckRules() {
+  return (
+    <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
+      <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
+      <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
+        <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
+        <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
+        <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
+        <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
+        <li>Nếu hai người cùng sửa một bộ, người lưu sau được báo tải lại để không ghi đè.</li>
+      </ul>
+    </section>
+  );
+}
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -69,7 +85,7 @@ function DeckDialog({ deck, topics, onClose, onSave }) {
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Chủ đề *</label>
             <select required value={formData.chuDeId} onChange={e => setFormData({ ...formData, chuDeId: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px' }}>
               <option value="">Chọn</option>
-              {topics?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {topics?.map(t => <option key={t.id} value={t.id}>{t.ten}</option>)}
             </select>
           </div>
           <div>
@@ -113,9 +129,8 @@ function CardDialog({ card, deckId, onClose, onSave }) {
     try {
       const body = { ...formData };
       if (card) body.version = card.version;
-      else body.boTheId = deckId;
 
-      const res = await apiFetch(`/api/v1/admin/cards${card ? `/${card.id}` : ''}`, {
+      const res = await apiFetch(card ? `/api/v1/admin/cards/${card.id}` : `/api/v1/admin/decks/${deckId}/cards`, {
         method: card ? 'PATCH' : 'POST',
         body: JSON.stringify(body)
       });
@@ -161,7 +176,7 @@ function AdminDecksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { me } = useMe();
+  const { data: me } = useMe();
 
   const id = searchParams.get('id');
   const defaultQ = searchParams.get('q') || '';
@@ -176,24 +191,31 @@ function AdminDecksContent() {
 
   const { data: topics } = useQuery({
     queryKey: ['admin-topics'],
-    queryFn: () => apiFetch('/api/v1/admin/topics')
+    queryFn: () => fetchAllPages('/api/v1/admin/topics')
   });
 
-  const { data: listData, isLoading: listLoading } = useQuery({
-    queryKey: ['admin-decks', q, trangThai, page],
-    queryFn: () => apiFetch(`/api/v1/admin/decks?q=${encodeURIComponent(q)}&trangThai=${trangThai}&page=${page}&size=20`),
+  const { data: listData, isLoading: listLoading, isError: listIsError, error: listError, refetch: refetchList } = useQuery({
+    queryKey: ['admin-decks', defaultQ, defaultStatus, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (defaultQ) params.set('q', defaultQ);
+      if (defaultStatus) params.set('trangThai', defaultStatus);
+      params.set('page', page.toString());
+      params.set('size', '20');
+      return apiFetch(`/api/v1/admin/decks?${params.toString()}`);
+    },
     enabled: !id
   });
 
-  const { data: deckDetail, isLoading: deckLoading } = useQuery({
+  const { data: deckDetail, isLoading: deckLoading, isError: deckIsError, error: deckError, refetch: refetchDeck } = useQuery({
     queryKey: ['admin-deck', id],
     queryFn: () => apiFetch(`/api/v1/admin/decks/${id}`),
     enabled: !!id
   });
 
-  const { data: cards, isLoading: cardsLoading } = useQuery({
+  const { data: cards, isLoading: cardsLoading, isError: cardsIsError, error: cardsError, refetch: refetchCards } = useQuery({
     queryKey: ['admin-cards', id],
-    queryFn: () => apiFetch(`/api/v1/admin/cards?boTheId=${id}`),
+    queryFn: () => fetchAllPages(`/api/v1/admin/decks/${id}/cards`),
     enabled: !!id
   });
 
@@ -207,12 +229,20 @@ function AdminDecksContent() {
         if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
       }
     },
-    onError: (err) => alert(err.message || 'Lỗi')
+    onError: (err, vars) => {
+      if (err.status === 409 && vars.url.includes('/admin/cards')) queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
+      alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.');
+    }
   });
 
   const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (bắt buộc):');
-    return reason?.trim();
+    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
+    if (reason === undefined) return undefined;
+    if (reason.length < 10 || reason.length > 500) {
+      alert('Lý do cần từ 10 đến 500 ký tự.');
+      return undefined;
+    }
+    return reason;
   };
 
   const handleDeckAction = (act, d) => {
@@ -241,7 +271,7 @@ function AdminDecksContent() {
       if (!window.confirm(`Xóa ${d.ten}?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
-      method = 'DELETE'; body = { lyDo };
+      method = 'DELETE'; body = { lyDo, version: d.version };
     }
 
     if (method) {
@@ -257,7 +287,7 @@ function AdminDecksContent() {
 
   const handleDeleteCard = (c) => {
     if (!window.confirm(`Xóa thẻ ${c.tu}?`)) return;
-    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}` });
+    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}?version=${c.version}` });
   };
 
   if (!me?.vaiTro?.includes('ADMIN')) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
@@ -302,6 +332,7 @@ function AdminDecksContent() {
 
   if (id) {
     if (deckLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>;
+    if (deckIsError) return <ErrorState title="Chưa tải được bộ mẫu" description={deckError?.message} onRetry={() => refetchDeck()} />;
     return (
       <div className="page page-grid with-side">
         <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
@@ -325,6 +356,8 @@ function AdminDecksContent() {
           <h2 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-3)' }}>Danh sách thẻ</h2>
           {cardsLoading ? (
             <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>Đang tải thẻ...</div>
+          ) : cardsIsError ? (
+            <ErrorState title="Chưa tải được danh sách thẻ" description={cardsError?.message} onRetry={() => refetchCards()} />
           ) : cards?.length > 0 ? (
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-3)' }}>
               {cards.map((c, i) => (
@@ -360,15 +393,7 @@ function AdminDecksContent() {
         </section>
 
         <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-          <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
-            <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-              <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
-              <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
-              <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
-              <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
-            </ul>
-          </section>
+          <DeckRules />
         </aside>
 
         {editingCard !== null && (
@@ -437,6 +462,8 @@ function AdminDecksContent() {
 
         {listLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : listIsError ? (
+          <ErrorState title="Chưa tải được danh sách bộ mẫu" description={listError?.message} onRetry={() => refetchList()} />
         ) : listData?.items?.length > 0 ? (
           <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
             {listData.items.map((d, i) => (
@@ -460,6 +487,7 @@ function AdminDecksContent() {
       </section>
 
       <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
+        <DeckRules />
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Nhật ký</h2>
           <Button variant="ghost" onClick={() => router.push('/quan-tri/nhat-ky?loai=BO_THE')} style={{ marginLeft: '-12px' }}>Mở nhật ký bộ mẫu</Button>

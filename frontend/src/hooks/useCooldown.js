@@ -7,7 +7,7 @@ export function useCooldown(error) {
   useEffect(() => {
     if (error?.status !== 429) return;
     const start = Date.now();
-    const update = setTimeout(() => { setNow(start); setUntil(start + 60000); }, 0);
+    const update = setTimeout(() => { setNow(start); setUntil(start + (error.retryAfter || 60) * 1000); }, 0);
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => { clearTimeout(update); clearInterval(timer); };
   }, [error]);

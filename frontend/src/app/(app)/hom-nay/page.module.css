@@ -17,3 +17,32 @@
 .goalLine { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
 .links { display: grid; gap: var(--sp-1); }
 .links a { justify-content: flex-start; margin-left: -12px; }
+.resume { display: grid; gap: var(--sp-3); padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: var(--rule) solid var(--primary-line); }
+.resumeHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-1) var(--sp-3); }
+.resume h2, .week h2 { font-size: var(--fs-h3); margin: 0; }
+.resumeMeta { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.resume .goalLine { margin-bottom: 0; }
+.resume :global(.row) { gap: var(--sp-2); margin-top: var(--sp-1); }
+.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+.weekGrid { display: grid; gap: var(--sp-6); }
+@media (min-width: 720px) { .weekGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mini { margin: 0; display: grid; gap: var(--sp-2); align-content: start; min-width: 0; }
+.mini figcaption { display: grid; gap: 2px; }
+.miniTitle { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; color: var(--ink); }
+.miniSum { font-size: var(--fs-small); color: var(--ink-2); }
+.miniBars { position: relative; height: 116px; padding-top: 20px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; border-bottom: var(--rule) solid var(--primary); background: repeating-linear-gradient(to top, transparent 0 31px, var(--primary-tint) 31px 32px); }
+.miniBar { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.miniBar i { display: block; width: 100%; height: 100%; background: var(--graphite); transform-origin: bottom; transform: scaleY(var(--v, 0)); transition: transform var(--dur-3) var(--ease-out); }
+.miniBar[data-goal] i { background: var(--secondary); }
+.isForecast .miniBar i { background: var(--primary); }
+.miniBar b { position: absolute; left: 0; right: 0; bottom: calc(var(--v, 0) * 100% + 2px); text-align: center; font-family: var(--font-form); font-stretch: var(--stretch-form); font-variant-numeric: tabular-nums; font-size: var(--fs-caption); font-weight: 700; color: var(--ink-2); }
+.miniGoal { position: absolute; left: 0; right: 0; bottom: calc(var(--g) * (100% - 20px)); border-top: 1.5px dashed var(--accent-text); pointer-events: none; }
+.miniX { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: var(--fs-caption); color: var(--ink-3); text-align: center; }
+.miniX span { display: grid; line-height: 1.25; }
+.miniX b { font-weight: 650; color: var(--ink-2); }
+.miniX .isToday b, .miniX .isToday { color: var(--primary); font-weight: 700; }
+.miniLegend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: var(--fs-caption); color: var(--ink-2); }
+.miniLegend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--secondary); }
+.miniLegend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
+.mini :global(.btn-quiet) { justify-self: start; margin-left: -12px; }
+@media (prefers-reduced-motion: reduce) { .miniBar i { transition: none; } }

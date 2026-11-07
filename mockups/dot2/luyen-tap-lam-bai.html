@@ -28,7 +28,7 @@
 <script src="../shared/speech.js?v=9462ca4f1c89"></script>
 </head>
 <body data-root=".." data-nav="practice" data-auth="required" class="no-bottom-nav">
-<!-- F2.5 · UI24 · API: GET /practice/sessions/{id} (B2.7, không có đáp án), POST /practice/sessions/{id}/submissions {submitKey, traLoi[], thoiGian} (B2.8) -->
+<!-- F2.5 · UI24 · API: GET /practice/sessions/{id} (B2.7, không có đáp án), GET /practice/sessions/{id}/questions/{cauHoiId}/audio (B2.7, câu NGHE_VIET), POST /practice/sessions/{id}/submissions {submitKey, traLoi[], thoiGian} (B2.8) -->
 <div class="session">
   <header class="session-bar">
     <a class="btn btn-quiet btn-icon" href="luyen-tap.html" id="exit" aria-label="Thoát bài làm"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></a>
@@ -99,7 +99,7 @@
     if (q.loaiCau === "PHAN_BIET_CAP") body = (d.cau ? sentence(d.cau) : '<p class="q-prompt">Từ nào nghĩa là “' + VL.esc(d.goiY) + "”?</p>") + options(q, true);
     if (q.loaiCau === "DIEN_CHO_TRONG") body = sentence(d.cau) + '<p class="hint">Gợi ý: ' + VL.esc(d.goiY) + ' <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span></p>" + textInput(q, "Từ cần điền");
     if (q.loaiCau === "NHAP_TU_THEO_NGHIA") body = '<p class="q-prompt">' + VL.esc(d.nghiaVi) + '</p><p class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</p>" + (d.viDuVi ? '<p class="hint">Ví dụ: ' + VL.esc(d.viDuVi) + "</p>" : "") + textInput(q, "Từ tiếng Anh");
-    if (q.loaiCau === "NGHE_VIET") body = '<div class="listen"><button type="button" class="btn btn-secondary" data-play="' + VL.esc(d.amTuId) + '">' + VL.icon("volume") + 'Nghe</button><button type="button" class="btn btn-quiet" data-play="' + VL.esc(d.amTuId) + '" data-rate="0.6">Nghe chậm</button></div><p class="hint">Từ loại <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span>, nghe bao nhiêu lần cũng được</p>" + textInput(q, "Từ bạn nghe được");
+    if (q.loaiCau === "NGHE_VIET") body = '<div class="listen"><button type="button" class="btn btn-secondary" data-play="' + VL.esc(q.id) + '">' + VL.icon("volume") + 'Nghe</button><button type="button" class="btn btn-quiet" data-play="' + VL.esc(q.id) + '" data-rate="0.6">Nghe chậm</button></div><p class="hint">Từ loại <span class="pos" lang="en">' + VL.esc(d.tuLoai || "") + "</span>, nghe bao nhiêu lần cũng được</p>" + textInput(q, "Từ bạn nghe được");
     if (q.loaiCau === "GHEP_TU") {
       label = "Ghép mỗi từ với nghĩa đúng";
       body = '<div class="match">' + d.cotTrai.map((l) => '<div class="match-row"><label for="m-' + q.id + "-" + l.id + '" lang="en">' + VL.esc(l.noiDung) + '</label><select class="select" id="m-' + q.id + "-" + l.id + '" name="' + q.id + '" data-left="' + l.id + '"><option value="">Chọn nghĩa</option>' + d.cotPhai.map((r) => '<option value="' + r.id + '">' + VL.esc(r.noiDung) + "</option>").join("") + "</select></div>").join("") + "</div>";
@@ -159,17 +159,24 @@
 
   form.addEventListener("input", update);
   form.addEventListener("change", update);
-  form.addEventListener("click", (e) => {
+  form.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-play]");
     if (!b) return;
-    const f = VLDemo.db.files[b.dataset.play];
-    if (f && f.url) {
-      const audio = new Audio(f.url);
-      audio.playbackRate = Number(b.dataset.rate) || 1;
-      audio.play().catch(() => VL.toast("Không phát được âm thanh", "error"));
+    const rate = Number(b.dataset.rate) || 1;
+    let file;
+    try {
+      file = await VL.api("GET", "/practice/sessions/" + id + "/questions/" + b.dataset.play + "/audio");
+    } catch (err) {
+      VL.toast(err.message || "Không tải được âm thanh", "error");
       return;
     }
-    if (!VLDemo.play(b.dataset.play, Number(b.dataset.rate) || 0.9)) VL.toast("Trình duyệt chưa phát được âm thanh", "error");
+    if (/^demo-audio:\/\//.test(file.downloadUrl || "")) {
+      if (!VLDemo.play(file.downloadUrl, rate)) VL.toast("Trình duyệt chưa phát được âm thanh", "error");
+      return;
+    }
+    const audio = new Audio(file.downloadUrl);
+    audio.playbackRate = rate;
+    audio.play().catch(() => VL.toast("Không phát được âm thanh", "error"));
   });
 
   form.addEventListener("submit", async (e) => {

@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Icon } from '@/components/ui';
+import { Pagination } from '@/components/ui';
+import { SpeakButton } from '@/components/content/SpeakButton';
+import { ERROR_GROUP, label } from '@/lib/practice-labels.mjs';
 import styles from './page.module.css';
 
 const GROUPS = [
@@ -25,17 +27,10 @@ const REASON = {
   DANH_DAU_THU_CONG: 'Bạn tự đánh dấu'
 };
 
-const ERROR_GROUP = {
-  NGHIA: 'Nghĩa',
-  CHINH_TA: 'Chính tả',
-  NGHE: 'Nghe',
-  NGU_CANH: 'Ngữ cảnh',
-  CAP_NHAM: 'Cặp dễ nhầm'
-};
-
-const MIX = {
-  HINH_THUC_GAN_GIONG: 'Viết gần giống',
-  NGHIA_GAN_NHAU: 'Nghĩa gần nhau'
+const lastSeen = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 function NotebookContent() {
@@ -48,6 +43,8 @@ function NotebookContent() {
 
   const [editingNote, setEditingNote] = useState(null);
   const [noteContent, setNoteContent] = useState('');
+  const [actionError, setActionError] = useState('');
+  const fail = (err) => setActionError(err.message || 'Chưa thực hiện được. Hãy thử lại.');
 
   const { data: notebook, isLoading: nbLoading, error: nbError } = useQuery({
     queryKey: ['notebook', page, nhomLoi],
@@ -64,18 +61,27 @@ function NotebookContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notebook'] });
       setEditingNote(null);
-    }
+    },
+    onError: fail
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => apiFetch(`/api/v1/notebook/${id}`, { method: 'DELETE' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notebook'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notebook'] }),
+    onError: fail
   });
 
   const practiceMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: (res) => router.push(`/luyen-tap-lam-bai?id=${res.id}`)
+    onSuccess: (res) => router.push(`/luyen-tap-lam-bai?id=${res.id}`),
+    onError: fail
   });
+
+  const goToPage = (value) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(value));
+    router.push(`/so-tay?${params.toString()}`, { scroll: false });
+  };
 
   const handleTabClick = (groupId) => {
     const params = new URLSearchParams(searchParams);
@@ -86,45 +92,34 @@ function NotebookContent() {
   };
 
   const saveNote = (id) => {
+    setActionError('');
     updateMutation.mutate({ id, body: { ghiChu: noteContent } });
   };
 
   const toggleMark = (it) => {
+    setActionError('');
     updateMutation.mutate({ id: it.theId, body: { danhDauThuCong: !it.danhDauThuCong } });
   };
 
   const removeEntry = (id) => {
     if (window.confirm('Bỏ khỏi sổ tay? Lịch sử ôn và bài luyện vẫn giữ nguyên.')) {
+      setActionError('');
       deleteMutation.mutate(id);
     }
   };
 
   const startPracticeNotebook = () => {
+    setActionError('');
     practiceMutation.mutate({ loaiBai: 'TONG_HOP', nguon: 'SO_TAY', soCau: 10 });
   };
 
   const startPracticePairs = (id1, id2) => {
+    setActionError('');
     practiceMutation.mutate({ loaiBai: 'PHAN_BIET_CAP', theIds: [id1, id2], soCau: 5 });
   };
 
   const totalCount = notebook?.tongHop?.TAT_CA || 0;
   const anyItems = totalCount > 0;
-  const totalPages = notebook?.totalPages || 1;
-  const filterName = GROUPS.find(group => group.id === nhomLoi)?.name;
-
-  const changePage = (nextPage) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', String(nextPage));
-    router.push(`/so-tay?${params.toString()}`, { scroll: false });
-  };
-
-  const speakWord = (word) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = 'en-US';
-    window.speechSynthesis.speak(utterance);
-  };
 
   return (
     <div className="page page-grid with-side">
@@ -158,13 +153,13 @@ function NotebookContent() {
         </div>
 
         <div className={styles.toolbarRow}>
-          <p className="small muted" id="filter-note" aria-live="polite">
-            {filterName ? `Đang hiển thị nhóm: ${filterName}` : `Hiển thị ${totalCount} từ trong sổ tay`}
-          </p>
+          <p className="small muted" id="filter-note" aria-live="polite"></p>
           <button type="button" className="btn btn-accent btn-lg" id="practice" onClick={startPracticeNotebook} disabled={!totalCount || practiceMutation.isPending}>
             Luyện các từ trong sổ tay
           </button>
         </div>
+
+        {actionError && <p className="notice notice-danger" role="alert">{actionError}</p>}
 
         <div data-view={nbLoading ? "loading" : nbError ? "error" : (notebook?.items?.length > 0 ? "ready" : "empty")} id="region" aria-live="polite">
           <div data-when="loading">
@@ -196,14 +191,14 @@ function NotebookContent() {
                       ))}
                       {it.nhomLoi?.map(g => (
                         <span key={g.nhomLoi} className="stamp stamp-quiet">
-                          {ERROR_GROUP[g.nhomLoi] || g.nhomLoi} &times; {g.soLan}
+                          {label(ERROR_GROUP, g.nhomLoi)} &times; {g.soLan}
                         </span>
                       ))}
                     </div>
 
                     <div className="answer-meta">
                       <Link href={`/bo-the/${it.boTheId}/tien-do`}>
-                        {it.boTheTen.length > 60 ? it.boTheTen.slice(0, 60) + '…' : it.boTheTen}
+                        {(it.boTheTen || 'Bộ của tôi').length > 60 ? (it.boTheTen || 'Bộ của tôi').slice(0, 60) + '…' : (it.boTheTen || 'Bộ của tôi')}
                       </Link>
                       {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
                       {it.lanGanNhatAt && <span>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
@@ -236,7 +231,7 @@ function NotebookContent() {
                         <ol>
                           {it.bangChung.map((b, idx) => (
                             <li key={idx}>
-                              {ERROR_GROUP[b.nhomLoi] || b.nhomLoi}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
+                              {label(ERROR_GROUP, b.nhomLoi)}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
                               {b.baiLuyenId && (
                                 <>
                                   . <Link href={`/luyen-tap-ket-qua?id=${b.baiLuyenId}`}>Xem bài</Link>
@@ -249,9 +244,7 @@ function NotebookContent() {
                     )}
 
                     <div className={styles.nbTools}>
-                      <button type="button" className="btn btn-quiet" data-act="play" onClick={() => speakWord(it.tu)}>
-                        <Icon name="play" />Nghe
-                      </button>
+                      <SpeakButton text={it.tu} />
                       <button type="button" className="btn btn-edit" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
                         {it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}
                       </button>
@@ -267,15 +260,7 @@ function NotebookContent() {
               ))}
             </ol>
             <div className={styles.pagerWrap}>
-              <nav className="pager" id="pager" aria-label="Phân trang">
-                <button type="button" className="btn btn-quiet btn-sm" onClick={() => changePage(page - 1)} disabled={page <= 0}>
-                  Trước
-                </button>
-                <span className="small muted">Trang {page + 1}/{totalPages}</span>
-                <button type="button" className="btn btn-quiet btn-sm" onClick={() => changePage(page + 1)} disabled={page + 1 >= totalPages}>
-                  Sau
-                </button>
-              </nav>
+              <Pagination page={page + 1} totalPages={notebook?.totalPages || 0} onPageChange={value => goToPage(value - 1)} />
             </div>
           </div>
           <div data-when="empty">
@@ -292,13 +277,7 @@ function NotebookContent() {
             </div>
           </div>
           <div data-when="error">
-            <div className="error-state">
-              <h2>Không tải được sổ tay</h2>
-              <p>{nbError?.message || 'Đã xảy ra lỗi khi tải dữ liệu.'}</p>
-              <button type="button" className="btn btn-secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['notebook'] })}>
-                Thử lại
-              </button>
-            </div>
+            <p className="notice notice-danger" role="alert">{nbError?.message || 'Chưa tải được sổ tay.'}</p>
           </div>
         </div>
       </section>
@@ -313,7 +292,7 @@ function NotebookContent() {
             <div data-when="ready">
               <ul className={styles.pairs} id="pairs" role="list">
                 {pairs?.map((pr, i) => (
-                  <li key={i}>
+                  <li key={pr.id || i}>
                     <div className={styles.pairWords}>
                       <div>
                         <b>{pr.the1.tu}</b>
@@ -326,8 +305,9 @@ function NotebookContent() {
                       </div>
                     </div>
                     <div className="row small muted">
-                      <strong>{MIX[pr.loaiNham] || 'Dễ nhầm'}</strong>
-                      <span>Nhầm {pr.soLan} lần</span>
+                      <strong>Dễ nhầm</strong>
+                      <span>Nhầm {pr.soLanNham} lần</span>
+                      {lastSeen(pr.lanCuoiAt) && <span>Gần nhất {lastSeen(pr.lanCuoiAt)}</span>}
                     </div>
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>
                       Luyện phân biệt
@@ -340,10 +320,7 @@ function NotebookContent() {
               <p className="small muted">Chưa có cặp nào. Cặp được ghi lại khi bạn chọn nhầm giữa hai từ trong bài luyện.</p>
             </div>
             <div data-when="error">
-              <p className="small muted">Không tải được danh sách cặp dễ nhầm.</p>
-              <button type="button" className="btn btn-quiet btn-sm" onClick={() => queryClient.invalidateQueries({ queryKey: ['confusing-pairs'] })}>
-                Thử lại
-              </button>
+              <p className="small muted">{pairsError?.message || 'Chưa tải được cặp dễ nhầm.'}</p>
             </div>
           </div>
         </section>

@@ -140,76 +140,102 @@ frontend/
 
 ## Đợt 2 — Học & luyện (S5–S6 · 26/10–08/11) · FR-06, 07, 08, 11, 13
 
-### [ ] F2.1 Hôm nay học gì? — UI12 ← B2.2
+### [x] F2.1 Hôm nay học gì? — UI12 ← B2.2
 - Đến hạn, quá hạn, mới còn lại, mục tiêu, chuỗi ngày; nút 5/10/20 phút; một hành động chính.
+- **Đã làm (07/11/2026, FE-12):** `hom-nay/page.js` khớp `mockups/dot2/hom-nay.html` (cùng thứ tự khối: Phiên đang dở, Tuần này, Chuỗi ngày học, Mục tiêu mỗi ngày, Theo bộ thẻ); chạy với BE Docker; 360px không tràn ngang; VER-03 bước 1 pass.
 
 ### [ ] F2.2 Phiên học flashcard — UI18, UI19 ← B2.3, B2.4
 - Chọn bộ, chiều (Anh–Việt / Việt–Anh), thời gian; lật thẻ (Space), đánh giá Quên/Khó/Nhớ/Dễ (phím 1–4, không kích hoạt khi đang gõ) kèm giải thích.
 - Mỗi lượt sinh `clientEventId` một lần, lưu tạm hàng đợi chưa đồng bộ, gửi lại cùng khóa khi mất mạng; 409 → tải trạng thái mới.
 - Hết giờ: cho hoàn tất thẻ đang học rồi kết thúc.
 - Hợp đồng B2.3: `POST /learning/sessions` chỉ gửi `{boTheId?, chieuHoc, quyThoiGian}` (không `cheDo` đến B2.6); hàng đợi rỗng → 422 `BUSINESS_RULE`. Response: `hetGioAt` tính ra, `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, `hangDoi[].the` có `anhId`/`amTuId`/`amCauId` (tải qua `/files/{id}`, không có URL), `hangDoi[].tienDo.version` dùng cho `expectedVersion`. Chưa có `duKien` đến khi BE thêm; số thẻ tối đa = `phút×60/giayMoiLuot` (20 giây), không ghi cứng 15 giây.
+- **Đã làm (07/11/2026, FE-12):** UI18/UI19 chạy với BE thật: tạo phiên, Space lật thẻ, phím 1–4 chấm, hai chiều, kết thúc giữa phiên (VER-03 bước 2); UI18 khớp mockup; 360px không tràn. **Chưa kiểm:** hàng đợi chưa đồng bộ khi mất mạng và nhánh 409 tải lại phiên, nên chưa tick.
 
-### [ ] F2.3 Tổng kết, tiến độ, lịch sử — UI20, UI21 ← B2.5
+### [x] F2.3 Tổng kết, tiến độ, lịch sử — UI20, UI21 ← B2.5
 - UI21 đọc `GET /decks/{id}/progress` (B2.5): `tongHop` và danh sách thẻ phân trang; mockup `bo-the-tien-do.html` đã dùng endpoint này.
 - Tổng kết khớp lịch sử; bảng thẻ theo trạng thái (mới, đang học, đến hạn, quá hạn, tạm ngưng); tạm ngưng/khôi phục/đặt lại có xác nhận.
+- **Đã làm (07/11/2026, FE-12):** sửa UI21 lỗi trắng trang "useParams is not defined" (thiếu import) và bật `no-undef` trong ESLint; UI20 luôn hiện khối "Gợi ý tiếp theo" như mockup (có câu khi không có từ khó). UI20/UI21 khớp mockup, 360px không tràn, id sai → "Không tìm thấy" (404).
 
-### [ ] F2.4 Cứu lịch ôn — UI22 ← B2.6
+### [x] F2.4 Cứu lịch ôn — UI22 ← B2.6
 - "Có N thẻ cần ôn; hôm nay bạn có X phút" + lộ trình chia ngày; ghi rõ là ước tính.
+- **Đã làm (07/11/2026, FE-12):** khối cứu lịch ôn trong `/hom-nay` kiểm với `cuuLichOn` thật từ BE (FE-09…FE-11, bàn giao Đợt 2 §10): đổi phút, giữ từ mới, bắt đầu phiên `CUU_LICH`.
 
-### [ ] F2.5 Luyện tập — UI23–UI26 ← B2.7, B2.8
+### [x] F2.5 Luyện tập — UI23–UI26 ← B2.7, B2.8
 - 8 dạng: chọn nghĩa, chọn từ, ghép, điền chỗ trống, nhập từ theo nghĩa, nghe viết, phân biệt cặp nhầm, tổng hợp.
 - Đề không có đáp án; nộp một lần với `submitKey`; kết quả + giải thích; luyện lại câu sai; lịch sử.
+- **Đã làm (07/11/2026, FE-12):** cả 8 dạng render với BE thật (bài 12 nghe viết, 13 tổng hợp gồm chọn nghĩa/chọn từ/nhập từ/phân biệt cặp, 15 ghép từ, 16 điền chỗ trống); sửa ghép từ tràn ngang 3336px ở 360px (`select` theo nghĩa dài); UI23 và UI26 hiện lỗi thay vì nuốt lỗi (loaiBai sai → "Chưa tải được lịch sử bài làm" + Thử lại); UI25 nhãn "Theo kỹ năng trong bài này" như mockup.
 
-### [ ] F2.6 Sổ tay từ khó & cặp nhầm — UI27 ← B2.9
+### [x] F2.6 Sổ tay từ khó & cặp nhầm — UI27 ← B2.9
 
 > Số liệu kiểm thử FE tại 20/10/2026: `npm test` 39/39 pass, ESLint 0 lỗi 14 cảnh báo (các con số 9/9, 35, "3 warning" ở trên là lịch sử). `react-hook-form` đã cài nhưng chưa dùng; không có Playwright và không có script `test:contract`.
+- **Đã làm (07/11/2026, FE-12):** khớp mockup (Sổ tay từ khó, Cặp dễ nhầm, Khi nào từ vào sổ); thanh lọc cuộn trong `.tabs` (overflow-x auto), trang không tràn ở 360px; VER-03 bước 4 pass.
 
-### [ ] F2.7 Thống kê nền — UI35 ← B2.10
+### [x] F2.7 Thống kê nền — UI35 ← B2.10
 - Biểu đồ theo ngày (múi giờ người học), tỷ lệ đúng, mức làm chủ theo kỹ năng; thiếu dữ liệu → "Chưa đủ dữ liệu".
+- **Đã làm (07/11/2026, FE-12):** khớp mockup (Tổng quan, Thời gian học theo ngày, Mức làm chủ, Cách tính, Luyện kỹ năng yếu); bảng cuộn trong `.table-wrap`; "Chưa đủ dữ liệu" khi dưới 5 lượt; VER-03 bước 5 pass.
 
-### [ ] F2.8 Quản trị nền — UI47, UI49, UI53 ← B2.11
+### [x] F2.8 Quản trị nền — UI47, UI49, UI53 ← B2.11
 - Tìm, khóa/mở tài khoản (bắt buộc lý do), cấp/thu vai trò; bộ/thẻ mẫu xuất bản/ẩn; nhật ký.
 - **Cuối Đợt 2:** demo học đầu-cuối; nhận `report/DOT2_BAO_CAO_FE.md`.
+- **Đã làm (07/11/2026, FE-12):** UI47/UI53 có trạng thái lỗi (`ErrorState` + Thử lại); UI49 có trạng thái lỗi cho danh sách bộ, chi tiết bộ, danh sách thẻ, thêm khối "Quy tắc" ở danh sách như mockup, sửa "Xóa bộ" thiếu `version` (FE-18); 360px không tràn; VER-03 bước 6–7 pass. Còn FE-16 (`alert`/`prompt`/`confirm`).
 
 ## Đợt 3 — AI, phát âm, động lực (S7–S9 · 09/11–29/11) · FR-08…14
 
+**Cắt phạm vi (áp 07/11/2026):** theo [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md). **Cắt** UI52, UI54, UI46 và tab "Tác vụ nền" của UI53. F2.2 (phần mất mạng + 409) làm đầu S7.
+
 ### [ ] F3.1 Xưởng thẻ AI — UI29 ← B3.1, B3.2
 - Trái đoạn văn, phải thẻ nháp: chọn, sửa, nghe, cảnh báo trùng, liên kết đoạn nguồn; 202 → hỏi trạng thái định kỳ; "Lưu N thẻ đã chọn" với `Idempotency-Key`.
+- **Giữ** (S7).
 
-### [ ] F3.2 Giải thích ngữ cảnh & viết câu — UI30, UI31 ← B3.3
+### [ ] F3.2 Giải thích ngữ cảnh, viết câu & tự điền thẻ — UI30, UI31, UI16 ← B3.3
 - Không render HTML từ AI; hiển thị câu gốc, bản sửa, lỗi, giải thích tiếng Việt; nút báo cáo đầu ra sai.
+- **R-02:** trong `CardEditor`, gõ từ → nút "Gợi ý" gọi `context-explanations` → điền IPA, nghĩa, ví dụ, bản dịch vào form (không tự lưu); AI lỗi/429 hiện thông báo, form vẫn lưu tay được.
+- **Gọn** (S8).
 
 ### [ ] F3.3 Lịch sử AI & hạn mức — UI32 ← B3.3
-- Hết hạn mức (429) hiển thị thời điểm được dùng lại; AI lỗi không chặn học.
+- Hết hạn mức (429) hiển thị thời điểm được dùng lại; AI lỗi không chặn học. Lịch sử dạng danh sách.
+- **Gọn** (S8).
 
 ### [ ] F3.4 Gợi ý có lý do — UI28 ← B3.5
 - Hiển thị mã lý do + minh chứng ("sai 3/5 lượt gần đây") + liên kết tới các lượt liên quan.
+- **R-04:** thẻ gợi ý `TIEN_BO` trên UI12 ("đúng 5/5 tuần này"); ẩn khi API không trả.
+- **Giữ** (S8).
 
-### [ ] F3.5 Góc phát âm — UI33, UI34 ← B3.4
-- Nghe mẫu; xin quyền micro khi bấm ghi; ghi ≤ 15 giây, phát lại, ghi lại; gửi; chỉ hiện chỉ số có thật; so sánh trước–sau; xóa bản ghi.
+### [ ] F3.5 Góc phát âm — UI33, UI34 ← B3.4a, B3.4b
+- Nghe mẫu (B3.4a, dùng cả trên UI19 và bài nghe viết từ S7); xin quyền micro khi bấm ghi; ghi ≤ 15 giây, phát lại, ghi lại; gửi; chỉ hiện chỉ số có thật; so sánh 2 lần gần nhất cùng từ; xóa bản ghi. Kết quả Fake hiện nhãn "Mô phỏng".
+- **Gọn** (S9).
 
-### [ ] F3.6 Động lực — UI38, UI54 ← B3.6
-- Điểm, chuỗi ngày, huy hiệu, thử thách, lịch sử thưởng; quản trị huy hiệu/thử thách.
+### [ ] F3.6 Động lực — UI38 ← B3.6
+- Điểm, chuỗi ngày, huy hiệu, thử thách tuần, lịch sử thưởng.
+- **R-03:** UI12 hiện "Đã dùng ngày nghỉ tuần này" khi chuỗi được giữ nhờ ngày đóng băng.
+- **Gọn** (S8). **Cắt:** UI54 quản trị huy hiệu/thử thách.
 
-### [ ] F3.7 Thông báo — UI39, UI52 ← B3.7
-- Chuông có số chưa đọc, trang thông báo, đánh dấu đã đọc; quản trị gửi thông báo hệ thống.
+### [ ] F3.7 Thông báo — UI39 ← B3.7
+- Chuông có số chưa đọc, trang thông báo, đánh dấu đã đọc.
+- **Gọn** (S8). **Cắt:** UI52 quản trị gửi thông báo hệ thống. **Hoãn:** web push + PWA.
 
 ### [ ] F3.8 Báo cáo & kiểm duyệt — UI45, UI50 ← B3.8
-- Hộp báo cáo (lý do + mô tả) trên bộ/thẻ/đầu ra AI; hàng đợi xử lý: giữ/ẩn/yêu cầu sửa/từ chối kèm lý do.
+- Hộp báo cáo (lý do + mô tả) trên bộ/thẻ/đầu ra AI; hàng đợi xử lý: giữ/ẩn kèm lý do.
+- **Gọn** (S9).
 
 ### [ ] F3.9 Tổng kết tuần & bản đồ làm chủ — UI36, UI37 ← B3.9, B2.10
 - Màu không phải dấu hiệu duy nhất; không tô xanh khi mới đúng một lần.
+- UI36 = bảng bộ thẻ × kỹ năng, có "Chưa đủ dữ liệu"; UI37 có mục "Từ đã vượt qua" (R-04).
+- **Gọn** (S9). **Cắt:** lưới màu từng từ.
 
 ### [ ] F3.10 Dữ liệu & xóa tài khoản — UI44 ← B3.10
 - Xác nhận hai bước, hiển thị trạng thái xử lý.
+- **Gọn** (S9).
 
-### [ ] F3.11 Quản trị vận hành — UI46, UI51, UI53 ← B3.11
-- Tổng quan, hạn mức/sử dụng/chi phí ("Chưa xác định" khi chưa có đơn giá), tác vụ nền, yêu cầu xóa dữ liệu.
+### [ ] F3.11 Quản trị vận hành — UI51 ← B3.11
+- Hạn mức và lượt dùng/lỗi theo dịch vụ.
+- **Gọn mạnh** (S9). **Cắt:** UI46 tổng quan, chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu.
 - **Cuối Đợt 3:** demo 10 bước TK §20.2; nhận `report/DOT3_BAO_CAO_FE.md`.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 
 ### [ ] F4.1 E2E Playwright cho kịch bản demo TK §20.2
+- **Gọn:** 1 kịch bản theo bước 1–4 và 8.
 ### [ ] F4.2 Responsive 360px, bàn phím, focus, tương phản, giảm chuyển động — TC-18
 ### [ ] F4.3 Mạng chậm / API lỗi: không mất kết quả đã lưu, thử lại rõ ràng — TC-18
 ### [ ] F4.4 Lighthouse, kích thước bundle, không lộ khóa dịch vụ trong bundle
@@ -217,7 +243,7 @@ frontend/
 ## GĐ5 — Triển khai & bàn giao (S11 · 07/12–14/12)
 
 ### [ ] F5.1 Build production sau Nginx cùng domain với API (cùng B5.1)
-### [ ] F5.2 Kiểm tra mọi màn hình với dữ liệu demo (B5.2)
+### [ ] F5.2 Kiểm tra mọi màn hình với dữ liệu demo (B5.2a, B5.2b)
 ### [ ] F5.3 Hướng dẫn sử dụng có ảnh chụp trong `huong-dan/`
 ### [ ] F5.4 Diễn tập demo 8–10 phút
 

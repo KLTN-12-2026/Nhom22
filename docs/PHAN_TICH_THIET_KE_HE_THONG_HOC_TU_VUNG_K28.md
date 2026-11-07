@@ -371,10 +371,11 @@ B2.10 (chốt 03/11/2026, đề xuất) hiện thực `GET /statistics/skills` c
 | CAP_DE_NHAM | Chọn nhầm hai từ trong nhiều câu | Bài phân biệt cặp từ |
 | PHAT_AM_THAP | Kết quả dịch vụ dưới ngưỡng cấu hình | Nghe mẫu và ghi âm lại |
 | QUA_HAN_NHIEU | Lượng ôn vượt khả năng một phiên | Chia kế hoạch học lại |
+| TIEN_BO | Thẻ từng sai/quên nhiều nhưng các lượt gần đây đều đúng, đủ ngưỡng lượt quan sát (thêm 07/11/2026, B3.5) | Ghi nhận tiến bộ, không yêu cầu hành động |
 
 B2.9 (chốt 03/11/2026, đề xuất) dùng ba mã đầu cho sổ tay UI27, ngưỡng trong `app.notebook.*`: QUEN_NHIEU = ≥ 3 lượt `lich_su_on` Quên từ `ON_TAP` (cả hai chiều) trong 30 ngày; SAI_CHINH_TA = ≥ 2 lỗi `CHINH_TA` trong 5 lượt nhập gần nhất (câu bỏ trống không tính lượt); CAP_DE_NHAM = thẻ thuộc cặp có `so_lan_nham ≥ 2`; thêm `DANH_DAU_THU_CONG` khi người học tự đánh dấu. Sổ tay là kết quả suy ra từ lỗi, lần quên và đánh dấu; chi tiết ở [flow B2.9](luong-backend/B2.9-so-tay-cap-nham.md).
 
-Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây”, có liên kết xem các lượt liên quan. Ngưỡng là cấu hình thiết kế, không phải kết luận nghiên cứu.
+Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây”, có liên kết xem các lượt liên quan. Với `TIEN_BO`: “‘reimbursement’: sai 3/5 lượt tháng trước, đúng 5/5 tuần này”. `PHAT_AM_THAP` chỉ bật khi đánh giá phát âm dùng dịch vụ thật. Ngưỡng là cấu hình thiết kế, không phải kết luận nghiên cứu.
 
 ## 9. Thiết kế trải nghiệm nổi bật — “wow” có giá trị học tập
 
@@ -694,7 +695,7 @@ Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạ
 - Một thẻ/chiều chỉ có một lượt thưởng SRS chính trong ngày; các bước học lại vẫn lưu nhưng không khai thác điểm bằng bấm liên tục.
 - Điểm tối đa/ngày là cấu hình; ví dụ minh họa 100 điểm/ngày, phải thống nhất trước triển khai.
 - Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ.
-- Chuỗi ngày tăng khi hoàn thành ít nhất một phiên có tối thiểu 5 lượt hợp lệ là quy tắc đề xuất; không cam kết ngày có một cú bấm là ngày học. Hiện thực tạm ở B2.2 tính theo **ngày**: ngày địa phương có tổng ≥5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; B3.6 chốt quy tắc cuối. Giao diện mô tả đúng quy tắc đang chạy.
+- Chuỗi ngày (**chốt 07/11/2026**, B3.6) tính theo **ngày**: ngày địa phương có tổng ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; không cam kết ngày có một cú bấm là ngày học. **Ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày không đủ điều kiện để giữ chuỗi; nghỉ từ 2 ngày liên tiếp trong cùng tuần thì đứt chuỗi. Giao diện mô tả đúng quy tắc đang chạy và báo khi đã dùng ngày nghỉ của tuần.
 - Sổ điểm là dữ liệu gốc; tổng điểm có thể tái tạo. Không nhận điểm lại khi gửi trùng hoặc chạy lại tác vụ.
 
 ### 15.2. Nhắc học
@@ -838,7 +839,7 @@ Kiểm thử công thức dùng đồng hồ cố định và bộ dữ liệu d
 6. Viết câu với từ đã học; xem giải thích tiếng Việt.
 7. Ghi âm, xem kết quả dịch vụ và xóa bản ghi.
 8. Mở tài khoản nghỉ học lâu; trình diễn cứu lịch ôn.
-9. Admin xử lý báo cáo và xem nhật ký/hạn mức.
+9. Admin xử lý báo cáo (giữ/ẩn kèm lý do) và xem hạn mức, lượt dùng dịch vụ.
 10. Mô phỏng AI lỗi; chứng minh phiên học và bài cố định vẫn hoạt động.
 
 ## 21. Rủi ro và cách giảm thiểu

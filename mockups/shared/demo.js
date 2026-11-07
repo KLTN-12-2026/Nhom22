@@ -1462,6 +1462,17 @@
       if (!s || s.uid !== u.id) notFound();
       return practiceView(s);
     }],
+    ["GET", /^\/practice\/sessions\/(\w+)\/questions\/(\w+)\/audio$/, (m) => {
+      const u = requireMe();
+      const s = db.practice[m[1]];
+      if (!s || s.uid !== u.id) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bài luyện");
+      const q = s.cauHoi.find((x) => x.id === m[2]);
+      if (!q) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy câu hỏi");
+      const amTuId = q.loaiCau === "NGHE_VIET" ? q.deBai.amTuId : null;
+      if (!amTuId) throw new ApiError(404, "NOT_FOUND", "Câu hỏi không có âm thanh");
+      if (/^demo-audio:\/\//.test(amTuId)) return { id: amTuId, loai: "AM_THANH", mimeType: "audio/mpeg", kichThuoc: 0, checksum: null, hoanTatAt: s.taoAt, downloadUrl: amTuId, expiresAt: new Date(Date.now() + 600000).toISOString() };
+      return fileResponse(ownedFile(amTuId));
+    }],
     ["POST", /^\/practice\/sessions\/(\w+)\/submissions$/, (m, b) => {
       const u = requireMe();
       const s = db.practice[m[1]];

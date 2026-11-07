@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Pagination } from '@/components/ui';
+import { Button, ErrorState, Pagination } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
 
 const STATUS = {
@@ -24,7 +24,8 @@ function AdminUsersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { me } = useMe();
+  const { data: me } = useMe();
+  const [actionError, setActionError] = useState(null);
 
   const defaultQ = searchParams.get('q') || '';
   const defaultStatus = searchParams.get('trangThai') || '';
@@ -35,18 +36,30 @@ function AdminUsersContent() {
   const [trangThai, setTrangThai] = useState(defaultStatus);
   const [vaiTro, setVaiTro] = useState(defaultRole);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin-users', q, trangThai, vaiTro, page],
-    queryFn: () => apiFetch(`/api/v1/admin/users?q=${encodeURIComponent(q)}&trangThai=${trangThai}&vaiTro=${vaiTro}&page=${page}&size=20`)
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['admin-users', defaultQ, defaultStatus, defaultRole, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (defaultQ) params.set('q', defaultQ);
+      if (defaultStatus) params.set('trangThai', defaultStatus);
+      if (defaultRole) params.set('vaiTro', defaultRole);
+      params.set('page', page.toString());
+      params.set('size', '20');
+      return apiFetch(`/api/v1/admin/users?${params.toString()}`);
+    }
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    onMutate: () => setActionError(null),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+    onError: setActionError
   });
 
   const roleMutation = useMutation({
     mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(body) }),
+    onMutate: () => setActionError(null),
+    onError: setActionError,
     onSuccess: (res, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       if (vars.isSelfRevoke) {
@@ -79,8 +92,13 @@ function AdminUsersContent() {
   };
 
   const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (bắt buộc):');
-    return reason?.trim();
+    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
+    if (reason === undefined) return undefined;
+    if (reason.length < 10 || reason.length > 500) {
+      alert('Lý do cần từ 10 đến 500 ký tự.');
+      return undefined;
+    }
+    return reason;
   };
 
   const handleLock = (user) => {
@@ -156,8 +174,14 @@ function AdminUsersContent() {
           </div>
         </form>
 
+        {actionError && (
+          <p className="notice notice-danger" role="alert" style={{ marginBottom: 'var(--space-4)' }}>{actionError.message}</p>
+        )}
+
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : isError ? (
+          <ErrorState title="Chưa tải được danh sách tài khoản" description={error?.message} onRetry={() => refetch()} />
         ) : data?.items?.length > 0 ? (
           <>
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
@@ -165,15 +189,15 @@ function AdminUsersContent() {
             </p>
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
               {data.items.map((u, i) => {
-                const st = STATUS[u.trangThai];
-                const isAdmin = u.vaiTro.includes('ADMIN');
+                const st = STATUS[u.trangThai] || { label: u.trangThai, className: '' };
+                const isAdmin = (u.vaiTro || []).includes('ADMIN');
                 return (
                   <li key={u.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
                     <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--color-primary-strong)' }}>
-                          {u.anhDaiDien ? <img src={u.anhDaiDien} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : u.tenHienThi.charAt(0).toUpperCase()}
+                          {(u.tenHienThi || u.email || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>

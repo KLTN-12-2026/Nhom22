@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon, Pagination } from '@/components/ui';
+import { Button, ErrorState, Icon, Pagination } from '@/components/ui';
 
 const TYPES = {
   CHON_NGHIA: 'Chọn nghĩa',
@@ -26,7 +26,7 @@ function PracticeHistoryContent() {
   const [page, setPage] = useState(defaultPage);
   const [loaiBai, setLoaiBai] = useState(defaultLoaiBai);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['practice-history', page, loaiBai],
     queryFn: () => apiFetch(`/api/v1/practice/history?page=${page}&size=10${loaiBai ? `&loaiBai=${loaiBai}` : ''}`)
   });
@@ -81,6 +81,8 @@ function PracticeHistoryContent() {
 
         {isLoading ? (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
+        ) : isError ? (
+          <ErrorState title="Chưa tải được lịch sử bài làm" description={error?.message} onRetry={() => refetch()} />
         ) : data?.items?.length > 0 ? (
           <>
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
@@ -97,7 +99,7 @@ function PracticeHistoryContent() {
                       {item.laLuyenLai && <span style={{ padding: '2px 8px', background: 'var(--color-border)', borderRadius: '4px', fontWeight: 'bold' }}>Luyện lại</span>}
                       <span>{item.boTheTen}</span>
                       <span>{new Date(item.nopAt).toLocaleString('vi-VN')}</span>
-                      <span>{Math.floor(item.thoiGianMs / 60000)}p {Math.floor((item.thoiGianMs % 60000) / 1000)}s</span>
+                      <span>{Math.floor(item.thoiGian / 60000)}p {Math.floor((item.thoiGian % 60000) / 1000)}s</span>
                       {item.soCauSai > 0 ? (
                         <span style={{ color: 'var(--color-danger)' }}>{item.soCauSai} câu sai</span>
                       ) : (
@@ -118,7 +120,7 @@ function PracticeHistoryContent() {
         ) : (
           <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
             <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>
-              {loaiBai ? `Chưa có bài ${TYPES[loaiBai].toLowerCase()}` : 'Bạn chưa làm bài luyện nào'}
+              {loaiBai ? `Chưa có bài ${(TYPES[loaiBai] || loaiBai).toLowerCase()}` : 'Bạn chưa làm bài luyện nào'}
             </h2>
             <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Làm một bài ngắn 5 câu để biết mình hay sai ở đâu.</p>
             <Button variant="primary" onClick={() => router.push('/luyen-tap')}>Chọn dạng bài</Button>

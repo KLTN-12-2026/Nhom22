@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { libraryPage } from '@/lib/library-query.mjs';
-import { copyDeck, deckCopyKey } from '@/lib/deck-copy.mjs';
+import { clearDeckCopyKey, copyDeck, deckCopyKey } from '@/lib/deck-copy.mjs';
 import { useMe } from '@/hooks/useMe';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { CardMedia } from '@/components/content/CardMedia';
@@ -59,6 +59,8 @@ function LibraryDetail({ id }) {
         attempt.current = { userId: me.id, key };
       }
       await copy.mutateAsync(attempt.current.key);
+      try { clearDeckCopyKey(window.sessionStorage, me.id, id); } catch {}
+      attempt.current = null;
     } catch {
     } finally { busy.current = false; }
   };
