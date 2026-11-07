@@ -5,7 +5,7 @@
 | Ngày lập | 06/11/2026 |
 | Dựa trên | [BAO_CAO_RA_SOAT_DOT2.md](BAO_CAO_RA_SOAT_DOT2.md) + đọc lại mã ngày 06/11/2026 |
 | Phạm vi | Đợt 2 = S5 + S6: B2.1–B2.12, F2.1–F2.8 |
-| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09, FE-01…FE-11 (kiểm trên BE thật qua Next.js); BE-03 một phần |
+| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09, FE-01…FE-11 (kiểm trên BE thật qua Next.js), VER-02 (Postman 144 request, 205/205 assertion); BE-03 một phần |
 | Hạn | Demo Đợt 2: 08/11/2026 |
 
 Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài liệu), `VER-xx` (kiểm chứng). Ưu tiên P0 = chặn demo, P1 = cần cho Đợt 2 đủ DoD, P2 = dọn dẹp.
@@ -50,7 +50,7 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | FE-13 | P1 | FE | Xóa mock route Next.js Đợt 2 sau khi BE thật chạy | Vừa |
 | BE-02 | ✅ | BE | Postman thống kê thêm 5 ca lỗi (xong 07/11, đã `curl` đúng) | Nhỏ |
 | BE-03 | 🟡 | BE | Biến environment xong 07/11; mô tả collection phải sửa tay trong Postman (MCP không sửa riêng `info`) | Nhỏ |
-| VER-02 | P1 | BE | Chạy Postman Đợt 2 trên HTTP thật, lưu kết quả | Vừa |
+| VER-02 | ✅ 07/11 | BE | Chạy Postman Đợt 2 trên HTTP thật, lưu kết quả | Vừa |
 | VER-03 | P1 | BE+FE | Demo đầu-cuối Đợt 2 trên BE thật | Vừa |
 | DOC-01…10 | 🟡 | BE | DOC-01…09 xong 07/11; DOC-10 thuộc roadmap FE (BE không sửa) | Nhỏ |
 | FE-14 | P2 | FE | `/hoc-tong-ket` gọi `POST .../finish` trong `useQuery` | Nhỏ |
