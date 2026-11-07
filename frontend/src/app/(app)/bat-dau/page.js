@@ -43,7 +43,7 @@ export default function OnboardingPage() {
     if ((step === 1 && !goal) || (step === 2 && !level)) { setErrorMsg('Chọn một mục để tiếp tục.'); return; }
     setErrorMsg('');
     if (step < 4) { setStep(step + 1); return; }
-    if (step === 5) { router.push(next === '/bat-dau' ? '/bo-the' : next); return; }
+    if (step === 5) { router.push(next === '/bat-dau' ? '/hom-nay' : next); return; }
     setSaving(true);
     try {
       const current = await apiFetch('/api/v1/me/learning-settings');

@@ -5,7 +5,7 @@
 | Ngày lập | 06/11/2026 |
 | Dựa trên | [BAO_CAO_RA_SOAT_DOT2.md](BAO_CAO_RA_SOAT_DOT2.md) + đọc lại mã ngày 06/11/2026 |
 | Phạm vi | Đợt 2 = S5 + S6: B2.1–B2.12, F2.1–F2.8 |
-| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09, FE-01…FE-08 (kiểm trên BE thật qua Next.js); BE-03 một phần |
+| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09, FE-01…FE-11 (kiểm trên BE thật qua Next.js); BE-03 một phần |
 | Hạn | Demo Đợt 2: 08/11/2026 |
 
 Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài liệu), `VER-xx` (kiểm chứng). Ưu tiên P0 = chặn demo, P1 = cần cho Đợt 2 đủ DoD, P2 = dọn dẹp.
@@ -43,9 +43,9 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | FE-07 | ✅ 07/11 | FE | Thống kê đọc `mucTieuPhutNgay`; BE trả `phutMoiNgay` | Nhỏ |
 | FE-08 | ✅ 07/11 | FE | Sổ tay cặp nhầm đọc `loaiNham`, `soLan`; BE trả `soLanNham`, `lanCuoiAt` | Nhỏ |
 | BE-01 | ✅ | BE | API âm thanh câu nghe viết `GET /practice/sessions/{id}/questions/{cauHoiId}/audio` (xong 06/11) | Nhỏ |
-| FE-09 | P1 | FE | UI22 "Cứu lịch ôn" chưa làm | Vừa |
-| FE-10 | P1 | FE | UI12 thiếu khối "Phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn" | Vừa |
-| FE-11 | P1 | FE | Logo/"Trở về" về `/bo-the` thay vì `/hom-nay` | Nhỏ |
+| FE-09 | ✅ 07/11 | FE | UI22 "Cứu lịch ôn" chưa làm | Vừa |
+| FE-10 | ✅ 07/11 | FE | UI12 thiếu khối "Phiên đang dở", "Hoạt động 7 ngày", "Dự báo ôn" | Vừa |
+| FE-11 | ✅ 07/11 | FE | Logo/"Trở về" về `/bo-the` thay vì `/hom-nay` | Nhỏ |
 | FE-12 | P1 | FE | Đối chiếu 14 trang với mockup, 360px, trạng thái tải/rỗng/lỗi | Lớn |
 | FE-13 | P1 | FE | Xóa mock route Next.js Đợt 2 sau khi BE thật chạy | Vừa |
 | BE-02 | ✅ | BE | Postman thống kê thêm 5 ca lỗi (xong 07/11, đã `curl` đúng) | Nhỏ |

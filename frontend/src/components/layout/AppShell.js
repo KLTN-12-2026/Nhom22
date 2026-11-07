@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
 import { Icon, useToast } from '@/components/ui';
 import { isPendingRoute } from './FeatureGate';
 
-const HOME = '/bo-the';
+const HOME = '/hom-nay';
 const visible = (groups) => groups.map(g => ({ ...g, items: g.items.filter(it => !isPendingRoute(it.href)) })).filter(g => g.items.length);
 
 const NAV = [

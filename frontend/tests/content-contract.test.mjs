@@ -27,7 +27,7 @@ test('edits keep shared references in their role and use explicit removal flags'
 });
 test('login destinations stay local and bounded', () => {
   assert.equal(safeNext('/thu-vien/23?page=1'), '/thu-vien/23?page=1');
-  for (const value of ['//evil.test', '/\\evil.test', 'https://evil.test', '/\nredirect', '/' + 'a'.repeat(201)]) assert.equal(safeNext(value), '/bo-the');
+  for (const value of ['//evil.test', '/\\evil.test', 'https://evil.test', '/\nredirect', '/' + 'a'.repeat(201)]) assert.equal(safeNext(value), '/hom-nay');
 });
 test('duplicate hints normalize spacing and case without removing meaningful accents', () => {
   assert.equal(normalizeTerm('  Apple   pie  '), 'apple pie');

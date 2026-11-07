@@ -26,6 +26,6 @@ export function normalizeTerm(value) {
   return value.normalize('NFC').trim().replace(/\s+/gu, ' ').toLowerCase();
 }
 
-export function safeNext(value, fallback = '/bo-the') {
+export function safeNext(value, fallback = '/hom-nay') {
   return value && value.length <= 200 && value.startsWith('/') && !value.startsWith('//') && !/[\\\r\n]/u.test(value) ? value : fallback;
 }
