@@ -37,7 +37,7 @@
 | **Đợt 1** — Tài khoản & nội dung | 12/10–25/10 | FR-01…05: tài khoản, hồ sơ, tệp, bộ/thẻ, thư viện, CSV | B1.1–B1.12 |
 | **Đợt 2** — Học & luyện | 26/10–08/11 | FR-06, 07, 11, 13: SRS, phiên học, bài luyện, sổ tay, thống kê, quản trị, bảng điều khiển | B2.1–B2.12 |
 | **Đợt 3** — AI & mở rộng | 09/11–29/11 | FR-08, 09, 10, 12, 14: AI, phát âm, gợi ý, thưởng, nhắc, kiểm duyệt, xóa dữ liệu | B3.1–B3.11 |
-| **GĐ4** — Kiểm thử & ổn định | 30/11–06/12 | TC-01…20, hiệu năng, sao lưu/khôi phục | B4.1–B4.5 |
+| **GĐ4** — Kiểm thử & ổn định | 30/11–06/12 | TC-01…22, hiệu năng, sao lưu/khôi phục | B4.1–B4.5 |
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
 Sau bước cuối mỗi giai đoạn: chạy `/fe-report <GĐ>` để bàn giao cho FE.
@@ -432,25 +432,27 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ---
 
-## Đợt 3 — AI, phát âm, động lực & vận hành (09/11–29/11) · FR-08, 09, 10, 12, 14
+## Đợt 3 — AI, phát âm, động lực, vận hành & thanh toán (09/11–29/11) · FR-08, 09, 10, 12, 14, 15
 
 ### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
 - `V15__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 cho sổ tay B2.9, V14 cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
-- **Giữ** (S7). Hạn mức theo user/ngày từ một bảng cấu hình phẳng; không tách hạn mức theo nhà cung cấp/loại tác vụ.
+- **Giữ** (S7). Hạn mức theo user/ngày từ một bảng cấu hình phẳng; không tách hạn mức theo nhà cung cấp. Ngoại lệ (bổ sung 07/11/2026): ảnh AI (X-04) có hạn mức riêng vì chi phí cao hơn văn bản; mức hạn mức AI/ảnh đọc theo gói đang hiệu lực (`EntitlementService`, B3.12a). Trước khi B3.12a xong, mọi người dùng coi như gói `MIEN_PHI`.
 - Mốc 12/11/2026: chốt nhà cung cấp AI; chưa có khóa thì demo bằng `FakeAiClient` có nhãn, vẫn giữ 1 lượt gọi thật cho nghiệm thu.
 
 ### [ ] B3.2 Adapter AI & tạo thẻ từ đoạn văn — FR-09, TC-12, TC-13
 - Interface `AiClient` + `OpenAiClient` (gọi bằng `RestClient`, timeout) + `FakeAiClient` (profile dev/test, dùng cho demo "AI lỗi").
 - API: `POST /ai/card-drafts` → 202 + requestId; `GET /ai/requests/{id}`; `POST /ai/card-drafts/{id}/commit` (chỉ lưu thẻ đã chọn, `Idempotency-Key`).
 - Prompt có phiên bản, tách chỉ dẫn hệ thống với đoạn văn User; kiểm schema JSON đầu ra, bỏ mục không hợp lệ, đánh dấu trùng.
+- **Bổ sung 07/11/2026** ([KE_HOACH_CAT_DOT3.md §7](../docs/KE_HOACH_CAT_DOT3.md)): **X-01** `card-drafts` nhận `tepId` (tệp `.docx` loại `TAI_LIEU`, ≤ 1 MB, đọc bằng Apache POI trong job; `.txt`/`.csv` FE gửi như đoạn văn), giới hạn 5.000 ký tự, 50 từ; **X-02** `commit` nhận `boTheId` hoặc `tenBoMoi` (tạo bộ `RIENG_TU` cùng giao dịch). Không dùng backend Node của bản demo.
 - **Giữ** (S7).
 
 ### [ ] B3.3 Các tác vụ AI khác — FR-09
 - API: `POST /ai/context-explanations`, `POST /ai/sentence-feedback` (giải thích tiếng Việt), `GET /ai/history` (danh sách), `GET /me/service-quota`.
 - AI lỗi/timeout **không chặn** học SRS và bài cố định.
-- **Gọn** (S8). `context-explanations` nhận từ (+ ngữ cảnh tùy chọn) và trả IPA, nghĩa, ví dụ, bản dịch, mẹo nhớ; dùng lại cho **R-02** tự điền thẻ trong trình sửa thẻ (người học sửa rồi mới lưu; AI lỗi vẫn lưu tay được).
+- **Gọn** (S8). `context-explanations` nhận từ (+ ngữ cảnh tùy chọn) và trả IPA, nghĩa, ví dụ, bản dịch, mẹo nhớ; dùng lại cho **R-02** tự điền thẻ trong trình sửa thẻ và **X-03** "Hoàn thiện với AI" trên thẻ nháp UI29 (người học sửa rồi mới lưu; AI lỗi vẫn lưu tay được).
+- **X-04 (bổ sung 07/11/2026):** `POST /ai/card-images {tu, nghia}` → 202 + `requestId`; job gọi `ImageClient` (thật) / `FakeImageClient` (dev, test, không có khóa), lưu PNG qua `FileService` loại `ANH`, kết quả `tepId` đọc qua `GET /ai/requests/{id}`. Prompt kèm nghĩa tiếng Việt; hạn mức ảnh riêng; lỗi không chặn lưu thẻ. **Giữ** (chốt 07/11/2026): nhà cung cấp Imagen 3 (Google, qua Gemini API/Vertex AI) theo bản demo; `FakeImageClient` dùng cho test và khi chưa có khóa. Hạn mức ảnh theo gói: Miễn phí 0, Pro 10, Premium 30 ảnh/ngày.
 - **Hoãn:** `POST /ai/exercise-drafts` (chỉ làm khi dư thời gian sau 29/11).
 
 ### [ ] B3.4a Âm thanh TTS — FR-10, TC-14
@@ -497,13 +499,30 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 ### [ ] B3.11 Quản trị vận hành — FR-13
 - API: `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi).
 - **Gọn mạnh** (S9). **Cắt:** `GET /admin/statistics`, `GET /admin/jobs`, thời gian phản hồi và chi phí. Mốc 22/11/2026: S8 chậm thì chỉ còn `GET /admin/service-usage`.
+
+### [ ] B3.12a Gói dịch vụ & thanh toán VNPay — FR-15, TC-21 (bổ sung 07/11/2026)
+- Thiết kế: TK §6.9, §12.2 (`goi_dich_vu`, `dang_ky_goi`, `giao_dich_thanh_toan`), §13.2. Nguồn: UI55, UI56 nhóm FE làm ngày 07/11/2026 (commit `ff3c54e`).
+- `V<n>__billing.sql` (số kế tiếp chưa dùng): 3 bảng + seed 3 gói `MIEN_PHI`/`PRO`/`PREMIUM` theo bảng giá TK §6.9.
+- API: `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts {goi, chuKy}` → `{maDon, paymentUrl}`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return` (chuyển về FE `/thanh-toan-ket-qua?maDon=`), `GET /billing/transactions/{maDon}`.
+- `PaymentGateway` + `VnpayGateway` (ký/kiểm HMAC-SHA512, `RestClient` không cần) + `FakePaymentGateway` (test, demo không mạng). Số tiền lấy từ `goi_dich_vu`; xác nhận IPN/return dùng một hàm, khóa hàng đơn, chuyển trạng thái một lần; kiểm chữ ký, số tiền, chủ đơn. Không nhận, không lưu dữ liệu thẻ.
+- `EntitlementService.current(userId)` → gói hiệu lực (mặc định `MIEN_PHI`); `QuotaService` (B3.1) đọc hạn mức AI/ảnh từ đây.
+- Cấu hình: `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `VNPAY_PAY_URL`, `VNPAY_RETURN_URL` trong `.env` (không commit khóa thật).
+- Test: TC-21 (chữ ký sai, sai số tiền, IPN lặp, đơn người khác, đơn hết hạn 15 phút).
+- **Giữ** (S8). Mốc 12/11/2026: đăng ký tài khoản sandbox VNPay; chưa có thì demo bằng `FakePaymentGateway` gắn nhãn "Mô phỏng".
+
+### [ ] B3.12b Lịch sử giao dịch, hết hạn gói, áp quyền lợi — FR-15, TC-22
+- API: `GET /billing/transactions` (phân trang, của mình), `GET /billing/transactions/{maDon}/receipt` (biên nhận HTML in được, không phải hóa đơn VAT), `GET /admin/payments` (Admin, chỉ đọc, lọc trạng thái/ngày).
+- Job hằng ngày: `dang_ky_goi` quá `het_han_at` → `HET_HAN`, người dùng về `MIEN_PHI`; nhắc trước 3 ngày qua B3.7. Đơn `CHO_THANH_TOAN` quá 15 phút → `HET_HAN`.
+- Áp quyền lợi ở máy chủ: giới hạn thẻ khi tạo thẻ (B1.9), nhập CSV (B1.12), sao chép bộ (B1.11), commit thẻ AI (B3.2); cờ `phat_am` ở B3.4b; bộ mẫu `cao_cap` (thêm cột ở bộ mẫu, Admin bật trong UI49) chỉ gói Premium sao chép được. Vượt → 422 `BUSINESS_RULE` kèm `goiCanNangCap`. Xuất CSV và xóa dữ liệu không phụ thuộc gói.
+- Test: TC-22.
+- **Gọn** (S9). Trễ thì cắt theo thứ tự: biên nhận HTML → `GET /admin/payments`.
 - **Cuối Đợt 3 →** `/fe-report DOT3`.
 
 ---
 
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
 
-### [ ] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-20
+### [ ] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-22
 - Mỗi TC ở TK §19 có ít nhất một test tự động (trừ TC-18 thủ công, TC-19/20 có biên bản). Bảng truy vết `FR ↔ API ↔ TC` trong `docs/`.
 
 ### [ ] B4.2 Rà soát bảo mật

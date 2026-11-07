@@ -27,7 +27,7 @@
 | **GĐ0** — Nền tảng | S1–S2 | 28/09–11/10 | Dự án Next.js, design system, `api-client`, layout, trang công khai, mockup Đợt 1 | F0.1–F0.6 |
 | **Đợt 1** — Tài khoản & nội dung | S3–S4 | 12/10–25/10 | Đăng ký/đăng nhập, onboarding, hồ sơ, thư viện, bộ/thẻ, CSV | F1.1–F1.12 |
 | **Đợt 2** — Học & luyện | S5–S6 | 26/10–08/11 | Hôm nay học gì, flashcard SRS, luyện tập, sổ tay, thống kê, quản trị nền | F2.1–F2.8 |
-| **Đợt 3** — AI & mở rộng | S7–S9 | 09/11–29/11 | Xưởng thẻ AI, viết câu, phát âm, thành tích, thông báo, kiểm duyệt, vận hành | F3.1–F3.11 |
+| **Đợt 3** — AI & mở rộng | S7–S9 | 09/11–29/11 | Xưởng thẻ AI (+ ảnh AI), viết câu, phát âm, thành tích, thông báo, kiểm duyệt, vận hành, gói & thanh toán | F3.1–F3.12 |
 | **GĐ4** — Kiểm thử | S10 | 30/11–06/12 | E2E, responsive, tiếp cận, lỗi mạng | F4.1–F4.4 |
 | **GĐ5** — Bàn giao | S11 | 07/12–14/12 | Build production, dữ liệu demo, hướng dẫn, diễn tập | F5.1–F5.4 |
 
@@ -148,7 +148,7 @@ frontend/
 - Chọn bộ, chiều (Anh–Việt / Việt–Anh), thời gian; lật thẻ (Space), đánh giá Quên/Khó/Nhớ/Dễ (phím 1–4, không kích hoạt khi đang gõ) kèm giải thích.
 - Mỗi lượt sinh `clientEventId` một lần, lưu tạm hàng đợi chưa đồng bộ, gửi lại cùng khóa khi mất mạng; 409 → tải trạng thái mới.
 - Hết giờ: cho hoàn tất thẻ đang học rồi kết thúc.
-- Hợp đồng B2.3: `POST /learning/sessions` chỉ gửi `{boTheId?, chieuHoc, quyThoiGian}` (không `cheDo` đến B2.6); hàng đợi rỗng → 422 `BUSINESS_RULE`. Response: `hetGioAt` tính ra, `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, `hangDoi[].the` có `anhId`/`amTuId`/`amCauId` (tải qua `/files/{id}`, không có URL), `hangDoi[].tienDo.version` dùng cho `expectedVersion`. Chưa có `duKien` đến khi BE thêm; số thẻ tối đa = `phút×60/giayMoiLuot` (20 giây), không ghi cứng 15 giây.
+- Hợp đồng B2.3: `POST /learning/sessions` chỉ gửi `{boTheId?, chieuHoc, quyThoiGian, cheDo?}` (`cheDo: CUU_LICH` từ B2.6, xem F2.4); hàng đợi rỗng → 422 `BUSINESS_RULE`. Response: `hetGioAt` tính ra, `hangDoi[].trangThai` là `CHUA_TRA_LOI`/`DA_TRA_LOI`, `hangDoi[].the` có `anhId`/`amTuId`/`amCauId` (tải qua `/files/{id}`, không có URL), `hangDoi[].tienDo.version` dùng cho `expectedVersion`. Chưa có `duKien` đến khi BE thêm; số thẻ tối đa = `phút×60/giayMoiLuot` (20 giây), không ghi cứng 15 giây.
 - **Đã làm (07/11/2026, FE-12):** UI18/UI19 chạy với BE thật: tạo phiên, Space lật thẻ, phím 1–4 chấm, hai chiều, kết thúc giữa phiên (VER-03 bước 2); UI18 khớp mockup; 360px không tràn. **Chưa kiểm:** hàng đợi chưa đồng bộ khi mất mạng và nhánh 409 tải lại phiên, nên chưa tick.
 
 ### [x] F2.3 Tổng kết, tiến độ, lịch sử — UI20, UI21 ← B2.5
@@ -176,19 +176,22 @@ frontend/
 
 ### [x] F2.8 Quản trị nền — UI47, UI49, UI53 ← B2.11
 - Tìm, khóa/mở tài khoản (bắt buộc lý do), cấp/thu vai trò; bộ/thẻ mẫu xuất bản/ẩn; nhật ký.
-- **Cuối Đợt 2:** demo học đầu-cuối; nhận `report/DOT2_BAO_CAO_FE.md`.
+- **Cuối Đợt 2:** demo học đầu-cuối; nhận `ban-giao-cho fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` (demo 7/7 bước pass 07/11/2026, §10).
 - **Đã làm (07/11/2026, FE-12):** UI47/UI53 có trạng thái lỗi (`ErrorState` + Thử lại); UI49 có trạng thái lỗi cho danh sách bộ, chi tiết bộ, danh sách thẻ, thêm khối "Quy tắc" ở danh sách như mockup, sửa "Xóa bộ" thiếu `version` (FE-18); 360px không tràn; VER-03 bước 6–7 pass. Còn FE-16 (`alert`/`prompt`/`confirm`).
 
-## Đợt 3 — AI, phát âm, động lực (S7–S9 · 09/11–29/11) · FR-08…14
+## Đợt 3 — AI, phát âm, động lực, thanh toán (S7–S9 · 09/11–29/11) · FR-08…15
 
 **Cắt phạm vi (áp 07/11/2026):** theo [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md). **Cắt** UI52, UI54, UI46 và tab "Tác vụ nền" của UI53. F2.2 (phần mất mạng + 409) làm đầu S7.
 
 ### [ ] F3.1 Xưởng thẻ AI — UI29 ← B3.1, B3.2
 - Trái đoạn văn, phải thẻ nháp: chọn, sửa, nghe, cảnh báo trùng, liên kết đoạn nguồn; 202 → hỏi trạng thái định kỳ; "Lưu N thẻ đã chọn" với `Idempotency-Key`.
-- **Giữ** (S7).
+- **Bổ sung 07/11/2026** (theo demo nhóm FE, [KE_HOACH_CAT_DOT3.md §7](../docs/KE_HOACH_CAT_DOT3.md)): **X-01** nút "Tải tệp (Word/TXT/CSV)" — `.txt`/`.csv` đọc tại trình duyệt, `.docx` tải qua `/files/upload-requests` rồi gửi `tepId`; **X-02** chọn bộ có sẵn *hoặc* nhập tên bộ mới (khóa ô còn lại); **X-03** "Hoàn thiện với AI (IPA + Ví dụ)" từng thẻ (API của F3.2); **X-04** "Sinh ảnh AI" (Imagen 3, **Giữ**) có "Tạo lại"/"Bỏ ảnh", nhãn "Ảnh AI"; hết hạn mức ảnh của gói → nút "Nâng cấp gói" sang UI55 (S8, sau B3.3); **X-05** loa nghe từng thẻ nháp; **X-06** sửa/xóa từng thẻ, "Xóa tất cả" có xác nhận, đếm số thẻ.
+- Mã demo của nhóm FE chưa có trên `main`; khi đưa vào phải bỏ gọi backend Node (`newduan/backend`) và gọi API Spring.
+- **Giữ** (S7; X-03, X-04 xong ở S8).
 
 ### [ ] F3.2 Giải thích ngữ cảnh, viết câu & tự điền thẻ — UI30, UI31, UI16 ← B3.3
 - Không render HTML từ AI; hiển thị câu gốc, bản sửa, lỗi, giải thích tiếng Việt; nút báo cáo đầu ra sai.
+- Hiện trạng 07/11/2026: nhóm FE đã có giao diện mô phỏng UI31 `/ai-viet-cau` (bản sửa, "Vì sao sửa?", "Báo cáo phản hồi") và ngăn UI30 "Giải thích theo ngữ cảnh" trên mặt thẻ ("Đọc câu ví dụ", "Giải thích câu này", "Báo cáo đầu ra"); chờ B3.3 để thay dữ liệu mô phỏng.
 - **R-02:** trong `CardEditor`, gõ từ → nút "Gợi ý" gọi `context-explanations` → điền IPA, nghĩa, ví dụ, bản dịch vào form (không tự lưu); AI lỗi/429 hiện thông báo, form vẫn lưu tay được.
 - **Gọn** (S8).
 
@@ -230,7 +233,15 @@ frontend/
 ### [ ] F3.11 Quản trị vận hành — UI51 ← B3.11
 - Hạn mức và lượt dùng/lỗi theo dịch vụ.
 - **Gọn mạnh** (S9). **Cắt:** UI46 tổng quan, chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu.
-- **Cuối Đợt 3:** demo 10 bước TK §20.2; nhận `report/DOT3_BAO_CAO_FE.md`.
+
+### [ ] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
+- Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng, "Xác nhận thanh toán" chỉ hẹn giờ 0,7 giây; lint lỗi `thanh-toan-lich-su/page.js:77`.
+- Nối API (S8): UI55 đọc `GET /billing/plans`, `GET /me/subscription` (bỏ mảng `PLANS` cứng); "Xác nhận thanh toán" gọi `POST /billing/checkouts` rồi `window.location.assign(paymentUrl)`. Thêm **UI57** `/thanh-toan-ket-qua?maDon=` đọc `GET /billing/transactions/{maDon}` (thành công/thất bại/đang chờ, nút thử lại).
+- **Bỏ khỏi giao diện:** form số thẻ/tên chủ thẻ/hạn/CVV (thẻ nhập trên trang VNPay), "Chuyển khoản ngân hàng" mã cứng, MoMo/ZaloPay (chưa có cổng), danh sách "thẻ đã lưu", dòng "Hỗ trợ ưu tiên"; dòng "Không xuất dữ liệu" của gói Miễn phí (xuất CSV miễn phí cho mọi gói); gói Miễn phí ghi "3 yêu cầu AI/ngày". Phương thức còn lại: "Thẻ ATM / VISA / Mastercard / VNPAY-QR qua VNPay".
+- Nối API (S9): UI56 đọc `GET /billing/transactions`, "Tải biên nhận" mở `.../receipt` (bỏ tạo tệp văn bản ở trình duyệt); UI51 thêm tab "Giao dịch" đọc `GET /admin/payments`.
+- Mọi chỗ bị chặn vì gói (422 `goiCanNangCap`, 429 hạn mức) hiện thông báo + liên kết UI55; `AppShell` hiện tên gói đang dùng.
+- **Giữ** (UI55, UI57: S8; UI56, tab UI51: S9).
+- **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b thanh toán); nhận `report/DOT3_BAO_CAO_FE.md`.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 

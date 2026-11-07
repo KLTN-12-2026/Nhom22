@@ -11,7 +11,17 @@
     { id: "5", name: "Mua sắm & dịch vụ", slug: "mua-sam" },
     { id: "6", name: "Tuyển dụng & phỏng vấn", slug: "tuyen-dung" },
     { id: "7", name: "Giao tiếp hằng ngày", slug: "giao-tiep" },
-    { id: "8", name: "Hợp đồng & pháp lý", slug: "hop-dong" }
+    { id: "8", name: "Hợp đồng & pháp lý", slug: "hop-dong" },
+    { id: "9", name: "Marketing & bán hàng", slug: "marketing" },
+    { id: "10", name: "Sản xuất & kho vận", slug: "san-xuat" },
+    { id: "11", name: "Công nghệ & máy tính", slug: "cong-nghe" },
+    { id: "12", name: "Sức khỏe & y tế", slug: "suc-khoe" },
+    { id: "13", name: "Giáo dục & học tập", slug: "giao-duc" },
+    { id: "14", name: "Nhà ở & bất động sản", slug: "nha-o" },
+    { id: "15", name: "Giải trí & sự kiện", slug: "giai-tri" },
+    { id: "16", name: "Giao thông & đi lại", slug: "giao-thong" },
+    { id: "17", name: "Gia đình & đời sống", slug: "gia-dinh" },
+    { id: "18", name: "Môi trường & thời tiết", slug: "moi-truong" }
   ];
 
   const TAGS = [
