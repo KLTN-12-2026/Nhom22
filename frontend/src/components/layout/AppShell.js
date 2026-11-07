@@ -21,6 +21,19 @@ const NAV = [
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
     { key: "stats", label: "Thống kê", icon: "chart", href: "/thong-ke" }
   ] },
+  { group: "Công cụ học tập", items: [
+    { key: "ai-workshop", label: "Xưởng thẻ AI", icon: "sparkles", href: "/ai-xuong-the" },
+    { key: "ai-sentence", label: "Viết câu", icon: "edit", href: "/ai-viet-cau" },
+    { key: "ai-history", label: "Lịch sử AI", icon: "clock", href: "/ai-lich-su" },
+    { key: "pronunciation", label: "Phát âm", icon: "mic", href: "/phat-am" },
+    { key: "pronunciation-history", label: "Lịch sử phát âm", icon: "file", href: "/phat-am-lich-su" }
+  ] },
+  { group: "Tiến bộ", items: [
+    { key: "recommendations", label: "Gợi ý ôn tập", icon: "target", href: "/goi-y" },
+    { key: "mastery-map", label: "Bản đồ làm chủ", icon: "chart", href: "/ban-do-lam-chu" },
+    { key: "weekly-summary", label: "Tổng kết tuần", icon: "calendar", href: "/tong-ket-tuan" },
+    { key: "achievements", label: "Thành tích", icon: "shield", href: "/thanh-tich" }
+  ] },
   { group: "Tài khoản", items: [
     { key: "profile", label: "Hồ sơ", icon: "user", href: "/ca-nhan" },
     { key: "learning", label: "Thiết lập học", icon: "target", href: "/ca-nhan/hoc-tap" },

@@ -1,0 +1,22 @@
+.page { max-width: 1440px; }
+.demoBar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-4); color: var(--ink-2); font-size: var(--fs-small); }
+.breadcrumb { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-4); font-size: var(--fs-small); }
+.breadcrumb span:last-child { color: var(--ink-2); }
+.note { color: var(--ink-2); margin-bottom: var(--sp-5); }
+.filter { display: flex; align-items: end; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+.filter .field { flex: 1 1 14rem; max-width: 24rem; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+.card { display: grid; gap: var(--sp-4); padding: var(--sp-4); border: var(--rule) solid var(--primary-line); border-radius: var(--radius-btn); background: var(--field); }
+.cardHeader { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); }
+.cardHeader h2 { font-size: var(--fs-h2); }
+.skills { display: grid; gap: var(--sp-4); }
+.skill { display: grid; gap: var(--sp-2); }
+.skill > .row-between { align-items: start; }
+.skill > .row-between span { text-align: right; color: var(--ink-2); }
+.meter { height: 9px; overflow: hidden; border-radius: 999px; background: var(--primary-tint); }
+.meter span { display: block; height: 100%; border-radius: inherit; background: var(--secondary); }
+.low .meter span { background: var(--warning); }
+.unknown .meter span { background: var(--ink-3); }
+.card > .btn { justify-self: start; }
+@media (max-width: 959px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .demoBar { align-items: flex-start; } .grid { grid-template-columns: 1fr; } .filter > .btn { width: 100%; } .card > .btn { width: 100%; } }
