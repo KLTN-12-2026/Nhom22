@@ -53,7 +53,7 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | VER-02 | ✅ 07/11 | BE | Chạy Postman Đợt 2 trên HTTP thật, lưu kết quả | Vừa |
 | VER-03 | ✅ 07/11 | BE+FE | Demo đầu-cuối Đợt 2 trên BE thật: 7/7 bước pass (bàn giao §10); phát hiện và sửa FE-18 | Vừa |
 | FE-18 | ✅ 07/11 | FE | UI49 "Xóa bộ" thiếu `version` trong body → 400; đã gửi `{ lyDo, version }` | Nhỏ |
-| DOC-01…10 | 🟡 | BE | DOC-01…09 xong 07/11; DOC-10 thuộc roadmap FE (BE không sửa) | Nhỏ |
+| DOC-01…10 | ✅ 07/11 | BE+FE | DOC-01…09 xong 07/11; DOC-10 (roadmap FE dòng `cheDo`, báo cáo FE) xong 07/11 | Nhỏ |
 | FE-14 | P2 | FE | `/hoc-tong-ket` gọi `POST .../finish` trong `useQuery` | Nhỏ |
 | FE-15 | P2 | FE | Test cho trang Đợt 2 | Vừa |
 | FE-16 | P2 | FE | Dùng `alert`/`prompt`/`confirm` ở UI49 | Vừa |
@@ -369,7 +369,7 @@ Ghi kết quả từng bước (pass/fail, ảnh chụp) vào phần "Đã làm"
 | DOC-09 | P1 | Bàn giao Đợt 2 §10: dòng Postman (`:846`), dòng "FE `/hom-nay` hiện tại" (`:886`), §10a RS-066 (`:896`) | Postman "chưa đối chiếu vì MCP chưa xác thực"; lỗi điều kiện `tongSoThe` (FE đã sửa); RS-066 mô tả trạng thái cũ | Postman: số đếm ngày 06/11 (03: 28, 04: 14, 06: 2, 07: 22 cho B2.11); `/hom-nay`: ghi "đã sửa, còn FE-09/FE-10/FE-11"; RS-066: "đã có `proxyOrMock`, còn mock dự phòng → FE-02/FE-13". Thêm vào §10a các mục FE-01, FE-03, FE-04, FE-06, FE-07 |
 | DOC-10 | P1 | `roadmap/TienDoDuKien_fronend.md:150`, `:172` | "không `cheDo` đến B2.6"; "nhận `report/DOT2_BAO_CAO_FE.md`" | Bỏ câu `cheDo` (B2.6 đã có, xem FE-09); trỏ `ban-giao-cho fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` |
 | DOC-11 | P1 | Bàn giao Đợt 2 §5.8, §10a RS-060 | Hướng dẫn tải âm qua `/decks/{boTheId}/cards/{theId}/files/AM_TU` nhưng `deBai` không có `theId` | ✅ Đã cập nhật 06/11/2026 theo BE-01 (API `.../questions/{cauHoiId}/audio`) |
-| DOC-12 | P2 | `docs/BAO_CAO_RA_SOAT_DOT2.md` | Chưa ghi FE-01 (cổng chặn) | Thêm FE-01 vào mục 3 và mục 4 sau khi sửa xong |
+| DOC-12 | P2 | `docs/BAO_CAO_RA_SOAT_DOT2.md` | Chưa ghi FE-01 (cổng chặn) | ✅ Viết lại báo cáo rà soát 07/11/2026 (lần 2) |
 
 Ràng buộc khi sửa tài liệu: không tick roadmap khi chưa có bằng chứng; không tạo báo cáo tiến độ BE song song; trạng thái BE chỉ ghi bằng tick + "Đã làm" trong `roadmap/TienDoDuKien_backend.md`.
 
@@ -377,13 +377,14 @@ Ràng buộc khi sửa tài liệu: không tick roadmap khi chưa có bằng ch�
 
 ## 7. Điều kiện đóng Đợt 2
 
-- [ ] VER-01: stack chạy, `ping` 200.
-- [ ] FE-01 … FE-08, BE-01: sửa xong, kiểm trên BE thật.
-- [ ] FE-09, FE-10, FE-11: UI12 đủ khối theo TK §9.1.
-- [ ] VER-02: Postman Đợt 2 chạy, có file bằng chứng trong `report/evidence/`.
+- [x] VER-01: stack chạy, `ping` 200 (07/11/2026).
+- [x] FE-01 … FE-08, BE-01: sửa xong, kiểm trên BE thật (07/11/2026, VER-03).
+- [x] FE-09, FE-10, FE-11: UI12 đủ khối theo TK §9.1 (07/11/2026).
+- [x] VER-02: Postman Đợt 2 chạy, 144 request / 205 assertion pass, `report/evidence/BE-B2-postman-20261107.json`.
 - [x] VER-03: 7 bước demo pass (07/11/2026).
 - [x] FE-12: 14 trang khớp mockup, đủ tải/rỗng/lỗi, 360px (07/11/2026); F2.2 chưa tick vì chưa kiểm mất mạng/409.
-- [ ] DOC-01 … DOC-11: tài liệu khớp code.
+- [x] DOC-01 … DOC-12: tài liệu khớp code (07/11/2026).
+- [ ] Còn mở, không chặn đóng Đợt 2: F2.2 (mất mạng + 409, dời đầu S7), FE-13…FE-17, BE-03 (mô tả collection sửa tay), BE-04 (dời Đợt 3). Chi tiết: `docs/BAO_CAO_RA_SOAT_DOT2.md` (lần 2).
 
 ## 8. Câu hỏi cần chốt
 
