@@ -1,129 +1,285 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Danh sách mockup – VocabLearning</title>
-<link rel="icon" href="shared/assets/favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="shared/tokens.css?v=e5a317bc5548">
-<link rel="stylesheet" href="shared/base.css?v=b44e370961e8">
-<link rel="stylesheet" href="shared/components.css?v=9c23856cf154">
-<link rel="stylesheet" href="shared/learning-refinements.css?v=a719a438661c">
-<style>
-  .wrap { max-width: 1080px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-7); }
-  .phase { margin-top: var(--sp-6); }
-  .phase h2 { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-h2); }
-  .mock-list { list-style: none; margin: var(--sp-3) 0 0; padding: 0; border-top: var(--rule-strong) solid var(--primary); }
-  .mock-list li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); position: relative; }
-  .mock-list .ui { font-family: var(--font-form); font-stretch: 100%; font-weight: 800; color: var(--primary); }
-  .mock-list a { font-weight: 650; }
-  .mock-list .meta { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-top: 2px; }
-  @media (min-width: 800px) { .mock-list li { grid-template-columns: 3.5rem 15rem minmax(0, 1fr); align-items: baseline; } .mock-list .meta { margin: 0; } }
-</style>
-<script src="shared/theme.js?v=c94fd5ea622d"></script>
-<link rel="stylesheet" href="shared/mascot.css?v=a0a60f61b067">
-<script src="shared/speech.js?v=9462ca4f1c89"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Danh sách mockup – VocabLearning</title>
+  <link rel="icon" href="shared/assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="shared/tokens.css?v=e5a317bc5548">
+  <link rel="stylesheet" href="shared/base.css?v=b44e370961e8">
+  <link rel="stylesheet" href="shared/components.css?v=9c23856cf154">
+  <link rel="stylesheet" href="shared/learning-refinements.css?v=a719a438661c">
+  <style>
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: var(--sp-5) var(--sp-4) var(--sp-7);
+    }
+
+    .phase {
+      margin-top: var(--sp-6);
+    }
+
+    .phase h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      flex-wrap: wrap;
+      font-size: var(--fs-h2);
+    }
+
+    .mock-list {
+      list-style: none;
+      margin: var(--sp-3) 0 0;
+      padding: 0;
+      border-top: var(--rule-strong) solid var(--primary);
+    }
+
+    .mock-list li {
+      display: grid;
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+      gap: var(--sp-3);
+      padding: var(--sp-3) 0;
+      border-bottom: var(--rule) dashed var(--primary-line);
+      position: relative;
+    }
+
+    .mock-list .ui {
+      font-family: var(--font-form);
+      font-stretch: 100%;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .mock-list a {
+      font-weight: 650;
+    }
+
+    .mock-list .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-3);
+      font-size: var(--fs-small);
+      color: var(--ink-2);
+      margin-top: 2px;
+    }
+
+    @media (min-width: 800px) {
+      .mock-list li {
+        grid-template-columns: 3.5rem 15rem minmax(0, 1fr);
+        align-items: baseline;
+      }
+
+      .mock-list .meta {
+        margin: 0;
+      }
+    }
+  </style>
+  <script src="shared/theme.js?v=c94fd5ea622d"></script>
+  <link rel="stylesheet" href="shared/mascot.css?v=a0a60f61b067">
+  <script src="shared/speech.js?v=9462ca4f1c89"></script>
 </head>
+
 <body data-root=".">
-<main id="main" class="wrap">
-  <div class="sheet">
-    <div class="form-head">
-      <div class="form-code"><span>VocabLearning</span><span>Mockup HTML/CSS/JS</span></div>
-      <h1>Danh sách mockup</h1>
-      <p>Giao diện mẫu cho FE dựng lại bằng Next.js (<code>/fe-from-mockup</code>). Chạy bằng dữ liệu mẫu trong trình duyệt, không cần backend. Tài khoản dùng thử: <code>an@vocab.local</code>, <code>binh@vocab.local</code> (nhiều thẻ quá hạn), <code>admin@vocab.local</code>, mật khẩu <code>Vocab@12345</code>.</p>
+  <main id="main" class="wrap">
+    <div class="sheet">
+      <div class="form-head">
+        <div class="form-code"><span>VocabLearning</span><span>Mockup HTML/CSS/JS</span></div>
+        <h1>Danh sách mockup</h1>
+        <p>Giao diện mẫu cho FE dựng lại bằng Next.js (<code>/fe-from-mockup</code>). Chạy bằng dữ liệu mẫu trong trình
+          duyệt, không cần backend. Tài khoản dùng thử: <code>an@vocab.local</code>, <code>binh@vocab.local</code>
+          (nhiều thẻ quá hạn), <code>admin@vocab.local</code>, mật khẩu <code>Vocab@12345</code>.</p>
+      </div>
+
+      <section class="phase" aria-labelledby="p0">
+        <h2 id="p0">GĐ0, trang công khai <span class="stamp stamp-success">Đủ 3/3</span></h2>
+        <ul class="mock-list" role="list">
+          <li><span class="ui">UI01</span><a href="gd0/trang-chu.html">Trang chủ</a><span class="meta"><span
+                class="stamp">F0.5</span>Giới thiệu, câu hỏi thử hai chiều, bộ mẫu</span></li>
+          <li><span class="ui">UI04</span><a href="gd0/huong-dan.html">Cách học</a><span class="meta"><span
+                class="stamp">F0.5</span>Bốn mức tự đánh giá, hai chiều, CSV, phím tắt, hỏi đáp</span></li>
+          <li><span class="ui">UI05</span><a href="gd0/chinh-sach.html">Quyền riêng tư và điều khoản</a><span
+              class="meta"><span class="stamp">F0.5</span>Bản nháp</span></li>
+        </ul>
+      </section>
+
+      <section class="phase" aria-labelledby="p1">
+        <h2 id="p1">Đợt 1, tài khoản và nội dung <span class="stamp stamp-success">Đủ 18/18</span></h2>
+        <ul class="mock-list" role="list">
+          <li><span class="ui">UI06</span><a href="dot1/dang-ky.html">Đăng ký</a><span class="meta"><span
+                class="stamp">F1.1</span>B1.1: 400 theo trường, 409 email trùng, 429 đếm ngược</span></li>
+          <li><span class="ui">UI07</span><a href="dot1/xac-thuc-email.html">Xác thực email</a><span class="meta"><span
+                class="stamp">F1.1</span>Token đúng, sai, hết hạn, đã dùng; gửi lại thư</span></li>
+          <li><span class="ui">UI08</span><a href="dot1/dang-nhap.html">Đăng nhập</a><span class="meta"><span
+                class="stamp">F1.2</span>Sai mật khẩu, chưa xác thực, bị khóa, 429</span></li>
+          <li><span class="ui">UI09</span><a href="dot1/quen-mat-khau.html">Quên mật khẩu</a><span class="meta"><span
+                class="stamp">F1.3</span>Luôn trả cùng một thông báo</span></li>
+          <li><span class="ui">UI10</span><a href="dot1/dat-lai-mat-khau.html?token=reset-2">Đặt lại mật khẩu</a><span
+              class="meta"><span class="stamp">F1.3</span>Mở từ thư mô phỏng ở trang Quên mật khẩu</span></li>
+          <li><span class="ui">UI11</span><a href="dot1/bat-dau.html">Khởi đầu</a><span class="meta"><span
+                class="stamp">F1.5</span>5 bước, tóm tắt phiếu, sao chép bộ khởi động</span></li>
+          <li><span class="ui">UI02</span><a href="dot1/thu-vien.html">Thư viện</a><span class="meta"><span
+                class="stamp">F1.7</span>Tìm, lọc, sắp xếp, phân trang theo URL</span></li>
+          <li><span class="ui">UI03</span><a href="dot1/thu-vien-chi-tiet.html?id=15">Chi tiết bộ công khai</a><span
+              class="meta"><span class="stamp">F1.7</span><span class="stamp">F1.10</span>Sao chép với Idempotency-Key,
+              yêu thích, chia sẻ, tên 150 ký tự</span></li>
+          <li><span class="ui">UI13</span><a href="dot1/bo-the.html">Bộ của tôi</a><span class="meta"><span
+                class="stamp">F1.8</span>Của tôi, yêu thích, tìm kiếm</span></li>
+          <li><span class="ui">UI14</span><a href="dot1/bo-the-tao.html">Tạo và sửa bộ thẻ</a><span class="meta"><span
+                class="stamp">F1.8</span>Xem trước, version 409, xóa có xác nhận</span></li>
+          <li><span class="ui">UI15</span><a href="dot1/bo-the-chi-tiet.html?id=21">Chi tiết bộ của tôi</a><span
+              class="meta"><span class="stamp">F1.9</span>Danh sách thẻ, cảnh báo trùng, xuất CSV</span></li>
+          <li><span class="ui">UI16</span><a href="dot1/the-tao.html?deckId=21">Tạo và sửa thẻ</a><span
+              class="meta"><span class="stamp">F1.9</span><span class="stamp">F1.6</span>Bàn phím IPA, ảnh, âm thanh,
+              xem trước mặt thẻ</span></li>
+          <li><span class="ui">UI17</span><a href="dot1/nhap-csv.html?deckId=21">Nhập CSV</a><span class="meta"><span
+                class="stamp">F1.11</span>Xem trước, lỗi từng dòng, trùng, chống công thức</span></li>
+          <li><span class="ui">UI40</span><a href="dot1/ca-nhan.html">Hồ sơ</a><span class="meta"><span
+                class="stamp">F1.5</span><span class="stamp">F1.6</span>Ảnh đại diện, tên, múi giờ</span></li>
+          <li><span class="ui">UI41</span><a href="dot1/ca-nhan-hoc-tap.html">Thiết lập học</a><span class="meta"><span
+                class="stamp">F1.5</span>Mục tiêu, trình độ, chủ đề, phút và từ mới mỗi ngày</span></li>
+          <li><span class="ui">UI42</span><a href="dot1/ca-nhan-bao-mat.html">Bảo mật</a><span class="meta"><span
+                class="stamp">F1.3</span>Đổi mật khẩu</span></li>
+          <li><span class="ui">UI43</span><a href="dot1/ca-nhan-thong-bao.html">Thông báo và nhắc học</a><span
+              class="meta"><span class="stamp">F1.5</span>Kênh, giờ nhắc</span></li>
+          <li><span class="ui">UI48</span><a href="dot1/quan-tri-chu-de.html">Quản trị chủ đề và nhãn</a><span
+              class="meta"><span class="stamp">F1.12</span>Cần tài khoản admin</span></li>
+        </ul>
+      </section>
+
+      <section class="phase" aria-labelledby="p2">
+        <h2 id="p2">Đợt 2, học, luyện tập và quản trị nền <span class="stamp stamp-success">Đủ 14/14</span></h2>
+        <ul class="mock-list" role="list">
+          <li><span class="ui">UI12</span><a href="dot2/hom-nay.html?as=an">Hôm nay — bảng điều khiển</a><span
+              class="meta"><span class="stamp">F2.1</span>Số thẻ đến hạn, phiên đang dở, quỹ thời gian 5/10/20 phút,
+              chiều học, chuỗi ngày, mục tiêu phút thật, hoạt động 7 ngày qua, dự báo ôn 7 ngày tới (B2.12 đề
+              xuất)</span></li>
+          <li><span class="ui">UI22</span><a href="dot2/hom-nay.html?as=binh">Kế hoạch cứu lịch</a><span
+              class="meta"><span class="stamp">F2.4</span>Tài khoản Bình quá tải thẻ quá hạn: chia theo ngày, tạm dừng
+              từ mới</span></li>
+          <li><span class="ui">UI18</span><a href="dot2/hoc.html?as=an">Bắt đầu phiên học</a><span class="meta"><span
+                class="stamp">F2.2</span>Chọn bộ, chiều học, thời lượng</span></li>
+          <li><span class="ui">UI19</span><a href="dot2/hoc.html?as=an">Phiên học</a><span class="meta"><span
+                class="stamp">F2.2</span>Mở từ Bắt đầu phiên học. Lật bằng phím cách, chấm 1–4, mất mạng giữ kết quả,
+              409</span></li>
+          <li><span class="ui">UI20</span><a href="dot2/hoc.html?as=an">Tổng kết phiên</a><span class="meta"><span
+                class="stamp">F2.3</span>Mở khi kết thúc phiên học. Phân bố mức, lịch ôn tiếp, luyện từ vừa quên</span>
+          </li>
+          <li><span class="ui">UI21</span><a href="dot2/bo-the-tien-do.html?id=21&amp;as=an">Tiến độ bộ thẻ</a><span
+              class="meta"><span class="stamp">F2.3</span>Hai chiều mỗi thẻ, tạm ngưng, đặt lại, lịch sử ôn</span></li>
+          <li><span class="ui">UI23</span><a href="dot2/luyen-tap.html?as=an">Chọn dạng bài luyện</a><span
+              class="meta"><span class="stamp">F2.5</span>8 dạng bài, nguồn theo bộ hoặc sổ tay</span></li>
+          <li><span class="ui">UI24</span><a href="dot2/luyen-tap.html?as=an">Làm bài luyện</a><span class="meta"><span
+                class="stamp">F2.5</span>Mở từ Chọn dạng bài. Đề không kèm đáp án, nộp một lần bằng submitKey</span>
+          </li>
+          <li><span class="ui">UI25</span><a href="dot2/luyen-tap-lich-su.html?as=an">Kết quả bài luyện</a><span
+              class="meta"><span class="stamp">F2.5</span>Mở từ Lịch sử. Giải thích từng câu, nhóm lỗi, luyện lại câu
+              sai</span></li>
+          <li><span class="ui">UI26</span><a href="dot2/luyen-tap-lich-su.html?as=an">Lịch sử bài luyện</a><span
+              class="meta"><span class="stamp">F2.5</span>Lọc theo dạng, phân trang</span></li>
+          <li><span class="ui">UI27</span><a href="dot2/so-tay.html?as=an">Sổ tay từ khó</a><span class="meta"><span
+                class="stamp">F2.6</span>Nhóm lỗi, bằng chứng, ghi chú, cặp dễ nhầm</span></li>
+          <li><span class="ui">UI35</span><a href="dot2/thong-ke.html?as=an">Thống kê</a><span class="meta"><span
+                class="stamp">F2.7</span>Theo ngày và múi giờ, biểu đồ kèm bảng, mức làm chủ theo kỹ năng</span></li>
+          <li><span class="ui">UI47</span><a href="dot2/quan-tri-tai-khoan.html?as=admin">Quản trị tài khoản và vai
+              trò</a><span class="meta"><span class="stamp">F2.8</span>Khóa, mở khóa, cấp và thu quyền có lý do; giữ
+              quản trị viên cuối</span></li>
+          <li><span class="ui">UI49</span><a href="dot2/quan-tri-bo-mau.html?as=admin">Quản trị bộ và thẻ mẫu</a><span
+              class="meta"><span class="stamp">F2.8</span>Nháp, xuất bản, ẩn, xóa có lý do; version 409</span></li>
+          <li><span class="ui">UI53</span><a href="dot2/quan-tri-nhat-ky.html?as=admin">Nhật ký quản trị</a><span
+              class="meta"><span class="stamp">F2.8</span>Lọc theo hành động, đối tượng, ngày; trước và sau. Tab Tác vụ
+              nền ở Đợt 3</span></li>
+        </ul>
+      </section>
+
+        <section class="phase" aria-labelledby="dot3">
+          <h2 id="dot3">Đợt 3 · AI, phát âm và mở rộng <span class="stamp">21 giao diện/khối</span></h2>
+          <p class="small muted">Bản mô phỏng tương tác, dùng chung giao diện sáng/tối. API đợt 3 còn kế hoạch; dữ liệu
+            mẫu không xác nhận backend đã triển khai.</p>
+          <div class="row" style="margin-block:var(--sp-4)"><a class="btn btn-primary"
+              href="dot2/hom-nay.html?as=an">Trải nghiệm luồng người học</a><a class="btn btn-secondary"
+              href="dot3/quan-tri-tong-quan.html?as=admin">Trải nghiệm luồng quản trị</a></div>
+          <p class="small muted">Chỉ các lối vào này chọn tài khoản demo. Khi chuyển màn hình trong ứng dụng, tài khoản
+            và dữ liệu mẫu được giữ nguyên.</p>
+          <ul class="mock-list" role="list">
+            <li><span class="ui">UI28</span><a href="dot3/goi-y.html?as=an">Gợi ý có lý do</a><span class="meta"><span
+                  class="stamp">F3.4</span>Một vài bước tiếp theo, kèm bằng chứng từ việc học.</span></li>
+            <li><span class="ui">UI29</span><a href="dot3/ai-xuong-the.html?as=an">Xưởng thẻ AI</a><span
+                class="meta"><span class="stamp">F3.1</span>Từ một đoạn văn đến thẻ nháp bạn đã kiểm tra.</span></li>
+            <li><span class="ui">UI30</span><a href="dot3/ai-giai-thich.html?as=an">Giải thích theo ngữ cảnh</a><span
+                class="meta"><span class="stamp">F3.2</span>Hiểu nghĩa trong câu, giữ nguyên thẻ đang học.</span></li>
+            <li><span class="ui">UI31</span><a href="dot3/ai-viet-cau.html?as=an">Viết câu dùng thử</a><span
+                class="meta"><span class="stamp">F3.2</span>Dùng từ mới trong một câu của chính bạn.</span></li>
+            <li><span class="ui">UI32</span><a href="dot3/ai-lich-su.html?as=an">Lịch sử AI và hạn mức</a><span
+                class="meta"><span class="stamp">F3.3</span>Theo dõi yêu cầu, kết quả và lượt sử dụng còn lại.</span>
+            </li>
+            <li><span class="ui">UI33</span><a href="dot3/phat-am.html?as=an">Góc phát âm</a><span class="meta"><span
+                  class="stamp">F3.5</span>Nghe, ghi ngắn và xem lại trước khi gửi đánh giá.</span></li>
+            <li><span class="ui">UI34</span><a href="dot3/phat-am-lich-su.html?as=an">Lịch sử phát âm</a><span
+                class="meta"><span class="stamp">F3.5</span>So sánh các lượt của cùng một từ bằng chỉ số có sẵn.</span>
+            </li>
+            <li><span class="ui">UI36</span><a href="dot3/ban-do-lam-chu.html?as=an">Bản đồ làm chủ</a><span
+                class="meta"><span class="stamp">F3.9</span>Nhận nghĩa, chính tả và phát âm được xem riêng.</span></li>
+            <li><span class="ui">UI37</span><a href="dot3/tong-ket-tuan.html?as=an">Tổng kết tuần</a><span
+                class="meta"><span class="stamp">F3.9</span>Nhìn lại một tuần, chọn việc vừa sức cho tuần sau.</span>
+            </li>
+            <li><span class="ui">UI38</span><a href="dot3/thanh-tich.html?as=an">Thành tích của bạn</a><span
+                class="meta"><span class="stamp">F3.6</span>Ghi nhận những bước học hợp lệ, không chạy đua điểm.</span>
+            </li>
+            <li><span class="ui">UI39</span><a href="dot3/thong-bao.html?as=an">Thông báo</a><span class="meta"><span
+                  class="stamp">F3.7</span>Nhắc học, tổng kết và phản hồi về nội dung của bạn.</span></li>
+            <li><span class="ui">UI44</span><a href="dot3/ca-nhan-du-lieu.html?as=an">Dữ liệu cá nhân</a><span
+                class="meta"><span class="stamp">F3.10</span>Hiểu dữ liệu được giữ và phạm vi xử lý khi yêu cầu
+                xóa.</span></li>
+            <li><span class="ui">UI45</span><a href="dot3/bao-cao-noi-dung.html?as=an">Báo cáo nội dung</a><span
+                class="meta"><span class="stamp">F3.8</span>Giúp kiểm tra bộ thẻ, nghĩa của từ hoặc đầu ra AI.</span>
+            </li>
+            <li><span class="ui">UI46</span><a href="dot3/quan-tri-tong-quan.html?as=admin">Tổng quan quản trị</a><span
+                class="meta"><span class="stamp">F3.11</span>Theo dõi nội dung cần xử lý và hoạt động dịch vụ.</span>
+            </li>
+            <li><span class="ui">UI50</span><a href="dot3/quan-tri-bao-cao.html?as=admin">Hàng đợi báo cáo</a><span
+                class="meta"><span class="stamp">F3.8</span>Xem bằng chứng, chọn quyết định và lưu lý do.</span></li>
+            <li><span class="ui">UI51</span><a href="dot3/quan-tri-dich-vu.html?as=admin">Hạn mức và sử dụng dịch
+                vụ</a><span class="meta"><span class="stamp">F3.11</span>Kiểm soát lượt dùng; không tính chi phí khi
+                thiếu đơn giá.</span></li>
+            <li><span class="ui">UI52</span><a href="dot3/quan-tri-thong-bao.html?as=admin">Thông báo hệ thống</a><span
+                class="meta"><span class="stamp">F3.7</span>Soạn, xem trước và xác nhận trước khi gửi.</span></li>
+            <li><span class="ui">UI53</span><a href="dot3/quan-tri-tac-vu.html?as=admin">Tác vụ nền</a><span
+                class="meta"><span class="stamp">F3.11</span>Theo dõi trạng thái, lần thử và yêu cầu chưa rõ kết
+                quả.</span></li>
+        <li><span class="ui">UI54</span><a href="dot3/quan-tri-dong-luc.html?as=admin">Huy hiệu và thử thách</a><span
+            class="meta"><span class="stamp">F3.6</span>Quản lý điều kiện ghi nhận, không thay đổi điểm tùy ý.</span>
+        </li>
+        <li><span class="ui">UI55</span><a href="dot3/thanh-toan-goi.html?as=an">Gói dịch vụ và thanh toán</a><span
+            class="meta"><span class="stamp">F3.12</span>Chọn gói Free/Pro/Premium, thanh toán qua thẻ, chuyển khoản
+            hoặc ví điện tử.</span></li>
+        <li><span class="ui">UI56</span><a href="dot3/thanh-toan-lich-su.html?as=an">Lịch sử thanh toán</a><span
+            class="meta"><span class="stamp">F3.12</span>Xem giao dịch, tải hóa đơn, quản lý phương thức thanh toán đã
+            lưu.</span></li>
+        </ul>
+      </section>
+
+      <section class="phase" aria-labelledby="dev">
+        <h2 id="dev">Cách dùng</h2>
+        <ul class="small" style="padding-left:1.1rem;display:grid;gap:6px;margin-top:var(--sp-3)">
+          <li>Chạy <code>npx http-server mockups -p 5173</code> rồi mở <code>http://localhost:5173</code>, hoặc mở trực
+            tiếp tệp HTML bằng trình duyệt.</li>
+          <li>Nút <strong>Mockup</strong> ở góc phải dưới: chuyển trạng thái Có dữ liệu, Đang tải, Trống, Lỗi và đặt lại
+            dữ liệu mẫu.</li>
+          <li>Dữ liệu lưu trong localStorage của trình duyệt. Thư xác thực và thư đặt lại mật khẩu được mô phỏng ngay
+            trên trang.</li>
+        </ul>
+      </section>
     </div>
-
-    <section class="phase" aria-labelledby="p0">
-      <h2 id="p0">GĐ0, trang công khai <span class="stamp stamp-success">Đủ 3/3</span></h2>
-      <ul class="mock-list" role="list">
-        <li><span class="ui">UI01</span><a href="gd0/trang-chu.html">Trang chủ</a><span class="meta"><span class="stamp">F0.5</span>Giới thiệu, câu hỏi thử hai chiều, bộ mẫu</span></li>
-        <li><span class="ui">UI04</span><a href="gd0/huong-dan.html">Cách học</a><span class="meta"><span class="stamp">F0.5</span>Bốn mức tự đánh giá, hai chiều, CSV, phím tắt, hỏi đáp</span></li>
-        <li><span class="ui">UI05</span><a href="gd0/chinh-sach.html">Quyền riêng tư và điều khoản</a><span class="meta"><span class="stamp">F0.5</span>Bản nháp</span></li>
-      </ul>
-    </section>
-
-    <section class="phase" aria-labelledby="p1">
-      <h2 id="p1">Đợt 1, tài khoản và nội dung <span class="stamp stamp-success">Đủ 18/18</span></h2>
-      <ul class="mock-list" role="list">
-        <li><span class="ui">UI06</span><a href="dot1/dang-ky.html">Đăng ký</a><span class="meta"><span class="stamp">F1.1</span>B1.1: 400 theo trường, 409 email trùng, 429 đếm ngược</span></li>
-        <li><span class="ui">UI07</span><a href="dot1/xac-thuc-email.html">Xác thực email</a><span class="meta"><span class="stamp">F1.1</span>Token đúng, sai, hết hạn, đã dùng; gửi lại thư</span></li>
-        <li><span class="ui">UI08</span><a href="dot1/dang-nhap.html">Đăng nhập</a><span class="meta"><span class="stamp">F1.2</span>Sai mật khẩu, chưa xác thực, bị khóa, 429</span></li>
-        <li><span class="ui">UI09</span><a href="dot1/quen-mat-khau.html">Quên mật khẩu</a><span class="meta"><span class="stamp">F1.3</span>Luôn trả cùng một thông báo</span></li>
-        <li><span class="ui">UI10</span><a href="dot1/dat-lai-mat-khau.html?token=reset-2">Đặt lại mật khẩu</a><span class="meta"><span class="stamp">F1.3</span>Mở từ thư mô phỏng ở trang Quên mật khẩu</span></li>
-        <li><span class="ui">UI11</span><a href="dot1/bat-dau.html">Khởi đầu</a><span class="meta"><span class="stamp">F1.5</span>5 bước, tóm tắt phiếu, sao chép bộ khởi động</span></li>
-        <li><span class="ui">UI02</span><a href="dot1/thu-vien.html">Thư viện</a><span class="meta"><span class="stamp">F1.7</span>Tìm, lọc, sắp xếp, phân trang theo URL</span></li>
-        <li><span class="ui">UI03</span><a href="dot1/thu-vien-chi-tiet.html?id=15">Chi tiết bộ công khai</a><span class="meta"><span class="stamp">F1.7</span><span class="stamp">F1.10</span>Sao chép với Idempotency-Key, yêu thích, chia sẻ, tên 150 ký tự</span></li>
-        <li><span class="ui">UI13</span><a href="dot1/bo-the.html">Bộ của tôi</a><span class="meta"><span class="stamp">F1.8</span>Của tôi, yêu thích, tìm kiếm</span></li>
-        <li><span class="ui">UI14</span><a href="dot1/bo-the-tao.html">Tạo và sửa bộ thẻ</a><span class="meta"><span class="stamp">F1.8</span>Xem trước, version 409, xóa có xác nhận</span></li>
-        <li><span class="ui">UI15</span><a href="dot1/bo-the-chi-tiet.html?id=21">Chi tiết bộ của tôi</a><span class="meta"><span class="stamp">F1.9</span>Danh sách thẻ, cảnh báo trùng, xuất CSV</span></li>
-        <li><span class="ui">UI16</span><a href="dot1/the-tao.html?deckId=21">Tạo và sửa thẻ</a><span class="meta"><span class="stamp">F1.9</span><span class="stamp">F1.6</span>Bàn phím IPA, ảnh, âm thanh, xem trước mặt thẻ</span></li>
-        <li><span class="ui">UI17</span><a href="dot1/nhap-csv.html?deckId=21">Nhập CSV</a><span class="meta"><span class="stamp">F1.11</span>Xem trước, lỗi từng dòng, trùng, chống công thức</span></li>
-        <li><span class="ui">UI40</span><a href="dot1/ca-nhan.html">Hồ sơ</a><span class="meta"><span class="stamp">F1.5</span><span class="stamp">F1.6</span>Ảnh đại diện, tên, múi giờ</span></li>
-        <li><span class="ui">UI41</span><a href="dot1/ca-nhan-hoc-tap.html">Thiết lập học</a><span class="meta"><span class="stamp">F1.5</span>Mục tiêu, trình độ, chủ đề, phút và từ mới mỗi ngày</span></li>
-        <li><span class="ui">UI42</span><a href="dot1/ca-nhan-bao-mat.html">Bảo mật</a><span class="meta"><span class="stamp">F1.3</span>Đổi mật khẩu</span></li>
-        <li><span class="ui">UI43</span><a href="dot1/ca-nhan-thong-bao.html">Thông báo và nhắc học</a><span class="meta"><span class="stamp">F1.5</span>Kênh, giờ nhắc</span></li>
-        <li><span class="ui">UI48</span><a href="dot1/quan-tri-chu-de.html">Quản trị chủ đề và nhãn</a><span class="meta"><span class="stamp">F1.12</span>Cần tài khoản admin</span></li>
-      </ul>
-    </section>
-
-    <section class="phase" aria-labelledby="p2">
-      <h2 id="p2">Đợt 2, học, luyện tập và quản trị nền <span class="stamp stamp-success">Đủ 14/14</span></h2>
-      <ul class="mock-list" role="list">
-        <li><span class="ui">UI12</span><a href="dot2/hom-nay.html?as=an">Hôm nay — bảng điều khiển</a><span class="meta"><span class="stamp">F2.1</span>Số thẻ đến hạn, phiên đang dở, quỹ thời gian 5/10/20 phút, chiều học, chuỗi ngày, mục tiêu phút thật, hoạt động 7 ngày qua, dự báo ôn 7 ngày tới (B2.12 đề xuất)</span></li>
-        <li><span class="ui">UI22</span><a href="dot2/hom-nay.html?as=binh">Kế hoạch cứu lịch</a><span class="meta"><span class="stamp">F2.4</span>Tài khoản Bình quá tải thẻ quá hạn: chia theo ngày, tạm dừng từ mới</span></li>
-        <li><span class="ui">UI18</span><a href="dot2/hoc.html?as=an">Bắt đầu phiên học</a><span class="meta"><span class="stamp">F2.2</span>Chọn bộ, chiều học, thời lượng</span></li>
-        <li><span class="ui">UI19</span><a href="dot2/hoc.html?as=an">Phiên học</a><span class="meta"><span class="stamp">F2.2</span>Mở từ Bắt đầu phiên học. Lật bằng phím cách, chấm 1–4, mất mạng giữ kết quả, 409</span></li>
-        <li><span class="ui">UI20</span><a href="dot2/hoc.html?as=an">Tổng kết phiên</a><span class="meta"><span class="stamp">F2.3</span>Mở khi kết thúc phiên học. Phân bố mức, lịch ôn tiếp, luyện từ vừa quên</span></li>
-        <li><span class="ui">UI21</span><a href="dot2/bo-the-tien-do.html?id=21&amp;as=an">Tiến độ bộ thẻ</a><span class="meta"><span class="stamp">F2.3</span>Hai chiều mỗi thẻ, tạm ngưng, đặt lại, lịch sử ôn</span></li>
-        <li><span class="ui">UI23</span><a href="dot2/luyen-tap.html?as=an">Chọn dạng bài luyện</a><span class="meta"><span class="stamp">F2.5</span>8 dạng bài, nguồn theo bộ hoặc sổ tay</span></li>
-        <li><span class="ui">UI24</span><a href="dot2/luyen-tap.html?as=an">Làm bài luyện</a><span class="meta"><span class="stamp">F2.5</span>Mở từ Chọn dạng bài. Đề không kèm đáp án, nộp một lần bằng submitKey</span></li>
-        <li><span class="ui">UI25</span><a href="dot2/luyen-tap-lich-su.html?as=an">Kết quả bài luyện</a><span class="meta"><span class="stamp">F2.5</span>Mở từ Lịch sử. Giải thích từng câu, nhóm lỗi, luyện lại câu sai</span></li>
-        <li><span class="ui">UI26</span><a href="dot2/luyen-tap-lich-su.html?as=an">Lịch sử bài luyện</a><span class="meta"><span class="stamp">F2.5</span>Lọc theo dạng, phân trang</span></li>
-        <li><span class="ui">UI27</span><a href="dot2/so-tay.html?as=an">Sổ tay từ khó</a><span class="meta"><span class="stamp">F2.6</span>Nhóm lỗi, bằng chứng, ghi chú, cặp dễ nhầm</span></li>
-        <li><span class="ui">UI35</span><a href="dot2/thong-ke.html?as=an">Thống kê</a><span class="meta"><span class="stamp">F2.7</span>Theo ngày và múi giờ, biểu đồ kèm bảng, mức làm chủ theo kỹ năng</span></li>
-        <li><span class="ui">UI47</span><a href="dot2/quan-tri-tai-khoan.html?as=admin">Quản trị tài khoản và vai trò</a><span class="meta"><span class="stamp">F2.8</span>Khóa, mở khóa, cấp và thu quyền có lý do; giữ quản trị viên cuối</span></li>
-        <li><span class="ui">UI49</span><a href="dot2/quan-tri-bo-mau.html?as=admin">Quản trị bộ và thẻ mẫu</a><span class="meta"><span class="stamp">F2.8</span>Nháp, xuất bản, ẩn, xóa có lý do; version 409</span></li>
-        <li><span class="ui">UI53</span><a href="dot2/quan-tri-nhat-ky.html?as=admin">Nhật ký quản trị</a><span class="meta"><span class="stamp">F2.8</span>Lọc theo hành động, đối tượng, ngày; trước và sau. Tab Tác vụ nền ở Đợt 3</span></li>
-      </ul>
-    </section>
-
-<section class="phase" aria-labelledby="dot3"><h2 id="dot3">Đợt 3 · AI, phát âm và mở rộng <span class="stamp">19 giao diện/khối</span></h2><p class="small muted">Bản mô phỏng tương tác, dùng chung giao diện sáng/tối. API đợt 3 còn kế hoạch; dữ liệu mẫu không xác nhận backend đã triển khai.</p>
-<div class="row" style="margin-block:var(--sp-4)"><a class="btn btn-primary" href="dot2/hom-nay.html?as=an">Trải nghiệm luồng người học</a><a class="btn btn-secondary" href="dot3/quan-tri-tong-quan.html?as=admin">Trải nghiệm luồng quản trị</a></div>
-<p class="small muted">Chỉ các lối vào này chọn tài khoản demo. Khi chuyển màn hình trong ứng dụng, tài khoản và dữ liệu mẫu được giữ nguyên.</p><ul class="mock-list" role="list"><li><span class="ui">UI28</span><a href="dot3/goi-y.html?as=an">Gợi ý có lý do</a><span class="meta"><span class="stamp">F3.4</span>Một vài bước tiếp theo, kèm bằng chứng từ việc học.</span></li>
-<li><span class="ui">UI29</span><a href="dot3/ai-xuong-the.html?as=an">Xưởng thẻ AI</a><span class="meta"><span class="stamp">F3.1</span>Từ một đoạn văn đến thẻ nháp bạn đã kiểm tra.</span></li>
-<li><span class="ui">UI30</span><a href="dot3/ai-giai-thich.html?as=an">Giải thích theo ngữ cảnh</a><span class="meta"><span class="stamp">F3.2</span>Hiểu nghĩa trong câu, giữ nguyên thẻ đang học.</span></li>
-<li><span class="ui">UI31</span><a href="dot3/ai-viet-cau.html?as=an">Viết câu dùng thử</a><span class="meta"><span class="stamp">F3.2</span>Dùng từ mới trong một câu của chính bạn.</span></li>
-<li><span class="ui">UI32</span><a href="dot3/ai-lich-su.html?as=an">Lịch sử AI và hạn mức</a><span class="meta"><span class="stamp">F3.3</span>Theo dõi yêu cầu, kết quả và lượt sử dụng còn lại.</span></li>
-<li><span class="ui">UI33</span><a href="dot3/phat-am.html?as=an">Góc phát âm</a><span class="meta"><span class="stamp">F3.5</span>Nghe, ghi ngắn và xem lại trước khi gửi đánh giá.</span></li>
-<li><span class="ui">UI34</span><a href="dot3/phat-am-lich-su.html?as=an">Lịch sử phát âm</a><span class="meta"><span class="stamp">F3.5</span>So sánh các lượt của cùng một từ bằng chỉ số có sẵn.</span></li>
-<li><span class="ui">UI36</span><a href="dot3/ban-do-lam-chu.html?as=an">Bản đồ làm chủ</a><span class="meta"><span class="stamp">F3.9</span>Nhận nghĩa, chính tả và phát âm được xem riêng.</span></li>
-<li><span class="ui">UI37</span><a href="dot3/tong-ket-tuan.html?as=an">Tổng kết tuần</a><span class="meta"><span class="stamp">F3.9</span>Nhìn lại một tuần, chọn việc vừa sức cho tuần sau.</span></li>
-<li><span class="ui">UI38</span><a href="dot3/thanh-tich.html?as=an">Thành tích của bạn</a><span class="meta"><span class="stamp">F3.6</span>Ghi nhận những bước học hợp lệ, không chạy đua điểm.</span></li>
-<li><span class="ui">UI39</span><a href="dot3/thong-bao.html?as=an">Thông báo</a><span class="meta"><span class="stamp">F3.7</span>Nhắc học, tổng kết và phản hồi về nội dung của bạn.</span></li>
-<li><span class="ui">UI44</span><a href="dot3/ca-nhan-du-lieu.html?as=an">Dữ liệu cá nhân</a><span class="meta"><span class="stamp">F3.10</span>Hiểu dữ liệu được giữ và phạm vi xử lý khi yêu cầu xóa.</span></li>
-<li><span class="ui">UI45</span><a href="dot3/bao-cao-noi-dung.html?as=an">Báo cáo nội dung</a><span class="meta"><span class="stamp">F3.8</span>Giúp kiểm tra bộ thẻ, nghĩa của từ hoặc đầu ra AI.</span></li>
-<li><span class="ui">UI46</span><a href="dot3/quan-tri-tong-quan.html?as=admin">Tổng quan quản trị</a><span class="meta"><span class="stamp">F3.11</span>Theo dõi nội dung cần xử lý và hoạt động dịch vụ.</span></li>
-<li><span class="ui">UI50</span><a href="dot3/quan-tri-bao-cao.html?as=admin">Hàng đợi báo cáo</a><span class="meta"><span class="stamp">F3.8</span>Xem bằng chứng, chọn quyết định và lưu lý do.</span></li>
-<li><span class="ui">UI51</span><a href="dot3/quan-tri-dich-vu.html?as=admin">Hạn mức và sử dụng dịch vụ</a><span class="meta"><span class="stamp">F3.11</span>Kiểm soát lượt dùng; không tính chi phí khi thiếu đơn giá.</span></li>
-<li><span class="ui">UI52</span><a href="dot3/quan-tri-thong-bao.html?as=admin">Thông báo hệ thống</a><span class="meta"><span class="stamp">F3.7</span>Soạn, xem trước và xác nhận trước khi gửi.</span></li>
-<li><span class="ui">UI53</span><a href="dot3/quan-tri-tac-vu.html?as=admin">Tác vụ nền</a><span class="meta"><span class="stamp">F3.11</span>Theo dõi trạng thái, lần thử và yêu cầu chưa rõ kết quả.</span></li>
-<li><span class="ui">UI54</span><a href="dot3/quan-tri-dong-luc.html?as=admin">Huy hiệu và thử thách</a><span class="meta"><span class="stamp">F3.6</span>Quản lý điều kiện ghi nhận, không thay đổi điểm tùy ý.</span></li></ul></section>
-
-    <section class="phase" aria-labelledby="dev">
-      <h2 id="dev">Cách dùng</h2>
-      <ul class="small" style="padding-left:1.1rem;display:grid;gap:6px;margin-top:var(--sp-3)">
-        <li>Chạy <code>npx http-server mockups -p 5173</code> rồi mở <code>http://localhost:5173</code>, hoặc mở trực tiếp tệp HTML bằng trình duyệt.</li>
-        <li>Nút <strong>Mockup</strong> ở góc phải dưới: chuyển trạng thái Có dữ liệu, Đang tải, Trống, Lỗi và đặt lại dữ liệu mẫu.</li>
-        <li>Dữ liệu lưu trong localStorage của trình duyệt. Thư xác thực và thư đặt lại mật khẩu được mô phỏng ngay trên trang.</li>
-      </ul>
-    </section>
-  </div>
-</main>
-<script src="shared/demo.js?v=7a64760fcbf9"></script>
-<script src="shared/app.js?v=8aa721dd6a29"></script>
-<script src="shared/mascot.js?v=f38c732c1a4f"></script>
+  </main>
+  <script src="shared/demo.js?v=7a64760fcbf9"></script>
+  <script src="shared/app.js?v=8aa721dd6a29"></script>
+  <script src="shared/mascot.js?v=f38c732c1a4f"></script>
 </body>
+
 </html>

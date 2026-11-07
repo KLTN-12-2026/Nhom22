@@ -1,0 +1,275 @@
+.pageSheet {
+  max-width: 1040px;
+}
+
+/* ── Section headings ── */
+.sectionHeading {
+  font-size: var(--fs-sm, 0.875rem);
+  font-weight: 700;
+  color: var(--ink-2, #5a6076);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--sp-4) 0;
+}
+
+/* ── Transaction list ── */
+.txList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1.5px solid var(--border, #e2e5f0);
+  border-radius: var(--radius-field, 10px);
+  overflow: hidden;
+  margin-bottom: var(--sp-7);
+}
+
+.txHeader {
+  display: grid;
+  grid-template-columns: 110px 1fr 120px 110px 100px;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--desk, #f5f6fa);
+  border-bottom: 1.5px solid var(--border, #e2e5f0);
+}
+
+.txHeader span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-3, #9ba0b8);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.txItem {
+  display: grid;
+  grid-template-columns: 110px 1fr 120px 110px 100px;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border, #e2e5f0);
+  background: var(--sheet, #fff);
+  transition: background 0.12s;
+}
+
+.txItem:last-child {
+  border-bottom: none;
+}
+
+.txItem:hover {
+  background: var(--desk, #f8f9fc);
+}
+
+.txDate {
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--ink-2, #5a6076);
+}
+
+.txDesc {
+  font-size: var(--fs-sm, 0.875rem);
+  color: var(--ink, #1a1f36);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txAmount {
+  font-size: var(--fs-sm, 0.875rem);
+  font-weight: 700;
+  color: var(--ink, #1a1f36);
+  text-align: right;
+}
+
+.txAmountZero {
+  color: var(--ink-3, #9ba0b8);
+  font-weight: 400;
+}
+
+.txStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs, 0.75rem);
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.txStatusOk {
+  background: #d1f5e7;
+  color: #1e8a5a;
+}
+
+.txStatusFail {
+  background: #fde8e8;
+  color: #c0392b;
+}
+
+.txAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.invoiceBtn {
+  font-size: var(--fs-xs, 0.75rem);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #d8dbe5);
+  background: var(--sheet, #fff);
+  color: var(--ink, #1a1f36);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.12s;
+}
+
+.invoiceBtn:hover:not(:disabled) {
+  background: var(--desk, #f0f2f8);
+  border-color: var(--ink-3, #9ba0b8);
+}
+
+.invoiceBtn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.noAction {
+  color: var(--ink-3, #9ba0b8);
+  font-size: var(--fs-xs, 0.75rem);
+  padding-right: 12px;
+}
+
+@media (max-width: 680px) {
+  .txHeader {
+    display: none;
+  }
+  .txItem {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    gap: var(--sp-2);
+  }
+  .txDate {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .txAmount {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .txDesc {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+  .txStatus {
+    grid-row: 3;
+    grid-column: 1;
+  }
+  .txAction {
+    grid-row: 3;
+    grid-column: 2;
+  }
+}
+
+/* ── Saved payment methods ── */
+.savedMethods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.savedMethodCard {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1.5px solid var(--border, #e2e5f0);
+  border-radius: var(--radius-field, 10px);
+  background: var(--sheet, #fff);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.savedMethodLogo {
+  width: 44px;
+  height: 30px;
+  border: 1px solid var(--border, #e2e5f0);
+  border-radius: 6px;
+  background: #1a1f72;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.savedMethodInfo {
+  flex: 1;
+}
+
+.cardLabel {
+  font-size: var(--fs-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--ink, #1a1f36);
+  margin: 0 0 2px 0;
+}
+
+.cardSub {
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--ink-2, #5a6076);
+  margin: 0;
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--ink-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.removeBtn:hover {
+  color: #c0392b;
+  background: #fde8e8;
+}
+
+.addMethodBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ── Empty State inside sheet ── */
+.stateBlock {
+  padding: var(--sp-7) var(--sp-5);
+  text-align: center;
+  border: 1.5px dashed var(--border, #e2e5f0);
+  border-radius: var(--radius-field, 10px);
+  margin-bottom: var(--sp-6);
+  background: var(--desk);
+}
+
+.stateIcon {
+  font-size: 2.2rem;
+  margin-bottom: var(--sp-2);
+}
+
+.stateBlock h3 {
+  margin: 0 0 var(--sp-2) 0;
+  font-size: var(--fs-base);
+  color: var(--ink);
+}
+
+.stateBlock p {
+  margin: 0 0 var(--sp-4) 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
