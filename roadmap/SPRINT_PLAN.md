@@ -23,6 +23,8 @@
 | **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…20 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, dữ liệu demo, tài liệu, diễn tập | B5.1–B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
+Ghi chú: "Đợt 2" = S5–S6; sprint S2 thuộc GĐ0.
+
 **Ghi nhận lịch sử 29/09:** kế hoạch từng ghi BE xong GĐ0, B1.1–B1.2 và 42 test xanh, FE chưa khởi tạo. Đây không phải trạng thái hiện tại; không công nhận số pass khi thiếu artifact đối chiếu. Báo cáo hiện có ghi triển khai đến B1.12; kiểm tra mã và bằng chứng tương ứng trước khi đóng bước. Giữ lịch demo dự kiến.
 
 ---
@@ -99,20 +101,20 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B2.1 Bộ tính SRS thuần | (unit test, không API) | — | — |
 | B2.2 Kế hoạch hôm nay | `GET /learning/today` | F2.1 | UI12 `/hom-nay` (chọn 5/10/20 phút) |
 | B2.3 Tạo phiên học | `POST /learning/sessions`, `GET /learning/sessions/{id}` | F2.2 | UI18 chọn chiều/thời gian |
-| B2.4 Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.2 | UI19 `/hoc/[sessionId]` (lật thẻ, phím tắt 1–4/Space, trạng thái "đã lưu / chưa đồng bộ") |
+| B2.4 Ghi kết quả ôn | `POST /learning/sessions/{id}/reviews` | F2.2 | UI19 `/hoc-phien?id=` (lật thẻ, phím tắt 1–4/Space, trạng thái "đã lưu / chưa đồng bộ") |
 | B2.5 Kết thúc, lịch sử, tạm ngưng/đặt lại | `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` | F2.3 | UI20 tổng kết, UI21 `/bo-the/[id]/tien-do` |
 | B2.6 Cứu lịch ôn | `cuuLichOn` + query `phut`, `giuTuMoi` trong `GET /learning/today`; `cheDo` (`THUONG`/`CUU_LICH`) ở `POST /learning/sessions` và `GET /learning/sessions/{id}` (migration V10) | F2.4 | UI22 khối "Cứu lịch ôn" trên UI12 |
 
-**Phạm vi B2.1:** migration learning dùng số tiếp theo chưa sử dụng sau khi kiểm tra checkout; không sửa migration đã áp dụng. Calculator Java thuần nhận trạng thái cũ, QUEN/KHO/NHO/DE và `Instant now`, trả trạng thái mới bất biến theo TK §7.2; EF ban đầu 2.5, min 1.3, trần khoảng ôn 365 ngày. TC-06 kiểm chuỗi Nhớ 10 phút → 1 ngày → 6 ngày → 15 ngày; TC-07 kiểm học lại, EF và số lần quên. Kiểm thưởng lặp thuộc bước ghi kết quả/thưởng, không nằm trong calculator. Chốt cách làm tròn và xung đột giữa lịch địa phương §7.3 với đầu vào calculator trước code; đề xuất trong chat chưa phải quyết định đã áp dụng. Không đưa API, ownership, quota, thống kê hoặc luyện tập vào calculator. B2.1 chưa được đánh dấu hoàn tất.
+**Phạm vi B2.1:** migration learning dùng số tiếp theo chưa sử dụng sau khi kiểm tra checkout; không sửa migration đã áp dụng. Calculator Java thuần nhận trạng thái cũ, QUEN/KHO/NHO/DE và `Instant now`, trả trạng thái mới bất biến theo TK §7.2; EF ban đầu 2.5, min 1.3, trần khoảng ôn 365 ngày. TC-06 kiểm chuỗi Nhớ 10 phút → 1 ngày → 6 ngày → 15 ngày; TC-07 kiểm học lại, EF và số lần quên. Kiểm thưởng lặp thuộc bước ghi kết quả/thưởng, không nằm trong calculator. Chốt cách làm tròn và xung đột giữa lịch địa phương §7.3 với đầu vào calculator trước code; đề xuất trong chat chưa phải quyết định đã áp dụng. Không đưa API, ownership, quota, thống kê hoặc luyện tập vào calculator. B2.1 đã hoàn tất (roadmap BE `[x]`, `SM2-VN-2` từ 03/11/2026).
 
-**Bàn giao Đợt 2:** chưa tìm thấy báo cáo riêng trong checkout. Khi được yêu cầu viết báo cáo, tìm lại tài liệu bàn giao hiện có và chốt đường dẫn mới nếu cần; không mặc định tạo `report/DOT2_BAO_CAO_FE.md` hoặc báo cáo BE song song.
+**Bàn giao Đợt 2:** `ban-giao-cho fe/SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` (trạng thái BE, kiểm chứng, hợp đồng cho FE); không tạo `report/DOT2_BAO_CAO_FE.md` hoặc báo cáo BE song song.
 
 **Xong khi:** TC-05…TC-10 qua; học một thẻ hai chiều cho hai lịch khác nhau; gửi trùng và hai tab không làm hỏng tiến độ. Âm thanh thẻ tạm dùng tệp đã tải lên (B1.6) hoặc Web Speech API của trình duyệt đến khi có B3.4.
 
 ### S6 · 02/11–08/11 · Luyện tập, sổ tay, thống kê, quản trị — FR-07, 08, 11, 13
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B2.7 Tạo bài luyện (✅ 31/10) | `POST /practice/sessions`, `GET /practice/sessions/{id}` (migration V11, 7 bảng), `GET /practice/sessions/{id}/questions/{cauHoiId}/audio` (âm câu nghe viết, thêm 06/11) | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap/[id]` (8 dạng bài) |
+| B2.7 Tạo bài luyện (✅ 31/10) | `POST /practice/sessions`, `GET /practice/sessions/{id}` (migration V11, 7 bảng), `GET /practice/sessions/{id}/questions/{cauHoiId}/audio` (âm câu nghe viết, thêm 06/11) | F2.5 | UI23 `/luyen-tap`, UI24 `/luyen-tap-lam-bai?id=` (8 dạng bài) |
 | B2.8 Nộp & chấm | `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` | F2.5 | UI25 kết quả + giải thích `/luyen-tap-ket-qua`, UI26 `/luyen-tap-lich-su` |
 | B2.9 Sổ tay & cặp nhầm | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/confusing-pairs` | F2.6 | UI27 `/so-tay` |
 | B2.10 Thống kê nền (BE xong 03/11/2026) | `GET /statistics/overview`, `GET /statistics/skills` | F2.7, F2.1 (khối 7 ngày) | UI35 `/thong-ke`, UI12 |

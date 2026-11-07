@@ -5,7 +5,7 @@
 | Ngày lập | 06/11/2026 |
 | Dựa trên | [BAO_CAO_RA_SOAT_DOT2.md](BAO_CAO_RA_SOAT_DOT2.md) + đọc lại mã ngày 06/11/2026 |
 | Phạm vi | Đợt 2 = S5 + S6: B2.1–B2.12, F2.1–F2.8 |
-| Trạng thái | Chưa sửa. File này chỉ liệt kê việc cần làm; mỗi mục có vị trí, hiện trạng, cách sửa, cách kiểm chứng |
+| Trạng thái | 07/11/2026: xong BE-01, VER-01, BE-02, DOC-01…09; BE-03 một phần. Mục FE-xx do FE làm |
 | Hạn | Demo Đợt 2: 08/11/2026 |
 
 Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài liệu), `VER-xx` (kiểm chứng). Ưu tiên P0 = chặn demo, P1 = cần cho Đợt 2 đủ DoD, P2 = dọn dẹp.
@@ -33,7 +33,7 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 
 | Mã | Ưu tiên | Bên | Tóm tắt | Cỡ |
 |---|---|---|---|---|
-| VER-01 | P0 | BE | Dựng lại Docker stack (`vocab-api-1` lỗi `UnknownHostException: mysql`) | Vừa |
+| VER-01 | ✅ | BE | Dựng lại Docker stack (xong 07/11: `compose down` + `up --build`; nguyên nhân: hạ tầng không có restart policy, chỉ `api` tự khởi động lại) | Vừa |
 | FE-01 | P0 | FE | `FeatureGate` còn chặn 3 trang quản trị và chặn luyện tập/sổ tay/thống kê khi tắt mock | Nhỏ |
 | FE-02 | P0 | FE | Mock tự thay BE ở dev; banner "máy chủ chưa có chức năng này" sai sự thật | Nhỏ |
 | FE-03 | P0 | FE | UI49 gọi `/admin/cards?boTheId`, `POST /admin/cards` (BE không có) | Nhỏ |
@@ -48,11 +48,11 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | FE-11 | P1 | FE | Logo/"Trở về" về `/bo-the` thay vì `/hom-nay` | Nhỏ |
 | FE-12 | P1 | FE | Đối chiếu 14 trang với mockup, 360px, trạng thái tải/rỗng/lỗi | Lớn |
 | FE-13 | P1 | FE | Xóa mock route Next.js Đợt 2 sau khi BE thật chạy | Vừa |
-| BE-02 | P1 | BE | Postman thống kê thiếu ca lỗi | Nhỏ |
-| BE-03 | P1 | BE | Mô tả collection Postman trỏ file không tồn tại | Nhỏ |
+| BE-02 | ✅ | BE | Postman thống kê thêm 5 ca lỗi (xong 07/11, đã `curl` đúng) | Nhỏ |
+| BE-03 | 🟡 | BE | Biến environment xong 07/11; mô tả collection phải sửa tay trong Postman (MCP không sửa riêng `info`) | Nhỏ |
 | VER-02 | P1 | BE | Chạy Postman Đợt 2 trên HTTP thật, lưu kết quả | Vừa |
 | VER-03 | P1 | BE+FE | Demo đầu-cuối Đợt 2 trên BE thật | Vừa |
-| DOC-01…10 | P1–P2 | BE | Sửa tài liệu lệch | Nhỏ |
+| DOC-01…10 | 🟡 | BE | DOC-01…09 xong 07/11; DOC-10 thuộc roadmap FE (BE không sửa) | Nhỏ |
 | FE-14 | P2 | FE | `/hoc-tong-ket` gọi `POST .../finish` trong `useQuery` | Nhỏ |
 | FE-15 | P2 | FE | Test cho trang Đợt 2 | Vừa |
 | FE-16 | P2 | FE | Dùng `alert`/`prompt`/`confirm` ở UI49 | Vừa |
