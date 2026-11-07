@@ -913,6 +913,20 @@ BE không sửa `frontend/`. Các mục dưới đây đã kiểm lại trên m�
 
 **07/11/2026 — UI12/UI22 (FE-09…FE-11):** `hom-nay/page.js` thêm khối "Phiên đang dở" (`phienDangDo`: tiếp tục hoặc kết thúc rồi mở `/hoc-tong-ket`), "Hoạt động 7 ngày qua" (`GET /statistics/overview?tuNgay&denNgay`, ngày đạt mục tiêu so `thoiGian` ms), "Dự báo ôn 7 ngày tới" (`duBaoOn`), ghi chú mục tiêu theo `daHocHomNay.thoiGian`; khối cứu lịch ôn khi `cuuLichOn != null` (chọn phút gửi `phut`, bỏ tick tạm dừng gửi `giuTuMoi=true`, `queryKey` gồm hai tham số, bắt đầu gửi `cheDo`). Logo, "Trở về ứng dụng", mặc định sau đăng nhập (`safeNext`) và sau khởi đầu về `/hom-nay`. Kiểm trên BE Docker với `an@vocab.local`: khối phiên dở hiện với phiên thật; tạm thêm 10 hàng `tien_do_the` quá hạn và `phutMoiNgay = 1` để BE trả `cuuLichOn` thật: đổi 5 phút gọi `?phut=5` (kế hoạch 4 ngày → 1 ngày), bỏ tick gọi `?phut=5&giuTuMoi=true`, "Bắt đầu" tạo phiên `cheDo = CUU_LICH`, `quyThoiGian = 5`; 360px không cuộn ngang; logo trỏ `/hom-nay`. Sau đó đã kết thúc 2 phiên thử, xóa 10 hàng tiến độ thêm tay và trả `phutMoiNgay = 10`. Chưa thử nhánh "Kết thúc và xem tổng kết" (phiên đã trả lời hết thẻ).
 
+**07/11/2026 — VER-03 demo đầu-cuối Đợt 2 (BE Docker + Next.js dev, `NEXT_PUBLIC_DOT2_MOCK=disabled`): 7/7 bước pass.**
+
+| # | Bước | Kết quả |
+|---|---|---|
+| 1 | `an@vocab.local` đăng nhập → `/hom-nay` | Pass: kế hoạch (2 thẻ ôn, 3 từ mới), khối "Hoạt động 7 ngày qua", "Dự báo ôn 7 ngày tới", chuỗi, mục tiêu |
+| 2 | Ôn hai chiều (TC-05) → `/hoc-tong-ket` | Pass: phiên 7 Anh → Việt 4 thẻ, tổng kết 4 lượt, "invoice" hẹn 1 ngày; phiên 8 Việt → Anh hiện lại "invoice" chiều ngược; nút "Kết thúc phiên học" giữa phiên → tổng kết "4 thẻ chưa chấm khi kết thúc" |
+| 3 | Nghe viết sai một từ | Pass: bài 12 `NGHE_VIET`, `.../questions/41/audio` 200, gõ "recipt" → UI25 "Sai · Lỗi nghe", đáp án `invoice`, nghĩa, ví dụ, `0p 16s` |
+| 4 | `/so-tay` | Pass: "invoice" đứng đầu, "Nghe × 2" |
+| 5 | `/thong-ke` khớp UI12 (TC-09) | Pass: BE `thoiGian = 74742` ms, `soPhut = 1`; `/thong-ke` "1 phút", `/hom-nay` "Tổng 1 phút" và "1/10 phút" |
+| 6 | Admin khóa tài khoản có lý do → nhật ký (TC-17) | Pass: khóa `qa1@vocab.local` → "Bị khóa"; `/quan-tri/nhat-ky` dòng "Khóa tài khoản · QA Một" kèm lý do; đã mở khóa lại (có nhật ký) |
+| 7 | `/quan-tri/bo-mau` thêm, sửa, xóa thẻ, xuất bản | Pass: tạo bộ nháp 101, thêm 2 thẻ, sửa phiên âm và dịch ví dụ, xóa 1 thẻ, xuất bản; nhật ký có `TAO_BO_MAU`, `TAO_THE_MAU` ×2, `SUA_THE_MAU`, `XOA_THE_MAU`, `XUAT_BAN_BO_MAU` |
+
+Lỗi phát hiện và đã sửa (FE-18): "Xóa bộ" ở UI49 gửi `DELETE /admin/decks/{id}` body `{lyDo}` thiếu `version` → BE 400 "Thiếu phiên bản". Sửa `quan-tri/bo-mau/page.js` gửi `{ lyDo, version: d.version }`; xóa bộ 101 thành công (GET sau đó 404). Ghi chú: hộp `window.confirm`/`prompt` (FE-16) bị trình duyệt nhúng tự đóng, khi kiểm phải thay bằng hàm trả sẵn; người dùng thật không bị ảnh hưởng. Dữ liệu dev để lại: phiên 7, 8, bài luyện 12 của An; nhật ký quản trị của các thao tác trên.
+
 | Mã | Vị trí FE | Hiện trạng | Việc FE cần làm |
 |---|---|---|---|
 | RS-060 (Cao) | `frontend/src/app/(app)/luyen-tap-lam-bai/page.js:211` | Đọc `q.deBai?.amThanhUrl`; BE trả `deBai.amTuId` (mục 5.8). Câu `NGHE_VIET` trên BE thật không có âm thanh. Hướng dẫn cũ (dùng `/decks/{boTheId}/cards/{theId}/files/AM_TU`) không làm được vì đề không có `theId`/`boTheId` | Từ 06/11/2026 BE có `GET /api/v1/practice/sessions/{id}/questions/{cauHoiId}/audio` (mục 5.8): bấm "Nghe" thì gọi API này và phát `downloadUrl`; không dùng giọng đọc trình duyệt cho câu nghe viết |

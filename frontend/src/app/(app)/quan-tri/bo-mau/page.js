@@ -256,7 +256,7 @@ function AdminDecksContent() {
       if (!window.confirm(`Xóa ${d.ten}?`)) return;
       const lyDo = promptReason();
       if (!lyDo) return;
-      method = 'DELETE'; body = { lyDo };
+      method = 'DELETE'; body = { lyDo, version: d.version };
     }
 
     if (method) {

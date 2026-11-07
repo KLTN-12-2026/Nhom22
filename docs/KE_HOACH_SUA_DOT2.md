@@ -51,7 +51,8 @@ Quy ước mã việc: `FE-xx` (frontend), `BE-xx` (backend), `DOC-xx` (tài li�
 | BE-02 | ✅ | BE | Postman thống kê thêm 5 ca lỗi (xong 07/11, đã `curl` đúng) | Nhỏ |
 | BE-03 | 🟡 | BE | Biến environment xong 07/11; mô tả collection phải sửa tay trong Postman (MCP không sửa riêng `info`) | Nhỏ |
 | VER-02 | ✅ 07/11 | BE | Chạy Postman Đợt 2 trên HTTP thật, lưu kết quả | Vừa |
-| VER-03 | P1 | BE+FE | Demo đầu-cuối Đợt 2 trên BE thật | Vừa |
+| VER-03 | ✅ 07/11 | BE+FE | Demo đầu-cuối Đợt 2 trên BE thật: 7/7 bước pass (bàn giao §10); phát hiện và sửa FE-18 | Vừa |
+| FE-18 | ✅ 07/11 | FE | UI49 "Xóa bộ" thiếu `version` trong body → 400; đã gửi `{ lyDo, version }` | Nhỏ |
 | DOC-01…10 | 🟡 | BE | DOC-01…09 xong 07/11; DOC-10 thuộc roadmap FE (BE không sửa) | Nhỏ |
 | FE-14 | P2 | FE | `/hoc-tong-ket` gọi `POST .../finish` trong `useQuery` | Nhỏ |
 | FE-15 | P2 | FE | Test cho trang Đợt 2 | Vừa |
@@ -380,7 +381,7 @@ Ràng buộc khi sửa tài liệu: không tick roadmap khi chưa có bằng ch�
 - [ ] FE-01 … FE-08, BE-01: sửa xong, kiểm trên BE thật.
 - [ ] FE-09, FE-10, FE-11: UI12 đủ khối theo TK §9.1.
 - [ ] VER-02: Postman Đợt 2 chạy, có file bằng chứng trong `report/evidence/`.
-- [ ] VER-03: 7 bước demo pass.
+- [x] VER-03: 7 bước demo pass (07/11/2026).
 - [ ] FE-12: 14 trang khớp mockup, đủ tải/rỗng/lỗi, 360px; tick F2.1–F2.8 kèm "Đã làm".
 - [ ] DOC-01 … DOC-11: tài liệu khớp code.
 
