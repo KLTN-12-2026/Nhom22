@@ -5,7 +5,7 @@
 | Ngày lập | 07/11/2026 |
 | Dựa trên | `roadmap/TienDoDuKien_backend.md` (B3.1–B5.4), `roadmap/TienDoDuKien_fronend.md` (F2.2, F3.1–F5.4), `roadmap/SPRINT_PLAN.md` (S7–S11), TK §9, §15, §19, §20 |
 | Phạm vi | S7–S11 · 09/11–14/12/2026 |
-| Trạng thái | **Đã áp 07/11/2026** vào roadmap BE/FE, `SPRINT_PLAN.md`, TK §8.3, §15.1, §20.2 (DOC3-01…06). Bổ sung Xưởng thẻ AI mở rộng X-01…X-06 (mục 7, DOC3-07…10) và gói dịch vụ + thanh toán FR-15 (mục 8, DOC3-11…14). Còn chờ GVHD đồng ý các mục Cắt/Hoãn (mục 5) |
+| Trạng thái | **Đã áp 07/11/2026** vào roadmap BE/FE, `SPRINT_PLAN.md`, TK §8.3, §15.1, §20.2 (DOC3-01…06). Bổ sung Xưởng thẻ AI mở rộng X-01…X-06 (mục 7, DOC3-07…10) và gói dịch vụ + thanh toán FR-15 (mục 8, DOC3-11…14). Còn chờ GVHD đồng ý các mục Cắt/Hoãn (mục 5). Tài liệu đã thống nhất 09/11/2026 theo DOC3-01…18 (mục 6) |
 | Hạn cứng | Demo hội đồng 14/12/2026 |
 
 ## 0. Nguyên tắc cắt
@@ -114,6 +114,10 @@ Ký hiệu: **Giữ** = làm như roadmap · **Gọn** = làm lõi, bỏ phần 
 | DOC3-12 | `roadmap/TienDoDuKien_backend.md` | B3.12a, B3.12b; B3.1 hạn mức theo gói; B4.1 TC-22 (áp 07/11/2026) |
 | DOC3-13 | `roadmap/TienDoDuKien_fronend.md` | F3.12 UI55–UI57 (áp 07/11/2026) |
 | DOC3-14 | `roadmap/SPRINT_PLAN.md` | S8, S9, ma trận FR-15, UI55–UI57, S10 15 FR / 22 TC (áp 07/11/2026) |
+| DOC3-15 | TK §4.2, §6.8, §10, §13.2, §18.1 | Ghi phần Cắt/Hoãn của Admin (thống kê, tác vụ nền, thông báo hệ thống, huy hiệu/thử thách, yêu cầu xóa), kiểm duyệt chỉ giữ/ẩn, `exercise-drafts` Hoãn, mốc Đợt 3 (áp 09/11/2026) |
+| DOC3-16 | `roadmap/TienDoDuKien_backend.md` §0.2 | Hàng Đợt 3: FR-11, 13, 15 và B3.1–B3.12b (áp 09/11/2026) |
+| DOC3-17 | `ban-giao-cho fe/SPRINT_2_...md` mục 9 | Viết lại bảng hợp đồng Đợt 3 theo lịch S7–S9 đã cắt, thêm B3.4a/B3.12a/B3.12b (áp 09/11/2026) |
+| DOC3-18 | `mockups/dot3/README.md`, `mockups/index.html`, `AGENTS.md`, `docs/luong-backend/B2.2`, `B2.4` | Đánh dấu UI46/52/53(tab)/54 là Cắt, thêm UI55–57 và X-01…X-06, FR-15/TC-22, chuỗi ngày đã chốt (áp 09/11/2026) |
 
 ## 7. Bổ sung 07/11/2026 — Xưởng thẻ AI mở rộng (theo bản demo nhóm FE)
 

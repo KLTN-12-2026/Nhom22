@@ -156,10 +156,10 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xem gợi ý kiểm duyệt AI khi được bật; ra quyết định và lưu lý do xử lý.
 - Xử lý báo cáo đầu ra AI sai, đánh dấu để cải thiện cấu hình.
 - Quản lý hạn mức AI/phát âm và cấu hình dịch vụ qua thông tin không chứa khóa bí mật.
-- Theo dõi lượt sử dụng, tỷ lệ lỗi, thời gian phản hồi và chi phí dịch vụ khi có dữ liệu tính phí.
-- Quản lý thông báo hệ thống, nhắc học, huy hiệu và thử thách.
-- Xem thống kê tài khoản, nội dung, học tập và mức độ sử dụng hệ thống.
-- Xem nhật ký thao tác quản trị, tác vụ nền và lỗi vận hành.
+- Theo dõi lượt sử dụng và tỷ lệ lỗi dịch vụ (Đợt 3 gọn; thời gian phản hồi và chi phí là hướng phát triển, cắt 07/11/2026).
+- Theo dõi nhắc học (hệ thống gửi theo cài đặt người dùng). Thông báo hệ thống do Admin soạn và quản lý huy hiệu/thử thách là hướng phát triển (cắt 07/11/2026); Đợt 3 dùng huy hiệu và thử thách tuần cố định bằng migration.
+- Xem số liệu tài khoản, nội dung, học tập qua các màn quản trị hiện có; trang thống kê tổng hợp của Admin là hướng phát triển (cắt 07/11/2026).
+- Xem nhật ký thao tác quản trị và lượt dùng/lỗi dịch vụ; màn tác vụ nền và theo dõi yêu cầu xóa dữ liệu là hướng phát triển (cắt 07/11/2026, theo dõi qua nhật ký).
 - Theo dõi sao lưu, kết quả phục hồi thử nghiệm và tiến độ xóa dữ liệu.
 - Xem danh sách giao dịch thanh toán và gói đang dùng của tài khoản (chỉ đọc; FR-15).
 
@@ -270,8 +270,8 @@ Nếu mất mạng, hiển thị kết quả chưa đồng bộ và cho gửi l�
 1. User báo cáo bộ/thẻ hoặc đầu ra AI, chọn lý do và mô tả.
 2. Hệ thống chống gửi trùng, lưu nội dung tham chiếu và đưa vào hàng đợi.
 3. Admin xem nội dung công khai hoặc nội dung cụ thể gắn báo cáo được phép truy cập.
-4. AI có thể gợi ý phân loại [Thiết kế]; Admin quyết định giữ/ẩn/yêu cầu sửa/từ chối báo cáo.
-5. Lưu người xử lý, lý do, trạng thái trước/sau và gửi thông báo cho người liên quan.
+4. AI có thể gợi ý phân loại [Thiết kế]; Admin quyết định giữ hoặc ẩn kèm lý do (Đợt 3 gọn; trạng thái yêu cầu sửa/từ chối là hướng phát triển).
+5. Lưu người xử lý, lý do, trạng thái trước/sau vào nhật ký. Thông báo cho người liên quan: hướng phát triển (cắt 07/11/2026).
 
 ### 6.9. Nâng cấp gói và thanh toán [Thiết kế, bổ sung 07/11/2026]
 
@@ -486,7 +486,7 @@ Hiển thị từ đã học, kỹ năng tiến bộ, ba từ khó và mục ti�
 | Động lực | Huy hiệu, thử thách, điểm, lịch sử thưởng |
 | Cá nhân | Hồ sơ, mục tiêu, bảo mật, thông báo, dữ liệu và xóa tài khoản |
 | Gói & thanh toán (FR-15) | UI55 chọn gói, chu kỳ, chuyển sang cổng; UI56 lịch sử giao dịch, biên nhận; UI57 kết quả thanh toán |
-| Quản trị | Tổng quan, tài khoản, nội dung mẫu, báo cáo, dịch vụ/hạn mức, thông báo, nhật ký/tác vụ |
+| Quản trị | Tài khoản, chủ đề, nội dung mẫu, báo cáo, dịch vụ/hạn mức và giao dịch, nhật ký. Cắt khỏi Đợt 3 (07/11/2026): tổng quan (UI46), thông báo hệ thống (UI52), tab tác vụ nền (UI53), huy hiệu/thử thách (UI54) |
 
 ## 11. Kiến trúc hệ thống
 
@@ -658,12 +658,12 @@ erDiagram
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
-| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts`, `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
+| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
 | Gói & thanh toán (FR-15) | `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions`, `GET /billing/transactions/{maDon}`, `GET /billing/transactions/{maDon}/receipt`, `GET /admin/payments` |
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`. Cắt 07/11/2026 (hướng phát triển): `GET /admin/statistics`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
@@ -811,7 +811,7 @@ Tệp cấu hình mẫu chỉ chứa tên biến, không chứa khóa hoặc tà
 | 05/10–11/10 | Chốt mô hình dữ liệu, API, wireframe, môi trường, dữ liệu mẫu và kế hoạch kiểm thử |
 | 12/10–25/10 — Đợt 1 | Tài khoản/hồ sơ, bộ/thẻ, thư viện, quyền, tệp, CSV; trình diễn vòng quản lý nội dung |
 | 26/10–08/11 — Đợt 2 | SRS, phiên học, bài cố định, lịch sử, sổ tay, thống kê nền và quản trị; trình diễn học đầu-cuối |
-| 09/11–29/11 — Đợt 3 | AI, phát âm, gợi ý, thưởng/nhắc, kiểm duyệt, các trải nghiệm nổi bật và tích hợp |
+| 09/11–29/11 — Đợt 3 | AI (gồm ảnh AI), phát âm, gợi ý, thưởng/nhắc, kiểm duyệt, xóa dữ liệu, vận hành gọn, gói dịch vụ và thanh toán VNPay; phạm vi đã cắt theo `docs/KE_HOACH_CAT_DOT3.md` |
 | 30/11–06/12 | Kiểm thử, lấy phản hồi, sửa lỗi, đo hiệu năng, kiểm tra sao lưu/triển khai |
 | 07/12–14/12 | Hoàn thiện báo cáo, hướng dẫn, demo, bằng chứng nghiệm thu và bàn giao |
 

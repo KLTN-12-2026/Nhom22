@@ -1,12 +1,14 @@
-# Mockup đợt 3 — F3.1–F3.11
+# Mockup đợt 3 — F3.1–F3.12
 
-19 màn hình/khối UI28–UI54, theo `roadmap/TienDoDuKien_fronend.md` và
-`roadmap/SPRINT_PLAN.md` S7–S9. Mở từ `mockups/index.html#dot3`.
+21 màn hình/khối UI28–UI56 (UI57 chưa có mockup), theo `roadmap/TienDoDuKien_fronend.md`,
+`roadmap/SPRINT_PLAN.md` S7–S9 và phạm vi đã cắt `docs/KE_HOACH_CAT_DOT3.md` (07/11/2026).
+Mở từ `mockups/index.html#dot3`. UI46, UI52, UI54 và UI53 (tab tác vụ nền) là **Cắt** khỏi Đợt 3:
+tệp mockup giữ để tham khảo, không làm FE/BE. UI29 và UI55/56 còn lệch tài liệu, xem mục "Lệch cần sửa".
 Các link người học dùng `?as=an`; quản trị dùng `?as=admin`, chỉ đăng nhập demo.
 
 ## Trạng thái triển khai
 
-Đối chiếu controller ngày 12/10/2026: backend hiện chưa có API đợt 3.
+Đối chiếu controller ngày 09/11/2026: backend chưa có API đợt 3 (B3.x chưa bắt đầu).
 Các endpoint bên dưới là **hợp đồng dự kiến trong tài liệu**, không phải API
 đã triển khai hoặc schema OpenAPI đã chốt. Không gọi backend thật từ các trang này.
 `ui.js` dùng fixture, mô phỏng xử lý; `shared/flow.js` nối điều hướng và dữ liệu đợt 3 trong sessionStorage
@@ -27,16 +29,25 @@ Các endpoint bên dưới là **hợp đồng dự kiến trong tài liệu**, 
 | UI39 | thong-bao.html | GET /notifications; PATCH /notifications/{id} |
 | UI44 | ca-nhan-du-lieu.html | POST /me/deletion-requests; schema trạng thái cá nhân chưa chốt |
 | UI45 | bao-cao-noi-dung.html | POST /reports |
-| UI46 | quan-tri-tong-quan.html | GET /admin/statistics; GET /admin/deletion-requests |
+| UI46 | quan-tri-tong-quan.html | **Cắt** (GET /admin/statistics, GET /admin/deletion-requests không làm) |
 | UI50 | quan-tri-bao-cao.html | GET /admin/reports; POST /admin/reports/{id}/resolve |
 | UI51 | quan-tri-dich-vu.html | GET/PUT /admin/service-quotas; GET /admin/service-usage |
-| UI52 | quan-tri-thong-bao.html | POST /admin/announcements |
-| UI53 | quan-tri-tac-vu.html | GET /admin/jobs; nhật ký sẵn trong dot2/quan-tri-nhat-ky.html |
-| UI54 | quan-tri-dong-luc.html | CRUD /admin/badges và /admin/challenges |
+| UI52 | quan-tri-thong-bao.html | **Cắt** (POST /admin/announcements không làm) |
+| UI53 | quan-tri-tac-vu.html | **Cắt** tab tác vụ nền (GET /admin/jobs không làm); nhật ký đã có ở dot2/quan-tri-nhat-ky.html |
+| UI54 | quan-tri-dong-luc.html | **Cắt** (huy hiệu/thử thách cố định bằng migration) |
+| UI55 | thanh-toan-goi.html | GET /billing/plans; GET /me/subscription; POST /billing/checkouts (FR-15, B3.12a) |
+| UI56 | thanh-toan-lich-su.html | GET /billing/transactions; GET /billing/transactions/{maDon}/receipt (B3.12b) |
+| UI57 | chưa có mockup | GET /billing/transactions/{maDon} (kết quả VNPay chuyển về, B3.12a) |
 
 Hôm nay, bộ thẻ, sổ tay, thống kê, hồ sơ và kết quả học có lối vào các công cụ liên quan. UI28 là ví dụ khối tích hợp Hôm nay/Sổ tay; UI30 là ngăn cạnh thẻ;
 UI45 là hộp báo cáo. Các tệp riêng giúp kiểm tra độc lập, không đề xuất bắt buộc
 tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đợt 2.
+
+## Lệch cần sửa so với tài liệu đã thống nhất
+
+- UI29: chưa có X-01 (tải tệp Word/TXT/CSV), X-02 (tên bộ mới), X-03 (hoàn thiện IPA + ví dụ), X-04 (sinh ảnh AI), X-06 (xóa tất cả); chỉ lưu vào bộ có sẵn. Xem `KE_HOACH_CAT_DOT3.md` §7.
+- UI55/UI56: bỏ form thẻ, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên"; gói Miễn phí 3 lượt AI/ngày và xuất CSV miễn phí; chỉ còn VNPay. Xem §8.
+- Chuỗi ngày trên mockup Hôm nay cần dòng "Đã dùng ngày nghỉ tuần này" (R-03).
 
 ## Tương tác và ranh giới dữ liệu mẫu
 
@@ -57,7 +68,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
   không thực thi xóa. Khi tích hợp cần CSRF, xác thực lại theo chính sách và
   trạng thái tác vụ thực tế; không tự thêm endpoint chưa được đặc tả.
 - Hạn mức mẫu 20/60/10 và giới hạn đoạn văn/câu là giả định trình bày. Thay bằng
-  cấu hình/validation chính thức khi B3.1–B3.11 có OpenAPI. Không coi là giá hoặc
+  cấu hình/validation chính thức khi B3.1–B3.12b có OpenAPI. Không coi là giá hoặc
   giới hạn hiện hành của dịch vụ ngoài.
 
 ## Kiểm tra
