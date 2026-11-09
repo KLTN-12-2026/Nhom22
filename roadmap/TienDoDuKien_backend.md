@@ -36,7 +36,7 @@
 | **GĐ0** — Khởi tạo & nền tảng | 28/09–11/10 | Project chạy trong Docker, lỗi/bảo mật/migration nền | B0.1–B0.8 |
 | **Đợt 1** — Tài khoản & nội dung | 12/10–25/10 | FR-01…05: tài khoản, hồ sơ, tệp, bộ/thẻ, thư viện, CSV | B1.1–B1.12 |
 | **Đợt 2** — Học & luyện | 26/10–08/11 | FR-06, 07, 11, 13: SRS, phiên học, bài luyện, sổ tay, thống kê, quản trị, bảng điều khiển | B2.1–B2.12 |
-| **Đợt 3** — AI & mở rộng | 09/11–29/11 | FR-08, 09, 10, 12, 14: AI, phát âm, gợi ý, thưởng, nhắc, kiểm duyệt, xóa dữ liệu | B3.1–B3.11 |
+| **Đợt 3** — AI & mở rộng | 09/11–29/11 | FR-08, 09, 10, 11, 12, 13, 14, 15: AI (gồm ảnh AI), phát âm, gợi ý, thưởng, nhắc, kiểm duyệt, xóa dữ liệu, vận hành gọn, gói & thanh toán | B3.1–B3.12b |
 | **GĐ4** — Kiểm thử & ổn định | 30/11–06/12 | TC-01…22, hiệu năng, sao lưu/khôi phục | B4.1–B4.5 |
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
