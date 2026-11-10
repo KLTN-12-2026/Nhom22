@@ -32,6 +32,8 @@ Các endpoint bên dưới là **hợp đồng dự kiến trong tài liệu**, 
 | UI46 | quan-tri-tong-quan.html | **Cắt** (GET /admin/statistics, GET /admin/deletion-requests không làm) |
 | UI50 | quan-tri-bao-cao.html | GET /admin/reports; POST /admin/reports/{id}/resolve |
 | UI51 | quan-tri-dich-vu.html | GET/PUT /admin/service-quotas; GET /admin/service-usage |
+| UI58 | chưa có mockup | GET /admin/revenue?ky=THANG\|QUY\|NAM (B3.12c, góp ý GVHD 10/11/2026) |
+| UI59 | chưa có mockup | GET /admin/payments; GET /admin/subscriptions; GET/PUT /admin/plans; công cụ demo sửa hạn (B3.12c) |
 | UI52 | quan-tri-thong-bao.html | **Cắt** (POST /admin/announcements không làm) |
 | UI53 | quan-tri-tac-vu.html | **Cắt** tab tác vụ nền (GET /admin/jobs không làm); nhật ký đã có ở dot2/quan-tri-nhat-ky.html |
 | UI54 | quan-tri-dong-luc.html | **Cắt** (huy hiệu/thử thách cố định bằng migration) |
@@ -46,7 +48,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 ## Lệch cần sửa so với tài liệu đã thống nhất
 
 - UI29: chưa có X-01 (tải tệp Word/TXT/CSV), X-02 (tên bộ mới), X-03 (hoàn thiện IPA + ví dụ), X-04 (sinh ảnh AI), X-06 (xóa tất cả); chỉ lưu vào bộ có sẵn. Xem `KE_HOACH_CAT_DOT3.md` §7.
-- UI55/UI56: bỏ form thẻ, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên"; gói Miễn phí 3 lượt AI/ngày và xuất CSV miễn phí; chỉ còn VNPay. Xem §8.
+- UI55/UI56: bỏ form thẻ, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên"; bỏ thẻ gói Miễn phí (bắt buộc mua gói, 10/11/2026), xuất CSV không phụ thuộc gói; chỉ còn VNPay; thêm banner sắp hết hạn trong khung ứng dụng. Xem `KE_HOACH_CAT_DOT3.md` §8.
 - Chuỗi ngày trên mockup Hôm nay cần dòng "Đã dùng ngày nghỉ tuần này" (R-03).
 
 ## Tương tác và ranh giới dữ liệu mẫu

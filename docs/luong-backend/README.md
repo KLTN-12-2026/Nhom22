@@ -46,6 +46,10 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 - [B2.11 — Quản trị nền](B2.11-quan-tri-nen.md)
 - [B2.12 — Bảng điều khiển người học](B2.12-bang-dieu-khien.md)
 
+## AI và dịch vụ B3
+
+- [B3.1 — Tác vụ nền và hạn mức dịch vụ](B3.1-tac-vu-nen-va-han-muc.md) (mã Mermaid, chưa sinh SVG)
+
 ## Redis
 
 - [Luồng Redis trong dự án](REDIS-trong-du-an.md)

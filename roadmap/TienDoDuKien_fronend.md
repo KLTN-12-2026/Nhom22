@@ -27,7 +27,7 @@
 | **GĐ0** — Nền tảng | S1–S2 | 28/09–11/10 | Dự án Next.js, design system, `api-client`, layout, trang công khai, mockup Đợt 1 | F0.1–F0.6 |
 | **Đợt 1** — Tài khoản & nội dung | S3–S4 | 12/10–25/10 | Đăng ký/đăng nhập, onboarding, hồ sơ, thư viện, bộ/thẻ, CSV | F1.1–F1.12 |
 | **Đợt 2** — Học & luyện | S5–S6 | 26/10–08/11 | Hôm nay học gì, flashcard SRS, luyện tập, sổ tay, thống kê, quản trị nền | F2.1–F2.8 |
-| **Đợt 3** — AI & mở rộng | S7–S9 | 09/11–29/11 | Xưởng thẻ AI (+ ảnh AI), viết câu, phát âm, thành tích, thông báo, kiểm duyệt, vận hành, gói & thanh toán | F3.1–F3.12 |
+| **Đợt 3** — AI & mở rộng | S7–S9 | 09/11–29/11 | Xưởng thẻ AI (+ ảnh AI), viết câu, phát âm, thành tích, thông báo, kiểm duyệt, vận hành, gói bắt buộc & thanh toán, doanh thu | F3.1–F3.13 |
 | **GĐ4** — Kiểm thử | S10 | 30/11–06/12 | E2E, responsive, tiếp cận, lỗi mạng | F4.1–F4.4 |
 | **GĐ5** — Bàn giao | S11 | 07/12–14/12 | Build production, dữ liệu demo, hướng dẫn, diễn tập | F5.1–F5.4 |
 
@@ -237,11 +237,19 @@ frontend/
 ### [ ] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
 - Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng, "Xác nhận thanh toán" chỉ hẹn giờ 0,7 giây; lint lỗi `thanh-toan-lich-su/page.js:77`.
 - Nối API (S8): UI55 đọc `GET /billing/plans`, `GET /me/subscription` (bỏ mảng `PLANS` cứng); "Xác nhận thanh toán" gọi `POST /billing/checkouts` rồi `window.location.assign(paymentUrl)`. Thêm **UI57** `/thanh-toan-ket-qua?maDon=` đọc `GET /billing/transactions/{maDon}` (thành công/thất bại/đang chờ, nút thử lại).
-- **Bỏ khỏi giao diện:** form số thẻ/tên chủ thẻ/hạn/CVV (thẻ nhập trên trang VNPay), "Chuyển khoản ngân hàng" mã cứng, MoMo/ZaloPay (chưa có cổng), danh sách "thẻ đã lưu", dòng "Hỗ trợ ưu tiên"; dòng "Không xuất dữ liệu" của gói Miễn phí (xuất CSV miễn phí cho mọi gói); gói Miễn phí ghi "3 yêu cầu AI/ngày". Phương thức còn lại: "Thẻ ATM / VISA / Mastercard / VNPAY-QR qua VNPay".
-- Nối API (S9): UI56 đọc `GET /billing/transactions`, "Tải biên nhận" mở `.../receipt` (bỏ tạo tệp văn bản ở trình duyệt); UI51 thêm tab "Giao dịch" đọc `GET /admin/payments`.
-- Mọi chỗ bị chặn vì gói (422 `goiCanNangCap`, 429 hạn mức) hiện thông báo + liên kết UI55; `AppShell` hiện tên gói đang dùng.
+- **Bỏ khỏi giao diện:** form số thẻ/tên chủ thẻ/hạn/CVV (thẻ nhập trên trang VNPay), "Chuyển khoản ngân hàng" mã cứng, MoMo/ZaloPay (chưa có cổng), danh sách "thẻ đã lưu", dòng "Hỗ trợ ưu tiên"; toàn bộ thẻ gói Miễn phí (không còn gói miễn phí, sửa 10/11/2026: chỉ `PRO`, `PREMIUM`); xuất CSV không phụ thuộc gói. Phương thức còn lại: "Thẻ ATM / VISA / Mastercard / VNPAY-QR qua VNPay".
+- Nối API (S9): UI56 đọc `GET /billing/transactions`, "Tải biên nhận" mở `.../receipt` (bỏ tạo tệp văn bản ở trình duyệt). Màn giao dịch của Admin chuyển sang UI59 (F3.13), không làm tab trong UI51.
+- **Bắt buộc có gói (10/11/2026):** interceptor API bắt 402 `SUBSCRIPTION_REQUIRED` → chuyển `/thanh-toan-goi?lyDo=CHUA_CO_GOI|HET_HAN`; layout `(app)` đọc `GET /me/subscription`, chưa có gói thì khóa menu học (chỉ còn Gói & thanh toán, Thông báo, Cá nhân); sau khởi đầu (UI10) chuyển sang UI55; UI57 thành công có nút về UI12.
+- Banner trong `AppShell` theo `soNgayConLai`: vàng khi ≤ 7 ngày, đỏ khi ≤ 1 ngày, nút "Gia hạn"; thông báo `GOI_SAP_HET_HAN`/`GOI_DA_HET_HAN` ở UI44 có liên kết UI55.
+- Mọi chỗ bị chặn vì quyền lợi gói (422 `goiCanNangCap`, 429 hạn mức) hiện thông báo + liên kết UI55; `AppShell` hiện tên gói đang dùng.
 - **Giữ** (UI55, UI57: S8; UI56, tab UI51: S9).
-- **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b thanh toán); nhận `report/DOT3_BAO_CAO_FE.md`.
+
+### [ ] F3.13 Quản lý thanh toán & doanh thu (Admin) — UI58, UI59 ← B3.12c (góp ý GVHD 10/11/2026)
+- UI59 `/quan-tri/thanh-toan`, 3 tab: **Giao dịch** (`GET /admin/payments`, lọc trạng thái/gói/ngày/email, xem chi tiết), **Gói người dùng** (`GET /admin/subscriptions`, lọc "Sắp hết hạn 7 ngày"; nút "Sửa ngày hết hạn" và "Chạy kiểm tra ngay" chỉ hiện khi API công cụ demo bật, bắt nhập lý do), **Cấu hình gói** (`GET/PUT /admin/plans`, 409 tải lại).
+- UI58 `/quan-tri/doanh-thu`: chuyển kỳ Tháng / Quý / Năm, chọn năm; thẻ tổng (doanh thu, số giao dịch, so với kỳ trước, gói hiệu lực, sắp hết hạn, tỷ lệ thành công); biểu đồ cột chồng theo gói; bảng số liệu bên dưới. Đọc `GET /admin/revenue`.
+- Thêm 2 mục vào menu quản trị.
+- **Giữ** (S9).
+- **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b mua gói bắt buộc + 9c hết hạn và doanh thu); nhận `report/DOT3_BAO_CAO_FE.md`.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 

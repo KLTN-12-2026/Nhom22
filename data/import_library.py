@@ -31,6 +31,18 @@ DECKS = {
     "giao-thong": ("Giao thông & đi lại", "GIAO_TIEP", "CO_BAN"),
     "gia-dinh": ("Gia đình & đời sống", "GIAO_TIEP", "MOI_BAT_DAU"),
     "moi-truong": ("Môi trường & thời tiết", "GIAO_TIEP", "CO_BAN"),
+    "the-thao": ("Thể thao & thể hình", "GIAO_TIEP", "CO_BAN"),
+    "am-thuc": ("Ẩm thực & nấu ăn", "GIAO_TIEP", "CO_BAN"),
+    "thoi-trang": ("Thời trang & làm đẹp", "GIAO_TIEP", "CO_BAN"),
+    "am-nhac": ("Âm nhạc & nghệ thuật", "GIAO_TIEP", "CO_BAN"),
+    "so-thich": ("Sở thích & thời gian rảnh", "GIAO_TIEP", "MOI_BAT_DAU"),
+    "cam-xuc": ("Cảm xúc & tính cách", "GIAO_TIEP", "CO_BAN"),
+    "tinh-ban": ("Tình bạn & tình yêu", "GIAO_TIEP", "CO_BAN"),
+    "dong-vat": ("Động vật & thiên nhiên", "GIAO_TIEP", "MOI_BAT_DAU"),
+    "khoa-hoc": ("Khoa học & vũ trụ", "GIAO_TIEP", "TRUNG_CAP"),
+    "lich-su": ("Lịch sử & văn hóa", "GIAO_TIEP", "TRUNG_CAP"),
+    "tin-tuc": ("Tin tức & xã hội", "GIAO_TIEP", "TRUNG_CAP"),
+    "mang-xa-hoi": ("Mạng xã hội & Internet", "GIAO_TIEP", "CO_BAN"),
 }
 
 

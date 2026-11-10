@@ -21,7 +21,19 @@
     { id: "15", name: "Giải trí & sự kiện", slug: "giai-tri" },
     { id: "16", name: "Giao thông & đi lại", slug: "giao-thong" },
     { id: "17", name: "Gia đình & đời sống", slug: "gia-dinh" },
-    { id: "18", name: "Môi trường & thời tiết", slug: "moi-truong" }
+    { id: "18", name: "Môi trường & thời tiết", slug: "moi-truong" },
+    { id: "19", name: "Thể thao & thể hình", slug: "the-thao" },
+    { id: "20", name: "Ẩm thực & nấu ăn", slug: "am-thuc" },
+    { id: "21", name: "Thời trang & làm đẹp", slug: "thoi-trang" },
+    { id: "22", name: "Âm nhạc & nghệ thuật", slug: "am-nhac" },
+    { id: "23", name: "Sở thích & thời gian rảnh", slug: "so-thich" },
+    { id: "24", name: "Cảm xúc & tính cách", slug: "cam-xuc" },
+    { id: "25", name: "Tình bạn & tình yêu", slug: "tinh-ban" },
+    { id: "26", name: "Động vật & thiên nhiên", slug: "dong-vat" },
+    { id: "27", name: "Khoa học & vũ trụ", slug: "khoa-hoc" },
+    { id: "28", name: "Lịch sử & văn hóa", slug: "lich-su" },
+    { id: "29", name: "Tin tức & xã hội", slug: "tin-tuc" },
+    { id: "30", name: "Mạng xã hội & Internet", slug: "mang-xa-hoi" }
   ];
 
   const TAGS = [
