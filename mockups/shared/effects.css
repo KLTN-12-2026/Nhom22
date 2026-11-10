@@ -1,0 +1,84 @@
+.btn, .rate, .choice-card, .opt { position: relative; overflow: hidden; isolation: isolate; }
+.fx-ripple { position: absolute; z-index: -1; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: currentColor; opacity: 0.18; pointer-events: none; transform: scale(0); animation: fx-ripple var(--dur-ripple) var(--ease-out) forwards; }
+@keyframes fx-ripple { to { transform: scale(24); opacity: 0; } }
+
+.btn:active:not(:disabled):not([aria-disabled="true"]), .rate:active:not(:disabled) { transform: scale(0.97); }
+.choice-card:has(input:checked) .bubble { animation: fx-pop var(--dur-2) var(--ease-out); }
+
+.flash { perspective: 1400px; }
+.flash .face { transform-origin: 50% 50%; backface-visibility: hidden; }
+.fx-turn { animation: fx-turn var(--dur-flip) var(--ease-out); }
+@keyframes fx-turn {
+  0% { transform: rotateY(0deg); }
+  45% { transform: rotateY(90deg) scale(0.98); opacity: 0.4; }
+  55% { transform: rotateY(-90deg) scale(0.98); opacity: 0.4; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+.flash .back { animation: fx-reveal var(--dur-3) var(--ease-out) both; animation-delay: calc(var(--dur-flip) * 0.45); }
+@keyframes fx-reveal { from { opacity: 0; transform: translateY(10px); } }
+
+.fx-pop { animation: fx-pop var(--dur-3) var(--ease-out); }
+@keyframes fx-pop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.fx-shake { animation: fx-shake var(--dur-3) var(--ease); }
+@keyframes fx-shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+.rates .rate { animation: fx-rise var(--dur-3) var(--ease-out) both; }
+.rates .rate:nth-child(2) { animation-delay: 40ms; }
+.rates .rate:nth-child(3) { animation-delay: 80ms; }
+.rates .rate:nth-child(4) { animation-delay: 120ms; }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(12px); } }
+
+.app-main > .page > .sheet, .app-main > .page > aside, .app-main > .page > .side-col { animation: fx-rise var(--dur-3) var(--ease-out) both; }
+.app-main > .page > aside, .app-main > .page > .side-col { animation-delay: 60ms; }
+
+.fx-confetti { position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; pointer-events: none; }
+
+.fx-stamp {
+  position: absolute; top: var(--sp-5); right: var(--sp-5); z-index: 5;
+  padding: var(--sp-2) var(--sp-4);
+  border: 3px solid var(--secondary); border-radius: var(--radius-btn);
+  color: var(--secondary);
+  font-family: var(--font-form); font-stretch: 80%; font-weight: 800; font-size: clamp(1.125rem, 0.9rem + 1vw, 1.5rem); letter-spacing: 0.02em;
+  white-space: nowrap; line-height: 1.1; pointer-events: none; mix-blend-mode: multiply;
+  transform: rotate(-9deg);
+  animation: fx-stamp var(--dur-celebrate) var(--ease-out) both; animation-delay: 120ms;
+}
+[data-theme="dark"] .fx-stamp { mix-blend-mode: normal; }
+.fx-stamp.is-primary { border-color: var(--primary); color: var(--primary); }
+.fx-stamp.is-accent { border-color: var(--accent-text); color: var(--accent-text); }
+.fx-stamp.is-still { animation: none; }
+@keyframes fx-stamp {
+  0% { opacity: 0; transform: rotate(-20deg) scale(2.6); }
+  35% { opacity: 1; transform: rotate(-9deg) scale(0.92); }
+  50% { transform: rotate(-9deg) scale(1.04); }
+  100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+}
+
+.fx-float {
+  position: fixed; z-index: 80; transform: translate(-50%, 0);
+  padding: 2px var(--sp-2); border-radius: 99px;
+  background: var(--sheet); color: var(--ink); box-shadow: var(--shadow-pop);
+  font-family: var(--font-form); font-size: var(--fs-small); font-weight: 700; white-space: nowrap;
+  pointer-events: none;
+  animation: fx-float var(--dur-celebrate) var(--ease-out) forwards;
+}
+.fx-float.is-good { color: var(--secondary); }
+.fx-float.is-forget { color: var(--danger); }
+.fx-float.is-hard { color: var(--warning-text); }
+.fx-float.is-easy { color: var(--primary); }
+@keyframes fx-float { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.9); } 20% { opacity: 1; transform: translate(-50%, -8px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -44px); } }
+
+.fx-correct { animation: fx-pop var(--dur-3) var(--ease-out); }
+.fx-check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: fx-draw var(--dur-3) var(--ease-out) forwards; }
+@keyframes fx-draw { to { stroke-dashoffset: 0; } }
+
+.meter > span { transition: transform var(--dur-celebrate) var(--ease-out); }
+
+.sound-toggle[aria-pressed="false"] .sound-on, .sound-toggle[aria-pressed="true"] .sound-off { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-ripple, .fx-turn, .flash .back, .fx-pop, .fx-shake, .rates .rate, .fx-stamp, .fx-float, .fx-correct, .fx-check path,
+  .app-main > .page > .sheet, .app-main > .page > aside, .app-main > .page > .side-col, .choice-card:has(input:checked) .bubble { animation: none; }
+  .fx-check path { stroke-dashoffset: 0; }
+  .btn:active:not(:disabled), .rate:active:not(:disabled) { transform: none; }
+}

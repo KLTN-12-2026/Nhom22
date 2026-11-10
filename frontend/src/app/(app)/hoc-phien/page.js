@@ -1,12 +1,14 @@
 'use client';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { SoundToggle } from '@/components/ui/SoundToggle';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { fx, RATE_SOUND, nextReviewText } from '@/lib/fx';
 
 const ALWAYS_DUE = ['MOI', 'ON_TAP'];
 const currentTime = () => Date.now();
@@ -29,6 +31,7 @@ function FlashcardSessionContent() {
   const id = searchParams.get('id');
   const flipButton = useRef(null);
   const rateButtons = useRef([]);
+  const faceRef = useRef(null);
   const cardStartTimeRef = useRef(0);
   const finishStarted = useRef(false);
 
@@ -87,6 +90,7 @@ function FlashcardSessionContent() {
 
   useEffect(() => {
     cardStartTimeRef.current = currentTime();
+    if (currentKey) fx.turn(faceRef.current);
   }, [currentKey]);
 
   useEffect(() => {
@@ -114,6 +118,8 @@ function FlashcardSessionContent() {
   }
 
   const handleFlip = () => {
+    fx.play('flip');
+    fx.turn(faceRef.current);
     setFlippedKey(currentKey);
   };
 
@@ -131,6 +137,9 @@ function FlashcardSessionContent() {
         expectedVersion: item.tienDo?.version ?? 0,
         thoiGianTraLoiMs
       });
+      const rateIndex = ratings.findIndex(([value]) => value === rate);
+      fx.play(RATE_SOUND[rate]);
+      fx.floatText(rateButtons.current[rateIndex], res.laiTrongPhien ? 'Gặp lại trong phiên này' : nextReviewText(res.tienDo?.hanOnAt), RATE_SOUND[rate]);
       const next = queue.map(q => (q === item ? { ...q, trangThai: 'DA_TRA_LOI', tienDo: res.tienDo ?? q.tienDo } : q));
       if (res.laiTrongPhien) {
         next.push({
@@ -182,6 +191,7 @@ function FlashcardSessionContent() {
           <p className="bar-sub">{englishFront ? 'Anh → Việt' : 'Việt → Anh'}<span>{doneCount} / {realItems.length} thẻ</span></p>
         </div>
         <span className="stamp" role="status">{reviewMutation.isPending ? 'Đang lưu…' : finishing ? 'Đang kết thúc…' : 'Đã lưu'}</span>
+        <SoundToggle />
         <ThemeToggle className="theme-session" />
       </header>
       <div className="meter is-progress session-meter" role="progressbar" aria-label="Tiến độ phiên học" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progressPercent)}>
@@ -199,7 +209,7 @@ function FlashcardSessionContent() {
               <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
                 <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
               </div>
-              <div className="face">
+              <div className="face" ref={faceRef}>
                 <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
                 <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
                 {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
