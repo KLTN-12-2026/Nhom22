@@ -840,7 +840,8 @@ Chưa có seed cho tiến độ thẻ. Từ B2.4, `tien_do_the` được tạo q
 | B3.9 (gọn) | S9 | Tổng kết tuần, bản đồ làm chủ dạng bảng | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` |
 | B3.10 (gọn) | S9 | Xóa tài khoản. **Cắt** `GET /admin/deletion-requests` | `POST /me/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
 | B3.11 (gọn mạnh) | S9 | Hạn mức và lượt dùng/lỗi dịch vụ. **Cắt** `GET /admin/statistics`, `GET /admin/jobs`, UI46, tab "Tác vụ nền" UI53 | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
-| B3.12b | S9 | Lịch sử giao dịch, biên nhận, hết hạn gói, áp quyền lợi theo gói (TC-22) | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`, `GET /admin/payments` | F3.12 | UI56 `/thanh-toan-lich-su`, tab "Giao dịch" UI51 |
+| B3.12b | S9 | Lịch sử giao dịch, biên nhận, nhắc hết hạn 7 ngày, khóa khi hết hạn (402), áp quyền lợi theo gói (TC-22, TC-23) | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`, `GET /me/subscription` (`soNgayConLai`) | F3.12 | UI56 `/thanh-toan-lich-su`, banner `AppShell`, UI44 |
+| B3.12c | S9 | Quản lý thanh toán, doanh thu tháng/quý/năm, công cụ demo sửa hạn (góp ý GVHD 10/11/2026, TC-23, TC-24) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
 Dự kiến liên quan quản trị: thao tác của B3.8 (ẩn bộ người học) và xử lý báo cáo có thể thêm mã vào `nhat_ky_quan_tri` (CHECK ở V14 sẽ được mở rộng bằng migration mới). Tác vụ dài AI/phát âm trả 202 kèm ID và endpoint trạng thái (TK §13.1).
 

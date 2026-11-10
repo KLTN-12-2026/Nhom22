@@ -36,8 +36,8 @@
 | **GĐ0** — Khởi tạo & nền tảng | 28/09–11/10 | Project chạy trong Docker, lỗi/bảo mật/migration nền | B0.1–B0.8 |
 | **Đợt 1** — Tài khoản & nội dung | 12/10–25/10 | FR-01…05: tài khoản, hồ sơ, tệp, bộ/thẻ, thư viện, CSV | B1.1–B1.12 |
 | **Đợt 2** — Học & luyện | 26/10–08/11 | FR-06, 07, 11, 13: SRS, phiên học, bài luyện, sổ tay, thống kê, quản trị, bảng điều khiển | B2.1–B2.12 |
-| **Đợt 3** — AI & mở rộng | 09/11–29/11 | FR-08, 09, 10, 11, 12, 13, 14, 15: AI (gồm ảnh AI), phát âm, gợi ý, thưởng, nhắc, kiểm duyệt, xóa dữ liệu, vận hành gọn, gói & thanh toán | B3.1–B3.12b |
-| **GĐ4** — Kiểm thử & ổn định | 30/11–06/12 | TC-01…22, hiệu năng, sao lưu/khôi phục | B4.1–B4.5 |
+| **Đợt 3** — AI & mở rộng | 09/11–29/11 | FR-08, 09, 10, 11, 12, 13, 14, 15: AI (gồm ảnh AI), phát âm, gợi ý, thưởng, nhắc, kiểm duyệt, xóa dữ liệu, vận hành gọn, gói bắt buộc & thanh toán, doanh thu | B3.1–B3.12c |
+| **GĐ4** — Kiểm thử & ổn định | 30/11–06/12 | TC-01…24, hiệu năng, sao lưu/khôi phục | B4.1–B4.5 |
 | **GĐ5** — Triển khai & bàn giao | 07/12–14/12 | Compose production, dữ liệu demo, OpenAPI, tài liệu | B5.1–B5.4 |
 
 Sau bước cuối mỗi giai đoạn: chạy `/fe-report <GĐ>` để bàn giao cho FE.
@@ -336,7 +336,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Mở rộng (đề xuất 28/10/2026, đã code ở B2.12 ngày 31/10/2026):** B2.12 thêm `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian` và đổi `daHocHomNay.soPhut` từ ước tính sang thời gian thật; các field hiện có giữ nguyên tên.
 
 ### [x] B2.3 Tạo phiên học — FR-06
-- `V9__phien_hoc_bo_the.sql` **đã có** (commit cùng B2.2): thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK; B2.3 không tạo lại và không sửa V9. Thứ tự migration: V9 (đã có, thuộc B2.3), V10 `phien_hoc.che_do` (B2.6, đã có), V11 practice (B2.7), V12 admin (B2.11), V13 jobs_ai (B3.1), V14 speaking (B3.4), V15 engagement (B3.6), V16 notification_report (B3.7), V17 privacy (B3.10). Số thực tế luôn lấy số kế tiếp chưa dùng khi tới bước đó.
+- `V9__phien_hoc_bo_the.sql` **đã có** (commit cùng B2.2): thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK; B2.3 không tạo lại và không sửa V9. Thứ tự migration: V9 (đã có, thuộc B2.3), V10 `phien_hoc.che_do` (B2.6, đã có), V11 practice (B2.7), V12 `nhac_hoc_default_false` (RS-057), V13 `so_tay_an_tu` (B2.9), V14 admin (B2.11), V15 `jobs_ai` (B3.1, 11/11/2026); các bước sau (B3.4, B3.6, B3.7, B3.10, B3.12a) lấy số kế tiếp chưa dùng khi tới bước đó.
 - API: `POST /learning/sessions` body `{boTheId?, chieuHoc, quyThoiGian}` (`EN_VI`/`VI_EN`, 5/10/20 phút), `GET /learning/sessions/{id}` (chỉ chủ phiên; người khác → 404). Không có `cheDo` ở B2.3; đã thêm ở B2.6.
 - Hàng đợi tối đa `quyThoiGian×60/20` thẻ (20 giây/lượt là ước tính): bước học lại đến hạn → ôn đến hạn (`han_on_at <= now`) → thẻ mới thật trong hạn mức → thẻ đã học chiều kia (không tốn hạn mức). Bỏ thẻ tạm ngưng/đã xóa/bộ không thuộc người dùng. Lưu vào `phien_hoc_the`; `mui_gio` = múi giờ người dùng lúc tạo.
 - Hàng đợi rỗng → 422 `BUSINESS_RULE`, không lưu phiên. B2.3 không trừ hạn mức (B2.4 làm). Response: `hetGioAt` (tính ra, không lưu), `hangDoi[].trangThai` (`CHUA_TRA_LOI`/`DA_TRA_LOI`), `hangDoi[].the` (media là ID tệp `anhId`/`amTuId`/`amCauId`), `hangDoi[].tienDo` (kèm `version`). Chưa có `duKien`.
@@ -434,12 +434,14 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ## Đợt 3 — AI, phát âm, động lực, vận hành & thanh toán (09/11–29/11) · FR-08, 09, 10, 12, 14, 15
 
-### [ ] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09
+### [x] B3.1 Tác vụ nền & hạn mức dịch vụ — FR-09, TC-12 (xong 11/11/2026)
 - `V15__jobs_ai.sql` (V12 đã dùng cho RS-057, V13 cho sổ tay B2.9, V14 cho admin B2.11; số thực tế lấy số kế tiếp chưa dùng): `tac_vu_nen`, `han_muc_dich_vu`, `su_dung_dich_vu`, `yeu_cau_ai`, `ban_nhap_the_ai`.
 - `JobService.enqueue(type, payload)`; `JobWorker` `@Scheduled` lấy việc bằng `SELECT … FOR UPDATE SKIP LOCKED`, retry hữu hạn có backoff, trạng thái `CHO/DANG_CHAY/XONG/LOI/KHONG_XAC_DINH`.
 - `QuotaService`: giữ chỗ hạn mức **nguyên tử** (UPDATE có điều kiện) trước khi gọi API, hoàn trả khi lỗi xác định; hết hạn mức → 429.
-- **Giữ** (S7). Hạn mức theo user/ngày từ một bảng cấu hình phẳng; không tách hạn mức theo nhà cung cấp. Ngoại lệ (bổ sung 07/11/2026): ảnh AI (X-04) có hạn mức riêng vì chi phí cao hơn văn bản; mức hạn mức AI/ảnh đọc theo gói đang hiệu lực (`EntitlementService`, B3.12a). Trước khi B3.12a xong, mọi người dùng coi như gói `MIEN_PHI`.
+- **Giữ** (S7). Hạn mức theo user/ngày từ một bảng cấu hình phẳng; không tách hạn mức theo nhà cung cấp. Ngoại lệ (bổ sung 07/11/2026): ảnh AI (X-04) có hạn mức riêng vì chi phí cao hơn văn bản; mức hạn mức AI/ảnh đọc theo gói đang hiệu lực (`EntitlementService`, B3.12a). Trước khi B3.12a xong, mọi người dùng coi như gói `PRO` (`ProGoiResolver`). Sửa 10/11/2026 (FR-15 bắt buộc gói): không có gói `MIEN_PHI`; V15 seed `han_muc_dich_vu` cho `PRO` (AI 20, ảnh 10) và `PREMIUM` (AI 100, ảnh 30) theo TK §6.9, cột `goi_ma` không có giá trị mặc định (đã sửa V15 11/11/2026, V15 chưa commit).
 - Mốc 12/11/2026: chốt nhà cung cấp AI; chưa có khóa thì demo bằng `FakeAiClient` có nhãn, vẫn giữ 1 lượt gọi thật cho nghiệm thu.
+- **Quyết định (11/11/2026):** `han_muc_dich_vu(goi_ma, loai, so_luot_ngay)` là nguồn hạn mức duy nhất, hai nhóm `AI` (tạo thẻ, giải thích, sửa câu) và `ANH`; `goi_dich_vu` (B3.12a) không có cột `han_muc_*`; `QuotaService` hỏi `GoiDichVuResolver` lấy `goi_ma`. "Ngày" hạn mức theo `app.quota.zone` (mặc định `Asia/Ho_Chi_Minh`), không theo `nguoi_dung.mui_gio`, và `GiuCho(ngay, loai)` được lưu cùng yêu cầu để xác nhận/hoàn trả đúng ngày. Job `DANG_CHAY` quá lease (10 phút) → `KHONG_XAC_DINH` (`LEASE_HET_HAN`), không tự chạy lại, không hoàn lượt; `KHONG_XAC_DINH` tính là đã dùng; `LOI` hoàn lượt. Hạn mức cho phát âm/bài luyện AI chưa có: thêm giá trị `loai` bằng migration của bước cần.
+- **Đã làm (11/11/2026):** `V15__jobs_ai.sql` (5 bảng; `yeu_cau_ai`, `ban_nhap_the_ai` chỉ tạo bảng, entity thuộc B3.2); `common/job`: `TacVuNen`, `TacVuNenRepository` (SKIP LOCKED), `JobService.enqueue` (`Propagation.MANDATORY`), `JobWorker` (3 pha transaction, retry/backoff 5s·2^n trần 5 phút, thu hồi lease), `JobHandler.khiKetThuc`, `JobException`, `JobConfig` (`@EnableScheduling`, tách khỏi `FileCleanupConfig`); `common/quota`: `HanMucDichVu`, `SuDungDichVu`, `SuDungDichVuRepository` (UPDATE có điều kiện), `QuotaService` (giữ chỗ/xác nhận/hoàn trả, 429 kèm `Retry-After`), `GoiDichVuResolver` + `ProGoiResolver`; cấu hình `app.jobs.*`, `app.quota.zone`; `app.jobs.enabled=false` ở `application-test.yaml`. Test mới: `FR09JobWorkerTest` (5), `FR09QuotaTest` (5), `MutableClock`. Không endpoint, không mockup/Postman. **Kiểm chứng (11/11/2026, người dùng báo "không lỗi", không có tổng số test):** compile, khởi động app và `mvnw test -Dtest='FR09JobWorkerTest,FR09QuotaTest'` sau khi đổi sang gói `PRO`/`PREMIUM`. **Chưa kiểm chứng:** bộ test đầy đủ (`mvnw verify`), chạy với nhà cung cấp AI thật (thuộc B3.2). Flow: [B3.1](../docs/luong-backend/B3.1-tac-vu-nen-va-han-muc.md).
 
 ### [ ] B3.2 Adapter AI & tạo thẻ từ đoạn văn — FR-09, TC-12, TC-13
 - Interface `AiClient` + `OpenAiClient` (gọi bằng `RestClient`, timeout) + `FakeAiClient` (profile dev/test, dùng cho demo "AI lỗi").
@@ -452,7 +454,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `POST /ai/context-explanations`, `POST /ai/sentence-feedback` (giải thích tiếng Việt), `GET /ai/history` (danh sách), `GET /me/service-quota`.
 - AI lỗi/timeout **không chặn** học SRS và bài cố định.
 - **Gọn** (S8). `context-explanations` nhận từ (+ ngữ cảnh tùy chọn) và trả IPA, nghĩa, ví dụ, bản dịch, mẹo nhớ; dùng lại cho **R-02** tự điền thẻ trong trình sửa thẻ và **X-03** "Hoàn thiện với AI" trên thẻ nháp UI29 (người học sửa rồi mới lưu; AI lỗi vẫn lưu tay được).
-- **X-04 (bổ sung 07/11/2026):** `POST /ai/card-images {tu, nghia}` → 202 + `requestId`; job gọi `ImageClient` (thật) / `FakeImageClient` (dev, test, không có khóa), lưu PNG qua `FileService` loại `ANH`, kết quả `tepId` đọc qua `GET /ai/requests/{id}`. Prompt kèm nghĩa tiếng Việt; hạn mức ảnh riêng; lỗi không chặn lưu thẻ. **Giữ** (chốt 07/11/2026): nhà cung cấp Imagen 3 (Google, qua Gemini API/Vertex AI) theo bản demo; `FakeImageClient` dùng cho test và khi chưa có khóa. Hạn mức ảnh theo gói: Miễn phí 0, Pro 10, Premium 30 ảnh/ngày.
+- **X-04 (bổ sung 07/11/2026):** `POST /ai/card-images {tu, nghia}` → 202 + `requestId`; job gọi `ImageClient` (thật) / `FakeImageClient` (dev, test, không có khóa), lưu PNG qua `FileService` loại `ANH`, kết quả `tepId` đọc qua `GET /ai/requests/{id}`. Prompt kèm nghĩa tiếng Việt; hạn mức ảnh riêng; lỗi không chặn lưu thẻ. **Giữ** (chốt 07/11/2026): nhà cung cấp Imagen 3 (Google, qua Gemini API/Vertex AI) theo bản demo; `FakeImageClient` dùng cho test và khi chưa có khóa. Hạn mức ảnh theo gói: Pro 10, Premium 30 ảnh/ngày (không còn gói Miễn phí, 10/11/2026).
 - **Hoãn:** `POST /ai/exercise-drafts` (chỉ làm khi dư thời gian sau 29/11).
 
 ### [ ] B3.4a Âm thanh TTS — FR-10, TC-14
@@ -480,6 +482,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - `V17__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
 - API: `GET /notifications`, `PATCH /notifications/{id}`.
 - Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User qua email và trong ứng dụng, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
+- Bảng `thong_bao` có `ngay_dia_phuong` và unique `(nguoi_dung_id, loai, ngay_dia_phuong)`; loại gồm nhắc học và `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN` (B3.12b dùng, TK §6.9).
 - **Gọn** (S8). **Cắt:** `POST /admin/announcements`. **Hoãn:** web push + PWA (mục hoãn ưu tiên 1).
 
 ### [ ] B3.8 Báo cáo nội dung & kiểm duyệt — FR-13
@@ -498,31 +501,43 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ### [ ] B3.11 Quản trị vận hành — FR-13
 - API: `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi).
-- **Gọn mạnh** (S9). **Cắt:** `GET /admin/statistics`, `GET /admin/jobs`, thời gian phản hồi và chi phí. Mốc 22/11/2026: S8 chậm thì chỉ còn `GET /admin/service-usage`.
+- **Gọn mạnh** (S9). **Cắt:** `GET /admin/statistics` (thống kê tổng hợp chung), `GET /admin/jobs`, thời gian phản hồi và chi phí. Thống kê doanh thu **không cắt**: làm ở B3.12c (`GET /admin/revenue`, góp ý GVHD 10/11/2026). Mốc 22/11/2026: S8 chậm thì chỉ còn `GET /admin/service-usage`.
 
 ### [ ] B3.12a Gói dịch vụ & thanh toán VNPay — FR-15, TC-21 (bổ sung 07/11/2026)
 - Thiết kế: TK §6.9, §12.2 (`goi_dich_vu`, `dang_ky_goi`, `giao_dich_thanh_toan`), §13.2. Nguồn: UI55, UI56 nhóm FE làm ngày 07/11/2026 (commit `ff3c54e`).
-- `V<n>__billing.sql` (số kế tiếp chưa dùng): 3 bảng + seed 3 gói `MIEN_PHI`/`PRO`/`PREMIUM` theo bảng giá TK §6.9.
+- `V<n>__billing.sql` (số kế tiếp chưa dùng, hiện là V16): 3 bảng + seed 2 gói `PRO`/`PREMIUM` theo bảng giá TK §6.9 (không có gói miễn phí, sửa 10/11/2026).
 - API: `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts {goi, chuKy}` → `{maDon, paymentUrl}`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return` (chuyển về FE `/thanh-toan-ket-qua?maDon=`), `GET /billing/transactions/{maDon}`.
 - `PaymentGateway` + `VnpayGateway` (ký/kiểm HMAC-SHA512, `RestClient` không cần) + `FakePaymentGateway` (test, demo không mạng). Số tiền lấy từ `goi_dich_vu`; xác nhận IPN/return dùng một hàm, khóa hàng đơn, chuyển trạng thái một lần; kiểm chữ ký, số tiền, chủ đơn. Không nhận, không lưu dữ liệu thẻ.
-- `EntitlementService.current(userId)` → gói hiệu lực (mặc định `MIEN_PHI`); `QuotaService` (B3.1) đọc hạn mức AI/ảnh từ đây.
+- `EntitlementService.current(userId)` → `Optional` gói hiệu lực (`HIEU_LUC` và `het_han_at > now`); B3.12a thay `ProGoiResolver` (B3.1) bằng bản đọc `EntitlementService` để `QuotaService` lấy `goi_ma`; hạn mức AI/ảnh đọc từ `han_muc_dich_vu(goi_ma, loai)` (V15, đã seed `PRO`/`PREMIUM`), `goi_dich_vu` không có cột `han_muc_*`.
+- **Bắt buộc có gói (10/11/2026):** `SubscriptionGuard` (interceptor) trả 402 `SUBSCRIPTION_REQUIRED` `{lyDo, goiGanNhat, hetHanAt}` cho API của User khi không có gói hiệu lực; danh sách được phép theo TK §6.9 (auth, public, xem thư viện, `/me` và cài đặt, `/billing/**`, `/notifications/**`, xuất CSV, yêu cầu xóa dữ liệu); Admin bỏ qua. Thêm `ErrorCode.SUBSCRIPTION_REQUIRED` → 402. Thanh toán xong: chưa có gói/đã hết hạn thì bắt đầu ngay, cùng gói thì cộng dồn.
+- Dữ liệu dev/test: tài khoản User seed có sẵn `dang_ky_goi` `PRO` còn hạn để các test cũ (B1–B2) không bị 402; test riêng cho tài khoản chưa có gói.
 - Cấu hình: `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `VNPAY_PAY_URL`, `VNPAY_RETURN_URL` trong `.env` (không commit khóa thật).
-- Test: TC-21 (chữ ký sai, sai số tiền, IPN lặp, đơn người khác, đơn hết hạn 15 phút).
+- Test: TC-21 (chữ ký sai, sai số tiền, IPN lặp, đơn người khác, đơn hết hạn 15 phút); TC-22 phần chưa mua gói → 402.
 - **Giữ** (S8). Mốc 12/11/2026: đăng ký tài khoản sandbox VNPay; chưa có thì demo bằng `FakePaymentGateway` gắn nhãn "Mô phỏng".
 
-### [ ] B3.12b Lịch sử giao dịch, hết hạn gói, áp quyền lợi — FR-15, TC-22
+### [ ] B3.12b Lịch sử giao dịch, nhắc và hết hạn gói, áp quyền lợi — FR-15, TC-22, TC-23
 - API: `GET /billing/transactions` (phân trang, của mình), `GET /billing/transactions/{maDon}/receipt` (biên nhận HTML in được, không phải hóa đơn VAT), `GET /admin/payments` (Admin, chỉ đọc, lọc trạng thái/ngày).
-- Job hằng ngày: `dang_ky_goi` quá `het_han_at` → `HET_HAN`, người dùng về `MIEN_PHI`; nhắc trước 3 ngày qua B3.7. Đơn `CHO_THANH_TOAN` quá 15 phút → `HET_HAN`.
+- `SubscriptionExpiryJob` mỗi 15 phút (cùng bộ lập lịch B3.7): còn `0 ≤ N ≤ 7` ngày địa phương và sau 08:00 → một `GOI_SAP_HET_HAN`/ngày (unique `(nguoi_dung_id, loai, ngay_dia_phuong)`); quá `het_han_at` → `HET_HAN` (UPDATE có điều kiện) + một `GOI_DA_HET_HAN`; tài khoản bị khóa bởi `SubscriptionGuard`, không mất dữ liệu. Trong ứng dụng luôn gửi, email theo `nhan_email`. Đơn `CHO_THANH_TOAN` quá 15 phút → `HET_HAN`.
+- `GET /me/subscription` thêm `soNgayConLai` (tính lúc gọi) cho banner.
 - Áp quyền lợi ở máy chủ: giới hạn thẻ khi tạo thẻ (B1.9), nhập CSV (B1.12), sao chép bộ (B1.11), commit thẻ AI (B3.2); cờ `phat_am` ở B3.4b; bộ mẫu `cao_cap` (thêm cột ở bộ mẫu, Admin bật trong UI49) chỉ gói Premium sao chép được. Vượt → 422 `BUSINESS_RULE` kèm `goiCanNangCap`. Xuất CSV và xóa dữ liệu không phụ thuộc gói.
-- Test: TC-22.
-- **Gọn** (S9). Trễ thì cắt theo thứ tự: biên nhận HTML → `GET /admin/payments`.
+- Test: TC-22, TC-23 (đồng hồ cố định: còn 8/7/3/0 ngày, chạy job nhiều lần trong ngày, gia hạn trong tuần cuối).
+- **Gọn** (S9). Trễ thì cắt theo thứ tự: biên nhận HTML. Nhắc hết hạn và khóa khi hết hạn **không cắt** (góp ý GVHD).
+
+### [ ] B3.12c Quản lý thanh toán & thống kê doanh thu (Admin) — FR-15, TC-23, TC-24 (góp ý GVHD 10/11/2026)
+- Thiết kế: TK §6.9 mục "Quản lý thanh toán" và "Thống kê doanh thu".
+- API: `GET /admin/payments` (lọc trạng thái, gói, ngày, email; phân trang), `GET /admin/payments/{maDon}`, `GET /admin/subscriptions` (lọc trạng thái, gói, email, `sapHetHan=7`), `GET /admin/plans`, `PUT /admin/plans/{ma}` (`version`, 409), `GET /admin/revenue?ky=THANG|QUY|NAM&nam=` (kỳ `NAM`: `tuNam`, `denNam`).
+- Công cụ demo (bật bằng `app.billing.demo-tools=true`): `PATCH /admin/subscriptions/{id}/expiry {hetHanAt, lyDo}`, `POST /admin/subscriptions/expiry-check`; lý do bắt buộc, ghi `nhat_ky_quan_tri` (thêm `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN`; đối tượng `GOI_DICH_VU`, `DANG_KY_GOI`; cần migration nới ràng buộc nếu cột là ENUM/CHECK).
+- Doanh thu: chỉ `THANH_CONG`, gom theo `hoan_tat_at` đổi sang `Asia/Ho_Chi_Minh` (`app.billing.business-zone`), kỳ trống = 0, tiền BIGINT VND; kèm theo gói, số giao dịch, so với kỳ trước, số gói hiệu lực, số sắp hết hạn 7 ngày, tỷ lệ thành công.
+- Seed giao dịch demo `DEMO-…` trải 2025–2026, chỉ profile `demo`.
+- Test: TC-23 (sửa hạn + chạy ngay), TC-24 (ranh giới 31/03 23:30 giờ VN, tổng tháng = quý = năm).
+- **Giữ** (S9). Trễ thì cắt theo thứ tự: cấu hình gói `PUT /admin/plans` → so với kỳ trước.
 - **Cuối Đợt 3 →** `/fe-report DOT3`.
 
 ---
 
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
 
-### [ ] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-22
+### [ ] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24
 - Mỗi TC ở TK §19 có ít nhất một test tự động (trừ TC-18 thủ công, TC-19/20 có biên bản). Bảng truy vết `FR ↔ API ↔ TC` trong `docs/`.
 
 ### [ ] B4.2 Rà soát bảo mật

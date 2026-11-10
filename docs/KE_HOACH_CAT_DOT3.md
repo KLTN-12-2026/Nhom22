@@ -41,8 +41,8 @@ Ký hiệu: **Giữ** = làm như roadmap · **Gọn** = làm lõi, bỏ phần 
 | B3.8 + F3.8 Báo cáo & kiểm duyệt | **Gọn** | `POST /reports` chống trùng, hàng đợi Admin, xử lý **giữ / ẩn** + lý do + nhật ký | Trạng thái "yêu cầu sửa", "từ chối" kèm thông báo người liên quan | — |
 | B3.9 + F3.9 Tổng kết tuần & bản đồ | **Gọn** | `weekly-summary` đủ; UI36 = bảng **bộ thẻ × kỹ năng** từ `/statistics/skills`, có "Chưa đủ dữ liệu" | Bản đồ từng từ dạng lưới màu, bấm từ xem lịch sử | — |
 | B3.10 + F3.10 Xóa tài khoản | **Gọn** | `POST /me/deletion-requests`, job xóa dữ liệu riêng + tệp S3 + phiên Redis, ẩn danh tác giả bộ đã chia sẻ; bản sao trước RS-059: **gỡ media khỏi bản sao** | `GET /admin/deletion-requests` → **Cắt** (xem qua nhật ký) | TC-16 |
-| B3.12a/b + F3.12 Gói dịch vụ & thanh toán (bổ sung 07/11) | **Giữ lõi** | 3 gói, VNPay sandbox, IPN/return một lần, lịch sử, biên nhận HTML, hết hạn về Miễn phí, áp hạn mức theo gói | Lưu thẻ, tự gia hạn, MoMo/ZaloPay, chuyển khoản thủ công, đổi gói giữa kỳ, hoàn tiền, hóa đơn VAT → **Cắt** | TC-21, TC-22 |
-| B3.11 + F3.11 Quản trị vận hành | **Gọn mạnh** | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi), UI51 | `GET /admin/statistics`, `GET /admin/jobs`, chi phí, UI46 tổng quan, tab UI53 "Tác vụ nền" → **Cắt** | Demo bước 9 |
+| B3.12a/b/c + F3.12/13 Gói dịch vụ & thanh toán (bổ sung 07/11, sửa 10/11) | **Giữ lõi** | 2 gói trả phí bắt buộc (không miễn phí, không dùng thử), VNPay sandbox, IPN/return một lần, lịch sử, biên nhận HTML, nhắc hết hạn 7 ngày mỗi ngày một lần, hết hạn thì khóa (giữ dữ liệu), áp hạn mức theo gói, Admin quản lý thanh toán + doanh thu tháng/quý/năm | Lưu thẻ, tự gia hạn, MoMo/ZaloPay, chuyển khoản thủ công, đổi gói giữa kỳ, hoàn tiền, hóa đơn VAT → **Cắt** | TC-21…TC-24 |
+| B3.11 + F3.11 Quản trị vận hành | **Gọn mạnh** | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` (lượt, lỗi), UI51 | `GET /admin/statistics` (tổng hợp chung), `GET /admin/jobs`, chi phí, UI46 tổng quan, tab UI53 "Tác vụ nền" → **Cắt**; doanh thu không cắt (UI58, B3.12c) | Demo bước 9 |
 
 ### 1.3. GĐ4–GĐ5
 
@@ -73,7 +73,7 @@ Ký hiệu: **Giữ** = làm như roadmap · **Gọn** = làm lõi, bỏ phần 
 |---|---|---|---|
 | **S7** 09–15/11 | B3.1, B3.2 (+ X-01, X-02), B3.4a | F2.2 (tồn), F3.1 (+ X-01, X-02, X-05, X-06) | Chốt nhà cung cấp AI + Speech + sinh ảnh **trước 12/11**; R-01 biên soạn song song |
 | **S8** 16–22/11 | B3.3 gọn (+ X-04), B3.5, B3.6 gọn, B3.7 gọn, B3.12a | F3.2 (+ X-03, X-04), F3.3, F3.4, F3.6, F3.7, F3.12 (UI55, UI57) | R-02, R-03, R-04 (phần gợi ý) |
-| **S9** 23–29/11 | B3.4b, B3.8 gọn, B3.9 gọn, B3.10 gọn, B3.11 gọn, B3.12b | F3.5, F3.8, F3.9, F3.10, F3.11, F3.12 (UI56) | R-04 (phần tổng kết tuần); 28–29/11 demo Đợt 3 + `/fe-report DOT3` |
+| **S9** 23–29/11 | B3.4b, B3.8 gọn, B3.9 gọn, B3.10 gọn, B3.11 gọn, B3.12b, B3.12c | F3.5, F3.8, F3.9, F3.10, F3.11, F3.12 (UI56), F3.13 (UI58, UI59) | R-04 (phần tổng kết tuần); 28–29/11 demo Đợt 3 + `/fe-report DOT3` |
 | **S10** 30/11–06/12 | B4.1–B4.5 (theo mục 1.3) | F4.1–F4.4 | Không thêm tính năng mới |
 | **S11** 07–14/12 | B5.1–B5.4 | F5.1–F5.4 | Đóng băng mã từ 11/12; chỉ sửa lỗi chặn demo |
 
@@ -83,7 +83,7 @@ Ký hiệu: **Giữ** = làm như roadmap · **Gọn** = làm lõi, bỏ phần 
 |---|---|---|
 | 12/11 | Có khóa API AI dùng được (ngân sách, hạn mức)? Có khóa Imagen 3 cho ảnh AI? Có tài khoản sandbox VNPay? | Demo bằng `FakeAiClient` có nhãn; vẫn giữ adapter thật + 1 lượt gọi thật cho nghiệm thu. Chưa có khóa ảnh → X-04 dùng `FakeImageClient` (nhãn "Mô phỏng"). Chưa có sandbox VNPay → `FakePaymentGateway` (nhãn "Mô phỏng") |
 | 16/11 | Có Azure Speech (gói miễn phí) chạy được pronunciation assessment? | B3.4b dùng Fake gắn nhãn "Mô phỏng" (TK §20.1); TTS vẫn dùng thật |
-| 22/11 | S8 xong đủ 5 bước BE (gồm B3.12a)? | Cắt B3.11 còn mỗi `GET /admin/service-usage`; UI36 chỉ còn bảng kỹ năng có sẵn ở UI35; B3.12b bỏ biên nhận và `GET /admin/payments`. X-04 và thanh toán **không** cắt |
+| 22/11 | S8 xong đủ 5 bước BE (gồm B3.12a)? | Cắt B3.11 còn mỗi `GET /admin/service-usage`; UI36 chỉ còn bảng kỹ năng có sẵn ở UI35; B3.12b bỏ biên nhận; B3.12c bỏ `PUT /admin/plans`. X-04, thanh toán, nhắc/khóa hết hạn và doanh thu **không** cắt |
 | 29/11 | S9 xong và còn dư ≥ 1 ngày? | Không làm mục Hoãn nào |
 
 **Hoãn, chỉ làm khi dư thời gian sau 29/11 (theo thứ tự):** web push + PWA cho nhắc học → `POST /ai/exercise-drafts` → kế hoạch theo ngày thi TOEIC.
@@ -158,10 +158,20 @@ Quyết định của nhóm: dùng thanh toán cho toàn hệ thống như giao 
 
 | Hạng mục | Quyết định | Lý do |
 |---|---|---|
-| Gói | `MIEN_PHI` / `PRO` 299.000 đ / `PREMIUM` 999.000 đ mỗi tháng (năm = 10 tháng), lưu ở bảng `goi_dich_vu` | Giữ giá của UI55; đổi giá không sửa mã |
+| Gói | `PRO` 299.000 đ / `PREMIUM` 999.000 đ mỗi tháng (năm = 10 tháng), lưu ở bảng `goi_dich_vu`; **không có gói miễn phí** (sửa 10/11/2026) | Giữ giá của UI55; đổi giá không sửa mã |
 | Cổng | VNPay sandbox (thẻ nội địa, VISA/Mastercard, VNPAY-QR) | Một cổng phủ đủ "thẻ" và "chuyển khoản/QR" của UI55; sandbox miễn phí |
 | Dữ liệu thẻ | Nhập trên trang VNPay, hệ thống không nhận/không lưu | Bỏ form thẻ và "thẻ đã lưu" ở UI55/UI56 |
-| Khác UI | Miễn phí có 3 lượt AI/ngày (UI ghi 0); xuất CSV miễn phí cho mọi gói (UI ghi chỉ gói trả phí); bỏ "Hỗ trợ ưu tiên" | Giữ chân người dùng (R-02); B1.12 đã giao và là quyền dữ liệu (FR-14); không có chức năng thật |
+| Khác UI | Bỏ thẻ gói Miễn phí; xuất CSV không phụ thuộc gói (UI ghi chỉ gói trả phí); bỏ "Hỗ trợ ưu tiên" | Góp ý GVHD 10/11/2026; B1.12 đã giao và là quyền dữ liệu (FR-14); không có chức năng thật |
 | Cắt | MoMo/ZaloPay, chuyển khoản thủ công, tự gia hạn, đổi gói giữa kỳ, hoàn tiền, hóa đơn VAT | Mỗi mục cần đối soát/hợp đồng riêng, không kịp S8–S9 |
+
+**Sửa theo góp ý GVHD (10/11/2026):**
+
+| Góp ý | Quyết định | Áp vào |
+|---|---|---|
+| Bắt buộc mua gói mới được dùng | Bỏ `MIEN_PHI`, không dùng thử; không có gói hiệu lực → 402 `SUBSCRIPTION_REQUIRED`, giữ dữ liệu; xuất CSV và xóa dữ liệu vẫn được | TK §1, §4.1, §5, §6.1, §6.9, §13; B3.12a; F3.12 |
+| Hết hạn / sắp hết hạn phải báo; nhắc trước 1 tuần, mỗi ngày 1 lần | `SubscriptionExpiryJob` 15 phút, một `GOI_SAP_HET_HAN`/ngày khi còn ≤ 7 ngày, `GOI_DA_HET_HAN` khi hết; banner theo `soNgayConLai` | TK §6.9, §12.2, TC-23; B3.7, B3.12b |
+| Demo chỉnh ngày hết hạn để xem thông báo | Công cụ Admin sửa `het_han_at` + chạy ngay tác vụ, bật bằng cờ, có lý do và nhật ký | TK §6.9, §20.2 9c; B3.12c; F3.13 |
+| Quản lý thanh toán | UI59: giao dịch, gói người dùng, cấu hình gói | TK §4.2, §6.9; B3.12c; F3.13 |
+| Thống kê doanh thu tháng/quý/năm | UI58 `GET /admin/revenue`, chỉ giao dịch thành công, giờ VN | TK §4.2, §6.9, TC-24; B3.12c; F3.13 |
 
 **Rủi ro:** S8 thêm một bước BE (B3.12a) → đã đổi mốc 22/11 (mục 4). IPN không tới máy cục bộ → `return` xác nhận cùng hàm; khi demo trên máy chủ mở IPN công khai. Hội đồng hỏi vì sao đề cương ghi "ngoài phạm vi: thanh toán" → TK §2.3 đã ghi lý do và ngày bổ sung; cần GVHD đồng ý trước 12/11.

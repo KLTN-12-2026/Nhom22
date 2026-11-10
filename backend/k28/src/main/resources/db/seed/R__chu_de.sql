@@ -16,6 +16,18 @@ VALUES ('Văn phòng & công sở', 'Công việc văn phòng, email, cuộc h�
        ('Giải trí & sự kiện', 'Phim ảnh, âm nhạc, thể thao, triển lãm, hội nghị và tổ chức sự kiện.'),
        ('Giao thông & đi lại', 'Phương tiện công cộng, lái xe, lịch trình, tắc đường và chỉ đường.'),
        ('Gia đình & đời sống', 'Thành viên gia đình, nhà cửa, việc nhà, thói quen và sinh hoạt hằng ngày.'),
-       ('Môi trường & thời tiết', 'Thời tiết, khí hậu, thiên nhiên, ô nhiễm và bảo vệ môi trường.')
+       ('Môi trường & thời tiết', 'Thời tiết, khí hậu, thiên nhiên, ô nhiễm và bảo vệ môi trường.'),
+       ('Thể thao & thể hình', 'Các môn thể thao, luật chơi, thi đấu, dụng cụ và tập luyện thể hình.'),
+       ('Ẩm thực & nấu ăn', 'Nguyên liệu, món ăn, cách chế biến, dụng cụ bếp và khẩu vị.'),
+       ('Thời trang & làm đẹp', 'Quần áo, phụ kiện, phong cách, mỹ phẩm và chăm sóc cá nhân.'),
+       ('Âm nhạc & nghệ thuật', 'Nhạc cụ, thể loại nhạc, hội họa, sân khấu và sáng tạo nghệ thuật.'),
+       ('Sở thích & thời gian rảnh', 'Đọc sách, chụp ảnh, trò chơi, làm vườn và các hoạt động thư giãn.'),
+       ('Cảm xúc & tính cách', 'Tâm trạng, cảm xúc, tính cách, thái độ và sức khỏe tinh thần.'),
+       ('Tình bạn & tình yêu', 'Bạn bè, hẹn hò, hôn nhân, mâu thuẫn và các mối quan hệ cá nhân.'),
+       ('Động vật & thiên nhiên', 'Vật nuôi, động vật hoang dã, cây cối, địa hình và cảnh quan.'),
+       ('Khoa học & vũ trụ', 'Vật lý, hóa học, sinh học, thí nghiệm, phát minh và không gian.'),
+       ('Lịch sử & văn hóa', 'Sự kiện lịch sử, phong tục, lễ hội, tôn giáo và di sản.'),
+       ('Tin tức & xã hội', 'Báo chí, chính trị, kinh tế, vấn đề xã hội và cộng đồng.'),
+       ('Mạng xã hội & Internet', 'Nền tảng trực tuyến, nội dung số, tương tác và an toàn trên mạng.')
 AS v
 ON DUPLICATE KEY UPDATE mo_ta = v.mo_ta;

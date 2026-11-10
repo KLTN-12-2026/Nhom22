@@ -12,6 +12,8 @@ spring:
 
 app:
   cookie-secure: false
+  jobs:
+    enabled: false
 
 springdoc:
   api-docs:
