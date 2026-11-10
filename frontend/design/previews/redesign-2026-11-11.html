@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VocabLearning — demo giao diện mới</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Gentium+Book+Plus:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --desk:#f3f1ea;--sheet:#fffdf8;--field:#ffffff;--sunk:#f7f5ee;
+  --ink:#22242a;--ink-2:#4a4e58;--ink-3:#6a6f7d;--line:#e6e2d6;--line-2:#d8d3c4;
+  --primary:#3549bb;--primary-fill:#3549bb;--primary-hover:#293b9f;--primary-tint:#eef0fa;--on-primary:#fff;
+  --accent:#f2b32b;--accent-hover:#e4a119;--accent-bg:#fcf1d6;--accent-text:#6b4a00;--on-accent:#24262c;
+  --secondary:#1e8a5a;--secondary-bg:#e3f2ea;--edit:#1762ad;--edit-bg:#e5f0ff;
+  --timing:#22242a;
+  --shadow:0 1px 2px rgba(21,22,26,.05),0 12px 32px -18px rgba(21,22,26,.22);
+  --focus:0 0 0 2px var(--sheet),0 0 0 4px var(--primary);
+  --font:"Archivo","Segoe UI",system-ui,sans-serif;--word:"Gentium Book Plus",Georgia,serif;
+  --r:14px;--r-sm:10px;--dur:200ms;--ease:cubic-bezier(.2,.7,.2,1);
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#171a20;--sheet:#20252d;--field:#272d37;--sunk:#1b1f26;
+  --ink:#f1f0eb;--ink-2:#c2c7d1;--ink-3:#9aa2b4;--line:#2f3641;--line-2:#3a424f;
+  --primary:#aab8ff;--primary-fill:#5262c9;--primary-hover:#4759c4;--primary-tint:#2a3150;--on-primary:#fff;
+  --accent:#edb439;--accent-hover:#dda228;--accent-bg:#3a3221;--accent-text:#f3cd79;--on-accent:#231e14;
+  --secondary:#73d5a3;--secondary-bg:#22382e;--edit:#8cc1ff;--edit-bg:#233a54;
+  --timing:#6c7588;
+  --shadow:0 1px 2px rgba(0,0,0,.2),0 16px 40px -20px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--desk);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:none;box-shadow:var(--focus)}
+svg{flex:none}
+
+.demo-bar{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:50;display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--ink);box-shadow:var(--shadow)}
+.demo-bar button{border:0;background:transparent;color:var(--sheet);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
+.demo-bar button[aria-pressed="true"]{background:var(--sheet);color:var(--ink)}
+
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:20px 14px;border-right:1px solid var(--line);background:var(--desk)}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 22px;font-weight:800;font-size:17px;letter-spacing:-.01em}
+.brand i{width:30px;height:30px;border-radius:9px;background:var(--primary-fill);display:grid;place-items:center;color:#fff;font-style:normal;font-family:var(--word);font-size:18px}
+.brand span{color:var(--primary)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:var(--r-sm);color:var(--ink-2);text-decoration:none;font-weight:500;transition:background var(--dur) var(--ease)}
+.nav a:hover{background:var(--sheet)}
+.nav a[aria-current="page"]{background:var(--sheet);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+.nav a[aria-current="page"] svg{color:var(--primary)}
+.nav .count{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent-text);background:var(--accent-bg);padding:2px 8px;border-radius:999px}
+.nav-label{font-size:12px;font-weight:600;color:var(--ink-3);padding:18px 12px 6px}
+.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--r);background:var(--sheet);border:1px solid var(--line)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-tint);color:var(--primary);display:grid;place-items:center;font-weight:700}
+.side-foot b{display:block;font-size:14px}
+.side-foot small{color:var(--ink-3);font-size:12px}
+
+.main{min-width:0;padding:28px 40px 96px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.crumb{color:var(--ink-3);font-size:13px}
+.top .sp{flex:1}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);display:grid;place-items:center;cursor:pointer;color:var(--ink-2)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;max-width:1180px}
+
+.sheet{position:relative;background:var(--sheet);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:40px 44px 40px 60px;overflow:hidden}
+.sheet::before{content:"";position:absolute;left:24px;top:40px;bottom:40px;width:8px;background:repeating-linear-gradient(to bottom,var(--timing) 0 3px,transparent 3px 22px);opacity:.14}
+
+.hello{font-size:14px;color:var(--ink-3);font-weight:500;margin:0 0 6px}
+h1{font-size:clamp(30px,2.2vw + 14px,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 10px;font-weight:800}
+.lead{font-size:17px;color:var(--ink-2);margin:0;max-width:52ch}
+.lead b{color:var(--ink)}
+
+.today{display:grid;grid-template-columns:repeat(3,1fr);margin:30px 0 28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.today div{padding:18px 0 18px 20px;border-left:1px solid var(--line)}
+.today div:first-child{border-left:0;padding-left:0}
+.today strong{display:block;font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.today span{color:var(--ink-3);font-size:13px}
+
+.q{margin:0 0 26px}
+.q-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.q-num{font-family:var(--word);font-weight:700;color:var(--primary);font-size:17px}
+.q-head h2{font-size:16px;margin:0;font-weight:700}
+.choices{display:grid;gap:10px}
+.choices.c3{grid-template-columns:repeat(3,1fr)}
+.choices.c2{grid-template-columns:repeat(2,1fr)}
+.choice{display:flex;align-items:center;gap:12px;min-height:64px;padding:12px 16px;border:1.5px solid var(--line-2);border-radius:var(--r);background:var(--field);cursor:pointer;text-align:left;transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease)}
+.choice:hover{border-color:var(--primary)}
+.choice .dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;font-family:var(--word);font-size:13px;font-weight:700;color:var(--ink-3)}
+.choice b{display:block;font-size:15px}
+.choice small{color:var(--ink-3);font-size:13px}
+.choice[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-tint)}
+.choice[aria-pressed="true"] .dot{background:var(--primary-fill);border-color:var(--primary-fill);color:#fff}
+
+.cta-row{display:flex;align-items:center;gap:20px;margin-top:32px;padding-top:28px;border-top:1px dashed var(--line-2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid transparent;font-weight:700;cursor:pointer;text-decoration:none;transition:background var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.btn:active{transform:translateY(1px)}
+.btn-learn{min-height:52px;padding:0 28px;font-size:16px;background:var(--accent);color:var(--on-accent);box-shadow:0 2px 0 var(--accent-hover)}
+.btn-learn:hover{background:var(--accent-hover)}
+.btn-primary{background:var(--primary-fill);color:var(--on-primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-ghost{background:transparent;color:var(--ink-2);border-color:var(--line-2)}
+.btn-ghost:hover{background:var(--sunk)}
+.btn-link{background:none;border:0;color:var(--primary);font-weight:600;padding:0;min-height:44px;cursor:pointer}
+.btn-sm{min-height:40px;padding:0 14px;font-size:14px}
+
+.rail{display:flex;flex-direction:column;gap:20px}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.panel h3{font-size:14px;margin:0 0 14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.streak{display:flex;align-items:center;gap:14px}
+.streak strong{font-size:36px;line-height:1;font-weight:800}
+.streak p{margin:0;color:var(--ink-3);font-size:13px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px}
+.week span{aspect-ratio:1;border-radius:8px;background:var(--sunk);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--ink-3);font-weight:600}
+.week span.on{background:var(--secondary-bg);border-color:transparent;color:var(--secondary)}
+.week span.now{border:1.5px solid var(--primary);color:var(--primary)}
+.meter{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden;margin:10px 0 8px;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--secondary);border-radius:99px}
+.goal-row{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3)}
+.goal-row b{color:var(--ink);font-variant-numeric:tabular-nums}
+.deck-mini{display:flex;flex-direction:column}
+.deck-mini a{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);text-decoration:none;color:inherit}
+.deck-mini a:first-child{border-top:0;padding-top:0}
+.thumb{width:44px;height:44px;border-radius:10px;flex:none;background:linear-gradient(135deg,#e9c46a,#d08c4a);overflow:hidden}
+.thumb.b{background:linear-gradient(135deg,#7aa6c2,#3d6b8a)}
+.thumb.c{background:linear-gradient(135deg,#a3c98f,#4f8a5e)}
+.deck-mini b{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;font-size:14px}
+.deck-mini small{color:var(--ink-3);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--accent-bg);color:var(--accent-text)}
+
+.page-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:22px}
+.page-head .sp{flex:1}
+.page-head h1{margin:0}
+.page-head .n{color:var(--ink-3);font-weight:500;font-size:16px;margin-left:8px;letter-spacing:0}
+.tools{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.tabs{display:inline-flex;padding:4px;border-radius:12px;background:var(--sunk);border:1px solid var(--line)}
+.tabs button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font-weight:600;cursor:pointer;color:var(--ink-3);min-height:36px}
+.tabs button[aria-selected="true"]{background:var(--sheet);color:var(--ink);box-shadow:var(--shadow)}
+.search{flex:1;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--field);color:var(--ink-3)}
+.search input{border:0;outline:0;background:transparent;flex:1;min-width:0}
+.rows{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:28px 88px minmax(0,1fr) auto;gap:18px;align-items:center;padding:20px 0;border-bottom:1px solid var(--line)}
+.row .idx{font-family:var(--word);font-weight:700;color:var(--ink-3);font-size:17px}
+.row .thumb{width:88px;height:66px;border-radius:12px}
+.row h3{margin:0 0 6px;font-size:16px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-3)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line-2);font-size:12px;font-weight:600;color:var(--ink-2)}
+.level{display:inline-flex;align-items:center;gap:6px}
+.level i{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.level i.on{background:var(--primary)}
+.progress-line{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--ink-3)}
+.progress-line .meter{flex:1;max-width:220px;margin:0;height:6px}
+.row .acts{display:flex;gap:8px}
+.btn-edit{background:var(--edit-bg);color:var(--edit)}
+
+.mascot{position:fixed;right:24px;bottom:24px;display:flex;align-items:flex-end;gap:10px;z-index:20}
+.mascot .say{max-width:220px;background:var(--sheet);border:1px solid var(--line);border-radius:14px 14px 4px 14px;padding:10px 12px;font-size:13px;box-shadow:var(--shadow)}
+.mascot .m{width:52px;height:52px;border-radius:50%;background:var(--primary-tint);display:grid;place-items:center;border:1px solid var(--line)}
+
+[data-screen]{display:none}
+[data-screen].on{display:block}
+
+@media (max-width:1180px){.layout{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:repeat(2,1fr)}}
+@media (max-width:1023px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .main{padding:20px 16px 110px}
+  .sheet{padding:28px 20px 28px 36px;border-radius:16px}
+  .sheet::before{left:12px}
+  .choices.c3,.choices.c2{grid-template-columns:1fr}
+  .rail{grid-template-columns:1fr}
+  .row{grid-template-columns:64px minmax(0,1fr);gap:14px}
+  .row .idx{display:none}
+  .row .thumb{width:64px;height:48px}
+  .row .acts{grid-column:1/-1}
+  .cta-row{flex-direction:column;align-items:stretch}
+  .mascot .say{display:none}
+  .mascot{bottom:84px}
+  .bottom{display:flex}
+}
+.bottom{display:none;position:fixed;left:0;right:0;bottom:0;height:64px;background:var(--sheet);border-top:1px solid var(--line);z-index:30;justify-content:space-around}
+.bottom a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--ink-3);text-decoration:none}
+.bottom a[aria-current="page"]{color:var(--primary)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-deck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="14" height="17" rx="2.5"/><path d="M4 7v11a3 3 0 0 0 3 3h9"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a1.5 1.5 0 0 1 1.5-1.5H11v17H5.5A1.5 1.5 0 0 1 4 19ZM13 3.5h5.5A1.5 1.5 0 0 1 20 5v14a1.5 1.5 0 0 1-1.5 1.5H13z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16v-5M12 16V7M17 16v-8"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><i>V</i><em style="font-style:normal">Vocab<span>Learning</span></em></div>
+    <nav class="nav" aria-label="Chính">
+      <a href="#" data-go="today" aria-current="page"><svg width="20" height="20"><use href="#i-today"/></svg>Hôm nay<span class="count">6</span></a>
+      <a href="#" data-go="decks"><svg width="20" height="20"><use href="#i-deck"/></svg>Bộ của tôi</a>
+      <a href="#"><svg width="20" height="20"><use href="#i-lib"/></svg>Thư viện</a>
+      <a href="#"><svg width="20" height="20"><use href="#i-pen"/></svg>Luyện tập</a>
+      <a href="#"><svg width="20" height="20"><use href="#i-note"/></svg>Sổ tay</a>
+      <a href="#"><svg width="20" height="20"><use href="#i-chart"/></svg>Thống kê</a>
+      <div class="nav-label">Công cụ</div>
+      <a href="#"><svg width="20" height="20"><use href="#i-spark"/></svg>Xưởng thẻ AI</a>
+      <a href="#"><svg width="20" height="20"><use href="#i-mic"/></svg>Phát âm</a>
+    </nav>
+    <div class="side-foot"><div class="avatar">A</div><div><b>Nguyễn Văn An</b><small>Gói miễn phí</small></div></div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <span class="crumb" id="crumb">Thứ Tư, 11 tháng 11</span>
+      <span class="sp"></span>
+      <button class="icon-btn" aria-label="Đổi giao diện sáng tối" id="theme"><svg width="18" height="18"><use href="#i-moon"/></svg></button>
+    </div>
+
+    <section data-screen="today" class="on">
+      <div class="layout">
+        <div class="sheet">
+          <p class="hello">Chào An,</p>
+          <h1>Hôm nay học gì?</h1>
+          <p class="lead">Có <b>6 thẻ cần ôn</b> và 0 từ mới. Khoảng 2 phút là xong.</p>
+
+          <div class="today">
+            <div><strong>6</strong><span>thẻ quá hạn</span></div>
+            <div><strong>0</strong><span>từ mới còn lại</span></div>
+            <div><strong>~2′</strong><span>thời gian ước tính</span></div>
+          </div>
+
+          <div class="q">
+            <div class="q-head"><span class="q-num">1.</span><h2>Hôm nay bạn có bao nhiêu phút?</h2></div>
+            <div class="choices c3" role="group">
+              <button class="choice" aria-pressed="false"><span class="dot">A</span><span><b>5 phút</b><small>khoảng 15 lượt</small></span></button>
+              <button class="choice" aria-pressed="true"><span class="dot">B</span><span><b>10 phút</b><small>khoảng 30 lượt</small></span></button>
+              <button class="choice" aria-pressed="false"><span class="dot">C</span><span><b>20 phút</b><small>khoảng 60 lượt</small></span></button>
+            </div>
+          </div>
+          <div class="q">
+            <div class="q-head"><span class="q-num">2.</span><h2>Chiều học</h2></div>
+            <div class="choices c2" role="group">
+              <button class="choice" aria-pressed="true"><span class="dot">A</span><span><b>Anh → Việt</b><small>Thấy từ tiếng Anh, nhớ lại nghĩa</small></span></button>
+              <button class="choice" aria-pressed="false"><span class="dot">B</span><span><b>Việt → Anh</b><small>Thấy nghĩa, nhớ lại từ tiếng Anh</small></span></button>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button class="btn btn-learn">Bắt đầu phiên hôm nay</button>
+            <button class="btn-link">Tự chọn bộ và thời gian</button>
+          </div>
+        </div>
+
+        <aside class="rail">
+          <div class="panel">
+            <h3>Chuỗi ngày học</h3>
+            <div class="streak"><strong>0</strong><p>ngày liên tiếp. Học ít nhất 5 lượt hôm nay để bắt đầu chuỗi.</p></div>
+            <div class="week"><span class="on">T2</span><span class="on">T3</span><span class="now">T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div>
+          </div>
+          <div class="panel">
+            <h3>Mục tiêu mỗi ngày</h3>
+            <div class="goal-row"><span>Đã học hôm nay</span><b>0 / 10 phút</b></div>
+            <div class="meter"><i style="width:4%"></i></div>
+            <button class="btn-link">Đổi thiết lập học</button>
+          </div>
+          <div class="panel">
+            <h3>Theo bộ thẻ</h3>
+            <div class="deck-mini">
+              <a href="#"><span class="thumb"></span><span><b>Khởi động — TOEIC nâng cao</b><small><span class="pill">3 cần ôn</span></small></span></a>
+              <a href="#"><span class="thumb b"></span><span><b>Bộ từ vựng giao tiếp với tên dài và dấu tiếng Việt</b><small><span class="pill">3 cần ôn</span></small></span></a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section data-screen="decks">
+      <div class="layout">
+        <div class="sheet">
+          <div class="page-head">
+            <h1>Bộ thẻ của bạn<span class="n">2 bộ</span></h1>
+            <span class="sp"></span>
+            <button class="btn btn-primary"><svg width="18" height="18"><use href="#i-plus"/></svg>Tạo bộ thẻ</button>
+          </div>
+          <div class="tools">
+            <div class="tabs" role="tablist"><button role="tab" aria-selected="true">Của tôi</button><button role="tab" aria-selected="false">Yêu thích</button></div>
+            <label class="search"><svg width="18" height="18"><use href="#i-search"/></svg><input placeholder="Tìm theo tên bộ"></label>
+          </div>
+          <ol class="rows">
+            <li class="row">
+              <span class="idx">1</span>
+              <span class="thumb"></span>
+              <div>
+                <h3>Khởi động — TOEIC nâng cao</h3>
+                <div class="meta"><span class="tag"><svg width="12" height="12"><use href="#i-lock"/></svg>Riêng tư</span><span class="level"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>Nâng cao</span><span>Sửa 7/11/2026</span></div>
+                <div class="progress-line"><div class="meter"><i style="width:62%"></i></div>62% đã thuộc</div>
+              </div>
+              <div class="acts"><button class="btn btn-ghost btn-sm">Mở</button><button class="btn btn-edit btn-sm">Sửa</button></div>
+            </li>
+            <li class="row">
+              <span class="idx">2</span>
+              <span class="thumb b"></span>
+              <div>
+                <h3>B110-1472f7b7ca48 Bộ từ vựng giao tiếp với tên dài và dấu tiếng Việt Bộ từ vựng giao tiếp với tên dài và dấu tiếng Việt Bộ từ vựng giao tiếp với tên</h3>
+                <div class="meta"><span class="tag"><svg width="12" height="12"><use href="#i-lock"/></svg>Riêng tư</span><span class="level"><i class="on"></i><i class="on"></i><i></i><i></i>Cơ bản</span><span>Sửa 7/11/2026</span></div>
+                <div class="progress-line"><div class="meter"><i style="width:18%"></i></div>18% đã thuộc</div>
+              </div>
+              <div class="acts"><button class="btn btn-ghost btn-sm">Mở</button><button class="btn btn-edit btn-sm">Sửa</button></div>
+            </li>
+          </ol>
+        </div>
+        <aside class="rail">
+          <div class="panel">
+            <h3>Kế hoạch mỗi ngày</h3>
+            <div class="goal-row" style="padding:6px 0"><span>Thời gian</span><b>10 phút/ngày</b></div>
+            <div class="goal-row" style="padding:6px 0"><span>Mục tiêu</span><b>Giao tiếp</b></div>
+            <button class="btn-link">Đổi thiết lập học</button>
+          </div>
+          <div class="panel">
+            <h3>Có sẵn danh sách từ?</h3>
+            <p style="margin:0;color:var(--ink-2);font-size:14px">Mở một bộ thẻ rồi chọn “Nhập CSV” để thêm nhiều thẻ cùng lúc. Tệp cần có cột từ và nghĩa tiếng Việt.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom" aria-label="Chính">
+  <a href="#" aria-current="page"><svg width="22" height="22"><use href="#i-today"/></svg>Học</a>
+  <a href="#"><svg width="22" height="22"><use href="#i-lib"/></svg>Thư viện</a>
+  <a href="#"><svg width="22" height="22"><use href="#i-pen"/></svg>Luyện tập</a>
+  <a href="#"><svg width="22" height="22"><use href="#i-note"/></svg>Sổ tay</a>
+  <a href="#"><svg width="22" height="22"><use href="#i-user"/></svg>Tôi</a>
+</nav>
+
+<div class="mascot"><div class="say">Một chút mỗi ngày, cùng Mực nhé.</div><div class="m"><svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16" cy="13" rx="10" ry="10" fill="#5262c9"/><path d="M8 20c0 6 2 8 3 8M13 21c0 5 1 7 2 7M19 21c0 5-1 7-2 7M24 20c0 6-2 8-3 8" stroke="#5262c9" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="12.5" cy="12" r="2.2" fill="#fff"/><circle cx="19.5" cy="12" r="2.2" fill="#fff"/><circle cx="12.8" cy="12.4" r="1" fill="#22242a"/><circle cx="19.8" cy="12.4" r="1" fill="#22242a"/></svg></div></div>
+
+<div class="demo-bar" role="group" aria-label="Chọn màn demo">
+  <button data-show="today" aria-pressed="true">Hôm nay</button>
+  <button data-show="decks" aria-pressed="false">Bộ thẻ</button>
+</div>
+
+<script>
+const show = id => {
+  document.querySelectorAll('[data-screen]').forEach(s => s.classList.toggle('on', s.dataset.screen === id));
+  document.querySelectorAll('[data-show]').forEach(b => b.setAttribute('aria-pressed', b.dataset.show === id));
+  document.querySelectorAll('.nav a[data-go]').forEach(a => a.dataset.go === id ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
+};
+document.querySelectorAll('[data-show]').forEach(b => b.onclick = () => show(b.dataset.show));
+document.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); show(a.dataset.go); });
+document.getElementById('theme').onclick = () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+};
+document.querySelectorAll('.choices').forEach(g => g.addEventListener('click', e => {
+  const c = e.target.closest('.choice'); if (!c) return;
+  g.querySelectorAll('.choice').forEach(x => x.setAttribute('aria-pressed', x === c));
+}));
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import '@/styles/compat.css';
 import '@/styles/mascot.css';
 import '@/styles/deck-illustrations.css';
 import '@/styles/learning-refinements.css';
+import '@/styles/effects.css';
 import { Providers } from './providers';
 
 export const metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
           {children}
         </Providers>
         <Script src="/mascot.js" strategy="afterInteractive" />
+        <Script src="/fx.js" strategy="afterInteractive" />
       </body>
     </html>
   );

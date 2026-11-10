@@ -1,6 +1,7 @@
 'use client';
 import { MobileNavigation } from './MobileNavigation';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { SoundToggle } from '@/components/ui/SoundToggle';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
@@ -98,7 +99,7 @@ export function AppShell({ children, user, isAdmin = false }) {
           <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
-        <div className="header-actions"><ThemeToggle />
+        <div className="header-actions"><SoundToggle /><ThemeToggle />
           {user && (
             <Link href="/ca-nhan" className="user-chip" aria-label={`Hồ sơ của ${user.tenHienThi || 'User'}`}>
               <span className="avatar">
@@ -125,20 +126,32 @@ export function AppShell({ children, user, isAdmin = false }) {
       <div className="app-body">
         <nav className="sidebar" aria-label="Điều hướng chính">
           <div id="sidebar-links" className="sidebar-links">
-          {navList.map((g) => (
-            <div key={g.group} className="nav-group">
-              <p className="nav-group-title">{g.group}</p>
-              {g.items.map(it => {
-                const active = it.href && isActive(it.href);
-                return (
-                  <Link key={it.key} className="nav-link" href={it.href} aria-current={active ? 'page' : undefined} aria-label={it.label} title={it.label}>
-                    <Icon name={it.icon} />
-                    <span className="nav-label">{it.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          {navList.map((g, index) => {
+            const links = g.items.map(it => {
+              const active = it.href && isActive(it.href);
+              return (
+                <Link key={it.key} className="nav-link" href={it.href} aria-current={active ? 'page' : undefined} aria-label={it.label} title={it.label}>
+                  <Icon name={it.icon} />
+                  <span className="nav-label">{it.label}</span>
+                </Link>
+              );
+            });
+            if (index === 0) {
+              return (
+                <div key={g.group} className="nav-group">
+                  <p className="nav-group-title">{g.group}</p>
+                  {links}
+                </div>
+              );
+            }
+            const hasActive = g.items.some(it => it.href && isActive(it.href));
+            return (
+              <details key={`${g.group}-${hasActive}`} className="nav-group nav-fold" open={hasActive || undefined}>
+                <summary>{g.group}<Icon name="chevron-down" /></summary>
+                {links}
+              </details>
+            );
+          })}
           </div>
         </nav>
 

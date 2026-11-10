@@ -1,5 +1,5 @@
 .start { display: grid; gap: var(--sp-5); margin-top: var(--sp-5); }
-.startFoot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+.startFoot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--line-2); }
 .done { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
 .rescue { display: grid; gap: var(--sp-4); }
 .rescueLead { font-size: var(--fs-lead); max-width: 52ch; }
@@ -10,9 +10,10 @@
 .streak { display: flex; align-items: baseline; gap: var(--sp-2); }
 .streak :global(.tally-n) { font-size: 2.5rem; }
 .deckMini { list-style: none; margin: 0; padding: 0; display: grid; }
-.deckMini li { display: grid; gap: 4px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+.deckMini li { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); }
 .deckMini li:first-child { padding-top: 0; }
-.deckMini .name { font-weight: 650; overflow-wrap: anywhere; }
+.deckMini li:last-child { padding-bottom: 0; border-bottom: 0; }
+.deckMini .name { font-weight: 650; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .deckMini .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
 .goalLine { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
 .links { display: grid; gap: var(--sp-1); }
@@ -23,7 +24,7 @@
 .resumeMeta { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
 .resume .goalLine { margin-bottom: 0; }
 .resume :global(.row) { gap: var(--sp-2); margin-top: var(--sp-1); }
-.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
+.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-7); padding-top: var(--sp-6); border-top: var(--rule) solid var(--line); }
 .weekGrid { display: grid; gap: var(--sp-6); }
 @media (min-width: 720px) { .weekGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mini { margin: 0; display: grid; gap: var(--sp-2); align-content: start; min-width: 0; }
