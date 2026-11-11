@@ -1,6 +1,8 @@
 package com.do_an_tot_nghiep.k28.practice.service;
 
+import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
+import com.do_an_tot_nghiep.k28.engagement.service.RewardService;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeAnswerRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticePairRequest;
@@ -21,6 +23,7 @@ import com.do_an_tot_nghiep.k28.practice.repository.TraLoiBaiLuyenRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -52,6 +55,8 @@ public class PracticeSubmissionService {
     private final PracticeResults results;
     private final JsonMapper json;
     private final Clock clock;
+    private final AccountService accountService;
+    private final RewardService rewardService;
 
     public record Outcome(boolean replayed, PracticeResultResponse body) {
     }
@@ -97,6 +102,12 @@ public class PracticeSubmissionService {
                 thoiGian(request.thoiGian(), practice, nopAt, keys.values()),
                 nopAt));
         save(userId, practice, attempt, rows, graded);
+        rewardService.practiced(
+                userId,
+                attempt.getId(),
+                attempt.getSoCauDung(),
+                practice.isLaLuyenLai(),
+                LocalDate.ofInstant(nopAt, accountService.zoneOf(userId)));
         return new Outcome(false, results.result(practice, results.boTheTen(practice), attempt));
     }
 

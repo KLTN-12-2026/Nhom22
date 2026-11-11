@@ -449,13 +449,77 @@
       cnt[d] = (cnt[d] || 0) + 1;
       if (cnt[d] >= 5) ok.add(d);
     });
-    const t = Date.now();
-    const today = localDate(t, tz);
-    let cursor = startOfLocalDay(t, tz) + 12 * 3600000;
-    if (!ok.has(today)) cursor -= DAY;
+    const days = [...ok].sort();
+    if (!days.length) return { chuoiNgay: 0, homNayDaTinh: false, ngayNghi: null };
+    const today = localDate(Date.now(), tz);
+    const anchor = days[days.length - 1] > today ? days[days.length - 1] : today;
+    const counted = ok.has(anchor);
+    const used = new Set();
+    const frozen = [];
+    let pending = [];
     let n = 0;
-    while (ok.has(localDate(cursor, tz))) { n++; cursor -= DAY; }
-    return { chuoiNgay: n, homNayDaTinh: ok.has(today) };
+    for (let d = counted ? anchor : shiftDate(anchor, -1); d >= days[0]; d = shiftDate(d, -1)) {
+      if (ok.has(d)) { n++; frozen.push(...pending); pending = []; continue; }
+      const w = weekStartOf(d);
+      if (used.has(w)) break;
+      used.add(w);
+      pending.push(d);
+    }
+    const ngayNghi = frozen.find((d) => weekStartOf(d) === weekStartOf(anchor)) || null;
+    return { chuoiNgay: n, homNayDaTinh: counted, ngayNghi };
+  }
+  function shiftDate(d, n) { return new Date(Date.parse(d + "T00:00:00Z") + n * DAY).toISOString().slice(0, 10); }
+  function weekStartOf(d) { const ms = Date.parse(d + "T00:00:00Z"); return new Date(ms - ((new Date(ms).getUTCDay() + 6) % 7) * DAY).toISOString().slice(0, 10); }
+
+  const REWARD_CAP = 100;
+  const BADGES = [
+    { id: "1", ma: "BUOC_DAU", ten: "Bước đầu", moTa: "Hoàn thành lượt ôn hợp lệ đầu tiên", loaiDieuKien: "TONG_LUOT_ON", nguong: 1 },
+    { id: "2", ma: "CHUOI_3", ten: "Ba ngày đều đặn", moTa: "Đạt chuỗi 3 ngày, mỗi ngày ít nhất 5 lượt hợp lệ", loaiDieuKien: "CHUOI_NGAY", nguong: 3 },
+    { id: "3", ma: "CHUOI_7", ten: "Một tuần bền bỉ", moTa: "Đạt chuỗi 7 ngày, mỗi ngày ít nhất 5 lượt hợp lệ", loaiDieuKien: "CHUOI_NGAY", nguong: 7 },
+    { id: "4", ma: "ON_100", ten: "Trăm lượt ôn", moTa: "Có 100 lượt ôn được tính thưởng", loaiDieuKien: "TONG_LUOT_ON", nguong: 100 },
+    { id: "5", ma: "LUYEN_10", ten: "Chăm luyện tập", moTa: "Nộp 10 bài luyện tập", loaiDieuKien: "TONG_BAI_LUYEN", nguong: 10 },
+    { id: "6", ma: "DIEM_500", ten: "Năm trăm điểm", moTa: "Tích lũy 500 điểm thưởng", loaiDieuKien: "TONG_DIEM", nguong: 500 }
+  ];
+  const CHALLENGES = [
+    { id: "1", ma: "TUAN_40_LUOT", ten: "Tuần học nhẹ nhàng", moTa: "40 lượt ôn hợp lệ từ thứ Hai đến Chủ nhật", loaiDieuKien: "LUOT_ON", chuKy: "TUAN", mucTieu: 40 }
+  ];
+  function rewardLedger(uid, tz) {
+    const seen = new Set();
+    const events = [];
+    db.reviews.filter((r) => r.uid === uid).forEach((r) => {
+      const ngay = localDate(Date.parse(r.createdAt), tz);
+      const key = r.theId + ":" + r.chieuHoc + ":" + ngay;
+      if (seen.has(key)) return;
+      seen.add(key);
+      events.push({ loaiSuKien: "ON_THE", diemGoc: 1, ngayDiaPhuong: ngay, createdAt: r.createdAt });
+    });
+    db.attempts.filter((a) => a.uid === uid).forEach((a) => events.push({
+      loaiSuKien: "BAI_LUYEN", diemGoc: a.laLuyenLai ? 0 : a.soCauDung, ngayDiaPhuong: localDate(Date.parse(a.nopAt), tz), createdAt: a.nopAt
+    }));
+    events.sort((x, y) => x.createdAt.localeCompare(y.createdAt));
+    const perDay = {};
+    return events.map((e, i) => {
+      const used = perDay[e.ngayDiaPhuong] || 0;
+      const soDiem = Math.max(0, Math.min(e.diemGoc, REWARD_CAP - used));
+      perDay[e.ngayDiaPhuong] = used + soDiem;
+      return { id: String(i + 1), loaiSuKien: e.loaiSuKien, diemGoc: e.diemGoc, soDiem, ngayDiaPhuong: e.ngayDiaPhuong, createdAt: e.createdAt };
+    });
+  }
+  function badgeView(uid, tz) {
+    const ledger = rewardLedger(uid, tz);
+    const streak = streakOf(uid, tz).chuoiNgay;
+    const reached = (loai, nguong) => {
+      if (loai === "CHUOI_NGAY") return streak >= nguong ? (ledger.length ? ledger[ledger.length - 1].createdAt : null) : null;
+      let acc = 0;
+      for (const e of ledger) {
+        if (loai === "TONG_LUOT_ON" && e.loaiSuKien === "ON_THE") acc++;
+        if (loai === "TONG_BAI_LUYEN" && e.loaiSuKien === "BAI_LUYEN") acc++;
+        if (loai === "TONG_DIEM") acc += e.soDiem;
+        if (acc >= nguong) return e.createdAt;
+      }
+      return null;
+    };
+    return BADGES.map((x) => { const nhanAt = reached(x.loaiDieuKien, x.nguong); return Object.assign({}, x, { daNhan: !!nhanAt, nhanAt }); });
   }
 
   const minutesOf = (ms) => Math.floor(ms / MIN);
@@ -528,7 +592,8 @@
       boThe: Object.keys(perDeck).map((id) => ({ boTheId: id, ten: deckName(id), soCanOn: perDeck[id].soCanOn, soMoi: perDeck[id].soMoi })),
       phienDangDo: openSessionOf(u, sod),
       duBaoOn,
-      cuuLichOn: rescue
+      cuuLichOn: rescue,
+      daDungNgayNghiTuanNay: !!st.ngayNghi, ngayNghiDaDung: st.ngayNghi
     };
   }
 
@@ -1605,6 +1670,36 @@
         soNgayCoHoc: theoNgay.filter((x) => x.soLuotOn || x.soCauLuyen).length, soNgayDatMucTieu: theoNgay.filter((x) => x.thoiGian >= l.minutesPerDay * 60000).length,
         chuoiNgay: streakOf(u.id, tz).chuoiNgay, theoNgay
       };
+    }],
+    ["GET", /^\/rewards\/history$/, (m, b, q) => {
+      const u = requireMe();
+      const tz = tzOf(u);
+      const ledger = rewardLedger(u.id, tz);
+      const today = localDate(Date.now(), tz);
+      const size = Math.max(1, Math.min(100, parseInt(q.size || "20", 10)));
+      const pg = Math.max(0, parseInt(q.page || "0", 10));
+      const list = ledger.slice().reverse();
+      return {
+        tongDiem: ledger.reduce((acc, e) => acc + e.soDiem, 0),
+        diemHomNay: ledger.filter((e) => e.ngayDiaPhuong === today).reduce((acc, e) => acc + e.soDiem, 0),
+        diemToiDaNgay: REWARD_CAP,
+        lichSu: { items: list.slice(pg * size, pg * size + size), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) }
+      };
+    }],
+    ["GET", /^\/badges$/, () => {
+      const u = requireMe();
+      return badgeView(u.id, tzOf(u));
+    }],
+    ["GET", /^\/challenges$/, () => {
+      const u = requireMe();
+      const tz = tzOf(u);
+      const tuanBatDau = weekStartOf(localDate(Date.now(), tz));
+      const tuanKetThuc = shiftDate(tuanBatDau, 6);
+      const rows = rewardLedger(u.id, tz).filter((e) => e.loaiSuKien === "ON_THE" && e.ngayDiaPhuong >= tuanBatDau && e.ngayDiaPhuong <= tuanKetThuc);
+      return CHALLENGES.map((c) => {
+        const done = rows.length >= c.mucTieu ? rows[c.mucTieu - 1].createdAt : null;
+        return Object.assign({}, c, { giaTri: rows.length, tuanBatDau, tuanKetThuc, hoanThanhAt: done });
+      });
     }],
     ["GET", /^\/statistics\/skills$/, (m, b, q) => {
       const u = requireMe();

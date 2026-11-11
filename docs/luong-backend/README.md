@@ -49,6 +49,7 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 ## AI và dịch vụ B3
 
 - [B3.1 — Tác vụ nền và hạn mức dịch vụ](B3.1-tac-vu-nen-va-han-muc.md) (mã Mermaid, chưa sinh SVG)
+- [B3.6 — Điểm thưởng, chuỗi ngày, huy hiệu, thử thách](B3.6-diem-chuoi-huy-hieu.md) (mã Mermaid, chưa sinh SVG)
 
 ## Redis
 

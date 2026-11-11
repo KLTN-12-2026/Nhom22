@@ -30,6 +30,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.learning.service.StudySessionService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
@@ -87,6 +88,9 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     LichSuOnRepository history;
     @Autowired
     StudyTimeService studyTime;
+
+    @Autowired
+    StreakService streakService;
 
     @Test
     void tc10_rescuePlanSplitsWorkloadByMinutesPerDay() throws Exception {
@@ -287,7 +291,7 @@ class FR06RescuePlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner, String phut, String giuTuMoi) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, studyTime)
+                sessions, queue, studyTime, streakService)
                 .today(learner.id(), new TodayQuery(phut, giuTuMoi));
     }
 

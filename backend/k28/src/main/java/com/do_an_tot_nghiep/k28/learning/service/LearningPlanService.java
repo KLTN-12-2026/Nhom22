@@ -31,7 +31,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class LearningPlanService {
 
     static final int GIAY_MOI_LUOT = 20;
-    static final int LUOT_TOI_THIEU_CHUOI = 5;
-    static final int SO_NGAY_TOI_DA = 1000;
     static final int SO_NGAY_KE_HOACH_TOI_DA = 14;
     static final int SO_NGAY_DU_BAO = 7;
 
@@ -59,6 +56,7 @@ public class LearningPlanService {
     private final PhienHocRepository sessions;
     private final PhienHocTheRepository queue;
     private final StudyTimeService studyTime;
+    private final StreakService streakService;
 
     @Transactional
     public TodayPlanResponse today(Long userId, TodayQuery query) {
@@ -98,9 +96,7 @@ public class LearningPlanService {
                 : Math.min(Math.max(0, settings.tuMoiMoiNgay() - soTheMoiDaHoc), soMoiKhaDung);
         int uocTinhPhut = Math.ceilDiv((soQuaHan + soDenHan + soMoiConLai) * GIAY_MOI_LUOT, 60);
 
-        List<LocalDate> days = qualifyingDays(userId, homNay);
-        int chuoiNgay = StreakCalculator.current(days, homNay);
-        boolean homNayDaTinhChuoi = !days.isEmpty() && days.get(0).equals(homNay);
+        StreakCalculator.Result chuoi = streakService.of(userId, homNay);
 
         List<DeckPlanResponse> boThe = deckRows.stream()
                 .map(row -> {
@@ -121,25 +117,23 @@ public class LearningPlanService {
                 GIAY_MOI_LUOT,
                 uocTinhPhut,
                 settings.phutMoiNgay(),
-                chuoiNgay,
-                homNayDaTinhChuoi,
-                LUOT_TOI_THIEU_CHUOI,
+                chuoi.chuoiNgay(),
+                chuoi.homNayDaTinhChuoi(),
+                StreakService.LUOT_TOI_THIEU_CHUOI,
                 new DaHocHomNayResponse(soLuot, thoiGian.thoiGian(), thoiGian.soPhut()),
                 tongSoThe,
                 boThe,
                 cuuLichOn,
                 openSession(userId, batDau),
-                forecast(userId, homNay, zone, ketThuc)
+                forecast(userId, homNay, zone, ketThuc),
+                chuoi.daDungNgayNghiTuanNay(),
+                chuoi.ngayNghiTuanNay()
         );
     }
 
     @Transactional(readOnly = true)
     public int streak(Long userId, LocalDate homNay) {
-        return StreakCalculator.current(qualifyingDays(userId, homNay), homNay);
-    }
-
-    private List<LocalDate> qualifyingDays(Long userId, LocalDate homNay) {
-        return usage.qualifyingDays(userId, LUOT_TOI_THIEU_CHUOI, homNay, PageRequest.ofSize(SO_NGAY_TOI_DA));
+        return streakService.of(userId, homNay).chuoiNgay();
     }
 
     private PhienDangDoResponse openSession(Long userId, Instant batDau) {
