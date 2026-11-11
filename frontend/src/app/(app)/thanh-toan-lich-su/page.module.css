@@ -2,6 +2,189 @@
   max-width: 1040px;
 }
 
+/* ── Subscription overview card ── */
+.subOverview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-6);
+  background: linear-gradient(135deg, var(--primary, #3549bb) 0%, #2a3d9e 100%);
+  border-radius: var(--radius-field, 10px);
+  margin-bottom: var(--sp-6);
+  flex-wrap: wrap;
+}
+
+.subOverviewIcon {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.subOverviewInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.subPlanName {
+  font-size: var(--fs-lg, 1.125rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 2px 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.planBadgeSm {
+  background: var(--accent, #f2b32b);
+  color: #3a2800;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+
+.badgeExpiring {
+  background: #fde8e8;
+  color: #c0392b;
+}
+
+.subExpires {
+  font-size: var(--fs-sm, 0.875rem);
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.subExpires strong {
+  color: #fff;
+}
+
+.subRenew {
+  font-size: var(--fs-xs, 0.75rem);
+  color: rgba(255, 255, 255, 0.65);
+  margin: 3px 0 0 0;
+}
+
+.subOverviewActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .subOverviewActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.btnWhiteOutline {
+  border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.btnWhiteOutline:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.btnDangerOutline {
+  border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  color: #fff !important;
+  background: transparent !important;
+}
+
+.btnDangerOutline:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: #fde8e8 !important;
+}
+
+/* ── Cancel modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+  background: rgba(10, 15, 40, 0.55);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.15s ease;
+}
+
+.modalCard {
+  background: var(--sheet, #fff);
+  border-radius: var(--radius-field, 12px);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(10, 15, 40, 0.25);
+  animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalHead {
+  padding: var(--sp-5) var(--sp-6) var(--sp-4);
+  border-bottom: 1px solid var(--border, #e2e5f0);
+}
+
+.modalHead h2 {
+  font-size: var(--fs-base, 1rem);
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink, #1a1f36);
+}
+
+.modalBody {
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.modalBody p {
+  font-size: var(--fs-sm, 0.875rem);
+  color: var(--ink-2, #5a6076);
+  line-height: 1.6;
+  margin: 0 0 var(--sp-3) 0;
+}
+
+.cancelWarn {
+  background: #fef9ec;
+  border: 1.5px solid #f9d975;
+  border-radius: 8px;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-xs, 0.75rem);
+  color: #7a5a00;
+  line-height: 1.5;
+}
+
+.modalFoot {
+  padding: var(--sp-4) var(--sp-6) var(--sp-5);
+  border-top: 1px solid var(--border, #e2e5f0);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* ── Section headings ── */
 .sectionHeading {
   font-size: var(--fs-sm, 0.875rem);

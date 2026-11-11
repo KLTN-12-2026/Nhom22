@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast, Icon } from '@/components/ui';
 import styles from './page.module.css';
@@ -74,9 +75,34 @@ export default function ThanhToanLichSuPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const [subscription, setSubscription] = useState({
+    plan: 'Premium',
+    status: 'active', // 'active' | 'canceling'
+    expires: '15/11/2027',
+    renewInfo: 'Gia hạn tiếp theo: 15/11/2027 · Hàng năm · 990.000 đ',
+  });
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+
   const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
   const [savedCards, setSavedCards] = useState(INITIAL_CARDS);
   const [downloadingId, setDownloadingId] = useState(null);
+
+  const handleConfirmCancel = () => {
+    setIsCanceling(true);
+    setTimeout(() => {
+      setIsCanceling(false);
+      setShowCancelModal(false);
+      setSubscription((prev) => ({
+        ...prev,
+        status: 'canceling',
+      }));
+      toast('✅ Đã gửi yêu cầu hủy gói. Gói Premium còn hiệu lực đến 15/11/2027.', {
+        variant: 'success',
+        duration: 5000,
+      });
+    }, 600);
+  };
 
   const handleDownloadInvoice = (tx) => {
     setDownloadingId(tx.id);
@@ -136,6 +162,47 @@ Cảm ơn bạn đã đăng ký và đồng hành cùng VocabLearning!
           <div className="form-code"><span>Tài khoản</span></div>
           <h1 id="page-title">Lịch sử thanh toán</h1>
           <p>Xem lịch sử giao dịch và tải hóa đơn.</p>
+        </div>
+
+        {/* Subscription overview */}
+        <div className={styles.subOverview} aria-label="Thông tin gói đăng ký hiện tại">
+          <div className={styles.subOverviewIcon} aria-hidden="true">⭐</div>
+          <div className={styles.subOverviewInfo}>
+            <p className={styles.subPlanName}>
+              Gói {subscription.plan}
+              <span className={`${styles.planBadgeSm} ${subscription.status === 'canceling' ? styles.badgeExpiring : ''}`}>
+                {subscription.status === 'canceling' ? 'SẼ HẾT HẠN' : 'ĐANG HOẠT ĐỘNG'}
+              </span>
+            </p>
+            <p className={styles.subExpires}>
+              Hiệu lực đến <strong>{subscription.expires}</strong>
+            </p>
+            <p className={styles.subRenew}>
+              {subscription.status === 'canceling'
+                ? 'Gói sẽ không tự động gia hạn và chuyển về Gói Miễn Phí sau khi hết hạn.'
+                : subscription.renewInfo}
+            </p>
+          </div>
+          <div className={styles.subOverviewActions}>
+            <Link href="/thanh-toan-goi" className={`btn btn-sm ${styles.btnWhiteOutline}`}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 7h10M9 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Đổi gói
+            </Link>
+            {subscription.status === 'active' && (
+              <button
+                type="button"
+                className={`btn btn-sm ${styles.btnDangerOutline}`}
+                onClick={() => setShowCancelModal(true)}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Hủy gói
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Transaction history */}
@@ -303,6 +370,54 @@ Cảm ơn bạn đã đăng ký và đồng hành cùng VocabLearning!
           </button>
         </div>
       </article>
+
+      {showCancelModal && (
+        <div
+          className={styles.modalOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-modal-title"
+          onClick={() => setShowCancelModal(false)}
+        >
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h2 id="cancel-modal-title">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="8" stroke="#c0392b" strokeWidth="1.6"/>
+                  <path d="M9 5v5M9 13h.01" stroke="#c0392b" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                Hủy gói {subscription.plan}?
+              </h2>
+            </div>
+            <div className={styles.modalBody}>
+              <p>
+                Bạn có chắc muốn hủy gói <strong>{subscription.plan}</strong> không? Sau khi hủy, tài khoản vẫn có quyền {subscription.plan} đến hết ngày <strong>{subscription.expires}</strong>, sau đó sẽ chuyển về Gói Miễn Phí.
+              </p>
+              <div className={styles.cancelWarn}>
+                ⚠️ Sau khi hết hạn, bạn sẽ không còn quyền truy cập: AI không giới hạn, đánh giá phát âm, bộ mẫu cao cấp.
+              </div>
+            </div>
+            <div className={styles.modalFoot}>
+              <button
+                type="button"
+                className="btn btn-quiet"
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCanceling}
+              >
+                Giữ lại gói
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger-solid"
+                onClick={handleConfirmCancel}
+                disabled={isCanceling}
+              >
+                {isCanceling ? 'Đang xử lý...' : 'Xác nhận hủy gói'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

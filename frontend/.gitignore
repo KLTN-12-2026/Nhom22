@@ -6,3 +6,6 @@
 lint-result.json
 
 .next-fe011-dev/
+node_modules/
+.next/
+.DS_Store

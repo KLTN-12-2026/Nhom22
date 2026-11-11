@@ -1,8 +1,9 @@
 'use client';
-import { useParams } from 'next/navigation';
-import { CsvImport } from '@/components/content/CsvImport';
 
-export default function CsvPage() {
+import { CsvImport } from '@/components/content/CsvImport';
+import { useParams } from 'next/navigation';
+
+export default function NhapCsvPage() {
   const { id } = useParams();
   return <CsvImport key={id} deckId={id} />;
 }

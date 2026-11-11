@@ -362,7 +362,12 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-3);
 }
-.card-form-grid .field:first-child { grid-column: 1 / -1; }
+.card-field-error {
+  color: var(--danger, #d9383a);
+  font-size: var(--fs-xs, 0.75rem);
+  margin-top: 4px;
+  display: none;
+}
 
 .qr-block {
   display: flex;
@@ -794,21 +799,25 @@
         <!-- Card form -->
         <div class="pay-detail is-active" id="detail-card">
           <div class="card-form-grid">
-            <div class="field">
-              <label class="field-label" for="card-number">Số thẻ</label>
+            <div class="field" id="field-card-number">
+              <label class="field-label" for="card-number">Số thẻ <span style="color:var(--danger,#d9383a)">*</span></label>
               <input class="input" type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" inputmode="numeric">
+              <p class="card-field-error" id="err-card-number"></p>
             </div>
-            <div class="field">
-              <label class="field-label" for="card-name">Tên chủ thẻ</label>
+            <div class="field" id="field-card-name">
+              <label class="field-label" for="card-name">Tên chủ thẻ <span style="color:var(--danger,#d9383a)">*</span></label>
               <input class="input" type="text" id="card-name" placeholder="NGUYEN VAN A" autocomplete="cc-name" style="text-transform:uppercase">
+              <p class="card-field-error" id="err-card-name"></p>
             </div>
-            <div class="field">
-              <label class="field-label" for="card-expiry">Ngày hết hạn</label>
+            <div class="field" id="field-card-expiry">
+              <label class="field-label" for="card-expiry">Ngày hết hạn <span style="color:var(--danger,#d9383a)">*</span></label>
               <input class="input" type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" inputmode="numeric">
+              <p class="card-field-error" id="err-card-expiry"></p>
             </div>
-            <div class="field">
-              <label class="field-label" for="card-cvv">CVV</label>
+            <div class="field" id="field-card-cvv">
+              <label class="field-label" for="card-cvv">CVV <span style="color:var(--danger,#d9383a)">*</span></label>
               <input class="input" type="text" id="card-cvv" placeholder="123" maxlength="4" autocomplete="cc-csc" inputmode="numeric">
+              <p class="card-field-error" id="err-card-cvv"></p>
             </div>
           </div>
         </div>
@@ -1016,7 +1025,91 @@ function switchPayMethod(method) {
   document.getElementById('detail-' + method).classList.add('is-active');
 }
 
+function validateCardForm() {
+  let isValid = true;
+  const numInput = document.getElementById('card-number');
+  const nameInput = document.getElementById('card-name');
+  const expInput = document.getElementById('card-expiry');
+  const cvvInput = document.getElementById('card-cvv');
+
+  const errNum = document.getElementById('err-card-number');
+  const errName = document.getElementById('err-card-name');
+  const errExp = document.getElementById('err-card-expiry');
+  const errCvv = document.getElementById('err-card-cvv');
+
+  [errNum, errName, errExp, errCvv].forEach(el => {
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  });
+  [numInput, nameInput, expInput, cvvInput].forEach(el => {
+    if (el) el.style.borderColor = '';
+  });
+
+  const numDigits = (numInput?.value || '').replace(/\D/g, '');
+  if (!numDigits) {
+    if (errNum) { errNum.textContent = 'Vui lòng nhập số thẻ'; errNum.style.display = 'block'; }
+    if (numInput) numInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  } else if (numDigits.length < 16) {
+    if (errNum) { errNum.textContent = 'Số thẻ không hợp lệ (cần 16 chữ số)'; errNum.style.display = 'block'; }
+    if (numInput) numInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  }
+
+  const nameVal = (nameInput?.value || '').trim();
+  if (!nameVal) {
+    if (errName) { errName.textContent = 'Vui lòng nhập tên chủ thẻ'; errName.style.display = 'block'; }
+    if (nameInput) nameInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  } else if (nameVal.length < 2) {
+    if (errName) { errName.textContent = 'Tên chủ thẻ không hợp lệ'; errName.style.display = 'block'; }
+    if (nameInput) nameInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  }
+
+  const expVal = (expInput?.value || '').trim();
+  if (!expVal) {
+    if (errExp) { errExp.textContent = 'Vui lòng nhập ngày hết hạn'; errExp.style.display = 'block'; }
+    if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  } else {
+    const match = expVal.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/);
+    if (!match) {
+      if (errExp) { errExp.textContent = 'Định dạng MM/YY không hợp lệ'; errExp.style.display = 'block'; }
+      if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
+      isValid = false;
+    } else {
+      const month = parseInt(match[1], 10);
+      const year = parseInt('20' + match[2], 10);
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        if (errExp) { errExp.textContent = 'Thẻ đã hết hạn'; errExp.style.display = 'block'; }
+        if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
+        isValid = false;
+      }
+    }
+  }
+
+  const cvvDigits = (cvvInput?.value || '').replace(/\D/g, '');
+  if (!cvvDigits) {
+    if (errCvv) { errCvv.textContent = 'Vui lòng nhập mã CVV'; errCvv.style.display = 'block'; }
+    if (cvvInput) cvvInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  } else if (cvvDigits.length < 3) {
+    if (errCvv) { errCvv.textContent = 'Mã CVV gồm 3 hoặc 4 chữ số'; errCvv.style.display = 'block'; }
+    if (cvvInput) cvvInput.style.borderColor = 'var(--danger, #d9383a)';
+    isValid = false;
+  }
+
+  return isValid;
+}
+
 function confirmPayment() {
+  const isCard = document.getElementById('detail-card').classList.contains('is-active');
+  if (isCard && !validateCardForm()) {
+    return;
+  }
   const btn = document.getElementById('btn-confirm');
   btn.disabled = true;
   btn.textContent = 'Đang xử lý...';
@@ -1053,13 +1146,25 @@ document.getElementById('success-overlay').addEventListener('click', function(e)
   if (e.target === this) closeSuccess();
 });
 
-// Card number formatting
+// Card number formatting & listeners
 document.addEventListener('DOMContentLoaded', function() {
   const cardNum = document.getElementById('card-number');
   if (cardNum) {
     cardNum.addEventListener('input', function() {
       let v = this.value.replace(/\D/g, '').substring(0, 16);
       this.value = v.replace(/(.{4})/g, '$1 ').trim();
+      const err = document.getElementById('err-card-number');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+      this.style.borderColor = '';
+    });
+  }
+  const cardName = document.getElementById('card-name');
+  if (cardName) {
+    cardName.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      const err = document.getElementById('err-card-name');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+      this.style.borderColor = '';
     });
   }
   const expiry = document.getElementById('card-expiry');
@@ -1068,6 +1173,18 @@ document.addEventListener('DOMContentLoaded', function() {
       let v = this.value.replace(/\D/g, '').substring(0, 4);
       if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
       this.value = v;
+      const err = document.getElementById('err-card-expiry');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+      this.style.borderColor = '';
+    });
+  }
+  const cvv = document.getElementById('card-cvv');
+  if (cvv) {
+    cvv.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').substring(0, 4);
+      const err = document.getElementById('err-card-cvv');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+      this.style.borderColor = '';
     });
   }
 });

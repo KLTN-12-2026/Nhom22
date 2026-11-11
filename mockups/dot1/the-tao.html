@@ -52,7 +52,10 @@
           <div class="form-head">
             <div class="form-code"><span id="mode-code">Phiếu thêm thẻ</span><span id="deck-code"></span></div>
           <a class="btn btn-quiet" id="back" href="bo-the.html" style="margin:0 0 var(--sp-2) -12px;justify-self:start"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span id="back-label">Bộ thẻ</span></a>
-            <h1 id="page-title">Thêm thẻ</h1>
+            <div class="row-between" style="align-items:center">
+              <h1 id="page-title" style="margin:0">Thêm thẻ</h1>
+              <a class="btn btn-secondary" id="import-csv" href="nhap-csv.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Nhập từ CSV</a>
+            </div>
           </div>
 
           <form id="form" class="form-grid" novalidate>
@@ -133,6 +136,7 @@
 
             <div class="form-foot">
               <a class="btn btn-quiet" id="cancel" href="bo-the.html">Hủy</a>
+              <a class="btn btn-secondary" id="foot-import-csv" href="nhap-csv.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Nhập từ CSV</a>
               <button type="submit" class="btn btn-secondary" id="save-more" data-more="1">Lưu và thêm thẻ khác</button>
               <button type="submit" class="btn btn-primary btn-lg" id="save">Lưu thẻ</button>
             </div>
@@ -275,8 +279,13 @@
     render: ({ deck, tags, cards, card }) => {
       existing = cards;
       const back = "bo-the-chi-tiet.html?id=" + deck.id;
+      const csvLink = "nhap-csv.html?deckId=" + deck.id;
       document.getElementById("back").href = back;
       document.getElementById("cancel").href = back;
+      const btnCsv = document.getElementById("import-csv");
+      const footCsv = document.getElementById("foot-import-csv");
+      if (btnCsv) btnCsv.href = csvLink;
+      if (footCsv) footCsv.href = csvLink;
       document.getElementById("back-label").textContent = deck.ten;
       document.getElementById("deck-code").textContent = cards.length + " thẻ ở trang này";
       document.getElementById("tags").innerHTML = tags.items.map((t) => '<label class="choice"><input type="checkbox" name="tagIds" value="' + t.id + '"><span class="bubble box" aria-hidden="true"><svg class="box-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>' + VL.esc(t.ten) + "</span></label>").join("");
@@ -286,6 +295,8 @@
         document.getElementById("page-title").textContent = "Sửa thẻ “" + card.tu + "”";
         document.getElementById("mode-code").textContent = "Phiếu sửa thẻ";
         document.getElementById("save-more").hidden = true;
+        if (btnCsv) btnCsv.hidden = true;
+        if (footCsv) footCsv.hidden = true;
         document.getElementById("save").textContent = "Lưu thay đổi";
         Object.entries({word:"tu",pos:"tuLoai",ipa:"phienAm",meaningVi:"nghiaVi",exampleEn:"viDuEn",exampleVi:"dichVi",nguon:"nguon"}).forEach(([field,key])=>{form[field].value=card[key] || "";});
         const d = form.querySelector('[name="difficulty"][value="' + (card.doKho || 2) + '"]');
