@@ -72,6 +72,10 @@ app:
     chinh-ta-luot: 5
     chinh-ta-sai: 2
     cap-nham: 2
+  rewards:
+    diem-toi-da-ngay: ${REWARD_DAILY_CAP:100}
+    diem-moi-luot-on: 1
+    diem-moi-cau-dung: 1
   statistics:
     so-luot-toi-da: 20
     so-quan-sat-toi-thieu: 5

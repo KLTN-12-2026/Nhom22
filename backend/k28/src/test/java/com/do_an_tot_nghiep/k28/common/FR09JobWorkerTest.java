@@ -38,7 +38,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class FR09JobWorkerTest extends AbstractIntegrationTest {
+class       FR09JobWorkerTest extends AbstractIntegrationTest {
 
     private static final String LOAI = "TEST_FR09";
     private static final JobProperties PROPS = new JobProperties(true, 5, 3, Duration.ofMinutes(10),

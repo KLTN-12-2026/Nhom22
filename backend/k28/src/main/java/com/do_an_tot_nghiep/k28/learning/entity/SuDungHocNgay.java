@@ -42,4 +42,10 @@ public class SuDungHocNgay extends BaseEntity {
             this.soTheMoi++;
         }
     }
+
+    public int addPoints(int requested, int cap) {
+        int granted = Math.max(0, Math.min(requested, cap - this.diem));
+        this.diem += granted;
+        return granted;
+    }
 }

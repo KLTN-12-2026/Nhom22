@@ -21,6 +21,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -74,6 +75,9 @@ class FR06DashboardTest extends AbstractIntegrationTest {
     PhienHocTheRepository queue;
     @Autowired
     StudyTimeService studyTime;
+
+    @Autowired
+    StreakService streakService;
 
     @Test
     void fr06_openSessionIsLatestDangHocStartedTodayAndCountsAnswers() throws Exception {
@@ -265,7 +269,7 @@ class FR06DashboardTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, studyTime)
+                sessions, queue, studyTime, streakService)
                 .today(learner.id(), new TodayQuery(null, null));
     }
 

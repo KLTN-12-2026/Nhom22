@@ -39,13 +39,11 @@ public interface SuDungHocNgayRepository extends JpaRepository<SuDungHocNgay, Lo
             from SuDungHocNgay s
             where s.nguoiDungId = :userId
               and s.soLuotHopLe >= :toiThieu
-              and s.ngayDiaPhuong <= :homNay
             order by s.ngayDiaPhuong desc
             """)
     List<LocalDate> qualifyingDays(
             @Param("userId") Long userId,
             @Param("toiThieu") int toiThieu,
-            @Param("homNay") LocalDate homNay,
             Pageable pageable
     );
 }

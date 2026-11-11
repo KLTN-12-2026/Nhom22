@@ -450,7 +450,7 @@ Màn hình này chính là **bảng điều khiển của người học**: UI12
 | Kế hoạch hôm nay | Quá hạn, đến hạn, từ mới còn lại, thời gian ước tính, nút bắt đầu | `GET /learning/today` | B2.2 |
 | Tiếp tục phiên đang dở | Phiên `DANG_HOC` mới nhất bắt đầu trong ngày địa phương hôm nay: số đã trả lời/còn lại, nút “Tiếp tục” hoặc “Xem tổng kết” | `phienDangDo` trong `GET /learning/today` | B2.12 |
 | Mục tiêu ngày | Phút đã học thật so với mục tiêu phút/ngày | `daHocHomNay` trong `GET /learning/today` | B2.2, đổi cách tính ở B2.12 |
-| Chuỗi ngày | Số ngày liên tiếp đủ điều kiện | `GET /learning/today` | B2.2, thay ở B3.6 |
+| Chuỗi ngày | Số ngày liên tiếp đủ điều kiện, ngày đóng băng của tuần (`daDungNgayNghiTuanNay`, `ngayNghiDaDung`) | `GET /learning/today` | B2.2, thêm ngày đóng băng ở B3.6 |
 | Cứu lịch ôn | Phương án chia N ngày khi quá hạn vượt ngưỡng (đã triển khai §13.2) | `cuuLichOn` trong `GET /learning/today` | B2.6 |
 | Hoạt động 7 ngày | Số phút và số lượt mỗi ngày, vạch mục tiêu | `theoNgay` của `GET /statistics/overview` (7 ngày đến hôm nay) | B2.10 |
 | Dự báo ôn 7 ngày tới | Số lượt đến hạn mỗi ngày từ ngày mai | `duBaoOn` trong `GET /learning/today` | B2.12 |
@@ -618,9 +618,9 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `dang_ky_goi` | nguoi_dung_id, goi_ma, bat_dau_at, het_han_at, trang_thai (`HIEU_LUC`/`HET_HAN`), version; tối đa một dòng hiệu lực mỗi người; chỉ mục `(trang_thai, het_han_at)` cho tác vụ nhắc/hết hạn |
 | `giao_dich_thanh_toan` | ma_don (unique), nguoi_dung_id, goi_ma, chu_ky (`THANG`/`NAM`), so_tien, cong (`VNPAY`), trang_thai (`CHO_THANH_TOAN`/`THANH_CONG`/`THAT_BAI`/`HET_HAN`), ma_giao_dich_cong, ma_phan_hoi, du_lieu_cong_json, tao_at, hoan_tat_at; không có cột dữ liệu thẻ |
 | `ket_qua_phat_am` | nguoi_dung_id, the_id, tep_ghi_am_id nullable, chi_so_json, nha_cung_cap, trang_thai |
-| `huy_hieu`, `nguoi_dung_huy_hieu` | điều kiện, lần nhận; unique người/huy hiệu |
-| `thu_thach`, `tien_do_thu_thach` | quy tắc thử thách, khoảng ngày và mức hoàn thành |
-| `so_diem_thuong` | nguoi_dung_id, loai_su_kien, su_kien_id, so_diem; unique nguồn thưởng |
+| `huy_hieu`, `nguoi_dung_huy_hieu` | ma, ten, mo_ta, loai_dieu_kien (`TONG_LUOT_ON`/`CHUOI_NGAY`/`TONG_BAI_LUYEN`/`TONG_DIEM`), nguong, thu_tu, hoat_dong; lần nhận nhan_at; unique người/huy hiệu (V16, 6 huy hiệu seed) |
+| `thu_thach`, `tien_do_thu_thach` | ma, loai_dieu_kien (`LUOT_ON`), chu_ky (`TUAN`), muc_tieu; tiến độ theo tuan_bat_dau (thứ Hai), gia_tri, hoan_thanh_at, version; unique người/thử thách/tuần (V16, 1 thử thách seed) |
+| `so_diem_thuong` | nguoi_dung_id, loai_su_kien (`ON_THE`/`BAI_LUYEN`), su_kien_id VARCHAR(64) (`tienDoId:ngày` cho lượt ôn, `lanLamBaiId` cho bài luyện), diem_goc, so_diem (sau trần), ngay_dia_phuong; unique (nguoi_dung_id, loai_su_kien, su_kien_id). `su_dung_hoc_ngay.diem` là tổng điểm của ngày, dùng để áp trần và tái tạo được từ sổ (V16) |
 | `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7); loại gồm nhắc học, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`; `ngay_dia_phuong`, unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
 | `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý |
@@ -762,9 +762,9 @@ Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạ
 
 - Chỉ thưởng cho sự kiện hoàn tất hợp lệ đã được lưu; không thưởng chỉ vì mở trang/lật thẻ.
 - Một thẻ/chiều chỉ có một lượt thưởng SRS chính trong ngày; các bước học lại vẫn lưu nhưng không khai thác điểm bằng bấm liên tục.
-- Điểm tối đa/ngày là cấu hình; ví dụ minh họa 100 điểm/ngày, phải thống nhất trước triển khai.
-- Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ.
-- Chuỗi ngày (**chốt 07/11/2026**, B3.6) tính theo **ngày**: ngày địa phương có tổng ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; không cam kết ngày có một cú bấm là ngày học. **Ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày không đủ điều kiện để giữ chuỗi; nghỉ từ 2 ngày liên tiếp trong cùng tuần thì đứt chuỗi. Giao diện mô tả đúng quy tắc đang chạy và báo khi đã dùng ngày nghỉ của tuần.
+- Điểm tối đa/ngày là cấu hình `app.rewards.diem-toi-da-ngay` (chốt 11/11/2026, B3.6: mặc định 100); 1 điểm cho lượt ôn được thưởng đầu tiên của thẻ/chiều trong ngày, 1 điểm/câu đúng của bài luyện. Sự kiện bị trần cắt vẫn ghi sổ với `so_diem = 0`. Huy hiệu và thử thách không cộng điểm.
+- Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ. Triển khai B3.6: bài `la_luyen_lai = true` nhận 0 điểm.
+- Chuỗi ngày (**chốt 07/11/2026**, B3.6) tính theo **ngày**: ngày địa phương có tổng ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; không cam kết ngày có một cú bấm là ngày học. **Ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày không đủ điều kiện để giữ chuỗi; nghỉ từ 2 ngày liên tiếp trong cùng tuần thì đứt chuỗi. Số chuỗi chỉ đếm ngày đủ điều kiện; ngày đóng băng giữ chuỗi nhưng không cộng. Hôm nay chưa đủ 5 lượt thì chưa tính là ngày nghỉ. Hai ngày nghỉ trong cùng tuần (liền nhau hay không) đứt chuỗi; mỗi tuần dùng ngày nghỉ của riêng tuần đó, nên nghỉ Chủ nhật và thứ Hai liền nhau vẫn giữ chuỗi. Ngày đã lưu muộn hơn hôm nay (sau khi đổi múi giờ) được coi là hôm nay. Giao diện mô tả đúng quy tắc đang chạy và báo khi đã dùng ngày nghỉ của tuần.
 - Sổ điểm là dữ liệu gốc; tổng điểm có thể tái tạo. Không nhận điểm lại khi gửi trùng hoặc chạy lại tác vụ.
 
 ### 15.2. Nhắc học
