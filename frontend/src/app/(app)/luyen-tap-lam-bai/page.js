@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { fx } from '@/lib/fx';
 import { PRACTICE_TYPE, label, splitBlank } from '@/lib/practice-labels.mjs';
 
 const randomPart = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
@@ -80,6 +81,8 @@ function PracticeSessionContent() {
   const id = searchParams.get('id');
   const startRef = useRef(0);
   const submitKey = useRef('');
+  const counterRef = useRef(null);
+  const lastAnswered = useRef(0);
 
   const { data: session, isLoading, error } = useQuery({
     queryKey: ['practice-session', id],
@@ -116,6 +119,21 @@ function PracticeSessionContent() {
       setSubmitError(err.message || 'Chưa nộp được bài. Hãy thử lại, câu trả lời vẫn được giữ.');
     }
   });
+
+  const answeredNow = session ? session.cauHoi.filter(q => {
+    const ans = answers[q.id];
+    if (q.loaiCau === 'GHEP_TU') return !!ans && q.deBai.cotTrai.every(l => !!ans[l.id]);
+    if (q.phuongAn) return !!ans;
+    return !!ans && String(ans).trim() !== '';
+  }).length : 0;
+
+  useEffect(() => {
+    if (answeredNow > lastAnswered.current) {
+      fx.play('select');
+      fx.pop(counterRef.current);
+    }
+    lastAnswered.current = answeredNow;
+  }, [answeredNow]);
 
   if (!id) return <div>Invalid Session</div>;
   if (error) return <div className="notice notice-danger" role="alert" style={{ margin: 'var(--space-6)' }}>{error.message || 'Chưa tải được bài luyện.'}</div>;
@@ -295,7 +313,7 @@ function PracticeSessionContent() {
             {submitError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-4)' }}>{submitError}</p>}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-6)', position: 'sticky', bottom: 'var(--space-4)', background: 'var(--color-field)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ fontWeight: 'bold' }}>Đã trả lời {answeredCount}/{session.cauHoi.length}</div>
+              <div ref={counterRef} style={{ fontWeight: 'bold', display: 'inline-block' }}>Đã trả lời {answeredCount}/{session.cauHoi.length}</div>
               <Button type="submit" variant="primary" size="lg" disabled={submitMutation.isPending}>
                 {submitMutation.isPending ? 'Đang nộp...' : 'Nộp bài'}
               </Button>

@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
+import com.do_an_tot_nghiep.k28.engagement.service.RewardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,7 @@ public class ReviewService {
     private final LichSuOnRepository history;
     private final CardService cardService;
     private final JsonMapper jsonMapper;
+    private final RewardService rewardService;
 
     public record Outcome(ReviewResponse body, boolean replayed) {
     }
@@ -165,6 +167,7 @@ public class ReviewService {
 
         dayUsage.record(theMoiVatLy);
         usage.saveAndFlush(dayUsage);
+        rewardService.reviewed(userId, row.getId(), homNay);
 
         boolean lai = backInSession(after.trangThai(), after.hanOnAt(), hetGioAt);
         if (lai) {

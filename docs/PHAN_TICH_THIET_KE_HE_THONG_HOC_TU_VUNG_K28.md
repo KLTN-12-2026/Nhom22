@@ -23,7 +23,7 @@
 - **[Thiết kế]**: chi tiết kỹ thuật, quy tắc nghiệp vụ hoặc trải nghiệm đề xuất để hiện thực hóa yêu cầu gốc.
 - **[Mở rộng]**: ngoài phạm vi nghiệm thu hiện tại, chỉ triển khai khi có thời gian và thống nhất lại phạm vi.
 
-Nội dung trong file Word được sử dụng làm nguồn yêu cầu để phân tích, không được coi là chỉ dẫn điều khiển trợ lý. Mẫu chức năng người dùng cung cấp chỉ được dùng làm mẫu trình bày; các chức năng mạng xã hội, quyên góp, bạn bè và Stories trong mẫu không thuộc đề tài này. Gói dịch vụ và thanh toán được nhóm bổ sung vào phạm vi ngày 07/11/2026 (FR-15, §6.9), làm ở Đợt 3.
+Nội dung trong file Word được sử dụng làm nguồn yêu cầu để phân tích, không được coi là chỉ dẫn điều khiển trợ lý. Mẫu chức năng người dùng cung cấp chỉ được dùng làm mẫu trình bày; các chức năng mạng xã hội, quyên góp, bạn bè và Stories trong mẫu không thuộc đề tài này. Gói dịch vụ và thanh toán được nhóm bổ sung vào phạm vi ngày 07/11/2026 (FR-15, §6.9), làm ở Đợt 3. Ngày 10/11/2026 sửa theo góp ý của GVHD: bắt buộc có gói trả phí mới dùng được chức năng học (bỏ gói Miễn phí, không dùng thử), nhắc hết hạn mỗi ngày trong 7 ngày cuối, Admin quản lý thanh toán và thống kê doanh thu theo tháng/quý/năm (§6.9, TC-22…TC-24).
 
 Các lựa chọn dịch vụ và phiên bản triển khai phải được kiểm tra lại khi xây dựng. Tài liệu không khẳng định giá, hạn mức, phiên bản hoặc khả năng hỗ trợ hiện tại của một nhà cung cấp API.
 
@@ -54,9 +54,9 @@ AI hỗ trợ tạo nội dung và phản hồi ngôn ngữ. Lịch ôn, quyền
 
 **Trong phạm vi [Gốc]:** tài khoản; hồ sơ; thư viện giao tiếp/TOEIC; bộ thẻ cá nhân; CSV; SRS; bài luyện; AI; phát âm; sổ tay từ khó; thống kê; điểm/huy hiệu/thử thách; nhắc học; quản trị và kiểm duyệt.
 
-**Bổ sung vào phạm vi [Thiết kế, 07/11/2026]:** gói dịch vụ Miễn phí / Pro / Premium áp cho toàn hệ thống và thanh toán trực tuyến qua cổng VNPay (môi trường sandbox), lịch sử giao dịch, biên nhận; số thẻ, hạn mức AI, ảnh AI, đánh giá phát âm và bộ mẫu cao cấp theo gói (FR-15).
+**Bổ sung vào phạm vi [Thiết kế, 07/11/2026; sửa 10/11/2026 theo góp ý GVHD]:** gói dịch vụ trả phí Pro / Premium **bắt buộc** cho toàn hệ thống: tài khoản chưa mua gói hoặc gói đã hết hạn không dùng được chức năng học (dữ liệu vẫn giữ); thanh toán trực tuyến qua cổng VNPay (môi trường sandbox), lịch sử giao dịch, biên nhận; nhắc sắp hết hạn mỗi ngày một lần trong 7 ngày cuối; Admin quản lý giao dịch, gói của người dùng, cấu hình gói và xem thống kê doanh thu theo tháng/quý/năm; số thẻ, hạn mức AI, ảnh AI, đánh giá phát âm và bộ mẫu cao cấp theo gói (FR-15).
 
-**Ngoài phạm vi [Gốc]:** ứng dụng di động riêng; mạng xã hội; đồng bộ ngoại tuyến đầy đủ; tự huấn luyện mô hình AI. Trong phần thanh toán: không lưu thẻ, không tự gia hạn, không hoàn tiền tự động, không xuất hóa đơn VAT, không đổi gói giữa kỳ.
+**Ngoài phạm vi [Gốc]:** ứng dụng di động riêng; mạng xã hội; đồng bộ ngoại tuyến đầy đủ; tự huấn luyện mô hình AI. Trong phần thanh toán: không lưu thẻ, không tự gia hạn, không hoàn tiền tự động, không xuất hóa đơn VAT, không đổi gói giữa kỳ, không có gói miễn phí hay dùng thử, Admin không cấp gói thủ công và không sửa giao dịch.
 
 **Hướng mở rộng [Gốc/Mở rộng]:** đăng nhập Facebook, nội dung IELTS, tiếng Anh trẻ em, hội thoại AI bằng văn bản. Vai trò giáo viên, lớp học và bảng xếp hạng nhóm cũng chỉ là đề xuất mở rộng, không tự bổ sung vào nghiệm thu.
 
@@ -141,7 +141,7 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xem thống kê từ đã học, lượt ôn, tỷ lệ đúng, thời gian, mục tiêu và chuỗi ngày.
 - Xem mức làm chủ theo kỹ năng, chủ đề/bộ, so sánh kỳ và tổng kết tuần.
 - Nhận điểm kinh nghiệm, huy hiệu, thử thách ngày/tuần và thông báo thành tích.
-- Xem các gói dịch vụ, nâng cấp hoặc gia hạn gói qua cổng thanh toán, xem lịch sử giao dịch và tải biên nhận (FR-15).
+- Mua gói (bắt buộc trước khi học), gia hạn gói qua cổng thanh toán, xem gói đang dùng và số ngày còn lại, nhận thông báo sắp hết hạn, xem lịch sử giao dịch và tải biên nhận (FR-15).
 
 ### 4.2. Chức năng đối với Admin
 
@@ -156,12 +156,13 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xem gợi ý kiểm duyệt AI khi được bật; ra quyết định và lưu lý do xử lý.
 - Xử lý báo cáo đầu ra AI sai, đánh dấu để cải thiện cấu hình.
 - Quản lý hạn mức AI/phát âm và cấu hình dịch vụ qua thông tin không chứa khóa bí mật.
-- Theo dõi lượt sử dụng, tỷ lệ lỗi, thời gian phản hồi và chi phí dịch vụ khi có dữ liệu tính phí.
-- Quản lý thông báo hệ thống, nhắc học, huy hiệu và thử thách.
-- Xem thống kê tài khoản, nội dung, học tập và mức độ sử dụng hệ thống.
-- Xem nhật ký thao tác quản trị, tác vụ nền và lỗi vận hành.
+- Theo dõi lượt sử dụng và tỷ lệ lỗi dịch vụ (Đợt 3 gọn; thời gian phản hồi và chi phí là hướng phát triển, cắt 07/11/2026).
+- Theo dõi nhắc học (hệ thống gửi theo cài đặt người dùng). Thông báo hệ thống do Admin soạn và quản lý huy hiệu/thử thách là hướng phát triển (cắt 07/11/2026); Đợt 3 dùng huy hiệu và thử thách tuần cố định bằng migration.
+- Xem số liệu tài khoản, nội dung, học tập qua các màn quản trị hiện có; trang thống kê tổng hợp của Admin là hướng phát triển (cắt 07/11/2026). Riêng thống kê doanh thu theo tháng/quý/năm **có làm** (UI58, góp ý GVHD 10/11/2026, FR-15).
+- Xem nhật ký thao tác quản trị và lượt dùng/lỗi dịch vụ; màn tác vụ nền và theo dõi yêu cầu xóa dữ liệu là hướng phát triển (cắt 07/11/2026, theo dõi qua nhật ký).
 - Theo dõi sao lưu, kết quả phục hồi thử nghiệm và tiến độ xóa dữ liệu.
-- Xem danh sách giao dịch thanh toán và gói đang dùng của tài khoản (chỉ đọc; FR-15).
+- Quản lý thanh toán (UI59, FR-15): tra cứu giao dịch, xem gói của người dùng và danh sách sắp hết hạn, sửa giá/hạn mức/trạng thái gói; công cụ demo sửa ngày hết hạn và chạy ngay tác vụ nhắc/hết hạn (có lý do, ghi nhật ký). Không hoàn tiền, không cấp gói thủ công, không sửa giao dịch.
+- Xem thống kê doanh thu theo tháng, quý, năm (UI58, FR-15).
 
 ### 4.3. Chức năng đối với Visitor
 
@@ -191,7 +192,7 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 | FR-12 | Thưởng/nhắc | P1 | Thưởng có giới hạn; nhận một lần; nhắc đúng cài đặt và không gửi trùng |
 | FR-13 | Quản trị | P0/P1 | Phân quyền máy chủ; thao tác quan trọng có người thực hiện, thời gian và lý do |
 | FR-14 | Dữ liệu cá nhân | P1 | Có yêu cầu xóa, trạng thái xử lý, xóa tệp và dữ liệu phụ thuộc theo chính sách |
-| FR-15 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026) | P1 | Gói chỉ kích hoạt khi cổng xác nhận có chữ ký hợp lệ và đúng số tiền; mỗi đơn kích hoạt đúng một lần; không lưu dữ liệu thẻ; hết hạn tự về Miễn phí mà không mất dữ liệu; hạn mức áp theo gói ở máy chủ |
+| FR-15 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026, sửa 10/11/2026) | P1 | Không có gói hiệu lực thì máy chủ chặn chức năng học (402), dữ liệu không mất; gói chỉ kích hoạt khi cổng xác nhận có chữ ký hợp lệ và đúng số tiền; mỗi đơn kích hoạt đúng một lần; không lưu dữ liệu thẻ; nhắc sắp hết hạn mỗi ngày đúng một lần trong 7 ngày cuối; hạn mức áp theo gói ở máy chủ; doanh thu theo tháng/quý/năm chỉ tính giao dịch thành công, theo giờ Việt Nam |
 
 ## 6. Luồng nghiệp vụ chính
 
@@ -202,7 +203,8 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 3. Người dùng xác thực bằng token một lần; token sai/hết hạn có thông báo và khả năng gửi lại.
 4. Người học chọn mục tiêu giao tiếp/TOEIC, trình độ tự đánh giá, chủ đề, thời gian/ngày, số từ mới và giờ nhắc.
 5. Hệ thống đề xuất bộ mẫu theo mục tiêu/trình độ đã lưu trong ho_so_hoc_tap: GET /library/decks?nguon=MAU&mucTieu={mucTieu}&trinhDo={trinhDo}. B1.10 chỉ gợi ý và xem bộ, người học có thể bỏ qua; không tự sao chép.
-6. Chuyển đến bảng điều khiển (UI12 `/hom-nay`, §9.1) với một hành động rõ ràng: “Bắt đầu phiên học đầu tiên”.
+6. Chưa có gói hiệu lực (FR-15, §6.9) → chuyển đến UI55 `/thanh-toan-goi` để mua gói; các bước 1–5 không cần gói.
+7. Thanh toán thành công (UI57) → chuyển đến bảng điều khiển (UI12 `/hom-nay`, §9.1) với một hành động rõ ràng: “Bắt đầu phiên học đầu tiên”.
 
 Đăng nhập Google xác minh danh tính từ nhà cung cấp; không tự nối tài khoản chỉ vì email trùng khi chưa có bằng chứng và quy trình liên kết an toàn.
 
@@ -270,30 +272,59 @@ Nếu mất mạng, hiển thị kết quả chưa đồng bộ và cho gửi l�
 1. User báo cáo bộ/thẻ hoặc đầu ra AI, chọn lý do và mô tả.
 2. Hệ thống chống gửi trùng, lưu nội dung tham chiếu và đưa vào hàng đợi.
 3. Admin xem nội dung công khai hoặc nội dung cụ thể gắn báo cáo được phép truy cập.
-4. AI có thể gợi ý phân loại [Thiết kế]; Admin quyết định giữ/ẩn/yêu cầu sửa/từ chối báo cáo.
-5. Lưu người xử lý, lý do, trạng thái trước/sau và gửi thông báo cho người liên quan.
+4. AI có thể gợi ý phân loại [Thiết kế]; Admin quyết định giữ hoặc ẩn kèm lý do (Đợt 3 gọn; trạng thái yêu cầu sửa/từ chối là hướng phát triển).
+5. Lưu người xử lý, lý do, trạng thái trước/sau vào nhật ký. Thông báo cho người liên quan: hướng phát triển (cắt 07/11/2026).
 
-### 6.9. Nâng cấp gói và thanh toán [Thiết kế, bổ sung 07/11/2026]
+### 6.9. Gói dịch vụ bắt buộc và thanh toán [Thiết kế, bổ sung 07/11/2026; sửa 10/11/2026 theo góp ý GVHD]
 
-**Các gói** (cấu hình trong bảng `goi_dich_vu`, giá theo giao diện UI55; đổi giá không cần sửa mã):
+**Nguyên tắc (chốt 10/11/2026):** hệ thống **không có gói miễn phí và không có dùng thử**. User chỉ dùng được chức năng học khi có một `dang_ky_goi` ở trạng thái `HIEU_LUC` và `het_han_at > now`. Đăng ký, xác thực email, đăng nhập, thiết lập lần đầu (§6.1 bước 1–5) và xem thư viện công khai vẫn mở; sau thiết lập lần đầu người học được đưa tới UI55 để mua gói. Admin không cần gói.
+
+**Các gói** (cấu hình trong bảng `goi_dich_vu`, giá theo giao diện UI55; Admin đổi giá ở UI59, không cần sửa mã):
 
 | Gói | Giá tháng / năm | Thẻ tối đa | AI văn bản / ngày | Ảnh AI / ngày | Đánh giá phát âm | Bộ mẫu cao cấp |
 |---|---|---|---|---|---|---|
-| `MIEN_PHI` | 0 | 500 | 3 | 0 | Không (vẫn nghe âm mẫu) | Không |
 | `PRO` | 299.000 đ / 2.990.000 đ | 5.000 | 20 | 10 | Có | Không |
 | `PREMIUM` | 999.000 đ / 9.990.000 đ | Không giới hạn | 100 | 30 | Có | Có |
 
-Xuất CSV (B1.12) và yêu cầu xóa dữ liệu (FR-14) **không** phụ thuộc gói: đây là quyền của người học với dữ liệu của chính mình. Gói Miễn phí có 3 lượt AI văn bản/ngày (giao diện ban đầu ghi 0) để người học thử tự điền thẻ (R-02) trước khi mua. Dòng "Hỗ trợ ưu tiên" trên giao diện không có chức năng tương ứng nên bỏ.
+Chu kỳ `THANG` cộng 1 tháng dương lịch, `NAM` cộng 1 năm dương lịch, tính theo múi giờ kinh doanh `Asia/Ho_Chi_Minh`. Dòng "Hỗ trợ ưu tiên" trên giao diện không có chức năng tương ứng nên bỏ.
 
-**Luồng:**
+**Khi không có gói hiệu lực** (chưa mua hoặc đã hết hạn):
+- `SubscriptionGuard` ở máy chủ trả **402** `SUBSCRIPTION_REQUIRED` kèm `{lyDo: CHUA_CO_GOI|HET_HAN, goiGanNhat, hetHanAt}` cho mọi API của User, trừ danh sách được phép: `/auth/**`, `/public/**`, `GET /library/**`, `/me` và cài đặt tài khoản (hồ sơ, mục tiêu, thông báo, mật khẩu), `GET /me/subscription`, `/billing/**` của User, `/notifications/**`, xuất CSV `GET /decks/{id}/export` và `POST /me/deletion-requests`. Xuất CSV và xóa dữ liệu là quyền của người học với dữ liệu của chính mình (FR-14) nên không phụ thuộc gói.
+- Guard đọc trực tiếp `het_han_at`, không chờ tác vụ nền: quá giờ hết hạn là bị chặn ngay.
+- **Không xóa dữ liệu**: bộ, thẻ, tiến độ SRS, lịch sử, sổ tay, điểm giữ nguyên. Mua lại thì học tiếp đúng trạng thái cũ; thẻ đến hạn trong thời gian bị khóa hiện là quá hạn như TC-10, không bị xóa nợ ôn.
+- FE: bắt 402 → chuyển `/thanh-toan-goi?lyDo=CHUA_CO_GOI|HET_HAN`; menu học bị khóa, chỉ còn Gói & thanh toán, Thông báo, Cá nhân.
+
+**Luồng mua:**
 1. User chọn gói và chu kỳ ở UI55 → `POST /billing/checkouts {goi, chuKy}`. Máy chủ tạo đơn `CHO_THANH_TOAN` với số tiền lấy từ `goi_dich_vu` (không tin số tiền từ trình duyệt), ký URL thanh toán VNPay (HMAC-SHA512) và trả `paymentUrl`.
 2. Trình duyệt chuyển sang trang VNPay; người học nhập thẻ nội địa/quốc tế hoặc quét VNPAY-QR **trên trang của cổng**. Hệ thống không nhận, không lưu số thẻ, CVV.
 3. VNPay gọi IPN `GET /billing/vnpay/ipn` (máy chủ ↔ máy chủ) và chuyển người học về `GET /billing/vnpay/return`. Cả hai đi qua một hàm xác nhận: kiểm chữ ký, mã đơn, số tiền, mã phản hồi; khóa hàng đơn rồi chuyển `THANH_CONG`/`THAT_BAI` **một lần** (gọi lặp trả kết quả cũ).
-4. Thành công → tạo/gia hạn `dang_ky_goi`: đang Miễn phí thì bắt đầu ngay; đang cùng gói thì cộng dồn hạn. Đang gói khác còn hạn → từ chối tạo đơn (không đổi gói giữa kỳ).
-5. Trang kết quả UI57 đọc `GET /billing/transactions/{maDon}`; UI56 liệt kê giao dịch và biên nhận HTML in được.
-6. Tác vụ nền hằng ngày chuyển gói hết hạn về `MIEN_PHI` và nhắc trước 3 ngày (B3.7). Thẻ vượt giới hạn vẫn giữ và học được; chỉ chặn tạo thẻ mới.
+4. Thành công → tạo/gia hạn `dang_ky_goi`: chưa có gói hoặc gói đã hết hạn thì bắt đầu ngay (`bat_dau_at = hoan_tat_at`); đang cùng gói còn hạn thì cộng dồn từ `het_han_at` cũ. Đang gói khác còn hạn → từ chối tạo đơn 422 (không đổi gói giữa kỳ).
+5. Trang kết quả UI57 đọc `GET /billing/transactions/{maDon}`; thành công thì mở khóa ngay và có nút về UI12. UI56 liệt kê giao dịch và biên nhận HTML in được.
 
-**Áp quyền lợi theo gói** (`EntitlementService`, đọc gói hiệu lực): `QuotaService` (B3.1) lấy hạn mức AI/ảnh theo gói; tạo thẻ, nhập CSV, sao chép bộ, commit thẻ AI kiểm giới hạn thẻ; đánh giá phát âm (B3.4b) kiểm cờ `phat_am`; sao chép bộ mẫu `cao_cap` kiểm cờ `bo_mau_cao_cap`. Vượt quyền lợi → 422 `BUSINESS_RULE` kèm gói cần nâng cấp; hết hạn mức ngày → 429 như §14.2.
+**Nhắc sắp hết hạn và chuyển hết hạn** (B3.12b, dùng bảng `thong_bao` của B3.7):
+- `SubscriptionExpiryJob` chạy mỗi 15 phút cùng bộ lập lịch của B3.7; Admin gọi chạy ngay được bằng công cụ demo.
+- Số ngày còn lại `N = ngày địa phương(het_han_at) − ngày địa phương(now)` theo múi giờ của User.
+- Khi `now < het_han_at`, `0 ≤ N ≤ 7`, giờ địa phương ≥ 08:00 và hôm nay chưa có thông báo `GOI_SAP_HET_HAN`: tạo một thông báo "Gói {tên} còn N ngày, hết hạn lúc HH:mm dd/MM/yyyy" (N = 0: "hết hạn hôm nay lúc HH:mm"), có liên kết tới UI55. Kết quả: bắt đầu nhắc trước 1 tuần, **mỗi ngày đúng một lần**, tối đa 8 lần (ngày D−7 đến ngày D).
+- Chống trùng: unique `(nguoi_dung_id, loai, ngay_dia_phuong)` trên `thong_bao`; chạy lại, chạy song song hay Admin bấm chạy ngay cũng không tạo thêm trong cùng ngày.
+- Khi `now ≥ het_han_at`: chuyển `HET_HAN` bằng UPDATE có điều kiện `trang_thai = 'HIEU_LUC'` (chạy lại không đổi gì) và tạo một thông báo `GOI_DA_HET_HAN` (khóa theo `dang_ky_goi.id`).
+- Kênh: trong ứng dụng luôn gửi (thông báo giao dịch, không phụ thuộc nút tắt nhắc học); email gửi khi `cai_dat_thong_bao.nhan_email = true`.
+- Gia hạn thành công thì `het_han_at` lùi ra xa nên tự hết nhắc.
+- Banner: `GET /me/subscription` trả `{goi, tenGoi, trangThai, batDauAt, hetHanAt, soNgayConLai}` tính tại thời điểm gọi; AppShell hiện banner vàng khi `soNgayConLai ≤ 7`, đỏ khi `≤ 1`, không phụ thuộc tác vụ nền.
+
+**Áp quyền lợi theo gói** (`EntitlementService`, đọc gói hiệu lực): `QuotaService` (B3.1) lấy hạn mức AI/ảnh theo gói; tạo thẻ, nhập CSV, sao chép bộ, commit thẻ AI kiểm giới hạn thẻ; đánh giá phát âm (B3.4b) kiểm cờ `phat_am`; sao chép bộ mẫu `cao_cap` kiểm cờ `bo_mau_cao_cap`. Vượt quyền lợi → 422 `BUSINESS_RULE` kèm `goiCanNangCap`; hết hạn mức ngày → 429 như §14.2. Thẻ đã có vượt giới hạn vẫn giữ và học được; chỉ chặn tạo thẻ mới.
+
+**Quản lý thanh toán (Admin, UI59 `/quan-tri/thanh-toan`):**
+- Giao dịch: `GET /admin/payments` (lọc trạng thái, gói, khoảng ngày, email; phân trang), `GET /admin/payments/{maDon}` (chi tiết, dữ liệu cổng trả về, không có trường thẻ).
+- Gói của người dùng: `GET /admin/subscriptions` (lọc trạng thái, gói, email, `sapHetHan=7`).
+- Cấu hình gói: `GET /admin/plans`, `PUT /admin/plans/{ma}` (giá, hạn mức, cờ quyền lợi, `hoat_dong`; có `version`, cũ → 409). Đơn đã tạo giữ số tiền lúc tạo.
+- Công cụ demo (chỉ bật khi `app.billing.demo-tools=true`; tắt khi triển khai thật): `PATCH /admin/subscriptions/{id}/expiry {hetHanAt, lyDo}` sửa ngày hết hạn; `POST /admin/subscriptions/expiry-check` chạy ngay `SubscriptionExpiryJob`. Lý do bắt buộc (10–500 ký tự), ghi `nhat_ky_quan_tri`.
+- Không hoàn tiền, không cấp gói thủ công, không sửa hay xóa giao dịch.
+
+**Thống kê doanh thu (Admin, UI58 `/quan-tri/doanh-thu`):**
+- `GET /admin/revenue?ky=THANG|QUY|NAM&nam=2026` (kỳ `NAM` dùng `tuNam`, `denNam`, mặc định 5 năm gần nhất).
+- Chỉ tính giao dịch `THANH_CONG`; gom theo `hoan_tat_at` đổi sang múi giờ kinh doanh `Asia/Ho_Chi_Minh` (`app.billing.business-zone`); kỳ không có giao dịch vẫn trả 0. Tiền là số nguyên VND, không dùng số thực.
+- Trả `{ky, nam, tongDoanhThu, soGiaoDich, soVoiKyTruocPhanTram, cacKy: [{nhan, tuNgay, denNgay, doanhThu, soGiaoDich, theoGoi: {PRO, PREMIUM}}], tongQuan: {soGoiHieuLuc, soSapHetHan7Ngay, tyLeThanhCong}}`. `tyLeThanhCong = THANH_CONG / (THANH_CONG + THAT_BAI + HET_HAN)` trong khoảng đang xem; đơn đang chờ không tính. `soVoiKyTruocPhanTram` = null khi kỳ trước bằng 0.
+- Dữ liệu demo: seed giao dịch `THANH_CONG` có `ma_don` tiền tố `DEMO-` trải 2025–2026, chỉ nạp ở profile `demo`.
 
 **Kiểm soát:** khóa bí mật cổng ở biến môi trường; demo dùng sandbox; đơn quá 15 phút chưa xác nhận → `HET_HAN`; lưu dữ liệu cổng trả về (không có trường thẻ) để đối soát; tạo đơn tối đa 5 lần/10 phút/người. Chạy máy cục bộ thì IPN không tới được, nên `return` cũng xác nhận qua cùng hàm; khi triển khai mở IPN công khai.
 
@@ -419,7 +450,7 @@ Màn hình này chính là **bảng điều khiển của người học**: UI12
 | Kế hoạch hôm nay | Quá hạn, đến hạn, từ mới còn lại, thời gian ước tính, nút bắt đầu | `GET /learning/today` | B2.2 |
 | Tiếp tục phiên đang dở | Phiên `DANG_HOC` mới nhất bắt đầu trong ngày địa phương hôm nay: số đã trả lời/còn lại, nút “Tiếp tục” hoặc “Xem tổng kết” | `phienDangDo` trong `GET /learning/today` | B2.12 |
 | Mục tiêu ngày | Phút đã học thật so với mục tiêu phút/ngày | `daHocHomNay` trong `GET /learning/today` | B2.2, đổi cách tính ở B2.12 |
-| Chuỗi ngày | Số ngày liên tiếp đủ điều kiện | `GET /learning/today` | B2.2, thay ở B3.6 |
+| Chuỗi ngày | Số ngày liên tiếp đủ điều kiện, ngày đóng băng của tuần (`daDungNgayNghiTuanNay`, `ngayNghiDaDung`) | `GET /learning/today` | B2.2, thêm ngày đóng băng ở B3.6 |
 | Cứu lịch ôn | Phương án chia N ngày khi quá hạn vượt ngưỡng (đã triển khai §13.2) | `cuuLichOn` trong `GET /learning/today` | B2.6 |
 | Hoạt động 7 ngày | Số phút và số lượt mỗi ngày, vạch mục tiêu | `theoNgay` của `GET /statistics/overview` (7 ngày đến hôm nay) | B2.10 |
 | Dự báo ôn 7 ngày tới | Số lượt đến hạn mỗi ngày từ ngày mai | `duBaoOn` trong `GET /learning/today` | B2.12 |
@@ -486,7 +517,7 @@ Hiển thị từ đã học, kỹ năng tiến bộ, ba từ khó và mục ti�
 | Động lực | Huy hiệu, thử thách, điểm, lịch sử thưởng |
 | Cá nhân | Hồ sơ, mục tiêu, bảo mật, thông báo, dữ liệu và xóa tài khoản |
 | Gói & thanh toán (FR-15) | UI55 chọn gói, chu kỳ, chuyển sang cổng; UI56 lịch sử giao dịch, biên nhận; UI57 kết quả thanh toán |
-| Quản trị | Tổng quan, tài khoản, nội dung mẫu, báo cáo, dịch vụ/hạn mức, thông báo, nhật ký/tác vụ |
+| Quản trị | Tài khoản, chủ đề, nội dung mẫu, báo cáo, dịch vụ/hạn mức, quản lý thanh toán (UI59), doanh thu tháng/quý/năm (UI58), nhật ký. Cắt khỏi Đợt 3 (07/11/2026): tổng quan (UI46), thông báo hệ thống (UI52), tab tác vụ nền (UI53), huy hiệu/thử thách (UI54) |
 
 ## 11. Kiến trúc hệ thống
 
@@ -526,7 +557,7 @@ Worker là tiến trình xử lý của ứng dụng, có thể chạy riêng kh
 | `dong_luc` | Điểm, huy hiệu, thử thách và sổ thưởng |
 | `thong_bao` | Trong ứng dụng, email, lịch nhắc |
 | `quan_tri` | Phân quyền, kiểm duyệt, cấu hình và nhật ký |
-| `thanh_toan` | Gói dịch vụ, đơn thanh toán, adapter cổng (`VnpayGateway`, `FakePaymentGateway`), đăng ký gói, quyền lợi theo gói (`EntitlementService`) |
+| `thanh_toan` | Gói dịch vụ, đơn thanh toán, adapter cổng (`VnpayGateway`, `FakePaymentGateway`), đăng ký gói, quyền lợi theo gói (`EntitlementService`), chặn khi không có gói (`SubscriptionGuard`), nhắc/hết hạn (`SubscriptionExpiryJob`), quản lý và doanh thu cho Admin (`RevenueService`) |
 | `ha_tang` | Tệp, tác vụ, quan sát vận hành và cấu hình bí mật |
 
 Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đặt công thức SRS hoặc chấm điểm vào controller hay frontend.
@@ -579,21 +610,22 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `loi_hoc_tap` | nguoi_dung_id, the_id, nhom_loi, nguon_su_kien, bang_chung_json (V11, thêm `su_kien_id`; `nhom_loi` NGHIA/CHINH_TA/NGHE/NGU_CANH/CAP_NHAM/PHAT_AM) |
 | `so_tay_tu_kho` | nguoi_dung_id, the_id, ghi_chu, danh_dau_thu_cong (V11, unique người/thẻ, `version`); `an_tu_at` (V13, B2.9): mốc “bỏ khỏi sổ”, lỗi/lần quên trước mốc bị ẩn. Hàng chỉ lưu ghi chú, đánh dấu và mốc ẩn; thành viên sổ tay suy từ `loi_hoc_tap`, `lich_su_on` và đánh dấu |
 | `cap_tu_de_nham` | the_1_id, the_2_id, loại nhầm; liên kết bằng chứng theo người học (V11: `nguoi_dung_id`, `so_lan_nham`, `lan_cuoi_at`, `the_1_id < the_2_id`, unique người/cặp). B2.8 (03/11/2026) không thêm cột loại nhầm vì hệ thống chỉ ghi nhận một loại (chọn/ghép nhầm sang thẻ khác); bằng chứng từng lần nằm ở `loi_hoc_tap.bang_chung_json.theNhamId` |
-| `yeu_cau_ai` | nguoi_dung_id, loai, trang_thai, input_ref, ket_qua_json, phien_ban_prompt, provider_request_id |
-| `ban_nhap_the_ai` | yeu_cau_id, noi_dung_json, trang_thai_duyet, the_da_luu_id |
-| `han_muc_dich_vu`, `su_dung_dich_vu` | hạn mức, lượt giữ chỗ/đã dùng, token nếu có, chi phí nullable, nguồn định giá |
-| `goi_dich_vu` | ma (`MIEN_PHI`/`PRO`/`PREMIUM`), ten, gia_thang, gia_nam, gioi_han_the (null = không giới hạn), han_muc_ai_ngay, han_muc_anh_ngay, phat_am, bo_mau_cao_cap, hoat_dong (FR-15) |
-| `dang_ky_goi` | nguoi_dung_id, goi_ma, bat_dau_at, het_han_at, trang_thai (`HIEU_LUC`/`HET_HAN`), version; tối đa một dòng hiệu lực mỗi người |
+| `yeu_cau_ai` | V15 (B3.1, chỉ tạo bảng; logic B3.2): nguoi_dung_id, loai (`TAO_THE`/`NGU_CANH`/`SUA_CAU`/`ANH_THE`), trang_thai (`CHO`/`DANG_XU_LY`/`HOAN_TAT`/`LOI`/`KHONG_XAC_DINH`), input_ref, ket_qua_json, phien_ban_prompt, provider_request_id, nha_cung_cap, model, thoi_luong_ms, token_vao/token_ra, ma_loi, han_muc_loai/han_muc_ngay/han_muc_trang_thai (`GIU_CHO`/`DA_DUNG`/`DA_HOAN`, bảo đảm xác nhận hoặc hoàn trả đúng một lần) |
+| `ban_nhap_the_ai` | V15: yeu_cau_id, thu_tu (unique cùng yeu_cau_id), noi_dung_json, trang_thai_duyet (`CHO_DUYET`/`DA_LUU`/`BO_QUA`), the_da_luu_id nullable, anh_id nullable (X-04) |
+| `han_muc_dich_vu` | V15 (B3.1): goi_ma (`PRO`/`PREMIUM`, không giá trị mặc định), loai (`AI`/`ANH`), so_luot_ngay, version; unique (goi_ma, loai); nguồn hạn mức duy nhất theo gói, seed PRO 20/10, PREMIUM 100/30 theo bảng §6.9 |
+| `su_dung_dich_vu` | V15: nguoi_dung_id, ngay (DATE theo `app.quota.zone`), loai, so_giu, so_dung, token_vao/token_ra nullable, chi_phi nullable, nguon_dinh_gia nullable, version; unique (nguoi_dung_id, ngay, loai); bộ đếm theo ngày, giữ chỗ bằng UPDATE có điều kiện `so_giu + so_dung < giới hạn` |
+| `goi_dich_vu` | ma (`PRO`/`PREMIUM`; không có gói miễn phí, sửa 10/11/2026), ten, gia_thang, gia_nam, gioi_han_the (null = không giới hạn), phat_am, bo_mau_cao_cap, hoat_dong (FR-15) |
+| `dang_ky_goi` | nguoi_dung_id, goi_ma, bat_dau_at, het_han_at, trang_thai (`HIEU_LUC`/`HET_HAN`), version; tối đa một dòng hiệu lực mỗi người; chỉ mục `(trang_thai, het_han_at)` cho tác vụ nhắc/hết hạn |
 | `giao_dich_thanh_toan` | ma_don (unique), nguoi_dung_id, goi_ma, chu_ky (`THANG`/`NAM`), so_tien, cong (`VNPAY`), trang_thai (`CHO_THANH_TOAN`/`THANH_CONG`/`THAT_BAI`/`HET_HAN`), ma_giao_dich_cong, ma_phan_hoi, du_lieu_cong_json, tao_at, hoan_tat_at; không có cột dữ liệu thẻ |
 | `ket_qua_phat_am` | nguoi_dung_id, the_id, tep_ghi_am_id nullable, chi_so_json, nha_cung_cap, trang_thai |
-| `huy_hieu`, `nguoi_dung_huy_hieu` | điều kiện, lần nhận; unique người/huy hiệu |
-| `thu_thach`, `tien_do_thu_thach` | quy tắc thử thách, khoảng ngày và mức hoàn thành |
-| `so_diem_thuong` | nguoi_dung_id, loai_su_kien, su_kien_id, so_diem; unique nguồn thưởng |
-| `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7) |
+| `huy_hieu`, `nguoi_dung_huy_hieu` | ma, ten, mo_ta, loai_dieu_kien (`TONG_LUOT_ON`/`CHUOI_NGAY`/`TONG_BAI_LUYEN`/`TONG_DIEM`), nguong, thu_tu, hoat_dong; lần nhận nhan_at; unique người/huy hiệu (V16, 6 huy hiệu seed) |
+| `thu_thach`, `tien_do_thu_thach` | ma, loai_dieu_kien (`LUOT_ON`), chu_ky (`TUAN`), muc_tieu; tiến độ theo tuan_bat_dau (thứ Hai), gia_tri, hoan_thanh_at, version; unique người/thử thách/tuần (V16, 1 thử thách seed) |
+| `so_diem_thuong` | nguoi_dung_id, loai_su_kien (`ON_THE`/`BAI_LUYEN`), su_kien_id VARCHAR(64) (`tienDoId:ngày` cho lượt ôn, `lanLamBaiId` cho bài luyện), diem_goc, so_diem (sau trần), ngay_dia_phuong; unique (nguoi_dung_id, loai_su_kien, su_kien_id). `su_dung_hoc_ngay.diem` là tổng điểm của ngày, dùng để áp trần và tái tạo được từ sổ (V16) |
+| `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7); loại gồm nhắc học, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`; `ngay_dia_phuong`, unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
 | `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý |
-| `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa |
-| `tac_vu_nen` | loại, payload_ref, trạng thái, retry_count, next_run_at, khóa giữ tác vụ |
+| `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa. B3.12b thêm hành động `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN` và loại đối tượng `GOI_DICH_VU`, `DANG_KY_GOI` |
+| `tac_vu_nen` | V15 (B3.1): loai, payload_json, trang_thai (`CHO`/`DANG_CHAY`/`XONG`/`LOI`/`KHONG_XAC_DINH`), retry_count, max_retry, next_run_at, khoa_boi và khoa_den_at (lease), ma_loi; index (trang_thai, next_run_at, id) cho hàng đợi |
 | `yeu_cau_xoa_du_lieu` | nguoi_dung_id, trạng thái, thời điểm, phạm vi và kết quả |
 | `thong_ke_ngay` | dữ liệu tổng hợp có thể tái tạo từ lịch sử hợp lệ |
 
@@ -642,7 +674,7 @@ erDiagram
 - Phân trang và giới hạn kích thước truy vấn; lọc/sắp xếp bằng trường cho phép.
 - Yêu cầu tạo kết quả học, nộp bài, lưu thẻ AI và nhận thưởng có khóa chống trùng.
 - Trả lỗi có `code`, `message`, `fieldErrors` là mảng {field,message} và `requestId`; không trả stack trace.
-- Dùng 401 cho chưa xác thực; 403 cho không đủ quyền; 404 để không lộ tài nguyên riêng; 409 cho xung đột; 422 cho dữ liệu nghiệp vụ sai; 429 cho quá hạn mức.
+- Dùng 401 cho chưa xác thực; 403 cho không đủ quyền; 404 để không lộ tài nguyên riêng; 402 `SUBSCRIPTION_REQUIRED` khi User chưa có gói hoặc gói đã hết hạn (FR-15); 409 cho xung đột; 422 cho dữ liệu nghiệp vụ sai; 429 cho quá hạn mức.
 - Tác vụ dài trả 202 kèm ID và endpoint trạng thái; không giữ kết nối học chờ AI lâu.
 
 ### 13.2. Danh mục endpoint chính
@@ -658,12 +690,12 @@ erDiagram
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
-| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts`, `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
-| Gói & thanh toán (FR-15) | `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions`, `GET /billing/transactions/{maDon}`, `GET /billing/transactions/{maDon}/receipt`, `GET /admin/payments` |
+| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
+| Gói & thanh toán (FR-15) | `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions`, `GET /billing/transactions/{maDon}`, `GET /billing/transactions/{maDon}/receipt`; Admin: `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET /admin/plans`, `PUT /admin/plans/{ma}`, `GET /admin/revenue`; công cụ demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` |
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/statistics`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`, `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`. Cắt 07/11/2026 (hướng phát triển): `GET /admin/statistics` (thống kê tổng hợp chung; doanh thu có riêng `GET /admin/revenue`, FR-15), `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 
@@ -712,12 +744,12 @@ Prompt có phiên bản; tách hướng dẫn cố định với dữ liệu Use
 
 ### 14.2. Hạn mức và chi phí
 
-- Tách hạn mức tạo thẻ, giải thích, sửa câu, sinh bài, sinh ảnh và phát âm. Mức hạn mức lấy theo gói đang hiệu lực của người học (`goi_dich_vu`, §6.9).
+- Hai nhóm hạn mức theo ngày: `AI` (tạo thẻ, giải thích, sửa câu) và `ANH` (sinh ảnh, chi phí cao hơn); hạn mức phát âm và sinh bài thêm bằng giá trị `loai` mới ở bước cần. Mức hạn mức đọc từ `han_muc_dich_vu(goi_ma, loai)` theo gói đang hiệu lực của người học (§6.9), "ngày" theo múi giờ cấu hình `app.quota.zone` (`Asia/Ho_Chi_Minh`), không theo múi giờ cá nhân.
 - Giữ chỗ hạn mức nguyên tử trước gọi API; hoàn trả theo trạng thái thất bại đã xác định.
 - Giới hạn độ dài đầu vào, số thẻ, token đầu ra, thời lượng âm thanh và tác vụ đồng thời.
 - Ghi nhà cung cấp, model nếu có, thời lượng, token có thể đo, trạng thái và mã lỗi.
 - Chi phí hiển thị từ dữ liệu sử dụng và cấu hình đơn giá có ngày hiệu lực; chưa có cơ sở thì ghi “Chưa xác định”, không ghi 0 như đã miễn phí.
-- Với timeout không rõ nhà cung cấp đã xử lý chưa, lưu trạng thái chưa xác định; không thử lại vô hạn gây nhân chi phí.
+- Với timeout không rõ nhà cung cấp đã xử lý chưa, lưu trạng thái chưa xác định (`KHONG_XAC_DINH`); không thử lại tự động, không hoàn lượt (tính là đã dùng). Tác vụ `DANG_CHAY` quá hạn giữ (lease) cũng chuyển `KHONG_XAC_DINH`. Lỗi xác định (`LOI`) hoàn lượt; lỗi tạm thời chưa gửi được thử lại hữu hạn có backoff trước khi thành `LOI`.
 - Cache nội dung chung và âm mẫu bằng khóa chứa nội dung, ngôn ngữ, giọng đọc và phiên bản; không dùng cache chung cho dữ liệu riêng của người học.
 
 ### 14.3. Xử lý lỗi
@@ -730,9 +762,9 @@ Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạ
 
 - Chỉ thưởng cho sự kiện hoàn tất hợp lệ đã được lưu; không thưởng chỉ vì mở trang/lật thẻ.
 - Một thẻ/chiều chỉ có một lượt thưởng SRS chính trong ngày; các bước học lại vẫn lưu nhưng không khai thác điểm bằng bấm liên tục.
-- Điểm tối đa/ngày là cấu hình; ví dụ minh họa 100 điểm/ngày, phải thống nhất trước triển khai.
-- Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ.
-- Chuỗi ngày (**chốt 07/11/2026**, B3.6) tính theo **ngày**: ngày địa phương có tổng ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; không cam kết ngày có một cú bấm là ngày học. **Ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày không đủ điều kiện để giữ chuỗi; nghỉ từ 2 ngày liên tiếp trong cùng tuần thì đứt chuỗi. Giao diện mô tả đúng quy tắc đang chạy và báo khi đã dùng ngày nghỉ của tuần.
+- Điểm tối đa/ngày là cấu hình `app.rewards.diem-toi-da-ngay` (chốt 11/11/2026, B3.6: mặc định 100); 1 điểm cho lượt ôn được thưởng đầu tiên của thẻ/chiều trong ngày, 1 điểm/câu đúng của bài luyện. Sự kiện bị trần cắt vẫn ghi sổ với `so_diem = 0`. Huy hiệu và thử thách không cộng điểm.
+- Bài luyện lặp đúng nguyên đề nhiều lần giảm/không nhận điểm; lịch sử học vẫn được giữ. Triển khai B3.6: bài `la_luyen_lai = true` nhận 0 điểm.
+- Chuỗi ngày (**chốt 07/11/2026**, B3.6) tính theo **ngày**: ngày địa phương có tổng ≥ 5 lượt hợp lệ (`su_dung_hoc_ngay.so_luot_hop_le`), không yêu cầu kết thúc phiên; không cam kết ngày có một cú bấm là ngày học. **Ngày đóng băng:** mỗi tuần (thứ Hai–Chủ nhật theo múi giờ User) tự dùng tối đa 1 ngày không đủ điều kiện để giữ chuỗi; nghỉ từ 2 ngày liên tiếp trong cùng tuần thì đứt chuỗi. Số chuỗi chỉ đếm ngày đủ điều kiện; ngày đóng băng giữ chuỗi nhưng không cộng. Hôm nay chưa đủ 5 lượt thì chưa tính là ngày nghỉ. Hai ngày nghỉ trong cùng tuần (liền nhau hay không) đứt chuỗi; mỗi tuần dùng ngày nghỉ của riêng tuần đó, nên nghỉ Chủ nhật và thứ Hai liền nhau vẫn giữ chuỗi. Ngày đã lưu muộn hơn hôm nay (sau khi đổi múi giờ) được coi là hôm nay. Giao diện mô tả đúng quy tắc đang chạy và báo khi đã dùng ngày nghỉ của tuần.
 - Sổ điểm là dữ liệu gốc; tổng điểm có thể tái tạo. Không nhận điểm lại khi gửi trùng hoặc chạy lại tác vụ.
 
 ### 15.2. Nhắc học
@@ -811,7 +843,7 @@ Tệp cấu hình mẫu chỉ chứa tên biến, không chứa khóa hoặc tà
 | 05/10–11/10 | Chốt mô hình dữ liệu, API, wireframe, môi trường, dữ liệu mẫu và kế hoạch kiểm thử |
 | 12/10–25/10 — Đợt 1 | Tài khoản/hồ sơ, bộ/thẻ, thư viện, quyền, tệp, CSV; trình diễn vòng quản lý nội dung |
 | 26/10–08/11 — Đợt 2 | SRS, phiên học, bài cố định, lịch sử, sổ tay, thống kê nền và quản trị; trình diễn học đầu-cuối |
-| 09/11–29/11 — Đợt 3 | AI, phát âm, gợi ý, thưởng/nhắc, kiểm duyệt, các trải nghiệm nổi bật và tích hợp |
+| 09/11–29/11 — Đợt 3 | AI (gồm ảnh AI), phát âm, gợi ý, thưởng/nhắc, kiểm duyệt, xóa dữ liệu, vận hành gọn, gói dịch vụ và thanh toán VNPay; phạm vi đã cắt theo `docs/KE_HOACH_CAT_DOT3.md` |
 | 30/11–06/12 | Kiểm thử, lấy phản hồi, sửa lỗi, đo hiệu năng, kiểm tra sao lưu/triển khai |
 | 07/12–14/12 | Hoàn thiện báo cáo, hướng dẫn, demo, bằng chứng nghiệm thu và bàn giao |
 
@@ -854,7 +886,9 @@ Phân công theo trách nhiệm, không khẳng định đây là phân công đ
 | TC-19 | Khôi phục dữ liệu từ bản sao lưu | Phục hồi được DB và tham chiếu tệp; có biên bản thời gian/kết quả |
 | TC-20 | Tải 50 người dùng theo môi trường mô tả | Có báo cáo p95/tỷ lệ lỗi; mục tiêu được đánh giá bằng số đo thực |
 | TC-21 | IPN/return sai chữ ký, sai số tiền, gọi lặp, đơn của người khác, đơn hết hạn | Không kích hoạt khi sai; đơn hợp lệ kích hoạt/gia hạn đúng một lần; không lộ đơn người khác |
-| TC-22 | Gói hết hạn; vượt số thẻ hoặc hạn mức AI/ảnh của gói | Về Miễn phí, không mất thẻ hay lịch sử; chặn tạo vượt mức bằng lỗi rõ ràng; học và xuất CSV vẫn chạy |
+| TC-22 | Chưa mua gói; gói hết hạn; vượt số thẻ hoặc hạn mức AI/ảnh của gói | API học trả 402, chuyển sang UI55; không mất thẻ, tiến độ hay lịch sử; xuất CSV, xóa dữ liệu, thông báo, thanh toán vẫn chạy; mua lại học tiếp đúng trạng thái cũ; vượt mức trả 422/429 rõ ràng |
+| TC-23 | Gói còn 8, 7, 3, 0 ngày; tác vụ chạy nhiều lần trong ngày; Admin sửa hạn rồi chạy ngay; gia hạn trong tuần cuối | Nhắc từ khi còn 7 ngày, mỗi ngày đúng một thông báo; không nhắc khi còn 8 ngày; quá hạn chuyển `HET_HAN` và có một thông báo đã hết hạn; gia hạn xong không nhắc nữa; sửa hạn có lý do và nhật ký |
+| TC-24 | Doanh thu tháng/quý/năm với giao dịch thành công, thất bại, hết hạn; giao dịch 23:30 ngày 31/03 giờ Việt Nam | Chỉ cộng giao dịch thành công; giao dịch 31/03 thuộc tháng 3 và quý 1; kỳ trống bằng 0; tổng các tháng bằng tổng quý bằng tổng năm |
 
 Kiểm thử công thức dùng đồng hồ cố định và bộ dữ liệu dự kiến; kiểm thử AI dùng phản hồi mô phỏng để tái lập lỗi, bổ sung một số lượt dịch vụ thật cho nghiệm thu tích hợp. Không coi nội dung AI giống từng chữ là tiêu chí thành công.
 
@@ -879,14 +913,15 @@ Kiểm thử công thức dùng đồng hồ cố định và bộ dữ liệu d
 7. Ghi âm, xem kết quả dịch vụ và xóa bản ghi.
 8. Mở tài khoản nghỉ học lâu; trình diễn cứu lịch ôn.
 9. Admin xử lý báo cáo (giữ/ẩn kèm lý do) và xem hạn mức, lượt dùng dịch vụ.
-9b. User Miễn phí bấm "Sinh ảnh AI" bị báo cần nâng cấp → mua Pro qua VNPay sandbox → hạn mức tăng ngay, sinh được ảnh; xem giao dịch và biên nhận.
+9b. Tài khoản mới thiết lập xong bị đưa tới trang mua gói (gọi API học trả 402) → mua Pro qua VNPay sandbox → mở khóa ngay; xem giao dịch và biên nhận.
+9c. Admin sửa ngày hết hạn của tài khoản demo thành còn 7 ngày rồi chạy ngay tác vụ → User thấy thông báo và banner "còn 7 ngày"; sửa còn 1 ngày → banner đỏ, không có thêm thông báo trong cùng ngày; sửa thành đã quá hạn → User bị khóa, dữ liệu còn nguyên. Admin mở thống kê doanh thu theo tháng, quý, năm.
 10. Mô phỏng AI lỗi; chứng minh phiên học và bài cố định vẫn hoạt động.
 
 ## 21. Rủi ro và cách giảm thiểu
 
 | Rủi ro | Cách xử lý |
 |---|---|
-| Phạm vi lớn trong 2,5 tháng | Chốt nền P0 sớm; tích hợp từng đợt; giữ P1 trong kế hoạch và không thêm mạng xã hội/thanh toán |
+| Phạm vi lớn trong 2,5 tháng | Chốt nền P0 sớm; tích hợp từng đợt; giữ P1 trong kế hoạch và không thêm mạng xã hội; thanh toán chỉ dùng VNPay sandbox, phạm vi chốt ở §6.9 |
 | AI tạo nội dung sai/mơ hồ | Schema, giới hạn, duyệt trước lưu, báo cáo lỗi; nội dung mẫu được kiểm tra thủ công |
 | Lỗi SRS/đồng thời | Quy tắc rõ, đồng hồ cố định, version/giao dịch/idempotency |
 | Phát âm không hỗ trợ chỉ số mong muốn | Thiết kế chỉ số nullable và adapter; kiểm tra khả năng dịch vụ trước chốt giao diện |

@@ -21,6 +21,8 @@ public record TodayPlanResponse(
         List<DeckPlanResponse> boThe,
         CuuLichOnResponse cuuLichOn,
         PhienDangDoResponse phienDangDo,
-        List<DuBaoNgayResponse> duBaoOn
+        List<DuBaoNgayResponse> duBaoOn,
+        boolean daDungNgayNghiTuanNay,
+        LocalDate ngayNghiDaDung
 ) {
 }

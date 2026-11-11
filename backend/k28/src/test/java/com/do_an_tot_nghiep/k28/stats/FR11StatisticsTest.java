@@ -18,6 +18,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.stats.dto.OverviewQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.StatisticsOverviewResponse;
@@ -76,6 +77,9 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
     PhienHocTheRepository queue;
     @Autowired
     StudyTimeService studyTime;
+
+    @Autowired
+    StreakService streakService;
     @Autowired
     LearningPlanService learningPlanService;
     @Autowired
@@ -331,7 +335,7 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
 
     private TodayPlanResponse planAt(Learner learner) {
         return new LearningPlanService(fixedClock(), accountService, settingsService, progress, usage,
-                sessions, queue, studyTime).today(learner.id(), new TodayQuery(null, null));
+                sessions, queue, studyTime, streakService).today(learner.id(), new TodayQuery(null, null));
     }
 
     private Clock fixedClock() {

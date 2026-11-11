@@ -28,6 +28,7 @@ for (const [source, destination] of [
   ['frontend/src/styles/mockup-components.css', 'mockups/shared/components.css'],
   ['frontend/src/styles/learning-refinements.css', 'mockups/shared/learning-refinements.css'],
   ['frontend/src/styles/deck-illustrations.css', 'mockups/shared/deck-illustrations.css'],
+  ['frontend/src/styles/effects.css', 'mockups/shared/effects.css'],
 ]) sync(destination, read(source));
 // The homepage uses the same authored stylesheet in CSS Modules and static HTML.
 const homeClasses = {
@@ -42,6 +43,7 @@ sync('mockups/shared/public-learning.css', homeCss);
 sync('mockups/shared/speech.js', read('frontend/public/speech.js'));
 sync('mockups/shared/theme.js', read('frontend/public/theme.js'));
 sync('mockups/shared/mascot.js', read('frontend/public/mascot.js'));
+sync('mockups/shared/fx.js', read('frontend/public/fx.js'));
 sync('mockups/shared/mascot.svg', read('frontend/public/mascot.svg'));
 sync('mockups/shared/mascot.css', read('frontend/src/styles/mascot.css'));
 sync('frontend/public/shared/assets/mascot-mark.svg', read('frontend/public/mascot.svg'));
@@ -67,6 +69,8 @@ for (const file of walk('mockups').filter(file => file.endsWith('.html'))) {
   if (!html.includes(`${prefix}speech.js`)) html=html.replace('</head>',`<script src="${prefix}speech.js"></script>\n</head>`);
   if (!html.includes(`${prefix}mascot.js`)) html=html.replace('</body>',`<script src="${prefix}mascot.js"></script>\n</body>`);
   if (!html.includes(`${prefix}mascot.css`)) html=html.replace('</head>',`<link rel="stylesheet" href="${prefix}mascot.css">\n</head>`);
+  if (!html.includes(`${prefix}fx.js`)) html=html.replace('</body>',`<script src="${prefix}fx.js"></script>\n</body>`);
+  if (html.includes('shared/learning-refinements.css') && !html.includes(`${prefix}effects.css`)) html=html.replace(/(<link rel="stylesheet" href="(?:\.\.\/)?shared\/learning-refinements\.css[^"]*">)/,`$1\n<link rel="stylesheet" href="${prefix}effects.css">`);
   if (!html.includes(`${prefix}theme.js`)) html = html.replace('</head>', `<script src="${prefix}theme.js"></script>\n</head>`);
   if (html.includes('shared/components.css') && !html.includes('shared/learning-refinements.css')) {
     console.error(`Missing shared stylesheet: ${file}`); drift = true;

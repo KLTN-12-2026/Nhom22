@@ -1,7 +1,14 @@
 :root {
   color-scheme: light;
   --sheet: #fffdf8;
-  --desk: #f0f2ef;
+  --desk: #f3f1ea;
+  --sunk: #f7f5ee;
+  --line: #e6e2d6;
+  --line-2: #d8d3c4;
+  --radius-sheet: 20px;
+  --radius-card: 14px;
+  --radius-control: 12px;
+  --shadow-soft: 0 1px 2px rgba(21, 22, 26, 0.05), 0 12px 32px -18px rgba(21, 22, 26, 0.22);
   --field: #ffffff;
   --ink: #24262c;
   --ink-2: #474b55;
@@ -83,6 +90,9 @@
   --dur-1: 120ms;
   --dur-2: 200ms;
   --dur-3: 320ms;
+  --dur-flip: 460ms;
+  --dur-celebrate: 900ms;
+  --dur-ripple: 520ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -129,9 +139,13 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --desk: #191d24;
-  --sheet: #242a33;
-  --field: #2c333e;
+  --desk: #171a20;
+  --sheet: #20252d;
+  --field: #272d37;
+  --sunk: #1b1f26;
+  --line: #2f3641;
+  --line-2: #3a424f;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2), 0 16px 40px -20px rgba(0, 0, 0, 0.55);
   --ink: #f1f0eb;
   --ink-2: #c2c7d1;
   --ink-3: #a2aabc;

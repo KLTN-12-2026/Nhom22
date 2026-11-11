@@ -8,13 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=e5a317bc5548">
+<link rel="stylesheet" href="../shared/tokens.css?v=8eea39e030ee">
 <link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
 <link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=a719a438661c">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=8ee697af7273">
+<link rel="stylesheet" href="../shared/effects.css?v=7fb6a75d9e3b">
 <style>
 .start { display: grid; gap: var(--sp-5); margin-top: var(--sp-5); }
-.start-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule-strong) solid var(--primary); }
+.start-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--line-2); }
 .done { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
 .rescue { display: grid; gap: var(--sp-4); }
 .rescue-lead { font-size: var(--fs-lead); max-width: 52ch; }
@@ -25,47 +26,48 @@
 .streak { display: flex; align-items: baseline; gap: var(--sp-2); }
 .streak .tally-n { font-size: 2.5rem; }
 .deck-mini { list-style: none; margin: 0; padding: 0; display: grid; }
-.deck-mini li { display: grid; gap: 4px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+.deck-mini li { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); }
 .deck-mini li:first-child { padding-top: 0; }
-.deck-mini .name { font-weight: 650; overflow-wrap: anywhere; }
+.deck-mini li:last-child { padding-bottom: 0; border-bottom: 0; }
+.deck-mini .name { font-weight: 650; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .deck-mini .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
 .goal-line { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
 .links { display: grid; gap: var(--sp-1); }
 .links a { justify-content: flex-start; margin-left: -12px; }
 .resume { display: grid; gap: var(--sp-3); padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: var(--rule) solid var(--primary-line); }
-.resume-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-1) var(--sp-3); }
+.resumeHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-1) var(--sp-3); }
 .resume h2, .week h2 { font-size: var(--fs-h3); margin: 0; }
-.resume-meta { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.resumeMeta { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
 .resume .goal-line { margin-bottom: 0; }
 .resume .row { gap: var(--sp-2); margin-top: var(--sp-1); }
-.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: var(--rule-strong) solid var(--primary); }
-.week-grid { display: grid; gap: var(--sp-6); }
-@media (min-width: 720px) { .week-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.week { display: grid; gap: var(--sp-4); margin-top: var(--sp-7); padding-top: var(--sp-6); border-top: var(--rule) solid var(--line); }
+.weekGrid { display: grid; gap: var(--sp-6); }
+@media (min-width: 720px) { .weekGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mini { margin: 0; display: grid; gap: var(--sp-2); align-content: start; min-width: 0; }
 .mini figcaption { display: grid; gap: 2px; }
-.mini-title { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; color: var(--ink); }
-.mini-sum { font-size: var(--fs-small); color: var(--ink-2); }
-.mini-bars { position: relative; height: 116px; padding-top: 20px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; border-bottom: var(--rule) solid var(--primary); background: repeating-linear-gradient(to top, transparent 0 31px, var(--primary-tint) 31px 32px); }
-.mini-bar { position: relative; height: 100%; display: flex; align-items: flex-end; }
-.mini-bar i { display: block; width: 100%; height: 100%; background: var(--graphite); transform-origin: bottom; transform: scaleY(var(--v, 0)); transition: transform var(--dur-3) var(--ease-out); }
-.mini-bar[data-goal] i { background: var(--secondary); }
-.is-forecast .mini-bar i { background: var(--primary); }
-.mini-bar b { position: absolute; left: 0; right: 0; bottom: calc(var(--v, 0) * 100% + 2px); text-align: center; font-family: var(--font-form); font-stretch: var(--stretch-form); font-variant-numeric: tabular-nums; font-size: var(--fs-caption); font-weight: 700; color: var(--ink-2); }
-.mini-goal { position: absolute; left: 0; right: 0; bottom: calc(var(--g) * (100% - 20px)); border-top: 1.5px dashed var(--accent-text); pointer-events: none; }
-.mini-x { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: var(--fs-caption); color: var(--ink-3); text-align: center; }
-.mini-x span { display: grid; line-height: 1.25; }
-.mini-x b { font-weight: 650; color: var(--ink-2); }
-.mini-x .is-today b, .mini-x .is-today { color: var(--primary); font-weight: 700; }
-.mini-legend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: var(--fs-caption); color: var(--ink-2); }
-.mini-legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--secondary); }
-.mini-legend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
+.miniTitle { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; color: var(--ink); }
+.miniSum { font-size: var(--fs-small); color: var(--ink-2); }
+.miniBars { position: relative; height: 116px; padding-top: 20px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; align-items: end; border-bottom: var(--rule) solid var(--primary); background: repeating-linear-gradient(to top, transparent 0 31px, var(--primary-tint) 31px 32px); }
+.miniBar { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.miniBar i { display: block; width: 100%; height: 100%; background: var(--graphite); transform-origin: bottom; transform: scaleY(var(--v, 0)); transition: transform var(--dur-3) var(--ease-out); }
+.miniBar[data-goal] i { background: var(--secondary); }
+.isForecast .miniBar i { background: var(--primary); }
+.miniBar b { position: absolute; left: 0; right: 0; bottom: calc(var(--v, 0) * 100% + 2px); text-align: center; font-family: var(--font-form); font-stretch: var(--stretch-form); font-variant-numeric: tabular-nums; font-size: var(--fs-caption); font-weight: 700; color: var(--ink-2); }
+.miniGoal { position: absolute; left: 0; right: 0; bottom: calc(var(--g) * (100% - 20px)); border-top: 1.5px dashed var(--accent-text); pointer-events: none; }
+.miniX { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: var(--fs-caption); color: var(--ink-3); text-align: center; }
+.miniX span { display: grid; line-height: 1.25; }
+.miniX b { font-weight: 650; color: var(--ink-2); }
+.miniX .isToday b, .miniX .isToday { color: var(--primary); font-weight: 700; }
+.miniLegend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); margin: 0; padding: 0; list-style: none; font-size: var(--fs-caption); color: var(--ink-2); }
+.miniLegend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--secondary); }
+.miniLegend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
 .mini .btn-quiet { justify-self: start; margin-left: -12px; }
-@media (prefers-reduced-motion: reduce) { .mini-bar i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .miniBar i { transition: none; } }
 </style>
 <script src="../shared/theme.js?v=c94fd5ea622d"></script>
 <link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
 <link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
-<script src="../shared/speech.js?v=9462ca4f1c89"></script>
+<script src="../shared/speech.js?v=b35997846e94"></script>
 </head>
 <body data-root=".." data-nav="today" data-auth="required">
 <!-- F2.1, F2.4 · UI12, UI22 · API: GET /learning/today?phut&giuTuMoi (B2.2, B2.6, B2.12), GET /statistics/overview?tuNgay&denNgay (B2.10), POST /learning/sessions (B2.3), POST /learning/sessions/{id}/finish (B2.5) -->
@@ -217,8 +219,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=7a64760fcbf9"></script>
-<script src="../shared/app.js?v=8aa721dd6a29"></script>
+<script src="../shared/demo.js?v=1619269d5741"></script>
+<script src="../shared/app.js?v=52375bbdf38a"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
@@ -413,5 +415,6 @@
 })();
 </script>
 <script src="../shared/mascot.js?v=f38c732c1a4f"></script>
+<script src="../shared/fx.js?v=09ccfad84284"></script>
 </body>
 </html>

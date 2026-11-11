@@ -1,10 +1,11 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { fx } from '@/lib/fx';
 import { ERROR_GROUP, PRACTICE_TYPE, SKILL, label, splitBlank } from '@/lib/practice-labels.mjs';
 
 function BlankSentence({ sentence }) {
@@ -62,6 +63,20 @@ function PracticeResultContent() {
     queryFn: () => apiFetch(`/api/v1/practice/sessions/${id}`),
     enabled: !!id
   });
+
+  const sheetRef = useRef(null);
+  const celebrated = useRef(false);
+  const result = session?.daNop ? session.ketQua : null;
+
+  useEffect(() => {
+    if (!result || celebrated.current || !sheetRef.current) return;
+    celebrated.current = true;
+    sheetRef.current.querySelectorAll('[data-count]').forEach(el => fx.countUp(el, el.dataset.count));
+    const ratio = result.tongSoCau ? result.soCauDung / result.tongSoCau : 0;
+    if (ratio >= 0.8) fx.celebrate(sheetRef.current, { stamp: 'Xuất sắc' });
+    else if (ratio >= 0.5) { fx.play('complete'); fx.stamp(sheetRef.current, 'Hoàn thành'); }
+    else fx.stamp(sheetRef.current, 'Đã nộp', { tone: 'primary' });
+  }, [result]);
 
   const retryMutation = useMutation({
     mutationFn: (lanLamId) => apiFetch('/api/v1/practice/mistakes/retry', { method: 'POST', body: JSON.stringify({ lanLamId }) }),
@@ -154,7 +169,7 @@ function PracticeResultContent() {
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
+      <section ref={sheetRef} className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
             <span>Kết quả</span> <span>&bull;</span> <span>{label(PRACTICE_TYPE, A.loaiBai)}{A.laLuyenLai ? ', luyện lại' : ''}</span>
@@ -166,7 +181,7 @@ function PracticeResultContent() {
         <div className="result-metrics">
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Điểm</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{A.diem}<span style={{ fontSize: '1rem', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>/100</span></div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}><span data-count={A.diem}>{A.diem}</span><span style={{ fontSize: '1rem', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>/100</span></div>
           </div>
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Thời gian</div>
@@ -174,11 +189,11 @@ function PracticeResultContent() {
           </div>
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Câu đúng</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-success-strong)' }}>{A.soCauDung}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-success-strong)' }}><span data-count={A.soCauDung}>{A.soCauDung}</span></div>
           </div>
           <div style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', textTransform: 'uppercase', fontWeight: 'bold' }}>Câu sai</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-danger)' }}>{wrongCount}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-danger)' }}><span data-count={wrongCount}>{wrongCount}</span></div>
           </div>
         </div>
 

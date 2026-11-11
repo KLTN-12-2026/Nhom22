@@ -1,10 +1,11 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui';
+import { fx } from '@/lib/fx';
 
 const RATING = { QUEN: 'Quên', KHO: 'Khó', NHO: 'Nhớ', DE: 'Dễ' };
 const SRS_STATE = { MOI: 'Mới', DANG_HOC: 'Đang học', ON_TAP: 'Ôn tập', HOC_LAI: 'Học lại', TAM_NGUNG: 'Tạm ngưng' };
@@ -47,6 +48,25 @@ function SummaryContent() {
     queryFn: () => apiFetch('/api/v1/learning/today'),
     enabled: !!summary
   });
+
+  const sheetRef = useRef(null);
+  const streakRef = useRef(null);
+  const celebrated = useRef(false);
+  const streakPlayed = useRef(false);
+
+  useEffect(() => {
+    if (!summary || celebrated.current || !sheetRef.current) return;
+    celebrated.current = true;
+    sheetRef.current.querySelectorAll('[data-count]').forEach(el => fx.countUp(el, el.dataset.count));
+    if (summary.soLuot > 0) fx.celebrate(sheetRef.current, { stamp: 'Hoàn thành' });
+  }, [summary]);
+
+  useEffect(() => {
+    if (!today?.homNayDaTinhChuoi || streakPlayed.current || !summary?.soLuot) return;
+    streakPlayed.current = true;
+    const timer = setTimeout(() => { fx.play('streak'); fx.pop(streakRef.current); }, 1400);
+    return () => clearTimeout(timer);
+  }, [today, summary]);
 
   const finishMutation = useMutation({
     mutationFn: () => apiFetch(`/api/v1/learning/sessions/${id}/finish`, { method: 'POST' }),
@@ -115,7 +135,7 @@ function SummaryContent() {
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
+      <section ref={sheetRef} className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
         <div style={{ marginBottom: 'var(--space-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)' }}>
             <span>Tổng kết phiên</span> <span>&bull;</span> <span>{t.chieuHoc === 'EN_VI' ? 'Anh → Việt' : 'Việt → Anh'}</span>
@@ -129,19 +149,19 @@ function SummaryContent() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
           <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Lượt chấm</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{t.soLuot} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>lượt</span></div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}><span data-count={t.soLuot}>{t.soLuot}</span> <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>lượt</span></div>
           </div>
           <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thẻ khác nhau</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{t.soThe} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>thẻ</span></div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}><span data-count={t.soThe}>{t.soThe}</span> <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>thẻ</span></div>
           </div>
           <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Từ mới</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{t.soTheMoi} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>từ</span></div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}><span data-count={t.soTheMoi}>{t.soTheMoi}</span> <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>từ</span></div>
           </div>
           <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thời gian trả lời · quỹ {t.quyThoiGian} phút</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{Math.floor(giay / 60)} <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>phút {giay % 60} giây</span></div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}><span data-count={Math.floor(giay / 60)}>{Math.floor(giay / 60)}</span> <span style={{ fontSize: 'var(--font-size-base)', fontWeight: 'normal', color: 'var(--color-ink-2)' }}>phút {giay % 60} giây</span></div>
           </div>
         </div>
 
@@ -216,7 +236,7 @@ function SummaryContent() {
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Chuỗi ngày học</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', color: 'var(--color-primary-strong)' }}>
-            <span style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{today?.chuoiNgay ?? '—'}</span>
+            <span ref={streakRef} style={{ fontSize: '2.5rem', fontWeight: 'bold', display: 'inline-block' }}>{today?.chuoiNgay ?? '—'}</span>
             <span style={{ fontWeight: '600' }}>ngày liên tiếp</span>
           </div>
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>

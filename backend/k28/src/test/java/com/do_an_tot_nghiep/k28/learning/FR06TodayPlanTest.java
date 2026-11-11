@@ -18,6 +18,7 @@ import com.do_an_tot_nghiep.k28.learning.repository.PhienHocTheRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.SuDungHocNgayRepository;
 import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -66,6 +67,9 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     PhienHocTheRepository queue;
     @Autowired
     StudyTimeService studyTime;
+
+    @Autowired
+    StreakService streakService;
 
     @Test
     void tc09_dayBoundariesFollowUserTimeZone() throws Exception {
@@ -190,8 +194,9 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
         insertUsage(learner, "2026-10-15", 0, 9);
 
         TodayPlanResponse plan = planAt("2026-10-19T05:00:00Z", learner);
-        assertThat(plan.chuoiNgay()).isEqualTo(3);
+        assertThat(plan.chuoiNgay()).isEqualTo(4);
         assertThat(plan.homNayDaTinhChuoi()).isTrue();
+        assertThat(plan.daDungNgayNghiTuanNay()).isFalse();
         assertThat(plan.luotToiThieuChuoi()).isEqualTo(5);
         assertThat(plan.daHocHomNay().soLuot()).isEqualTo(5);
         assertThat(plan.daHocHomNay().thoiGian()).isZero();
@@ -200,7 +205,7 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
         jdbc.update("UPDATE su_dung_hoc_ngay SET so_luot_hop_le = ? WHERE nguoi_dung_id = ? AND ngay_dia_phuong = ?",
                 4, learner.id(), LocalDate.parse("2026-10-19"));
         TodayPlanResponse notYet = planAt("2026-10-19T05:00:00Z", learner);
-        assertThat(notYet.chuoiNgay()).isEqualTo(2);
+        assertThat(notYet.chuoiNgay()).isEqualTo(3);
         assertThat(notYet.homNayDaTinhChuoi()).isFalse();
 
         assertThat(planAt("2026-10-21T05:00:00Z", learner).chuoiNgay()).isZero();
@@ -226,7 +231,7 @@ class FR06TodayPlanTest extends AbstractIntegrationTest {
     private TodayPlanResponse planAt(String instant, Learner learner) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new LearningPlanService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, studyTime)
+                sessions, queue, studyTime, streakService)
                 .today(learner.id(), new TodayQuery(null, null));
     }
 

@@ -19,8 +19,8 @@
 | **S6** | 02/11–08/11 | Đợt 2 | Luyện tập, sổ tay, thống kê nền, quản trị nền, bảng điều khiển | B2.7–B2.12 | F2.5–F2.8, F2.1 (mở rộng) | FR-07, 08, 11, 13 · TC-09, 11, 17 | 🎯 **Demo Đợt 2** (08/11): học đầu-cuối · 📦 `DOT2` |
 | **S7** | 09/11–15/11 | Đợt 3 | Tác vụ nền, hạn mức, xưởng thẻ AI, TTS, thư viện mẫu 200–300 thẻ | B3.1, B3.2, B3.4a, B5.2a | F2.2 (tồn), F3.1, F3.5 (nghe) | FR-09, 10 · TC-12, 13 | |
 | **S8** | 16/11–22/11 | Đợt 3 | AI hỗ trợ + tự điền thẻ + ảnh AI, gợi ý có lý do, điểm/chuỗi, nhắc học, gói & thanh toán VNPay | B3.3, B3.5, B3.6, B3.7, B3.12a | F3.2–F3.4, F3.6, F3.7, F3.12 (UI55, UI57) | FR-08, 09, 12, 15 · TC-15, 21 | |
-| **S9** | 23/11–29/11 | Đợt 3 | Đánh giá phát âm, kiểm duyệt, tổng kết tuần, xóa dữ liệu, quản trị vận hành (gọn), lịch sử giao dịch + hết hạn gói | B3.4b, B3.8–B3.11, B3.12b | F3.5, F3.8–F3.12 | FR-10, 11, 13, 14, 15 · TC-14, 16, 17, 22 | 🎯 **Demo Đợt 3** (29/11): đủ chức năng · 📦 `DOT3` |
-| **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…22 | 📦 `GD4` · Biên bản test/đo |
+| **S9** | 23/11–29/11 | Đợt 3 | Đánh giá phát âm, kiểm duyệt, tổng kết tuần, xóa dữ liệu, quản trị vận hành (gọn), lịch sử giao dịch + nhắc/hết hạn gói, quản lý thanh toán + doanh thu | B3.4b, B3.8–B3.11, B3.12b, B3.12c | F3.5, F3.8–F3.13 | FR-10, 11, 13, 14, 15 · TC-14, 16, 17, 22, 23, 24 | 🎯 **Demo Đợt 3** (29/11): đủ chức năng · 📦 `DOT3` |
+| **S10** | 30/11–06/12 | GĐ4 | Kiểm thử nghiệm thu, bảo mật, hiệu năng, sao lưu | B4.1–B4.5 | F4.1–F4.4 | TC-01…24 | 📦 `GD4` · Biên bản test/đo |
 | **S11** | 07/12–14/12 | GĐ5 | Triển khai, tài khoản demo, tài liệu, diễn tập; đóng băng mã từ 11/12 | B5.1, B5.2b, B5.3, B5.4 | F5.1–F5.4 | — | 🏁 **Bàn giao** (14/12) · 📦 `GD5` |
 
 Ghi chú: "Đợt 2" = S5–S6; sprint S2 thuộc GĐ0.
@@ -147,7 +147,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B3.7 Thông báo & nhắc học (gọn) | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 chuông + `/thong-bao` |
 | B3.12a Gói & thanh toán VNPay (bổ sung 07/11) | `GET /billing/plans`, `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions/{maDon}` | F3.12 | UI55 `/thanh-toan-goi`, UI57 `/thanh-toan-ket-qua` |
 
-**Xong khi:** TC-15, TC-21 qua; chạy lại job không cộng điểm/gửi mail trùng; AI lỗi vẫn lưu thẻ tay được; thanh toán sandbox (hoặc `FakePaymentGateway`) kích hoạt gói đúng một lần và hạn mức AI/ảnh đổi theo gói.
+**Xong khi:** TC-15, TC-21 qua; chạy lại job không cộng điểm/gửi mail trùng; AI lỗi vẫn lưu thẻ tay được; tài khoản chưa có gói bị 402 và được đưa tới UI55; thanh toán sandbox (hoặc `FakePaymentGateway`) kích hoạt gói đúng một lần, mở khóa ngay và hạn mức AI/ảnh đổi theo gói.
 
 ### S9 · 23/11–29/11 · Phát âm, kiểm duyệt, tổng kết, dữ liệu cá nhân, vận hành, giao dịch — FR-10, 11, 13, 14, 15
 | BE | API | FE | Màn hình |
@@ -157,14 +157,15 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B3.9 Tổng kết tuần (gọn) | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` (bảng bộ thẻ × kỹ năng) |
 | B3.10 Xóa tài khoản (gọn) | `POST /me/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
 | B3.11 Quản trị vận hành (gọn mạnh) | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
-| B3.12b Lịch sử giao dịch, hết hạn gói, áp quyền lợi | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`, `GET /admin/payments` | F3.12 | UI56 `/thanh-toan-lich-su`, tab "Giao dịch" trong UI51 |
+| B3.12b Lịch sử giao dịch, nhắc/hết hạn gói, áp quyền lợi | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`; job nhắc 7 ngày + hết hạn | F3.12 | UI56 `/thanh-toan-lich-su`, banner hết hạn trong `AppShell`, UI44 thông báo |
+| B3.12c Quản lý thanh toán & doanh thu (góp ý GVHD 10/11) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
-**Xong khi:** TC-14, TC-16, TC-17, TC-21, TC-22 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 + bước 9b (nâng cấp gói qua VNPay sandbox) trên dữ liệu minh họa.
+**Xong khi:** TC-14, TC-16, TC-17, TC-21…TC-24 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 + bước 9b (bắt buộc mua gói qua VNPay sandbox) + 9c (sửa hạn, nhắc hết hạn, khóa, doanh thu) trên dữ liệu minh họa.
 
-### S10 · 30/11–06/12 · Kiểm thử & ổn định — TC-01…22
+### S10 · 30/11–06/12 · Kiểm thử & ổn định — TC-01…24
 | BE | FE | Kết quả |
 |---|---|---|
-| B4.1 Test tự động cho mỗi TC + bảng truy vết FR ↔ API ↔ TC | F4.1 E2E Playwright cho luồng demo (TK §20.2 bước 1–4, 8) | Bảng truy vết đủ 15 FR / 22 TC |
+| B4.1 Test tự động cho mỗi TC + bảng truy vết FR ↔ API ↔ TC | F4.1 E2E Playwright cho luồng demo (TK §20.2 bước 1–4, 8) | Bảng truy vết đủ 15 FR / 24 TC |
 | B4.2 Rà soát bảo mật (`/security-review`) | F4.2 Responsive 360px, bàn phím, focus, tương phản, `prefers-reduced-motion` (TC-18) | Không lỗi mức cao |
 | B4.3 Hiệu năng 50 User (TC-20) | F4.3 Mạng chậm/API lỗi: không mất kết quả đã lưu, nút thử lại (TC-18) | Báo cáo p95, tỷ lệ lỗi |
 | B4.4 Sao lưu & khôi phục (TC-19) | F4.4 Lighthouse, kích thước bundle, không lộ khóa trong bundle | Biên bản khôi phục |
@@ -198,7 +199,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | FR-12 | Thưởng/nhắc | P1 | B3.6, B3.7 | F3.6, F3.7 | S8 | TC-15 |
 | FR-13 | Quản trị | P0/P1 | B1.7, B2.11, B3.8, B3.11 | F1.12, F2.8, F3.8, F3.11 | S4, S6, S9 | TC-17 |
 | FR-14 | Dữ liệu cá nhân | P1 | B3.10 | F3.10 | S9 | TC-16 |
-| FR-15 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026) | P1 | B3.12a, B3.12b | F3.12 | S8, S9 | TC-21, 22 |
+| FR-15 | Gói dịch vụ bắt buộc & thanh toán, doanh thu (bổ sung 07/11/2026, sửa 10/11/2026) | P1 | B3.12a, B3.12b, B3.12c | F3.12, F3.13 | S8, S9 | TC-21…24 |
 | — | Phi chức năng | — | B4.1–B4.5 | F4.1–F4.4 | S10 | TC-18…20 |
 
 ---
@@ -257,13 +258,15 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI48 | Quản trị — chủ đề & nhãn | `/quan-tri/chu-de` | A | S4 |
 | UI49 | Quản trị — bộ/thẻ mẫu | `/quan-tri/bo-mau` | A | S6 |
 | UI50 | Quản trị — hàng đợi báo cáo | `/quan-tri/bao-cao` | A | S9 |
-| UI51 | Quản trị — hạn mức & sử dụng dịch vụ (+ tab "Giao dịch", FR-15) | `/quan-tri/dich-vu` | A | S9 |
+| UI51 | Quản trị — hạn mức & sử dụng dịch vụ | `/quan-tri/dich-vu` | A | S9 |
 | UI52 | Quản trị — thông báo hệ thống | `/quan-tri/thong-bao` | A | **Cắt** |
 | UI53 | Quản trị — nhật ký (tab "Tác vụ nền": **Cắt**) | `/quan-tri/nhat-ky` | A | S6 |
 | UI54 | Quản trị — huy hiệu & thử thách | `/quan-tri/dong-luc` | A | **Cắt** |
 | UI55 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026) | `/thanh-toan-goi` | L | S8 |
 | UI56 | Lịch sử thanh toán & biên nhận | `/thanh-toan-lich-su` | L | S9 |
 | UI57 | Kết quả thanh toán (VNPay chuyển về) | `/thanh-toan-ket-qua?maDon=` | L | S8 |
+| UI58 | Quản trị — thống kê doanh thu tháng/quý/năm (góp ý GVHD 10/11/2026) | `/quan-tri/doanh-thu` | A | S9 |
+| UI59 | Quản trị — quản lý thanh toán: giao dịch, gói người dùng, cấu hình gói, công cụ demo sửa hạn (góp ý GVHD 10/11/2026) | `/quan-tri/thanh-toan` | A | S9 |
 
 Quyền: G khách · L đã đăng nhập · O chủ sở hữu · A Admin.
 
@@ -278,7 +281,7 @@ Quyền: G khách · L đã đăng nhập · O chủ sở hữu · A Admin.
 | TV3 — SRS | S5 | B2.1–B2.6 + F2.1–F2.4, kiểm thử công thức |
 | TV4 — Luyện tập & thống kê | S6, S8–S9 | B2.7–B2.10, B3.6, B3.9 + F2.5–F2.7, F3.6, F3.9 |
 | TV5 — AI & dịch vụ | S7–S9 | B3.1–B3.5, B3.7, B3.10 + F3.1–F3.5, F3.7 |
-| Thanh toán (bổ sung 07/11/2026) | S8–S9 | B3.12a, B3.12b: BE chính; F3.12: người làm UI55/UI56 (nhánh `NGUYEN_DINH_NHAT_QUAN_FE`) |
+| Thanh toán (bổ sung 07/11/2026, sửa 10/11/2026) | S8–S9 | B3.12a, B3.12b, B3.12c: BE chính; F3.12, F3.13: người làm UI55/UI56 (nhánh `NGUYEN_DINH_NHAT_QUAN_FE`) |
 
 Mỗi PR có một người review khác module. Kiểm thử và tài liệu là việc chung.
 

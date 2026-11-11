@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo đóng góp thành viên</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#6b6b66;--line:#dcdad2;--card:#fff;--a:#1f5f4a;--b:#b4561d;--c:#3a4f9e;--warn:#fff4e0;--warnb:#e0b45a}
+@media (prefers-color-scheme:dark){:root{--bg:#181816;--fg:#ecebe5;--mut:#a09f98;--line:#33322e;--card:#211f1d;--a:#5fc4a0;--b:#f0955a;--c:#8ea2f0;--warn:#2e2616;--warnb:#7a6128}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;margin:0 0 4px}
+h2{font-size:20px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:24px 0 8px}
+p{margin:8px 0}
+.mut{color:var(--mut)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;background:color-mix(in srgb,var(--line) 40%,transparent)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.wrap{overflow-x:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card b{display:block;font-size:30px;line-height:1.1}
+.card span{color:var(--mut);font-size:13px}
+.bar{height:22px;border-radius:5px;display:flex;overflow:hidden;margin:6px 0 4px;background:var(--line)}
+.bar i{display:block;height:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+.legend em{font-style:normal}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.pho{background:var(--a)}.thao{background:var(--b)}.quan{background:var(--c)}
+.note{background:var(--warn);border:1px solid var(--warnb);border-radius:8px;padding:12px 14px;margin:14px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:color-mix(in srgb,var(--line) 50%,transparent);padding:1px 5px;border-radius:4px}
+ul{margin:6px 0;padding-left:20px}
+li{margin:3px 0}
+small{color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Báo cáo đóng góp của các thành viên</h1>
+<p class="mut">Đề tài: Website học từ vựng VocabLearning (KLTN, nhóm 22) · Số liệu chốt ngày 11/11/2026 · Nguồn: lịch sử Git của kho <code>KLTN-12-2026/Nhom22</code> (mọi nhánh), <code>git blame</code> tại HEAD của nhánh <code>huynh_gia_pho_be</code>, tài liệu roadmap trong kho, thư mục <code>C:\doantotnghiep</code> trên máy.</p>
+
+<div class="note">
+<b>Đọc trước.</b> Kho GitHub <code>KLTN-12-2026/Nhom22</code> có đúng 5 cộng tác viên: <code>giaph4</code> (Phố), <code>lehuuthao</code> (Thảo), <code>NQuan2702</code> (Quân), <code>tranvanmau044</code> và <code>ngocthai1105</code> (Ngọc Thái). Hai người sau được thêm vào kho ngày 19/10/2026 nhưng <b>không có commit, PR, issue, bình luận hay review nào</b> ở cả hai kho (<code>KLTN-12-2026/Nhom22</code> và <code>giaph4/do-an-tot-nghiep</code>), nên đóng góp ghi nhận trên GitHub là 0. Nếu họ có làm việc ngoài Git (viết báo cáo, kiểm thử tay, thuyết trình…) thì cần bổ sung bằng chứng ở mục 9. Tỉ lệ dưới đây là <b>tỉ lệ đóng góp vào mã nguồn và tài liệu trong kho</b>, không phải đánh giá toàn bộ nỗ lực.
+</div>
+
+<h2>1. Tổng quan</h2>
+<div class="cards">
+<div class="card"><b>243</b><span>commit trên origin/main (gồm commit trùng nội dung do chép/đẩy lại lịch sử)</span></div>
+<div class="card"><b>90</b><span>commit duy nhất không tính merge (Phố 61, Thảo 24, Quân 5)</span></div>
+<div class="card"><b>49</b><span>Pull Request trên 2 kho (20 + 29); chỉ review của bot Copilot, không có review của người</span></div>
+<div class="card"><b>46 ngày</b><span>27/09/2026 → 11/11/2026</span></div>
+</div>
+
+<h3>Tỉ lệ đóng góp tổng hợp (có trọng số)</h3>
+<div class="bar"><i class="pho" style="width:74.3%"></i><i class="thao" style="width:23%"></i><i class="quan" style="width:2.7%"></i></div>
+<div class="legend"><em><span class="dot pho"></span>Huỳnh Gia Phố 74,3%</em><em><span class="dot thao"></span>Lê Hữu Thảo 23,0%</em><em><span class="dot quan"></span>Nguyễn Đình Nhật Quân 2,7%</em></div>
+<p class="mut">Trọng số: backend 1,0 · frontend 1,0 · mockup HTML 0,5 · tài liệu 0,25 · dữ liệu mẫu 0,1 (dòng thêm mới, đã loại tệp sinh tự động và các commit chép lại mã của người khác, xem mục 5).</p>
+
+<h3>Tỉ lệ nếu chỉ đếm dòng thô (mọi loại dòng trọng số bằng nhau)</h3>
+<div class="bar"><i class="pho" style="width:78.2%"></i><i class="thao" style="width:18.5%"></i><i class="quan" style="width:3.3%"></i></div>
+<div class="legend"><em><span class="dot pho"></span>Phố 78,2%</em><em><span class="dot thao"></span>Thảo 18,5%</em><em><span class="dot quan"></span>Quân 3,3%</em></div>
+
+<h2>2. Bảng số liệu theo thành viên</h2>
+<p class="mut">Dòng thêm mới (+) theo Git, đã loại <code>node_modules</code>, <code>package-lock</code>, <code>.history</code>, <code>graphify-out</code>, tệp nhị phân; commit chép lại của Quân (a96f9a4, b63fe14) không tính.</p>
+<div class="wrap">
+<table>
+<tr><th>Thành viên</th><th class="n">Commit</th><th class="n">Ngày hoạt động</th><th class="n">Backend</th><th class="n">Frontend</th><th class="n">Mockup</th><th class="n">Tài liệu</th><th class="n">Dữ liệu</th></tr>
+<tr><td>Huỳnh Gia Phố</td><td class="n">61</td><td class="n">23</td><td class="n">32.057</td><td class="n">9.519</td><td class="n">16.623</td><td class="n">10.798</td><td class="n">1.284</td></tr>
+<tr><td>Lê Hữu Thảo</td><td class="n">24</td><td class="n">7</td><td class="n">78</td><td class="n">16.230</td><td class="n">0</td><td class="n">3</td><td class="n">0</td></tr>
+<tr><td>Nguyễn Đình Nhật Quân</td><td class="n">5 (1 có nội dung mới)</td><td class="n">3</td><td class="n">0</td><td class="n">884</td><td class="n">2.063</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>Trần Văn Mậu (<code>tranvanmau044</code>)</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>Ngọc Thái (<code>ngocthai1105</code>)</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><th>Tổng</th><th class="n">90</th><th class="n"></th><th class="n">32.135</th><th class="n">26.633</th><th class="n">18.686</th><th class="n">10.801</th><th class="n">1.284</th></tr>
+</table>
+</div>
+<p class="mut">Phố dùng hai danh tính Git (<code>Ɠia Pɦo Huỳnh</code> và <code>Huynh Gia Pho</code>, tức tài khoản GitHub web khi merge PR) nên đã gộp thành một người. Commit của <code>copilot-swe-agent[bot]</code> (4 commit, xoá thư mục <code>.claude</code> ngày 27/09) và <code>khoacnttdtu</code> (2 commit, README khởi tạo kho tổ chức ngày 19/10) không tính cho thành viên nào.</p>
+
+<h3>Dòng còn sống tại HEAD (git blame, không tính khoảng trắng)</h3>
+<div class="wrap">
+<table>
+<tr><th>Khu vực</th><th class="n">Phố</th><th class="n">Thảo</th><th class="n">Quân</th><th class="n">Tổng dòng</th></tr>
+<tr><td>Backend (Java, SQL, YAML)</td><td class="n">30.712</td><td class="n">68</td><td class="n">0</td><td class="n">30.780</td></tr>
+<tr><td>Frontend (JS, CSS)</td><td class="n">8.415</td><td class="n">8.342</td><td class="n">3.164*</td><td class="n">19.921</td></tr>
+<tr><td>Mockup HTML</td><td class="n">13.798</td><td class="n">0</td><td class="n">1.995*</td><td class="n">15.793</td></tr>
+<tr><td>Tài liệu Markdown</td><td class="n">11.732</td><td class="n">2</td><td class="n">0</td><td class="n">11.734</td></tr>
+</table>
+</div>
+<p class="mut">* Phần lớn số dòng của Quân ở đây là mã do Thảo và Phố viết nhưng được Quân chép lại trong commit tái cấu trúc ngày 03/11 và 05/11 (Git ghi nhận người commit sau cùng). Vì vậy cột blame đánh giá cao Quân và đánh giá thấp Thảo; số đáng tin hơn là bảng ở trên.</p>
+
+<h2>3. Huỳnh Gia Phố — trưởng nhóm, backend chính, thiết kế giao diện mẫu</h2>
+<p><b>Vai trò:</b> nhóm trưởng / BE chính (SPRINT_PLAN §5b). 61 commit, 23 ngày hoạt động, merge 44 PR của cả nhóm. Tác giả của 99,8% dòng backend hiện có.</p>
+<ul>
+<li><b>Khởi tạo và tài liệu (27–28/09):</b> tạo kho, đưa tài liệu phân tích thiết kế (<code>PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md</code>), đề cương, setup Spring Boot 4 + MySQL + Redis + RustFS + Docker Compose, thiết lập quy trình PR, tài liệu bàn giao cho FE.</li>
+<li><b>Sprint 1 – Backend giai đoạn 1 (B1.1 → B1.11, 29/09 → 13/10):</b> đăng ký, xác thực email, đăng nhập/đăng xuất/JWT, quên mật khẩu, hồ sơ và onboarding, phân quyền, thư viện/bộ/thẻ, import CSV, tệp âm thanh, chia sẻ liên kết; chốt “hoàn thành FE + BE giai đoạn Sprint 1” ngày 13/10.</li>
+<li><b>Sprint 2 – Backend giai đoạn 2 (B2.1 → B2.12, 16/10 → 03/11):</b> thuật toán SRS, phiên học, lịch sử ôn, luyện tập, sổ tay từ khó, thống kê, nền tảng quản trị (B2.11), API <code>learning/today</code> cho bảng điều khiển; refactor code base (20/10); xử lý đợt rà soát <code>RA_SOAT_2026-10-31</code> (12 lô sửa).</li>
+<li><b>Sprint 3 – giai đoạn 3.1 (07/11 → 11/11):</b> seed 18 chủ đề và nhập bộ mẫu từ CSV, phát âm thanh bài nghe (BE-01), chạy bộ Postman trên HTTP thật (VER-02), cắt phạm vi đợt 3, hoàn thành backend giai đoạn 3.1 (11/11).</li>
+<li><b>Mockup giao diện (56 trang HTML):</b> viết <code>shared/tokens.css</code>, <code>shared/demo.js</code>, yêu cầu giao diện, toàn bộ mockup đợt 1–2 và nhiều trang đợt 3 (≈16.600 dòng); chỉnh giao diện và thêm hiệu ứng âm thanh (11/11).</li>
+<li><b>Frontend:</b> sau khi Thảo làm giao diện, Phố nối API thật, sửa lệch hợp đồng BE–FE (FE-01…FE-18, 30/10 và 07/11), thêm UI12 và UI22 (kế hoạch cứu).</li>
+<li><b>Tài liệu:</b> 3 báo cáo bàn giao Sprint 1–3 trong <code>ban-giao-cho fe/</code>, luồng backend trong <code>docs/luong-backend/</code>, kế hoạch sửa đợt 2 và cắt đợt 3, roadmap BE.</li>
+<li><b>Kiểm thử:</b> 57 tệp test Java (FR08, FR11, FR13…), bộ Postman “VocabLearning API”.</li>
+</ul>
+<p><b>Bằng chứng:</b> <code>git log --author="Pho\|Huỳnh"</code>; 393 tệp Java, 22 controller, 15 migration, 57 tệp test trong <code>backend/</code>; các PR #1–#27 (giaph4/do-an-tot-nghiep) và #1–#19 (KLTN-12-2026/Nhom22) có nhánh <code>huynh_gia_pho_be</code>.</p>
+
+<h2>4. Lê Hữu Thảo — frontend</h2>
+<p><b>Vai trò:</b> FE (nhánh <code>Le_Huu_Thao_FE</code>). 24 commit, 7 ngày hoạt động (29/09 – 06/10 và 27/10). Phần lớn frontend ban đầu là của Thảo; ≈16.200 dòng thêm mới.</p>
+<ul>
+<li><b>29/09:</b> khởi tạo Next.js, design system (F0.2), layout, RouteGuard, các trang cơ bản (F0.4–F0.6), onboarding (UI11), thiết lập cá nhân (UI40, UI41), bảng phân chia công việc FE.</li>
+<li><b>30/09:</b> TanStack Query + MSW, đăng nhập (F1.2), đăng ký và xác thực email (F1.1), quên/đặt lại mật khẩu (F1.3), thư viện và bộ của tôi (F1.7, F1.8), tạo bộ, thêm thẻ (F1.9).</li>
+<li><b>03/10:</b> bảng điều khiển “Hôm nay học gì” (F2.1), phiên học flashcard (F2.2), tổng kết phiên (F2.3), luyện tập trọn luồng (F2.5), sổ tay từ khó (F2.6), UI và API mock đợt 2 (thống kê, quản trị, cấu hình học, tiến độ).</li>
+<li><b>04–06/10:</b> chỉnh UI khớp mockup, dashboard quản trị theo chủ đề, tách sidebar admin/user, hướng dẫn chạy backend.</li>
+<li><b>27/10:</b> hoàn thiện tích hợp mock API, mở khoá các trang học tập, luyện tập, sổ tay, thống kê.</li>
+</ul>
+<p><b>Bằng chứng:</b> <code>git log --author="Thao Le"</code>; PR từ nhánh <code>Le_Huu_Thao_FE</code> (giaph4 #11, #16, #18, #22; KLTN #4); 48 trang <code>page.js</code> trong <code>frontend/src/app</code>; tiến độ F0–F2 đã tích trong <code>roadmap/TienDoDuKien_fronend.md</code>.</p>
+
+<h2>5. Nguyễn Đình Nhật Quân — frontend thanh toán và hợp nhất kho</h2>
+<p><b>Vai trò:</b> làm UI55/UI56 (thanh toán) theo SPRINT_PLAN §5b (nhánh <code>NGUYEN_DINH_NHAT_QUAN_FE</code>). 5 commit, 3 ngày hoạt động (03, 05, 07/11).</p>
+<table>
+<tr><th>Commit</th><th>Ngày</th><th>Nội dung</th><th class="n">Đánh giá</th></tr>
+<tr><td><code>ff3c54e</code></td><td>07/11</td><td>Trang gói dịch vụ và lịch sử thanh toán (UI55, UI56): 4 tệp trang + CSS, 2 mockup, sửa <code>AppShell</code> và <code>mockups/index.html</code> (+2.947/−122)</td><td class="n">Đóng góp mới thực sự</td></tr>
+<tr><td><code>a96f9a4</code></td><td>05/11</td><td>Chuẩn hoá cấu trúc kho theo bố cục nhóm (779 tệp, +16.808): chép lại <code>backend</code>, <code>docs</code>, <code>frontend</code>, <code>mockups</code> của người khác</td><td class="n">Công việc tích hợp, không tính dòng</td></tr>
+<tr><td><code>b63fe14</code></td><td>03/11</td><td>“cập nhập fe”: đưa bản FE sao chép vào <code>do-an-tot-nghiep/</code> (+5.227/−15.628)</td><td class="n">Công việc tích hợp, không tính dòng</td></tr>
+<tr><td><code>b1f8bcf</code>, <code>44f2a54</code></td><td>03/11</td><td>Dọn <code>.DS_Store</code>, ignore dependency và cache</td><td class="n">Nhỏ</td></tr>
+</table>
+<div class="note">Hai commit chép lại (a96f9a4, b63fe14) tạo nhiều dòng “thêm” và làm số liệu thô của Quân phình lên (+7.320 ở mục “khác”, +4.127 backend). Nội dung giống hệt tệp đã có do Phố và Thảo viết nên báo cáo này không tính cho Quân. Nếu nhóm xác nhận Quân cũng tham gia làm các trang đó thì cần bằng chứng riêng.</div>
+<p><b>Bằng chứng:</b> PR KLTN #9 và #15 (nhánh <code>NGUYEN_DINH_NHAT_QUAN_FE</code>); thư mục <code>frontend/src/app/(app)/thanh-toan-goi</code>, <code>thanh-toan-lich-su</code>; <code>mockups/dot3/thanh-toan-*.html</code>.</p>
+
+<h2>5b. Dữ liệu GitHub: Pull Request, review, issue</h2>
+<p class="mut">Lấy bằng <code>gh</code> ngày 11/11/2026. Họ tên của <code>tranvanmau044</code> chưa có trong hồ sơ GitHub, cần nhóm xác nhận.</p>
+<div class="wrap">
+<table>
+<tr><th>Kho</th><th class="n">PR</th><th>Người mở PR</th><th class="n">Review của người</th><th class="n">Review của bot</th><th class="n">Issue / bình luận</th></tr>
+<tr><td><code>KLTN-12-2026/Nhom22</code></td><td class="n">20 (19 merge, #13 chưa merge)</td><td>giaph4 17 · NQuan2702 2 · lehuuthao 1</td><td class="n">0</td><td class="n">17 (Copilot)</td><td class="n">0 / 0</td></tr>
+<tr><td><code>giaph4/do-an-tot-nghiep</code> (kho cũ)</td><td class="n">29</td><td>giaph4 28 (gồm 4 PR cho nhánh của Thảo) · Copilot 1</td><td class="n">1 (giaph4)</td><td class="n">29 (Copilot)</td><td class="n">–</td></tr>
+</table>
+</div>
+<table>
+<tr><th>Thành viên</th><th class="n">PR mở (Nhom22)</th><th>PR</th><th class="n">Dòng +/− theo PR</th></tr>
+<tr><td>Phố</td><td class="n">17</td><td>#1–#3, #5–#8, #10–#14, #16–#20</td><td class="n">+34.921 / −7.023</td></tr>
+<tr><td>Thảo</td><td class="n">1</td><td>#4 (tích hợp mock API, 15 tệp)</td><td class="n">+1.594 / −384</td></tr>
+<tr><td>Quân</td><td class="n">2</td><td>#9 (91 tệp, +3.629/−3.011: gộp lại cấu trúc FE), #15 (UI55/UI56, 8 tệp)</td><td class="n">+6.576 / −3.133</td></tr>
+<tr><td>Trần Văn Mậu, Ngọc Thái</td><td class="n">0</td><td>–</td><td class="n">0</td></tr>
+</table>
+<div class="note">Mọi review trên PR đều do bot Copilot tạo (kiểu “COMMENTED”); không có review hay bình luận nào của thành viên. Quy tắc “mỗi PR có một người review khác module” trong SPRINT_PLAN §5b chưa được thực hiện. Các PR của Thảo trong kho cũ do Phố tạo, nên số PR theo tài khoản không phản ánh tác giả mã.</div>
+
+<h2>6. Tiến độ công việc theo roadmap</h2>
+<table>
+<tr><th>Phạm vi</th><th class="n">Bước đã tích</th><th class="n">Chưa</th><th>Ghi chú</th></tr>
+<tr><td>Backend (<code>TienDoDuKien_backend.md</code>)</td><td class="n">33</td><td class="n">30</td><td>Xong B0, B1.1–B1.11, B2.1–B2.12, B3.1; do Phố thực hiện</td></tr>
+<tr><td>Frontend (<code>TienDoDuKien_fronend.md</code>)</td><td class="n">25</td><td class="n">27</td><td>F0–F2 là chính do Thảo; Phố nối API và sửa lệch; Quân UI55/UI56</td></tr>
+</table>
+
+<h2>7. Dòng thời gian</h2>
+<table>
+<tr><th>Mốc</th><th>Sự kiện</th><th>Người</th></tr>
+<tr><td>27–28/09</td><td>Khởi tạo kho, tài liệu, setup dự án, PR #1–#5</td><td>Phố</td></tr>
+<tr><td>29/09 – 13/10</td><td>Sprint 1: BE B1.1–B1.11, mockup đợt 1, FE F0–F1 với API mock</td><td>Phố, Thảo</td></tr>
+<tr><td>16/10 – 03/11</td><td>Sprint 2: BE B2.1–B2.12, FE F2 (Thảo hoàn thiện mock 27/10), rà soát 31/10</td><td>Phố, Thảo</td></tr>
+<tr><td>03–05/11</td><td>Hợp nhất kho theo cấu trúc nhóm, chuyển sang <code>KLTN-12-2026/Nhom22</code></td><td>Quân, Phố</td></tr>
+<tr><td>07/11</td><td>Nối FE–BE đợt 2, UI55/UI56, seed 18 chủ đề, chạy Postman thật, cắt phạm vi đợt 3</td><td>Phố, Quân</td></tr>
+<tr><td>09–11/11</td><td>Backend giai đoạn 3.1, chỉnh giao diện và hiệu ứng âm thanh</td><td>Phố</td></tr>
+</table>
+
+<h2>8. Phương pháp và giới hạn</h2>
+<ul>
+<li><b>Gộp danh tính:</b> hai tên Git của Phố là một người (cùng thư mục làm việc; email khác nhau do commit qua máy và qua GitHub web).</li>
+<li><b>Loại commit trùng:</b> lịch sử có các cặp commit khác mã băm nhưng cùng tác giả, giờ và nội dung (do đẩy sang hai kho). Đã khử trùng theo (tác giả, thời gian, tiêu đề).</li>
+<li><b>Dòng code không bằng công sức:</b> một phần mã được viết có hỗ trợ công cụ AI (dự án có <code>CLAUDE.md</code>, skill <code>/be-code</code>); số dòng của Phố phản ánh cả khối lượng này. Phố cũng gánh việc không có dòng: thiết kế API, review, merge 44 PR, quản lý nhánh.</li>
+<li><b>Trọng số là quy ước của báo cáo,</b> có thể đổi; hai cách tính (mục 1) cho kết quả gần nhau.</li>
+<li><b>Không truy cập được:</b> Zalo, Messenger, Google Drive của nhóm (GitHub đã được tra cứu ở mục 5b). Các tệp .docx tìm thấy trong <code>Documents\Zalo Received Files</code> thuộc môn học khác, không dùng.</li>
+</ul>
+
+<h2>9. Việc cần bổ sung để báo cáo đầy đủ</h2>
+<ul>
+<li>Họ tên, vai trò và bằng chứng công việc của Trần Văn Mậu và Ngọc Thái (tài liệu họ viết, biên bản họp, ảnh chụp kiểm thử, bài thuyết trình). GitHub ghi nhận 0 hoạt động.</li>
+<li>Xác nhận của nhóm cho phần việc ngoài mã nguồn của Thảo và Quân (kiểm thử tay, họp, báo cáo).</li>
+</ul>
+
+<h2>10. Lệnh tái lập số liệu</h2>
+<table>
+<tr><th>Mục đích</th><th>Lệnh</th></tr>
+<tr><td>Số commit theo người</td><td><code>git shortlog -sne --all</code></td></tr>
+<tr><td>Dòng thêm/xoá theo người</td><td><code>git log --all --no-merges --numstat --format='@@%h|%an|%aI|%s'</code></td></tr>
+<tr><td>Dòng còn sống</td><td><code>git blame -w --line-porcelain HEAD -- &lt;tệp&gt;</code></td></tr>
+<tr><td>Danh sách PR đã merge</td><td><code>git log origin/main --merges --format='%ad %s' --date=short</code></td></tr>
+</table>
+
+</main>
+</body>
+</html>

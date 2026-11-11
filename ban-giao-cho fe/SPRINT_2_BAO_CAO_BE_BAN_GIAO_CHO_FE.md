@@ -40,7 +40,7 @@
 | B2.10 Thống kê nền | ✅ `GET /statistics/overview`, `GET /statistics/skills`; module `stats`; không migration; `FR11StatisticsTest` (5), `MasteryCalculatorTest` (3) pass, bộ đầy đủ 394/394 (03/11); chưa HTTP thật | F2.7 UI35 `/thong-ke`; F2.1 khối "Hoạt động 7 ngày" UI12 | Nối theo mục 5.11; đổi `mucTieuPhutNgay` → `phutMoiNgay` |
 | B2.11 Quản trị nền | ✅ `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/decks`, `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`, `GET /admin/audit-logs`; module `admin`; migration `V14__admin.sql`; `FR13AdminTest` (9) pass, bộ đầy đủ 403/403 (03/11); chưa HTTP thật | F2.8 UI47 `/quan-tri/tai-khoan`, UI49 `/quan-tri/bo-mau`, UI53 `/quan-tri/nhat-ky` | Nối theo mục 5.12; thẻ mẫu dùng `/admin/decks/{id}/cards` (phân trang), không còn `/admin/cards?boTheId` |
 
-**Chưa có** ở Đợt 2: không còn; tab "Tác vụ nền" UI53 chờ B3.11.
+**Chưa có** ở Đợt 2: không còn; tab "Tác vụ nền" UI53 đã cắt khỏi Đợt 3 (KE_HOACH_CAT_DOT3 §1.2).
 
 ## 2. Chạy BE
 
@@ -818,28 +818,32 @@ Chưa có seed cho tiến độ thẻ. Từ B2.4, `tien_do_the` được tạo q
 - [ ] F2.5 UI26 `GET /practice/history` (mặc định 20/trang; muốn 10 thì gửi `size=10`), hiển thị `thoiGian` (ms)
 - [ ] F2.8 UI47 `/quan-tri/tai-khoan`: lọc `q/trangThai/vaiTro`, size 10; khóa/mở/cấp/thu quyền đều có hộp lý do 10–500; hiện `soPhienDaHuy`; `banThanMatQuyen = true` → xóa trạng thái đăng nhập, về `/dang-nhap`; 422 hiện message của BE
 - [ ] F2.8 UI49 `/quan-tri/bo-mau`: trạng thái suy từ `quyenTruyCap` + `trangThaiKiemDuyet`; mọi PATCH/DELETE gửi `version`, 409 → tải lại; thẻ mẫu đọc `GET /admin/decks/{id}/cards` (phân trang), tạo `POST /admin/decks/{id}/cards`, xóa `DELETE /admin/cards/{id}?version=`; DELETE bộ gửi body `{version, lyDo}`
-- [ ] F2.8 UI53 `/quan-tri/nhat-ky`: lọc `hanhDong`, `loai`, `q`, `tuNgay/denNgay` (≤ 366 ngày); hiển thị `truoc`/`sau` dạng khóa–giá trị; tab "Tác vụ nền" ẩn tới B3.11
+- [ ] F2.8 UI53 `/quan-tri/nhat-ky`: lọc `hanhDong`, `loai`, `q`, `tuNgay/denNgay` (≤ 366 ngày); hiển thị `truoc`/`sau` dạng khóa–giá trị; tab "Tác vụ nền" ẩn (đã cắt khỏi Đợt 3)
 - [ ] UI21: `GET /decks/{id}/progress` với `nhom`, `q`, `page`, `size`; nút tạm ngưng gửi `{tamNgung}`; nút đặt lại hỏi xác nhận rồi gửi `{xacNhan: true}`
 
 ## 9. Sắp có ở Đợt 3 — hợp đồng dự kiến
 
-Đợt 2 đã đủ B2.1–B2.12. Bảng dưới là **dự kiến** theo `roadmap/TienDoDuKien_backend.md` (Đợt 3) và `roadmap/SPRINT_PLAN.md` (S7–S9), chưa có code; tên field sẽ chốt khi làm từng bước.
+Đợt 2 đã đủ B2.1–B2.12. Bảng dưới là **dự kiến** theo `roadmap/TienDoDuKien_backend.md` (Đợt 3), `roadmap/SPRINT_PLAN.md` (S7–S9) và `docs/KE_HOACH_CAT_DOT3.md` (phạm vi đã cắt 07/11/2026), chưa có code; tên field sẽ chốt khi làm từng bước.
 
 | BE bước | Sprint | Dự kiến có | API (dự kiến) | FE bước | UI |
 |---|---|---|---|---|---|
-| B3.1 | S7 (09/11–15/11) | Tác vụ nền, hạn mức dịch vụ | không có API riêng; hết hạn mức → 429 | — | — |
-| B3.2 | S7 | Tạo thẻ bằng AI | `POST /ai/card-drafts` (202 + ID), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
-| B3.3 | S7 | Giải thích ngữ cảnh, sửa câu, đề luyện AI | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/exercise-drafts`, `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai/viet-cau`, UI32 `/ai/lich-su` |
-| B3.5 | S7 | Gợi ý có lý do | `GET /learning/recommendations` → `{reasonCode, message, cardIds, evidence}` | F3.4 | UI28 trên UI12, UI27 |
-| B3.4 | S8 (16/11–22/11) | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su` |
-| B3.6 | S8 | Điểm, huy hiệu, thử thách | `GET /rewards/history`, `GET /badges`, `GET /challenges`, CRUD `/admin/badges`, `/admin/challenges` | F3.6 | UI38 `/thanh-tich`, UI54 `/quan-tri/dong-luc` |
-| B3.7 | S8 | Thông báo, nhắc học | `GET /notifications`, `PATCH /notifications/{id}`, `POST /admin/announcements` | F3.7 | UI39 `/thong-bao`, UI52 `/quan-tri/thong-bao` |
-| B3.8 | S9 (23/11–29/11) | Báo cáo nội dung, kiểm duyệt bộ người học | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45, UI50 `/quan-tri/bao-cao` |
-| B3.9 | S9 | Tổng kết tuần | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` |
-| B3.10 | S9 | Xóa tài khoản | `POST /me/deletion-requests`, `GET /admin/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
-| B3.11 | S9 | Quản trị vận hành | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/statistics`, `GET /admin/jobs` | F3.11 | UI46 `/quan-tri`, UI51 `/quan-tri/dich-vu`, UI53 tab "Tác vụ nền" |
+| B3.1 | S7 (09/11–15/11) | Tác vụ nền, hạn mức dịch vụ (theo gói từ B3.12a) | không có API riêng; hết hạn mức → 429 | — | — |
+| B3.2 | S7 | Tạo thẻ bằng AI; nhập tệp, lưu vào bộ mới (X-01, X-02) | `POST /ai/card-drafts` (202 + ID; đoạn văn hoặc `tepId`), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`, `Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
+| B3.4a | S7 | Âm thanh TTS | `GET /cards/{id}/audio` | F3.5 (nghe) | UI19, UI24 |
+| B3.3 (gọn) | S8 (16/11–22/11) | Giải thích ngữ cảnh, sửa câu, tự điền thẻ (R-02, X-03), ảnh AI (X-04). `POST /ai/exercise-drafts` **Hoãn** | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (202), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai/viet-cau`, UI32 `/ai/lich-su`, UI16, UI29 |
+| B3.5 | S8 | Gợi ý có lý do (+ `TIEN_BO`) | `GET /learning/recommendations` → `{reasonCode, message, cardIds, evidence}` | F3.4 | UI28 trên UI12, UI27 |
+| B3.6 (gọn) | S8 | Điểm, chuỗi ngày + ngày đóng băng, 5–6 huy hiệu và 1 thử thách tuần cố định. **Cắt** CRUD `/admin/badges`, `/admin/challenges` | `GET /rewards/history`, `GET /badges`, `GET /challenges` | F3.6 | UI38 `/thanh-tich`, UI12 |
+| B3.7 (gọn) | S8 | Thông báo, nhắc học. **Cắt** `POST /admin/announcements`; **Hoãn** web push | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 `/thong-bao` |
+| B3.12a | S8 | Gói dịch vụ, thanh toán VNPay sandbox (FR-15) | `GET /billing/plans`, `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions/{maDon}` | F3.12 | UI55 `/thanh-toan-goi`, UI57 `/thanh-toan-ket-qua` |
+| B3.4b (gọn) | S9 (23/11–29/11) | Đánh giá phát âm | `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su` |
+| B3.8 (gọn) | S9 | Báo cáo nội dung, kiểm duyệt (giữ/ẩn + lý do) | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45, UI50 `/quan-tri/bao-cao` |
+| B3.9 (gọn) | S9 | Tổng kết tuần, bản đồ làm chủ dạng bảng | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` |
+| B3.10 (gọn) | S9 | Xóa tài khoản. **Cắt** `GET /admin/deletion-requests` | `POST /me/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
+| B3.11 (gọn mạnh) | S9 | Hạn mức và lượt dùng/lỗi dịch vụ. **Cắt** `GET /admin/statistics`, `GET /admin/jobs`, UI46, tab "Tác vụ nền" UI53 | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
+| B3.12b | S9 | Lịch sử giao dịch, biên nhận, nhắc hết hạn 7 ngày, khóa khi hết hạn (402), áp quyền lợi theo gói (TC-22, TC-23) | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`, `GET /me/subscription` (`soNgayConLai`) | F3.12 | UI56 `/thanh-toan-lich-su`, banner `AppShell`, UI44 |
+| B3.12c | S9 | Quản lý thanh toán, doanh thu tháng/quý/năm, công cụ demo sửa hạn (góp ý GVHD 10/11/2026, TC-23, TC-24) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
-Dự kiến liên quan quản trị: thao tác của B3.8 (ẩn bộ người học), B3.6/B3.7 có thể thêm mã vào `nhat_ky_quan_tri` (CHECK ở V14 sẽ được mở rộng bằng migration mới). Tác vụ dài AI/phát âm trả 202 kèm ID và endpoint trạng thái (TK §13.1).
+Dự kiến liên quan quản trị: thao tác của B3.8 (ẩn bộ người học) và xử lý báo cáo có thể thêm mã vào `nhat_ky_quan_tri` (CHECK ở V14 sẽ được mở rộng bằng migration mới). Tác vụ dài AI/phát âm trả 202 kèm ID và endpoint trạng thái (TK §13.1).
 
 **B2.12 — bảng điều khiển UI12 (đã code 31/10/2026, hợp đồng ở mục 5.7; đoạn dưới giữ làm bối cảnh):** UI12 `/hom-nay` là bảng điều khiển duy nhất (TK §9.1); không có route hay endpoint `/dashboard` riêng. FE gọi song song `GET /learning/today` và `GET /statistics/overview?tuNgay=<ngay−6>&denNgay=<ngay>`.
 

@@ -53,6 +53,16 @@ app:
       enabled: ${FILE_CLEANUP_ENABLED:true}
       initial-delay-ms: ${FILE_CLEANUP_INITIAL_DELAY_MS:60000}
       interval-ms: ${FILE_CLEANUP_INTERVAL_MS:60000}
+  jobs:
+    enabled: ${JOBS_ENABLED:true}
+    interval-ms: ${JOBS_INTERVAL_MS:5000}
+    batch-size: 3
+    max-retry: 3
+    lease: 10m
+    backoff-base: 5s
+    backoff-max: 5m
+  quota:
+    zone: ${QUOTA_ZONE:Asia/Ho_Chi_Minh}
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
@@ -62,6 +72,10 @@ app:
     chinh-ta-luot: 5
     chinh-ta-sai: 2
     cap-nham: 2
+  rewards:
+    diem-toi-da-ngay: ${REWARD_DAILY_CAP:100}
+    diem-moi-luot-on: 1
+    diem-moi-cau-dung: 1
   statistics:
     so-luot-toi-da: 20
     so-quan-sat-toi-thieu: 5
