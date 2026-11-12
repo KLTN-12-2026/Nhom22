@@ -51,6 +51,13 @@ export default function ThanhToanGoiPage() {
   const [method, setMethod] = useState('card');
   const [status, setStatus] = useState('');
   const [success, setSuccess] = useState(false);
+  const [cardData, setCardData] = useState({
+    number: '',
+    name: '',
+    expiry: '',
+    cvv: '',
+  });
+  const [errors, setErrors] = useState({});
 
   const plan = selectedPlan ? PLANS[selectedPlan] : null;
   const total = plan ? plan[cycle] : 0;
@@ -61,10 +68,93 @@ export default function ThanhToanGoiPage() {
     setCycle('monthly');
     setMethod('card');
     setStatus('');
+    setErrors({});
+  };
+
+  const handleCardNumberChange = e => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ');
+    setCardData(prev => ({ ...prev, number: formatted }));
+    if (errors.number) setErrors(prev => ({ ...prev, number: '' }));
+  };
+
+  const handleCardNameChange = e => {
+    setCardData(prev => ({ ...prev, name: e.target.value.toUpperCase() }));
+    if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+  };
+
+  const handleCardExpiryChange = e => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+    let formatted = raw;
+    if (raw.length > 2) {
+      formatted = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+    }
+    setCardData(prev => ({ ...prev, expiry: formatted }));
+    if (errors.expiry) setErrors(prev => ({ ...prev, expiry: '' }));
+  };
+
+  const handleCardCvvChange = e => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+    setCardData(prev => ({ ...prev, cvv: raw }));
+    if (errors.cvv) setErrors(prev => ({ ...prev, cvv: '' }));
+  };
+
+  const validateCard = () => {
+    const errs = {};
+    const cleanNumber = cardData.number.replace(/\D/g, '');
+    if (!cleanNumber) {
+      errs.number = 'Vui lòng nhập số thẻ';
+    } else if (cleanNumber.length < 16) {
+      errs.number = 'Số thẻ không hợp lệ (cần 16 chữ số)';
+    }
+
+    const cleanName = cardData.name.trim();
+    if (!cleanName) {
+      errs.name = 'Vui lòng nhập tên chủ thẻ';
+    } else if (cleanName.length < 2) {
+      errs.name = 'Tên chủ thẻ không hợp lệ';
+    }
+
+    const cleanExpiry = cardData.expiry.trim();
+    if (!cleanExpiry) {
+      errs.expiry = 'Vui lòng nhập ngày hết hạn';
+    } else {
+      const match = cleanExpiry.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/);
+      if (!match) {
+        errs.expiry = 'Định dạng MM/YY không hợp lệ';
+      } else {
+        const month = parseInt(match[1], 10);
+        const year = parseInt(`20${match[2]}`, 10);
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        if (year < currentYear || (year === currentYear && month < currentMonth)) {
+          errs.expiry = 'Thẻ đã hết hạn';
+        }
+      }
+    }
+
+    const cleanCvv = cardData.cvv.replace(/\D/g, '');
+    if (!cleanCvv) {
+      errs.cvv = 'Vui lòng nhập mã CVV';
+    } else if (cleanCvv.length < 3) {
+      errs.cvv = 'Mã CVV phải gồm 3 hoặc 4 chữ số';
+    }
+
+    return errs;
   };
 
   const confirmPayment = () => {
     if (!plan) return;
+    if (method === 'card') {
+      const formErrors = validateCard();
+      if (Object.keys(formErrors).length > 0) {
+        setErrors(formErrors);
+        setStatus('Vui lòng điền đầy đủ và chính xác thông tin thẻ để đăng ký gói.');
+        return;
+      }
+    }
+    setErrors({});
     setStatus('Đang xử lý...');
     window.setTimeout(() => {
       setStatus('');
@@ -87,9 +177,9 @@ export default function ThanhToanGoiPage() {
           <span className={styles.planBadge}>★ &nbsp;Đang dùng: Gói Miễn Phí</span>
           <div className={styles.planInfo}>
             <strong>Tài khoản cơ bản</strong>
-            <span>Nâng cấp để mở thêm tính năng học tập</span>
+            <span>Nâng cấp để mở thêm tính năng học tập. Quản lý hoặc hủy gói tại Lịch sử thanh toán.</span>
           </div>
-          <Link href="/thanh-toan-lich-su" className="btn btn-quiet btn-sm">Lịch sử thanh toán</Link>
+          <Link href="/thanh-toan-lich-su" className="btn btn-quiet btn-sm">Quản lý & Lịch sử gói</Link>
         </div>
 
         <p className={styles.sectionHeading}>Chọn gói</p>
@@ -165,12 +255,56 @@ export default function ThanhToanGoiPage() {
 
                 {method === 'card' && (
                   <div className={styles.cardForm}>
-                    <label className="field"><span className="field-label">Số thẻ</span><input className="input" placeholder="1234 5678 9012 3456" inputMode="numeric" /></label>
-                    <label className="field"><span className="field-label">Tên chủ thẻ</span><input className="input" placeholder="NGUYEN VAN A" /></label>
-                    <div className={styles.cardFields}>
-                      <label className="field"><span className="field-label">Ngày hết hạn</span><input className="input" placeholder="MM/YY" /></label>
-                      <label className="field"><span className="field-label">CVV</span><input className="input" placeholder="123" inputMode="numeric" /></label>
-                    </div>
+                    <label className={`field ${errors.number ? styles.fieldInvalid : ''}`}>
+                      <span className="field-label">Số thẻ <span className={styles.required}>*</span></span>
+                      <input
+                        className="input"
+                        placeholder="1234 5678 9012 3456"
+                        inputMode="numeric"
+                        maxLength={19}
+                        value={cardData.number}
+                        onChange={handleCardNumberChange}
+                      />
+                      {errors.number && <span className={styles.fieldErrorText}>{errors.number}</span>}
+                    </label>
+
+                    <label className={`field ${errors.name ? styles.fieldInvalid : ''}`}>
+                      <span className="field-label">Tên chủ thẻ <span className={styles.required}>*</span></span>
+                      <input
+                        className="input"
+                        placeholder="NGUYEN VAN A"
+                        style={{ textTransform: 'uppercase' }}
+                        value={cardData.name}
+                        onChange={handleCardNameChange}
+                      />
+                      {errors.name && <span className={styles.fieldErrorText}>{errors.name}</span>}
+                    </label>
+
+                    <label className={`field ${errors.expiry ? styles.fieldInvalid : ''}`}>
+                      <span className="field-label">Ngày hết hạn <span className={styles.required}>*</span></span>
+                      <input
+                        className="input"
+                        placeholder="MM/YY"
+                        inputMode="numeric"
+                        maxLength={5}
+                        value={cardData.expiry}
+                        onChange={handleCardExpiryChange}
+                      />
+                      {errors.expiry && <span className={styles.fieldErrorText}>{errors.expiry}</span>}
+                    </label>
+
+                    <label className={`field ${errors.cvv ? styles.fieldInvalid : ''}`}>
+                      <span className="field-label">CVV <span className={styles.required}>*</span></span>
+                      <input
+                        className="input"
+                        placeholder="123"
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={cardData.cvv}
+                        onChange={handleCardCvvChange}
+                      />
+                      {errors.cvv && <span className={styles.fieldErrorText}>{errors.cvv}</span>}
+                    </label>
                   </div>
                 )}
                 {method === 'bank' && <div className={styles.bankPanel}><strong>Mã chuyển khoản</strong><code>THANHTOAN {plan.name.toUpperCase()} USER12345</code><span>Ngân hàng VocabLearning · STK 0123 456 789</span></div>}

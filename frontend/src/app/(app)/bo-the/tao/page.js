@@ -28,13 +28,14 @@ function DeckForm({ deck }) {
   const [level, setLevel] = useState(deck?.trinhDo || 'MOI_BAT_DAU');
   const [visibility, setVisibility] = useState(deck?.quyenTruyCap || 'RIENG_TU');
   const [goal, setGoal] = useState(deck?.mucTieu || '');
+  const [submitAction, setSubmitAction] = useState('save');
 
   const createMutation = useMutation({
     mutationFn: (data) => apiFetch(deck ? `/api/v1/decks/${deck.id}` : '/api/v1/decks', { method: deck ? 'PATCH' : 'POST', body: JSON.stringify(data) }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-decks'] });
       queryClient.setQueryData(['deck', res.id], res);
-      router.push(`/bo-the/${res.id}`);
+      router.push(submitAction === 'import' ? `/bo-the/${res.id}/nhap-csv` : `/bo-the/${res.id}`);
     },
     onError: (err) => {
       setErrorMsg(err.message);
@@ -44,6 +45,7 @@ function DeckForm({ deck }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (createMutation.isPending) return;
+    setSubmitAction(e.nativeEvent.submitter?.value || 'save');
     if (!name.trim()) { setErrorMsg('Nhập tên bộ thẻ.'); return; }
     createMutation.mutate({
       ten: name, moTa: desc, trinhDo: level, quyenTruyCap: visibility,
@@ -60,11 +62,22 @@ function DeckForm({ deck }) {
     <div className="page page-grid with-side" data-view="ready">
       <section className="sheet" aria-labelledby="page-title">
         <div className="form-head">
-          <div className="form-code"><span id="mode-code">Phiếu tạo bộ thẻ</span></div>
+          <div className="form-code"><span id="mode-code">{deck ? 'Phiếu sửa bộ thẻ' : 'Phiếu tạo bộ thẻ'}</span></div>
           <Link className="btn btn-quiet" id="back" href="/bo-the" style={{ margin: '0 0 var(--sp-2) -12px', justifySelf: 'start' }}>
             <Icon name="arrow-left" /><span>Bộ của tôi</span>
           </Link>
-          <h1 id="page-title">{deck ? 'Sửa bộ thẻ' : 'Tạo bộ thẻ'}</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
+            <h1 id="page-title" style={{ margin: 0 }}>{deck ? 'Sửa bộ thẻ' : 'Tạo bộ thẻ'}</h1>
+            {deck ? (
+              <Link className="btn btn-secondary" href={`/bo-the/${deck.id}/nhap-csv`}>
+                <Icon name="upload" />Nhập từ CSV
+              </Link>
+            ) : (
+              <button type="submit" form="form" className="btn btn-secondary" name="action" value="import" disabled={createMutation.isPending}>
+                <Icon name="upload" />Nhập từ CSV
+              </button>
+            )}
+          </div>
         </div>
 
         <form id="form" className={styles.formGrid} onSubmit={handleSubmit}>
@@ -170,6 +183,11 @@ function DeckForm({ deck }) {
           <div className={styles.formFoot}>
             <div className={styles.row}>
               <Link className="btn btn-quiet" id="cancel" href="/bo-the">Hủy</Link>
+              {deck && (
+                <Link className="btn btn-secondary" href={`/bo-the/${deck.id}/nhap-csv`}>
+                  <Icon name="upload" />Nhập từ CSV
+                </Link>
+              )}
               <button type="submit" className="btn btn-primary btn-lg" id="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending ? 'Đang lưu...' : deck ? 'Lưu bộ thẻ' : 'Tạo bộ thẻ'}
               </button>
