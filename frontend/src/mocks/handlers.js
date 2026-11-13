@@ -266,20 +266,59 @@ export const handlers = [
         {
           id: 'q1',
           thuTu: 1,
-          loaiCau: 'CHON_NGHIA',
-          deBai: { tu: 'receipt', phienAm: '/rɪˈsiːt/', tuLoai: 'n.' },
+          loaiCau: 'DIEN_CHO_TRONG',
+          deBai: {
+            cau: 'The staff are _______ brochures to visitors.',
+            nguCanh: 'Nhân viên đang phân phát tờ rơi cho khách tham quan.',
+            goiY: 'phân phát'
+          },
           phuongAn: [
-            { id: 'o1', noiDung: 'biên lai' },
-            { id: 'o2', noiDung: 'hoá đơn' },
-            { id: 'o3', noiDung: 'đơn hàng' },
-            { id: 'o4', noiDung: 'thẻ' }
-          ]
+            { id: 'o1', noiDung: 'passing out', nghiaVi: 'phân phát' },
+            { id: 'o2', noiDung: 'taking off', nghiaVi: 'cởi (quần áo, mũ)' },
+            { id: 'o3', noiDung: 'entering', nghiaVi: 'bước vào' },
+            { id: 'o4', noiDung: 'vendors', nghiaVi: 'người bán hàng' }
+          ],
+          dapAnDung: 'o1',
+          dapAnText: 'passing out',
+          giaiThich: 'Nghĩa: "phân phát"'
         },
         {
           id: 'q2',
           thuTu: 2,
           loaiCau: 'DIEN_CHO_TRONG',
-          deBai: { cau: 'Can I have a _____, please?', goiY: 'biên lai', tuLoai: 'n.' }
+          deBai: {
+            cau: 'We have _______ printer paper.',
+            nguCanh: 'Chúng tôi đã hết sạch giấy in rồi.',
+            goiY: 'hết, cạn kiệt'
+          },
+          phuongAn: [
+            { id: 'o1', noiDung: 'run out of', nghiaVi: 'hết, cạn kiệt' },
+            { id: 'o2', noiDung: 'run into', nghiaVi: 'tình cờ gặp' },
+            { id: 'o3', noiDung: 'run away', nghiaVi: 'chạy trốn' },
+            { id: 'o4', noiDung: 'run across', nghiaVi: 'băng qua' }
+          ],
+          dapAnDung: 'o1',
+          dapAnText: 'run out of',
+          giaiThich: 'Nghĩa: "hết, cạn kiệt"'
+        },
+        {
+          id: 'q3',
+          thuTu: 3,
+          loaiCau: 'DIEN_CHO_TRONG',
+          deBai: {
+            cau: 'I really _______ your help.',
+            nguCanh: 'Tôi thật sự trân trọng sự giúp đỡ của bạn.',
+            goiY: 'trân trọng, biết ơn'
+          },
+          phuongAn: [
+            { id: 'o1', noiDung: 'appreciate', nghiaVi: 'trân trọng, biết ơn' },
+            { id: 'o2', noiDung: 'appreciation', nghiaVi: 'sự cảm kích' },
+            { id: 'o3', noiDung: 'appropriate', nghiaVi: 'thích hợp' },
+            { id: 'o4', noiDung: 'approach', nghiaVi: 'tiếp cận' }
+          ],
+          dapAnDung: 'o1',
+          dapAnText: 'appreciate',
+          giaiThich: 'Nghĩa: "trân trọng, biết ơn"'
         }
       ] : [],
       ketQua: mockPracticeStatus === 'DA_NOP' ? {

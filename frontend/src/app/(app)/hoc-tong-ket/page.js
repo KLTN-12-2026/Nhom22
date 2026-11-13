@@ -86,12 +86,12 @@ function SummaryContent() {
     onError: (err) => setPracticeError(err.message || 'Chưa tạo được bài luyện.')
   });
 
-  if (!id) return <div style={{ padding: 'var(--space-8)' }} role="alert">Thiếu mã phiên học. <Link href="/hoc">Chọn phiên học</Link></div>;
+  if (!id) return <div style={{ padding: 'var(--space-8)' }} role="alert">Thiếu mã phiên học. <Link href="/luyen-tap">Chọn bài học / luyện tập</Link></div>;
   if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải kết quả...</div>;
   if (error) {
     return (
       <div style={{ padding: 'var(--space-8)' }} role="alert">
-        {error.status === 404 ? 'Không tìm thấy phiên học.' : error.message} <Link href="/hoc">Chọn phiên học khác</Link>
+        {error.status === 404 ? 'Không tìm thấy phiên học.' : error.message} <Link href="/luyen-tap">Chọn bài học khác</Link>
       </div>
     );
   }
@@ -227,7 +227,7 @@ function SummaryContent() {
         </div>
 
         <div className="action-bar" style={{ paddingTop: 'var(--space-4)', borderTop: '2px solid var(--color-primary-tint)', display: 'flex', gap: 'var(--space-3)' }}>
-          <Button variant="primary" onClick={() => router.push('/hoc')}>Học phiên khác</Button>
+          <Button variant="primary" onClick={() => router.push('/luyen-tap')}>Học tiếp / Luyện tập</Button>
           <Button variant="secondary" onClick={() => router.push('/hom-nay')}>Về trang Hôm nay</Button>
         </div>
       </section>
