@@ -336,7 +336,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Mở rộng (đề xuất 28/10/2026, đã code ở B2.12 ngày 31/10/2026):** B2.12 thêm `phienDangDo`, `duBaoOn`, `daHocHomNay.thoiGian` và đổi `daHocHomNay.soPhut` từ ước tính sang thời gian thật; các field hiện có giữ nguyên tên.
 
 ### [x] B2.3 Tạo phiên học — FR-06
-- `V9__phien_hoc_bo_the.sql` **đã có** (commit cùng B2.2): thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK; B2.3 không tạo lại và không sửa V9. Thứ tự migration: V9 (đã có, thuộc B2.3), V10 `phien_hoc.che_do` (B2.6, đã có), V11 practice (B2.7), V12 `nhac_hoc_default_false` (RS-057), V13 `so_tay_an_tu` (B2.9), V14 admin (B2.11), V15 `jobs_ai` (B3.1, 11/11/2026), V16 `engagement` (B3.6, 11/11/2026); các bước sau (B3.4, B3.7, B3.10, B3.12a) lấy số kế tiếp chưa dùng khi tới bước đó.
+- `V9__phien_hoc_bo_the.sql` **đã có** (commit cùng B2.2): thêm `phien_hoc.bo_the_id` (null = tất cả bộ), có FK; B2.3 không tạo lại và không sửa V9. Thứ tự migration: V9 (đã có, thuộc B2.3), V10 `phien_hoc.che_do` (B2.6, đã có), V11 practice (B2.7), V12 `nhac_hoc_default_false` (RS-057), V13 `so_tay_an_tu` (B2.9), V14 admin (B2.11), V15 `jobs_ai` (B3.1, 11/11/2026), V16 `engagement` (B3.6, 11/11/2026), V17 `notification` (B3.7, 11/11/2026); các bước sau (B3.4, B3.8 `bao_cao_noi_dung`, B3.10, B3.12a) lấy số kế tiếp chưa dùng khi tới bước đó.
 - API: `POST /learning/sessions` body `{boTheId?, chieuHoc, quyThoiGian}` (`EN_VI`/`VI_EN`, 5/10/20 phút), `GET /learning/sessions/{id}` (chỉ chủ phiên; người khác → 404). Không có `cheDo` ở B2.3; đã thêm ở B2.6.
 - Hàng đợi tối đa `quyThoiGian×60/20` thẻ (20 giây/lượt là ước tính): bước học lại đến hạn → ôn đến hạn (`han_on_at <= now`) → thẻ mới thật trong hạn mức → thẻ đã học chiều kia (không tốn hạn mức). Bỏ thẻ tạm ngưng/đã xóa/bộ không thuộc người dùng. Lưu vào `phien_hoc_the`; `mui_gio` = múi giờ người dùng lúc tạo.
 - Hàng đợi rỗng → 422 `BUSINESS_RULE`, không lưu phiên. B2.3 không trừ hạn mức (B2.4 làm). Response: `hetGioAt` (tính ra, không lưu), `hangDoi[].trangThai` (`CHUA_TRA_LOI`/`DA_TRA_LOI`), `hangDoi[].the` (media là ID tệp `anhId`/`amTuId`/`amCauId`), `hangDoi[].tienDo` (kèm `version`). Chưa có `duKien`.
@@ -467,9 +467,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - Interface `SpeechClient` + Azure Speech adapter + Fake (gắn nhãn "Mô phỏng"). Chỉ số thiếu → `null`, không sinh điểm giả.
 - **Gọn** (S9): so sánh trước–sau = 2 lần gần nhất cùng từ; không có biểu đồ tiến bộ. Mốc 16/11/2026: Azure Speech không chạy được thì dùng Fake gắn nhãn (TK §20.1).
 
-### [ ] B3.5 Gợi ý có lý do — FR-08
+### [x] B3.5 Gợi ý có lý do — FR-08
 - API: `GET /learning/recommendations` trả `{reasonCode, message, cardIds, evidence}` với QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM, QUA_HAN_NHIEU, TIEN_BO (TK §8.3); PHAT_AM_THAP chỉ bật khi B3.4b dùng dịch vụ thật. Ngưỡng trong `application.yaml`.
 - **Giữ** (S8). **R-04:** `TIEN_BO` khi một thẻ từng sai nhiều mà các lượt gần đây đúng (ví dụ "sai 3/5 lượt tháng trước, đúng 5/5 tuần này"); chỉ trả khi đủ ngưỡng lượt quan sát.
+- **Đã làm 12/11/2026:** module `practice`: `RecommendationController`, `RecommendationService`, giao diện `RecommendationRule` + `ForgettingRule`, `SpellingRule`, `ConfusingPairRule`, `OverdueRule`, `ProgressRule` (+ `ProgressPolicy` thuần để B3.9 dùng lại), `RecommendationCards`, `RecommendationCandidate`, enum `MaLyDoGoiY`; `RecommendationProperties` (`app.recommendations.*`) và `NotebookProperties` (cùng khóa `app.notebook.*` của B2.9); DTO `RecommendationResponse`, `RecommendationEvidenceResponse`; `SoTayTuKhoRepository.spellingStats/progressStats`; `TienDoTheRepository.overdueCardIds`; `LearningPlanService.overdue` + `OverdueSummary` (cùng điều kiện `cuuLichOn`). Không migration. `PHAT_AM_THAP` chỉ có enum + cờ `enabled: false`. TK §8.3 sửa định nghĩa `QUA_HAN_NHIEU`. Kiểm chứng: `ProgressPolicyTest` 8, `RecommendationServiceTest` 5, `RecommendationRulesTest` 5, `FR08RecommendationTest` 3, `FR08NotebookTest` 4 pass; toàn bộ `mvnw test` 452/452 pass (Testcontainers, 12/11/2026). Chưa gọi HTTP thật; mockup UI28 đã nối route demo đúng DTO (13/11/2026); Postman đã thêm 1 request vào "03 Học tập" (13/11/2026), chưa chạy test script. Luồng: [B3.5](../docs/luong-backend/B3.5-goi-y-co-ly-do.md); bàn giao: [Sprint 3](../ban-giao-cho%20fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) mục 5.4.
 
 ### [x] B3.6 Điểm thưởng, chuỗi ngày, huy hiệu, thử thách — FR-12, TC-15
 - **Đã làm 11/11/2026:** `V16__engagement.sql` (5 bảng, seed 6 huy hiệu + thử thách `TUAN_40_LUOT`); `RewardService` gọi trong cùng transaction từ `ReviewService` (B2.4) và `PracticeSubmissionService` (B2.8); trần `app.rewards.diem-toi-da-ngay` = 100 áp qua `su_dung_hoc_ngay.diem` có khóa dòng; lượt ôn thưởng 1 lần/thẻ/chiều/ngày (`su_kien_id = tienDoId:ngày`), bài luyện lại 0 điểm; `StreakCalculator`/`StreakService` có ngày đóng băng, dùng chung cho `/learning/today` (thêm `daDungNgayNghiTuanNay`, `ngayNghiDaDung`) và `/statistics/overview`; sửa lỗi mất một ngày chuỗi khi đổi múi giờ sang phía tây. Kiểm chứng: `FR12RewardTest` 6, `StreakCalculatorTest` 13 và toàn bộ `mvnw test` 427/427 pass (Testcontainers, 11/11/2026). Chưa gọi HTTP thật trên môi trường dev. "Qua nửa đêm" được phủ bởi cách gán ngày theo múi giờ phiên của B2.2 (TC-09) và test thuần, chưa có test tích hợp đồng hồ cố định 23:59/00:01 cho lượt ôn. Mockup UI38 đã đọc 3 route demo đúng DTO; Postman thêm 4 request. Luồng: [B3.6](../docs/luong-backend/B3.6-diem-chuoi-huy-hieu.md); bàn giao: [Sprint 3](../ban-giao-cho%20fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md).
@@ -479,14 +480,16 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - API: `GET /rewards/history`, `GET /badges`, `GET /challenges`.
 - **Gọn** (S8): 5–6 huy hiệu và 1 thử thách tuần cố định, seed bằng migration. **Cắt:** CRUD `/admin/badges`, `/admin/challenges`.
 
-### [ ] B3.7 Thông báo & nhắc học — FR-12, TC-15
-- `V17__notification_report.sql` (số thực tế lấy số kế tiếp chưa dùng): `thong_bao`, `bao_cao_noi_dung`.
+### [x] B3.7 Thông báo & nhắc học — FR-12, TC-15
+- **Đã làm 11/11/2026:** `V17__notification.sql` chỉ có `thong_bao` (unique `(nguoi_dung_id, loai, ngay_dia_phuong)`, cờ `hien_thi`, `gui_email`); `bao_cao_noi_dung` chuyển sang migration của B3.8 vì quy tắc chống gửi trùng thuộc B3.8. `ReminderWorker` mỗi 15 phút (`app.reminders.*`) → `NotificationService.remind`: User `HOAT_DONG`, bật `nhac_hoc` và có `gio_nhac`, giờ địa phương ≥ `gio_nhac`, hôm nay < 5 lượt hợp lệ → `INSERT IGNORE`; email chỉ gửi khi chèn được dòng (sau commit), có link tắt nhắc. Tắt kênh trong ứng dụng → vẫn ghi dòng chống trùng với `hien_thi = false`. `NotificationService.create` (MANDATORY) để B3.12b dùng. Kiểm chứng: `FR12NotificationTest` 4/4 và toàn bộ `mvnw test` 431/431 pass (Testcontainers, 11/11/2026). Mockup UI39 đọc `GET/PATCH /notifications` demo đúng DTO (đã xem preview); Postman thêm 3 request. Chưa gọi HTTP thật, chưa xem email thật trên Mailpit dev. Luồng: [B3.7](../docs/luong-backend/B3.7-thong-bao-nhac-hoc.md); bàn giao: [Sprint 3](../ban-giao-cho%20fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) mục 5.3.
+- `V17__notification.sql`: `thong_bao`.
 - API: `GET /notifications`, `PATCH /notifications/{id}`.
 - Scheduler mỗi 15 phút: gửi nhắc theo giờ + múi giờ User qua email và trong ứng dụng, khóa chống trùng (user, loại, ngày địa phương); tôn trọng cài đặt tắt kênh.
 - Bảng `thong_bao` có `ngay_dia_phuong` và unique `(nguoi_dung_id, loai, ngay_dia_phuong)`; loại gồm nhắc học và `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN` (B3.12b dùng, TK §6.9).
 - **Gọn** (S8). **Cắt:** `POST /admin/announcements`. **Hoãn:** web push + PWA (mục hoãn ưu tiên 1).
 
 ### [ ] B3.8 Báo cáo nội dung & kiểm duyệt — FR-13
+- Migration số kế tiếp: `bao_cao_noi_dung` (chuyển từ B3.7, 11/11/2026).
 - API: `POST /reports` (bộ/thẻ/đầu ra AI, chống gửi trùng), `GET /admin/reports`, `POST /admin/reports/{id}/resolve` (giữ/ẩn + lý do, ghi nhật ký).
 - **Gọn** (S9). **Cắt:** trạng thái "yêu cầu sửa", "từ chối" và thông báo người liên quan.
 
@@ -506,7 +509,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ### [ ] B3.12a Gói dịch vụ & thanh toán VNPay — FR-15, TC-21 (bổ sung 07/11/2026)
 - Thiết kế: TK §6.9, §12.2 (`goi_dich_vu`, `dang_ky_goi`, `giao_dich_thanh_toan`), §13.2. Nguồn: UI55, UI56 nhóm FE làm ngày 07/11/2026 (commit `ff3c54e`).
-- `V<n>__billing.sql` (số kế tiếp chưa dùng, hiện là V16): 3 bảng + seed 2 gói `PRO`/`PREMIUM` theo bảng giá TK §6.9 (không có gói miễn phí, sửa 10/11/2026).
+- `V<n>__billing.sql` (số kế tiếp chưa dùng, hiện là V18): 3 bảng + seed 2 gói `PRO`/`PREMIUM` theo bảng giá TK §6.9 (không có gói miễn phí, sửa 10/11/2026).
 - API: `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts {goi, chuKy}` → `{maDon, paymentUrl}`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return` (chuyển về FE `/thanh-toan-ket-qua?maDon=`), `GET /billing/transactions/{maDon}`.
 - `PaymentGateway` + `VnpayGateway` (ký/kiểm HMAC-SHA512, `RestClient` không cần) + `FakePaymentGateway` (test, demo không mạng). Số tiền lấy từ `goi_dich_vu`; xác nhận IPN/return dùng một hàm, khóa hàng đơn, chuyển trạng thái một lần; kiểm chữ ký, số tiền, chủ đơn. Không nhận, không lưu dữ liệu thẻ.
 - `EntitlementService.current(userId)` → `Optional` gói hiệu lực (`HIEU_LUC` và `het_han_at > now`); B3.12a thay `ProGoiResolver` (B3.1) bằng bản đọc `EntitlementService` để `QuotaService` lấy `goi_ma`; hạn mức AI/ảnh đọc từ `han_muc_dich_vu(goi_ma, loai)` (V15, đã seed `PRO`/`PREMIUM`), `goi_dich_vu` không có cột `han_muc_*`.

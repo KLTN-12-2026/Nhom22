@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v7";
+  const KEY = "vl-demo-v8";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -197,7 +197,7 @@
       ["EN_VI", "VI_EN"].forEach((dir, j) => put("3", x.id, dir, { trangThai: "ON_TAP", ef: 2.3, khoangOnNgay: 3 + (i % 4), chuoiThanhCong: 2, soLanQuen: (i * 7 + j) % 5, hanOnAt: iso(sod - (12 + (i % 9)) * DAY), version: 3 }));
     });
 
-    const anCards = s.cards.filter((x) => x.deckId === "21" || x.deckId === "22");
+    const anCards = s.cards.filter((x) => (x.deckId === "21" || x.deckId === "22") && x.word !== "How's it going?");
     const ratings = ["NHO", "NHO", "KHO", "NHO", "DE", "QUEN", "NHO", "KHO", "NHO", "DE"];
     const studyDays = { 1: 12, 2: 9, 3: 14, 5: 6, 6: 11, 8: 4, 9: 10, 10: 8, 13: 12, 16: 7, 17: 9, 22: 6, 24: 5 };
     let k = 0;
@@ -216,6 +216,9 @@
       { id: "p1", uid: "2", the1Id: cp, the2Id: cm, soLanNham: 2, lanCuoiAt: at(14, 20) },
       { id: "p2", uid: "2", the1Id: rc, the2Id: rp, soLanNham: 1, lanCuoiAt: at(15, 20) }
     );
+    const hg = card("22", "How's it going?");
+    ["QUEN", "NHO", "QUEN", "KHO", "QUEN"].forEach((r, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-tb" + i, theId: hg, chieuHoc: "EN_VI", danhGia: r, thoiGianTraLoiMs: 9000, createdAt: at(12 + i * 2, 19), truoc: { trangThai: "DANG_HOC" }, sau: { trangThai: r === "QUEN" ? "DANG_HOC" : "ON_TAP" }, phienBanThuatToan: ALGO }));
+    [1, 2, 3, 4, 5].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-tbm" + i, theId: hg, chieuHoc: i % 2 ? "VI_EN" : "EN_VI", danhGia: "NHO", thoiGianTraLoiMs: 5000, createdAt: at(d, 7), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO }));
     [3, 9, 20].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-" + d, theId: rc, chieuHoc: i === 1 ? "VI_EN" : "EN_VI", danhGia: "QUEN", thoiGianTraLoiMs: 12000, createdAt: at(d, 20.5), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "HOC_LAI" }, phienBanThuatToan: ALGO }));
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
 
@@ -280,6 +283,23 @@
     const s = session.get();
     if (!s) return null;
     return db.users.find((u) => u.id === s.userId) || null;
+  }
+  function inboxOf(u) {
+    db.thongBao = db.thongBao || {};
+    if (!db.thongBao[u.id]) {
+      const tz = tzOf(u);
+      const today = localDate(Date.now(), tz);
+      const yesterday = shiftDate(today, -1);
+      db.thongBao[u.id] = [
+        { id: String(u.id * 100 + 2), loai: "NHAC_HOC", tieuDe: "Đến giờ ôn từ vựng", noiDung: "Hôm nay bạn đã ôn 2/5 lượt. Ôn thêm vài thẻ để giữ chuỗi ngày học.", lienKet: "/hom-nay", ngayDiaPhuong: today, hienThi: true, daDocAt: null, createdAt: new Date(Date.now() - 3600000).toISOString() },
+        { id: String(u.id * 100 + 1), loai: "NHAC_HOC", tieuDe: "Đến giờ ôn từ vựng", noiDung: "Hôm nay bạn đã ôn 0/5 lượt. Ôn thêm vài thẻ để giữ chuỗi ngày học.", lienKet: "/hom-nay", ngayDiaPhuong: yesterday, hienThi: true, daDocAt: new Date(Date.now() - 86400000).toISOString(), createdAt: new Date(Date.now() - 90000000).toISOString() }
+      ];
+      save(db);
+    }
+    return db.thongBao[u.id];
+  }
+  function notificationView(n) {
+    return { id: n.id, loai: n.loai, tieuDe: n.tieuDe, noiDung: n.noiDung, lienKet: n.lienKet, ngayDiaPhuong: n.ngayDiaPhuong, daDocAt: n.daDocAt, createdAt: n.createdAt };
   }
   function requireMe() { const u = me(); if (!u) unauth(); return u; }
   function ownedFile(id, allowDeleted) {
@@ -966,6 +986,91 @@
     if (filter) list = list.filter((it) => notebookIn(it, filter));
     return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || "") || Number(b.theId) - Number(a.theId));
   }
+  const REC = { toiDaGoiY: 10, toiDaMoiLyDo: 2, toiDaTheQuaHan: 20, soNgayCu: 30, soNgayMoi: 7, soLuotCu: 5, soSaiCu: 3, tyLeSaiCu: 0.5, soLuotMoi: 5, soSaiMoi: 0 };
+  const REC_ORDER = ["QUEN_NHIEU", "SAI_CHINH_TA", "CAP_DE_NHAM", "PHAT_AM_THAP", "QUA_HAN_NHIEU", "TIEN_BO"];
+  function recommendations(u) {
+    const uid = u.id;
+    const now = Date.now();
+    const nb = db.notebook[uid] || {};
+    const after = (theId, at) => { const h = nb[theId] && nb[theId].anTu; return !h || Date.parse(at) > Date.parse(h); };
+    const usable = (theId) => !!notebookCard(uid, theId, false);
+    const word = (theId) => notebookCard(uid, theId, false).x.word;
+    const later = (a, b) => (!a || (b && b > a) ? b : a);
+    const byReason = {};
+
+    const lapses = {};
+    db.reviews.filter((r) => r.uid === uid && r.danhGia === "QUEN" && r.truoc && r.truoc.trangThai === "ON_TAP" && Date.parse(r.createdAt) >= now - NB.quenNgay * DAY && after(r.theId, r.createdAt))
+      .forEach((r) => { const o = lapses[r.theId] = lapses[r.theId] || { n: 0, last: null }; o.n++; o.last = later(o.last, r.createdAt); });
+    byReason.QUEN_NHIEU = Object.keys(lapses).filter((id) => lapses[id].n >= NB.quenNhieu && usable(id))
+      .sort((a, b) => lapses[b].n - lapses[a].n || lapses[b].last.localeCompare(lapses[a].last) || Number(b) - Number(a))
+      .map((id) => ({ reasonCode: "QUEN_NHIEU", message: "Ôn lại ‘" + word(id) + "’ và thêm mẹo nhớ: bạn quên " + lapses[id].n + " lần trong " + NB.quenNgay + " ngày qua", cardIds: [id], evidence: { soLanQuen: lapses[id].n, soNgay: NB.quenNgay, lanCuoiAt: lapses[id].last }, exclusive: true }));
+
+    const typed = {};
+    db.answers.filter((a) => a.uid === uid && a.theId && a.coTraLoi && TYPED.includes(a.loaiCau) && after(a.theId, a.createdAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .forEach((a) => { (typed[a.theId] = typed[a.theId] || []).push(a); });
+    byReason.SAI_CHINH_TA = Object.keys(typed).map((id) => { const w = typed[id].slice(0, NB.chinhTaLuot); return { id, soSai: w.filter((a) => a.nhomLoi === "CHINH_TA").length, soLuot: w.length, last: w[0].createdAt }; })
+      .filter((x) => x.soSai >= NB.chinhTaSai && usable(x.id))
+      .sort((a, b) => b.soSai - a.soSai || b.last.localeCompare(a.last) || Number(b.id) - Number(a.id))
+      .map((x) => ({ reasonCode: "SAI_CHINH_TA", message: "Luyện viết ‘" + word(x.id) + "’ vì bạn viết sai " + x.soSai + " trong " + x.soLuot + " lượt gần đây", cardIds: [x.id], evidence: { soSai: x.soSai, soLuot: x.soLuot, lanCuoiAt: x.last }, exclusive: true }));
+
+    byReason.CAP_DE_NHAM = db.pairs.filter((p) => p.uid === uid && p.soLanNham >= NB.capNham && usable(p.the1Id) && usable(p.the2Id) && after(p.the1Id, p.lanCuoiAt) && after(p.the2Id, p.lanCuoiAt))
+      .sort((a, b) => b.soLanNham - a.soLanNham || b.lanCuoiAt.localeCompare(a.lanCuoiAt))
+      .map((p) => ({ reasonCode: "CAP_DE_NHAM", message: "Phân biệt ‘" + word(p.the1Id) + "’ và ‘" + word(p.the2Id) + "’: bạn chọn nhầm " + p.soLanNham + " lần", cardIds: [p.the1Id, p.the2Id], evidence: { capId: p.id, soLanNham: p.soLanNham, lanCuoiAt: p.lanCuoiAt }, exclusive: true }));
+
+    const plan = todayPlan(u, {});
+    byReason.QUA_HAN_NHIEU = [];
+    if (plan.cuuLichOn) {
+      const sod = startOfLocalDay(now, tzOf(u));
+      const due = {};
+      ownCards(uid).forEach((x) => DIRS.forEach((dir) => {
+        const pr = progressOf(uid, x.id, dir);
+        if (pr.trangThai === "MOI" || pr.trangThai === "TAM_NGUNG" || !pr.hanOnAt) return;
+        const h = Date.parse(pr.hanOnAt);
+        if (h < sod) due[x.id] = due[x.id] === undefined ? h : Math.min(due[x.id], h);
+      }));
+      const r = plan.cuuLichOn;
+      byReason.QUA_HAN_NHIEU.push({
+        reasonCode: "QUA_HAN_NHIEU",
+        message: "Bạn có " + plan.soQuaHan + " lượt ôn quá hạn, nhiều hơn " + r.luotMoiNgay + " lượt mỗi ngày với " + r.phutMoiNgay + " phút học. Chia kế hoạch cứu lịch trong " + r.soNgay + " ngày",
+        cardIds: Object.keys(due).sort((a, b) => due[a] - due[b] || Number(a) - Number(b)).slice(0, REC.toiDaTheQuaHan),
+        evidence: { soQuaHan: plan.soQuaHan, soDenHan: plan.soDenHan, luotMoiNgay: r.luotMoiNgay, phutMoiNgay: r.phutMoiNgay, soNgayKeHoach: r.soNgay },
+        exclusive: false
+      });
+    }
+
+    const cuTu = now - REC.soNgayCu * DAY;
+    const moiTu = now - REC.soNgayMoi * DAY;
+    const obs = {};
+    const add = (theId, at, dung) => {
+      const t = Date.parse(at);
+      if (!theId || t < cuTu) return;
+      const o = obs[theId] = obs[theId] || { cu: 0, saiCu: 0, moi: 0, saiMoi: 0, last: null };
+      if (t < moiTu) { o.cu++; if (!dung) o.saiCu++; } else { o.moi++; if (!dung) o.saiMoi++; }
+      o.last = later(o.last, at);
+    };
+    db.reviews.filter((r) => r.uid === uid).forEach((r) => add(r.theId, r.createdAt, r.danhGia !== "QUEN"));
+    db.answers.filter((a) => a.uid === uid).forEach((a) => add(a.theId, a.createdAt, a.dung));
+    byReason.TIEN_BO = Object.keys(obs).filter((id) => { const o = obs[id]; return o.cu >= REC.soLuotCu && o.saiCu >= REC.soSaiCu && o.saiCu >= REC.tyLeSaiCu * o.cu && o.moi >= REC.soLuotMoi && o.saiMoi <= REC.soSaiMoi && usable(id); })
+      .sort((a, b) => obs[b].moi - obs[a].moi || obs[b].last.localeCompare(obs[a].last) || Number(b) - Number(a))
+      .map((id) => { const o = obs[id]; return { reasonCode: "TIEN_BO", message: "‘" + word(id) + "’: sai " + o.saiCu + "/" + o.cu + " lượt trước đó, đúng " + (o.moi - o.saiMoi) + "/" + o.moi + " lượt trong " + REC.soNgayMoi + " ngày gần đây", cardIds: [id], evidence: { soLuotCu: o.cu, soSaiCu: o.saiCu, soNgayCu: REC.soNgayCu - REC.soNgayMoi, soLuotMoi: o.moi, soDungMoi: o.moi - o.saiMoi, soNgayMoi: REC.soNgayMoi, lanCuoiAt: o.last }, exclusive: true }; });
+
+    const used = new Set();
+    const out = [];
+    REC_ORDER.forEach((code) => {
+      let taken = 0;
+      (byReason[code] || []).forEach((c) => {
+        if (taken >= REC.toiDaMoiLyDo || out.length >= REC.toiDaGoiY) return;
+        if (c.exclusive) {
+          if (c.cardIds.some((id) => used.has(id))) return;
+          c.cardIds.forEach((id) => used.add(id));
+        }
+        out.push({ reasonCode: c.reasonCode, message: c.message, cardIds: c.cardIds, evidence: c.evidence });
+        taken++;
+      });
+    });
+    return out;
+  }
   function notebookIn(it, key) {
     if (key === "TAT_CA") return true;
     if (key === "QUEN_NHIEU") return it.lyDo.includes("QUEN_NHIEU");
@@ -1635,6 +1740,7 @@
       nb[m[1]] = Object.assign({ ghiChu: null }, nb[m[1]] || {}, { danhDauThuCong: false, anTu: new Date().toISOString(), capNhatAt: new Date().toISOString() });
       return { status: 204 };
     }],
+    ["GET", /^\/learning\/recommendations$/, () => recommendations(requireMe())],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();
       const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos || null, phienAm: x.ipa || null, nghiaVi: x.meaningVi, viDuEn: x.exampleEn || null });
@@ -1685,6 +1791,28 @@
         diemToiDaNgay: REWARD_CAP,
         lichSu: { items: list.slice(pg * size, pg * size + size), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) }
       };
+    }],
+    ["GET", /^\/notifications$/, (m, b, q) => {
+      const u = requireMe();
+      const size = parseInt(q.size || "20", 10);
+      const pg = parseInt(q.page || "0", 10);
+      if (!(size >= 1 && size <= 100)) bad([fe("size", size < 1 ? "size tối thiểu là 1" : "size tối đa là 100")]);
+      if (!(pg >= 0)) bad([fe("page", "page phải không âm")]);
+      const all = inboxOf(u).filter((n) => n.hienThi);
+      const list = q.chuaDoc === "true" ? all.filter((n) => !n.daDocAt) : all;
+      return {
+        soChuaDoc: all.filter((n) => !n.daDocAt).length,
+        thongBao: { items: list.slice(pg * size, pg * size + size).map(notificationView), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) }
+      };
+    }],
+    ["PATCH", /^\/notifications\/([^/]+)$/, (m, b) => {
+      const u = requireMe();
+      if (typeof b.daDoc !== "boolean") bad([fe("daDoc", "Chọn đã đọc hoặc chưa đọc")]);
+      const n = inboxOf(u).find((x) => x.id === m[1] && x.hienThi);
+      if (!n) notFound();
+      n.daDocAt = b.daDoc ? (n.daDocAt || new Date().toISOString()) : null;
+      save(db);
+      return notificationView(n);
     }],
     ["GET", /^\/badges$/, () => {
       const u = requireMe();

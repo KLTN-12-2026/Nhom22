@@ -24,4 +24,11 @@ public class DailyUsageService {
         usage.saveAndFlush(day);
         return granted;
     }
+
+    @Transactional(readOnly = true)
+    public int validReviews(Long userId, LocalDate ngay) {
+        return usage.findByNguoiDungIdAndNgayDiaPhuong(userId, ngay)
+                .map(SuDungHocNgay::getSoLuotHopLe)
+                .orElse(0);
+    }
 }

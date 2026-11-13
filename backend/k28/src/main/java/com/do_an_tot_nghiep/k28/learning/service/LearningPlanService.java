@@ -27,10 +27,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,6 +131,26 @@ public class LearningPlanService {
                 chuoi.daDungNgayNghiTuanNay(),
                 chuoi.ngayNghiTuanNay()
         );
+    }
+
+    @Transactional
+    public Optional<OverdueSummary> overdue(Long userId, int limit) {
+        ZoneId zone = accountService.zoneOf(userId);
+        LocalDate homNay = LocalDate.ofInstant(clock.instant(), zone);
+        Instant batDau = homNay.atStartOfDay(zone).toInstant();
+        Instant ketThuc = homNay.plusDays(1).atStartOfDay(zone).toInstant();
+        int phut = settingsService.learning(userId).phutMoiNgay();
+
+        List<DeckDueRow> dueRows = progress.dueByDeck(userId, TRANG_THAI_CO_HAN, batDau, ketThuc);
+        int soQuaHan = Math.toIntExact(dueRows.stream().mapToLong(DeckDueRow::soQuaHan).sum());
+        int soDenHan = Math.toIntExact(dueRows.stream().mapToLong(DeckDueRow::soDenHan).sum());
+        int luotMoiNgay = phut * 60 / GIAY_MOI_LUOT;
+        if (soQuaHan <= luotMoiNgay) {
+            return Optional.empty();
+        }
+        CuuLichOnResponse plan = rescuePlan(homNay, soQuaHan, soDenHan, phut, false);
+        List<Long> theIds = progress.overdueCardIds(userId, TRANG_THAI_CO_HAN, batDau, PageRequest.of(0, limit));
+        return Optional.of(new OverdueSummary(soQuaHan, soDenHan, phut, luotMoiNgay, plan.soNgay(), theIds));
     }
 
     @Transactional(readOnly = true)

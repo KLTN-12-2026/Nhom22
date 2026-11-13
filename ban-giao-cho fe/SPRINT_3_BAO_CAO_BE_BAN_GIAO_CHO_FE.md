@@ -25,9 +25,9 @@
 | B3.2 Adapter AI & tạo thẻ từ đoạn văn | ⏳ Chưa làm (S7) | F3.1 UI29 `/ai/xuong-the` | Làm trước với MSW theo hợp đồng dự kiến mục 9 |
 | B3.4a Âm thanh TTS | ⏳ Chưa làm (S7) | F3.5 (nghe) UI19, UI24 | MSW |
 | B3.3 Các tác vụ AI khác (gọn) | ⏳ Chưa làm (S8) | F3.2, F3.3 UI30–UI32, UI16 | MSW |
-| B3.5 Gợi ý có lý do | ⏳ Chưa làm (S8) | F3.4 UI28 | MSW |
+| B3.5 Gợi ý có lý do (FR-08, R-04) | ✅ `GET /learning/recommendations`; 5 mã lý do (`PHAT_AM_THAP` tắt chờ B3.4b); ngưỡng `app.recommendations.*` + `app.notebook.*`; không migration; 21 test mới pass, toàn bộ 452/452 (12/11); chưa HTTP thật | F3.4 UI28 trên UI12, UI27 | Nối API thật (mục 5.4); ẩn khối khi mảng rỗng; thẻ `TIEN_BO` là lời khen, không có nút hành động |
 | B3.6 Điểm, chuỗi ngày, huy hiệu, thử thách (gọn, FR-12, TC-15) | ✅ 3 API + mở rộng `/learning/today`; `V16__engagement.sql`; thưởng ghi trong cùng transaction với lượt ôn/nộp bài; `mvnw test` 427/427 pass (11/11); chưa HTTP thật | F3.6 UI38 `/thanh-tich`, thẻ chuỗi UI12 | Nối 3 API thật (mục 5.2); hiện trạng thái ngày nghỉ tuần trên UI12; invalidate sau khi ôn/nộp bài |
-| B3.7 Thông báo, nhắc học (gọn) | ⏳ Chưa làm (S8) | F3.7 UI39 | MSW |
+| B3.7 Thông báo, nhắc học (gọn, FR-12, TC-15) | ✅ 2 API + `ReminderWorker` 15 phút; `V17__notification.sql`; chống trùng `(user, loại, ngày địa phương)`; `FR12NotificationTest` 4/4 pass (11/11); chưa HTTP thật | F3.7 UI39 chuông + `/thong-bao` | Nối 2 API thật (mục 5.3); số chưa đọc trên chuông; mở `lienKet` rồi `PATCH` đã đọc |
 | B3.12a Gói dịch vụ & thanh toán VNPay | ⏳ Chưa làm (S8) | F3.12 UI55, UI57 | MSW; bắt 402 `SUBSCRIPTION_REQUIRED` khi bước này giao |
 | B3.4b Đánh giá phát âm (gọn) | ⏳ Chưa làm (S9) | F3.5 UI33, UI34 | MSW |
 | B3.8–B3.11 | ⏳ Chưa làm (S9) | F3.8–F3.11 | MSW |
@@ -167,6 +167,59 @@ Ví dụ (rút gọn, hợp đồng theo mã nguồn, giá trị minh họa):
 
 **Lỗi:** 401 `UNAUTHENTICATED`; 400 `VALIDATION_FAILED` khi `page`/`size` sai (`fieldErrors[].field` = `page`/`size`).
 
+### 5.3 B3.7 — Thông báo và nhắc học
+
+Đăng nhập (cookie `SESSION`); chỉ thông báo của người gọi; `PATCH` cần XSRF như mọi request ghi. Hợp đồng theo mã nguồn và `FR12NotificationTest` (MockMvc), chưa gọi HTTP thật. Luồng: [B3.7](../docs/luong-backend/B3.7-thong-bao-nhac-hoc.md).
+
+| API | Vào | 200 |
+|---|---|---|
+| `GET /api/v1/notifications` | `chuaDoc` (mặc định `false` = tất cả), `page` (≥ 0), `size` (1–100, mặc định 20) | `{soChuaDoc, thongBao: {items[], page, size, totalElements, totalPages}}`; item `{id, loai, tieuDe, noiDung, lienKet, ngayDiaPhuong, daDocAt, createdAt}`, mới nhất trước |
+| `PATCH /api/v1/notifications/{id}` | body `{daDoc: true\|false}` | item đã cập nhật; `daDoc: false` đặt lại chưa đọc |
+
+| Enum `loai` | Ý nghĩa |
+|---|---|
+| `NHAC_HOC` | Nhắc học hằng ngày (B3.7), `lienKet` = `/hom-nay` |
+| `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN` | Dành cho B3.12b, chưa phát sinh |
+
+Quy tắc FE cần biết:
+- Nhắc học do máy chủ gửi mỗi 15 phút theo `gioNhac` + `muiGio` trong cài đặt UI06 (`PUT /me/notification-settings`); mỗi ngày địa phương tối đa 1 lần; không gửi nếu hôm nay đã đủ 5 lượt ôn hợp lệ.
+- Tắt "trong ứng dụng" thì thông báo không hiện ở API (email vẫn gửi nếu bật email). Email có link `/ca-nhan/thong-bao` để tắt.
+- Chuông: đọc `soChuaDoc` (gọi `GET ?size=1` là đủ); invalidate sau `PATCH`.
+
+**Lỗi:** 401 `UNAUTHENTICATED`; 400 `VALIDATION_FAILED` (`fieldErrors[].field` = `daDoc`/`page`/`size`); 404 `NOT_FOUND` (ID không có hoặc của người khác); 403 `CSRF_INVALID`.
+
+### 5.4 B3.5 — Gợi ý có lý do
+
+`GET /api/v1/learning/recommendations`: đăng nhập (cookie `SESSION`), không tham số, không cần CSRF. Trả **mảng** (không phân trang), chưa có dữ liệu → `[]`. Hợp đồng theo mã nguồn và `FR08RecommendationTest` (MockMvc), chưa gọi HTTP thật. Luồng: [B3.5](../docs/luong-backend/B3.5-goi-y-co-ly-do.md).
+
+Mỗi phần tử `{reasonCode, message, cardIds: string[], evidence}`. `evidence` chỉ có trường khác `null`:
+
+| `reasonCode` | `cardIds` | `evidence` | Hành động FE |
+|---|---|---|---|
+| `QUEN_NHIEU` | 1 thẻ | `soLanQuen`, `soNgay`, `lanCuoiAt` | Mở thẻ / thêm mẹo nhớ |
+| `SAI_CHINH_TA` | 1 thẻ | `soSai`, `soLuot`, `lanCuoiAt` | Tạo bài `NHAP_TU_THEO_NGHIA` |
+| `CAP_DE_NHAM` | 2 thẻ | `capId`, `soLanNham`, `lanCuoiAt` | Bài phân biệt cặp |
+| `QUA_HAN_NHIEU` | ≤ 20 thẻ | `soQuaHan`, `soDenHan`, `luotMoiNgay`, `phutMoiNgay`, `soNgayKeHoach` | Mở cứu lịch (`cuuLichOn`, phiên `CUU_LICH`) |
+| `TIEN_BO` | 1 thẻ | `soLuotCu`, `soSaiCu`, `soNgayCu`, `soLuotMoi`, `soDungMoi`, `soNgayMoi`, `lanCuoiAt` | Chỉ hiển thị lời khen (R-04) |
+| `PHAT_AM_THAP` | — | `diem`, `diemToiThieu`, `lanCuoiAt` (dành sẵn) | Chưa trả, chờ B3.4b |
+
+Ví dụ (rút gọn từ kỳ vọng của test, ID minh họa):
+
+```json
+[
+  {"reasonCode": "QUEN_NHIEU", "message": "Ôn lại ‘receipt’ và thêm mẹo nhớ: bạn quên 3 lần trong 30 ngày qua", "cardIds": ["101"], "evidence": {"soLanQuen": 3, "soNgay": 30, "lanCuoiAt": "2026-11-12T02:00:00Z"}},
+  {"reasonCode": "CAP_DE_NHAM", "message": "Phân biệt ‘affect’ và ‘effect’: bạn chọn nhầm 3 lần", "cardIds": ["102", "103"], "evidence": {"capId": "7", "soLanNham": 3, "lanCuoiAt": "2026-11-12T01:00:00Z"}},
+  {"reasonCode": "TIEN_BO", "message": "‘reimbursement’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây", "cardIds": ["104"], "evidence": {"soLuotCu": 5, "soSaiCu": 3, "soNgayCu": 23, "soLuotMoi": 5, "soDungMoi": 5, "soNgayMoi": 7, "lanCuoiAt": "2026-11-10T07:00:00Z"}}
+]
+```
+
+Quy tắc FE cần biết:
+- Thứ tự mảng là thứ tự ưu tiên của BE; hiển thị nguyên thứ tự. Tối đa 2 gợi ý mỗi lý do, 10 gợi ý tổng; một thẻ chỉ xuất hiện ở một lý do (trừ `QUA_HAN_NHIEU`).
+- `message` là tiếng Việt, hiển thị trực tiếp; dựng UI riêng (badge, số) từ `evidence`, không tách chuỗi `message`.
+- Sau khi ôn, nộp bài, xóa thẻ hoặc `DELETE /notebook/{cardId}`: invalidate `['learning','recommendations']`.
+
+**Lỗi:** 401 `UNAUTHENTICATED`.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
@@ -228,7 +281,7 @@ Trạng thái BE đến 11/11/2026: chỉ B3.1; các mục dưới là tiêu ch�
 - [ ] `KHONG_XAC_DINH` hiện "Chưa xác định" và nói rõ thử lại tốn thêm một lượt; `LOI` cho thử lại
 - [ ] F3.2 UI30, UI31, UI16: không render HTML từ AI; AI lỗi/429 không chặn lưu thẻ tay
 - [ ] F3.3 UI32 lịch sử AI dạng danh sách; hạn mức còn lại đọc `GET /me/service-quota` (B3.3)
-- [ ] F3.4 UI28 gợi ý hiển thị mã lý do và minh chứng
+- [ ] F3.4 UI28 gợi ý đọc `GET /learning/recommendations` (mục 5.4): hiển thị mã lý do, `message`, số liệu từ `evidence`; ẩn khối khi `[]`; `TIEN_BO` không có nút hành động
 - [ ] F3.5 UI33, UI34 phát âm: xin quyền micro khi bấm ghi, chỉ hiện chỉ số có thật, kết quả Fake có nhãn "Mô phỏng"
 - [ ] F3.6 UI38 đọc `/rewards/history` (phân trang), `/badges`, `/challenges`; hiện "đã chạm trần ngày" khi `soDiem < diemGoc`; UI12 hiện ngày nghỉ tuần từ `daDungNgayNghiTuanNay`/`ngayNghiDaDung`; không tự tính điểm ở FE
 - [ ] F3.7 thông báo đọc API thật
@@ -245,8 +298,8 @@ Theo `roadmap/TienDoDuKien_backend.md` (Đợt 3), `roadmap/SPRINT_PLAN.md` (S7�
 | B3.2 | S7 (09/11–15/11) | Tạo thẻ bằng AI; nhập tệp, lưu vào bộ mới (X-01, X-02); dùng hạ tầng B3.1 | `POST /ai/card-drafts` (202 + ID; đoạn văn hoặc `tepId`), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`, `Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
 | B3.4a | S7 | Âm thanh TTS | `GET /cards/{id}/audio` | F3.5 (nghe) | UI19, UI24 |
 | B3.3 (gọn) | S8 (16/11–22/11) | Giải thích ngữ cảnh, sửa câu, tự điền thẻ (R-02, X-03), ảnh AI (X-04); `POST /ai/exercise-drafts` **Hoãn** | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (202), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31, UI32, UI16, UI29 |
-| B3.5 | S8 | Gợi ý có lý do (+ `TIEN_BO`) | `GET /learning/recommendations` → `{reasonCode, message, cardIds, evidence}` | F3.4 | UI28, UI27 |
-| B3.7 (gọn) | S8 | Thông báo, nhắc học | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 |
+| B3.5 | S8 | Gợi ý có lý do (+ `TIEN_BO`) — **đã giao 12/11, xem mục 5.4** | `GET /learning/recommendations` → `[{reasonCode, message, cardIds, evidence}]` | F3.4 | UI28, UI27 |
+| B3.7 (gọn) | S8 | Thông báo, nhắc học — **đã giao 11/11, xem mục 5.3** | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 |
 | B3.12a | S8 | Gói dịch vụ, VNPay sandbox (FR-15); `EntitlementService` thay `ProGoiResolver`; `SubscriptionGuard` 402 | `GET /billing/plans`, `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions/{maDon}` | F3.12 | UI55, UI57 |
 | B3.4b (gọn) | S9 (23/11–29/11) | Đánh giá phát âm | `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33, UI34 |
 | B3.8 (gọn) | S9 | Báo cáo nội dung, kiểm duyệt | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45, UI50 |
@@ -256,7 +309,7 @@ Theo `roadmap/TienDoDuKien_backend.md` (Đợt 3), `roadmap/SPRINT_PLAN.md` (S7�
 | B3.12b | S9 | Lịch sử giao dịch, biên nhận, hết hạn gói, áp quyền lợi (TC-22, TC-23) | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`, `GET /me/subscription` (`soNgayConLai`) | F3.12 | UI56, banner `AppShell`, UI44 |
 | B3.12c | S9 | Quản lý thanh toán, doanh thu, công cụ demo sửa hạn (TC-23, TC-24) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58, UI59 |
 
-Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); mới đối chiếu với DTO cho UI38 `thanh-tich` (B3.6), các màn khác chưa vì BE chưa có API. Việc tạo hay sửa mockup cần yêu cầu riêng.
+Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); đã đối chiếu với DTO cho UI38 `thanh-tich` (B3.6) và UI28 `goi-y` + khối trên `hom-nay`, `so-tay` (B3.5), các màn khác chưa vì BE chưa có API. Việc tạo hay sửa mockup cần yêu cầu riêng.
 
 ## 10. Lưu ý / giới hạn / chưa kiểm chứng
 
@@ -276,6 +329,9 @@ Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); mới đối chiếu 
 | Đổi hành vi cũ | `chuoiNgay` của `/learning/today` và `/statistics/overview` có thể tăng so với trước vì có ngày đóng băng; `FR06TodayPlanTest` đã sửa kỳ vọng (3 → 4, 2 → 3) |
 | Giới hạn B3.6 | "Qua nửa đêm" dựa trên cách gán ngày theo múi giờ phiên của B2.2 (TC-09), chưa có test tích hợp đồng hồ cố định cho lượt ôn 23:59/00:01. Bài luyện không cộng vào chuỗi ngày (chuỗi chỉ đếm lượt ôn, theo TK). Mockup `quan-tri-dong-luc` (UI54) giữ nguyên vì đã Cắt. Mockup `demo.js` tính huy hiệu `CHUOI_NGAY` theo chuỗi hiện tại, còn BE giữ huy hiệu đã nhận vĩnh viễn |
 | Mockup / Postman B3.6 | `mockups/shared/demo.js` thêm 3 route đúng DTO + ngày đóng băng trong `/learning/today`; `mockups/dot3/ui.js` trang `thanh-tich` đọc 3 route (kiểm tra preview `?as=an`, console không lỗi). Postman "06 Tương tác & thống kê": 3 request + 1 ca 400 |
+| Kiểm chứng B3.5 | **12/11/2026:** `.\mvnw.cmd -q test -Dtest=ProgressPolicyTest,RecommendationServiceTest,RecommendationRulesTest,FR08RecommendationTest,FR08NotebookTest` → 8 + 5 + 5 + 3 + 4 test, 0 lỗi; toàn bộ `.mvnw.cmd -B test` 452/452 pass, BUILD SUCCESS (Testcontainers MySQL 8.4/Redis). `FR08RecommendationTest`: rỗng → `[]`, 401; ba lý do với dữ liệu thật, bỏ thẻ đã xóa và thẻ chỉ có 4 lượt mới, user khác → `[]` (TC-02); `QUA_HAN_NHIEU` khớp `cuuLichOn` và không đổi `han_on_at` (TC-10). Chưa gọi HTTP thật |
+| Quyết định B3.5 (12/11/2026, đề xuất) | TK §8.3 `QUA_HAN_NHIEU` sửa thành "vượt số lượt mỗi ngày theo cài đặt" để trùng điều kiện `cuuLichOn`; giữ tên `reasonCode`/`cardIds`/`evidence` theo hợp đồng đã ghi; mỗi thẻ một gợi ý; loại trùng theo thứ tự ưu tiên; ngưỡng `TIEN_BO` ở `app.recommendations.tien-bo.*`; ba mã đầu dùng chung `app.notebook.*` với sổ tay; `ProgressPolicy` để B3.9 dùng lại |
+| Giới hạn B3.5 | `SAI_CHINH_TA` chỉ có unit test (SQL `spellingStats` chép điều kiện từ `spellingCardIds` của B2.9, chưa có test tích hợp riêng); `PHAT_AM_THAP` chưa có rule; Mockup UI28 đã đối chiếu DTO (13/11/2026): route demo `GET /learning/recommendations` trong `mockups/shared/demo.js` (cùng quy tắc BE, khóa lưu trữ `vl-demo-v8`, thêm mẫu `TIEN_BO` cho thẻ "How's it going?"), trang `dot3/goi-y.html` đọc route này, khối "Gợi ý cho bạn" trên `dot2/hom-nay.html` và `dot2/so-tay.html`; preview `?as=an`, `?as=binh` ở 1280 và 390 px không lỗi console, không cuộn ngang. Postman "03 Học tập": thêm request "Gợi ý có lý do (B3.5 · FR-08)" kèm test script (13/11/2026), chưa chạy |
 | Chưa kiểm chứng | Các API Đợt 3 còn lại ở mục 9 (chưa có code); HTTP thật cho mọi bước B3.x |
 
 ## 11. Báo lỗi cho BE

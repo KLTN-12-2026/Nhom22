@@ -91,6 +91,15 @@
               <div data-when="error"></div>
             </div>
           </section>
+          <section class="panel" aria-labelledby="rec-title">
+            <h2 class="panel-title" id="rec-title">Gợi ý cho bạn</h2>
+            <div data-view="loading" id="rec-region" aria-live="polite">
+              <div data-when="loading"><div class="skeleton"><div class="sk sk-line"></div><div class="sk sk-line"></div></div></div>
+              <div data-when="ready"><div class="stack" id="rec-list"></div><a class="btn btn-quiet" href="../dot3/goi-y.html" style="margin:var(--sp-2) 0 0 -12px">Xem tất cả gợi ý</a></div>
+              <div data-when="empty"><p class="small muted">Chưa có gợi ý. Gợi ý xuất hiện khi bạn quên hoặc viết sai một từ nhiều lần, hay nhầm hai từ.</p></div>
+              <div data-when="error"></div>
+            </div>
+          </section>
           <section class="panel" aria-labelledby="rules-title">
             <h2 class="panel-title" id="rules-title">Khi nào từ vào sổ</h2>
             <ul class="rules">
@@ -115,6 +124,19 @@
 (function () {
   if (!VL.ready) return;
   const $ = (x) => document.getElementById(x);
+  const REC_LABEL = { QUEN_NHIEU: ["Quên nhiều", "warning"], SAI_CHINH_TA: ["Sai chính tả", "warning"], CAP_DE_NHAM: ["Cặp dễ nhầm", "warning"], PHAT_AM_THAP: ["Phát âm thấp", "warning"], QUA_HAN_NHIEU: ["Quá hạn nhiều", "warning"], TIEN_BO: ["Tiến bộ", "success"] };
+  VL.load(document.getElementById("rec-region"), {
+    fetch: () => VL.api("GET", "/learning/recommendations"),
+    isEmpty: (list) => list.length === 0,
+    render: (list) => {
+      const shown = list.filter((x) => x.reasonCode !== "TIEN_BO").slice(0, 2).concat(list.filter((x) => x.reasonCode === "TIEN_BO").slice(0, 1));
+      document.getElementById("rec-list").innerHTML = shown.map((x) => {
+        const l = REC_LABEL[x.reasonCode] || [x.reasonCode, "quiet"];
+        return '<div><span class="stamp stamp-' + l[1] + '">' + VL.esc(l[0]) + '</span><p class="small" style="margin-top:var(--sp-1)">' + VL.esc(x.message) + "</p></div>";
+      }).join("");
+    }
+  });
+
   const p = VL.params();
   const GROUPS = [["", "Tất cả", "TAT_CA"], ["NGHIA", "Nghĩa"], ["CHINH_TA", "Chính tả"], ["NGHE", "Nghe"], ["NGU_CANH", "Dùng từ trong câu"], ["CAP_NHAM", "Cặp dễ nhầm"], ["QUEN_NHIEU", "Quên nhiều"], ["DANH_DAU", "Tự đánh dấu"]];
   const REASON = { QUEN_NHIEU: "Quên nhiều lần", SAI_CHINH_TA: "Sai chính tả lặp lại", CAP_DE_NHAM: "Hay nhầm với từ khác", DANH_DAU_THU_CONG: "Bạn tự đánh dấu" };

@@ -1,8 +1,11 @@
 package com.do_an_tot_nghiep.k28.account.service;
 
+import com.do_an_tot_nghiep.k28.account.dto.ReminderTarget;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.account.mapper.UserMapper;
+import com.do_an_tot_nghiep.k28.account.repository.CaiDatThongBaoRepository;
 import com.do_an_tot_nghiep.k28.account.repository.HoSoHocTapRepository;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,7 @@ public class AccountService {
     private final NguoiDungRepository users;
     private final HoSoHocTapRepository profile;
     private final UserMapper userMapper;
+    private final CaiDatThongBaoRepository notificationSettings;
 
     @Transactional(readOnly = true)
     public UserResponse me(Long userId) {
@@ -84,5 +89,10 @@ public class AccountService {
                         NguoiDungRepository.PublicDisplayName::getId,
                         NguoiDungRepository.PublicDisplayName::getTenHienThi
                 ));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReminderTarget> reminderTargets() {
+        return notificationSettings.reminderTargets(TrangThaiNguoiDung.HOAT_DONG);
     }
 }

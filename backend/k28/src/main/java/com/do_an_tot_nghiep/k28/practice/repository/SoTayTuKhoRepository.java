@@ -94,6 +94,74 @@ public interface SoTayTuKhoRepository extends JpaRepository<SoTayTuKho, Long> {
     );
 
     @Query(value = """
+            select x.the_id as theId,
+                   cast(sum(x.chinh_ta) as signed) as soSai,
+                   cast(count(*) as signed) as soLuot,
+                   max(x.nop_at) as lanCuoiAt
+            from (
+                select c.the_id,
+                       a.nop_at,
+                       case when json_unquote(json_extract(r.ket_qua_json, '$.nhomLoi')) = 'CHINH_TA'
+                            then 1 else 0 end as chinh_ta,
+                       row_number() over (partition by c.the_id order by a.nop_at desc, r.id desc) as rn
+                from tra_loi_bai_luyen r
+                join lan_lam_bai a on a.id = r.lan_lam_id
+                join cau_hoi_bai_luyen c on c.id = r.cau_hoi_id
+                left join so_tay_tu_kho s on s.nguoi_dung_id = a.nguoi_dung_id and s.the_id = c.the_id
+                where a.nguoi_dung_id = :userId
+                  and c.the_id is not null
+                  and r.tra_loi_json is not null
+                  and c.loai_cau in ('NHAP_TU_THEO_NGHIA', 'NGHE_VIET', 'DIEN_CHO_TRONG')
+                  and (s.an_tu_at is null or a.nop_at > s.an_tu_at)
+            ) x
+            where x.rn <= :window
+            group by x.the_id
+            having sum(x.chinh_ta) >= :threshold
+            order by soSai desc, lanCuoiAt desc, theId desc
+            """, nativeQuery = true)
+    List<SpellingStatRow> spellingStats(
+            @Param("userId") Long userId,
+            @Param("window") int window,
+            @Param("threshold") int threshold
+    );
+
+    @Query(value = """
+            select x.the_id as theId,
+                   cast(sum(case when x.thoi_diem < :moiTu then 1 else 0 end) as signed) as soLuotCu,
+                   cast(sum(case when x.thoi_diem < :moiTu and x.dung = 0 then 1 else 0 end) as signed) as soSaiCu,
+                   cast(sum(case when x.thoi_diem >= :moiTu then 1 else 0 end) as signed) as soLuotMoi,
+                   cast(sum(case when x.thoi_diem >= :moiTu and x.dung = 0 then 1 else 0 end) as signed) as soSaiMoi,
+                   max(x.thoi_diem) as lanCuoiAt
+            from (
+                select t.the_id,
+                       h.created_at as thoi_diem,
+                       case when h.danh_gia = 'QUEN' then 0 else 1 end as dung
+                from lich_su_on h
+                join tien_do_the t on t.id = h.tien_do_id
+                where h.nguoi_dung_id = :userId
+                  and h.created_at >= :cuTu
+                union all
+                select c.the_id,
+                       a.nop_at,
+                       case when r.dung then 1 else 0 end
+                from tra_loi_bai_luyen r
+                join lan_lam_bai a on a.id = r.lan_lam_id
+                join cau_hoi_bai_luyen c on c.id = r.cau_hoi_id
+                where a.nguoi_dung_id = :userId
+                  and c.the_id is not null
+                  and a.nop_at >= :cuTu
+            ) x
+            group by x.the_id
+            having soSaiCu > 0 and soLuotMoi > 0
+            order by soLuotMoi desc, lanCuoiAt desc, theId desc
+            """, nativeQuery = true)
+    List<ProgressStatRow> progressStats(
+            @Param("userId") Long userId,
+            @Param("cuTu") Instant cuTu,
+            @Param("moiTu") Instant moiTu
+    );
+
+    @Query(value = """
             select x.id
             from (
                 select l.id,
@@ -159,6 +227,32 @@ public interface SoTayTuKhoRepository extends JpaRepository<SoTayTuKho, Long> {
         Long getThe2Id();
 
         Integer getSoLanNham();
+
+        Instant getLanCuoiAt();
+    }
+
+    interface SpellingStatRow {
+
+        Long getTheId();
+
+        Long getSoSai();
+
+        Long getSoLuot();
+
+        Instant getLanCuoiAt();
+    }
+
+    interface ProgressStatRow {
+
+        Long getTheId();
+
+        Long getSoLuotCu();
+
+        Long getSoSaiCu();
+
+        Long getSoLuotMoi();
+
+        Long getSoSaiMoi();
 
         Instant getLanCuoiAt();
     }
