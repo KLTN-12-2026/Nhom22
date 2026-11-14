@@ -11,7 +11,7 @@ public record UploadRequest(
         @NotNull(message = "Chọn loại tệp")
         LoaiTep loai,
         @NotBlank(message = "Thiếu loại nội dung của tệp")
-        @Size(max = 50, message = "Loại nội dung tối đa 50 ký tự")
+        @Size(max = 100, message = "Loại nội dung tối đa 100 ký tự")
         String mimeType,
         @Positive(message = "Dung lượng tệp phải lớn hơn 0")
         long kichThuoc,

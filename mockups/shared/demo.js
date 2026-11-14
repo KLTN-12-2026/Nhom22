@@ -1170,8 +1170,122 @@
     return { tu, den, list };
   }
 
+  const AI_DRAFT = { maxKyTu: 5000, maxThe: 50, hanMuc: 20, zone: "Asia/Ho_Chi_Minh" };
+  function aiStore() { db.aiRequests = db.aiRequests || []; db.aiCommits = db.aiCommits || {}; return db; }
+  function aiOwned(id) {
+    const u = requireMe();
+    const r = aiStore().aiRequests.find((x) => x.id === id && x.uid === u.id);
+    if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy yêu cầu AI");
+    return aiAdvance(r);
+  }
+  function aiCreate(u, b) {
+    aiStore();
+    const doanVan = typeof b.doanVan === "string" && b.doanVan.trim() ? b.doanVan.trim() : null;
+    const tepId = b.tepId ? String(b.tepId) : null;
+    if (!doanVan === !tepId) bad([fe("doanVan", "Gửi đoạn văn hoặc tệp Word, không gửi cả hai")]);
+    if (doanVan && [...doanVan].length > AI_DRAFT.maxKyTu) bad([fe("doanVan", "Đoạn văn tối đa " + AI_DRAFT.maxKyTu + " ký tự")]);
+    if (tepId) throw new ApiError(422, "BUSINESS_RULE", "Chọn tệp Word (.docx) đã tải lên xong", [fe("tepId", "Bản mẫu chưa đọc tệp Word; tệp .txt/.csv được đọc ngay trên trình duyệt")]);
+    if (b.boTheId) ownDeck(String(b.boTheId));
+    const ngay = localDate(Date.now(), AI_DRAFT.zone);
+    const used = db.aiRequests.filter((r) => r.uid === u.id && r.ngay === ngay && r.hanMucTrangThai !== "DA_HOAN").length;
+    if (used >= AI_DRAFT.hanMuc) {
+      const reset = startOfLocalDay(Date.now(), AI_DRAFT.zone) + DAY;
+      throw new ApiError(429, "RATE_LIMITED", "Bạn đã dùng hết lượt AI hôm nay, vui lòng thử lại vào ngày mai", [], { retryAfter: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) });
+    }
+    const r = { id: nextId(), uid: u.id, loai: "TAO_THE", trangThai: "CHO", maLoi: null, nhaCungCap: "fake", model: null, phienBanPrompt: "card-draft-v1", createdAt: new Date().toISOString(), batDau: Date.now(), ngay, hanMucTrangThai: "GIU_CHO", doanVan, boTheId: b.boTheId ? String(b.boTheId) : null, banNhap: [] };
+    db.aiRequests.unshift(r);
+    return { status: 202, body: { requestId: r.id, trangThai: "CHO" } };
+  }
+  function aiAdvance(r) {
+    if (["HOAN_TAT", "LOI", "KHONG_XAC_DINH"].includes(r.trangThai)) return r;
+    const elapsed = Date.now() - r.batDau;
+    if (elapsed < 700) return r;
+    r.trangThai = "DANG_XU_LY";
+    const mode = ((r.doanVan || "").match(/#mo-phong:([A-Z_]+)/) || [])[1] || "THANH_CONG";
+    if (elapsed < (mode === "THU_LAI" ? 4000 : 1600)) return r;
+    r.model = "fake-card-draft";
+    const fail = { LOI: ["LOI", "MO_PHONG_LOI"], SAI_SCHEMA: ["LOI", "SAI_SCHEMA"], THU_LAI: ["LOI", "MO_PHONG_TAM_THOI"], TIMEOUT: ["KHONG_XAC_DINH", "TIMEOUT"] }[mode];
+    if (fail) { r.trangThai = fail[0]; r.maLoi = fail[1]; r.hanMucTrangThai = fail[0] === "LOI" ? "DA_HOAN" : "DA_DUNG"; return r; }
+    const text = r.doanVan.replace(/#mo-phong:[A-Z_]+/g, " ");
+    const existing = {};
+    if (r.boTheId) db.cards.filter((c) => c.deckId === r.boTheId && !c.deleted).forEach((c) => { const k = norm(c.word); if (!existing[k]) existing[k] = c.id; });
+    const sentences = (text.match(/[^.!?\n]+[.!?]?/g) || []).map((s) => s.trim());
+    const seen = new Set();
+    (text.match(/\p{L}[\p{L}'-]{3,}/gu) || []).forEach((w) => {
+      const tu = w.toLowerCase();
+      if (seen.has(tu) || r.banNhap.length >= AI_DRAFT.maxThe) return;
+      seen.add(tu);
+      const known = db.cards.find((c) => norm(c.word) === tu && !c.deleted);
+      const viDuEn = sentences.find((s) => s.toLowerCase().includes(tu) && s.length <= 300) || null;
+      r.banNhap.push({ id: nextId(), thuTu: r.banNhap.length + 1, tu, tuLoai: known && known.pos ? known.pos : null, nghiaVi: known ? known.meaningVi : "Nghĩa mô phỏng của “" + tu + "”", viDuEn, dichVi: null, trung: !!existing[tu], theTrungId: existing[tu] || null, trangThaiDuyet: "CHO_DUYET", theDaLuuId: null });
+    });
+    if (!r.banNhap.length) { r.trangThai = "LOI"; r.maLoi = "KHONG_CO_TU"; r.hanMucTrangThai = "DA_HOAN"; return r; }
+    r.trangThai = "HOAN_TAT";
+    r.hanMucTrangThai = "DA_DUNG";
+    return r;
+  }
+  function aiRequestView(r) {
+    return { id: r.id, loai: r.loai, trangThai: r.trangThai, maLoi: r.maLoi, moPhong: true, nhaCungCap: r.nhaCungCap, model: r.model, phienBanPrompt: r.phienBanPrompt, createdAt: r.createdAt, banNhap: r.trangThai === "HOAN_TAT" ? r.banNhap.map((x) => Object.assign({}, x)) : [] };
+  }
+  function aiCommit(u, id, b, h) {
+    aiStore();
+    const key = h["Idempotency-Key"];
+    if (!key || !/^[A-Za-z0-9._:-]{1,128}$/.test(key)) bad([fe("Idempotency-Key", "Gửi Idempotency-Key từ 1 đến 128 ký tự ASCII hợp lệ")]);
+    const ids = Array.isArray(b.banNhapIds) ? b.banNhapIds.map(String) : [];
+    if (!ids.length || ids.length > 50) bad([fe("banNhapIds", "Chọn từ 1 đến 50 thẻ nháp")]);
+    if (new Set(ids).size !== ids.length) bad([fe("banNhapIds", "Các thẻ nháp không được trùng nhau")]);
+    const tenBoMoi = typeof b.tenBoMoi === "string" ? b.tenBoMoi.trim() : "";
+    if (!b.boTheId === !tenBoMoi) bad([fe("boTheId", "Chọn bộ thẻ có sẵn hoặc nhập tên bộ mới, không chọn cả hai")]);
+    if (tenBoMoi.length > 150) bad([fe("tenBoMoi", "Tên bộ thẻ tối đa 150 ký tự")]);
+    const clean = (v) => { const t = (v == null ? "" : String(v)).normalize("NFC").trim().replace(/\s+/g, " "); return t || null; };
+    const edits = {};
+    (Array.isArray(b.sua) ? b.sua : []).forEach((x) => {
+      const key2 = String(x && x.banNhapId);
+      const e2 = { tu: clean(x.tu), tuLoai: clean(x.tuLoai), nghiaVi: clean(x.nghiaVi), viDuEn: clean(x.viDuEn), dichVi: clean(x.dichVi) };
+      if (!ids.includes(key2) || edits[key2]) bad([fe("sua", "Chỉ sửa thẻ nháp đang chọn, mỗi thẻ một lần")]);
+      if (!e2.tu || !e2.nghiaVi) bad([fe("sua", "Nhập từ tiếng Anh và nghĩa tiếng Việt")]);
+      const unsafe = [e2.tuLoai, e2.nghiaVi, e2.viDuEn, e2.dichVi].some((v) => v && /[<>{}]/.test(v));
+      if (e2.tu.length > 100 || !/^\p{L}[\p{L}\p{M}'’ -]*$/u.test(e2.tu) || e2.tu.split(" ").length > 6 || unsafe
+        || e2.nghiaVi.length > 500 || (e2.tuLoai || "").length > 30 || (e2.viDuEn || "").length > 300 || (e2.dichVi || "").length > 300) {
+        bad([fe("sua", "Từ chỉ gồm chữ cái, khoảng trắng, dấu nháy hoặc gạch nối, tối đa 6 từ; không dùng ký tự < > { }")]);
+      }
+      edits[key2] = e2;
+    });
+    const hash = id + ":" + ids.slice().sort((a, c) => Number(a) - Number(c)).join(",") + ":" + (b.boTheId ? "deck:" + b.boTheId : "new:" + tenBoMoi) + ":" + JSON.stringify(Object.keys(edits).sort().map((k) => [k, edits[k]]));
+    const slot = u.id + ":" + key;
+    const prev = db.aiCommits[slot];
+    if (prev) {
+      if (prev.hash !== hash) throw new ApiError(409, "CONFLICT", "Idempotency-Key đã dùng cho yêu cầu khác", [fe("Idempotency-Key", "Idempotency-Key đã dùng cho yêu cầu khác")]);
+      return prev.response;
+    }
+    const r = aiOwned(id);
+    if (r.trangThai !== "HOAN_TAT") throw new ApiError(422, "BUSINESS_RULE", "Yêu cầu AI chưa tạo xong thẻ nháp");
+    const picked = r.banNhap.filter((x) => ids.includes(x.id)).sort((a, c) => a.thuTu - c.thuTu);
+    if (picked.length !== ids.length) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy thẻ nháp", [fe("banNhapIds", "Không tìm thấy thẻ nháp")]);
+    if (picked.some((x) => x.trangThaiDuyet !== "CHO_DUYET")) throw new ApiError(409, "CONFLICT", "Có thẻ nháp đã được lưu trước đó", [fe("banNhapIds", "Có thẻ nháp đã được lưu trước đó")]);
+    let deck;
+    if (b.boTheId) deck = ownDeck(String(b.boTheId)).d;
+    else {
+      deck = { id: nextId(), name: tenBoMoi, description: "", goal: null, topicId: null, level: "CO_BAN", visibility: "RIENG_TU", kind: "CA_NHAN", ownerId: u.id, ownerName: u.tenHienThi, source: "Xưởng thẻ AI", updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0, sourceDeckId: null };
+      db.decks.push(deck);
+    }
+    const ketQua = picked.map((x) => {
+      if (edits[x.id]) Object.assign(x, edits[x.id]);
+      const theTrungIds = db.cards.filter((c) => c.deckId === deck.id && !c.deleted && norm(c.word) === norm(x.tu)).map((c) => c.id);
+      const card = { id: nextId(), deckId: deck.id, word: x.tu, pos: x.tuLoai || "", ipa: "", meaningVi: x.nghiaVi, exampleEn: x.viDuEn || "", exampleVi: x.dichVi || "", difficulty: 1, tagIds: [], imageUrl: null, audioUrl: null, version: 0, createdAt: new Date().toISOString() };
+      db.cards.push(card);
+      x.trangThaiDuyet = "DA_LUU";
+      x.theDaLuuId = card.id;
+      return { banNhapId: x.id, theId: card.id, trung: theTrungIds.length > 0, theTrungIds };
+    });
+    deck.updatedAt = new Date().toISOString();
+    const response = { yeuCauId: r.id, boTheId: deck.id, boMoi: !b.boTheId, soTheDaLuu: ketQua.length, ketQua };
+    db.aiCommits[slot] = { hash, response };
+    return response;
+  }
+
   const routes = [
-    ["GET", /^\/public\/ping$/, () => ({ status: "UP", serverTime: new Date().toISOString() })],
+    ["GET", /^\/public\/ping$/,() => ({ status: "UP", serverTime: new Date().toISOString() })],
     ["GET", /^\/auth\/csrf$/, () => ({ headerName: "X-XSRF-TOKEN", token: "demo-csrf" })],
 
     ["POST", /^\/auth\/register$/, (m, b) => {
@@ -1741,6 +1855,9 @@
       return { status: 204 };
     }],
     ["GET", /^\/learning\/recommendations$/, () => recommendations(requireMe())],
+    ["POST", /^\/ai\/card-drafts$/, (m, b) => aiCreate(requireMe(), b)],
+    ["GET", /^\/ai\/requests\/(\w+)$/, (m) => aiRequestView(aiOwned(m[1]))],
+    ["POST", /^\/ai\/card-drafts\/(\w+)\/commit$/, (m, b, q, h) => aiCommit(requireMe(), m[1], b, h)],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();
       const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos || null, phienAm: x.ipa || null, nghiaVi: x.meaningVi, viDuEn: x.exampleEn || null });

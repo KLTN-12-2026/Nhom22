@@ -596,7 +596,8 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
-| `tep_tin` | chu_so_huu_id, object_key unique, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `tep_tin` | chu_so_huu_id, object_key unique, mime_type (V18: `VARCHAR(100)` để chứa MIME `.docx`), kich_thuoc, checksum, loai (`ANH`/`AM_THANH`/`TAI_LIEU`; `TAI_LIEU` thêm ở V18 cho X-01, chỉ `.docx` ≤ 1 MB), trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `yeu_cau_luu_the_ai` | V18 B3.2: nguoi_dung_id, idempotency_key ascii_bin, yeu_cau_ai_id, bo_the_id nullable (bộ đích, có khi hoàn tất; bộ mới tạo trong cùng giao dịch), request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key); kết quả cùng null hoặc cùng hoàn tất |
 | `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu; khóa chính (the_id, vai_tro) nên mỗi thẻ có tối đa một tệp cho mỗi vai trò |
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
 | `chu_de_yeu_thich` | V4: nguoi_dung_id, chu_de_id; khóa chính cặp; tối đa 5 chủ đề/người (kiểm ở dịch vụ) |
@@ -692,7 +693,7 @@ erDiagram
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
-| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
+| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`; `boTheId` tùy chọn để đánh dấu từ trùng, B3.2), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`; `sua` tùy chọn để lưu nội dung thẻ nháp đã sửa, B3.2), `GET /ai/history`, `GET /me/service-quota` |
 | Gói & thanh toán (FR-15) | `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions`, `GET /billing/transactions/{maDon}`, `GET /billing/transactions/{maDon}/receipt`; Admin: `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET /admin/plans`, `PUT /admin/plans/{ma}`, `GET /admin/revenue`; công cụ demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` |
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
@@ -756,7 +757,7 @@ Prompt có phiên bản; tách hướng dẫn cố định với dữ liệu Use
 
 ### 14.3. Xử lý lỗi
 
-Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạt động có mã lỗi riêng. Thử lại hữu hạn với backoff cho lỗi phù hợp; dùng mã yêu cầu nhà cung cấp nếu có. Khi lỗi kéo dài, tạm ngừng nhận tác vụ ngoài và hiển thị tình trạng. Học thẻ, SRS, bài cố định và thống kê vẫn dùng dữ liệu nội bộ.
+Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạt động có mã lỗi riêng. Thử lại hữu hạn với backoff cho lỗi phù hợp; dùng mã yêu cầu nhà cung cấp nếu có. Đầu ra sai schema hoặc không còn mục hợp lệ → `LOI` (`SAI_SCHEMA`/`KHONG_CO_TU`), hoàn lượt (chốt 13/11/2026, B3.2); mục lẻ sai bị bỏ, phần còn lại vẫn `HOAN_TAT`. Khi lỗi kéo dài, tạm ngừng nhận tác vụ ngoài và hiển thị tình trạng. Học thẻ, SRS, bài cố định và thống kê vẫn dùng dữ liệu nội bộ.
 
 ## 15. Điểm thưởng, chuỗi ngày và nhắc học
 

@@ -21,6 +21,7 @@
 		<springdoc.version>3.1.1</springdoc.version>
 		<awssdk.version>2.55.6</awssdk.version>
 		<commons-csv.version>1.10.0</commons-csv.version>
+		<poi.version>5.4.1</poi.version>
 		<argLine></argLine>
 		<test.jvm.unixTmp></test.jvm.unixTmp>
 	</properties>
@@ -87,6 +88,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>${commons-csv.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>

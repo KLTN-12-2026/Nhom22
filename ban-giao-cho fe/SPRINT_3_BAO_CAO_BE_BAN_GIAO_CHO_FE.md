@@ -3,13 +3,14 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 3 — AI, phát âm, động lực, vận hành & thanh toán (09/11 – 29/11/2026, Sprint S7–S9) |
-| Ngày cập nhật | 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
-| Trạng thái BE | 🟡 Đang làm: B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. Các bước B3.x khác chưa bắt đầu |
+| Ngày cập nhật | 14/11/2026 — **B3.2 code xong** (tạo thẻ bằng AI: 3 API, Fake + OpenAI, `.docx`, lưu vào bộ mới; còn 1 lượt gọi OpenAI thật). 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
+| Trạng thái BE | 🟡 Đang làm: **B3.2** code xong, `CardDraftParserTest` 14 + `FakeAiClientTest` 8 + `FR09CardDraftTest` 18 pass, toàn bộ `mvnw test` 492/492 pass (14/11/2026); chưa gọi OpenAI thật và HTTP thật. B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. Các bước B3.x khác chưa bắt đầu |
 | FE làm tương ứng | F3.1–F3.13 (`roadmap/TienDoDuKien_fronend.md`, mục Đợt 3): UI29 xưởng thẻ AI, UI30–UI32 AI, UI28 gợi ý, UI33–UI34 phát âm, UI38 thành tích, UI39 thông báo, UI45/UI50 báo cáo, UI36–UI37 thống kê, UI44 dữ liệu cá nhân, UI51 vận hành, UI55–UI57 thanh toán, UI58–UI59 quản lý thanh toán |
 | Báo cáo trước | [Đợt 2](SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó và ở [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) |
 
 > **Đọc nhanh:**
 > - **API mới đầu tiên của Đợt 3 (B3.6):** `GET /rewards/history`, `GET /badges`, `GET /challenges` cho UI38 `/thanh-tich`; `GET /learning/today` thêm `daDungNgayNghiTuanNay`, `ngayNghiDaDung` cho thẻ chuỗi ngày trên UI12 (mục 5.2). FE nối F3.6 bằng API thật.
+> - **B3.2 (UI29):** `POST /ai/card-drafts` → 202 `{requestId}`, hỏi `GET /ai/requests/{id}` tới `HOAN_TAT`/`LOI`/`KHONG_XAC_DINH`, rồi `POST /ai/card-drafts/{id}/commit` kèm `Idempotency-Key` với `boTheId` **hoặc** `tenBoMoi` (mục 5.5). Chưa có khóa OpenAI nên BE chạy `FakeAiClient`, response có `moPhong: true` → FE gắn nhãn "Mô phỏng".
 > - B3.1 chỉ là hạ tầng bên trong BE (hàng đợi tác vụ nền `tac_vu_nen`, hạn mức dịch vụ theo người/ngày). Các trang Đợt 3 khác vẫn dùng MSW/mock cho đến khi từng bước B3.x giao API.
 > - Điều FE cần biết từ B3.1: mọi API AI sau này sẽ trả **202 + ID** rồi FE hỏi trạng thái, và hết hạn mức ngày trả **429 `RATE_LIMITED` kèm header `Retry-After`** (mục 3, mục 6). `api-client.js` đã đọc `Retry-After` thành `error.retryAfter`.
 > - Hạn mức theo gói (TK §6.9, không có gói miễn phí): `PRO` AI 20 và ảnh 10 lượt/ngày; `PREMIUM` AI 100 và ảnh 30 lượt/ngày; "ngày" tính theo giờ Việt Nam (mục 7).
@@ -22,7 +23,7 @@
 | BE bước | Kết quả | FE bước / UI | FE cần làm |
 |---|---|---|---|
 | B3.1 Tác vụ nền & hạn mức dịch vụ (FR-09, TC-12) | ✅ Không API. `JobService`/`JobWorker` (SKIP LOCKED, retry/backoff, thu hồi lease), `QuotaService` (giữ chỗ nguyên tử, xác nhận, hoàn trả, 429); migration `V15__jobs_ai.sql` (5 bảng, seed hạn mức `PRO`/`PREMIUM`); `FR09JobWorkerTest` (5), `FR09QuotaTest` (5) người dùng báo không lỗi (11/11); chưa HTTP thật | — (nền cho F3.1, F3.2, F3.3) | Chuẩn bị xử lý 429 + `Retry-After` và luồng 202 → hỏi trạng thái (mục 3, 6); chưa nối API |
-| B3.2 Adapter AI & tạo thẻ từ đoạn văn | ⏳ Chưa làm (S7) | F3.1 UI29 `/ai/xuong-the` | Làm trước với MSW theo hợp đồng dự kiến mục 9 |
+| B3.2 Adapter AI & tạo thẻ từ đoạn văn (FR-09, TC-12, TC-13, X-01, X-02) | 🟡 3 API; `V18__ai_card_drafts.sql` (`TAI_LIEU`, `mime_type` 100, `yeu_cau_luu_the_ai`); Apache POI; `FakeAiClient` (mặc định) + `OpenAiClient`; 40 test mới pass, toàn bộ 492/492 (14/11); **chưa gọi OpenAI thật**, chưa HTTP thật | F3.1 UI29 `/ai/xuong-the` | Nối 3 API thật (mục 5.5); hỏi trạng thái mỗi 2 giây; giữ cùng `Idempotency-Key` khi bấm lưu lại; nhãn "Mô phỏng" khi `moPhong` |
 | B3.4a Âm thanh TTS | ⏳ Chưa làm (S7) | F3.5 (nghe) UI19, UI24 | MSW |
 | B3.3 Các tác vụ AI khác (gọn) | ⏳ Chưa làm (S8) | F3.2, F3.3 UI30–UI32, UI16 | MSW |
 | B3.5 Gợi ý có lý do (FR-08, R-04) | ✅ `GET /learning/recommendations`; 5 mã lý do (`PHAT_AM_THAP` tắt chờ B3.4b); ngưỡng `app.recommendations.*` + `app.notebook.*`; không migration; 21 test mới pass, toàn bộ 452/452 (12/11); chưa HTTP thật | F3.4 UI28 trên UI12, UI27 | Nối API thật (mục 5.4); ẩn khối khi mảng rỗng; thẻ `TIEN_BO` là lời khen, không có nút hành động |
@@ -220,6 +221,41 @@ Quy tắc FE cần biết:
 
 **Lỗi:** 401 `UNAUTHENTICATED`.
 
+### 5.5 B3.2 — Tạo thẻ bằng AI (UI29)
+
+Hợp đồng theo mã nguồn và `FR09CardDraftTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi OpenAI thật. Luồng: [B3.2](../docs/luong-backend/B3.2-tao-the-ai.md).
+
+| API | Request | Response |
+|---|---|---|
+| `POST /api/v1/ai/card-drafts` (CSRF) | `{doanVan?, tepId?, boTheId?}` — đúng một trong `doanVan` (≤ 5.000 ký tự) và `tepId` (tệp `TAI_LIEU` `.docx` ≤ 1 MB đã `complete`); `boTheId` tùy chọn để đánh dấu từ đã có trong bộ | **202** `{requestId, trangThai: "CHO"}`, header `Location` |
+| `GET /api/v1/ai/requests/{id}` | — | `{id, loai, trangThai, maLoi, moPhong, nhaCungCap, model, phienBanPrompt, createdAt, banNhap[]}` |
+| `POST /api/v1/ai/card-drafts/{id}/commit` (CSRF, `Idempotency-Key`) | `{banNhapIds: string[1..50], boTheId?, tenBoMoi?, sua?}` — đúng một trong `boTheId` và `tenBoMoi` (≤ 150); `sua?: [{banNhapId, tu, tuLoai, nghiaVi, viDuEn, dichVi}]` (tùy chọn, chỉ cho thẻ đang chọn, cùng quy tắc an toàn với parser, tính vào hash idempotency) | `{yeuCauId, boTheId, boMoi, soTheDaLuu, ketQua: [{banNhapId, theId, trung, theTrungIds}]}` |
+
+`banNhap[i]` = `{id, thuTu, tu, tuLoai, nghiaVi, viDuEn, dichVi, trung, theTrungId, trangThaiDuyet: "CHO_DUYET"|"DA_LUU", theDaLuuId}`; rỗng cho tới khi `HOAN_TAT`. `requestId` của body 202 là id yêu cầu AI, **khác** `requestId` trong body lỗi.
+
+```json
+{"id":"41","loai":"TAO_THE","trangThai":"HOAN_TAT","maLoi":null,"moPhong":true,"nhaCungCap":"fake","model":"fake-card-draft","phienBanPrompt":"card-draft-v1","createdAt":"2026-11-14T03:00:00Z",
+ "banNhap":[{"id":"301","thuTu":1,"tu":"receipt","tuLoai":null,"nghiaVi":"Nghĩa mô phỏng của \"receipt\"","viDuEn":"Please keep the receipt.","dichVi":null,"trung":true,"theTrungId":"88","trangThaiDuyet":"CHO_DUYET","theDaLuuId":null}]}
+```
+(ví dụ minh họa theo DTO, ID không phải kết quả chạy thật)
+
+| `trangThai` | FE hiển thị | Lượt AI |
+|---|---|---|
+| `CHO`, `DANG_XU_LY` | "Đang xử lý", nút "Dừng theo dõi" (không hủy phía máy chủ) | đang giữ |
+| `HOAN_TAT` | Danh sách thẻ nháp; bỏ chọn sẵn thẻ `trung`; cảnh báo "N thẻ chưa có ví dụ" | đã dùng |
+| `LOI` + `maLoi` (`SAI_SCHEMA`, `KHONG_CO_TU`, `NCC_TU_CHOI`, `TEP_QUA_DAI`, `TEP_KHONG_HOP_LE`, `MO_PHONG_LOI`, `MO_PHONG_TAM_THOI`…) | Thông báo lỗi, giữ đoạn văn, cho thử lại | **đã hoàn** |
+| `KHONG_XAC_DINH` (`TIMEOUT`, `MAT_KET_NOI`, `LEASE_HET_HAN`) | "Chưa xác định", nói rõ thử lại tốn thêm một lượt | đã dùng |
+
+**Lỗi:** 400 `VALIDATION_FAILED` (`fieldErrors[].field` = `doanVan`, `tepId`, `boTheId`, `Idempotency-Key`, `banNhapIds`, `tenBoMoi`, `sua`); 401; 403 CSRF; 404 (yêu cầu, bộ, tệp, thẻ nháp của người khác hoặc không có); 409 (cùng key khác body; thẻ nháp đã lưu bằng key khác); 422 (tệp không phải `TAI_LIEU`/chưa tải xong; commit khi chưa `HOAN_TAT`); 429 `RATE_LIMITED` + `Retry-After`.
+
+Quy tắc FE:
+- Tạo **một** `Idempotency-Key` cho mỗi lần bấm "Lưu"; bấm lại sau lỗi mạng dùng **cùng** key (trả lại đúng kết quả cũ, không tạo trùng). Đổi lựa chọn thẻ/bộ → key mới.
+- Thẻ nháp không chọn vẫn `CHO_DUYET`, lưu tiếp được bằng key mới. Thẻ trùng vẫn lưu nếu người dùng chọn; BE không ghi đè thẻ cũ.
+- Nút "Sửa" (X-06): gửi các thẻ đã sửa trong `sua` cùng lần lưu; thẻ không sửa thì không cần gửi. `tu` 1–100 ký tự, ≤ 6 từ, chỉ chữ/khoảng trắng/`'`/`-`; `nghiaVi` bắt buộc ≤ 500; `tuLoai` ≤ 30; `viDuEn`/`dichVi` ≤ 300; không dùng `< > { }`. Sai → 400 `fieldErrors[].field = sua` (hoặc `sua[i].tu`…). Sửa nội dung = body khác → cần `Idempotency-Key` mới.
+- `.txt`/`.csv`: đọc ở trình duyệt rồi gửi `doanVan`. `.docx`: `POST /files/upload-requests {loai:"TAI_LIEU", mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document", kichThuoc, checksum}` → PUT → `POST /files/{fileId}/complete` → `POST /ai/card-drafts {tepId}`.
+- Demo lỗi khi BE dùng Fake: thêm `#mo-phong:LOI`, `#mo-phong:TIMEOUT`, `#mo-phong:SAI_SCHEMA`, `#mo-phong:THU_LAI` hoặc `#mo-phong:INJECTION` vào đoạn văn.
+- Sau commit: invalidate `['decks']`, `['decks', boTheId]`, `['ai','requests',id]`.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
@@ -264,13 +300,13 @@ export const useChallenges = () => useQuery({ queryKey: ['challenges'], queryFn:
 
 Sau khi ghi lượt ôn hoặc nộp bài thành công: invalidate `['rewards']`, `['badges']`, `['challenges']`, `['learning','today']` (B3.6).
 
-`useAiRequest` và handler `card-drafts` là **dự kiến** (B3.2 chưa có); tên field `trangThai` chốt khi làm B3.2. Mã lỗi 429 và `Retry-After` theo mã nguồn hiện tại. Sau mutation AI thành công: invalidate `['ai','history']` và `['me','service-quota']` (khi B3.3 có).
+`useAiRequest` dùng được với API thật của B3.2 (mục 5.5). Mã lỗi 429 và `Retry-After` theo mã nguồn hiện tại. Sau mutation AI thành công: invalidate `['ai','history']` và `['me','service-quota']` (khi B3.3 có).
 
 ## 7. Dữ liệu mẫu / tài khoản demo
 
 - Tài khoản demo giữ nguyên như Đợt 2: `admin@vocab.local` (ADMIN), `an@vocab.local`, `binh@vocab.local`, `chi@vocab.local` (USER), mật khẩu `Vocab@12345` (seed dev).
 - Hạn mức seed bởi `V15__jobs_ai.sql` (theo TK §6.9, mọi môi trường): `PRO` AI 20 / ảnh 10; `PREMIUM` AI 100 / ảnh 30 mỗi ngày. Chưa có B3.12a nên mọi người dùng được coi là `PRO`. Quản trị đổi mức qua `PUT /admin/service-quotas` (B3.11, chưa có).
-- Chưa có dữ liệu `yeu_cau_ai` hay tác vụ nền để FE xem; các bảng này rỗng đến khi B3.2.
+- Dev mặc định `AI_PROVIDER=fake` (mọi tài khoản demo tạo thẻ AI được, nhãn "Mô phỏng"), độ trễ 1 giây. Bật OpenAI: đặt `AI_PROVIDER=openai` và `OPENAI_API_KEY` trong `.env` của máy (không ghi vào `.env.example`).
 
 ## 8. Checklist FE hoàn thành Đợt 3
 
@@ -295,7 +331,7 @@ Theo `roadmap/TienDoDuKien_backend.md` (Đợt 3), `roadmap/SPRINT_PLAN.md` (S7�
 
 | BE bước | Sprint | Dự kiến có | API (dự kiến) | FE bước | UI |
 |---|---|---|---|---|---|
-| B3.2 | S7 (09/11–15/11) | Tạo thẻ bằng AI; nhập tệp, lưu vào bộ mới (X-01, X-02); dùng hạ tầng B3.1 | `POST /ai/card-drafts` (202 + ID; đoạn văn hoặc `tepId`), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`, `Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
+| B3.2 | S7 (09/11–15/11) | Tạo thẻ bằng AI; nhập tệp, lưu vào bộ mới (X-01, X-02) — **đã giao 14/11, xem mục 5.5** (chờ 1 lượt OpenAI thật) | `POST /ai/card-drafts` (202 + ID; đoạn văn hoặc `tepId`), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`, `Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
 | B3.4a | S7 | Âm thanh TTS | `GET /cards/{id}/audio` | F3.5 (nghe) | UI19, UI24 |
 | B3.3 (gọn) | S8 (16/11–22/11) | Giải thích ngữ cảnh, sửa câu, tự điền thẻ (R-02, X-03), ảnh AI (X-04); `POST /ai/exercise-drafts` **Hoãn** | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (202), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31, UI32, UI16, UI29 |
 | B3.5 | S8 | Gợi ý có lý do (+ `TIEN_BO`) — **đã giao 12/11, xem mục 5.4** | `GET /learning/recommendations` → `[{reasonCode, message, cardIds, evidence}]` | F3.4 | UI28, UI27 |
@@ -318,7 +354,7 @@ Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); đã đối chiếu v
 | Kiểm chứng B3.1 | **11/11/2026:** người dùng báo compile, khởi động app và `.\mvnw.cmd -q test -Dtest='FR09JobWorkerTest,FR09QuotaTest'` không lỗi sau khi đổi sang gói `PRO`/`PREMIUM`; không có tổng số test hay log đính kèm. Chưa chạy bộ test đầy đủ (`mvnw verify`). Không có HTTP thật vì B3.1 không có endpoint; không có mục Postman hay mockup cho bước này |
 | Test đã viết | `FR09JobWorkerTest`: hai worker không lấy trùng 20 job; retry/backoff 5s·10s·20s rồi `LOI` sau 4 lần chạy; `LOI`, `KHONG_XAC_DINH`, lỗi lạ, loại chưa đăng ký không retry; lease hết hạn → `KHONG_XAC_DINH`; `enqueue` ngoài transaction bị từ chối. `FR09QuotaTest`: 10 request đồng thời với giới hạn 5 chỉ được 5; 429 kèm `Retry-After` và sang ngày mới theo giờ Việt Nam; hạn mức ảnh tách khỏi AI; hoàn trả và xác nhận; job `LOI` hoàn lượt, `KHONG_XAC_DINH` giữ lượt |
 | Quyết định nghiệp vụ (11/11/2026) | `han_muc_dich_vu(goi_ma, loai)` là nguồn hạn mức duy nhất, `goi_dich_vu` không có cột `han_muc_*` (TK §12.2 đã sửa); "ngày" hạn mức theo `app.quota.zone`; worker chết hoặc quá lease 10 phút → `KHONG_XAC_DINH`, không hoàn lượt (đánh đổi: worker chết trước khi gọi API thì người dùng mất một lượt); không có gói miễn phí |
-| Chưa chốt | Đầu ra nhà cung cấp sai schema có hoàn lượt hay không (quyết định ở `khiKetThuc` của B3.2); hạn mức riêng cho phát âm và bài luyện AI (thêm giá trị `loai` bằng migration của bước cần); mốc 12/11/2026 chốt nhà cung cấp AI (chưa có khóa thì dùng `FakeAiClient` có nhãn) |
+| Chưa chốt | hạn mức riêng cho phát âm và bài luyện AI (thêm giá trị `loai` bằng migration của bước cần); mốc 12/11/2026 chốt nhà cung cấp AI (chưa có khóa thì dùng `FakeAiClient` có nhãn) |
 | Điểm nối tạm | `ProGoiResolver` luôn trả `PRO`; B3.12a thay bằng bản đọc `EntitlementService`. Trước đó chưa có `SubscriptionGuard` nên chưa có 402 |
 | Việc chờ làm | `JobWorker` chỉ chạy được khi có `JobHandler` đăng ký (B3.2+); `yeu_cau_ai`/`ban_nhap_the_ai` mới có bảng, chưa có entity |
 | Rủi ro đã biết | Test 10 request đồng thời có thể lộ deadlock khi tạo dòng đếm lần đầu (chưa thấy xảy ra); `app.jobs.lease` (10 phút) phải lớn hơn `batch-size × timeout API` khi chọn timeout ở B3.2 |
@@ -332,6 +368,10 @@ Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); đã đối chiếu v
 | Kiểm chứng B3.5 | **12/11/2026:** `.\mvnw.cmd -q test -Dtest=ProgressPolicyTest,RecommendationServiceTest,RecommendationRulesTest,FR08RecommendationTest,FR08NotebookTest` → 8 + 5 + 5 + 3 + 4 test, 0 lỗi; toàn bộ `.mvnw.cmd -B test` 452/452 pass, BUILD SUCCESS (Testcontainers MySQL 8.4/Redis). `FR08RecommendationTest`: rỗng → `[]`, 401; ba lý do với dữ liệu thật, bỏ thẻ đã xóa và thẻ chỉ có 4 lượt mới, user khác → `[]` (TC-02); `QUA_HAN_NHIEU` khớp `cuuLichOn` và không đổi `han_on_at` (TC-10). Chưa gọi HTTP thật |
 | Quyết định B3.5 (12/11/2026, đề xuất) | TK §8.3 `QUA_HAN_NHIEU` sửa thành "vượt số lượt mỗi ngày theo cài đặt" để trùng điều kiện `cuuLichOn`; giữ tên `reasonCode`/`cardIds`/`evidence` theo hợp đồng đã ghi; mỗi thẻ một gợi ý; loại trùng theo thứ tự ưu tiên; ngưỡng `TIEN_BO` ở `app.recommendations.tien-bo.*`; ba mã đầu dùng chung `app.notebook.*` với sổ tay; `ProgressPolicy` để B3.9 dùng lại |
 | Giới hạn B3.5 | `SAI_CHINH_TA` chỉ có unit test (SQL `spellingStats` chép điều kiện từ `spellingCardIds` của B2.9, chưa có test tích hợp riêng); `PHAT_AM_THAP` chưa có rule; Mockup UI28 đã đối chiếu DTO (13/11/2026): route demo `GET /learning/recommendations` trong `mockups/shared/demo.js` (cùng quy tắc BE, khóa lưu trữ `vl-demo-v8`, thêm mẫu `TIEN_BO` cho thẻ "How's it going?"), trang `dot3/goi-y.html` đọc route này, khối "Gợi ý cho bạn" trên `dot2/hom-nay.html` và `dot2/so-tay.html`; preview `?as=an`, `?as=binh` ở 1280 và 390 px không lỗi console, không cuộn ngang. Postman "03 Học tập": thêm request "Gợi ý có lý do (B3.5 · FR-08)" kèm test script (13/11/2026), chưa chạy |
+| Kiểm chứng B3.2 | **14/11/2026:** `.\mvnw.cmd test -Dtest='CardDraftParserTest,FakeAiClientTest,FR09CardDraftTest'` → 14 + 8 + 18 test, 0 lỗi; toàn bộ `mvnw -B test` 492/492 pass (lần chạy sau khi thêm `sua`), BUILD SUCCESS (Testcontainers MySQL 8.4/Redis/RustFS). `FR09CardDraftTest`: 202 → `CHO` → worker → `HOAN_TAT` + metadata + lượt `DA_DUNG`; injection chỉ ra thẻ nháp hợp lệ, không đổi bộ/thẻ (TC-12); sai schema → `LOI` hoàn lượt; timeout → `KHONG_XAC_DINH` giữ lượt; `THU_LAI` 4 lần → `LOI` hoàn lượt; 429 + `Retry-After`; 400/401/403; 404 dữ liệu người khác; chọn 3/8, gửi 2 lần → đúng 3 thẻ, cùng key khác body 409, key khác lưu lại thẻ đã lưu 409 (TC-13); bộ mới `RIENG_TU`; đánh dấu trùng; `.docx` qua `tepId`, quá 5.000 ký tự → `TEP_QUA_DAI`; `FileVerifier` nhận `.docx`, từ chối ZIP khác. **Chưa:** 1 lượt gọi OpenAI thật (chưa có khóa), HTTP thật trên dev, tải `.docx` qua URL ký thật |
+| Quyết định B3.2 (13/11/2026) | Nhà cung cấp **OpenAI** (`gpt-4o-mini`, đổi bằng `OPENAI_MODEL`), Structured Outputs strict + BE kiểm lại; sai schema/0 mục hợp lệ → `LOI` hoàn lượt; `V18` thêm `TAI_LIEU`, nới `mime_type` lên 100, bảng `yeu_cau_luu_the_ai`; Apache POI `poi-ooxml` 5.4.1 đọc `.docx`; `boTheId` tùy chọn ở `card-drafts` để đánh dấu trùng (TK §13 đã sửa); chọn client bằng `app.ai.provider` thay vì `@Profile` để dev bật được OpenAI thật; trần tải lên 1 MB của `TAI_LIEU` nằm trong enum `LoaiTep` như các loại tệp khác, `app.ai.card-draft.max-tep-bytes` là ngưỡng riêng của AI |
+| Bổ sung B3.2 (14/11/2026) | Commit nhận `sua` (X-06 "Sửa" trước khi lưu): nội dung sửa ghi vào thẻ mới và `noi_dung_json` của nháp; kiểm bằng `CardDraftParser.kiemTraSua`. `CardDraftParserTest` 14, `FR09CardDraftTest` 18 (thêm `tc13_commitSavesEditedDraftContent`, `tc13_invalidEditsAreRejected`) pass. Mockup UI29 có nút "Sửa trước khi lưu" gửi `sua` (preview: sửa nghĩa/từ loại rồi lưu vào bộ mới, console sạch) |
+| Giới hạn B3.2 | Bộ mới luôn `trinhDo = CO_BAN`; Fake chỉ tách từ ≥ 4 chữ cái, nghĩa là chuỗi mô phỏng. Mockup UI29 (`dot3/ai-xuong-the.html`, `ui.js`) đọc 3 route demo đúng DTO trong `shared/demo.js` (cùng quy tắc 202/hỏi trạng thái/`Idempotency-Key`/409/422/429); preview `?as=an` 1280 và 390 px: tạo 8 thẻ nháp, đánh dấu trùng, lưu 3/8 vào bộ mới, `SAI_SCHEMA`, `TIMEOUT`, console không lỗi, không cuộn ngang. Postman chưa đồng bộ (connector Postman của plugin chưa xác thực) |
 | Chưa kiểm chứng | Các API Đợt 3 còn lại ở mục 9 (chưa có code); HTTP thật cho mọi bước B3.x |
 
 ## 11. Báo lỗi cho BE

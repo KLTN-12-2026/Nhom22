@@ -117,6 +117,26 @@ public class FileService {
         return response(file);
     }
 
+    public void requireDocument(Long userId, Long fileId, long maxBytes) {
+        document(userId, fileId, maxBytes);
+    }
+
+    public byte[] readDocument(Long userId, Long fileId, long maxBytes) {
+        TepTin file = document(userId, fileId, maxBytes);
+        return storage.readBounded(file.getObjectKey(), (int) Math.min(maxBytes, verifier.maxBytes(LoaiTep.TAI_LIEU)));
+    }
+
+    private TepTin document(Long userId, Long fileId, long maxBytes) {
+        TepTin file = active(files.findByIdAndChuSoHuuId(fileId, userId).orElseThrow(this::notFound));
+        if (file.getLoai() != LoaiTep.TAI_LIEU || file.getHoanTatAt() == null) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "tepId", "Chọn tệp Word (.docx) đã tải lên xong");
+        }
+        if (file.getKichThuoc() > maxBytes) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "tepId", "Tệp Word vượt dung lượng cho phép");
+        }
+        return file;
+    }
+
     public FileResponse setAvatar(Long userId, Long fileId) {
         TepTin file = new TransactionTemplate(txManager).execute(status -> {
             TepTin current = active(files.findOwnedForUpdate(fileId, userId).orElseThrow(this::notFound));

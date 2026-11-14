@@ -63,6 +63,25 @@ app:
     backoff-max: 5m
   quota:
     zone: ${QUOTA_ZONE:Asia/Ho_Chi_Minh}
+  ai:
+    provider: ${AI_PROVIDER:fake}
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_MODEL:gpt-4o-mini}
+      connect-timeout: 5s
+      read-timeout: 60s
+      max-output-tokens: 6000
+      temperature: 0.2
+    fake:
+      che-do: ${AI_FAKE_MODE:THANH_CONG}
+      do-tre: 1s
+    card-draft:
+      phien-ban-prompt: card-draft-v1
+      max-ky-tu: 5000
+      max-the: 50
+      max-tep-bytes: 1048576
+      max-tu-moi-the: 6
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
