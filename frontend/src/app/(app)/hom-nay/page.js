@@ -198,7 +198,7 @@ function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pau
         <Button type="button" variant="accent" size="lg" disabled={starting} onClick={() => onStart({ boTheId: null, chieuHoc: dir, quyThoiGian: nearest(rescue.phutMoiNgay), cheDo: rescue.tamDungTuMoi ? 'CUU_LICH' : 'THUONG' })}>
           {starting ? 'Đang tạo phiên…' : 'Bắt đầu phiên hôm nay'}
         </Button>
-        <Link className="btn btn-quiet" href="/hoc">Tự chọn bộ và thời gian</Link>
+        <Link className="btn btn-quiet" href="/luyen-tap">Tự chọn bộ và dạng bài</Link>
       </div>
     </section>
   );
@@ -421,7 +421,7 @@ export default function TodayPage() {
                       <Button type="submit" variant={resumeOpen ? 'secondary' : 'accent'} size="lg" disabled={sessionMutation.isPending}>
                         {sessionMutation.isPending ? 'Đang tạo phiên…' : resumeOpen ? 'Bắt đầu phiên mới' : 'Bắt đầu phiên hôm nay'}
                       </Button>
-                      <Link className="btn btn-quiet" href="/hoc">Tự chọn bộ và thời gian</Link>
+                      <Link className="btn btn-quiet" href="/luyen-tap">Tự chọn bộ và dạng bài</Link>
                     </div>
                   </form>
                 )}
@@ -480,7 +480,7 @@ export default function TodayPage() {
                         <span>{b.soMoi} từ chưa học</span>
                       </span>
                       <span className="row" style={{ gap: 'var(--sp-2)' }}>
-                        <Link className="btn btn-secondary btn-sm" href={`/hoc?boTheId=${b.boTheId}`}>Học bộ này</Link>
+                        <Link className="btn btn-secondary btn-sm" href={`/luyen-tap?loaiBai=FLASHCARD&boTheId=${b.boTheId}`}>Học bộ này</Link>
                         <Link className="btn btn-quiet btn-sm" href={`/bo-the/${b.boTheId}/tien-do`}>Tiến độ</Link>
                       </span>
                     </li>

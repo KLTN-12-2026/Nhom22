@@ -19,10 +19,20 @@ public record CreateSessionRequest(
         Integer quyThoiGian,
 
         @Pattern(regexp = "THUONG|CUU_LICH", message = "Chế độ học phải là THUONG hoặc CUU_LICH")
-        String cheDo
+        String cheDo,
+
+        Boolean hocTuDo
 ) {
+
+    public CreateSessionRequest(String boTheId, ChieuHoc chieuHoc, Integer quyThoiGian, String cheDo) {
+        this(boTheId, chieuHoc, quyThoiGian, cheDo, null);
+    }
 
     public CheDoPhien mode() {
         return cheDo == null ? CheDoPhien.THUONG : CheDoPhien.valueOf(cheDo);
+    }
+
+    public boolean isHocTuDo() {
+        return Boolean.TRUE.equals(hocTuDo);
     }
 }

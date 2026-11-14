@@ -107,12 +107,12 @@ function FlashcardSessionContent() {
     if (shouldFinish && finishMutation.isIdle) startFinish();
   });
 
-  if (!id) return <div className="flash-note" role="alert">Thiếu mã phiên học. <Link href="/hoc">Chọn phiên học</Link></div>;
+  if (!id) return <div className="flash-note" role="alert">Thiếu mã phiên học. <Link href="/luyen-tap">Chọn bài học / luyện tập</Link></div>;
   if (isLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải phiên học...</div>;
   if (error || !session) {
     return (
       <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-danger)' }} role="alert">
-        {error?.status === 404 ? 'Không tìm thấy phiên học.' : 'Lỗi tải phiên học.'} <Link href="/hoc">Chọn phiên học khác</Link>
+        {error?.status === 404 ? 'Không tìm thấy phiên học.' : 'Lỗi tải phiên học.'} <Link href="/luyen-tap">Chọn bài học khác</Link>
       </div>
     );
   }
@@ -162,7 +162,7 @@ function FlashcardSessionContent() {
       } else if (err.code === 'CONFLICT') {
         router.replace(`/hoc-tong-ket?id=${id}`);
       } else if (err.status === 404) {
-        router.replace('/hoc');
+        router.replace('/luyen-tap');
       } else if (err.status === 422) {
         setQueue(queue.map(q => (q === item ? { ...q, trangThai: 'BO_QUA' } : q)));
         setNotice(err.message || 'Thẻ này không còn trong phiên, chuyển sang thẻ tiếp theo.');
