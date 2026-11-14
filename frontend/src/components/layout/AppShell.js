@@ -60,6 +60,7 @@ const ADMIN_NAV_ONLY = [
     { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
     { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
+    { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
     { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
   ] }
 ];
@@ -161,7 +162,7 @@ export function AppShell({ children, user, isAdmin = false }) {
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
-        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
+        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-payments':'Thanh toán','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
           const cur = it.key==='today' ? ['/hom-nay','/hoc','/bo-the','/thong-ke'].some(route=>isActive(route)) : isActive(it.href);
           return (
             <Link key={it.key} href={it.href} aria-current={cur ? 'page' : undefined}>
