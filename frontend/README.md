@@ -104,6 +104,8 @@ Dùng cùng `NEXT_DIST_DIR` khi build/start. Với OAuth/email, backend đặt `
 
 ## Trang chờ backend
 
+Trang **Quản lý thanh toán** dành cho ADMIN tại `/quan-tri/thanh-toan` (cũng có thể mở `/quan-ly-thanh-toan`) dựng theo `mockups/dot3/quan-ly-thanh-toan.html`. Ba tab giao dịch, gói người dùng và cấu hình gói hỗ trợ tìm kiếm/lọc, phân trang, xuất CSV, xem chi tiết và tải biên nhận HTML mẫu. Cho phép sửa giá và quyền lợi gói; không hiển thị công cụ demo, bộ chọn trạng thái mô phỏng hoặc nhãn UI59/Đợt 3 trên giao diện. Dữ liệu lưu riêng trong sessionStorage `vocab:payment-admin:v1`, mốc tính hạn 10:00 ngày 12/11/2026 giờ Việt Nam. Trang chỉ mô phỏng giao diện, chưa gọi API thanh toán hay gửi thông báo thật.
+
 Các trang đã có mã nhưng gọi endpoint backend chưa tồn tại (phiên học, luyện tập, sổ tay, thống kê, `/decks/{id}/progress`, quản trị tài khoản/bộ mẫu/nhật ký; thuộc B2.3–B2.11) được che bởi `FeatureGate` (danh sách `FUTURE` trong `src/components/layout/FeatureGate.js`) và ẩn khỏi điều hướng `AppShell`. Khi backend xong bước tương ứng, gỡ route khỏi `FUTURE`. Trang `/hoc` và `/hoc-phien` dùng `trangThai` `CHUA_TRA_LOI`/`DA_TRA_LOI` và chưa gửi `cheDo` (thuộc B2.6).
 
 ## Đồng bộ giao diện
