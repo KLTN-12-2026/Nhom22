@@ -66,7 +66,12 @@ public class TepTin extends BaseEntity {
     }
 
     public static TepTin system(String objectKey, String mimeType, long kichThuoc, String checksum, Instant now) {
-        TepTin file = pending(null, objectKey, mimeType, kichThuoc, checksum, LoaiTep.AM_THANH);
+        return recording(null, objectKey, mimeType, kichThuoc, checksum, now);
+    }
+
+    public static TepTin recording(Long chuSoHuuId, String objectKey, String mimeType, long kichThuoc,
+                                   String checksum, Instant now) {
+        TepTin file = pending(chuSoHuuId, objectKey, mimeType, kichThuoc, checksum, LoaiTep.AM_THANH);
         file.hoanTatAt = now;
         return file;
     }

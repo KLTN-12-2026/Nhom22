@@ -51,6 +51,7 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 - [B3.1 — Tác vụ nền và hạn mức dịch vụ](B3.1-tac-vu-nen-va-han-muc.md) (mã Mermaid, chưa sinh SVG)
 - [B3.2 — Adapter AI và tạo thẻ từ đoạn văn](B3.2-tao-the-ai.md) (mã Mermaid, chưa sinh SVG)
 - [B3.4a — Âm thanh TTS](B3.4a-am-thanh-tts.md) (mã Mermaid, chưa sinh SVG)
+- [B3.4b — Đánh giá phát âm](B3.4b-danh-gia-phat-am.md) (mã Mermaid, chưa sinh SVG)
 - [B3.5 — Gợi ý có lý do](B3.5-goi-y-co-ly-do.md) (mã Mermaid, chưa sinh SVG)
 - [B3.6 — Điểm thưởng, chuỗi ngày, huy hiệu, thử thách](B3.6-diem-chuoi-huy-hieu.md) (mã Mermaid, chưa sinh SVG)
 - [B3.7 — Thông báo và nhắc học](B3.7-thong-bao-nhac-hoc.md) (mã Mermaid, chưa sinh SVG)
