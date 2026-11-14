@@ -35,8 +35,11 @@ public class QuotaService {
         if (usage.giuCho(nguoiDungId, ngay, loai.name(), gioiHan, now) == 0) {
             Instant nuaDem = ngay.plusDays(1).atStartOfDay(props.zone()).toInstant();
             throw new ApiException(ErrorCode.RATE_LIMITED,
-                    "Bạn đã dùng hết lượt " + (loai == LoaiDichVu.ANH ? "tạo ảnh AI" : "AI")
-                            + " hôm nay, vui lòng thử lại vào ngày mai",
+                    "Bạn đã dùng hết lượt " + switch (loai) {
+                        case AI -> "AI";
+                        case ANH -> "tạo ảnh AI";
+                        case TTS -> "giọng đọc mẫu";
+                    } + " hôm nay, vui lòng thử lại vào ngày mai",
                     Math.max(1, Duration.between(now, nuaDem).getSeconds()));
         }
         return new GiuCho(ngay, loai);

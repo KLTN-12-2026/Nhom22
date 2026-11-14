@@ -103,7 +103,7 @@ public class FileVerifier {
         };
     }
 
-    private String sha256(byte[] content) {
+    public String sha256(byte[] content) {
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(content);
             return HexFormat.of().formatHex(digest);

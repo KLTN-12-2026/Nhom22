@@ -307,6 +307,10 @@
     if (!f || f.ownerId !== u.id || (f.deleted && !allowDeleted)) notFound();
     return f;
   }
+  function ttsFile(url, at) {
+    return { id: url.replace(/\W+/g, "-"), loai: "AM_THANH", mimeType: "audio/vnd.wave", kichThuoc: 4844, checksum: null, hoanTatAt: at, downloadUrl: url, expiresAt: new Date(Date.now() + 600000).toISOString() };
+  }
+
   function fileResponse(f) {
     if (!f.hoanTatAt) throw new ApiError(422, "BUSINESS_RULE", "Tệp chưa hoàn tất tải lên");
     return { id: f.id, loai: f.loai, mimeType: f.mimeType, kichThuoc: f.kichThuoc, checksum: f.checksum, hoanTatAt: f.hoanTatAt, downloadUrl: f.url, expiresAt: new Date(Date.now() + 600000).toISOString() };
@@ -387,7 +391,7 @@
     if (f.until > Date.now()) throw new ApiError(429, "RATE_LIMITED", "Bạn thao tác quá nhiều lần, vui lòng thử lại sau", [], { retryAfter: Math.ceil((f.until - Date.now()) / 1000) });
     return { fail() { f.n += 1; if (f.n >= limit) { f.until = Date.now() + 60000; f.n = 0; } db.fails[key] = f; }, reset() { delete db.fails[key]; } };
   }
-  const flags = { offline: false, conflictOnce: false };
+  const flags = { offline: false, conflictOnce: false, ttsDown: false };
   const iso = (ms) => new Date(ms).toISOString();
   const tzOf = (u) => (u && u.muiGio) || "Asia/Ho_Chi_Minh";
   const cardById = (id) => db.cards.find((x) => x.id === id);
@@ -723,7 +727,7 @@
       return Object.assign(base, { deBai: { cau: bl.cau, goiY: x.meaningVi, tuLoai: x.pos }, dapAn: { chapNhan: [bl.dapAn], noiDung: bl.dapAn } });
     }
     if (type === "NHAP_TU_THEO_NGHIA") return Object.assign(base, { deBai: { nghiaVi: x.meaningVi, tuLoai: x.pos, viDuVi: x.exampleVi || null }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
-    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amTuId: x.amTuId || "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
+    if (type === "NGHE_VIET") return Object.assign(base, { deBai: x.amTuId ? { amTuId: x.amTuId, tuLoai: x.pos } : { amThanhTts: true, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
     return null;
   }
   function matchQuestion(group, thuTu) {
@@ -1774,10 +1778,23 @@
       if (!s || s.uid !== u.id) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bài luyện");
       const q = s.cauHoi.find((x) => x.id === m[2]);
       if (!q) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy câu hỏi");
-      const amTuId = q.loaiCau === "NGHE_VIET" ? q.deBai.amTuId : null;
-      if (!amTuId) throw new ApiError(404, "NOT_FOUND", "Câu hỏi không có âm thanh");
-      if (/^demo-audio:\/\//.test(amTuId)) return { id: amTuId, loai: "AM_THANH", mimeType: "audio/mpeg", kichThuoc: 0, checksum: null, hoanTatAt: s.taoAt, downloadUrl: amTuId, expiresAt: new Date(Date.now() + 600000).toISOString() };
+      if (q.loaiCau !== "NGHE_VIET") throw new ApiError(404, "NOT_FOUND", "Câu hỏi không có âm thanh");
+      const amTuId = q.deBai.amTuId;
+      if (!amTuId || /^demo-audio:\/\//.test(amTuId)) return ttsFile(amTuId || "demo-audio://" + q.id, s.taoAt);
       return fileResponse(ownedFile(amTuId));
+    }],
+    ["GET", /^\/cards\/(\w+)\/audio$/, (m, b, q) => {
+      const u = requireMe();
+      const loai = q.loai || "TU";
+      if (loai !== "TU" && loai !== "CAU") throw new ApiError(400, "VALIDATION_FAILED", "Dữ liệu không hợp lệ");
+      const c = cardById(m[1]);
+      const d = c && db.decks.find((x) => x.id === c.deckId);
+      if (!c || !d || (d.ownerId !== u.id && d.visibility !== "CONG_KHAI")) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy thẻ");
+      const uploaded = loai === "TU" ? c.amTuId : c.amCauId;
+      if (uploaded) return Object.assign(fileResponse(ownedFile(uploaded)), { nguon: "TAI_LEN", moPhong: false });
+      if (loai === "CAU" && !c.exampleEn) throw new ApiError(404, "NOT_FOUND", "Thẻ chưa có câu ví dụ để đọc");
+      if (flags.ttsDown) throw new ApiError(503, "TTS_UNAVAILABLE", "Chưa tạo được giọng đọc mẫu, hãy dùng giọng đọc của trình duyệt");
+      return Object.assign(ttsFile("demo-audio://" + c.id + (loai === "CAU" ? "-cau" : ""), new Date().toISOString()), { nguon: "TTS", moPhong: true });
     }],
     ["POST", /^\/practice\/sessions\/(\w+)\/submissions$/, (m, b) => {
       const u = requireMe();
@@ -2190,9 +2207,9 @@
   function play(url, rate) {
     if (!("speechSynthesis" in window)) return false;
     let text = null;
-    const m = /^demo-audio:\/\/(\w+)$/.exec(url || "");
+    const m = /^demo-audio:\/\/(\w+?)(-cau)?$/.exec(url || "");
     if (m) Object.values(db.practice).some((s) => s.cauHoi.some((q) => { if (q.id === m[1]) { text = q.dapAn.noiDung; return true; } return false; }));
-    if (m && !text && cardById(m[1])) text = cardById(m[1]).word;
+    if (m && !text && cardById(m[1])) text = m[2] ? cardById(m[1]).exampleEn : cardById(m[1]).word;
     if (!text) return false;
     speechSynthesis.cancel();
     const ut = new SpeechSynthesisUtterance(text);

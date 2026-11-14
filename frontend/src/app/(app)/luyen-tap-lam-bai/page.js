@@ -244,7 +244,7 @@ function PracticeSessionContent() {
       return (
         <div>
           {listening ? (
-            <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!q.deBai?.amTuId} tuLoai={q.deBai?.tuLoai} />
+            <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts)} tuLoai={q.deBai?.tuLoai} />
           ) : q.deBai?.cau ? (
             <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}><BlankSentence sentence={q.deBai.cau} /></div>
           ) : (

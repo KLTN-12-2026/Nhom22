@@ -117,6 +117,20 @@ public class FileService {
         return response(file);
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Long createSystemAudio(String objectKey, String mimeType, byte[] content) {
+        return files.saveAndFlush(TepTin.system(objectKey, mimeType, content.length,
+                verifier.sha256(content), clock.instant())).getId();
+    }
+
+    public FileResponse linkedFile(Long fileId) {
+        TepTin file = active(files.findById(fileId).orElseThrow(this::notFound));
+        if (file.getHoanTatAt() == null) {
+            throw notFound();
+        }
+        return response(file);
+    }
+
     public void requireDocument(Long userId, Long fileId, long maxBytes) {
         document(userId, fileId, maxBytes);
     }

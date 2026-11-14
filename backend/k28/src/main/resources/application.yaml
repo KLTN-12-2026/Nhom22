@@ -82,6 +82,18 @@ app:
       max-the: 50
       max-tep-bytes: 1048576
       max-tu-moi-the: 6
+  tts:
+    provider: ${TTS_PROVIDER:fake}
+    model: ${TTS_MODEL:gpt-4o-mini-tts}
+    giong: ${TTS_VOICE:alloy}
+    ngon-ngu: en
+    phien-ban: tts-v1
+    max-ky-tu: 300
+    max-bytes: 2097152
+    read-timeout: 20s
+    fake:
+      che-do: ${TTS_FAKE_MODE:THANH_CONG}
+      do-tre: 0s
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}

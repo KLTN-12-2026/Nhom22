@@ -596,7 +596,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
-| `tep_tin` | chu_so_huu_id, object_key unique, mime_type (V18: `VARCHAR(100)` để chứa MIME `.docx`), kich_thuoc, checksum, loai (`ANH`/`AM_THANH`/`TAI_LIEU`; `TAI_LIEU` thêm ở V18 cho X-01, chỉ `.docx` ≤ 1 MB), trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `tep_tin` | chu_so_huu_id (V19 B3.4a: nullable; `NULL` = tệp hệ thống TTS, người dùng không đọc/xóa được qua `/files/{id}` và không tính vào dung lượng của ai), object_key unique, mime_type (V18: `VARCHAR(100)` để chứa MIME `.docx`), kich_thuoc, checksum, loai (`ANH`/`AM_THANH`/`TAI_LIEU`; `TAI_LIEU` thêm ở V18 cho X-01, chỉ `.docx` ≤ 1 MB), trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
 | `yeu_cau_luu_the_ai` | V18 B3.2: nguoi_dung_id, idempotency_key ascii_bin, yeu_cau_ai_id, bo_the_id nullable (bộ đích, có khi hoàn tất; bộ mới tạo trong cùng giao dịch), request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key); kết quả cùng null hoặc cùng hoàn tất |
 | `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu; khóa chính (the_id, vai_tro) nên mỗi thẻ có tối đa một tệp cho mỗi vai trò |
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
@@ -615,8 +615,9 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `cap_tu_de_nham` | the_1_id, the_2_id, loại nhầm; liên kết bằng chứng theo người học (V11: `nguoi_dung_id`, `so_lan_nham`, `lan_cuoi_at`, `the_1_id < the_2_id`, unique người/cặp). B2.8 (03/11/2026) không thêm cột loại nhầm vì hệ thống chỉ ghi nhận một loại (chọn/ghép nhầm sang thẻ khác); bằng chứng từng lần nằm ở `loi_hoc_tap.bang_chung_json.theNhamId` |
 | `yeu_cau_ai` | V15 (B3.1, chỉ tạo bảng; logic B3.2): nguoi_dung_id, loai (`TAO_THE`/`NGU_CANH`/`SUA_CAU`/`ANH_THE`), trang_thai (`CHO`/`DANG_XU_LY`/`HOAN_TAT`/`LOI`/`KHONG_XAC_DINH`), input_ref, ket_qua_json, phien_ban_prompt, provider_request_id, nha_cung_cap, model, thoi_luong_ms, token_vao/token_ra, ma_loi, han_muc_loai/han_muc_ngay/han_muc_trang_thai (`GIU_CHO`/`DA_DUNG`/`DA_HOAN`, bảo đảm xác nhận hoặc hoàn trả đúng một lần) |
 | `ban_nhap_the_ai` | V15: yeu_cau_id, thu_tu (unique cùng yeu_cau_id), noi_dung_json, trang_thai_duyet (`CHO_DUYET`/`DA_LUU`/`BO_QUA`), the_da_luu_id nullable, anh_id nullable (X-04) |
-| `han_muc_dich_vu` | V15 (B3.1): goi_ma (`PRO`/`PREMIUM`, không giá trị mặc định), loai (`AI`/`ANH`), so_luot_ngay, version; unique (goi_ma, loai); nguồn hạn mức duy nhất theo gói, seed PRO 20/10, PREMIUM 100/30 theo bảng §6.9 |
+| `han_muc_dich_vu` | V15 (B3.1): goi_ma (`PRO`/`PREMIUM`, không giá trị mặc định), loai (`AI`/`ANH`/`TTS`; `TTS` thêm ở V19, B3.4a), so_luot_ngay, version; unique (goi_ma, loai); nguồn hạn mức duy nhất theo gói, seed PRO 20/10, PREMIUM 100/30 theo bảng §6.9; V19 seed `TTS` PRO 100, PREMIUM 300 lượt/ngày (chỉ tính lượt cache miss) |
 | `su_dung_dich_vu` | V15: nguoi_dung_id, ngay (DATE theo `app.quota.zone`), loai, so_giu, so_dung, token_vao/token_ra nullable, chi_phi nullable, nguon_dinh_gia nullable, version; unique (nguoi_dung_id, ngay, loai); bộ đếm theo ngày, giữ chỗ bằng UPDATE có điều kiện `so_giu + so_dung < giới hạn` |
+| `am_thanh_tts` | V19 (B3.4a): cache âm thanh dùng chung, khoa_cache `CHAR(64)` ascii_bin unique = SHA-256 của (nhà cung cấp, model, giọng, ngôn ngữ, phiên bản, văn bản đã chuẩn hóa `CardText.term`), tep_tin_id unique FK `tep_tin` (tệp hệ thống), nha_cung_cap, model, giong, ngon_ngu, phien_ban, do_dai_van_ban, thoi_luong_ms (thời gian gọi nhà cung cấp), mo_phong; không có cột người dùng/thẻ nên cache không chứa dữ liệu riêng của người học |
 | `goi_dich_vu` | ma (`PRO`/`PREMIUM`; không có gói miễn phí, sửa 10/11/2026), ten, gia_thang, gia_nam, gioi_han_the (null = không giới hạn), phat_am, bo_mau_cao_cap, hoat_dong (FR-15) |
 | `dang_ky_goi` | nguoi_dung_id, goi_ma, bat_dau_at, het_han_at, trang_thai (`HIEU_LUC`/`HET_HAN`), version; tối đa một dòng hiệu lực mỗi người; chỉ mục `(trang_thai, het_han_at)` cho tác vụ nhắc/hết hạn |
 | `giao_dich_thanh_toan` | ma_don (unique), nguoi_dung_id, goi_ma, chu_ky (`THANG`/`NAM`), so_tien, cong (`VNPAY`), trang_thai (`CHO_THANH_TOAN`/`THANH_CONG`/`THAT_BAI`/`HET_HAN`), ma_giao_dich_cong, ma_phan_hoi, du_lieu_cong_json, tao_at, hoan_tat_at; không có cột dữ liệu thẻ |
@@ -712,6 +713,8 @@ Bảng điều khiển (§9.1) không có endpoint riêng. B2.12 (**đề xuất
 
 B2.10 (**đề xuất**, đã triển khai 03/11/2026): `GET /statistics/overview?tuNgay&denNgay&boTheId` (mặc định 7 ngày đến hôm nay, tối đa 90 ngày, ngày tương lai hoặc `tuNgay > denNgay` → 400, bộ không thuộc người dùng → 404) trả `{muiGio, tuNgay, denNgay, boTheId, soTuDaHoc, soLuotOn, tyLeNho, baiLuyen{soBai, soCauDung, tongSoCau, tyLeDung}, tongPhut, phutMoiNgay, soNgayCoHoc, soNgayDatMucTieu, chuoiNgay, theoNgay[{ngay, soLuotOn, soCauLuyen, thoiGian, soPhut}]}`; `GET /statistics/skills?boTheId` trả 5 phần tử `{kyNang, soQuanSat, soLuotTinh, duDuLieu, mucLamChu, tyLeDungLanDau, tyLeDungSauLuyenLai, soQuanSatToiThieu, nguon}`. Bộ lọc chủ đề của UI35 chưa triển khai. Chi tiết: [flow B2.10](luong-backend/B2.10-thong-ke-nen.md).
 
+Âm thanh TTS (B3.4a, đã triển khai 14/11/2026, **đề xuất**): `GET /cards/{id}/audio?loai=TU|CAU` (mặc định `TU`; cần đăng nhập) → 200 `{id, loai, mimeType, kichThuoc, checksum, hoanTatAt, downloadUrl, expiresAt, nguon (`TAI_LEN`/`TTS`), moPhong}` (siêu tập của `FileResponse`, URL ký). Quyền: chủ thẻ hoặc thẻ thuộc bộ `CONG_KHAI` + `BINH_THUONG` chưa xóa; thẻ người khác, bộ ẩn, thẻ/bộ đã xóa mềm → 404; `CAU` khi thẻ không có `viDuEn` → 404; `loai` khác → 400. Tệp tải lên `AM_TU`/`AM_CAU` được ưu tiên, không gọi TTS. Chưa có tệp → tra cache `am_thanh_tts`; miss → giữ lượt `TTS`, gọi nhà cung cấp ngoài transaction, lưu tệp hệ thống + cache trong transaction ngắn rồi xác nhận lượt; hết lượt → 429 `RATE_LIMITED` + `Retry-After`; lỗi nhà cung cấp (timeout, 5xx, sai định dạng) → 503 `TTS_UNAVAILABLE`, hoàn lượt, FE dùng Web Speech. Văn bản > `app.tts.max-ky-tu` (300) → 422. Bài `NGHE_VIET`: thẻ không có `AM_TU` vẫn tạo câu, `deBai` = `{amThanhTts: true, tuLoai}` thay cho `{amTuId, tuLoai}`; `GET /practice/sessions/{id}/questions/{qid}/audio` giữ hợp đồng `FileResponse`, trả tệp TTS. Chi tiết ở [flow B3.4a](luong-backend/B3.4a-am-thanh-tts.md).
+
 Các endpoint là hợp đồng đề xuất; cần đặc tả request/response và quyền cụ thể trong OpenAPI khi lập trình. Duyệt bài AI được dùng cho bản nháp đã kiểm tra, không gửi trực tiếp nội dung AI chưa duyệt thành bài kiểm tra có đáp án cố định.
 
 ### 13.3. Ví dụ ghi kết quả học
@@ -754,6 +757,7 @@ Prompt có phiên bản; tách hướng dẫn cố định với dữ liệu Use
 - Chi phí hiển thị từ dữ liệu sử dụng và cấu hình đơn giá có ngày hiệu lực; chưa có cơ sở thì ghi “Chưa xác định”, không ghi 0 như đã miễn phí.
 - Với timeout không rõ nhà cung cấp đã xử lý chưa, lưu trạng thái chưa xác định (`KHONG_XAC_DINH`); không thử lại tự động, không hoàn lượt (tính là đã dùng). Tác vụ `DANG_CHAY` quá hạn giữ (lease) cũng chuyển `KHONG_XAC_DINH`. Lỗi xác định (`LOI`) hoàn lượt; lỗi tạm thời chưa gửi được thử lại hữu hạn có backoff trước khi thành `LOI`.
 - Cache nội dung chung và âm mẫu bằng khóa chứa nội dung, ngôn ngữ, giọng đọc và phiên bản; không dùng cache chung cho dữ liệu riêng của người học.
+- TTS (B3.4a, chốt 14/11/2026): gọi đồng bộ trong request, không qua `tac_vu_nen`; mọi lỗi nhà cung cấp kể cả timeout đều hoàn lượt `TTS` (khác quy tắc `KHONG_XAC_DINH` ở trên vì kết quả không được lưu nếu không nhận đủ dữ liệu, và gọi lại cùng khóa không tạo bản ghi thứ hai). Cache hit không trừ lượt.
 
 ### 14.3. Xử lý lỗi
 
@@ -815,7 +819,7 @@ Các con số sau là **mục tiêu nghiệm thu đề xuất**, chưa phải k�
 - Cơ sở dữ liệu nghiệp vụ: MySQL.
 - Phiên đăng nhập và cache: Redis.
 - Ảnh/âm thanh: kho tương thích S3.
-- Tích hợp: Google OAuth, email, API mô hình ngôn ngữ như OpenAI, API giọng đọc/đánh giá phát âm như Azure Speech.
+- Tích hợp: Google OAuth, email, API mô hình ngôn ngữ OpenAI; giọng đọc TTS dùng OpenAI `gpt-4o-mini-tts` giọng `alloy` chung khóa `OPENAI_API_KEY` (chốt 14/11/2026, B3.4a); đánh giá phát âm như Azure Speech (B3.4b).
 - Đóng gói/triển khai: Docker; Docker Compose và reverse proxy là lựa chọn đề xuất cho bản minh họa.
 - Quản lý mã nguồn: Git; kho dùng chung và quy trình review.
 - Đặc tả/kiểm thử: OpenAPI, công cụ kiểm tra API, kiểm thử backend và luồng web.

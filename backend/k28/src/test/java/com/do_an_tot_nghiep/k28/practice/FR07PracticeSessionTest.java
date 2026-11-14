@@ -140,14 +140,20 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
         assertThat(match.get("deBai").get("cotTrai").size()).isEqualTo(5);
         assertThat(match.get("deBai").get("cotPhai").size()).isEqualTo(5);
 
-        create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 5))
-                .andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.code").value("BUSINESS_RULE"));
         long audio = audioFile(learner, cards.get(2));
         JsonNode listening = body(create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 5))
                 .andExpect(status().isCreated()));
-        assertThat(listening.get("soCau").asInt()).isEqualTo(1);
-        assertThat(listening.get("cauHoi").get(0).get("deBai").get("amTuId").asText()).isEqualTo(String.valueOf(audio));
+        assertThat(listening.get("soCau").asInt()).isEqualTo(5);
+        List<String> uploaded = new ArrayList<>();
+        listening.get("cauHoi").forEach(question -> {
+            JsonNode deBai = question.get("deBai");
+            if (deBai.has("amTuId")) {
+                uploaded.add(deBai.get("amTuId").asText());
+            } else {
+                assertThat(deBai.get("amThanhTts").asBoolean()).isTrue();
+            }
+        });
+        assertThat(uploaded).containsExactly(String.valueOf(audio));
         assertThat(listening.toString()).doesNotContain("deadline");
 
         JsonNode mixed = body(create(learner, Map.of("loaiBai", "TONG_HOP", "soCau", 5))
@@ -259,7 +265,13 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
         JsonNode listening = body(create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 5))
                 .andExpect(status().isCreated()));
         String practiceId = listening.get("id").asText();
-        String questionId = listening.get("cauHoi").get(0).get("id").asText();
+        String questionId = null;
+        for (JsonNode question : listening.get("cauHoi")) {
+            if (question.get("deBai").has("amTuId")) {
+                questionId = question.get("id").asText();
+            }
+        }
+        assertThat(questionId).isNotNull();
         String audioPath = "/api/v1/practice/sessions/" + practiceId + "/questions/" + questionId + "/audio";
 
         JsonNode file = body(mockMvc.perform(get(audioPath).cookie(learner.session()))
