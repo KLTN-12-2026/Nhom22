@@ -307,6 +307,22 @@
     if (!f || f.ownerId !== u.id || (f.deleted && !allowDeleted)) notFound();
     return f;
   }
+  function pronunciationStatus(c) {
+    const v = [c.tongDiem, c.doChinhXac, c.doTroiChay, c.doDayDu];
+    return v.every((x) => x === null) ? "KHONG_NHAN_DIEN" : v.some((x) => x === null) ? "THIEU_CHI_SO" : "DAY_DU";
+  }
+  function pronunciationView(r) {
+    const prev = (db.pronunciations || []).filter((x) => x.uid === r.uid && x.theId === r.theId && Number(x.id) < Number(r.id)).sort((a, z) => Number(z.id) - Number(a.id))[0];
+    const delta = (k) => prev && r.chiSo[k] !== null && prev.chiSo[k] !== null ? Math.round((r.chiSo[k] - prev.chiSo[k]) * 10) / 10 : null;
+    return { id: r.id, theId: r.theId, vanBanMau: r.vanBanMau, ngonNgu: "en-US", nhaCungCap: "fake", moPhong: true, trangThai: pronunciationStatus(r.chiSo), chiSo: r.chiSo, thoiLuongGhiMs: r.thoiLuongGhiMs,
+      ghiAm: r.ghiAmId ? { id: r.ghiAmId, loai: "AM_THANH", mimeType: "audio/wav", kichThuoc: r.ghiAmSize, checksum: null, hoanTatAt: r.createdAt, downloadUrl: r.ghiAmUrl, expiresAt: new Date(Date.now() + 600000).toISOString() } : null,
+      soSanh: prev ? { lanTruocId: prev.id, lanTruocAt: prev.createdAt, cungThangDo: true, tongDiem: delta("tongDiem"), doChinhXac: delta("doChinhXac"), doTroiChay: delta("doTroiChay"), doDayDu: delta("doDayDu") } : null,
+      createdAt: r.createdAt };
+  }
+  function ttsFile(url, at) {
+    return { id: url.replace(/\W+/g, "-"), loai: "AM_THANH", mimeType: "audio/vnd.wave", kichThuoc: 4844, checksum: null, hoanTatAt: at, downloadUrl: url, expiresAt: new Date(Date.now() + 600000).toISOString() };
+  }
+
   function fileResponse(f) {
     if (!f.hoanTatAt) throw new ApiError(422, "BUSINESS_RULE", "Tệp chưa hoàn tất tải lên");
     return { id: f.id, loai: f.loai, mimeType: f.mimeType, kichThuoc: f.kichThuoc, checksum: f.checksum, hoanTatAt: f.hoanTatAt, downloadUrl: f.url, expiresAt: new Date(Date.now() + 600000).toISOString() };
@@ -387,7 +403,7 @@
     if (f.until > Date.now()) throw new ApiError(429, "RATE_LIMITED", "Bạn thao tác quá nhiều lần, vui lòng thử lại sau", [], { retryAfter: Math.ceil((f.until - Date.now()) / 1000) });
     return { fail() { f.n += 1; if (f.n >= limit) { f.until = Date.now() + 60000; f.n = 0; } db.fails[key] = f; }, reset() { delete db.fails[key]; } };
   }
-  const flags = { offline: false, conflictOnce: false };
+  const flags = { offline: false, conflictOnce: false, ttsDown: false, speechDown: false, speechPartial: false };
   const iso = (ms) => new Date(ms).toISOString();
   const tzOf = (u) => (u && u.muiGio) || "Asia/Ho_Chi_Minh";
   const cardById = (id) => db.cards.find((x) => x.id === id);
@@ -723,7 +739,7 @@
       return Object.assign(base, { deBai: { cau: bl.cau, goiY: x.meaningVi, tuLoai: x.pos }, dapAn: { chapNhan: [bl.dapAn], noiDung: bl.dapAn } });
     }
     if (type === "NHAP_TU_THEO_NGHIA") return Object.assign(base, { deBai: { nghiaVi: x.meaningVi, tuLoai: x.pos, viDuVi: x.exampleVi || null }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
-    if (type === "NGHE_VIET") return Object.assign(base, { deBai: { amTuId: x.amTuId || "demo-audio://" + id, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
+    if (type === "NGHE_VIET") return Object.assign(base, { deBai: x.amTuId ? { amTuId: x.amTuId, tuLoai: x.pos } : { amThanhTts: true, tuLoai: x.pos }, dapAn: { chapNhan: [x.word], noiDung: x.word } });
     return null;
   }
   function matchQuestion(group, thuTu) {
@@ -1774,10 +1790,62 @@
       if (!s || s.uid !== u.id) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bài luyện");
       const q = s.cauHoi.find((x) => x.id === m[2]);
       if (!q) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy câu hỏi");
-      const amTuId = q.loaiCau === "NGHE_VIET" ? q.deBai.amTuId : null;
-      if (!amTuId) throw new ApiError(404, "NOT_FOUND", "Câu hỏi không có âm thanh");
-      if (/^demo-audio:\/\//.test(amTuId)) return { id: amTuId, loai: "AM_THANH", mimeType: "audio/mpeg", kichThuoc: 0, checksum: null, hoanTatAt: s.taoAt, downloadUrl: amTuId, expiresAt: new Date(Date.now() + 600000).toISOString() };
+      if (q.loaiCau !== "NGHE_VIET") throw new ApiError(404, "NOT_FOUND", "Câu hỏi không có âm thanh");
+      const amTuId = q.deBai.amTuId;
+      if (!amTuId || /^demo-audio:\/\//.test(amTuId)) return ttsFile(amTuId || "demo-audio://" + q.id, s.taoAt);
       return fileResponse(ownedFile(amTuId));
+    }],
+    ["GET", /^\/cards\/(\w+)\/audio$/, (m, b, q) => {
+      const u = requireMe();
+      const loai = q.loai || "TU";
+      if (loai !== "TU" && loai !== "CAU") throw new ApiError(400, "VALIDATION_FAILED", "Dữ liệu không hợp lệ");
+      const c = cardById(m[1]);
+      const d = c && db.decks.find((x) => x.id === c.deckId);
+      if (!c || !d || (d.ownerId !== u.id && d.visibility !== "CONG_KHAI")) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy thẻ");
+      const uploaded = loai === "TU" ? c.amTuId : c.amCauId;
+      if (uploaded) return Object.assign(fileResponse(ownedFile(uploaded)), { nguon: "TAI_LEN", moPhong: false });
+      if (loai === "CAU" && !c.exampleEn) throw new ApiError(404, "NOT_FOUND", "Thẻ chưa có câu ví dụ để đọc");
+      if (flags.ttsDown) throw new ApiError(503, "TTS_UNAVAILABLE", "Chưa tạo được giọng đọc mẫu, hãy dùng giọng đọc của trình duyệt");
+      return Object.assign(ttsFile("demo-audio://" + c.id + (loai === "CAU" ? "-cau" : ""), new Date().toISOString()), { nguon: "TTS", moPhong: true });
+    }],
+    ["POST", /^\/pronunciation\/assessments$/, (m, b) => {
+      const u = requireMe();
+      const f = b.file;
+      if (!f || !f.size) bad([fe("file", "Chưa có bản ghi âm")]);
+      if (!b.theId) bad([fe("theId", "Chọn thẻ cần luyện")]);
+      const c = cardById(String(b.theId));
+      const d = c && db.decks.find((x) => x.id === c.deckId);
+      if (!c || c.deleted || !d || d.deleted || (d.ownerId !== u.id && d.visibility !== "CONG_KHAI")) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy thẻ");
+      if (f.mimeType !== "audio/wav" || f.size > 524288) throw new ApiError(422, "BUSINESS_RULE", "Bản ghi phải là WAV PCM 16 kHz, 16 bit, một kênh", [fe("file", "Bản ghi phải là WAV PCM 16 kHz, 16 bit, một kênh")]);
+      if (!(f.durationMs > 0) || f.durationMs > 15000) throw new ApiError(422, "BUSINESS_RULE", "Bản ghi tối đa 15 giây", [fe("file", "Bản ghi tối đa 15 giây")]);
+      if (flags.speechDown) throw new ApiError(503, "SPEECH_UNAVAILABLE", "Chưa đánh giá được phát âm, lượt đã được hoàn lại, hãy thử lại sau");
+      db.pronunciations = db.pronunciations || [];
+      const id = nextId(), at = new Date().toISOString(), diem = 60 + (Number(id) * 7 + f.size) % 36;
+      const thieu = !!flags.speechPartial;
+      db.pronunciations.push({ id, uid: u.id, theId: c.id, vanBanMau: c.word, ghiAmId: "rec" + id, ghiAmUrl: f.url || "demo-audio://rec" + id, ghiAmSize: f.size, thoiLuongGhiMs: Math.round(f.durationMs), createdAt: at,
+        chiSo: { tongDiem: thieu ? null : diem, doChinhXac: diem, doTroiChay: thieu ? null : Math.min(100, diem + 4), doDayDu: 100, vanBanNhanDien: c.word, tu: [{ tu: c.word, doChinhXac: diem, loi: diem < 70 ? "SAI" : "KHONG" }] } });
+      return { status: 201, body: pronunciationView(db.pronunciations[db.pronunciations.length - 1]) };
+    }],
+    ["GET", /^\/pronunciation\/assessments\/(\w+)$/, (m) => {
+      const u = requireMe();
+      const r = (db.pronunciations || []).find((x) => x.id === m[1] && x.uid === u.id);
+      if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy kết quả phát âm");
+      return pronunciationView(r);
+    }],
+    ["GET", /^\/pronunciation\/history$/, (m, b, q) => {
+      const u = requireMe();
+      const page = Number(q.page || 0), size = Math.min(100, Number(q.size || 20));
+      const list = (db.pronunciations || []).filter((x) => x.uid === u.id && (!q.theId || x.theId === q.theId)).sort((a, z) => Number(z.id) - Number(a.id));
+      const items = list.slice(page * size, page * size + size).map((r) => ({ id: r.id, theId: r.theId, vanBanMau: r.vanBanMau, nhaCungCap: "fake", moPhong: true, trangThai: pronunciationStatus(r.chiSo), tongDiem: r.chiSo.tongDiem, doChinhXac: r.chiSo.doChinhXac, doTroiChay: r.chiSo.doTroiChay, doDayDu: r.chiSo.doDayDu, tepGhiAmId: r.ghiAmId, createdAt: r.createdAt }));
+      return { items, page, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) };
+    }],
+    ["DELETE", /^\/pronunciation\/recordings\/(\w+)$/, (m) => {
+      const u = requireMe();
+      const r = (db.pronunciations || []).find((x) => x.ghiAmId === m[1] && x.uid === u.id);
+      if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bản ghi âm");
+      r.ghiAmId = null;
+      r.ghiAmUrl = null;
+      return { status: 204 };
     }],
     ["POST", /^\/practice\/sessions\/(\w+)\/submissions$/, (m, b) => {
       const u = requireMe();
@@ -2190,9 +2258,9 @@
   function play(url, rate) {
     if (!("speechSynthesis" in window)) return false;
     let text = null;
-    const m = /^demo-audio:\/\/(\w+)$/.exec(url || "");
+    const m = /^demo-audio:\/\/(\w+?)(-cau)?$/.exec(url || "");
     if (m) Object.values(db.practice).some((s) => s.cauHoi.some((q) => { if (q.id === m[1]) { text = q.dapAn.noiDung; return true; } return false; }));
-    if (m && !text && cardById(m[1])) text = cardById(m[1]).word;
+    if (m && !text && cardById(m[1])) text = m[2] ? cardById(m[1]).exampleEn : cardById(m[1]).word;
     if (!text) return false;
     speechSynthesis.cancel();
     const ut = new SpeechSynthesisUtterance(text);

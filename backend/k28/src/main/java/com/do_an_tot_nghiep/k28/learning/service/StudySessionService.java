@@ -273,7 +273,7 @@ public class StudySessionService {
         progress.dueQueue(userId, chieu, TRANG_THAI_ON, now, boTheId, page)
                 .forEach(row -> picked.add(row.getTheId()));
 
-        int soMoiConLai = tuDo ? (cap - picked.size()) : soMoiConLai(userId, homNay);
+        int soMoiConLai = soMoiConLai(userId, homNay);
         if (soMoiConLai > 0 && picked.size() < cap) {
             picked.addAll(progress.physicallyNewCardIds(
                     userId,

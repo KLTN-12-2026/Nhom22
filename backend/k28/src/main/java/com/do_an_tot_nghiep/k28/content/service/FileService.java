@@ -16,6 +16,7 @@ import com.do_an_tot_nghiep.k28.content.repository.TepTinRepository;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,6 +114,32 @@ public class FileService {
         TepTin file = active(files.findByIdAndChuSoHuuId(fileId, userId).orElseThrow(this::notFound));
         if (file.getHoanTatAt() == null) {
             throw new ApiException(ErrorCode.BUSINESS_RULE, "Tệp chưa hoàn tất tải lên");
+        }
+        return response(file);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Long createSystemAudio(String objectKey, String mimeType, byte[] content) {
+        return files.saveAndFlush(TepTin.system(objectKey, mimeType, content.length,
+                verifier.sha256(content), clock.instant())).getId();
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Long createRecording(Long userId, String objectKey, String mimeType, byte[] content) {
+        return files.saveAndFlush(TepTin.recording(userId, objectKey, mimeType, content.length,
+                verifier.sha256(content), clock.instant())).getId();
+    }
+
+    public Optional<FileResponse> ownedFile(Long userId, Long fileId) {
+        return files.findByIdAndChuSoHuuId(fileId, userId)
+                .filter(file -> file.getTrangThaiXoa() != TrangThaiXoaTep.DA_XOA && file.getHoanTatAt() != null)
+                .map(this::response);
+    }
+
+    public FileResponse linkedFile(Long fileId) {
+        TepTin file = active(files.findById(fileId).orElseThrow(this::notFound));
+        if (file.getHoanTatAt() == null) {
+            throw notFound();
         }
         return response(file);
     }

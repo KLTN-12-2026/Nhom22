@@ -23,6 +23,7 @@ import com.do_an_tot_nghiep.k28.practice.repository.BaiLuyenRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.CauHoiBaiLuyenRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.LanLamBaiRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.TraLoiBaiLuyenRepository;
+import com.do_an_tot_nghiep.k28.speaking.service.TtsService;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +56,7 @@ public class PracticeService {
     private final PracticeResults results;
     private final CardService cardService;
     private final FileService fileService;
+    private final TtsService ttsService;
     private final NotebookService notebookService;
     private final JsonMapper json;
 
@@ -131,11 +133,12 @@ public class PracticeService {
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
         CauHoiBaiLuyen question = questions.findByIdAndBaiId(questionId, practice.getId())
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy câu hỏi"));
-        JsonNode amTuId = question.getLoaiCau() == LoaiCau.NGHE_VIET
-                ? json.readTree(question.getDeBaiJson()).get("amTuId")
-                : null;
-        if (amTuId == null || amTuId.isNull()) {
+        if (question.getLoaiCau() != LoaiCau.NGHE_VIET || question.getTheId() == null) {
             throw new ApiException(ErrorCode.NOT_FOUND, "Câu hỏi không có âm thanh");
+        }
+        JsonNode amTuId = json.readTree(question.getDeBaiJson()).get("amTuId");
+        if (amTuId == null || amTuId.isNull()) {
+            return ttsService.wordAudio(userId, question.getTheId());
         }
         try {
             return fileService.get(userId, Long.valueOf(amTuId.asText()));

@@ -70,7 +70,6 @@ final class PracticeGenerator {
         if (drafts.isEmpty()) {
             throw rule(switch (loaiBai) {
                 case DIEN_CHO_TRONG -> "Các thẻ đã chọn chưa có câu ví dụ chứa đúng từ, nên chưa tạo được câu điền chỗ trống.";
-                case NGHE_VIET -> "Các thẻ đã chọn chưa có âm thanh của từ, nên chưa tạo được câu nghe viết.";
                 default -> "Chưa tạo được câu hỏi từ các thẻ đã chọn.";
             });
         }
@@ -178,10 +177,12 @@ final class PracticeGenerator {
                     null,
                     typedAnswer(card.tu()),
                     explain(card));
-            case NGHE_VIET -> card.amTuId() == null ? null : new Draft(
+            case NGHE_VIET -> new Draft(
                     type,
                     Long.valueOf(card.id()),
-                    map("amTuId", card.amTuId(), "tuLoai", card.tuLoai()),
+                    card.amTuId() == null
+                            ? map("amThanhTts", true, "tuLoai", card.tuLoai())
+                            : map("amTuId", card.amTuId(), "tuLoai", card.tuLoai()),
                     null,
                     typedAnswer(card.tu()),
                     explain(card));

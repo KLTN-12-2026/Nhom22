@@ -647,7 +647,7 @@ function PracticeSessionContent() {
 
         {/* Audio (nếu dạng Nghe Viết) */}
         {currentQ?.loaiCau === 'NGHE_VIET' && (
-          <ListenPrompt practiceId={id} questionId={currentQ.id} hasAudio={!!currentQ.deBai?.amTuId} tuLoai={currentQ.deBai?.tuLoai} />
+          <ListenPrompt practiceId={id} questionId={currentQ.id} hasAudio={!!(currentQ.deBai?.amTuId || currentQ.deBai?.amThanhTts)} tuLoai={currentQ.deBai?.tuLoai} />
         )}
 
         {/* Options / Input Content */}

@@ -3,14 +3,16 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 3 — AI, phát âm, động lực, vận hành & thanh toán (09/11 – 29/11/2026, Sprint S7–S9) |
-| Ngày cập nhật | 14/11/2026 — **B3.2 code xong** (tạo thẻ bằng AI: 3 API, Fake + OpenAI, `.docx`, lưu vào bộ mới; còn 1 lượt gọi OpenAI thật). 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
-| Trạng thái BE | 🟡 Đang làm: **B3.2** code xong, `CardDraftParserTest` 14 + `FakeAiClientTest` 8 + `FR09CardDraftTest` 18 pass, toàn bộ `mvnw test` 492/492 pass (14/11/2026); chưa gọi OpenAI thật và HTTP thật. B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. Các bước B3.x khác chưa bắt đầu |
+| Ngày cập nhật | 14/11/2026 — **B3.4b code xong** (đánh giá phát âm: 4 API, Fake + Azure Speech REST; còn 1 lượt gọi Azure thật). 14/11/2026 — **B3.4a code xong** (âm thanh TTS `GET /cards/{id}/audio`, bài `NGHE_VIET` dùng TTS; còn 1 lượt gọi OpenAI TTS thật). 14/11/2026 — **B3.2 code xong** (tạo thẻ bằng AI: 3 API, Fake + OpenAI, `.docx`, lưu vào bộ mới; còn 1 lượt gọi OpenAI thật). 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
+| Trạng thái BE | 🟡 Đang làm: **B3.4b** code xong, `FR10PronunciationTest` 5 + `AzureSpeechClientTest` 3 pass (14/11/2026); chưa gọi Azure Speech thật và HTTP thật. **B3.4a** code xong, `FR10TtsTest` 7 test + `FR07PracticeSessionTest` cập nhật pass, toàn bộ `mvnw -q verify` pass (exit 0, 14/11/2026); chưa gọi OpenAI TTS thật và HTTP thật. **B3.2** code xong, `CardDraftParserTest` 14 + `FakeAiClientTest` 8 + `FR09CardDraftTest` 18 pass, toàn bộ `mvnw test` 492/492 pass (14/11/2026); chưa gọi OpenAI thật và HTTP thật. B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. Các bước B3.x khác chưa bắt đầu |
 | FE làm tương ứng | F3.1–F3.13 (`roadmap/TienDoDuKien_fronend.md`, mục Đợt 3): UI29 xưởng thẻ AI, UI30–UI32 AI, UI28 gợi ý, UI33–UI34 phát âm, UI38 thành tích, UI39 thông báo, UI45/UI50 báo cáo, UI36–UI37 thống kê, UI44 dữ liệu cá nhân, UI51 vận hành, UI55–UI57 thanh toán, UI58–UI59 quản lý thanh toán |
 | Báo cáo trước | [Đợt 2](SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó và ở [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) |
 
 > **Đọc nhanh:**
 > - **API mới đầu tiên của Đợt 3 (B3.6):** `GET /rewards/history`, `GET /badges`, `GET /challenges` cho UI38 `/thanh-tich`; `GET /learning/today` thêm `daDungNgayNghiTuanNay`, `ngayNghiDaDung` cho thẻ chuỗi ngày trên UI12 (mục 5.2). FE nối F3.6 bằng API thật.
 > - **B3.2 (UI29):** `POST /ai/card-drafts` → 202 `{requestId}`, hỏi `GET /ai/requests/{id}` tới `HOAN_TAT`/`LOI`/`KHONG_XAC_DINH`, rồi `POST /ai/card-drafts/{id}/commit` kèm `Idempotency-Key` với `boTheId` **hoặc** `tenBoMoi` (mục 5.5). Chưa có khóa OpenAI nên BE chạy `FakeAiClient`, response có `moPhong: true` → FE gắn nhãn "Mô phỏng".
+> - **B3.4b (UI33, UI34):** `POST /pronunciation/assessments` (multipart `theId` + `file` WAV PCM 16 kHz mono ≤ 15 giây) → 201 kết quả có `chiSo` (thiếu là `null`), `ghiAm`, `soSanh`; `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}`; 503 `SPEECH_UNAVAILABLE` hoàn lượt; 429 khi hết lượt `PHAT_AM` (mục 5.7).
+> - **B3.4a (UI19, UI24, X-05):** `GET /cards/{id}/audio?loai=TU|CAU` → `FileResponse` + `nguon` (`TAI_LEN`/`TTS`) + `moPhong`; 503 `TTS_UNAVAILABLE` → dùng Web Speech; 429 khi hết lượt `TTS`. Bài `NGHE_VIET` giờ tạo câu cho mọi thẻ: câu không có `deBai.amTuId` có `deBai.amThanhTts = true`, vẫn lấy âm qua `GET /practice/sessions/{id}/questions/{qid}/audio` (mục 5.6).
 > - B3.1 chỉ là hạ tầng bên trong BE (hàng đợi tác vụ nền `tac_vu_nen`, hạn mức dịch vụ theo người/ngày). Các trang Đợt 3 khác vẫn dùng MSW/mock cho đến khi từng bước B3.x giao API.
 > - Điều FE cần biết từ B3.1: mọi API AI sau này sẽ trả **202 + ID** rồi FE hỏi trạng thái, và hết hạn mức ngày trả **429 `RATE_LIMITED` kèm header `Retry-After`** (mục 3, mục 6). `api-client.js` đã đọc `Retry-After` thành `error.retryAfter`.
 > - Hạn mức theo gói (TK §6.9, không có gói miễn phí): `PRO` AI 20 và ảnh 10 lượt/ngày; `PREMIUM` AI 100 và ảnh 30 lượt/ngày; "ngày" tính theo giờ Việt Nam (mục 7).
@@ -24,13 +26,13 @@
 |---|---|---|---|
 | B3.1 Tác vụ nền & hạn mức dịch vụ (FR-09, TC-12) | ✅ Không API. `JobService`/`JobWorker` (SKIP LOCKED, retry/backoff, thu hồi lease), `QuotaService` (giữ chỗ nguyên tử, xác nhận, hoàn trả, 429); migration `V15__jobs_ai.sql` (5 bảng, seed hạn mức `PRO`/`PREMIUM`); `FR09JobWorkerTest` (5), `FR09QuotaTest` (5) người dùng báo không lỗi (11/11); chưa HTTP thật | — (nền cho F3.1, F3.2, F3.3) | Chuẩn bị xử lý 429 + `Retry-After` và luồng 202 → hỏi trạng thái (mục 3, 6); chưa nối API |
 | B3.2 Adapter AI & tạo thẻ từ đoạn văn (FR-09, TC-12, TC-13, X-01, X-02) | 🟡 3 API; `V18__ai_card_drafts.sql` (`TAI_LIEU`, `mime_type` 100, `yeu_cau_luu_the_ai`); Apache POI; `FakeAiClient` (mặc định) + `OpenAiClient`; 40 test mới pass, toàn bộ 492/492 (14/11); **chưa gọi OpenAI thật**, chưa HTTP thật | F3.1 UI29 `/ai/xuong-the` | Nối 3 API thật (mục 5.5); hỏi trạng thái mỗi 2 giây; giữ cùng `Idempotency-Key` khi bấm lưu lại; nhãn "Mô phỏng" khi `moPhong` |
-| B3.4a Âm thanh TTS | ⏳ Chưa làm (S7) | F3.5 (nghe) UI19, UI24 | MSW |
+| B3.4a Âm thanh TTS (FR-10, TC-14) | 🟡 1 API mới + `NGHE_VIET` dùng TTS; `V19__tts_cache.sql` (`am_thanh_tts`, hạn mức `TTS`, tệp hệ thống); `FakeTtsClient` (mặc định) + `OpenAiTtsClient`; `FR10TtsTest` 7 test, toàn bộ suite pass (14/11); **chưa gọi OpenAI TTS thật**, chưa HTTP thật | F3.5 (nghe) UI19, UI24; F3.1 X-05 | Nút loa gọi API thật, fallback Web Speech khi 503/429/lỗi mạng; UI24 hiện nút nghe khi `amTuId` hoặc `amThanhTts` (FE đã sửa `luyen-tap-lam-bai`) |
 | B3.3 Các tác vụ AI khác (gọn) | ⏳ Chưa làm (S8) | F3.2, F3.3 UI30–UI32, UI16 | MSW |
 | B3.5 Gợi ý có lý do (FR-08, R-04) | ✅ `GET /learning/recommendations`; 5 mã lý do (`PHAT_AM_THAP` tắt chờ B3.4b); ngưỡng `app.recommendations.*` + `app.notebook.*`; không migration; 21 test mới pass, toàn bộ 452/452 (12/11); chưa HTTP thật | F3.4 UI28 trên UI12, UI27 | Nối API thật (mục 5.4); ẩn khối khi mảng rỗng; thẻ `TIEN_BO` là lời khen, không có nút hành động |
 | B3.6 Điểm, chuỗi ngày, huy hiệu, thử thách (gọn, FR-12, TC-15) | ✅ 3 API + mở rộng `/learning/today`; `V16__engagement.sql`; thưởng ghi trong cùng transaction với lượt ôn/nộp bài; `mvnw test` 427/427 pass (11/11); chưa HTTP thật | F3.6 UI38 `/thanh-tich`, thẻ chuỗi UI12 | Nối 3 API thật (mục 5.2); hiện trạng thái ngày nghỉ tuần trên UI12; invalidate sau khi ôn/nộp bài |
 | B3.7 Thông báo, nhắc học (gọn, FR-12, TC-15) | ✅ 2 API + `ReminderWorker` 15 phút; `V17__notification.sql`; chống trùng `(user, loại, ngày địa phương)`; `FR12NotificationTest` 4/4 pass (11/11); chưa HTTP thật | F3.7 UI39 chuông + `/thong-bao` | Nối 2 API thật (mục 5.3); số chưa đọc trên chuông; mở `lienKet` rồi `PATCH` đã đọc |
 | B3.12a Gói dịch vụ & thanh toán VNPay | ⏳ Chưa làm (S8) | F3.12 UI55, UI57 | MSW; bắt 402 `SUBSCRIPTION_REQUIRED` khi bước này giao |
-| B3.4b Đánh giá phát âm (gọn) | ⏳ Chưa làm (S9) | F3.5 UI33, UI34 | MSW |
+| B3.4b Đánh giá phát âm (gọn, FR-10, TC-14) | 🟡 4 API mới; `V20__speaking.sql` (`ket_qua_phat_am`, hạn mức `PHAT_AM`); `FakeSpeechClient` (mặc định) + `AzureSpeechClient`; `FR10PronunciationTest` 5 + `AzureSpeechClientTest` 3 pass (14/11); **chưa gọi Azure thật**, chưa HTTP thật | F3.5 UI33, UI34 | Ghi âm Web Audio → WAV 16 kHz mono, chỉ hiện chỉ số khác `null`, nhãn "Mô phỏng" khi `moPhong` (mục 5.7) |
 | B3.8–B3.11 | ⏳ Chưa làm (S9) | F3.8–F3.11 | MSW |
 | B3.12b, B3.12c | ⏳ Chưa làm (S9) | F3.12 UI56, F3.13 UI58–UI59 | MSW |
 
@@ -256,6 +258,59 @@ Quy tắc FE:
 - Demo lỗi khi BE dùng Fake: thêm `#mo-phong:LOI`, `#mo-phong:TIMEOUT`, `#mo-phong:SAI_SCHEMA`, `#mo-phong:THU_LAI` hoặc `#mo-phong:INJECTION` vào đoạn văn.
 - Sau commit: invalidate `['decks']`, `['decks', boTheId]`, `['ai','requests',id]`.
 
+### 5.6 B3.4a — Âm thanh TTS (UI19, UI24, X-05)
+
+Hợp đồng theo mã nguồn và `FR10TtsTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi OpenAI thật. Luồng: [B3.4a](../docs/luong-backend/B3.4a-am-thanh-tts.md).
+
+| Method / path | Quyền | Request | Response |
+|---|---|---|---|
+| `GET /api/v1/cards/{id}/audio` | Đăng nhập (GET, không cần CSRF); chủ thẻ hoặc thẻ thuộc bộ công khai chưa ẩn/xóa | query `loai` = `TU` (mặc định) / `CAU` | 200 `{id, loai, mimeType, kichThuoc, checksum, hoanTatAt, downloadUrl, expiresAt, nguon, moPhong}` |
+| `GET /api/v1/practice/sessions/{id}/questions/{qid}/audio` | Chủ bài | – | 200 `FileResponse` (không đổi) |
+
+| Lỗi | Khi nào | FE làm gì |
+|---|---|---|
+| 400 `VALIDATION_FAILED` | `loai` sai | – |
+| 401 | Chưa đăng nhập (thư viện công khai khi khách xem) | Dùng Web Speech |
+| 404 `NOT_FOUND` | Thẻ người khác (bộ riêng tư), bộ bị ẩn, thẻ/bộ đã xóa; `CAU` khi thẻ không có `viDuEn` | Ẩn nút loa câu khi `viDuEn` rỗng |
+| 422 `BUSINESS_RULE` | Văn bản > 300 ký tự (thực tế không xảy ra vì `tu` ≤ 100, `viDuEn` ≤ 300) | Web Speech |
+| 429 `RATE_LIMITED` + `Retry-After` | Hết lượt `TTS` trong ngày (chỉ tính khi chưa có cache) | Web Speech, không chặn học |
+| 503 `TTS_UNAVAILABLE` / `DEPENDENCY_DOWN` | Nhà cung cấp hoặc kho tệp lỗi; lượt đã hoàn | Web Speech |
+
+- `nguon = TAI_LEN`: tệp `AM_TU`/`AM_CAU` người dùng tải lên (ưu tiên, không tốn lượt). `nguon = TTS`: giọng đọc sinh tự động, dùng chung cho mọi thẻ cùng nội dung; `moPhong = true` → gắn nhãn "Mô phỏng" (BE đang dùng `FakeTtsClient`, phát âm thanh WAV 0,3 s, không phải giọng đọc thật).
+- `downloadUrl` hết hạn ở `expiresAt` (URL ký): cache phía FE theo `expiresAt` như `ListenPrompt` đang làm, gọi lại API khi hết hạn (cache hit không tốn lượt).
+- `NGHE_VIET`: thẻ không có `AM_TU` không còn bị loại; `deBai` = `{amThanhTts: true, tuLoai}` thay cho `{amTuId, tuLoai}`. FE đã đổi `hasAudio` trong `frontend/src/app/(app)/luyen-tap-lam-bai/page.js` thành `amTuId || amThanhTts` (build pass 14/11/2026). Route mock `frontend/src/app/api/v1/practice/[...slug]/route.js` chưa sinh `amThanhTts` (chỉ ảnh hưởng chế độ mock).
+- X-05 (thẻ nháp đã lưu ở UI29) và UI19: gọi `GET /cards/{theDaLuuId}/audio`; trước khi lưu vẫn dùng Web Speech.
+- Demo lỗi khi BE dùng Fake: đưa `#mo-phong:LOI`, `#mo-phong:TIMEOUT`, `#mo-phong:SAI_DINH_DANG` hoặc `#mo-phong:CHAM` (chậm 400 ms) vào `tu`/`viDuEn` của thẻ.
+- Mockup: `mockups/shared/demo.js` có route `GET /cards/{id}/audio` (cờ `VLDemo.flags.ttsDown` để demo 503) và `NGHE_VIET` sinh `amThanhTts`.
+
+### 5.7 B3.4b — Đánh giá phát âm (UI33, UI34)
+
+Hợp đồng theo mã nguồn và `FR10PronunciationTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi Azure Speech thật. Luồng: [B3.4b](../docs/luong-backend/B3.4b-danh-gia-phat-am.md).
+
+| Method / path | Quyền | Request | Response |
+|---|---|---|---|
+| `POST /api/v1/pronunciation/assessments` | Đăng nhập + CSRF; chủ thẻ hoặc thẻ bộ công khai | `multipart/form-data`: `theId`, `file` (WAV) | 201 `{id, theId, vanBanMau, ngonNgu, nhaCungCap, moPhong, trangThai, chiSo, thoiLuongGhiMs, ghiAm, soSanh, createdAt}` |
+| `GET /api/v1/pronunciation/assessments/{id}` | Chủ kết quả | – | 200 như trên |
+| `GET /api/v1/pronunciation/history` | Đăng nhập | `theId?`, `page` (0), `size` (20, ≤ 100) | 200 `PageResponse<{id, theId, vanBanMau, nhaCungCap, moPhong, trangThai, tongDiem, doChinhXac, doTroiChay, doDayDu, tepGhiAmId, createdAt}>` |
+| `DELETE /api/v1/pronunciation/recordings/{id}` | Chủ bản ghi; `id` = `ghiAm.id` | – | 204, chỉ số giữ nguyên |
+
+| Lỗi | Khi nào | FE làm gì |
+|---|---|---|
+| 400 `VALIDATION_FAILED` | Thiếu `file`/`theId` | – |
+| 404 `NOT_FOUND` | Thẻ không đọc được; kết quả/bản ghi của người khác hoặc đã xóa | Quay về danh sách |
+| 422 `BUSINESS_RULE` (`field: file`) | Không phải WAV PCM 16 kHz/16 bit/mono, > 15 giây, > 512 KB | Báo ghi lại; FE nên tự dừng ghi ở 15 giây |
+| 429 `RATE_LIMITED` + `Retry-After` | Hết lượt `PHAT_AM` (PRO 30, PREMIUM 100/ngày) | Hiện giờ dùng lại; vẫn nghe mẫu được |
+| 503 `SPEECH_UNAVAILABLE` | Dịch vụ lỗi/timeout; lượt đã hoàn, không lưu gì | Cho thử lại |
+
+- `chiSo = {tongDiem, doChinhXac, doTroiChay, doDayDu, vanBanNhanDien, tu: [{tu, doChinhXac, loi}]}`, điểm 0–100 hoặc `null`; **không hiển thị ô điểm có giá trị `null`**, không tự tính thay. `loi`: `KHONG`/`SAI`/`BO_SOT`/`THUA`/`KHAC`.
+- `trangThai`: `DAY_DU`, `THIEU_CHI_SO` (hiện "Dịch vụ không trả đủ chỉ số"), `KHONG_NHAN_DIEN` (hiện "Không nghe rõ, hãy ghi lại"; lượt vẫn bị tính).
+- `soSanh = null` ở lần đầu; sau đó là chênh lệch so với lần ngay trước cùng thẻ. `cungThangDo = false` hoặc từng chỉ số `null` → không hiện mức cải thiện.
+- Ghi âm: `MediaRecorder` mặc định ra WebM/Opus, BE **không nhận**. Dùng `AudioContext({sampleRate: 16000})` + `ScriptProcessor`/`AudioWorklet` lấy PCM, ghép header WAV 44 byte (16 bit, mono). Tệp 15 giây ≈ 480 KB.
+- `ghiAm.downloadUrl` là URL ký hết hạn ở `ghiAm.expiresAt`; gọi lại `GET /assessments/{id}` khi hết hạn.
+- Demo khi BE dùng Fake (`moPhong = true`, điểm 60–95 theo nội dung tệp): đưa `#mo-phong:THIEU_CHI_SO`, `#mo-phong:KHONG_NHAN_DIEN`, `#mo-phong:LOI` hoặc `#mo-phong:TIMEOUT` vào `tu` của thẻ.
+- Mockup: `mockups/dot3/phat-am.html` đổi bản ghi sang WAV 16 kHz bằng `OfflineAudioContext` rồi gọi route demo; `VLDemo.flags.speechDown` (503), `speechPartial` (`THIEU_CHI_SO`).
+- Chưa có: gợi ý `PHAT_AM_THAP` (B3.5 vẫn tắt), ghi sổ tay lỗi phát âm, biểu đồ tiến bộ.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
@@ -318,7 +373,8 @@ Trạng thái BE đến 11/11/2026: chỉ B3.1; các mục dưới là tiêu ch�
 - [ ] F3.2 UI30, UI31, UI16: không render HTML từ AI; AI lỗi/429 không chặn lưu thẻ tay
 - [ ] F3.3 UI32 lịch sử AI dạng danh sách; hạn mức còn lại đọc `GET /me/service-quota` (B3.3)
 - [ ] F3.4 UI28 gợi ý đọc `GET /learning/recommendations` (mục 5.4): hiển thị mã lý do, `message`, số liệu từ `evidence`; ẩn khối khi `[]`; `TIEN_BO` không có nút hành động
-- [ ] F3.5 UI33, UI34 phát âm: xin quyền micro khi bấm ghi, chỉ hiện chỉ số có thật, kết quả Fake có nhãn "Mô phỏng"
+- [ ] F3.5 phần nghe (B3.4a): nút loa UI19/UI24/thư viện gọi `GET /cards/{id}/audio`, nhãn "Mô phỏng" khi `moPhong`, 503/429/401/lỗi mạng chuyển Web Speech; UI24 hiện nút nghe khi `amTuId` hoặc `amThanhTts`
+- [ ] F3.5 UI33, UI34 phát âm (B3.4b, mục 5.7): xin quyền micro khi bấm ghi, nghe lại trước khi gửi, gửi WAV PCM 16 kHz mono ≤ 15 giây; chỉ hiện chỉ số khác `null`, so sánh chỉ khi `soSanh.cungThangDo`; kết quả `moPhong` có nhãn "Mô phỏng"; 503/429 không chặn nghe mẫu; xóa bản ghi bằng `ghiAm.id`
 - [ ] F3.6 UI38 đọc `/rewards/history` (phân trang), `/badges`, `/challenges`; hiện "đã chạm trần ngày" khi `soDiem < diemGoc`; UI12 hiện ngày nghỉ tuần từ `daDungNgayNghiTuanNay`/`ngayNghiDaDung`; không tự tính điểm ở FE
 - [ ] F3.7 thông báo đọc API thật
 - [ ] F3.8–F3.11 báo cáo, thống kê tuần, xóa dữ liệu, vận hành đọc API thật
@@ -332,12 +388,12 @@ Theo `roadmap/TienDoDuKien_backend.md` (Đợt 3), `roadmap/SPRINT_PLAN.md` (S7�
 | BE bước | Sprint | Dự kiến có | API (dự kiến) | FE bước | UI |
 |---|---|---|---|---|---|
 | B3.2 | S7 (09/11–15/11) | Tạo thẻ bằng AI; nhập tệp, lưu vào bộ mới (X-01, X-02) — **đã giao 14/11, xem mục 5.5** (chờ 1 lượt OpenAI thật) | `POST /ai/card-drafts` (202 + ID; đoạn văn hoặc `tepId`), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`, `Idempotency-Key`) | F3.1 | UI29 `/ai/xuong-the` |
-| B3.4a | S7 | Âm thanh TTS | `GET /cards/{id}/audio` | F3.5 (nghe) | UI19, UI24 |
+| B3.4a | S7 | Âm thanh TTS — **đã giao 14/11, xem mục 5.6** (chờ 1 lượt OpenAI TTS thật) | `GET /cards/{id}/audio?loai=TU\|CAU` | F3.5 (nghe) | UI19, UI24 |
 | B3.3 (gọn) | S8 (16/11–22/11) | Giải thích ngữ cảnh, sửa câu, tự điền thẻ (R-02, X-03), ảnh AI (X-04); `POST /ai/exercise-drafts` **Hoãn** | `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (202), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31, UI32, UI16, UI29 |
 | B3.5 | S8 | Gợi ý có lý do (+ `TIEN_BO`) — **đã giao 12/11, xem mục 5.4** | `GET /learning/recommendations` → `[{reasonCode, message, cardIds, evidence}]` | F3.4 | UI28, UI27 |
 | B3.7 (gọn) | S8 | Thông báo, nhắc học — **đã giao 11/11, xem mục 5.3** | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 |
 | B3.12a | S8 | Gói dịch vụ, VNPay sandbox (FR-15); `EntitlementService` thay `ProGoiResolver`; `SubscriptionGuard` 402 | `GET /billing/plans`, `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions/{maDon}` | F3.12 | UI55, UI57 |
-| B3.4b (gọn) | S9 (23/11–29/11) | Đánh giá phát âm | `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33, UI34 |
+| B3.4b (gọn) | S9 (23/11–29/11) | Đánh giá phát âm — **đã giao 14/11, xem mục 5.7** (chờ 1 lượt Azure Speech thật) | `POST /pronunciation/assessments` (multipart ≤ 15 giây), `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33, UI34 |
 | B3.8 (gọn) | S9 | Báo cáo nội dung, kiểm duyệt | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` | F3.8 | UI45, UI50 |
 | B3.9 (gọn) | S9 | Tổng kết tuần, bản đồ làm chủ dạng bảng | `GET /statistics/weekly-summary` | F3.9 | UI37, UI36 |
 | B3.10 (gọn) | S9 | Xóa tài khoản | `POST /me/deletion-requests` | F3.10 | UI44 |
@@ -372,6 +428,12 @@ Mockup Đợt 3: xem `mockups/dot3/` (README và `ui.js`); đã đối chiếu v
 | Quyết định B3.2 (13/11/2026) | Nhà cung cấp **OpenAI** (`gpt-4o-mini`, đổi bằng `OPENAI_MODEL`), Structured Outputs strict + BE kiểm lại; sai schema/0 mục hợp lệ → `LOI` hoàn lượt; `V18` thêm `TAI_LIEU`, nới `mime_type` lên 100, bảng `yeu_cau_luu_the_ai`; Apache POI `poi-ooxml` 5.4.1 đọc `.docx`; `boTheId` tùy chọn ở `card-drafts` để đánh dấu trùng (TK §13 đã sửa); chọn client bằng `app.ai.provider` thay vì `@Profile` để dev bật được OpenAI thật; trần tải lên 1 MB của `TAI_LIEU` nằm trong enum `LoaiTep` như các loại tệp khác, `app.ai.card-draft.max-tep-bytes` là ngưỡng riêng của AI |
 | Bổ sung B3.2 (14/11/2026) | Commit nhận `sua` (X-06 "Sửa" trước khi lưu): nội dung sửa ghi vào thẻ mới và `noi_dung_json` của nháp; kiểm bằng `CardDraftParser.kiemTraSua`. `CardDraftParserTest` 14, `FR09CardDraftTest` 18 (thêm `tc13_commitSavesEditedDraftContent`, `tc13_invalidEditsAreRejected`) pass. Mockup UI29 có nút "Sửa trước khi lưu" gửi `sua` (preview: sửa nghĩa/từ loại rồi lưu vào bộ mới, console sạch) |
 | Giới hạn B3.2 | Bộ mới luôn `trinhDo = CO_BAN`; Fake chỉ tách từ ≥ 4 chữ cái, nghĩa là chuỗi mô phỏng. Mockup UI29 (`dot3/ai-xuong-the.html`, `ui.js`) đọc 3 route demo đúng DTO trong `shared/demo.js` (cùng quy tắc 202/hỏi trạng thái/`Idempotency-Key`/409/422/429); preview `?as=an` 1280 và 390 px: tạo 8 thẻ nháp, đánh dấu trùng, lưu 3/8 vào bộ mới, `SAI_SCHEMA`, `TIMEOUT`, console không lỗi, không cuộn ngang. Postman chưa đồng bộ (connector Postman của plugin chưa xác thực) |
+| Kiểm chứng B3.4a | **14/11/2026:** `./mvnw -q test -Dtest='FR10TtsTest,FR07PracticeSessionTest'` không lỗi (race 2 luồng thật sự chạm `uk_am_thanh_tts_khoa` trong log); `./mvnw -q verify` toàn bộ exit 0. Log có `LettuceConnectionFactory has been STOPPED` từ tác vụ dọn phiên của context test cũ, không làm test lỗi. FE `npm run build` exit 0. Mockup kiểm bằng `VLDemo.handle` trên preview (200 TTS, 404 thẻ riêng tư người khác, 400 `loai` sai, 503 khi `ttsDown`, `NGHE_VIET` có `amThanhTts`) |
+| Quyết định B3.4a (14/11/2026) | OpenAI `gpt-4o-mini-tts`, giọng `alloy` cố định, chung `OPENAI_API_KEY` (bật bằng `TTS_PROVIDER=openai`); hạn mức `TTS` PRO 100 / PREMIUM 300 lượt/ngày, chỉ tính cache miss (người dùng chọn thêm "Miễn phí 30" nhưng TK không có gói miễn phí nên không seed); mọi lỗi nhà cung cấp kể cả timeout → 503 + hoàn lượt; tệp TTS là tệp hệ thống `chu_so_huu_id = NULL` |
+| Giới hạn B3.4a | Hai request đồng thời cùng nội dung có thể cùng gọi nhà cung cấp (chỉ một bản ghi được giữ, bên thua hoàn lượt và xóa object); tệp TTS không bao giờ bị dọn khi không còn thẻ nào dùng; chưa có endpoint Admin xem cache |
+| Kiểm chứng B3.4b | **14/11/2026:** `./mvnw -q test -Dtest='FR10PronunciationTest,AzureSpeechClientTest'` không lỗi (5 + 3 test); toàn bộ `mvnw verify` 507/507 pass (trước khi đổi `coGhiAm` → `tepGhiAmId`; sau đổi chạy lại `FR10PronunciationTest` + `AzureSpeechClientTest` pass); mockup UI33/UI34 gọi route demo (`VLDemo.handle` trả đúng khóa DTO, 201/400/422/503/204/404) và render đúng trên preview; lần chạy đầu phát hiện và sửa lỗi MIME `codecs=audio/pcm` không hợp lệ với Spring (đổi sang `codecs="audio/pcm"`) |
+| Quyết định B3.4b (14/11/2026) | Azure Speech REST short audio + Fake mặc định (`SPEECH_PROVIDER=azure`); hạn mức `PHAT_AM` PRO 30 / PREMIUM 100; chỉ WAV PCM 16 kHz/16 bit/mono ≤ 15 giây; lỗi dịch vụ → 503 + hoàn lượt, không lưu |
+| Giới hạn B3.4b | Chưa gọi Azure thật nên header `Content-Type` có `codecs` trong ngoặc kép chưa được Azure xác nhận; chưa kiểm cờ gói `phat_am` (B3.12a); bản ghi không tự xóa theo thời hạn |
 | Chưa kiểm chứng | Các API Đợt 3 còn lại ở mục 9 (chưa có code); HTTP thật cho mọi bước B3.x |
 
 ## 11. Báo lỗi cho BE

@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.content.service;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CardAudioSource;
 import com.do_an_tot_nghiep.k28.content.dto.CardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CreateCardRequest;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
@@ -250,6 +251,23 @@ public class CardService {
 
     public Long deckIdOf(Long cardId) {
         return cards.findByIdAndXoaAtIsNull(cardId).orElseThrow(this::cardNotFound).getBoTheId();
+    }
+
+    public CardAudioSource audioSource(Long userId, Long cardId) {
+        TheTuVung card = cards.findByIdAndXoaAtIsNull(cardId).orElseThrow(this::cardNotFound);
+        BoThe deck = decks.findByIdAndXoaAtIsNull(card.getBoTheId())
+                .filter(d -> d.getChuSoHuuId().equals(userId) || d.isPublished())
+                .orElseThrow(this::cardNotFound);
+        List<CardLinkRepository.FileLink> fileLinks = links.findFiles(List.of(card.getId()));
+        String amTuId = fileId(fileLinks, VaiTroTep.AM_TU);
+        String amCauId = fileId(fileLinks, VaiTroTep.AM_CAU);
+        return new CardAudioSource(
+                card.getId(),
+                card.getTu(),
+                card.getViDuEn(),
+                amTuId == null ? null : Long.valueOf(amTuId),
+                amCauId == null ? null : Long.valueOf(amCauId)
+        );
     }
 
     public boolean isStudyable(Long userId, Long cardId) {
