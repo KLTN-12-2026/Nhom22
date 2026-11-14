@@ -229,7 +229,7 @@ final class PracticeGenerator {
         return new Draft(
                 LoaiCau.DIEN_CHO_TRONG,
                 Long.valueOf(card.id()),
-                map("cau", blank.cau(), "goiY", card.nghiaVi(), "tuLoai", card.tuLoai()),
+                map("cau", blank.cau(), "dichVi", card.dichVi(), "goiY", card.nghiaVi(), "tuLoai", card.tuLoai(), "tu", card.tu()),
                 null,
                 typedAnswer(blank.dapAn()),
                 explain(card));

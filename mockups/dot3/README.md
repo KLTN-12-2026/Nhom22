@@ -1,6 +1,6 @@
-# Mockup đợt 3 — F3.1–F3.12
+# Mockup đợt 3 — F3.1–F3.13
 
-21 màn hình/khối UI28–UI56 (UI57 chưa có mockup), theo `roadmap/TienDoDuKien_fronend.md`,
+Các màn hình/khối UI28–UI59 (UI57 chưa có mockup), theo `roadmap/TienDoDuKien_fronend.md`,
 `roadmap/SPRINT_PLAN.md` S7–S9 và phạm vi đã cắt `docs/KE_HOACH_CAT_DOT3.md` (07/11/2026).
 Mở từ `mockups/index.html#dot3`. UI46, UI52, UI54 và UI53 (tab tác vụ nền) là **Cắt** khỏi Đợt 3:
 tệp mockup giữ để tham khảo, không làm FE/BE. UI29 và UI55/56 còn lệch tài liệu, xem mục "Lệch cần sửa".
@@ -32,8 +32,8 @@ Các endpoint bên dưới là **hợp đồng dự kiến trong tài liệu**, 
 | UI46 | quan-tri-tong-quan.html | **Cắt** (GET /admin/statistics, GET /admin/deletion-requests không làm) |
 | UI50 | quan-tri-bao-cao.html | GET /admin/reports; POST /admin/reports/{id}/resolve |
 | UI51 | quan-tri-dich-vu.html | GET/PUT /admin/service-quotas; GET /admin/service-usage |
-| UI58 | chưa có mockup | GET /admin/revenue?ky=THANG\|QUY\|NAM (B3.12c, góp ý GVHD 10/11/2026) |
-| UI59 | chưa có mockup | GET /admin/payments; GET /admin/subscriptions; GET/PUT /admin/plans; công cụ demo sửa hạn (B3.12c) |
+| UI58 | quan-ly-thong-ke.html | GET /admin/revenue?ky=THANG\|QUY\|NAM (B3.12c, góp ý GVHD 10/11/2026) |
+| UI59 | quan-ly-thanh-toan.html | GET /admin/payments; GET /admin/payments/{maDon}; GET /admin/subscriptions; GET/PUT /admin/plans; công cụ demo sửa hạn (B3.12c) |
 | UI52 | quan-tri-thong-bao.html | **Cắt** (POST /admin/announcements không làm) |
 | UI53 | quan-tri-tac-vu.html | **Cắt** tab tác vụ nền (GET /admin/jobs không làm); nhật ký đã có ở dot2/quan-tri-nhat-ky.html |
 | UI54 | quan-tri-dong-luc.html | **Cắt** (huy hiệu/thử thách cố định bằng migration) |
@@ -53,6 +53,8 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 
 ## Tương tác và ranh giới dữ liệu mẫu
 
+- Thống kê doanh thu (UI58): mở `quan-ly-thong-ke.html?as=admin`. Chuyển tháng/quý/năm, chọn năm hoặc khoảng năm (mặc định 2022–2026); biểu đồ cột chồng Pro/Premium, chọn cột bằng chuột/bàn phím, biểu đồ tỷ trọng, bảng chi tiết và xuất CSV theo bộ lọc. Tổng tiền, số giao dịch và tỷ lệ thành công tính từ cùng một bộ giao dịch mẫu độc lập với UI59; không gọi API thật. Chỉ giao dịch thành công được cộng doanh thu, dùng số nguyên VND, ranh giới kỳ theo giờ Việt Nam. Dữ liệu dừng ở 10:00 ngày 13/11/2026; kỳ chưa đến vẫn có dòng 0; gói hiệu lực/sắp hết hạn là snapshot riêng tại mốc này. Có trạng thái đang tải, không có giao dịch, lỗi/thử lại; số so sánh khi kỳ trước bằng 0 hiển thị “Chưa có cơ sở”. CSS và JavaScript nhúng trong HTML.
+- Quản lý thanh toán (UI59): mở `quan-ly-thanh-toan.html?as=admin`. Ba tab giao dịch/gói người dùng/cấu hình gói; tìm kiếm, lọc ngày/trạng thái/gói, phân trang, xuất CSV theo bộ lọc, xem chi tiết và tải biên nhận HTML mẫu. Cấu hình gói có mô phỏng xung đột phiên bản 409. Công cụ demo phải bật trước khi sửa hạn/chạy kiểm tra, bắt nhập lý do 10–500 ký tự. Dữ liệu gói, nhật ký và dấu đã nhắc lưu riêng trong sessionStorage `vocab:payment-admin:v1`; nút đặt lại chỉ xóa mẫu thanh toán. Mốc thời gian cố định 10:00 ngày 12/11/2026 theo giờ Việt Nam; không gọi API, sửa giao dịch hoặc gửi thông báo thật. CSS và JavaScript riêng của UI59 được nhúng trong `quan-ly-thanh-toan.html`.
 - Xưởng thẻ: yêu cầu bộ đích, mô phỏng chờ/đang xử lý/xong/lỗi/chưa xác định;
   chọn từng thẻ, sửa từ/nghĩa, nghe qua Web Speech, xem đoạn nguồn. Trùng không
   được chọn mặc định. Lưu đúng các thẻ đã chọn, đã sửa vào bộ đích trong VLDemo (localStorage); khóa nút khi đang lưu. Link xem bộ và học bộ giữ đúng ID. Bản nháp giữ lại khi chuyển sang lịch sử hoặc tải lại trang. Đặt lại đợt 3 không xóa thẻ đã thêm vào bộ demo.

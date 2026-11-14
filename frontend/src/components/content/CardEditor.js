@@ -72,7 +72,30 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
       </fieldset>
       {save.error && <div role="alert"><p className="notice notice-error">{save.error.message}</p>{save.error.code === 'VERSION_CONFLICT' && <button type="button" className="btn btn-secondary" onClick={() => { client.invalidateQueries({ queryKey: ['deck-cards', deckId] }); onCancel?.(); }}>Tải lại thẻ</button>}</div>}
       {saved && <p className="notice notice-success" role="status">Đã lưu thẻ{saved.trung ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
-      <div className={styles.foot}>{onCancel ? <button type="button" className="btn btn-quiet" disabled={pending} onClick={onCancel}>Hủy</button> : <Link className="btn btn-quiet" href={`/bo-the/${deckId}`}>Hủy</Link>}{!initial && <button className="btn btn-secondary" value="more" disabled={pending}>Lưu và thêm thẻ khác</button>}<button className="btn btn-primary btn-lg" disabled={pending} aria-busy={pending}>{pending ? 'Đang lưu…' : 'Lưu thẻ'}</button></div>
+      <div className={styles.foot}>
+        {onCancel ? (
+          <button type="button" className="btn btn-quiet" disabled={pending} onClick={onCancel}>
+            Hủy
+          </button>
+        ) : (
+          <Link className="btn btn-quiet" href={`/bo-the/${deckId}`}>
+            Hủy
+          </Link>
+        )}
+        {!initial && deckId && (
+          <Link className="btn btn-secondary" href={`/bo-the/${deckId}/nhap-csv`}>
+            <Icon name="upload" />Nhập từ CSV
+          </Link>
+        )}
+        {!initial && (
+          <button className="btn btn-secondary" value="more" disabled={pending}>
+            Lưu và thêm thẻ khác
+          </button>
+        )}
+        <button className="btn btn-primary btn-lg" disabled={pending} aria-busy={pending}>
+          {pending ? 'Đang lưu…' : 'Lưu thẻ'}
+        </button>
+      </div>
     </form>
     {!modal && <aside className="side-col"><h2 className="panel-title">Xem trước khi học</h2><div className={styles.face}><span className={styles.faceLabel}>Mặt trước, chiều Anh → Việt</span><p className="word" lang="en">{values.tu || 'receipt'}</p><p className="ipa">{values.phienAm} {values.tuLoai}</p></div><div className={styles.face}><span className={styles.faceLabel}>Mặt sau</span><p>{values.nghiaVi || 'Nghĩa tiếng Việt'}</p><p className="entry-example" lang="en">{values.viDuEn}</p><p className="muted">{values.dichVi}</p></div></aside>}
   </div>;

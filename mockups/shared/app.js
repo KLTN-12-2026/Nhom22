@@ -344,6 +344,8 @@
       { key: "quan-tri-tong-quan", label: "Tổng quan", icon: "chart", href: "dot3/quan-tri-tong-quan.html" },
       { key: "quan-tri-bao-cao", label: "Báo cáo nội dung", icon: "alert", href: "dot3/quan-tri-bao-cao.html" },
       { key: "quan-tri-dich-vu", label: "Dịch vụ", icon: "settings", href: "dot3/quan-tri-dich-vu.html" },
+      { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "dot3/quan-ly-thanh-toan.html" },
+      { key: "admin-revenue", label: "Thống kê doanh thu", icon: "chart", href: "dot3/quan-ly-thong-ke.html" },
       { key: "quan-tri-thong-bao", label: "Thông báo hệ thống", icon: "bell", href: "dot3/quan-tri-thong-bao.html" },
       { key: "quan-tri-tac-vu", label: "Tác vụ nền", icon: "clock", href: "dot3/quan-tri-tac-vu.html" },
       { key: "quan-tri-dong-luc", label: "Huy hiệu & thử thách", icon: "shield", href: "dot3/quan-tri-dong-luc.html" },

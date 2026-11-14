@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản lý thống kê – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/learning-refinements.css">
+<link rel="stylesheet" href="../shared/effects.css">
+<link rel="stylesheet" href="../shared/flow.css">
+<link rel="stylesheet" href="ui.css">
+<script src="../shared/theme.js"></script>
+<style>
+/* UI58 · Giao diện và biểu đồ riêng của trang thống kê. */
+.revenue-page { --rv-pro:var(--primary-fill); --rv-premium:var(--secondary); }
+.rv-heading, .rv-card-head, .rv-toolbar, .rv-period-detail, .rv-table-head { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap; }
+.rv-heading { align-items:flex-start; margin-bottom:var(--sp-5); }
+.rv-heading .form-head { margin-bottom:0; }
+.rv-heading .btn { margin-top:var(--sp-3); }
+.rv-toolbar { padding:var(--sp-4); background:var(--sunk); border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:var(--sp-5); align-items:flex-end; }
+.rv-toolbar-left, .rv-year-range { display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap; }
+.rv-toolbar .field { margin:0; font-size:var(--fs-caption); font-weight:600; min-width:7.5rem; }
+.rv-toolbar .select { background-color:var(--field); }
+.rv-period { display:flex; padding:4px; gap:4px; background:var(--sheet); border:1px solid var(--line); border-radius:var(--radius-control); }
+.rv-period button { min-height:40px; padding:8px 18px; background:transparent; color:var(--ink-3); border:0; border-radius:8px; font-size:var(--fs-small); font-weight:650; }
+.rv-period button[aria-pressed="true"] { background:var(--primary-fill); color:var(--on-primary); box-shadow:var(--shadow-soft); }
+.rv-period button:hover:not([aria-pressed="true"]) { background:var(--primary-tint); color:var(--primary); }
+.rv-scope { font-size:var(--fs-caption); color:var(--ink-3); margin-bottom:var(--sp-4); }
+.rv-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-3); margin-bottom:var(--sp-5); }
+.rv-metric { border:1px solid var(--line); border-radius:var(--radius-card); padding:var(--sp-4) var(--sp-5); min-width:0; background:var(--field); }
+.rv-metric:first-child { background:var(--primary-tint); border-color:var(--primary-line); }
+.rv-metric-label { color:var(--ink-2); font-size:var(--fs-caption); display:flex; align-items:center; gap:var(--sp-2); }
+.rv-metric-label .icon { width:17px; height:17px; color:var(--ink-3); }
+.rv-metric strong { display:block; font-size:clamp(1.4rem,2vw,1.85rem); font-weight:750; line-height:1.5; letter-spacing:-.035em; margin:6px 0 2px; overflow-wrap:anywhere; }
+.rv-metric:first-child strong { color:var(--primary-strong); }
+.rv-metric small { color:var(--ink-3); font-size:.75rem; }
+.rv-up { color:var(--secondary-text) !important; }
+.rv-down { color:var(--danger) !important; }
+.rv-charts { display:grid; grid-template-columns:minmax(0,2.4fr) minmax(15rem,1fr); gap:var(--sp-4); align-items:stretch; }
+.rv-card { border:1px solid var(--line); border-radius:var(--radius-card); padding:var(--sp-5); min-width:0; background:var(--field); }
+.rv-card-head { align-items:flex-start; margin-bottom:var(--sp-4); }
+.rv-card h2, .rv-table-head h2 { font-size:var(--fs-h3); }
+.rv-card-head p { color:var(--ink-3); font-size:var(--fs-caption); margin-top:var(--sp-2); }
+.rv-unit { color:var(--ink-3); font-size:.75rem; white-space:nowrap; }
+.rv-legend { display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; font-size:var(--fs-caption); color:var(--ink-2); margin-bottom:var(--sp-3); }
+.rv-legend span, .rv-plan-name { display:inline-flex; align-items:center; gap:7px; }
+.rv-dot { display:inline-block; flex-shrink:0; width:9px; height:9px; border-radius:3px; background:var(--rv-pro); }
+.rv-dot.premium { background:var(--rv-premium); }
+.rv-chart-scroll { overflow-x:auto; }
+.rv-chart { display:block; width:100%; min-width:520px; height:auto; }
+.rv-chart text { fill:var(--ink-3); font-family:var(--font-body); font-size:12px; }
+.rv-gridline { stroke:var(--line); stroke-dasharray:4 5; }
+.rv-column { cursor:pointer; outline:none; }
+.rv-column .rv-hit { fill:transparent; rx:6px; }
+.rv-column:hover .rv-hit, .rv-column[aria-pressed="true"] .rv-hit { fill:var(--primary-tint); }
+.rv-column:focus-visible .rv-hit { stroke:var(--primary); stroke-width:2; }
+.rv-column[aria-pressed="true"] text { fill:var(--primary); font-weight:700; }
+.rv-bar-pro { fill:var(--rv-pro); }
+.rv-bar-premium { fill:var(--rv-premium); }
+.rv-zero { stroke:var(--line-2); stroke-width:2; stroke-linecap:round; }
+.rv-chart-help { color:var(--ink-3); font-size:.75rem; margin-top:var(--sp-2); }
+.rv-period-detail { padding:var(--sp-3) var(--sp-4); border:1px solid var(--line); border-radius:var(--radius-control); background:var(--sunk); margin-top:var(--sp-4); font-size:var(--fs-caption); gap:var(--sp-2); }
+.rv-period-detail small { display:block; color:var(--ink-3); margin-top:2px; }
+.rv-period-detail > strong { font-size:var(--fs-lead); color:var(--primary-strong); white-space:nowrap; }
+.rv-donut { position:relative; width:180px; height:180px; margin:var(--sp-5) auto; }
+.rv-donut svg { width:100%; height:100%; transform:rotate(-90deg); }
+.rv-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.rv-donut-center span { color:var(--ink-3); font-size:.75rem; }
+.rv-donut-center strong { font-size:1.6rem; letter-spacing:-.03em; }
+.rv-plan-split { list-style:none; padding:0; display:grid; gap:var(--sp-4); }
+.rv-plan-split li { display:grid; gap:5px; padding-bottom:var(--sp-3); border-bottom:1px solid var(--line); }
+.rv-plan-split li > div { display:flex; justify-content:space-between; align-items:center; gap:var(--sp-2); font-size:var(--fs-small); }
+.rv-plan-split small { font-size:.75rem; color:var(--ink-3); padding-left:16px; }
+.rv-table-section { margin-top:var(--sp-6); }
+.rv-table-head { margin-bottom:var(--sp-4); }
+.rv-table-head p { color:var(--ink-3); font-size:var(--fs-caption); margin-top:var(--sp-2); }
+.rv-table { font-size:var(--fs-caption); }
+.rv-table th { background:var(--sunk); color:var(--ink-2); font-size:.75rem; }
+.rv-table th:not(:first-child), .rv-table td:not(:first-child) { text-align:right; }
+.rv-table td { padding-block:var(--sp-3); }
+.rv-table tbody tr.is-selected { background:var(--primary-tint); }
+.rv-table tfoot { background:var(--sunk); font-weight:700; }
+.rv-table tfoot td { border-top:2px solid var(--line-2); }
+.rv-table small { display:block; color:var(--ink-3); font-size:.7rem; font-weight:400; }
+.rv-badge { display:inline-block; font-size:.7rem; padding:2px 7px; border-radius:20px; margin-left:5px; background:var(--accent-bg); color:var(--accent-text); }
+.rv-notes { margin-top:var(--sp-5); background:var(--sunk); padding:var(--sp-4); border-radius:var(--radius-control); font-size:var(--fs-caption); color:var(--ink-2); }
+.rv-notes summary { cursor:pointer; font-weight:650; min-height:30px; }
+.rv-notes ul { padding-left:var(--sp-5); display:grid; gap:var(--sp-2); margin-top:var(--sp-2); }
+.rv-notes li { max-width:85ch; }
+.rv-state { padding:var(--sp-7) var(--sp-4); border:1px dashed var(--line-2); border-radius:var(--radius-card); text-align:center; display:grid; justify-items:center; gap:var(--sp-3); }
+.rv-state p { color:var(--ink-3); font-size:var(--fs-small); }
+.rv-state .skeleton { width:min(100%,28rem); }
+.rv-error { color:var(--danger); font-size:var(--fs-small); margin-bottom:var(--sp-4); }
+.rv-error:empty { display:none; }
+.rv-current-note { color:var(--ink-3); font-size:.75rem; }
+@media(max-width:1199px) { .rv-charts { grid-template-columns:minmax(0,1fr); } .rv-composition-body { display:flex; align-items:center; gap:var(--sp-6); } .rv-donut { margin:0; flex-shrink:0; } .rv-plan-split { flex:1; } }
+@media(max-width:767px) { .rv-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .rv-metric { padding:var(--sp-4); } .rv-toolbar-left { width:100%; } .rv-period { flex:1; } .rv-period button { flex:1; padding-inline:12px; } .rv-heading .btn { margin-top:0; } .rv-card { padding:var(--sp-4); } }
+@media(max-width:639px) { .rv-table th:not(:first-child), .rv-table td:not(:first-child) { text-align:left; } .rv-table td { grid-template-columns:7.5rem minmax(0,1fr); } .rv-table tfoot tr { display:grid; padding:var(--sp-3); } .rv-table tfoot td { border:0; } .rv-table tbody td:first-child { font-weight:650; } .rv-table tfoot td:first-child { border-top:1px solid var(--line-2); padding-top:var(--sp-3); } .rv-metric strong { font-size:1.3rem; } .rv-metric:first-child { grid-column:1/-1; } .rv-metric:last-child { grid-column:1/-1; } .rv-toolbar > .btn { width:100%; } .rv-composition-body { flex-direction:column; gap:var(--sp-4); } .rv-plan-split { width:100%; } .rv-donut { width:160px; height:160px; margin-block:var(--sp-2); } .rv-year-range { width:100%; } .rv-year-range .field { flex:1; min-width:0; } .rv-chart-help { max-width:32ch; } }
+</style>
+</head>
+<body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="quan-ly-thong-ke" data-nav="admin-revenue" data-role="ADMIN">
+<!-- F3.13 · UI58 · Dữ liệu mẫu độc lập, không gọi API thật. -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar" aria-label="Điều hướng chính"></nav>
+    <main class="app-main" id="main">
+      <div class="page d3-page revenue-page">
+        <div class="d3-demo"><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><a href="../index.html#dot3">Danh mục mockup</a></div>
+        <article class="sheet" aria-labelledby="page-title">
+          <nav class="flow-breadcrumb" aria-label="Đường dẫn"><a href="quan-tri-dich-vu.html">Quản trị</a><span aria-hidden="true">/</span><span>Thống kê doanh thu</span></nav>
+          <div class="rv-heading">
+            <div class="form-head"><div class="form-code"><span>Quản trị</span><span>UI58 · Đợt 3</span></div><h1 id="page-title">Quản lý thống kê</h1><p>Theo dõi doanh thu và hiệu quả thanh toán theo từng giai đoạn.</p></div>
+            <a class="btn btn-secondary" href="quan-ly-thanh-toan.html">Xem giao dịch ↗</a>
+          </div>
+          <form class="rv-toolbar" id="revenue-filters" aria-label="Bộ lọc thống kê doanh thu">
+            <div class="rv-toolbar-left">
+              <div class="field"><span id="period-label">Thống kê theo</span><div class="rv-period" role="group" aria-labelledby="period-label"><button type="button" data-period="THANG" aria-pressed="true">Tháng</button><button type="button" data-period="QUY" aria-pressed="false">Quý</button><button type="button" data-period="NAM" aria-pressed="false">Năm</button></div></div>
+              <label class="field" id="single-year-field">Năm<select class="select" id="revenue-year" name="year"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option></select></label>
+              <div class="rv-year-range" id="year-range" hidden>
+                <label class="field">Từ năm<select class="select" id="revenue-from-year" name="fromYear"><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option></select></label>
+                <label class="field">Đến năm<select class="select" id="revenue-to-year" name="toYear"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option></select></label>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="export-revenue">↓ Xuất báo cáo CSV</button>
+          </form>
+          <p class="rv-error" id="revenue-error" role="alert"></p>
+          <p class="rv-scope" id="revenue-scope" role="status" aria-live="polite"></p>
+          <div id="revenue-state-message" hidden></div>
+          <div id="revenue-content">
+            <div class="rv-summary" id="revenue-summary" aria-label="Tổng quan doanh thu"></div>
+            <div class="rv-charts">
+              <section class="rv-card" aria-labelledby="revenue-chart-title">
+                <div class="rv-card-head"><div><h2 id="revenue-chart-title">Doanh thu theo tháng</h2><p id="revenue-chart-subtitle">Năm 2026 · Giao dịch thành công</p></div><span class="rv-unit">Đơn vị: triệu đồng</span></div>
+                <div class="rv-legend" aria-label="Chú giải biểu đồ"><span><i class="rv-dot" aria-hidden="true"></i>Gói Pro</span><span><i class="rv-dot premium" aria-hidden="true"></i>Gói Premium</span></div>
+                <div class="rv-chart-scroll" tabindex="0" role="region" aria-label="Biểu đồ doanh thu, có thể cuộn ngang trên điện thoại"><svg class="rv-chart" id="revenue-chart" viewBox="0 0 720 300" role="group" aria-labelledby="revenue-chart-title" aria-describedby="chart-help"></svg></div>
+                <p class="rv-chart-help" id="chart-help">Chọn một cột để xem chi tiết. Dùng phím mũi tên để chuyển kỳ; trên điện thoại có thể cuộn biểu đồ.</p>
+                <div class="rv-period-detail" id="revenue-period-detail" role="status" aria-live="polite"></div>
+              </section>
+              <section class="rv-card" aria-labelledby="composition-title">
+                <div class="rv-card-head"><div><h2 id="composition-title">Doanh thu theo gói</h2><p>Tỷ trọng trong thời gian đang xem</p></div></div>
+                <div class="rv-composition-body"><div class="rv-donut" id="revenue-donut"></div><ul class="rv-plan-split" id="revenue-plan-split"></ul></div>
+              </section>
+            </div>
+            <section class="rv-table-section" aria-labelledby="revenue-table-title">
+              <div class="rv-table-head"><div><h2 id="revenue-table-title">Chi tiết doanh thu</h2><p>Đối chiếu số liệu theo kỳ và từng gói dịch vụ.</p></div><span class="rv-current-note" id="revenue-row-count"></span></div>
+              <div class="d3-table-wrap"><table class="d3-table rv-table"><caption class="sr-only" id="revenue-table-caption">Doanh thu theo tháng năm 2026</caption><thead><tr><th scope="col" id="period-column">Tháng</th><th scope="col">Gói Pro</th><th scope="col">Gói Premium</th><th scope="col">Tổng doanh thu</th><th scope="col">Giao dịch thành công</th><th scope="col">So kỳ trước</th></tr></thead><tbody id="revenue-table-body"></tbody><tfoot id="revenue-table-footer"></tfoot></table></div>
+            </section>
+          </div>
+          <details class="rv-notes"><summary>Cách tính số liệu</summary><ul><li>Doanh thu chỉ gồm giao dịch thành công, theo thời điểm hoàn tất và múi giờ Việt Nam (Asia/Ho_Chi_Minh).</li><li>Tỷ lệ thành công = thành công / (thành công + thất bại + hết hạn). Đơn đang chờ không được tính.</li><li>Thẻ tăng trưởng so với cùng giai đoạn trước; bảng so với tháng, quý hoặc năm liền trước. Kỳ trước bằng 0 thì hiển thị “Chưa có cơ sở”.</li><li>Năm 2026 có dữ liệu đến 10:00 ngày 13/11/2026. Kỳ đang diễn ra là số lũy kế; kỳ chưa bắt đầu hiển thị 0 và ghi “Chưa đến kỳ”.</li><li>Gói hiệu lực và sắp hết hạn là ảnh chụp tại mốc dữ liệu mẫu, không thay đổi khi chọn kỳ doanh thu.</li></ul></details>
+          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="revenue-demo-state">Xem trạng thái <select class="select" id="revenue-demo-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Không có giao dịch</option><option value="error">Lỗi tải dữ liệu</option></select></label><button type="button" class="btn btn-quiet" id="reset-revenue-demo">Đặt lại mẫu thống kê</button></div></details><span class="rv-current-note">Dữ liệu mẫu · 13/11/2026 · Giờ Việt Nam</span></footer>
+        </article>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
+</div>
+<noscript><p class="notice">Bật JavaScript để xem biểu đồ và tương tác với số liệu mô phỏng.</p></noscript>
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script src="../shared/flow.js"></script>
+<script>
+/* UI58 · Dữ liệu và tương tác thống kê, không cần thư viện biểu đồ bên ngoài. */
+(function () {
+  'use strict';
+  if (!window.VL?.ready || !VL.me()?.vaiTro.includes('ADMIN')) return;
+  const $ = (selector) => document.querySelector(selector);
+  const money = (value) => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+  const number = (value) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(value);
+  const percent = (value) => number(value) + '%';
+  const snapshot = new Date('2026-11-13T10:00:00+07:00');
+  const monthStart = (year, month) => new Date(Date.UTC(year, month, 1, -7));
+  const periodNames = { THANG: 'tháng', QUY: 'quý', NAM: 'năm' };
+  const fixtures = [];
+  const season = [0, 3, 7, 5, 9, 12, 8, 15, 20, 25, 28, 34];
+  let sequence = 0;
+  // Giao dịch mẫu cố định; có năm trước để tính so sánh cùng kỳ.
+  for (let year = 2017; year <= 2026; year++) {
+    for (let month = 0; month < 12; month++) {
+      if (year === 2026 && month > 10) continue;
+      for (const plan of ['PRO', 'PREMIUM']) {
+        const base = plan === 'PRO' ? 17 + (year - 2017) * 4 + season[month] : 6 + (year - 2017) * 2 + Math.floor(season[month] / 2);
+        const count = year === 2026 && month === 10 ? Math.floor(base * 0.42) : base;
+        for (let i = 0; i < count; i++) {
+          const day = (i % (year === 2026 && month === 10 ? 12 : 28)) + 1;
+          const annual = i % 13 === 0;
+          const amount = (plan === 'PRO' ? 299000 : 999000) * (annual ? 10 : 1);
+          const status = i % 19 === 18 ? 'CHO_THANH_TOAN' : i % 17 === 16 ? 'HET_HAN' : i % 11 === 10 ? 'THAT_BAI' : 'THANH_CONG';
+          fixtures.push({ id: `DEMO-RV-${++sequence}`, plan, amount, status, completed: new Date(Date.UTC(year, month, day, 2, 30)) });
+        }
+      }
+    }
+  }
+  const subscriptions = [
+    ['PRO', '2026-12-12'], ['PREMIUM', '2027-11-12'], ['PRO', '2026-11-15'], ['PREMIUM', '2026-11-18'],
+    ['PRO', '2026-11-10'], ['PREMIUM', '2026-12-11'], ['PRO', '2026-11-12'], ['PRO', '2026-11-20']
+  ];
+  let period = 'THANG';
+  let rows = [];
+  let selected = 0;
+  function aggregate(start, end, empty = false) {
+    const result = { PRO: 0, PREMIUM: 0, count: 0, failed: 0, expired: 0 };
+    if (empty) return result;
+    for (const t of fixtures) {
+      if (t.completed < start || t.completed >= end) continue;
+      if (t.status === 'THANH_CONG') { result[t.plan] += t.amount; result.count++; }
+      else if (t.status === 'THAT_BAI') result.failed++;
+      else if (t.status === 'HET_HAN') result.expired++;
+    }
+    return result;
+  }
+  const total = (item) => item.PRO + item.PREMIUM;
+  const growth = (current, previous) => previous > 0 ? (current - previous) / previous * 100 : null;
+  function growthText(value) { return value === null ? 'Chưa có cơ sở' : `${value > 0 ? '+' : ''}${percent(value)}`; }
+  function growthClass(value) { return value === null || value === 0 ? '' : value > 0 ? 'rv-up' : 'rv-down'; }
+  function cutoffForYear(year) {
+    return new Date(Date.UTC(year, snapshot.getUTCMonth(), snapshot.getUTCDate(), snapshot.getUTCHours(), snapshot.getUTCMinutes()));
+  }
+  function getView() {
+    const year = Number($('#revenue-year').value);
+    const from = period === 'NAM' ? Number($('#revenue-from-year').value) : year;
+    const to = period === 'NAM' ? Number($('#revenue-to-year').value) : year;
+    if (from > to) return null;
+    const empty = $('#revenue-demo-state').value === 'empty';
+    const count = period === 'THANG' ? 12 : period === 'QUY' ? 4 : to - from + 1;
+    const items = Array.from({ length: count }, (_, index) => {
+      const bucketYear = period === 'NAM' ? from + index : year;
+      const month = period === 'NAM' ? 0 : period === 'QUY' ? index * 3 : index;
+      const span = period === 'NAM' ? 12 : period === 'QUY' ? 3 : 1;
+      const start = monthStart(bucketYear, month), end = monthStart(bucketYear, month + span);
+      const previous = aggregate(monthStart(bucketYear, month - span), start, empty);
+      const item = aggregate(start, end, empty);
+      const label = period === 'THANG' ? `Tháng ${index + 1}` : period === 'QUY' ? `Quý ${index + 1}` : String(bucketYear);
+      return { ...item, label, short: period === 'THANG' ? `T${index + 1}` : period === 'QUY' ? `Quý ${index + 1}` : label,
+        fullLabel: period === 'NAM' ? `Năm ${bucketYear}` : `${label}/${year}`, start, end,
+        future: start > snapshot, partial: start <= snapshot && end > snapshot,
+        growth: growth(total(item), total(previous)) };
+    });
+    const start = monthStart(from, 0), end = monthStart(to + 1, 0);
+    const sum = aggregate(start, end, empty);
+    const previousYears = period === 'NAM' ? to - from + 1 : 1;
+    const prevStart = monthStart(from - previousYears, 0);
+    const prevEnd = to === 2026 ? cutoffForYear(to - previousYears) : monthStart(to + 1 - previousYears, 0);
+    const comparison = aggregate(prevStart, prevEnd, empty);
+    return { rows: items, sum, growth: growth(total(sum), total(comparison)), range: period === 'NAM' ? `${from}–${to}` : String(year),
+      comparisonLabel: period === 'NAM' ? `So với ${from - previousYears}–${to - previousYears}${to === 2026 ? ', cùng mốc thời gian' : ''}` : `So với cùng kỳ năm ${year - 1}` };
+  }
+  function renderSummary(view) {
+    const sum = view.sum;
+    const resolved = sum.count + sum.failed + sum.expired;
+    const active = subscriptions.filter(([, expiry]) => new Date(expiry + 'T09:00:00+07:00') > snapshot);
+    const soon = active.filter(([, expiry]) => (Date.parse(expiry) - Date.parse('2026-11-13')) / 86400000 <= 7);
+    const metrics = [
+      ['Tổng doanh thu', money(total(sum)), 'Chỉ tính giao dịch thành công', 'chart', ''],
+      ['Giao dịch thành công', number(sum.count), `Trong giai đoạn ${view.range}`, 'check', ''],
+      ['Tăng trưởng doanh thu', growthText(view.growth), view.comparisonLabel, 'chart', growthClass(view.growth)],
+      ['Tỷ lệ thành công', resolved ? percent(sum.count / resolved * 100) : '—', resolved ? `${number(sum.count)} / ${number(resolved)} đơn đã có kết quả` : 'Chưa có giao dịch để tính tỷ lệ', 'shield', ''],
+      ['Gói còn hiệu lực', number(active.length), 'Tại 10:00 ngày 13/11/2026', 'user', ''],
+      ['Sắp hết hạn 7 ngày', number(soon.length), 'Tại mốc dữ liệu mẫu', 'clock', '']
+    ];
+    $('#revenue-summary').innerHTML = metrics.map(([label, value, note, icon, cls]) => `<article class="rv-metric"><p class="rv-metric-label">${VL.icon(icon)}${label}</p><strong class="${cls}">${value}</strong><small>${note}</small></article>`).join('');
+  }
+  function renderChart() {
+    const width = 720, left = 54, right = 12, top = 18, bottom = 260, height = bottom - top;
+    const maximum = Math.max(...rows.map(total), 1000000);
+    const rawStep = maximum / 4, power = 10 ** Math.floor(Math.log10(rawStep));
+    const step = [1, 2, 5, 10].map((n) => n * power).find((n) => n >= rawStep);
+    const ceiling = step * 4, slot = (width - left - right) / rows.length, barWidth = Math.min(52, slot * 0.56);
+    let svg = '';
+    for (let i = 0; i <= 4; i++) {
+      const y = bottom - height * i / 4;
+      svg += `<line class="rv-gridline" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"/><text x="${left - 9}" y="${y + 4}" text-anchor="end">${number(ceiling * i / 4 / 1000000)}</text>`;
+    }
+    rows.forEach((row, index) => {
+      const x = left + slot * index + (slot - barWidth) / 2;
+      const proHeight = row.PRO / ceiling * height, premiumHeight = row.PREMIUM / ceiling * height;
+      svg += `<g class="rv-column" role="button" tabindex="${index === selected ? 0 : -1}" data-bucket="${index}" aria-pressed="${index === selected}" aria-label="${row.fullLabel}: ${money(total(row))}${row.future ? ', chưa đến kỳ' : row.partial ? ', đang diễn ra' : ''}"><title>${row.fullLabel} · Pro: ${money(row.PRO)} · Premium: ${money(row.PREMIUM)}</title><rect class="rv-hit" x="${left + slot * index + 3}" y="4" width="${slot - 6}" height="290"/>`;
+      if (total(row)) svg += `<rect class="rv-bar-pro" x="${x}" y="${bottom - proHeight}" width="${barWidth}" height="${proHeight}"/><rect class="rv-bar-premium" x="${x}" y="${bottom - proHeight - premiumHeight}" width="${barWidth}" height="${premiumHeight}" rx="3"/>`;
+      else svg += `<line class="rv-zero" x1="${x}" x2="${x + barWidth}" y1="${bottom}" y2="${bottom}"/>`;
+      svg += `<text x="${left + slot * (index + 0.5)}" y="283" text-anchor="middle">${row.short}</text></g>`;
+    });
+    $('#revenue-chart').innerHTML = svg;
+  }
+  function renderComposition(sum) {
+    const revenue = total(sum), share = revenue ? sum.PRO / revenue * 100 : 0;
+    const circumference = 2 * Math.PI * 70;
+    $('#revenue-donut').innerHTML = `<svg viewBox="0 0 180 180" role="img" aria-label="Tỷ trọng doanh thu: Pro ${percent(share)}, Premium ${percent(revenue ? 100 - share : 0)}"><circle cx="90" cy="90" r="70" fill="none" stroke="var(--line)" stroke-width="20"/>${revenue ? `<circle cx="90" cy="90" r="70" fill="none" stroke="var(--rv-pro)" stroke-width="20" stroke-dasharray="${circumference * share / 100} ${circumference}"/><circle cx="90" cy="90" r="70" fill="none" stroke="var(--rv-premium)" stroke-width="20" stroke-dasharray="${circumference * (100 - share) / 100} ${circumference}" stroke-dashoffset="${-circumference * share / 100}"/>` : ''}</svg><div class="rv-donut-center"><span>Tổng doanh thu</span><strong>${number(revenue / 1000000)}</strong><span>triệu đồng</span></div>`;
+    $('#revenue-plan-split').innerHTML = [['PRO', 'Pro', share], ['PREMIUM', 'Premium', revenue ? 100 - share : 0]].map(([code, name, value]) => `<li><div><span class="rv-plan-name"><i class="rv-dot ${code === 'PREMIUM' ? 'premium' : ''}" aria-hidden="true"></i>${name}</span><strong>${percent(value)}</strong></div><small>${money(sum[code])}</small></li>`).join('');
+  }
+  function renderTable(view) {
+    $('#period-column').textContent = periodNames[period][0].toUpperCase() + periodNames[period].slice(1);
+    $('#revenue-table-caption').textContent = `Doanh thu theo ${periodNames[period]} · ${view.range}, đơn vị đồng`;
+    $('#revenue-row-count').textContent = `${rows.length} ${periodNames[period]} · Đơn vị: VND`;
+    $('#revenue-table-body').innerHTML = rows.map((row, index) => `<tr data-table-bucket="${index}" class="${index === selected ? 'is-selected' : ''}"><td data-label="Kỳ"><strong>${row.label}</strong>${row.partial ? '<span class="rv-badge">Đang diễn ra</span>' : ''}${row.future ? '<small>Chưa đến kỳ</small>' : ''}</td><td data-label="Gói Pro">${money(row.PRO)}</td><td data-label="Gói Premium">${money(row.PREMIUM)}</td><td data-label="Tổng doanh thu"><strong>${money(total(row))}</strong></td><td data-label="Giao dịch">${number(row.count)}</td><td data-label="So kỳ trước" class="${growthClass(row.future ? null : row.growth)}">${row.future ? '—' : growthText(row.growth)}</td></tr>`).join('');
+    $('#revenue-table-footer').innerHTML = `<tr><td data-label="Kỳ">Tổng cộng</td><td data-label="Gói Pro">${money(view.sum.PRO)}</td><td data-label="Gói Premium">${money(view.sum.PREMIUM)}</td><td data-label="Tổng doanh thu">${money(total(view.sum))}</td><td data-label="Giao dịch">${number(view.sum.count)}</td><td data-label="So kỳ trước">—</td></tr>`;
+  }
+  function selectBucket(index) {
+    selected = index;
+    const row = rows[index];
+    $('#revenue-period-detail').innerHTML = `<div><b>${row.fullLabel}</b><small>${row.future ? 'Chưa đến kỳ' : `${number(row.count)} giao dịch thành công · Pro ${money(row.PRO)} · Premium ${money(row.PREMIUM)}`}</small></div><strong>${money(total(row))}</strong>`;
+    document.querySelectorAll('[data-bucket]').forEach((column) => { const active = Number(column.dataset.bucket) === index; column.setAttribute('aria-pressed', String(active)); column.setAttribute('tabindex', active ? '0' : '-1'); });
+    document.querySelectorAll('[data-table-bucket]').forEach((tr) => tr.classList.toggle('is-selected', Number(tr.dataset.tableBucket) === index));
+  }
+  function render() {
+    const view = getView(), state = $('#revenue-demo-state').value;
+    const invalid = !view, blocked = invalid || state === 'error' || state === 'loading';
+    $('#single-year-field').hidden = period === 'NAM'; $('#year-range').hidden = period !== 'NAM';
+    document.querySelectorAll('[data-period]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.period === period)));
+    $('#revenue-error').textContent = invalid ? 'Năm kết thúc phải bằng hoặc sau năm bắt đầu.' : '';
+    $('#revenue-content').hidden = blocked; $('#revenue-state-message').hidden = !blocked;
+    $('#export-revenue').disabled = blocked;
+    $('#revenue-content').setAttribute('aria-busy', String(state === 'loading'));
+    if (blocked) {
+      $('#revenue-scope').textContent = '';
+      $('#revenue-state-message').innerHTML = invalid ? '<div class="rv-state"><h2>Khoảng năm chưa hợp lệ</h2><p>Điều chỉnh năm bắt đầu hoặc kết thúc để xem báo cáo.</p></div>' : state === 'loading' ? '<div class="rv-state" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div><p>Đang tổng hợp doanh thu…</p></div>' : '<div class="rv-state" role="alert"><h2>Chưa tải được thống kê</h2><p>Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.</p><button class="btn btn-secondary" type="button" id="retry-revenue">Thử lại</button></div>';
+      return;
+    }
+    rows = view.rows;
+    selected = Math.max(0, rows.findLastIndex((row) => row.count > 0));
+    $('#revenue-scope').textContent = `Đang xem: ${view.range} · Theo ${periodNames[period]} · ${state === 'empty' ? 'Chưa phát sinh giao dịch trong dữ liệu mẫu.' : 'Dữ liệu mô phỏng, cập nhật đến 10:00 ngày 13/11/2026.'}`;
+    $('#revenue-chart-title').textContent = `Doanh thu theo ${periodNames[period]}`;
+    $('#revenue-chart-subtitle').textContent = `${period === 'NAM' ? 'Giai đoạn' : 'Năm'} ${view.range} · Giao dịch thành công`;
+    renderSummary(view); renderChart(); renderComposition(view.sum); renderTable(view); selectBucket(selected);
+  }
+  $('#revenue-filters').addEventListener('submit', (event) => event.preventDefault());
+  $('#revenue-filters').addEventListener('change', render);
+  document.querySelector('.rv-period').addEventListener('click', (event) => { const button = event.target.closest('[data-period]'); if (button) { period = button.dataset.period; render(); } });
+  $('#revenue-chart').addEventListener('click', (event) => { const column = event.target.closest('[data-bucket]'); if (column) selectBucket(Number(column.dataset.bucket)); });
+  $('#revenue-chart').addEventListener('focusin', (event) => { const column = event.target.closest('[data-bucket]'); if (column) selectBucket(Number(column.dataset.bucket)); });
+  $('#revenue-chart').addEventListener('keydown', (event) => {
+    const column = event.target.closest('[data-bucket]'); if (!column) return;
+    let index = Number(column.dataset.bucket);
+    if (event.key === 'ArrowRight') index = (index + 1) % rows.length;
+    else if (event.key === 'ArrowLeft') index = (index + rows.length - 1) % rows.length;
+    else if (event.key === 'Home') index = 0;
+    else if (event.key === 'End') index = rows.length - 1;
+    else if (!['Enter', ' '].includes(event.key)) return;
+    event.preventDefault(); selectBucket(index); $(`[data-bucket="${index}"]`).focus();
+  });
+  $('#revenue-demo-state').addEventListener('change', render);
+  $('#revenue-state-message').addEventListener('click', (event) => { if (event.target.closest('#retry-revenue')) { $('#revenue-demo-state').value = 'ready'; render(); } });
+  $('#reset-revenue-demo').addEventListener('click', () => { $('#revenue-filters').reset(); $('#revenue-demo-state').value = 'ready'; period = 'THANG'; render(); VL.toast('Đã đặt lại mẫu thống kê doanh thu.'); });
+  $('#export-revenue').addEventListener('click', () => {
+    const view = getView(); if (!view) return;
+    const csvRows = [['Kỳ', 'Doanh thu Pro (VND)', 'Doanh thu Premium (VND)', 'Tổng doanh thu (VND)', 'Giao dịch thành công', 'So kỳ trước (%)', 'Ghi chú'],
+      ...rows.map((row) => [row.fullLabel, row.PRO, row.PREMIUM, total(row), row.count, row.future || row.growth === null ? '' : row.growth.toFixed(2), row.future ? 'Chưa đến kỳ' : row.partial ? 'Đang diễn ra' : '']),
+      ['Tổng cộng', view.sum.PRO, view.sum.PREMIUM, total(view.sum), view.sum.count, '', 'Dữ liệu mô phỏng · Giờ Việt Nam']];
+    const cell = (value) => '"' + String(value).replace(/"/g, '""') + '"';
+    const blob = new Blob(['\ufeff' + csvRows.map((row) => row.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = `doanh-thu-${period.toLowerCase()}-${view.range}.csv`; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); VL.toast('Đã xuất báo cáo doanh thu theo kỳ đang xem.');
+  });
+  render();
+})();
+</script>
+</body>
+</html>

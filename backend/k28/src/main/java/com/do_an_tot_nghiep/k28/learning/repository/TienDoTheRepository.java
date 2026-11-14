@@ -282,6 +282,28 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
             Pageable pageable
     );
 
+    @Query("""
+            select c.id
+            from TheTuVung c
+            join BoThe b on b.id = c.boTheId
+            left join TienDoThe t on t.theId = c.id
+                and t.nguoiDungId = :userId
+                and t.chieuHoc = :chieu
+            where c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+              and (:boTheId is null or b.id = :boTheId)
+              and (t.trangThai is null or t.trangThai <> :tamNgung)
+            order by coalesce(t.hanOnAt, c.createdAt) asc, c.id asc
+            """)
+    List<Long> practiceCards(
+            @Param("userId") Long userId,
+            @Param("chieu") ChieuHoc chieu,
+            @Param("boTheId") Long boTheId,
+            @Param("tamNgung") TrangThaiTienDo tamNgung,
+            Pageable pageable
+    );
+
     Optional<TienDoThe> findByNguoiDungIdAndTheIdAndChieuHoc(
             Long nguoiDungId, Long theId, ChieuHoc chieuHoc
     );

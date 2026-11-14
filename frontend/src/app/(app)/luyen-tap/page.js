@@ -8,10 +8,10 @@ import { fetchAllPages } from '@/lib/fetch-all-pages';
 import styles from './page.module.css';
 
 const TYPES = [
-  { id: 'CHON_NGHIA', name: 'Chọn nghĩa', desc: 'Thấy từ tiếng Anh, chọn nghĩa đúng trong 4 phương án', skill: 'Nhận nghĩa' },
+  { id: 'FLASHCARD', name: 'Flashcard', desc: 'Lật thẻ ghi nhớ, tự đánh giá theo phương pháp ngắt quãng (SRS)', skill: 'Ghi nhớ cốt lõi' },
   { id: 'CHON_TU', name: 'Chọn từ', desc: 'Thấy nghĩa tiếng Việt, chọn từ đúng', skill: 'Nhận nghĩa' },
   { id: 'GHEP_TU', name: 'Ghép từ', desc: 'Nối từ với nghĩa, chấm từng cặp', skill: 'Nhận nghĩa' },
-  { id: 'DIEN_CHO_TRONG', name: 'Điền chỗ trống', desc: 'Điền từ còn thiếu vào câu ví dụ', skill: 'Dùng từ trong câu' },
+  { id: 'DIEN_CHO_TRONG', name: 'Điền chỗ trống', desc: 'Game điền từ vào câu ngữ cảnh, 4 lựa chọn A/B/C/D (20s/câu)', skill: 'Ngữ cảnh câu' },
   { id: 'NHAP_TU_THEO_NGHIA', name: 'Nhập từ theo nghĩa', desc: 'Gõ từ tiếng Anh theo nghĩa cho sẵn', skill: 'Viết đúng chính tả' },
   { id: 'NGHE_VIET', name: 'Nghe viết', desc: 'Nghe phát âm rồi gõ lại từ', skill: 'Nghe và viết' },
   { id: 'PHAN_BIET_CAP', name: 'Phân biệt cặp dễ nhầm', desc: 'Chọn đúng từ giữa hai từ bạn hay nhầm', skill: 'Phân biệt cặp dễ nhầm' },
@@ -21,11 +21,11 @@ const TYPES = [
 function PracticeForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultType = searchParams.get('loaiBai') || 'CHON_NGHIA';
+  const defaultType = searchParams.get('loaiBai') || 'FLASHCARD';
   const defaultDeckId = searchParams.get('boTheId');
   const defaultSource = searchParams.get('nguon');
 
-  const [loaiBai, setLoaiBai] = useState(TYPES.find(t => t.id === defaultType) ? defaultType : 'CHON_NGHIA');
+  const [loaiBai, setLoaiBai] = useState(TYPES.find(t => t.id === defaultType) ? defaultType : 'FLASHCARD');
   const [soCau, setSoCau] = useState(10);
   const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
   const [errorMsg, setErrorMsg] = useState('');
@@ -40,7 +40,7 @@ function PracticeForm() {
     queryFn: () => apiFetch('/api/v1/practice/history?size=3')
   });
 
-  const sessionMutation = useMutation({
+  const practiceMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: (res) => {
       router.push(`/luyen-tap-lam-bai?id=${res.id}`);
@@ -48,12 +48,36 @@ function PracticeForm() {
     onError: (err) => setErrorMsg(err.message || 'Lỗi khi tạo phiên luyện tập')
   });
 
+  const flashcardMutation = useMutation({
+    mutationFn: (body) => apiFetch('/api/v1/learning/sessions', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: (res) => {
+      router.push(`/hoc-phien?id=${res.id}`);
+    },
+    onError: (err) => setErrorMsg(err.message || 'Lỗi khi bắt đầu phiên học Flashcard')
+  });
+
+  const isSubmitting = practiceMutation.isPending || flashcardMutation.isPending;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMsg('');
     const boTheId = source.startsWith('deck:') ? source.slice(5) : null;
     const nguon = source === 'SO_TAY' ? 'SO_TAY' : 'BO_THE';
-    sessionMutation.mutate({ loaiBai, soCau: Number(soCau), boTheId, nguon });
+
+    if (loaiBai === 'FLASHCARD') {
+      if (source === 'SO_TAY') {
+        setErrorMsg('Học Flashcard SRS áp dụng cho Tất cả bộ của tôi hoặc từng Bộ thẻ cụ thể. Để luyện từ trong Sổ tay, vui lòng chọn các dạng bài khác.');
+        return;
+      }
+      flashcardMutation.mutate({
+        boTheId: boTheId ? String(boTheId) : null,
+        chieuHoc: 'EN_VI',
+        quyThoiGian: Number(soCau),
+        hocTuDo: true
+      });
+    } else {
+      practiceMutation.mutate({ loaiBai, soCau: Number(soCau), boTheId, nguon });
+    }
   };
 
   return (
@@ -61,11 +85,11 @@ function PracticeForm() {
       <section className="sheet" aria-labelledby="page-title">
         <div className="form-head">
           <div className="form-code">
-            <span>Luyện tập</span>
-            <span>Bài cố định, chấm tại máy chủ</span>
+            <span>Học & Luyện tập</span>
+            <span>Flashcard SRS và các dạng bài tập</span>
           </div>
-          <h1 id="page-title">Chọn dạng bài</h1>
-          <p>Đề không kèm đáp án. Bạn nộp một lần, máy chủ chấm và giải thích từng câu. Câu sai được ghi vào sổ tay.</p>
+          <h1 id="page-title">Chọn hình thức học & luyện tập</h1>
+          <p>Ôn tập ghi nhớ qua Flashcard hoặc làm các bài luyện tập chấm điểm theo kỹ năng.</p>
         </div>
 
         <form id="form" className="stack-lg" noValidate onSubmit={handleSubmit}>
@@ -102,28 +126,32 @@ function PracticeForm() {
           </div>
 
           <fieldset className="fieldset field" data-field="soCau">
-            <legend>Số câu</legend>
+            <legend>{loaiBai === 'FLASHCARD' ? 'Thời gian học' : 'Số câu'}</legend>
             <div className="choice-grid cols-3">
               {[5, 10, 20].map(m => (
                 <label key={m} className="choice choice-card">
                   <input type="radio" name="soCau" value={m} checked={soCau === m} onChange={() => setSoCau(m)} />
                   <span className="bubble" aria-hidden="true"></span>
                   <span className="choice-body">
-                    <span className="choice-title">{m} câu</span>
-                    <span className="choice-desc">khoảng {m === 5 ? 3 : m === 10 ? 6 : 12} phút</span>
+                    <span className="choice-title">{loaiBai === 'FLASHCARD' ? `${m} phút` : `${m} câu`}</span>
+                    <span className="choice-desc">{loaiBai === 'FLASHCARD' ? `Khoảng ${m * 3} thẻ` : `khoảng ${m === 5 ? 3 : m === 10 ? 6 : 12} phút`}</span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="field-hint">Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
+            <p className="field-hint">
+              {loaiBai === 'FLASHCARD'
+                ? 'Hệ thống tự động xếp thẻ theo thuật toán ngắt quãng SRS (thẻ quá hạn, đến hạn và từ mới).'
+                : 'Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.'}
+            </p>
             <p className="field-error"></p>
           </fieldset>
 
           <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
           <div className={styles.formFoot}>
-            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending}>
-              {sessionMutation.isPending ? 'Đang tạo...' : 'Làm bài'}
+            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Đang khởi tạo...' : (loaiBai === 'FLASHCARD' ? 'Bắt đầu học Flashcard' : 'Làm bài')}
             </button>
             <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>
           </div>

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản lý thanh toán – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="../shared/components.css">
+<link rel="stylesheet" href="../shared/learning-refinements.css">
+<link rel="stylesheet" href="../shared/effects.css">
+<link rel="stylesheet" href="../shared/flow.css">
+<link rel="stylesheet" href="ui.css">
+<style>
+/* Giao diện riêng của trang quản lý thanh toán. */
+.payment-page .sheet { padding-bottom: var(--sp-5); }
+.pa-heading, .pa-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap; }
+.pa-heading .form-head { margin-bottom:var(--sp-5); }
+.pa-environment { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--primary-line); border-radius:30px; color:var(--ink-2); font-size:var(--fs-caption); white-space:nowrap; }
+.pa-environment > span { width:7px; height:7px; border-radius:50%; background:var(--secondary); }
+.pa-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--line); border-radius:var(--radius-card); background:var(--sunk); margin-bottom:var(--sp-6); overflow:hidden; }
+.pa-summary article { padding:var(--sp-5); }
+.pa-summary article + article { border-left:1px solid var(--line); }
+.pa-summary p, .pa-summary small { color:var(--ink-3); font-size:var(--fs-caption); }
+.pa-summary strong { display:block; font-size:clamp(1.3rem,2vw,1.85rem); line-height:1.5; letter-spacing:-.04em; margin:var(--sp-2) 0; }
+.pa-summary .pa-positive { color:var(--secondary-text); }
+.pa-tabs { display:flex; gap:var(--sp-5); border-bottom:1px solid var(--line); margin-bottom:var(--sp-5); overflow-x:auto; }
+.pa-tab { border:0; border-bottom:3px solid transparent; background:transparent; padding:var(--sp-3) 0; white-space:nowrap; min-height:var(--tap); font-weight:650; color:var(--ink-3); }
+.pa-tab[aria-selected="true"] { color:var(--primary); border-bottom-color:var(--primary); }
+.pa-tab:hover { color:var(--primary); }
+.pa-section-head { align-items:center; margin-bottom:var(--sp-5); }
+.pa-section-head h2 { font-size:var(--fs-h3); margin-bottom:var(--sp-2); }
+.pa-section-head p, .pa-caption { font-size:var(--fs-small); color:var(--ink-3); }
+.pa-filters { display:grid; grid-template-columns:minmax(12rem,2fr) repeat(2,minmax(9rem,1fr)); align-items:end; gap:var(--sp-3); padding:var(--sp-4); background:var(--sunk); border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:var(--sp-4); }
+.pa-filters .field { min-width:0; margin:0; font-size:var(--fs-caption); font-weight:600; }
+.pa-filters :is(input,select) { width:100%; min-width:0; background:var(--field); }
+.pa-filters > button { justify-self:start; }
+.pa-feedback { font-size:var(--fs-small); color:var(--ink-2); margin-bottom:var(--sp-3); }
+.pa-feedback:empty { display:none; }
+.pa-table { font-size:var(--fs-caption); }
+.pa-table th { background:var(--sunk); color:var(--ink-3); font-size:.75rem; font-weight:600; white-space:nowrap; }
+.pa-table td { padding-block:var(--sp-4); vertical-align:middle; }
+.pa-table td strong { display:block; font-weight:650; }
+.pa-table td small { display:block; color:var(--ink-3); font-size:.75rem; margin-top:3px; }
+.pa-table .pa-money { white-space:nowrap; font-weight:650; }
+.pa-table .btn { min-height:36px; padding:6px 10px; font-size:var(--fs-caption); }
+.pa-table tbody tr:hover { background:var(--sunk); }
+.pa-table a { font-weight:650; }
+.pa-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:30px; background:var(--primary-tint); color:var(--primary-strong); font-size:.75rem; font-weight:600; white-space:nowrap; }
+.pa-badge::before { content:""; width:5px; height:5px; border-radius:50%; background:currentColor; }
+.pa-badge.success { background:var(--secondary-bg); color:var(--secondary-text); }
+.pa-badge.pending { background:var(--warning-bg); color:var(--warning-text); }
+.pa-badge.failed { background:var(--danger-bg); color:var(--danger); }
+.pa-badge.expired { background:var(--sunk); color:var(--ink-3); border:1px solid var(--line); }
+.pa-plan-label { font-weight:650; color:var(--primary); }
+.pa-table-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--sp-3); font-size:var(--fs-caption); color:var(--ink-3); }
+.pa-table-footer .pager { padding-block:var(--sp-4); }
+.pa-empty { padding:var(--sp-7) var(--sp-4); text-align:center; border:1px dashed var(--line-2); border-radius:var(--radius-card); display:grid; justify-items:center; gap:var(--sp-3); }
+.pa-empty h3 { font-size:var(--fs-h3); }
+.pa-empty p { color:var(--ink-3); font-size:var(--fs-small); }
+.pa-demo-tools { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-4); padding:var(--sp-4); background:var(--warning-bg); border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:var(--sp-4); }
+.pa-demo-tools p { font-size:var(--fs-caption); color:var(--ink-2); }
+.pa-check { display:flex; align-items:center; gap:var(--sp-2); min-height:var(--tap); font-size:var(--fs-small); cursor:pointer; }
+.pa-check input { width:18px; height:18px; accent-color:var(--primary); }
+.pa-demo-tools .pa-check { margin-left:auto; }
+.pa-plan-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-5); }
+.pa-plan-card { padding:var(--sp-5); border:1px solid var(--line); border-radius:var(--radius-card); background:var(--field); }
+.pa-plan-card .pa-section-head { padding-bottom:var(--sp-4); border-bottom:1px solid var(--line); }
+.pa-plan-card h3 { font-size:var(--fs-h2); }
+.pa-price { font-size:1.8rem; font-weight:750; letter-spacing:-.04em; }
+.pa-price small { font-size:var(--fs-small); font-weight:400; color:var(--ink-3); letter-spacing:0; }
+.pa-year-price { color:var(--ink-3); font-size:var(--fs-small); margin:4px 0 var(--sp-5); }
+.pa-feature-list { list-style:none; padding:0; display:grid; gap:var(--sp-3); margin-bottom:var(--sp-5); font-size:var(--fs-small); }
+.pa-feature-list li { display:flex; justify-content:space-between; gap:var(--sp-3); }
+.pa-feature-list li span { color:var(--ink-3); }
+.pa-plan-card > .btn { width:100%; }
+.pa-info { padding:var(--sp-4); margin-top:var(--sp-5); color:var(--ink-2); font-size:var(--fs-small); background:var(--primary-tint); border-radius:var(--radius-btn); }
+.pa-dialog { margin:auto; }
+.pa-dialog-head { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-3); margin-bottom:var(--sp-4); }
+.pa-dialog-head h2 { border:0; padding:0; font-size:var(--fs-h2); }
+.pa-dialog-head p { color:var(--ink-3); font-size:var(--fs-small); margin-top:var(--sp-2); }
+.pa-detail-total { padding:var(--sp-5); background:var(--sunk); border-radius:var(--radius-card); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-5); }
+.pa-detail-total strong { display:block; font-size:1.8rem; }
+.pa-detail-list { display:grid; gap:var(--sp-3); margin-bottom:var(--sp-5); }
+.pa-detail-list > div { display:grid; grid-template-columns:1fr 1.4fr; gap:var(--sp-4); padding-bottom:var(--sp-2); border-bottom:1px solid var(--line); font-size:var(--fs-small); }
+.pa-detail-list dt { color:var(--ink-3); }
+.pa-detail-list dd { margin:0; text-align:right; overflow-wrap:anywhere; }
+.pa-edit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4); }
+.pa-edit-grid .field { margin:0; min-width:0; }
+.pa-edit-grid input { width:100%; }
+.pa-edit-grid .pa-wide { grid-column:1 / -1; }
+.pa-form-error { color:var(--danger); font-size:var(--fs-small); }
+.pa-form-error:empty { display:none; }
+@media(min-width:1500px) { .pa-filters { grid-template-columns:minmax(12rem,1.8fr) repeat(2,minmax(8rem,1fr)) repeat(2,minmax(9rem,1fr)) auto; } }
+@media(max-width:1050px) { .pa-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .pa-summary article:nth-child(3) { border-left:0; } .pa-summary article:nth-child(n+3) { border-top:1px solid var(--line); } }
+@media(max-width:700px) { .pa-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } .pa-search { grid-column:1/-1; } .pa-plan-grid { grid-template-columns:1fr; } .pa-heading { margin-bottom:var(--sp-5); } .pa-heading .form-head { margin-bottom:0; } .pa-tabs { gap:var(--sp-4); } .pa-tab { font-size:var(--fs-small); } .pa-summary article { padding:var(--sp-4); } .pa-summary strong { font-size:1.4rem; } .pa-demo-tools .pa-check { margin-left:0; } }
+@media(max-width:639px) { .pa-table td small { margin:0; } .pa-table td[data-label] { align-items:center; } .pa-table td > :is(.pa-badge,.pa-plan-label) { justify-self:start; } .pa-table td[data-label="Thao tác"]::before { content:""; } .pa-edit-grid { grid-template-columns:1fr; } .pa-detail-total { flex-wrap:wrap; } }
+</style>
+<script src="../shared/theme.js"></script>
+</head>
+<body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="quan-ly-thanh-toan" data-nav="admin-payments" data-role="ADMIN">
+<!-- F3.13 · UI59. Local fixtures only; see README.md. -->
+<div class="app">
+  <header class="app-header"></header>
+  <div class="app-body">
+    <nav class="sidebar" aria-label="Điều hướng chính"></nav>
+    <main class="app-main" id="main">
+      <div class="page d3-page payment-page">
+        <div class="d3-demo"><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><a href="../index.html#dot3">Danh mục mockup</a></div>
+        <article class="sheet" aria-labelledby="page-title">
+          <nav class="flow-breadcrumb" aria-label="Đường dẫn"><a href="quan-tri-dich-vu.html">Quản trị</a><span aria-hidden="true">/</span><span>Quản lý thanh toán</span></nav>
+          <div class="pa-heading">
+            <div class="form-head"><div class="form-code"><span>Quản trị</span><span>UI59 · Đợt 3</span></div><h1 id="page-title">Quản lý thanh toán</h1><p>Theo dõi giao dịch, quản lý thời hạn và quyền lợi gói dịch vụ.</p></div>
+            <span class="pa-environment"><span aria-hidden="true"></span> VNPay Sandbox</span>
+          </div>
+          <div class="pa-summary" aria-label="Tổng quan dữ liệu mẫu" id="payment-summary"></div>
+          <div class="pa-tabs" role="tablist" aria-label="Quản lý thanh toán">
+            <button class="pa-tab" id="tab-payments" role="tab" aria-selected="true" aria-controls="panel-payments" tabindex="0" data-tab="payments">Giao dịch</button>
+            <button class="pa-tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="panel-subscriptions" tabindex="-1" data-tab="subscriptions">Gói người dùng</button>
+            <button class="pa-tab" id="tab-plans" role="tab" aria-selected="false" aria-controls="panel-plans" tabindex="-1" data-tab="plans">Cấu hình gói</button>
+          </div>
+          <section id="panel-payments" role="tabpanel" aria-labelledby="tab-payments" tabindex="0">
+            <div class="pa-section-head"><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói qua VNPay.</p></div><button class="btn btn-secondary" type="button" id="export-payments">↓ Xuất CSV</button></div>
+            <form id="payment-filters" class="pa-filters" aria-label="Lọc giao dịch">
+              <label class="field pa-search">Tìm giao dịch<input class="input" type="search" name="query" placeholder="Mã đơn, tên hoặc email…" autocomplete="off"></label>
+              <label class="field">Trạng thái<select class="select" name="status"><option value="">Tất cả trạng thái</option><option value="THANH_CONG">Thành công</option><option value="CHO_THANH_TOAN">Chờ thanh toán</option><option value="THAT_BAI">Thất bại</option><option value="HET_HAN">Hết hạn</option></select></label>
+              <label class="field">Gói dịch vụ<select class="select" name="plan"><option value="">Tất cả gói</option><option value="PRO">Pro</option><option value="PREMIUM">Premium</option></select></label>
+              <label class="field">Từ ngày<input class="input" type="date" name="from"></label>
+              <label class="field">Đến ngày<input class="input" type="date" name="to"></label>
+              <button class="btn btn-quiet" type="reset">Xóa bộ lọc</button>
+            </form>
+            <p class="pa-feedback" id="payment-feedback" role="status" aria-live="polite"></p>
+            <div id="payment-results"></div>
+            <div class="pa-table-footer"><span id="payment-count"></span><nav class="pager" id="payment-pagination" aria-label="Phân trang giao dịch"></nav></div>
+          </section>
+          <section id="panel-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" tabindex="0" hidden>
+            <div class="pa-section-head"><div><h2>Gói người dùng</h2><p>Theo dõi hiệu lực gói và các tài khoản cần gia hạn.</p></div></div>
+            <form id="subscription-filters" class="pa-filters pa-sub-filters" aria-label="Lọc gói người dùng">
+              <label class="field pa-search">Người dùng<input class="input" type="search" name="query" placeholder="Tên hoặc email…"></label>
+              <label class="field">Gói dịch vụ<select class="select" name="plan"><option value="">Tất cả gói</option><option value="PRO">Pro</option><option value="PREMIUM">Premium</option></select></label>
+              <label class="field">Hiệu lực<select class="select" name="status"><option value="">Tất cả trạng thái</option><option value="active">Còn hiệu lực</option><option value="soon">Sắp hết hạn 7 ngày</option><option value="expired">Đã hết hạn</option></select></label>
+              <button class="btn btn-quiet" type="reset">Xóa bộ lọc</button>
+            </form>
+            <div class="pa-demo-tools"><div><strong>Công cụ demo</strong><p>Thử luồng nhắc và hết hạn trên dữ liệu mẫu.</p></div><label class="pa-check"><input type="checkbox" id="enable-demo-tools"> Bật công cụ demo</label><button class="btn btn-secondary" type="button" id="check-expiry" hidden>Chạy kiểm tra ngay</button></div>
+            <div id="subscription-results"></div>
+            <p class="pa-feedback" id="expiry-feedback" role="status" aria-live="polite"></p>
+          </section>
+          <section id="panel-plans" role="tabpanel" aria-labelledby="tab-plans" tabindex="0" hidden>
+            <div class="pa-section-head"><div><h2>Cấu hình gói dịch vụ</h2><p>Thiết lập giá và quyền lợi cho các đơn mua mới.</p></div></div>
+            <div class="pa-plan-grid" id="plan-cards"></div>
+            <p class="pa-info">Giá mới chỉ áp dụng cho đơn tạo sau khi lưu. Đơn đã tạo giữ nguyên số tiền và gói người dùng đang dùng giữ nguyên thời hạn.</p>
+          </section>
+          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="payment-state">Xem trạng thái <select class="select" id="payment-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Trống</option><option value="error">Lỗi</option></select></label><button class="btn btn-quiet" type="button" id="reset-payment-demo">Đặt lại mẫu thanh toán</button></div></details><span class="pa-caption">Mốc dữ liệu mẫu: 12/11/2026 · Giờ Việt Nam</span></footer>
+        </article>
+      </div>
+    </main>
+  </div>
+  <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
+</div>
+<dialog class="d3-dialog pa-dialog" id="payment-dialog" aria-labelledby="payment-dialog-title"><div id="payment-dialog-content"></div></dialog>
+<noscript><p class="notice">Bật JavaScript để xem và tương tác với dữ liệu mô phỏng.</p></noscript>
+<script src="../shared/demo.js"></script>
+<script src="../shared/app.js"></script>
+<script src="../shared/flow.js"></script>
+<script>
+/* Tương tác và dữ liệu mô phỏng quản lý thanh toán. */
+(function () {
+  'use strict';
+  if (!window.VL?.ready || !VL.me()?.vaiTro.includes('ADMIN')) return;
+
+  const $ = (selector) => document.querySelector(selector);
+  const esc = VL.esc;
+  const money = (value) => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+  const date = (value) => new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value));
+  const time = (value) => new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value));
+  const normalize = (value) => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').toLowerCase();
+  const clock = new Date('2026-11-12T10:00:00+07:00');
+  const storageKey = 'vocab:payment-admin:v1';
+  const statuses = { THANH_CONG: ['Thành công', 'success'], CHO_THANH_TOAN: ['Chờ thanh toán', 'pending'], THAT_BAI: ['Thất bại', 'failed'], HET_HAN: ['Hết hạn', 'expired'] };
+  const badge = (label, type) => `<span class="pa-badge ${type}">${esc(label)}</span>`;
+  const planName = (code) => code === 'PRO' ? 'Pro' : 'Premium';
+  const seedPlans = [
+    { code: 'PRO', month: 299000, year: 2990000, cards: 5000, ai: 20, images: 10, speech: true, premium: false, active: true, version: 1 },
+    { code: 'PREMIUM', month: 999000, year: 9990000, cards: null, ai: 100, images: 30, speech: true, premium: true, active: true, version: 1 }
+  ];
+  const users = [
+    ['Nguyễn Hoài An', 'an@example.com'], ['Trần Minh Anh', 'minhanh@example.com'], ['Lê Quang Huy', 'quanghuy@example.com'],
+    ['Phạm Thu Hà', 'thuha@example.com'], ['Võ Đức Minh', 'ducminh@example.com'], ['Đặng Ngọc Linh', 'ngoclinh@example.com'],
+    ['Bùi Tuấn Khang', 'tuankhang@example.com'], ['Hoàng Mai Chi', 'maichi@example.com']
+  ];
+  const transactions = [
+    [0, 'PRO', 'THANG', 'THANH_CONG', '12', '09:42'], [1, 'PREMIUM', 'NAM', 'THANH_CONG', '12', '09:30'],
+    [2, 'PRO', 'THANG', 'CHO_THANH_TOAN', '12', '09:55'], [3, 'PREMIUM', 'THANG', 'THAT_BAI', '12', '08:32'],
+    [4, 'PRO', 'NAM', 'THANH_CONG', '11', '16:05'], [5, 'PREMIUM', 'THANG', 'THANH_CONG', '11', '14:20'],
+    [6, 'PRO', 'THANG', 'HET_HAN', '11', '10:15'], [7, 'PRO', 'THANG', 'THANH_CONG', '10', '17:48'],
+    [0, 'PRO', 'THANG', 'THANH_CONG', '09', '09:10'], [3, 'PREMIUM', 'THANG', 'THANH_CONG', '08', '11:25'],
+    [2, 'PRO', 'NAM', 'THAT_BAI', '07', '15:40'], [6, 'PRO', 'THANG', 'THANH_CONG', '06', '08:30']
+  ].map(([user, plan, cycle, status, day, hour], i) => ({
+    id: `DEMO-202611${day}-${String(128 - i).padStart(4, '0')}`, name: users[user][0], email: users[user][1], plan, cycle, status,
+    amount: seedPlans.find((p) => p.code === plan)[cycle === 'NAM' ? 'year' : 'month'],
+    created: `2026-11-${day}T${hour}:00+07:00`, gatewayId: status === 'THANH_CONG' ? String(14882900 + i) : null,
+    response: status === 'THANH_CONG' ? '00' : status === 'THAT_BAI' ? '24' : null
+  }));
+  const seedSubscriptions = users.map(([name, email], i) => ({
+    id: `SUB-${String(i + 1).padStart(4, '0')}`, name, email, plan: [1, 3, 5].includes(i) ? 'PREMIUM' : 'PRO',
+    start: '2026-10-15T09:00:00+07:00', expiry: ['2026-12-12', '2027-11-12', '2026-11-15', '2026-11-18', '2026-11-10', '2026-12-11', '2026-11-12', '2026-11-20'][i] + 'T09:00:00+07:00'
+  }));
+  let data = { plans: structuredClone(seedPlans), subscriptions: structuredClone(seedSubscriptions), reminders: [], expired: [], audit: [] };
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(storageKey));
+    if (saved && Array.isArray(saved.plans) && Array.isArray(saved.subscriptions) && Array.isArray(saved.audit) && Array.isArray(saved.reminders) && Array.isArray(saved.expired)) data = saved;
+  } catch { /* The mockup also works when storage is unavailable. */ }
+  let activeTab = 'payments';
+  let page = 1;
+  const pageSize = 6;
+  const dialog = $('#payment-dialog');
+  const paymentForm = $('#payment-filters');
+  const subscriptionForm = $('#subscription-filters');
+  const demoEnabled = () => $('#enable-demo-tools').checked;
+  const dayCount = (subscription) => Math.round((Date.parse(subscription.expiry.slice(0, 10)) - Date.parse('2026-11-12')) / 86400000);
+  const isExpired = (subscription) => new Date(subscription.expiry) <= clock;
+  const isSoon = (subscription) => !isExpired(subscription) && dayCount(subscription) <= 7;
+  const subscriptionBadge = (subscription) => isExpired(subscription) ? badge('Đã hết hạn', 'expired') : isSoon(subscription) ? badge(dayCount(subscription) === 0 ? 'Hết hạn hôm nay' : `Còn ${dayCount(subscription)} ngày`, 'pending') : badge('Còn hiệu lực', 'success');
+  function save(message) {
+    try { sessionStorage.setItem(storageKey, JSON.stringify(data)); VL.toast(message); }
+    catch { VL.toast(message + ' Thay đổi chỉ được giữ đến khi tải lại trang.'); }
+  }
+  function download(content, filename, type) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = document.createElement('a'); link.href = url; link.download = filename;
+    document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function openDialog(title, subtitle, content) {
+    $('#payment-dialog-content').innerHTML = `<div class="pa-dialog-head"><div><h2 id="payment-dialog-title">${esc(title)}</h2><p>${esc(subtitle)}</p></div><button class="btn btn-quiet btn-icon" type="button" data-close aria-label="Đóng hộp thoại">${VL.icon('x')}</button></div>${content}`;
+    dialog.showModal();
+  }
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog || event.target.closest('[data-close]')) dialog.close();
+  });
+  function renderSummary() {
+    const paid = transactions.filter((t) => t.status === 'THANH_CONG');
+    const items = [
+      ['Tổng đã thanh toán', money(paid.reduce((sum, t) => sum + t.amount, 0)), `${paid.length} giao dịch thành công`, 'pa-positive'],
+      ['Tổng giao dịch', transactions.length, 'Toàn bộ dữ liệu mẫu', ''],
+      ['Gói còn hiệu lực', data.subscriptions.filter((s) => !isExpired(s)).length, 'Tính tại mốc dữ liệu mẫu', ''],
+      ['Sắp hết hạn', data.subscriptions.filter(isSoon).length, 'Trong 7 ngày tới', '']
+    ];
+    $('#payment-summary').innerHTML = items.map(([label, value, note, color]) => `<article><p>${label}</p><strong class="${color}">${value}</strong><small>${note}</small></article>`).join('');
+  }
+  function filteredPayments() {
+    const filters = new FormData(paymentForm);
+    const query = normalize(filters.get('query').trim());
+    const from = filters.get('from'), to = filters.get('to');
+    if (from && to && from > to) return [];
+    return transactions.filter((t) => (!query || normalize(`${t.id} ${t.name} ${t.email}`).includes(query)) &&
+      (!filters.get('status') || t.status === filters.get('status')) && (!filters.get('plan') || t.plan === filters.get('plan')) &&
+      (!from || t.created.slice(0, 10) >= from) && (!to || t.created.slice(0, 10) <= to));
+  }
+  function empty(title, text, button = '') {
+    return `<div class="pa-empty"><span aria-hidden="true">${VL.icon('file', 'icon-lg')}</span><h3>${title}</h3><p>${text}</p>${button}</div>`;
+  }
+  function table(headers, rows, caption) {
+    return `<div class="d3-table-wrap"><table class="d3-table pa-table"><caption class="sr-only">${caption}</caption><thead><tr>${headers.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map((cells) => `<tr>${cells.map((cell, i) => `<td data-label="${headers[i]}">${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+  function renderPayments() {
+    const items = filteredPayments();
+    const lastPage = Math.max(1, Math.ceil(items.length / pageSize)); page = Math.min(page, lastPage);
+    const start = (page - 1) * pageSize;
+    $('#payment-results').innerHTML = items.length ? table(['Mã đơn / Thời gian', 'Người dùng', 'Gói dịch vụ', 'Số tiền', 'Trạng thái', 'Thao tác'], items.slice(start, start + pageSize).map((t) => [
+      `<strong>${t.id}</strong><small>${date(t.created)} · ${time(t.created)}</small>`,
+      `<strong>${esc(t.name)}</strong><small>${esc(t.email)}</small>`,
+      `<span class="pa-plan-label">${planName(t.plan)}</span><small>${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</small>`,
+      `<span class="pa-money">${money(t.amount)}</span>`, badge(...statuses[t.status]),
+      `<button class="btn btn-quiet" type="button" data-detail="${t.id}" aria-label="Xem chi tiết đơn ${t.id}">Chi tiết ↗</button>`
+    ]), 'Các giao dịch thanh toán qua VNPay') : empty('Không có giao dịch', 'Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm kết quả.', '<button class="btn btn-secondary" type="button" data-clear-payments>Xóa bộ lọc</button>');
+    const from = paymentForm.elements.from.value, to = paymentForm.elements.to.value;
+    $('#payment-feedback').textContent = from && to && from > to ? 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.' : '';
+    $('#payment-count').textContent = items.length ? `Hiển thị ${start + 1}–${Math.min(start + pageSize, items.length)} / ${items.length} giao dịch` : '0 giao dịch';
+    $('#payment-pagination').innerHTML = `<button type="button" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''} aria-label="Trang trước">‹</button>${Array.from({ length: lastPage }, (_, i) => `<button type="button" data-page="${i + 1}" ${page === i + 1 ? 'aria-current="page"' : ''} aria-label="Trang ${i + 1}">${i + 1}</button>`).join('')}<button type="button" data-page="${page + 1}" ${page === lastPage ? 'disabled' : ''} aria-label="Trang sau">›</button>`;
+    $('#export-payments').disabled = !items.length || $('#payment-state').value !== 'ready';
+  }
+  function renderSubscriptions() {
+    const filters = new FormData(subscriptionForm), query = normalize(filters.get('query').trim());
+    const items = data.subscriptions.filter((s) => (!query || normalize(`${s.name} ${s.email}`).includes(query)) &&
+      (!filters.get('plan') || filters.get('plan') === s.plan) && (!filters.get('status') ||
+        (filters.get('status') === 'expired' ? isExpired(s) : filters.get('status') === 'soon' ? isSoon(s) : !isExpired(s))));
+    $('#subscription-results').innerHTML = items.length ? table(['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái', 'Thao tác'], items.map((s) => [
+      `<strong>${esc(s.name)}</strong><small>${esc(s.email)}</small>`, `<span class="pa-plan-label">${planName(s.plan)}</span>`, date(s.start),
+      `<strong>${date(s.expiry)}</strong><small>${time(s.expiry)} · Giờ Việt Nam</small>`, subscriptionBadge(s),
+      demoEnabled() ? `<button class="btn btn-secondary" type="button" data-expiry="${s.id}" aria-label="Sửa ngày hết hạn của ${esc(s.name)}">Sửa ngày hết hạn</button>` : '<span class="pa-caption">—</span>'
+    ]), 'Gói dịch vụ của người dùng') : empty('Không có gói phù hợp', 'Thử thay đổi tên, email hoặc điều kiện lọc.');
+    $('#check-expiry').hidden = !demoEnabled();
+  }
+  function renderPlans() {
+    $('#plan-cards').innerHTML = data.plans.map((p) => `<article class="pa-plan-card"><div class="pa-section-head"><h3>${planName(p.code)}</h3>${badge(p.active ? 'Đang mở bán' : 'Ngừng mở bán', p.active ? 'success' : 'expired')}</div><p class="pa-price">${money(p.month)} <small>/ tháng</small></p><p class="pa-year-price">${money(p.year)} / năm</p><ul class="pa-feature-list"><li><span>Số thẻ tối đa</span><strong>${p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')}</strong></li><li><span>AI văn bản / ngày</span><strong>${p.ai} lượt</strong></li><li><span>Ảnh AI / ngày</span><strong>${p.images} ảnh</strong></li><li><span>Đánh giá phát âm</span><strong>${p.speech ? 'Có' : 'Không'}</strong></li><li><span>Bộ mẫu cao cấp</span><strong>${p.premium ? 'Có' : 'Không'}</strong></li></ul><button class="btn btn-secondary" type="button" data-edit-plan="${p.code}">${VL.icon('edit')} Chỉnh sửa gói</button><p class="pa-caption" style="margin-top:12px">Phiên bản ${p.version}</p></article>`).join('');
+  }
+  function render() {
+    renderSummary(); renderPayments(); renderSubscriptions(); renderPlans();
+    const state = $('#payment-state').value;
+    if (state === 'ready') return;
+    const content = state === 'loading' ? '<div class="pa-empty" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div></div><p>Đang tải dữ liệu thanh toán…</p></div>' :
+      state === 'error' ? empty('Không tải được dữ liệu', 'Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.', '<button class="btn btn-secondary" type="button" data-retry>Thử lại</button>') : empty('Chưa có dữ liệu', 'Dữ liệu sẽ xuất hiện khi có giao dịch và đăng ký gói.', '<button class="btn btn-secondary" type="button" data-retry>Xem dữ liệu mẫu</button>');
+    ['#payment-results', '#subscription-results', '#plan-cards'].forEach((selector) => { $(selector).innerHTML = content; });
+    $('#payment-summary').innerHTML = '<article><p>Tổng quan</p><strong>—</strong><small>Chưa có dữ liệu để tổng hợp</small></article>';
+    $('#payment-count').textContent = ''; $('#payment-pagination').innerHTML = ''; $('#check-expiry').hidden = true;
+  }
+  function selectTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('[data-tab]').forEach((button) => {
+      const active = button.dataset.tab === tab;
+      button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1;
+      $(`#panel-${button.dataset.tab}`).hidden = !active;
+    });
+  }
+  document.querySelector('.pa-tabs').addEventListener('keydown', (event) => {
+    const tabs = ['payments', 'subscriptions', 'plans'];
+    let index = tabs.indexOf(activeTab);
+    if (event.key === 'ArrowRight') index = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') index = (index + 2) % tabs.length;
+    else if (event.key === 'Home') index = 0;
+    else if (event.key === 'End') index = 2;
+    else return;
+    event.preventDefault(); selectTab(tabs[index]); $(`#tab-${tabs[index]}`).focus();
+  });
+  function showDetail(id) {
+    const t = transactions.find((item) => item.id === id);
+    const details = [['Mã đơn', t.id], ['Người thanh toán', t.name], ['Email', t.email], ['Gói dịch vụ', `${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}`], ['Tạo lúc', `${time(t.created)} ${date(t.created)}`], ['Cổng thanh toán', 'VNPay Sandbox'], ['Mã giao dịch VNPay', t.gatewayId || 'Chưa có'], ['Mã phản hồi', t.response ? `${t.response} · ${t.response === '00' ? 'Thành công' : 'Người dùng hủy giao dịch'}` : 'Chưa nhận phản hồi']];
+    openDialog('Chi tiết giao dịch', 'Thông tin giao dịch mẫu · Giờ Việt Nam', `<div class="pa-detail-total"><div><span class="pa-caption">Số tiền thanh toán</span><strong>${money(t.amount)}</strong></div>${badge(...statuses[t.status])}</div><dl class="pa-detail-list">${details.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><div class="dialog-actions"><button class="btn btn-secondary" type="button" data-close>Đóng</button>${t.status === 'THANH_CONG' ? `<button class="btn btn-primary" type="button" data-receipt="${t.id}">${VL.icon('download')} Tải biên nhận mẫu</button>` : ''}</div>`);
+  }
+  function editPlan(code) {
+    const p = data.plans.find((item) => item.code === code);
+    const numericField = (label, name, value, min = 0) => `<label class="field">${label}<input class="input" type="number" name="${name}" value="${value ?? ''}" min="${min}" max="1000000000" step="1" ${name === 'cards' ? 'placeholder="Không giới hạn"' : 'required'}></label>`;
+    openDialog(`Chỉnh sửa gói ${planName(code)}`, `Phiên bản ${p.version} · Thay đổi trên dữ liệu mẫu`, `<form id="edit-plan-form"><div class="pa-edit-grid">${numericField('Giá tháng (VND)', 'month', p.month, 1)}${numericField('Giá năm (VND)', 'year', p.year, 1)}${numericField('Số thẻ tối đa (trống = không giới hạn)', 'cards', p.cards, 1)}${numericField('AI văn bản / ngày', 'ai', p.ai)}${numericField('Ảnh AI / ngày', 'images', p.images)}<label class="pa-check"><input name="active" type="checkbox" ${p.active ? 'checked' : ''}> Mở bán gói</label><label class="pa-check"><input name="speech" type="checkbox" ${p.speech ? 'checked' : ''}> Đánh giá phát âm</label><label class="pa-check"><input name="premium" type="checkbox" ${p.premium ? 'checked' : ''}> Bộ mẫu cao cấp</label></div><details><summary>Thử trạng thái mô phỏng</summary><label class="pa-check"><input type="checkbox" name="conflict"> Xung đột phiên bản (409)</label></details><p class="pa-form-error" id="plan-form-error" role="alert"></p><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-secondary" type="button" data-reload-plan="${code}" hidden>Tải lại cấu hình</button><button class="btn btn-primary" type="submit">Lưu thay đổi</button></div></form>`);
+    $('#edit-plan-form').addEventListener('submit', (event) => {
+      event.preventDefault(); const fields = new FormData(event.currentTarget);
+      if (fields.has('conflict')) {
+        $('#plan-form-error').textContent = 'Cấu hình đã thay đổi ở phiên khác (409 mô phỏng). Tải lại cấu hình trước khi chỉnh sửa.';
+        $('[data-reload-plan]').hidden = false; event.currentTarget.querySelector('[type="submit"]').disabled = true; return;
+      }
+      for (const field of ['month', 'year', 'cards', 'ai', 'images']) p[field] = field === 'cards' && fields.get(field) === '' ? null : Number(fields.get(field));
+      for (const field of ['speech', 'premium', 'active']) p[field] = fields.has(field);
+      p.version++; data.audit.push({ action: 'SUA_GOI_DICH_VU', target: code, at: clock.toISOString() });
+      save(`Đã lưu cấu hình gói ${planName(code)} trong dữ liệu mẫu.`); dialog.close(); render();
+    });
+  }
+  function demoAction(id) {
+    if (!demoEnabled()) return;
+    const subscription = data.subscriptions.find((s) => s.id === id);
+    openDialog(subscription ? 'Sửa ngày hết hạn' : 'Chạy kiểm tra hết hạn', subscription ? `${subscription.name} · ${planName(subscription.plan)}` : 'Chạy mô phỏng tại 10:00 ngày 12/11/2026, giờ Việt Nam', `<form id="demo-action-form">${subscription ? `<label class="field">Ngày hết hạn mới (giờ Việt Nam)<input class="input" type="datetime-local" name="expiry" value="${subscription.expiry.slice(0, 16)}" min="${subscription.start.slice(0, 16)}" max="2099-12-31T23:59" required></label>` : '<p class="pa-caption">Kiểm tra các gói cần nhắc và đã hết hạn trong dữ liệu mẫu. Chạy lại trong cùng ngày sẽ bỏ qua thông báo đã tạo.</p>'}<label class="field">Lý do<textarea class="input" name="reason" rows="3" minlength="10" maxlength="500" placeholder="Nhập lý do thực hiện (10–500 ký tự)" required></textarea></label><p class="pa-form-error" id="demo-form-error" role="alert"></p><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-primary" type="submit">${subscription ? 'Lưu ngày hết hạn mẫu' : 'Chạy kiểm tra mẫu'}</button></div></form>`);
+    $('#demo-action-form').addEventListener('submit', (event) => {
+      event.preventDefault(); if (!demoEnabled()) return;
+      const fields = new FormData(event.currentTarget), reason = fields.get('reason').trim();
+      if (reason.length < 10 || reason.length > 500) { $('#demo-form-error').textContent = 'Nhập lý do từ 10 đến 500 ký tự.'; return; }
+      if (subscription) subscription.expiry = fields.get('expiry') + ':00+07:00';
+      else {
+        let reminders = 0, expired = 0;
+        data.subscriptions.forEach((s) => {
+          const reminderKey = `${s.id}:${s.expiry}:2026-11-12`;
+          if (isExpired(s) && !data.expired.includes(s.id + ':' + s.expiry)) { data.expired.push(s.id + ':' + s.expiry); expired++; }
+          else if (isSoon(s) && !data.reminders.includes(reminderKey)) { data.reminders.push(reminderKey); reminders++; }
+        });
+        $('#expiry-feedback').textContent = `Kết quả mẫu: ${reminders} thông báo sắp hết hạn và ${expired} thông báo hết hạn mới. Không gửi email hoặc thông báo thật.`;
+      }
+      data.audit.push({ action: subscription ? 'SUA_HAN_GOI' : 'CHAY_KIEM_TRA_HET_HAN', target: id || 'ALL', reason, at: clock.toISOString() });
+      save(subscription ? 'Đã cập nhật ngày hết hạn mẫu.' : 'Đã chạy kiểm tra trên dữ liệu mẫu.'); dialog.close(); render();
+    });
+  }
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('button'); if (!button) return;
+    if (button.dataset.tab) selectTab(button.dataset.tab);
+    if (button.dataset.detail) showDetail(button.dataset.detail);
+    if (button.dataset.page) { page = Number(button.dataset.page); renderPayments(); }
+    if (button.hasAttribute('data-clear-payments')) paymentForm.reset();
+    if (button.hasAttribute('data-retry')) { $('#payment-state').value = 'ready'; render(); }
+    if (button.dataset.editPlan) editPlan(button.dataset.editPlan);
+    if (button.dataset.reloadPlan) { dialog.close(); editPlan(button.dataset.reloadPlan); }
+    if (button.dataset.expiry) demoAction(button.dataset.expiry);
+    if (button.dataset.receipt) {
+      const t = transactions.find((item) => item.id === button.dataset.receipt);
+      download(`<!doctype html><html lang="vi"><meta charset="utf-8"><title>Biên nhận ${esc(t.id)}</title><body><h1>VocabLearning · Biên nhận mẫu</h1><p>Dữ liệu mô phỏng · VNPay Sandbox</p><dl><dt>Mã đơn</dt><dd>${t.id}</dd><dt>Người thanh toán</dt><dd>${esc(t.name)} · ${esc(t.email)}</dd><dt>Gói</dt><dd>${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</dd><dt>Số tiền</dt><dd>${money(t.amount)}</dd><dt>Trạng thái</dt><dd>Thành công</dd><dt>Ngày tạo</dt><dd>${date(t.created)} ${time(t.created)} (giờ Việt Nam)</dd></dl><p>Biên nhận này dùng để xem thử giao diện.</p></body></html>`, `${t.id}-bien-nhan-mau.html`, 'text/html;charset=utf-8');
+    }
+  });
+  paymentForm.addEventListener('submit', (event) => event.preventDefault());
+  subscriptionForm.addEventListener('submit', (event) => event.preventDefault());
+  paymentForm.addEventListener('input', () => { page = 1; render(); });
+  subscriptionForm.addEventListener('input', render);
+  paymentForm.addEventListener('reset', () => setTimeout(() => { page = 1; render(); }, 0));
+  subscriptionForm.addEventListener('reset', () => setTimeout(render, 0));
+  $('#payment-state').addEventListener('change', render);
+  $('#enable-demo-tools').addEventListener('change', render);
+  $('#check-expiry').addEventListener('click', () => demoAction());
+  $('#export-payments').addEventListener('click', () => {
+    const rows = [['Mã đơn', 'Người dùng', 'Email', 'Gói', 'Chu kỳ', 'Số tiền (VND)', 'Trạng thái', 'Ngày tạo (giờ Việt Nam)'],
+      ...filteredPayments().map((t) => [t.id, t.name, t.email, planName(t.plan), t.cycle === 'NAM' ? 'Năm' : 'Tháng', t.amount, statuses[t.status][0], `${date(t.created)} ${time(t.created)}`])];
+    const cell = (value) => '"' + String(value).replace(/^[=+@-]/, "'$&").replace(/"/g, '""') + '"';
+    download('\ufeff' + rows.map((row) => row.map(cell).join(',')).join('\r\n'), 'giao-dich-mau-2026-11.csv', 'text/csv;charset=utf-8');
+    VL.toast(`Đã xuất ${rows.length - 1} giao dịch theo bộ lọc hiện tại.`);
+  });
+  $('#reset-payment-demo').addEventListener('click', () => {
+    data = { plans: structuredClone(seedPlans), subscriptions: structuredClone(seedSubscriptions), reminders: [], expired: [], audit: [] };
+    $('#payment-state').value = 'ready'; $('#enable-demo-tools').checked = false; $('#expiry-feedback').textContent = '';
+    paymentForm.reset(); subscriptionForm.reset(); page = 1; selectTab('payments'); save('Đã đặt lại dữ liệu mẫu thanh toán.'); render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

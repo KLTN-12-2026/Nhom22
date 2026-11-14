@@ -1,13 +1,33 @@
 'use client';
-import { useState, Suspense, useEffect, useRef } from 'react';
+import { useState, Suspense, useEffect, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
-import { fx } from '@/lib/fx';
-import { PRACTICE_TYPE, label, splitBlank } from '@/lib/practice-labels.mjs';
+import { label } from '@/lib/practice-labels.mjs';
+import styles from './page.module.css';
 
-const randomPart = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+const TIME_LIMIT = 20;
+const LABELS = ['A', 'B', 'C', 'D'];
+
+const FALLBACK_DISTRACTORS = [
+  { tu: 'achievement', nghiaVi: 'thành tựu' },
+  { tu: 'challenge', nghiaVi: 'thử thách' },
+  { tu: 'development', nghiaVi: 'sự phát triển' },
+  { tu: 'opportunity', nghiaVi: 'cơ hội' },
+  { tu: 'experience', nghiaVi: 'kinh nghiệm' },
+  { tu: 'knowledge', nghiaVi: 'kiến thức' },
+  { tu: 'solution', nghiaVi: 'giải pháp' },
+  { tu: 'progress', nghiaVi: 'sự tiến bộ' }
+];
+
+const now = () => Date.now();
+
+const randomPart = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
 function submitKeyFor(id) {
   const name = `practice-submit:${id}`;
@@ -22,18 +42,82 @@ function submitKeyFor(id) {
   }
 }
 
-function playAudio(url, rate) {
+// Web Audio API Synthesizer (Zero-latency, offline-first)
+let audioCtx = null;
+function getAudioCtx() {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function playTone(freq, type, duration, vol = 0.1) {
+  try {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch {}
+}
+
+const SFX = {
+  correct: () => {
+    playTone(600, 'sine', 0.1);
+    setTimeout(() => playTone(800, 'sine', 0.2), 100);
+  },
+  wrong: () => {
+    playTone(300, 'square', 0.15, 0.05);
+    setTimeout(() => playTone(200, 'square', 0.2, 0.05), 150);
+  },
+  tick: () => {
+    playTone(1000, 'sine', 0.05, 0.02);
+  },
+  timeup: () => {
+    playTone(150, 'sawtooth', 0.4, 0.1);
+    setTimeout(() => playTone(100, 'sawtooth', 0.4, 0.1), 200);
+  },
+  select: () => {
+    playTone(400, 'sine', 0.1, 0.05);
+  }
+};
+
+function speak(text) {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window && text) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    } catch {}
+  }
+}
+
+function playAudioFile(url, rate = 1) {
   const audio = new Audio(url);
   audio.playbackRate = rate;
   return audio.play();
 }
 
-const now = () => Date.now();
-
-function BlankSentence({ sentence, mark = '' }) {
-  const [before, after] = splitBlank(sentence);
-  if (after === null) return before;
-  return <>{before}<span style={{ display: 'inline-block', minWidth: '50px', borderBottom: '2px solid var(--color-ink)', margin: '0 4px', textAlign: 'center' }}>{mark}</span>{after}</>;
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
 function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
@@ -41,6 +125,7 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
   const [loadingAudio, setLoadingAudio] = useState(false);
   const cached = useRef(null);
   if (!hasAudio) return <p className="notice notice-warning" style={{ marginBottom: 'var(--space-3)' }}>Câu này chưa có âm thanh.</p>;
+
   const audioUrl = async () => {
     const c = cached.current;
     if (c && (!c.expiresAt || new Date(c.expiresAt).getTime() - 30000 > now())) return c.downloadUrl;
@@ -48,12 +133,15 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
     cached.current = file;
     return file.downloadUrl;
   };
+
   const listen = async (rate) => {
     setError('');
     setLoadingAudio(true);
     try {
       const url = await audioUrl();
-      await playAudio(url, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
+      await playAudioFile(url, rate).catch(() => {
+        throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.');
+      });
     } catch (err) {
       cached.current = null;
       setError(err.message || 'Không tải được âm thanh. Thử lại.');
@@ -61,14 +149,19 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
       setLoadingAudio(false);
     }
   };
+
   return (
     <div style={{ marginBottom: 'var(--space-3)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <Button type="button" variant="secondary" onClick={() => listen(1)} disabled={loadingAudio}><Icon name="volume" /> Nghe</Button>
-        <Button type="button" variant="ghost" onClick={() => listen(0.6)} disabled={loadingAudio}>Nghe chậm</Button>
+        <Button type="button" variant="secondary" onClick={() => listen(1)} disabled={loadingAudio}>
+          <Icon name="volume" /> Nghe
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => listen(0.6)} disabled={loadingAudio}>
+          Nghe chậm
+        </Button>
       </div>
-      <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>
-        {tuLoai && <>Từ loại <span style={{ color: 'var(--color-primary)' }}>[{tuLoai}]</span>, </>}nghe bao nhiêu lần cũng được
+      <p style={{ fontSize: 'var(--font-size-sm)', color: '#94a3b8', marginTop: 'var(--space-2)' }}>
+        {tuLoai && <>Từ loại <span style={{ color: '#a78bfa' }}>[{tuLoai}]</span>, </>}nghe bao nhiêu lần cũng được
       </p>
       {error && <p className="field-error" role="alert">{error}</p>}
     </div>
@@ -81,8 +174,6 @@ function PracticeSessionContent() {
   const id = searchParams.get('id');
   const startRef = useRef(0);
   const submitKey = useRef('');
-  const counterRef = useRef(null);
-  const lastAnswered = useRef(0);
 
   const { data: session, isLoading, error } = useQuery({
     queryKey: ['practice-session', id],
@@ -90,57 +181,227 @@ function PracticeSessionContent() {
     enabled: !!id
   });
 
+  const [activeQuestions, setActiveQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timer, setTimer] = useState(0);
+  const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [feedback, setFeedback] = useState({});
+  const [wrongQuestions, setWrongQuestions] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [isRetryMode, setIsRetryMode] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  // Initial setup when session loads
   useEffect(() => {
-    startRef.current = now();
-    const interval = setInterval(() => {
-      setTimer(Math.floor((now() - startRef.current) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (session?.cauHoi && session.cauHoi.length > 0 && activeQuestions.length === 0) {
+      setActiveQuestions(session.cauHoi);
+      startRef.current = now();
+      setIsTimerActive(true);
+    }
+  }, [session?.cauHoi, activeQuestions.length]);
 
   useEffect(() => {
-    if (session?.daNop) router.replace(`/luyen-tap-ket-qua?id=${id}`);
-  }, [session?.daNop, id, router]);
+    if (session?.daNop && !isFinished) {
+      router.replace(`/luyen-tap-ket-qua?id=${id}`);
+    }
+  }, [session?.daNop, isFinished, id, router]);
 
-  const submitMutation = useMutation({
-    mutationFn: (body) => apiFetch(`/api/v1/practice/sessions/${id}/submissions`, { method: 'POST', body: JSON.stringify(body) }),
-    onSuccess: () => {
-      router.push(`/luyen-tap-ket-qua?id=${id}`);
-    },
-    onError: (err) => {
-      if (err.status === 409) {
-        router.replace(`/luyen-tap-ket-qua?id=${id}`);
+  // Generate 4 multiple-choice options (1 correct + 3 distractors) for DIEN_CHO_TRONG from session deck cards
+  const questionOptionsMap = useMemo(() => {
+    if (!session?.cauHoi) return {};
+    const map = {};
+    const allCards = session.cauHoi
+      .map(q => ({
+        tu: q.deBai?.tu || q.deBai?.goiY || '',
+        nghiaVi: q.deBai?.goiY || q.deBai?.dichVi || ''
+      }))
+      .filter(c => c.tu);
+
+    session.cauHoi.forEach(q => {
+      if (q.phuongAn && Array.isArray(q.phuongAn) && q.phuongAn.length > 0) {
+        map[q.id] = q.phuongAn;
         return;
       }
-      setSubmitError(err.message || 'Chưa nộp được bài. Hãy thử lại, câu trả lời vẫn được giữ.');
+
+      const targetWord = q.deBai?.tu || q.deBai?.goiY || '';
+      const targetMeaning = q.deBai?.goiY || q.deBai?.dichVi || '';
+
+      const pool = allCards.filter(c => c.tu.toLowerCase() !== targetWord.toLowerCase());
+      const uniquePool = [];
+      const seen = new Set();
+      pool.forEach(item => {
+        const key = item.tu.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniquePool.push(item);
+        }
+      });
+
+      const shuffledPool = shuffle(uniquePool);
+      const chosenDistractors = shuffledPool.slice(0, 3);
+
+      if (chosenDistractors.length < 3) {
+        for (const fb of FALLBACK_DISTRACTORS) {
+          if (chosenDistractors.length >= 3) break;
+          const key = fb.tu.toLowerCase();
+          if (key !== targetWord.toLowerCase() && !seen.has(key)) {
+            chosenDistractors.push(fb);
+            seen.add(key);
+          }
+        }
+      }
+
+      const rawOpts = [
+        { id: `opt_corr_${q.id}`, noiDung: targetWord, nghiaVi: targetMeaning, isCorrect: true },
+        ...chosenDistractors.map((d, i) => ({
+          id: `opt_dist_${q.id}_${i}`,
+          noiDung: d.tu,
+          nghiaVi: d.nghiaVi,
+          isCorrect: false
+        }))
+      ];
+
+      map[q.id] = shuffle(rawOpts);
+    });
+    return map;
+  }, [session]);
+
+  const submitMutation = useMutation({
+    mutationFn: (body) =>
+      apiFetch(`/api/v1/practice/sessions/${id}/submissions`, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      }),
+    onSuccess: () => {
+      // Result recorded in backend; keep user on HINI end screen for review / retry
+    },
+    onError: (err) => {
+      if (err.status === 409) return;
+      setSubmitError(err.message || 'Chưa nộp được bài lên hệ thống.');
     }
   });
 
-  const answeredNow = session ? session.cauHoi.filter(q => {
-    const ans = answers[q.id];
-    if (q.loaiCau === 'GHEP_TU') return !!ans && q.deBai.cotTrai.every(l => !!ans[l.id]);
-    if (q.phuongAn) return !!ans;
-    return !!ans && String(ans).trim() !== '';
-  }).length : 0;
+  const questions = activeQuestions;
+  const currentQ = questions[currentIndex] || questions[0];
+  const total = questions.length;
+  const isLastQuestion = currentIndex === total - 1;
+  const progressPercent = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
+  const currentAnswer = currentQ ? answers[currentQ.id] : null;
+  const currentFb = currentQ ? feedback[currentQ.id] : null;
 
+  // Question change timer reset
   useEffect(() => {
-    if (answeredNow > lastAnswered.current) {
-      fx.play('select');
-      fx.pop(counterRef.current);
-    }
-    lastAnswered.current = answeredNow;
-  }, [answeredNow]);
+    if (questions.length === 0 || isFinished) return;
+    const q = questions[currentIndex];
+    if (!q) return;
 
-  if (!id) return <div>Invalid Session</div>;
-  if (error) return <div className="notice notice-danger" role="alert" style={{ margin: 'var(--space-6)' }}>{error.message || 'Chưa tải được bài luyện.'}</div>;
-  if (isLoading || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải bài...</div>;
+    if (!answers[q.id]) {
+      setTimeLeft(TIME_LIMIT);
+      setIsTimerActive(true);
+    } else {
+      setIsTimerActive(false);
+    }
+  }, [currentIndex, isFinished, questions, answers]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!isTimerActive || isFinished) return;
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsTimerActive(false);
+          handleTimeout();
+          return 0;
+        }
+        if (prev <= 6) {
+          SFX.tick();
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTimerActive, isFinished, currentIndex]);
+
+  const handleTimeout = () => {
+    if (!currentQ || answers[currentQ.id]) return;
+    SFX.timeup();
+    const qId = currentQ.id;
+    setAnswers((prev) => ({ ...prev, [qId]: '__TIMEOUT__' }));
+
+    const targetWord = currentQ.deBai?.tu || currentQ.deBai?.goiY || '';
+    const targetMeaning = currentQ.deBai?.goiY || currentQ.deBai?.dichVi || '';
+
+    setWrongQuestions((prev) => {
+      if (prev.some((wq) => wq.id === currentQ.id)) return prev;
+      return [...prev, currentQ];
+    });
+
+    setFeedback((prev) => ({
+      ...prev,
+      [qId]: {
+        isCorrect: false,
+        isTimeout: true,
+        selectedText: '(Hết thời gian)',
+        selectedMeaning: '',
+        correctText: targetWord,
+        correctMeaning: targetMeaning,
+        explanationText: targetMeaning ? `Nghĩa: "${targetMeaning}"` : ''
+      }
+    }));
+  };
+
+  const handleSelectOption = (questionId, opt) => {
+    if (answers[questionId] || !isTimerActive) return;
+    setIsTimerActive(false);
+    SFX.select();
+    speak(opt.noiDung);
+
+    const isCorrect =
+      opt.isCorrect !== undefined
+        ? opt.isCorrect
+        : currentQ.dapAnDung
+        ? opt.id === currentQ.dapAnDung
+        : true;
+
+    const selectedText = opt.noiDung;
+    const targetWord = currentQ.deBai?.tu || currentQ.deBai?.goiY || currentQ.dapAnText || opt.noiDung;
+    const targetMeaning = currentQ.deBai?.goiY || currentQ.deBai?.dichVi || '';
+
+    setAnswers((prev) => ({ ...prev, [questionId]: opt.noiDung || opt.id }));
+
+    if (isCorrect) {
+      setScore((prev) => prev + 10);
+      setCorrectCount((prev) => prev + 1);
+      SFX.correct();
+    } else {
+      SFX.wrong();
+      setWrongQuestions((prev) => {
+        if (prev.some((wq) => wq.id === currentQ.id)) return prev;
+        return [...prev, currentQ];
+      });
+    }
+
+    setFeedback((prev) => ({
+      ...prev,
+      [questionId]: {
+        isCorrect,
+        isTimeout: false,
+        selectedText,
+        selectedMeaning: opt.nghiaVi || '',
+        correctText: targetWord,
+        correctMeaning: targetMeaning,
+        explanationText: opt.nghiaVi || targetMeaning ? `Nghĩa: "${targetMeaning || opt.nghiaVi}"` : ''
+      }
+    }));
+  };
 
   const handleInputChange = (questionId, value, subId = null) => {
-    setAnswers(prev => {
+    setAnswers((prev) => {
       const next = { ...prev };
       if (subId) {
         next[questionId] = { ...(next[questionId] || {}), [subId]: value };
@@ -151,36 +412,22 @@ function PracticeSessionContent() {
     });
   };
 
-  const calculateAnswered = () => {
-    return session.cauHoi.filter(q => {
-      const ans = answers[q.id];
+  const handleSubmitSession = () => {
+    const originalQuestions = session?.cauHoi || [];
+    const traLoi = originalQuestions.map((q) => {
       if (q.loaiCau === 'GHEP_TU') {
-        if (!ans) return false;
-        return q.deBai.cotTrai.every(l => !!ans[l.id]);
-      }
-      if (q.phuongAn) return !!ans;
-      return !!ans && String(ans).trim() !== '';
-    }).length;
-  };
-
-  const answeredCount = calculateAnswered();
-  const progressPercent = session.cauHoi.length ? (answeredCount / session.cauHoi.length) * 100 : 0;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (answeredCount < session.cauHoi.length) {
-      if (!window.confirm(`Còn ${session.cauHoi.length - answeredCount} câu trống. Bạn có chắc chắn muốn nộp?`)) return;
-    }
-
-    const traLoi = session.cauHoi.map(q => {
-      if (q.loaiCau === 'GHEP_TU') {
-        const cap = q.deBai.cotTrai.map(l => ({ traiId: l.id, phaiId: answers[q.id]?.[l.id] || null })).filter(c => c.phaiId);
+        const cap =
+          q.deBai?.cotTrai
+            ?.map((l) => ({ traiId: l.id, phaiId: answers[q.id]?.[l.id] || null }))
+            .filter((c) => c.phaiId) || [];
         return { cauHoiId: q.id, cap };
       }
-      if (q.phuongAn) {
+      if (q.phuongAn && !questionOptionsMap[q.id]) {
         return { cauHoiId: q.id, luaChonId: answers[q.id] || null };
       }
-      return { cauHoiId: q.id, noiDung: answers[q.id] || '' };
+      const ansVal = answers[q.id];
+      const noiDung = ansVal === '__TIMEOUT__' ? '' : typeof ansVal === 'string' ? ansVal : '';
+      return { cauHoiId: q.id, noiDung };
     });
 
     if (!submitKey.current) submitKey.current = submitKeyFor(id);
@@ -192,142 +439,383 @@ function PracticeSessionContent() {
     });
   };
 
-  const renderQuestion = (q, index) => {
-    const renderContent = () => {
-      if (q.phuongAn && Array.isArray(q.phuongAn)) {
-        return (
-          <div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 'bold', fontFamily: 'var(--font-word)', marginBottom: '4px' }}>
-              {q.deBai?.tu || q.deBai?.nghiaVi || (q.deBai?.cau ? <BlankSentence sentence={q.deBai.cau} /> : null)}
-            </div>
-            <div style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
-              {q.deBai?.phienAm && <span style={{ marginRight: '8px' }}>{q.deBai.phienAm}</span>}
-              {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
-              {q.deBai?.goiY && <span style={{ marginLeft: '8px' }}>Gợi ý: {q.deBai.goiY}</span>}
-            </div>
-            <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-              {q.phuongAn.map((opt, i) => (
-                <label key={opt.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', gap: 'var(--space-3)', cursor: 'pointer', background: answers[q.id] === opt.id ? 'var(--color-primary-tint)' : 'transparent' }}>
-                  <input type="radio" name={q.id} value={opt.id} checked={answers[q.id] === opt.id} onChange={(e) => handleInputChange(q.id, e.target.value)} />
-                  <span style={{ fontWeight: 'bold', width: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                  <span>{opt.noiDung}</span>
-                </label>
-              ))}
+  const handleContinue = () => {
+    SFX.select();
+    if (isLastQuestion) {
+      if (!isRetryMode) {
+        handleSubmitSession();
+      }
+      setIsFinished(true);
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  };
+
+  const handleStartRetry = () => {
+    SFX.select();
+    const retryQs = shuffle(wrongQuestions.map((q) => ({ ...q })));
+    setActiveQuestions(retryQs);
+    setAnswers({});
+    setFeedback({});
+    setWrongQuestions([]);
+    setCurrentIndex(0);
+    setScore(0);
+    setCorrectCount(0);
+    setIsRetryMode(true);
+    setIsFinished(false);
+    setTimeLeft(TIME_LIMIT);
+    setIsTimerActive(true);
+  };
+
+  const handleRestartAll = () => {
+    SFX.select();
+    setActiveQuestions(session?.cauHoi || []);
+    setAnswers({});
+    setFeedback({});
+    setWrongQuestions([]);
+    setCurrentIndex(0);
+    setScore(0);
+    setCorrectCount(0);
+    setIsRetryMode(false);
+    setIsFinished(false);
+    setTimeLeft(TIME_LIMIT);
+    setIsTimerActive(true);
+  };
+
+  // Find word to display in blank
+  const chosenBlankWord =
+    currentAnswer === '__TIMEOUT__'
+      ? '(Hết giờ)'
+      : typeof currentAnswer === 'string'
+      ? currentAnswer
+      : '';
+
+  const renderSentenceWithBlank = (sentence) => {
+    if (!sentence) return null;
+    const parts = sentence.split(/_____|____|___|\?/g);
+    const isAnswered = !!currentFb;
+    const isCorr = currentFb?.isCorrect;
+
+    let highlightClass = styles.blankHighlight;
+    if (isAnswered) {
+      highlightClass += isCorr ? ` ${styles.blankHighlightCorrect}` : ` ${styles.blankHighlightWrong}`;
+    }
+
+    if (parts.length <= 1) {
+      return (
+        <span>
+          {sentence} <span className={highlightClass}>{chosenBlankWord || '_______'}</span>
+        </span>
+      );
+    }
+    return (
+      <span>
+        {parts[0]}
+        <span className={highlightClass}>{chosenBlankWord || '_______'}</span>
+        {parts.slice(1).join('_______')}
+      </span>
+    );
+  };
+
+  if (!id) return <div style={{ color: '#ffffff', padding: '30px', textAlign: 'center' }}>Phiên luyện tập không hợp lệ.</div>;
+  if (error) return <div style={{ color: '#f87171', padding: '30px', textAlign: 'center' }}>{error.message || 'Chưa tải được bài luyện.'}</div>;
+  if (isLoading || !session || !session.cauHoi || session.cauHoi.length === 0) {
+    return <div style={{ color: '#ffffff', padding: '60px', textAlign: 'center' }}>Đang tải bài luyện tập...</div>;
+  }
+
+  // Active question options
+  const activeOptions = currentQ ? (questionOptionsMap[currentQ.id] || currentQ.phuongAn) : [];
+
+  // End Screen view
+  if (isFinished) {
+    const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+    const emoji = accuracy >= 90 ? '🏆' : accuracy >= 70 ? '⭐' : '📚';
+    const titleText = accuracy >= 90 ? 'Xuất Sắc!' : accuracy >= 70 ? 'Khá Tốt!' : 'Cần Cố Gắng Thêm!';
+
+    return (
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          <div className={styles.endScreen}>
+            <span className={styles.endEmoji}>{emoji}</span>
+            <h2 className={styles.endTitle}>{titleText}</h2>
+            <p className={styles.endScore}>
+              Bạn trả lời đúng {correctCount}/{total} câu · Điểm: {score} · Độ chính xác: {accuracy}%
+            </p>
+
+            <div className={styles.retryActions}>
+              {wrongQuestions.length > 0 && (
+                <button type="button" className={styles.btnGold} onClick={handleStartRetry}>
+                  🔄 LUYỆN LẠI CÂU SAI ({wrongQuestions.length} CÂU)
+                </button>
+              )}
+              <button type="button" className={styles.btnOutline} onClick={handleRestartAll}>
+                ↻ LÀM LẠI TỪ ĐẦU
+              </button>
+              <button
+                type="button"
+                className={styles.btnSecondaryAction}
+                onClick={() => router.push(`/luyen-tap-ket-qua?id=${id}`)}
+              >
+                📊 XEM BÁO CÁO CHI TIẾT
+              </button>
+              <Link href="/luyen-tap" className={styles.btnExitEnd}>
+                Quay về trang Luyện tập
+              </Link>
             </div>
           </div>
-        );
-      }
+        </div>
+      </div>
+    );
+  }
 
-      if (q.loaiCau === 'GHEP_TU' && q.deBai?.cotTrai) {
-        return (
-          <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-            {q.deBai.cotTrai.map(left => (
-              <div key={left.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 150px) minmax(0, 1fr)', gap: 'var(--space-3)', alignItems: 'center' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
+  return (
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        {/* Top Header */}
+        <div className={styles.topBar}>
+          <Link href="/luyen-tap" className={styles.exitBtn}>
+            <Icon name="arrow-left" size={16} /> Thoát
+          </Link>
+
+          <div className={styles.brandCenter}>
+            <div className={styles.brandTitle}>
+              {isRetryMode ? 'LUYỆN LẠI CÂU SAI 🔄' : (session.boTheTen || 'Luyện Tập Từ Vựng')}
+            </div>
+            <div className={styles.brandSub}>{label(session.loaiBai)}</div>
+          </div>
+
+          <div className={styles.statCards}>
+            <div className={styles.statCard}>
+              <span className={styles.statNum}>{score}</span>
+              <span className={styles.statLabel}>ĐIỂM</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statNum}>{correctCount}</span>
+              <span className={styles.statLabel}>CÂU ĐÚNG</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Retry Badge */}
+        {isRetryMode && (
+          <div style={{ textAlign: 'center' }}>
+            <span className={styles.retryBadge}>
+              <Icon name="sparkles" size={13} /> Đang luyện lại các câu chưa đúng
+            </span>
+          </div>
+        )}
+
+        {/* Timer & Progress Bar (20s countdown) */}
+        <div className={styles.timelineRow}>
+          <span className={`${styles.timeDisplay} ${timeLeft <= 5 ? styles.timeDisplayDanger : ''}`}>
+            {timeLeft}s
+          </span>
+          <div className={styles.progressTrack}>
+            <div
+              className={`${styles.progressFill} ${timeLeft <= 5 ? styles.progressFillDanger : ''}`}
+              style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className={styles.questionCard}>
+          <span className={styles.questionTag}>
+            QUESTION {currentIndex + 1} / {total}
+          </span>
+          <div className={styles.questionSentence}>
+            {currentQ?.deBai?.cau ? (
+              renderSentenceWithBlank(currentQ.deBai.cau)
+            ) : (
+              currentQ?.deBai?.tu || currentQ?.deBai?.nghiaVi || 'Câu hỏi'
+            )}
+          </div>
+        </div>
+
+        {/* Context Card (Ngữ cảnh Tiếng Việt) */}
+        <div className={styles.contextCard}>
+          <div className={styles.contextHeader}>
+            <Icon name="sparkles" size={15} /> NGỮ CẢNH TIẾNG VIỆT
+          </div>
+          <div className={styles.contextText}>
+            {currentQ?.deBai?.dichVi ||
+              currentQ?.deBai?.viDuVi ||
+              currentQ?.deBai?.goiY ||
+              (currentQ?.deBai?.tuLoai ? `Từ loại: [${currentQ.deBai.tuLoai}]` : 'Nhận diện từ và ngữ cảnh câu')}
+          </div>
+        </div>
+
+        {/* Audio (nếu dạng Nghe Viết) */}
+        {currentQ?.loaiCau === 'NGHE_VIET' && (
+          <ListenPrompt practiceId={id} questionId={currentQ.id} hasAudio={!!(currentQ.deBai?.amTuId || currentQ.deBai?.amThanhTts)} tuLoai={currentQ.deBai?.tuLoai} />
+        )}
+
+        {/* Options / Input Content */}
+        {activeOptions && Array.isArray(activeOptions) && activeOptions.length > 0 ? (
+          <div className={styles.optionsGrid}>
+            {activeOptions.map((opt, i) => {
+              const letter = LABELS[i] || String.fromCharCode(65 + i);
+              const isSelected = currentAnswer === opt.noiDung || currentAnswer === opt.id;
+              const hasAnswered = !!currentFb;
+              const isOptionCorrect = opt.isCorrect !== undefined ? opt.isCorrect : opt.id === currentQ.dapAnDung;
+
+              let cardClass = styles.optionCard;
+              if (hasAnswered) {
+                if (isSelected) {
+                  cardClass += currentFb.isCorrect ? ` ${styles.optionCardSelected}` : ` ${styles.optionCardWrong}`;
+                } else if (isOptionCorrect && (!currentFb.isCorrect || currentAnswer === '__TIMEOUT__')) {
+                  cardClass += ` ${styles.optionCardReveal}`;
+                }
+              }
+
+              return (
+                <button
+                  key={opt.id || opt.noiDung}
+                  type="button"
+                  className={cardClass}
+                  disabled={hasAnswered || !isTimerActive}
+                  onClick={() => handleSelectOption(currentQ.id, opt)}
+                >
+                  <span className={styles.optionBadge}>{letter}</span>
+                  <span className={styles.optionContent}>
+                    <span className={styles.optionMain}>{opt.noiDung}</span>
+                    {opt.nghiaVi && (
+                      <span
+                        className={styles.optionSub}
+                        style={{ display: hasAnswered ? 'block' : 'none' }}
+                      >
+                        {opt.nghiaVi}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : currentQ?.loaiCau === 'GHEP_TU' && currentQ.deBai?.cotTrai ? (
+          <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
+            {currentQ.deBai.cotTrai.map((left) => (
+              <div
+                key={left.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '150px 1fr',
+                  gap: '12px',
+                  alignItems: 'center',
+                  background: '#1a1733',
+                  padding: '14px 18px',
+                  borderRadius: '12px'
+                }}
+              >
+                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#ffffff' }}>{left.noiDung}</div>
                 <select
-                  style={{ width: '100%', minWidth: 0, padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
-                  value={answers[q.id]?.[left.id] || ''}
-                  onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: '#231f44',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px'
+                  }}
+                  value={answers[currentQ.id]?.[left.id] || ''}
+                  onChange={(e) => handleInputChange(currentQ.id, e.target.value, left.id)}
                 >
                   <option value="">Chọn nghĩa...</option>
-                  {q.deBai.cotPhai?.map(right => (
-                    <option key={right.id} value={right.id}>{right.noiDung}</option>
+                  {currentQ.deBai.cotPhai?.map((right) => (
+                    <option key={right.id} value={right.id}>
+                      {right.noiDung}
+                    </option>
                   ))}
                 </select>
               </div>
             ))}
           </div>
-        );
-      }
-
-      const listening = q.loaiCau === 'NGHE_VIET';
-      return (
-        <div>
-          {listening ? (
-            <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts)} tuLoai={q.deBai?.tuLoai} />
-          ) : q.deBai?.cau ? (
-            <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}><BlankSentence sentence={q.deBai.cau} /></div>
-          ) : (
-            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
-          )}
-          {!listening && (
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-              Gợi ý: {q.deBai?.goiY || 'Gõ từ tiếng Anh chuẩn xác'} {q.deBai?.phienAm && <span>({q.deBai.phienAm})</span>} {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
-              {q.deBai?.viDuVi && <div style={{ marginTop: '4px' }}>Ví dụ: {q.deBai.viDuVi}</div>}
-            </div>
-          )}
+        ) : (
           <input
             type="text"
-            placeholder={listening ? 'Từ bạn nghe được' : 'Nhập từ tiếng Anh...'}
-            value={answers[q.id] || ''}
-            onChange={(e) => handleInputChange(q.id, e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '1.1rem' }}
+            className={styles.inputBox}
+            placeholder={
+              currentQ?.loaiCau === 'NGHE_VIET'
+                ? 'Nhập từ bạn nghe được...'
+                : 'Nhập từ tiếng Anh cần điền vào chỗ trống...'
+            }
+            value={answers[currentQ?.id] || ''}
+            onChange={(e) => handleInputChange(currentQ.id, e.target.value)}
           />
-        </div>
-      );
-    };
+        )}
 
-    return (
-      <section key={q.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-6)', borderBottom: '1px dashed var(--color-border)', marginBottom: 'var(--space-6)' }}>
-        <div style={{ width: '40px', height: '40px', background: 'var(--color-field)', border: '2px solid var(--color-primary-tint)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, color: 'var(--color-primary-strong)' }}>
-          {index + 1}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'bold', color: 'var(--color-primary)', marginBottom: 'var(--space-3)', textTransform: 'uppercase' }}>
-            {label(PRACTICE_TYPE, q.loaiCau)}
+        {/* Feedback Analysis Area */}
+        {currentFb && (
+          <div className={styles.analysisGrid} style={{ marginBottom: '20px' }}>
+            {!currentFb.isCorrect && (
+              <div className={`${styles.analysisItem} ${styles.analysisWrong}`}>
+                <div className={`${styles.analysisHead} ${styles.analysisHeadWrong}`}>
+                  <Icon name="x" size={18} />
+                  {currentFb.isTimeout ? (
+                    'HẾT THỜI GIAN (20s)'
+                  ) : (
+                    <>
+                      BẠN ĐÃ CHỌN SAI: <strong>{currentFb.selectedText}</strong>
+                    </>
+                  )}
+                </div>
+                {currentFb.selectedMeaning && (
+                  <div className={styles.analysisDesc}>Nghĩa: "{currentFb.selectedMeaning}"</div>
+                )}
+              </div>
+            )}
+
+            <div className={`${styles.analysisItem} ${styles.analysisCorrect}`}>
+              <div className={`${styles.analysisHead} ${styles.analysisHeadCorrect}`}>
+                <Icon name="check" size={18} />
+                ĐÁP ÁN ĐÚNG: <strong>{currentFb.correctText}</strong>
+              </div>
+              {currentFb.correctMeaning && (
+                <div className={styles.analysisDesc}>Nghĩa: "{currentFb.correctMeaning}"</div>
+              )}
+            </div>
           </div>
-          {renderContent()}
-        </div>
-      </section>
-    );
-  };
+        )}
 
-  return (
-    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ background: 'var(--color-field)', display: 'flex', alignItems: 'center', padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 10 }}>
-        <Button variant="ghost" onClick={() => router.push('/luyen-tap')} style={{ padding: '8px' }}><Icon name="x" /></Button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Bài luyện: {label(PRACTICE_TYPE, session.loaiBai)}</div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{session.boTheTen}</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', fontWeight: 'bold' }}>
-          <Icon name="clock" /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-        </div>
-      </header>
-      <div style={{ height: '4px', background: 'var(--color-border)' }}>
-        <div style={{ height: '100%', background: 'var(--color-primary)', width: `${progressPercent}%`, transition: 'width 0.3s ease' }} />
+        {/* Submit Error */}
+        {submitError && (
+          <div
+            style={{
+              color: '#ef4444',
+              background: 'rgba(239, 68, 68, 0.15)',
+              padding: '12px 18px',
+              borderRadius: '10px',
+              marginBottom: '16px',
+              fontWeight: '500'
+            }}
+          >
+            {submitError}
+          </div>
+        )}
+
+        {/* Bottom Continue / Submit Button */}
+        {currentFb && (
+          <button
+            type="button"
+            className={styles.continueBtn}
+            onClick={handleContinue}
+            disabled={submitMutation.isPending}
+          >
+            {isLastQuestion
+              ? isRetryMode
+                ? 'HOÀN THÀNH LUYỆN LẠI 🏆'
+                : 'XEM KẾT QUẢ 🏆'
+              : 'TIẾP TỤC ➔'}
+          </button>
+        )}
       </div>
-
-      <main style={{ flex: 1, padding: 'var(--space-5)', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: '100%', maxWidth: '720px' }}>
-          <form onSubmit={handleSubmit} style={{ background: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-            <div style={{ marginBottom: 'var(--space-6)', borderBottom: '1px solid var(--color-border)', paddingBottom: 'var(--space-4)' }}>
-              <h1 style={{ fontSize: 'var(--font-size-2xl)' }}>Bài luyện</h1>
-              <p style={{ color: 'var(--color-ink-2)' }}>Trả lời theo thứ tự nào cũng được. Không phân biệt chữ hoa, chữ thường.</p>
-            </div>
-
-            <div>
-              {session.cauHoi.map((q, index) => renderQuestion(q, index))}
-            </div>
-
-            {submitError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-4)' }}>{submitError}</p>}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-6)', position: 'sticky', bottom: 'var(--space-4)', background: 'var(--color-field)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div ref={counterRef} style={{ fontWeight: 'bold', display: 'inline-block' }}>Đã trả lời {answeredCount}/{session.cauHoi.length}</div>
-              <Button type="submit" variant="primary" size="lg" disabled={submitMutation.isPending}>
-                {submitMutation.isPending ? 'Đang nộp...' : 'Nộp bài'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </main>
     </div>
   );
 }
 
 export default function PracticeSessionPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div style={{ color: '#ffffff', padding: '60px', textAlign: 'center' }}>Đang tải...</div>}>
       <PracticeSessionContent />
     </Suspense>
   );

@@ -104,8 +104,9 @@ public class StudySessionService {
         CheDoPhien cheDo = request.mode();
         int cap = quyThoiGian * 60 / LearningPlanService.GIAY_MOI_LUOT;
 
+        boolean tuDo = request.isHocTuDo() || boTheId != null;
         List<Long> cardIds = pickCardIds(
-                userId, chieu, boTheId, now, homNay, cap, cheDo
+                userId, chieu, boTheId, now, homNay, cap, cheDo, tuDo
         );
         if (cardIds.isEmpty()) {
             throw new ApiException(
@@ -113,9 +114,11 @@ public class StudySessionService {
                     cheDo == CheDoPhien.CUU_LICH
                             ? "Chưa có thẻ nào đến hạn ôn ở chiều đã chọn. "
                                     + "Chế độ học lại sau thời gian nghỉ không lấy thẻ mới."
-                            : "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. "
-                                    + "Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, "
-                                    + "hoặc thêm thẻ mới vào bộ."
+                            : (tuDo
+                                    ? "Chưa có thẻ nào khả dụng trong bộ thẻ này (hoặc tất cả thẻ đang tạm ngưng). Hãy thêm thẻ mới vào bộ để học."
+                                    : "Chưa có thẻ nào cần học lúc này ở chiều đã chọn. "
+                                            + "Thẻ đến hạn tiếp theo sẽ xuất hiện đúng giờ, "
+                                            + "hoặc thêm thẻ mới vào bộ.")
             );
         }
 
@@ -252,7 +255,8 @@ public class StudySessionService {
             Instant now,
             LocalDate homNay,
             int cap,
-            CheDoPhien cheDo
+            CheDoPhien cheDo,
+            boolean tuDo
     ) {
         Pageable page = PageRequest.ofSize(cap);
         LinkedHashSet<Long> picked = new LinkedHashSet<>();
@@ -270,18 +274,28 @@ public class StudySessionService {
                 .forEach(row -> picked.add(row.getTheId()));
 
         int soMoiConLai = soMoiConLai(userId, homNay);
-        if (soMoiConLai > 0) {
+        if (soMoiConLai > 0 && picked.size() < cap) {
             picked.addAll(progress.physicallyNewCardIds(
                     userId,
                     boTheId,
                     TrangThaiTienDo.MOI,
-                    PageRequest.ofSize(Math.min(cap, soMoiConLai))
+                    PageRequest.ofSize(Math.min(cap - picked.size(), soMoiConLai))
             ));
         }
 
-        picked.addAll(progress.otherDirectionCardIds(
-                userId, chieu, boTheId, TrangThaiTienDo.MOI, page
-        ));
+        if (picked.size() < cap) {
+            picked.addAll(progress.otherDirectionCardIds(
+                    userId, chieu, boTheId, TrangThaiTienDo.MOI,
+                    PageRequest.ofSize(cap - picked.size())
+            ));
+        }
+
+        if (tuDo && picked.size() < cap) {
+            picked.addAll(progress.practiceCards(
+                    userId, chieu, boTheId, TrangThaiTienDo.TAM_NGUNG,
+                    PageRequest.ofSize(cap - picked.size())
+            ));
+        }
 
         return picked.stream().limit(cap).toList();
     }

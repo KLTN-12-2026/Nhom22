@@ -46,8 +46,9 @@
 .method.selected i { border-color:var(--primary); background:var(--primary); box-shadow:inset 0 0 0 4px var(--sheet); }
 .methodGlyph { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:var(--desk); color:var(--primary); font-size:1.15rem; }
 .cardForm { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
-.cardForm > .field:first-child, .cardFields { grid-column:1 / -1; }
-.cardFields { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
+.fieldInvalid input { border-color:var(--danger, #d9383a) !important; }
+.fieldErrorText { color:var(--danger, #d9383a); font-size:var(--fs-xs, 0.75rem); margin-top:4px; display:block; }
+.required { color:var(--danger, #d9383a); margin-left:2px; }
 .bankPanel, .walletPanel { display:grid; gap:var(--sp-3); padding:var(--sp-5); background:var(--desk); border-radius:var(--radius-field); }
 .bankPanel code { padding:var(--sp-3); background:var(--sheet); color:var(--primary); font-weight:700; }
 .walletPanel { grid-template-columns:1fr 1fr; }

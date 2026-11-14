@@ -141,9 +141,9 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
         assertThat(match.get("deBai").get("cotPhai").size()).isEqualTo(5);
 
         long audio = audioFile(learner, cards.get(2));
-        JsonNode listening = body(create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 5))
+        JsonNode listening = body(create(learner, Map.of("loaiBai", "NGHE_VIET", "soCau", 10))
                 .andExpect(status().isCreated()));
-        assertThat(listening.get("soCau").asInt()).isEqualTo(5);
+        assertThat(listening.get("soCau").asInt()).isEqualTo(6);
         List<String> uploaded = new ArrayList<>();
         listening.get("cauHoi").forEach(question -> {
             JsonNode deBai = question.get("deBai");

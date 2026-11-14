@@ -276,7 +276,7 @@ function ProgressContent() {
               ))}
             </div>
           )}
-          <Button variant="primary" onClick={() => router.push(`/hoc?boTheId=${id}`)} style={{ width: '100%' }}>Học bộ này</Button>
+          <Button variant="primary" onClick={() => router.push(`/luyen-tap?loaiBai=FLASHCARD&boTheId=${id}`)} style={{ width: '100%' }}>Học bộ này (Flashcard)</Button>
         </section>
 
         <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
