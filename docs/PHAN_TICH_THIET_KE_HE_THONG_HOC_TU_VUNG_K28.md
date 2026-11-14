@@ -430,10 +430,12 @@ B2.10 (chốt 03/11/2026, đề xuất) hiện thực `GET /statistics/skills` c
 | SAI_CHINH_TA | Sai ít nhất 2/5 lượt nhập gần nhất | Phiên nhập từ/nghe viết |
 | CAP_DE_NHAM | Chọn nhầm hai từ trong nhiều câu | Bài phân biệt cặp từ |
 | PHAT_AM_THAP | Kết quả dịch vụ dưới ngưỡng cấu hình | Nghe mẫu và ghi âm lại |
-| QUA_HAN_NHIEU | Lượng ôn vượt khả năng một phiên | Chia kế hoạch học lại |
+| QUA_HAN_NHIEU | Số lượt ôn quá hạn vượt số lượt mỗi ngày theo cài đặt (`phutMoiNgay×60/20`), cùng điều kiện bật `cuuLichOn` (B2.6; sửa 12/11/2026, B3.5) | Chia kế hoạch học lại |
 | TIEN_BO | Thẻ từng sai/quên nhiều nhưng các lượt gần đây đều đúng, đủ ngưỡng lượt quan sát (thêm 07/11/2026, B3.5) | Ghi nhận tiến bộ, không yêu cầu hành động |
 
 B2.9 (chốt 03/11/2026, đề xuất) dùng ba mã đầu cho sổ tay UI27, ngưỡng trong `app.notebook.*`: QUEN_NHIEU = ≥ 3 lượt `lich_su_on` Quên từ `ON_TAP` (cả hai chiều) trong 30 ngày; SAI_CHINH_TA = ≥ 2 lỗi `CHINH_TA` trong 5 lượt nhập gần nhất (câu bỏ trống không tính lượt); CAP_DE_NHAM = thẻ thuộc cặp có `so_lan_nham ≥ 2`; thêm `DANH_DAU_THU_CONG` khi người học tự đánh dấu. Sổ tay là kết quả suy ra từ lỗi, lần quên và đánh dấu; chi tiết ở [flow B2.9](luong-backend/B2.9-so-tay-cap-nham.md).
+
+B3.5 (chốt 12/11/2026, đề xuất) hiện thực `GET /learning/recommendations` → `[{reasonCode, message, cardIds, evidence}]`, user chưa có dữ liệu → `[]`. Ba mã đầu dùng chung ngưỡng `app.notebook.*` với sổ tay. `TIEN_BO`: cửa sổ cũ `[now−30 ngày, now−7 ngày)` có ≥ 5 lượt, ≥ 3 sai và tỷ lệ sai ≥ 0,5; cửa sổ mới `[now−7 ngày, now)` có ≥ 5 lượt và không sai; "sai" = lượt ôn Quên hoặc câu luyện `dung = false`; ngưỡng ở `app.recommendations.tien-bo.*`. Mỗi thẻ một gợi ý (cặp nhầm: 2 thẻ; quá hạn: 1 gợi ý), ưu tiên theo thứ tự bảng trên, tối đa 2 gợi ý mỗi lý do và 10 gợi ý tổng, một thẻ chỉ thuộc một lý do (trừ `QUA_HAN_NHIEU`). Chi tiết ở [flow B3.5](luong-backend/B3.5-goi-y-co-ly-do.md).
 
 Ví dụ hiển thị: “Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây”, có liên kết xem các lượt liên quan. Với `TIEN_BO`: “‘reimbursement’: sai 3/5 lượt tháng trước, đúng 5/5 tuần này”. `PHAT_AM_THAP` chỉ bật khi đánh giá phát âm dùng dịch vụ thật. Ngưỡng là cấu hình thiết kế, không phải kết luận nghiên cứu.
 
@@ -594,7 +596,8 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
 | `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
-| `tep_tin` | chu_so_huu_id, object_key unique, mime_type, kich_thuoc, checksum, loai, trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `tep_tin` | chu_so_huu_id, object_key unique, mime_type (V18: `VARCHAR(100)` để chứa MIME `.docx`), kich_thuoc, checksum, loai (`ANH`/`AM_THANH`/`TAI_LIEU`; `TAI_LIEU` thêm ở V18 cho X-01, chỉ `.docx` ≤ 1 MB), trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
+| `yeu_cau_luu_the_ai` | V18 B3.2: nguoi_dung_id, idempotency_key ascii_bin, yeu_cau_ai_id, bo_the_id nullable (bộ đích, có khi hoàn tất; bộ mới tạo trong cùng giao dịch), request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key); kết quả cùng null hoặc cùng hoàn tất |
 | `the_tep` | the_id, tep_id, vai_tro: ảnh/âm từ/âm câu; khóa chính (the_id, vai_tro) nên mỗi thẻ có tối đa một tệp cho mỗi vai trò |
 | `bo_yeu_thich` | nguoi_dung_id, bo_the_id; unique cặp |
 | `chu_de_yeu_thich` | V4: nguoi_dung_id, chu_de_id; khóa chính cặp; tối đa 5 chủ đề/người (kiểm ở dịch vụ) |
@@ -621,9 +624,9 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `huy_hieu`, `nguoi_dung_huy_hieu` | ma, ten, mo_ta, loai_dieu_kien (`TONG_LUOT_ON`/`CHUOI_NGAY`/`TONG_BAI_LUYEN`/`TONG_DIEM`), nguong, thu_tu, hoat_dong; lần nhận nhan_at; unique người/huy hiệu (V16, 6 huy hiệu seed) |
 | `thu_thach`, `tien_do_thu_thach` | ma, loai_dieu_kien (`LUOT_ON`), chu_ky (`TUAN`), muc_tieu; tiến độ theo tuan_bat_dau (thứ Hai), gia_tri, hoan_thanh_at, version; unique người/thử thách/tuần (V16, 1 thử thách seed) |
 | `so_diem_thuong` | nguoi_dung_id, loai_su_kien (`ON_THE`/`BAI_LUYEN`), su_kien_id VARCHAR(64) (`tienDoId:ngày` cho lượt ôn, `lanLamBaiId` cho bài luyện), diem_goc, so_diem (sau trần), ngay_dia_phuong; unique (nguoi_dung_id, loai_su_kien, su_kien_id). `su_dung_hoc_ngay.diem` là tổng điểm của ngày, dùng để áp trần và tái tạo được từ sổ (V16) |
-| `thong_bao` | thông báo, đã đọc (chưa có migration; B3.7); loại gồm nhắc học, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`; `ngay_dia_phuong`, unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
+| `thong_bao` | nguoi_dung_id, loai (`NHAC_HOC`, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`), ngay_dia_phuong, tieu_de, noi_dung, lien_ket, hien_thi (false khi User tắt kênh trong ứng dụng, dòng vẫn giữ để chống trùng), gui_email, da_doc_at (V17, B3.7); unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
-| `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý |
+| `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý (chưa có migration; B3.8) |
 | `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa. B3.12b thêm hành động `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN` và loại đối tượng `GOI_DICH_VU`, `DANG_KY_GOI` |
 | `tac_vu_nen` | V15 (B3.1): loai, payload_json, trang_thai (`CHO`/`DANG_CHAY`/`XONG`/`LOI`/`KHONG_XAC_DINH`), retry_count, max_retry, next_run_at, khoa_boi và khoa_den_at (lease), ma_loi; index (trang_thai, next_run_at, id) cho hàng đợi |
 | `yeu_cau_xoa_du_lieu` | nguoi_dung_id, trạng thái, thời điểm, phạm vi và kết quả |
@@ -690,7 +693,7 @@ erDiagram
 | Kế hoạch/SRS | `GET /learning/today`, `POST /learning/sessions`, `GET /learning/sessions/{id}`, `POST /learning/sessions/{id}/reviews`, `POST /learning/sessions/{id}/finish`, `GET /learning/history`, `GET /decks/{id}/progress`, `PUT /cards/{id}/progress/suspend`, `POST /cards/{id}/progress/reset` |
 | Luyện tập | `POST /practice/sessions`, `GET /practice/sessions/{id}`, `POST /practice/sessions/{id}/submissions`, `GET /practice/history`, `POST /practice/mistakes/retry` |
 | Sổ tay/gợi ý | `GET /notebook`, `PUT/DELETE /notebook/{cardId}`, `GET /learning/recommendations`, `GET /learning/confusing-pairs` |
-| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`), `GET /ai/history`, `GET /me/service-quota` |
+| AI | `POST /ai/card-drafts` (đoạn văn hoặc `tepId`; `boTheId` tùy chọn để đánh dấu từ trùng, B3.2), `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, `POST /ai/card-images` (ảnh minh họa thẻ nháp, bổ sung 07/11/2026), `POST /ai/exercise-drafts` (Hoãn, chỉ làm khi dư thời gian), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (`boTheId` hoặc `tenBoMoi`; `sua` tùy chọn để lưu nội dung thẻ nháp đã sửa, B3.2), `GET /ai/history`, `GET /me/service-quota` |
 | Gói & thanh toán (FR-15) | `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return`, `GET /billing/transactions`, `GET /billing/transactions/{maDon}`, `GET /billing/transactions/{maDon}/receipt`; Admin: `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET /admin/plans`, `PUT /admin/plans/{ma}`, `GET /admin/revenue`; công cụ demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` |
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
@@ -754,7 +757,7 @@ Prompt có phiên bản; tách hướng dẫn cố định với dữ liệu Use
 
 ### 14.3. Xử lý lỗi
 
-Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạt động có mã lỗi riêng. Thử lại hữu hạn với backoff cho lỗi phù hợp; dùng mã yêu cầu nhà cung cấp nếu có. Khi lỗi kéo dài, tạm ngừng nhận tác vụ ngoài và hiển thị tình trạng. Học thẻ, SRS, bài cố định và thống kê vẫn dùng dữ liệu nội bộ.
+Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạt động có mã lỗi riêng. Thử lại hữu hạn với backoff cho lỗi phù hợp; dùng mã yêu cầu nhà cung cấp nếu có. Đầu ra sai schema hoặc không còn mục hợp lệ → `LOI` (`SAI_SCHEMA`/`KHONG_CO_TU`), hoàn lượt (chốt 13/11/2026, B3.2); mục lẻ sai bị bỏ, phần còn lại vẫn `HOAN_TAT`. Khi lỗi kéo dài, tạm ngừng nhận tác vụ ngoài và hiển thị tình trạng. Học thẻ, SRS, bài cố định và thống kê vẫn dùng dữ liệu nội bộ.
 
 ## 15. Điểm thưởng, chuỗi ngày và nhắc học
 
@@ -770,6 +773,8 @@ Timeout, giới hạn tốc độ, sai cấu trúc và dịch vụ ngừng hoạ
 ### 15.2. Nhắc học
 
 Nhắc theo múi giờ và lựa chọn kênh. Khóa chống trùng gồm User, loại nhắc và ngày địa phương. Không gửi nếu đã tắt kênh, tài khoản đang xóa hoặc đã hoàn thành điều kiện không cần nhắc. Email có lựa chọn ngừng nhận; thông báo hệ thống quan trọng tách khỏi nhắc học tùy chọn.
+
+Triển khai B3.7 (11/11/2026): tác vụ chạy mỗi 15 phút; xét User `HOAT_DONG` có `nhac_hoc = true` và `gio_nhac` (API cài đặt đã bắt buộc giờ khi bật nhắc); gửi ở lần chạy đầu tiên khi giờ địa phương ≥ `gio_nhac`. "Đã hoàn thành" = hôm nay đã ≥ 5 lượt hợp lệ (ngưỡng chuỗi ngày §15.1). Ghi `thong_bao` bằng chèn bỏ qua trùng; email chỉ gửi khi chèn được dòng, sau commit. Tắt kênh trong ứng dụng vẫn ghi dòng với `hien_thi = false` để email không gửi lặp. Email ngừng nhận bằng link tới trang cài đặt thông báo (chưa có link một chạm có token).
 
 ## 16. Yêu cầu phi chức năng và bảo mật
 

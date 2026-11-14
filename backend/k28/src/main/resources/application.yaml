@@ -63,6 +63,25 @@ app:
     backoff-max: 5m
   quota:
     zone: ${QUOTA_ZONE:Asia/Ho_Chi_Minh}
+  ai:
+    provider: ${AI_PROVIDER:fake}
+    openai:
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_MODEL:gpt-4o-mini}
+      connect-timeout: 5s
+      read-timeout: 60s
+      max-output-tokens: 6000
+      temperature: 0.2
+    fake:
+      che-do: ${AI_FAKE_MODE:THANH_CONG}
+      do-tre: 1s
+    card-draft:
+      phien-ban-prompt: card-draft-v1
+      max-ky-tu: 5000
+      max-the: 50
+      max-tep-bytes: 1048576
+      max-tu-moi-the: 6
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
@@ -76,9 +95,28 @@ app:
     diem-toi-da-ngay: ${REWARD_DAILY_CAP:100}
     diem-moi-luot-on: 1
     diem-moi-cau-dung: 1
+  reminders:
+    enabled: ${REMINDERS_ENABLED:true}
+    interval-ms: ${REMINDERS_INTERVAL_MS:900000}
+    initial-delay-ms: ${REMINDERS_INITIAL_DELAY_MS:60000}
   statistics:
     so-luot-toi-da: 20
     so-quan-sat-toi-thieu: 5
+  recommendations:
+    toi-da-goi-y: 10
+    toi-da-moi-ly-do: 2
+    toi-da-the-qua-han: 20
+    tien-bo:
+      so-ngay-cu: 30
+      so-ngay-moi: 7
+      so-luot-cu-toi-thieu: 5
+      so-sai-cu-toi-thieu: 3
+      ty-le-sai-cu-toi-thieu: 0.5
+      so-luot-moi-toi-thieu: 5
+      so-sai-moi-toi-da: 0
+    phat-am-thap:
+      enabled: false
+      diem-toi-thieu: 60
   s3:
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}

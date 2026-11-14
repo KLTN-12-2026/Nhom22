@@ -1,0 +1,1312 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>B3.5 Gợi ý có lý do</title><style>
+:root{--bg:#f7f6f2;--panel:#ffffff;--ink:#1d2330;--muted:#5b6475;--line:#d9d6cc;--accent:#1f5fbf;--accent-soft:#e6eefb;--code-bg:#f1efe8;--ok:#1d7a46;--warn:#9a5b00}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#14171d;--panel:#1b1f27;--ink:#e6e8ee;--muted:#9aa3b5;--line:#2c3240;--accent:#7aa7ff;--accent-soft:#1f2a40;--code-bg:#11141a;--ok:#5fd28f;--warn:#f0b35a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Segoe UI",system-ui,sans-serif}
+.wrap{display:grid;grid-template-columns:270px 1fr;max-width:1400px;margin:0 auto}
+nav{position:sticky;top:0;height:100vh;overflow:auto;padding:20px 14px;border-right:1px solid var(--line);font-size:13px}
+nav a{display:block;color:var(--muted);text-decoration:none;padding:3px 6px;border-radius:4px}
+nav a:hover{background:var(--accent-soft);color:var(--ink)}
+nav .g{margin:12px 0 4px;font-weight:600;color:var(--ink)}
+main{padding:28px 32px;min-width:0}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:20px;margin:36px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+h3{font-size:16px;margin:0}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin:14px 0}
+.path{font-family:Consolas,monospace;font-size:12.5px;color:var(--muted);word-break:break-all}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent);margin-left:6px}
+.role{margin:8px 0;font-weight:500}
+ul{margin:6px 0 10px;padding-left:20px}
+li{margin:3px 0}
+code{font-family:Consolas,monospace;font-size:13px;background:var(--code-bg);padding:1px 4px;border-radius:3px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:12px;overflow:auto;font-size:12.5px;line-height:1.45;max-height:620px}
+pre code{background:none;padding:0}
+details summary{cursor:pointer;color:var(--accent);font-size:13px;margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft)}
+.tablewrap{overflow-x:auto}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.flow span{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
+.flow b{color:var(--muted)}
+.ok{color:var(--ok);font-weight:600}.warn{color:var(--warn);font-weight:600}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}main{padding:16px}}
+</style></head><body><div class="wrap"><nav><div class="g">Tổng quan</div><a href="#tong-quan">Mục tiêu và luồng</a><a href="#doi-chieu">Đối chiếu tài liệu</a><a href="#ly-do">Sáu mã lý do</a><a href="#thiet-ke">Thiết kế gom gợi ý</a><div class="g">1. Cấu hình</div><a href="#f0">application.yaml</a><a href="#f1">NotebookProperties.java</a><a href="#f2">RecommendationProperties.java</a><a href="#f3">RecommendationConfig.java</a><div class="g">2. Enum và DTO</div><a href="#f4">MaLyDoGoiY.java</a><a href="#f5">RecommendationEvidenceResponse.java</a><a href="#f6">RecommendationResponse.java</a><div class="g">3. Repository</div><a href="#f7">SoTayTuKhoRepository.java</a><a href="#f8">TienDoTheRepository.java</a><div class="g">4. Service module learning</div><a href="#f9">OverdueSummary.java</a><a href="#f10">LearningPlanService.java</a><div class="g">5. Khung rule</div><a href="#f11">RecommendationCandidate.java</a><a href="#f12">RecommendationRule.java</a><a href="#f13">RecommendationCards.java</a><a href="#f14">ProgressPolicy.java</a><div class="g">6. Năm rule</div><a href="#f15">ForgettingRule.java</a><a href="#f16">SpellingRule.java</a><a href="#f17">ConfusingPairRule.java</a><a href="#f18">OverdueRule.java</a><a href="#f19">ProgressRule.java</a><div class="g">7. Service và controller</div><a href="#f20">RecommendationService.java</a><a href="#f21">RecommendationController.java</a><div class="g">8. Test</div><a href="#f22">ProgressPolicyTest.java</a><a href="#f23">RecommendationServiceTest.java</a><a href="#f24">RecommendationRulesTest.java</a><a href="#f25">FR08RecommendationTest.java</a><div class="g">Kết thúc</div><a href="#chay-thu">Chạy thử, JSON, Postman</a><a href="#tc">Ánh xạ TC</a><a href="#checklist">Checklist tài liệu</a></nav><main><h1>B3.5 — Gợi ý có lý do (FR-08)</h1><p class="sub">Giải thích chi tiết từng file đã triển khai · Sprint S8 · UI28 · cập nhật 12/11/2026. Mã nguồn trong trang được đọc trực tiếp từ file khi sinh trang.</p><h2 id="tong-quan">Mục tiêu và luồng</h2><div class="card"><p><code>GET /api/v1/learning/recommendations</code> trả mảng <code>[{reasonCode, message, cardIds, evidence}]</code>: mỗi phần tử là một lời khuyên kèm lý do có số liệu chứng minh (TK §8.3). User chưa có dữ liệu → <code>[]</code>. Không ghi dữ liệu, không migration.</p><div class="flow"><span>RecommendationController</span><b>→</b><span>RecommendationService</span><b>→</b><span>5 RecommendationRule</span><b>→</b><span>SoTayTuKhoRepository / LearningPlanService</span><b>→</b><span>MySQL</span></div><ol><li>Controller lấy <code>userId</code> từ phiên đăng nhập.</li><li>Service đọc <code>Clock</code> một lần, sắp rule theo thứ tự enum <code>MaLyDoGoiY</code>.</li><li>Mỗi rule truy vấn tổng hợp, lọc thẻ dùng được (của chính user, chưa xóa, không tạm ngưng), sinh ứng viên đã sắp theo độ mạnh.</li><li>Service lấy tối đa 2 ứng viên mỗi lý do, tối đa 10 tổng, bỏ ứng viên có thẻ đã thuộc lý do ưu tiên cao hơn.</li><li>Trả JSON; <code>evidence</code> bỏ trường null.</li></ol></div><h2 id="doi-chieu">Đối chiếu tài liệu trước khi code</h2><div class="tablewrap"><table><tr><th>Nguồn</th><th>Chưa khớp</th><th>Chọn</th><th>Lý do</th></tr><tr><td>TK §8.3, dòng QUA_HAN_NHIEU</td><td>Ghi “vượt khả năng một phiên”, code B2.6 bật cứu lịch theo số lượt/ngày</td><td>Đã sửa TK</td><td>UI12 không được vừa hiện cứu lịch vừa không có gợi ý</td></tr><tr><td>Roadmap, SPRINT_PLAN, handoff</td><td>reasonCode/cardIds/evidence là tiếng Anh, khác quy ước tên DTO tiếng Việt</td><td>Giữ nguyên</td><td>Hợp đồng đã ghi ở 3 tài liệu; trường trong evidence dùng tiếng Việt</td></tr><tr><td>TK §8.3 TIEN_BO</td><td>Chưa có số cho “đủ lượt quan sát”, chưa định nghĩa “sai”</td><td>Đề xuất ngưỡng yaml; sai = Quên hoặc dung=false</td><td>Không đổi dữ liệu</td></tr><tr><td>Roadmap B3.5</td><td>Không nói một gợi ý = một thẻ hay một nhóm</td><td>Một thẻ / một cặp / một gợi ý quá hạn</td><td>Mẫu message của TK nêu tên từng thẻ</td></tr><tr><td>TK §8.3</td><td>Một thẻ có thể vừa QUEN_NHIEU vừa TIEN_BO</td><td>Loại trùng theo thứ tự enum</td><td>Tránh hai thông điệp trái ngược</td></tr><tr><td>B2.9 NotebookService</td><td>Ngưỡng đọc bằng @Value</td><td>Thêm NotebookProperties cùng khóa</td><td>Sổ tay và gợi ý dùng chung ngưỡng</td></tr><tr><td>B3.4b chưa làm</td><td>Chưa có dữ liệu phát âm</td><td>Chỉ enum + cờ tắt + chỗ trong evidence</td><td>DTO ổn định cho S8</td></tr><tr><td>TK §19</td><td>FR-08 không có TC riêng</td><td>Ánh xạ TC-02, TC-10</td><td>—</td></tr></table></div><h2 id="ly-do">Sáu mã lý do</h2><div class="tablewrap"><table><tr><th>Mã</th><th>Điều kiện</th><th>Nguồn dữ liệu</th><th>Ngưỡng</th><th>evidence</th><th>message mẫu</th></tr><tr><td>QUEN_NHIEU</td><td>≥ 3 lượt Quên từ ON_TAP trong 30 ngày (cả hai chiều), sau mốc ẩn sổ tay</td><td>lich_su_on ⋈ tien_do_the (lapseStats)</td><td>app.notebook.quen-nhieu, quen-nhieu-ngay</td><td>soLanQuen, soNgay, lanCuoiAt</td><td>Ôn lại ‘receipt’ và thêm mẹo nhớ: bạn quên 3 lần trong 30 ngày qua</td></tr><tr><td>SAI_CHINH_TA</td><td>≥ 2 lỗi CHINH_TA trong 5 lượt nhập gần nhất (bỏ trống không tính)</td><td>tra_loi_bai_luyen ⋈ lan_lam_bai ⋈ cau_hoi_bai_luyen (spellingStats)</td><td>app.notebook.chinh-ta-luot, chinh-ta-sai</td><td>soSai, soLuot, lanCuoiAt</td><td>Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây</td></tr><tr><td>CAP_DE_NHAM</td><td>so_lan_nham ≥ 2, cả hai thẻ dùng được, không bị ẩn sau lần nhầm cuối</td><td>cap_tu_de_nham (pairStats)</td><td>app.notebook.cap-nham</td><td>capId, soLanNham, lanCuoiAt</td><td>Phân biệt ‘affect’ và ‘effect’: bạn chọn nhầm 3 lần</td></tr><tr><td>PHAT_AM_THAP</td><td>Chưa bật — chờ B3.4b dùng dịch vụ thật</td><td>—</td><td>app.recommendations.phat-am-thap.enabled=false, diem-toi-thieu</td><td>diem, diemToiThieu, lanCuoiAt (dành sẵn)</td><td>—</td></tr><tr><td>QUA_HAN_NHIEU</td><td>soQuaHan &gt; phutMoiNgay×60/20 (cùng điều kiện cuuLichOn)</td><td>tien_do_the, ho_so_hoc_tap (LearningPlanService.overdue)</td><td>cài đặt phutMoiNgay của user; toi-da-the-qua-han</td><td>soQuaHan, soDenHan, luotMoiNgay, phutMoiNgay, soNgayKeHoach</td><td>Bạn có 120 lượt ôn quá hạn, nhiều hơn 30 lượt mỗi ngày với 10 phút học. Chia kế hoạch cứu lịch trong 5 ngày</td></tr><tr><td>TIEN_BO</td><td>Cũ [−30d, −7d): ≥ 5 lượt, ≥ 3 sai, tỷ lệ ≥ 0,5. Mới [−7d, now): ≥ 5 lượt, 0 sai</td><td>lich_su_on ∪ tra_loi_bai_luyen (progressStats) + ProgressPolicy</td><td>app.recommendations.tien-bo.*</td><td>soLuotCu, soSaiCu, soNgayCu, soLuotMoi, soDungMoi, soNgayMoi, lanCuoiAt</td><td>‘reimbursement’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây</td></tr></table></div><h2 id="thiet-ke">Thiết kế gom gợi ý</h2><div class="card"><ul><li><b>Mẫu Strategy</b>: mỗi lý do là một class cài <code>RecommendationRule</code>; Spring inject tất cả thành <code>List</code>. Thêm lý do = thêm class.</li><li><b>Thứ tự ưu tiên</b> = thứ tự khai báo enum: QUEN_NHIEU → SAI_CHINH_TA → CAP_DE_NHAM → PHAT_AM_THAP → QUA_HAN_NHIEU → TIEN_BO.</li><li><b>Giới hạn</b>: 2 gợi ý mỗi lý do, 10 tổng; tối đa thực tế 9 nên TIEN_BO luôn còn chỗ.</li><li><b>Loại trùng</b>: ứng viên <code>exclusive</code> chiếm thẻ; ứng viên sau có thẻ đã chiếm bị bỏ và rule chuyển sang ứng viên kế tiếp. QUA_HAN_NHIEU không chiếm và không bị bỏ.</li><li><b>Ngưỡng ở Java thuần</b> cho TIEN_BO (<code>ProgressPolicy</code>) để test biên nhanh và để B3.9 dùng lại.</li><li><b>Ranh giới module</b>: practice gọi learning qua <code>LearningPlanService.overdue</code>, không gọi repository của learning.</li></ul></div><h2>1. Cấu hình</h2><div class="card" id="f0"><h3>application.yaml<span class="tag">Sửa — thêm khối app.recommendations</span></h3><div class="path">backend/k28/src/main/resources/application.yaml</div><p class="role">Nơi đặt mọi ngưỡng của B3.5. Không có số nào ghi cứng trong Java.</p><ul><li><b>toi-da-goi-y: 10</b> — trần tổng số gợi ý trả về một lần gọi API.</li><li><b>toi-da-moi-ly-do: 2</b> — mỗi mã lý do được tối đa 2 gợi ý. Với 5 mã đang bật: 2 (QUEN_NHIEU) + 2 (SAI_CHINH_TA) + 2 (CAP_DE_NHAM) + 1 (QUA_HAN_NHIEU chỉ sinh 1) + 2 (TIEN_BO) = 9 ≤ 10, nên thẻ khen TIEN_BO (R-04) không bao giờ bị cắt vì hết chỗ.</li><li><b>toi-da-the-qua-han: 20</b> — số thẻ quá hạn lâu nhất đưa vào <code>cardIds</code> của QUA_HAN_NHIEU, để response không phình khi user nợ hàng trăm thẻ.</li><li><b>tien-bo.so-ngay-cu: 30 / so-ngay-moi: 7</b> — hai cửa sổ thời gian: cửa sổ cũ <code>[now−30 ngày, now−7 ngày)</code>, cửa sổ mới <code>[now−7 ngày, now)</code>. Hai cửa sổ nối tiếp, không chồng nhau.</li><li><b>so-luot-cu-toi-thieu: 5, so-sai-cu-toi-thieu: 3, ty-le-sai-cu-toi-thieu: 0.5</b> — điều kiện “từng sai nhiều”: đủ 5 lượt quan sát, ít nhất 3 lượt sai và tỷ lệ sai ≥ 50%. Có tỷ lệ để thẻ sai 3/20 lượt không bị coi là “sai nhiều”.</li><li><b>so-luot-moi-toi-thieu: 5, so-sai-moi-toi-da: 0</b> — điều kiện “gần đây đúng”: đủ 5 lượt trong 7 ngày và không sai lượt nào. Đây là ngưỡng “đủ lượt quan sát ở cả hai cửa sổ” của R-04.</li><li><b>phat-am-thap.enabled: false</b> — cờ tắt PHAT_AM_THAP. Chỉ bật khi B3.4b dùng dịch vụ phát âm thật (không bật khi đang dùng Fake “Mô phỏng”). <b>diem-toi-thieu: 60</b> là ngưỡng điểm dành sẵn cho rule đó.</li><li>Ba mã QUEN_NHIEU, SAI_CHINH_TA, CAP_DE_NHAM <b>không</b> có khóa riêng ở đây: chúng dùng chung <code>app.notebook.*</code> của sổ tay B2.9 để hai màn UI27 (sổ tay) và UI28 (gợi ý) không lệch nhau.</li><li>Spring Boot đọc tên kebab-case (<code>so-ngay-cu</code>) vào tham số camelCase (<code>soNgayCu</code>) theo cơ chế <i>relaxed binding</i>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>  recommendations:
+    toi-da-goi-y: 10
+    toi-da-moi-ly-do: 2
+    toi-da-the-qua-han: 20
+    tien-bo:
+      so-ngay-cu: 30
+      so-ngay-moi: 7
+      so-luot-cu-toi-thieu: 5
+      so-sai-cu-toi-thieu: 3
+      ty-le-sai-cu-toi-thieu: 0.5
+      so-luot-moi-toi-thieu: 5
+      so-sai-moi-toi-da: 0
+    phat-am-thap:
+      enabled: false
+      diem-toi-thieu: 60</code></pre></details></div><div class="card" id="f1"><h3>NotebookProperties.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/NotebookProperties.java</div><p class="role">Đọc khóa <code>app.notebook.*</code> (đã có từ B2.9) thành một record có kiểu, để các rule dùng chung ngưỡng với sổ tay.</p><ul><li><b>@ConfigurationProperties("app.notebook")</b>: Spring tìm các khóa dưới <code>app.notebook</code> và gọi constructor của record với giá trị tương ứng (<code>quen-nhieu</code> → <code>quenNhieu</code>…).</li><li><b>record</b>: bất biến, không có setter. Spring Boot 3+/4 bind record qua constructor nên không cần <code>@ConstructorBinding</code>.</li><li><b>@Validated + @Min(1)</b>: nếu ai sửa yaml thành 0 hoặc số âm, ứng dụng dừng ngay khi khởi động với thông báo rõ ràng, thay vì chạy với ngưỡng vô nghĩa (ví dụ “quên ≥ 0 lần” sẽ gợi ý mọi thẻ).</li><li><code>NotebookService</code> của B2.9 vẫn đọc cùng khóa bằng <code>@Value</code>; không sửa để giữ phạm vi B3.5. Cả hai đọc cùng một nguồn nên luôn khớp. Bài tập tùy chọn: chuyển <code>NotebookService</code> sang inject <code>NotebookProperties</code>.</li><li>Class này chưa tự được đăng ký; nó được bật bởi <code>RecommendationConfig</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service;
+
+import jakarta.validation.constraints.Min;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(&quot;app.notebook&quot;)
+public record NotebookProperties(
+        @Min(1) int quenNhieu,
+        @Min(1) int quenNhieuNgay,
+        @Min(1) int chinhTaLuot,
+        @Min(1) int chinhTaSai,
+        @Min(1) int capNham
+) {
+}
+</code></pre></details></div><div class="card" id="f2"><h3>RecommendationProperties.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationProperties.java</div><p class="role">Ánh xạ khối <code>app.recommendations</code>, gồm hai record con <code>TienBo</code> và <code>PhatAmThap</code>.</p><ul><li>Record lồng nhau: khóa <code>app.recommendations.tien-bo.so-ngay-cu</code> → <code>properties.tienBo().soNgayCu()</code>.</li><li><b>@NotNull @Valid</b> trên <code>tienBo</code>/<code>phatAmThap</code>: bắt buộc có khối con trong yaml và kích hoạt kiểm tra ràng buộc bên trong khối con (thiếu <code>@Valid</code> thì <code>@Min</code> trong <code>TienBo</code> bị bỏ qua).</li><li><b>@DecimalMin/@DecimalMax</b> giữ tỷ lệ trong [0, 1].</li><li><b>Compact constructor</b> <code>public TienBo { ... }</code>: chạy khi Spring tạo record. Kiểm tra <code>soNgayCu &gt; soNgayMoi</code>; nếu sai (ví dụ 7 và 7) thì cửa sổ cũ rỗng → ném <code>IllegalArgumentException</code> → ứng dụng không khởi động. Đây là kiểm tra chéo hai trường mà annotation đơn lẻ không diễn đạt được.</li><li><code>PhatAmThap(boolean enabled, int diemToiThieu)</code> được khai báo sẵn để hợp đồng cấu hình ổn định trước B3.4b.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(&quot;app.recommendations&quot;)
+public record RecommendationProperties(
+        @Min(1) int toiDaGoiY,
+        @Min(1) int toiDaMoiLyDo,
+        @Min(1) int toiDaTheQuaHan,
+        @NotNull @Valid TienBo tienBo,
+        @NotNull @Valid PhatAmThap phatAmThap
+) {
+
+    public record TienBo(
+            @Min(2) int soNgayCu,
+            @Min(1) int soNgayMoi,
+            @Min(1) int soLuotCuToiThieu,
+            @Min(1) int soSaiCuToiThieu,
+            @DecimalMin(&quot;0.0&quot;) @DecimalMax(&quot;1.0&quot;) double tyLeSaiCuToiThieu,
+            @Min(1) int soLuotMoiToiThieu,
+            @Min(0) int soSaiMoiToiDa
+    ) {
+
+        public TienBo {
+            if (soNgayCu &lt;= soNgayMoi) {
+                throw new IllegalArgumentException(
+                        &quot;app.recommendations.tien-bo.so-ngay-cu phải lớn hơn so-ngay-moi&quot;);
+            }
+        }
+    }
+
+    public record PhatAmThap(boolean enabled, @Min(0) @Max(100) int diemToiThieu) {
+    }
+}
+</code></pre></details></div><div class="card" id="f3"><h3>RecommendationConfig.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationConfig.java</div><p class="role">Đăng ký hai lớp properties thành bean.</p><ul><li><b>@EnableConfigurationProperties({...})</b>: cách đăng ký theo tiền lệ <code>JobConfig</code>, <code>QuotaConfig</code> của dự án (dự án không dùng <code>@ConfigurationPropertiesScan</code>).</li><li>Sau khi đăng ký, có thể inject <code>RecommendationProperties</code>/<code>NotebookProperties</code> qua constructor như mọi bean khác.</li><li>Class rỗng là bình thường: annotation mới là phần có tác dụng.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.service.NotebookProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableConfigurationProperties({RecommendationProperties.class, NotebookProperties.class})
+public class RecommendationConfig {
+}
+</code></pre></details></div><h2>2. Enum và DTO</h2><div class="card" id="f4"><h3>MaLyDoGoiY.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/MaLyDoGoiY.java</div><p class="role">Danh sách mã lý do của TK §8.3, đồng thời là <b>thứ tự ưu tiên</b>.</p><ul><li>Không trùng enum <code>MaLyDo</code> của B2.9 (enum đó có <code>DANH_DAU_THU_CONG</code>, không có QUA_HAN_NHIEU/TIEN_BO và được dùng trong response sổ tay). Tách enum để không đổi hợp đồng <code>GET /notebook</code>.</li><li>Enum trong Java so sánh theo <b>ordinal</b> (vị trí khai báo). <code>RecommendationService</code> sắp các rule bằng <code>Comparator.comparing(RecommendationRule::code)</code>, nên thứ tự dòng ở đây chính là thứ tự ưu tiên: QUEN_NHIEU → SAI_CHINH_TA → CAP_DE_NHAM → PHAT_AM_THAP → QUA_HAN_NHIEU → TIEN_BO.</li><li>Lý do thứ tự: các lỗi cụ thể của từng thẻ trước, khối lượng ôn chung sau, lời khen cuối cùng. Đổi thứ tự dòng là đổi ưu tiên, nên đây là thay đổi hợp đồng FE.</li><li>Jackson serialize enum thành chuỗi tên (<code>"QUEN_NHIEU"</code>), đúng trường <code>reasonCode</code> FE cần.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+public enum MaLyDoGoiY {
+    QUEN_NHIEU,
+    SAI_CHINH_TA,
+    CAP_DE_NHAM,
+    PHAT_AM_THAP,
+    QUA_HAN_NHIEU,
+    TIEN_BO
+}
+</code></pre></details></div><div class="card" id="f5"><h3>RecommendationEvidenceResponse.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/dto/RecommendationEvidenceResponse.java</div><p class="role">Phần <code>evidence</code> (minh chứng) của mỗi gợi ý — một record chung cho mọi mã lý do.</p><ul><li><b>Vì sao một record có nhiều trường nullable</b> thay vì <code>Map&lt;String,Object&gt;</code>: tên trường cố định, có trong OpenAPI/Swagger, FE biết chính xác các khóa có thể xuất hiện; S8 cần hợp đồng ổn định.</li><li><b>@JsonInclude(NON_NULL)</b>: Jackson bỏ trường <code>null</code> khi xuất JSON, nên evidence của QUEN_NHIEU chỉ có <code>soLanQuen, soNgay, lanCuoiAt</code>. Test kiểm tra <code>evidence.has("soQuaHan") == false</code>.</li><li><b>@Builder</b> (Lombok) trên record: tạo <code>RecommendationEvidenceResponse.builder().soLanQuen(3).build()</code>, các trường không gọi giữ <code>null</code>. Tránh constructor 20 tham số dễ truyền nhầm vị trí.</li><li>Kiểu bọc <code>Integer</code> (không phải <code>int</code>) để có thể là <code>null</code>.</li><li>Nhóm trường theo mã: QUEN_NHIEU (<code>soLanQuen, soNgay</code>), SAI_CHINH_TA (<code>soSai, soLuot</code>), CAP_DE_NHAM (<code>capId, soLanNham</code>), QUA_HAN_NHIEU (<code>soQuaHan, soDenHan, luotMoiNgay, phutMoiNgay, soNgayKeHoach</code>), TIEN_BO (<code>soLuotCu, soSaiCu, soNgayCu, soLuotMoi, soDungMoi, soNgayMoi</code>), PHAT_AM_THAP dành sẵn (<code>diem, diemToiThieu</code>); <code>lanCuoiAt</code> dùng chung.</li><li><code>capId</code> là <code>String</code> vì quy ước ID ra JSON dạng chuỗi (TK §13).</li><li>Tên trường tiếng Việt không dấu, camelCase, theo quy ước DTO của dự án; tên <code>soLanNham</code>, <code>lanCuoiAt</code> trùng tên cột <code>cap_tu_de_nham</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.Instant;
+import lombok.Builder;
+
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record RecommendationEvidenceResponse(
+        Integer soLanQuen,
+        Integer soNgay,
+        Integer soSai,
+        Integer soLuot,
+        String capId,
+        Integer soLanNham,
+        Integer soQuaHan,
+        Integer soDenHan,
+        Integer luotMoiNgay,
+        Integer phutMoiNgay,
+        Integer soNgayKeHoach,
+        Integer soLuotCu,
+        Integer soSaiCu,
+        Integer soNgayCu,
+        Integer soLuotMoi,
+        Integer soDungMoi,
+        Integer soNgayMoi,
+        Integer diem,
+        Integer diemToiThieu,
+        Instant lanCuoiAt
+) {
+}
+</code></pre></details></div><div class="card" id="f6"><h3>RecommendationResponse.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/dto/RecommendationResponse.java</div><p class="role">Một phần tử trong mảng response: <code>{reasonCode, message, cardIds, evidence}</code>.</p><ul><li>Bốn tên trường là tiếng Anh vì đã được ghi cố định trong roadmap B3.5, SPRINT_PLAN S8 và báo cáo bàn giao. Đây là ngoại lệ có chủ đích của quy ước “tên DTO = tên entity”, giống <code>fileId</code>.</li><li><code>cardIds</code> là <code>List&lt;String&gt;</code>: ID thẻ chuyển sang chuỗi để JavaScript không mất độ chính xác với số lớn.</li><li><code>message</code> là câu tiếng Việt hoàn chỉnh do BE sinh, FE hiển thị nguyên văn; số liệu để dựng giao diện thì lấy từ <code>evidence</code>.</li><li>API trả <b>mảng</b> trực tiếp (không bọc trang), theo tiền lệ <code>GET /learning/confusing-pairs</code>, vì số phần tử đã bị chặn ≤ 10.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.dto;
+
+import com.do_an_tot_nghiep.k28.practice.service.recommendation.MaLyDoGoiY;
+import java.util.List;
+
+public record RecommendationResponse(
+        MaLyDoGoiY reasonCode,
+        String message,
+        List&lt;String&gt; cardIds,
+        RecommendationEvidenceResponse evidence
+) {
+}
+</code></pre></details></div><h2>3. Repository</h2><div class="card" id="f7"><h3>SoTayTuKhoRepository.java<span class="tag">Sửa — thêm spellingStats, progressStats và 2 projection</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/repository/SoTayTuKhoRepository.java</div><p class="role">Hai truy vấn tổng hợp mới cho SAI_CHINH_TA và TIEN_BO. Đặt trong repository sổ tay vì cùng nhóm dữ liệu lỗi học tập của module <code>practice</code>.</p><ul><li><b>spellingStats</b> (native SQL): giống <code>spellingCardIds</code> của B2.9 nhưng trả thêm số liệu cho message: <code>soSai</code>, <code>soLuot</code>, <code>lanCuoiAt</code>.</li><li>&nbsp;&nbsp;• Truy vấn con lấy các câu nhập từ (<code>NHAP_TU_THEO_NGHIA</code>, <code>NGHE_VIET</code>, <code>DIEN_CHO_TRONG</code>) đã trả lời (<code>tra_loi_json is not null</code> → câu bỏ trống không tính lượt, đúng quyết định B2.9).</li><li>&nbsp;&nbsp;• <code>row_number() over (partition by c.the_id order by a.nop_at desc, r.id desc)</code> đánh số lượt mới nhất = 1 cho từng thẻ; <code>where x.rn &lt;= :window</code> giữ 5 lượt gần nhất.</li><li>&nbsp;&nbsp;• <code>chinh_ta</code> = 1 khi <code>ket_qua_json.nhomLoi = 'CHINH_TA'</code>; <code>having sum(...) &gt;= :threshold</code> giữ thẻ có ≥ 2 lỗi.</li><li>&nbsp;&nbsp;• <code>left join so_tay_tu_kho ... a.nop_at &gt; s.an_tu_at</code>: tôn trọng mốc “ẩn khỏi sổ tay”, lượt trước mốc ẩn không tính.</li><li><b>progressStats</b> (native SQL): đếm lượt quan sát của mỗi thẻ trong hai cửa sổ.</li><li>&nbsp;&nbsp;• <code>UNION ALL</code> hai nguồn: lượt ôn (<code>lich_su_on</code> ⋈ <code>tien_do_the</code> để biết <code>the_id</code>; sai khi <code>danh_gia = 'QUEN'</code>) và câu luyện (<code>tra_loi_bai_luyen</code> ⋈ <code>lan_lam_bai</code> ⋈ <code>cau_hoi_bai_luyen</code>; sai khi <code>dung = false</code>). Cả hai chiều học EN→VI và VI→EN đều tính cho cùng một thẻ.</li><li>&nbsp;&nbsp;• <code>sum(case when thoi_diem &lt; :moiTu ...)</code> đếm cửa sổ cũ, <code>&gt;= :moiTu</code> đếm cửa sổ mới; điều kiện <code>&gt;= :cuTu</code> nằm trong truy vấn con để không quét lịch sử quá cũ.</li><li>&nbsp;&nbsp;• <code>having soSaiCu &gt; 0 and soLuotMoi &gt; 0</code> chỉ loại các thẻ chắc chắn không đạt; <b>ngưỡng thật nằm ở Java (<code>ProgressPolicy</code>)</b> để unit test được các biên mà không cần DB.</li><li>&nbsp;&nbsp;• Alias cột thời điểm là <code>thoi_diem</code> vì <code>AT</code> là từ khóa của MySQL.</li><li><b>cast(... as signed)</b>: <code>SUM()</code> của MySQL trả <code>DECIMAL</code>; ép về <code>BIGINT</code> để getter <code>Long</code> của projection nhận đúng kiểu.</li><li><b>Interface projection</b> (<code>SpellingStatRow</code>, <code>ProgressStatRow</code>): Spring Data tạo proxy đọc cột theo alias (<code>theId</code> → <code>getTheId()</code>). Giống <code>PairStatRow</code> sẵn có.</li><li>MySQL cho phép dùng alias của <code>SELECT</code> trong <code>HAVING</code>/<code>ORDER BY</code> (chuẩn SQL thì không) — cú pháp này phụ thuộc MySQL, chấp nhận được vì dự án chỉ dùng MySQL 8.4.</li></ul><details open><summary>Mã nguồn</summary><pre><code>            select x.the_id as theId,
+                   cast(sum(x.chinh_ta) as signed) as soSai,
+                   cast(count(*) as signed) as soLuot,
+                   max(x.nop_at) as lanCuoiAt
+            from (
+                select c.the_id,
+                       a.nop_at,
+                       case when json_unquote(json_extract(r.ket_qua_json, &#x27;$.nhomLoi&#x27;)) = &#x27;CHINH_TA&#x27;
+                            then 1 else 0 end as chinh_ta,
+                       row_number() over (partition by c.the_id order by a.nop_at desc, r.id desc) as rn
+                from tra_loi_bai_luyen r
+                join lan_lam_bai a on a.id = r.lan_lam_id
+                join cau_hoi_bai_luyen c on c.id = r.cau_hoi_id
+                left join so_tay_tu_kho s on s.nguoi_dung_id = a.nguoi_dung_id and s.the_id = c.the_id
+                where a.nguoi_dung_id = :userId
+                  and c.the_id is not null
+                  and r.tra_loi_json is not null
+                  and c.loai_cau in (&#x27;NHAP_TU_THEO_NGHIA&#x27;, &#x27;NGHE_VIET&#x27;, &#x27;DIEN_CHO_TRONG&#x27;)
+                  and (s.an_tu_at is null or a.nop_at &gt; s.an_tu_at)
+            ) x
+            where x.rn &lt;= :window
+            group by x.the_id
+            having sum(x.chinh_ta) &gt;= :threshold
+            order by soSai desc, lanCuoiAt desc, theId desc
+            &quot;&quot;&quot;, nativeQuery = true)
+    List&lt;SpellingStatRow&gt; spellingStats(
+            @Param(&quot;userId&quot;) Long userId,
+            @Param(&quot;window&quot;) int window,
+            @Param(&quot;threshold&quot;) int threshold
+    );
+
+    @Query(value = &quot;&quot;&quot;
+            select x.the_id as theId,
+                   cast(sum(case when x.thoi_diem &lt; :moiTu then 1 else 0 end) as signed) as soLuotCu,
+                   cast(sum(case when x.thoi_diem &lt; :moiTu and x.dung = 0 then 1 else 0 end) as signed) as soSaiCu,
+                   cast(sum(case when x.thoi_diem &gt;= :moiTu then 1 else 0 end) as signed) as soLuotMoi,
+                   cast(sum(case when x.thoi_diem &gt;= :moiTu and x.dung = 0 then 1 else 0 end) as signed) as soSaiMoi,
+                   max(x.thoi_diem) as lanCuoiAt
+            from (
+                select t.the_id,
+                       h.created_at as thoi_diem,
+                       case when h.danh_gia = &#x27;QUEN&#x27; then 0 else 1 end as dung
+                from lich_su_on h
+                join tien_do_the t on t.id = h.tien_do_id
+                where h.nguoi_dung_id = :userId
+                  and h.created_at &gt;= :cuTu
+                union all
+                select c.the_id,
+                       a.nop_at,
+                       case when r.dung then 1 else 0 end
+                from tra_loi_bai_luyen r
+                join lan_lam_bai a on a.id = r.lan_lam_id
+                join cau_hoi_bai_luyen c on c.id = r.cau_hoi_id
+                where a.nguoi_dung_id = :userId
+                  and c.the_id is not null
+                  and a.nop_at &gt;= :cuTu
+            ) x
+            group by x.the_id
+            having soSaiCu &gt; 0 and soLuotMoi &gt; 0
+            order by soLuotMoi desc, lanCuoiAt desc, theId desc
+            &quot;&quot;&quot;, nativeQuery = true)
+    List&lt;ProgressStatRow&gt; progressStats(
+            @Param(&quot;userId&quot;) Long userId,
+            @Param(&quot;cuTu&quot;) Instant cuTu,
+            @Param(&quot;moiTu&quot;) Instant moiTu
+    );
+
+    interface SpellingStatRow {
+
+        Long getTheId();
+
+        Long getSoSai();
+
+        Long getSoLuot();
+
+        Instant getLanCuoiAt();
+    }
+
+    interface ProgressStatRow {
+
+        Long getTheId();
+
+        Long getSoLuotCu();
+
+        Long getSoSaiCu();
+
+        Long getSoLuotMoi();
+
+        Long getSoSaiMoi();
+
+        Instant getLanCuoiAt();
+    }</code></pre></details></div><div class="card" id="f8"><h3>TienDoTheRepository.java<span class="tag">Sửa — thêm overdueCardIds</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/learning/repository/TienDoTheRepository.java</div><p class="role">Lấy ID các thẻ quá hạn lâu nhất cho <code>cardIds</code> của QUA_HAN_NHIEU.</p><ul><li>JPQL (không phải native) vì chỉ join entity có sẵn; điều kiện loại trừ giống hệt <code>dueByDeck</code>/<code>dueTimes</code> của B2.2/B2.12: thẻ và bộ chưa xóa, bộ của chính người dùng, trạng thái <code>DANG_HOC/ON_TAP/HOC_LAI</code> (loại <code>TAM_NGUNG</code> và <code>MOI</code>).</li><li>“Quá hạn” = <code>hanOnAt &lt; batDau</code> với <code>batDau</code> là 0 giờ hôm nay theo múi giờ người dùng — cùng định nghĩa với <code>soQuaHan</code> của <code>/learning/today</code>.</li><li><code>group by t.theId</code>: một thẻ có hai chiều quá hạn chỉ xuất hiện một lần. <code>order by min(t.hanOnAt)</code>: thẻ nợ lâu nhất đứng đầu; thêm <code>t.theId</code> để thứ tự ổn định.</li><li>Tham số <b>Pageable</b>: Spring Data thêm <code>LIMIT</code>. Kiểu trả <code>List</code> (không phải <code>Page</code>) nên không phát sinh câu đếm thừa.</li><li>Đặt ở module <code>learning</code> vì <code>tien_do_the</code> thuộc module này; module <code>practice</code> chỉ gọi qua <code>LearningPlanService</code>, đúng quy tắc “không gọi repository của module khác”.</li></ul><details open><summary>Mã nguồn</summary><pre><code>            select t.theId
+            from TienDoThe t
+            join TheTuVung c on c.id = t.theId
+            join BoThe b on b.id = c.boTheId
+            where t.nguoiDungId = :userId
+              and t.trangThai in :trangThais
+              and t.hanOnAt &lt; :batDau
+              and c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+            group by t.theId
+            order by min(t.hanOnAt), t.theId
+            &quot;&quot;&quot;)
+    List&lt;Long&gt; overdueCardIds(
+            @Param(&quot;userId&quot;) Long userId,
+            @Param(&quot;trangThais&quot;) Collection&lt;TrangThaiTienDo&gt; trangThais,
+            @Param(&quot;batDau&quot;) Instant batDau,
+            Pageable page
+    );</code></pre></details></div><h2>4. Service module learning</h2><div class="card" id="f9"><h3>OverdueSummary.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/learning/service/OverdueSummary.java</div><p class="role">Kết quả nội bộ <code>LearningPlanService.overdue</code> trả cho module practice.</p><ul><li>Không phải DTO API (không có hậu tố Response), chỉ là record truyền dữ liệu giữa hai service.</li><li><code>soQuaHan</code>/<code>soDenHan</code> đếm theo <b>thẻ-chiều</b> (một thẻ hai chiều tính 2), giống <code>cuuLichOn</code>; vì vậy message nói “lượt ôn quá hạn”.</li><li><code>soNgayKeHoach</code> lấy từ <code>rescuePlan(...).soNgay()</code> nên luôn bằng số ngày của kế hoạch cứu lịch trên UI12.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.learning.service;
+
+import java.util.List;
+
+public record OverdueSummary(
+        int soQuaHan,
+        int soDenHan,
+        int phutMoiNgay,
+        int luotMoiNgay,
+        int soNgayKeHoach,
+        List&lt;Long&gt; theIds
+) {
+}
+</code></pre></details></div><div class="card" id="f10"><h3>LearningPlanService.java<span class="tag">Sửa — thêm method overdue</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/learning/service/LearningPlanService.java</div><p class="role">Tính điều kiện QUA_HAN_NHIEU bằng đúng công thức đang bật <code>cuuLichOn</code> trong <code>today()</code>.</p><ul><li>Bước 1: lấy múi giờ (<code>accountService.zoneOf</code>), tính <code>homNay</code>, mốc <code>batDau</code> (0 giờ hôm nay) và <code>ketThuc</code> (0 giờ ngày mai) — giống hệt <code>today()</code> để hai API không lệch số.</li><li>Bước 2: <code>settingsService.learning(userId).phutMoiNgay()</code>. Hàm này có thể <b>tạo</b> hồ sơ học tập mặc định nếu chưa có, nên method để <code>@Transactional</code> thường (không <code>readOnly</code>).</li><li>Bước 3: <code>dueByDeck</code> trả số quá hạn/đến hạn theo bộ; cộng lại thành <code>soQuaHan</code>, <code>soDenHan</code>.</li><li>Bước 4: <code>luotMoiNgay = phut × 60 / GIAY_MOI_LUOT</code> (20 giây/lượt). Nếu <code>soQuaHan &lt;= luotMoiNgay</code> → <code>Optional.empty()</code>: không gợi ý. Đây là điều kiện đã sửa trong TK §8.3 (trước ghi “một phiên”).</li><li>Bước 5: gọi lại <code>rescuePlan(...)</code> có sẵn (B2.6) để lấy <code>soNgay</code>; không viết lại công thức chia ngày.</li><li>Bước 6: <code>overdueCardIds(..., PageRequest.of(0, limit))</code> lấy tối đa <code>limit</code> thẻ.</li><li>Chỉ đọc, không đổi <code>han_on_at</code> (TC-10: không xóa nợ ôn, không tự đổi lịch gốc).</li><li>Thêm import <code>Optional</code> và <code>PageRequest</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>    @Transactional
+    public Optional&lt;OverdueSummary&gt; overdue(Long userId, int limit) {
+        ZoneId zone = accountService.zoneOf(userId);
+        LocalDate homNay = LocalDate.ofInstant(clock.instant(), zone);
+        Instant batDau = homNay.atStartOfDay(zone).toInstant();
+        Instant ketThuc = homNay.plusDays(1).atStartOfDay(zone).toInstant();
+        int phut = settingsService.learning(userId).phutMoiNgay();
+
+        List&lt;DeckDueRow&gt; dueRows = progress.dueByDeck(userId, TRANG_THAI_CO_HAN, batDau, ketThuc);
+        int soQuaHan = Math.toIntExact(dueRows.stream().mapToLong(DeckDueRow::soQuaHan).sum());
+        int soDenHan = Math.toIntExact(dueRows.stream().mapToLong(DeckDueRow::soDenHan).sum());
+        int luotMoiNgay = phut * 60 / GIAY_MOI_LUOT;
+        if (soQuaHan &lt;= luotMoiNgay) {
+            return Optional.empty();
+        }
+        CuuLichOnResponse plan = rescuePlan(homNay, soQuaHan, soDenHan, phut, false);
+        List&lt;Long&gt; theIds = progress.overdueCardIds(userId, TRANG_THAI_CO_HAN, batDau, PageRequest.of(0, limit));
+        return Optional.of(new OverdueSummary(soQuaHan, soDenHan, phut, luotMoiNgay, plan.soNgay(), theIds));
+    }</code></pre></details></div><h2>5. Khung rule</h2><div class="card" id="f11"><h3>RecommendationCandidate.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationCandidate.java</div><p class="role">Ứng viên gợi ý do rule sinh ra, trước khi service áp giới hạn và loại trùng.</p><ul><li>Khác <code>RecommendationResponse</code> ở 2 điểm: <code>cardIds</code> còn là <code>List&lt;Long&gt;</code> (để so trùng), và có cờ <b>exclusive</b>.</li><li><code>exclusive = true</code>: thẻ của gợi ý này “chiếm chỗ”, các lý do ưu tiên thấp hơn không được dùng lại thẻ đó. QUA_HAN_NHIEU đặt <code>false</code> vì nó nói về khối lượng chung, không phải lỗi của từng thẻ.</li><li><code>toResponse()</code> đổi ID sang chuỗi và bỏ cờ nội bộ — FE không thấy <code>exclusive</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationResponse;
+import java.util.List;
+
+public record RecommendationCandidate(
+        MaLyDoGoiY reasonCode,
+        String message,
+        List&lt;Long&gt; cardIds,
+        RecommendationEvidenceResponse evidence,
+        boolean exclusive
+) {
+
+    public RecommendationResponse toResponse() {
+        return new RecommendationResponse(
+                reasonCode, message, cardIds.stream().map(String::valueOf).toList(), evidence);
+    }
+}
+</code></pre></details></div><div class="card" id="f12"><h3>RecommendationRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationRule.java</div><p class="role">Giao diện chung của mọi lý do (mẫu Strategy).</p><ul><li><code>code()</code>: mã lý do của rule; service dùng để sắp thứ tự.</li><li><code>evaluate(userId, now)</code>: trả mọi ứng viên của lý do này, đã sắp theo độ mạnh. Nhận <code>now</code> từ service (một lần đọc <code>Clock</code>) để mọi rule dùng cùng mốc thời gian và test cố định được thời gian.</li><li>Mỗi class rule có <code>@Component</code> → Spring gom tất cả thành <code>List&lt;RecommendationRule&gt;</code> inject vào service. Thêm lý do mới (PHAT_AM_THAP ở B3.4b) = thêm một class, không sửa service. Có thể gắn <code>@ConditionalOnProperty(prefix = "app.recommendations.phat-am-thap", name = "enabled", havingValue = "true")</code> cho rule đó để cờ tắt/bật bean.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import java.time.Instant;
+import java.util.List;
+
+public interface RecommendationRule {
+
+    MaLyDoGoiY code();
+
+    List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now);
+}
+</code></pre></details></div><div class="card" id="f13"><h3>RecommendationCards.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationCards.java</div><p class="role">Lọc thẻ còn được gợi ý và lấy chữ <code>tu</code> để ghép message.</p><ul><li><code>notebook.cards(userId, ids)</code> (B2.9): chỉ trả thẻ thuộc bộ có <code>chuSoHuuId = userId</code>, thẻ và bộ chưa xóa. Đây là chốt bảo vệ dữ liệu của người khác (TC-02) và yêu cầu FR-08 “không gợi ý nội dung đã xóa/tạm ngưng”.</li><li><code>suspendedCardIds(..., TAM_NGUNG)</code>: loại thẻ tạm ngưng.</li><li>Trả <code>Map&lt;Long, NotebookCardRow&gt;</code> để rule vừa kiểm tra <code>containsKey</code> vừa lấy <code>tu</code> trong O(1).</li><li>Tách thành bean riêng (thay vì gọi hàm private của <code>NotebookService</code>) để các rule dùng chung và unit test mock được.</li><li>Danh sách rỗng → trả <code>Map.of()</code> ngay, tránh câu SQL <code>in ()</code> không hợp lệ.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class RecommendationCards {
+
+    private final SoTayTuKhoRepository notebook;
+
+    public Map&lt;Long, NotebookCardRow&gt; usable(Long userId, Collection&lt;Long&gt; ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        Set&lt;Long&gt; suspended = new HashSet&lt;&gt;(notebook.suspendedCardIds(userId, ids, TrangThaiTienDo.TAM_NGUNG));
+        Map&lt;Long, NotebookCardRow&gt; cards = new HashMap&lt;&gt;();
+        notebook.cards(userId, ids).stream()
+                .filter(card -&gt; !suspended.contains(card.theId()))
+                .forEach(card -&gt; cards.put(card.theId(), card));
+        return cards;
+    }
+}
+</code></pre></details></div><div class="card" id="f14"><h3>ProgressPolicy.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/ProgressPolicy.java</div><p class="role">Quy tắc thuần (không Spring, không DB) quyết định một thẻ có TIEN_BO hay không. B3.9 (“từ đã vượt qua”) dùng lại đúng lớp này.</p><ul><li><code>oldFrom(now) = now − soNgayCu</code>, <code>recentFrom(now) = now − soNgayMoi</code>: hai mốc truyền vào <code>progressStats</code>.</li><li><code>matches(soLuotCu, soSaiCu, soLuotMoi, soSaiMoi)</code> = AND của 5 điều kiện: đủ lượt cũ, đủ lỗi cũ, tỷ lệ lỗi cũ (<code>soSaiCu ≥ tyLe × soLuotCu</code>, nhân thay vì chia để tránh chia cho 0), đủ lượt mới, lỗi mới không vượt trần.</li><li>Ví dụ với cấu hình mặc định: (5, 3, 5, 0) đạt; (6, 3, 5, 0) đạt vì 3 ≥ 0,5×6 = 3; (7, 3, 5, 0) không đạt vì 3 &lt; 3,5; (5, 3, 4, 0) không đạt vì thiếu lượt mới; (5, 3, 5, 1) không đạt vì có 1 lỗi gần đây.</li><li>Record bọc <code>TienBo</code> nên tạo được bằng <code>new ProgressPolicy(properties.tienBo())</code> mà không cần Spring.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import java.time.Duration;
+import java.time.Instant;
+
+public record ProgressPolicy(RecommendationProperties.TienBo config) {
+
+    public Instant oldFrom(Instant now) {
+        return now.minus(Duration.ofDays(config.soNgayCu()));
+    }
+
+    public Instant recentFrom(Instant now) {
+        return now.minus(Duration.ofDays(config.soNgayMoi()));
+    }
+
+    public boolean matches(long soLuotCu, long soSaiCu, long soLuotMoi, long soSaiMoi) {
+        return soLuotCu &gt;= config.soLuotCuToiThieu()
+                &amp;&amp; soSaiCu &gt;= config.soSaiCuToiThieu()
+                &amp;&amp; soSaiCu &gt;= config.tyLeSaiCuToiThieu() * soLuotCu
+                &amp;&amp; soLuotMoi &gt;= config.soLuotMoiToiThieu()
+                &amp;&amp; soSaiMoi &lt;= config.soSaiMoiToiDa();
+    }
+}
+</code></pre></details></div><h2>6. Năm rule</h2><div class="card" id="f15"><h3>ForgettingRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/ForgettingRule.java</div><p class="role">QUEN_NHIEU — thẻ quên nhiều lần gần đây.</p><ul><li>Dùng lại <code>lapseStats</code> của B2.9: đếm lượt <code>QUEN</code> trên <code>lich_su_on</code> mà trạng thái <b>trước</b> lượt đó là <code>ON_TAP</code> (đọc <code>truoc_json.trangThai</code>), trong <code>quenNhieuNgay</code> ngày, sau mốc ẩn sổ tay. Quên khi đang học lần đầu (<code>DANG_HOC</code>) không tính là “lần quên” (lapse) theo SRS.</li><li>Lọc <code>soLan &gt;= quenNhieu</code> (3), sắp <code>soLan</code> giảm dần → <code>lanCuoiAt</code> mới nhất → <code>theId</code> giảm dần (ổn định).</li><li>Gọi <code>cards.usable</code> một lần cho mọi ID (tránh N+1 query), bỏ thẻ không dùng được.</li><li>Message: <i>Ôn lại ‘receipt’ và thêm mẹo nhớ: bạn quên 4 lần trong 30 ngày qua</i> — theo cột “Hành động” của TK §8.3.</li><li>Evidence: <code>soLanQuen</code>, <code>soNgay</code>, <code>lanCuoiAt</code>. <code>exclusive = true</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.learning.entity.enums.DanhGia;
+import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.repository.LapseStatRow;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import com.do_an_tot_nghiep.k28.practice.service.NotebookProperties;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class ForgettingRule implements RecommendationRule {
+
+    private final SoTayTuKhoRepository notebook;
+    private final RecommendationCards cards;
+    private final NotebookProperties properties;
+
+    @Override
+    public MaLyDoGoiY code() {
+        return MaLyDoGoiY.QUEN_NHIEU;
+    }
+
+    @Override
+    public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+        Instant since = now.minus(Duration.ofDays(properties.quenNhieuNgay()));
+        List&lt;LapseStatRow&gt; rows = notebook
+                .lapseStats(userId, since, DanhGia.QUEN, TrangThaiTienDo.ON_TAP.name())
+                .stream()
+                .filter(row -&gt; row.soLan() &gt;= properties.quenNhieu())
+                .sorted(Comparator.comparing(LapseStatRow::soLan, Comparator.reverseOrder())
+                        .thenComparing(LapseStatRow::lanCuoiAt, Comparator.reverseOrder())
+                        .thenComparing(LapseStatRow::theId, Comparator.reverseOrder()))
+                .toList();
+        Map&lt;Long, NotebookCardRow&gt; usable = cards.usable(userId, rows.stream().map(LapseStatRow::theId).toList());
+        return rows.stream()
+                .filter(row -&gt; usable.containsKey(row.theId()))
+                .map(row -&gt; new RecommendationCandidate(
+                        code(),
+                        &quot;Ôn lại ‘%s’ và thêm mẹo nhớ: bạn quên %d lần trong %d ngày qua&quot;.formatted(
+                                usable.get(row.theId()).tu(), row.soLan(), properties.quenNhieuNgay()),
+                        List.of(row.theId()),
+                        RecommendationEvidenceResponse.builder()
+                                .soLanQuen(row.soLan().intValue())
+                                .soNgay(properties.quenNhieuNgay())
+                                .lanCuoiAt(row.lanCuoiAt())
+                                .build(),
+                        true))
+                .toList();
+    }
+}
+</code></pre></details></div><div class="card" id="f16"><h3>SpellingRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/SpellingRule.java</div><p class="role">SAI_CHINH_TA — viết sai nhiều trong các lượt nhập gần nhất.</p><ul><li>Gọi <code>spellingStats(userId, chinhTaLuot=5, chinhTaSai=2)</code>; thứ tự đã sắp ở SQL (<code>soSai</code> giảm dần).</li><li>Lọc thẻ dùng được, ghép message đúng mẫu TK §8.3: <i>Luyện viết ‘receipt’ vì bạn viết sai 3 trong 5 lượt gần đây</i>.</li><li><code>soLuot</code> có thể nhỏ hơn 5 nếu thẻ mới có ít lượt (ví dụ 2/3) — message vẫn đúng vì lấy số thật.</li><li>Evidence: <code>soSai</code>, <code>soLuot</code>, <code>lanCuoiAt</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.SpellingStatRow;
+import com.do_an_tot_nghiep.k28.practice.service.NotebookProperties;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class SpellingRule implements RecommendationRule {
+
+    private final SoTayTuKhoRepository notebook;
+    private final RecommendationCards cards;
+    private final NotebookProperties properties;
+
+    @Override
+    public MaLyDoGoiY code() {
+        return MaLyDoGoiY.SAI_CHINH_TA;
+    }
+
+    @Override
+    public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+        List&lt;SpellingStatRow&gt; rows = notebook.spellingStats(userId, properties.chinhTaLuot(), properties.chinhTaSai());
+        Map&lt;Long, NotebookCardRow&gt; usable = cards.usable(userId, rows.stream().map(SpellingStatRow::getTheId).toList());
+        return rows.stream()
+                .filter(row -&gt; usable.containsKey(row.getTheId()))
+                .map(row -&gt; new RecommendationCandidate(
+                        code(),
+                        &quot;Luyện viết ‘%s’ vì bạn viết sai %d trong %d lượt gần đây&quot;.formatted(
+                                usable.get(row.getTheId()).tu(), row.getSoSai(), row.getSoLuot()),
+                        List.of(row.getTheId()),
+                        RecommendationEvidenceResponse.builder()
+                                .soSai(row.getSoSai().intValue())
+                                .soLuot(row.getSoLuot().intValue())
+                                .lanCuoiAt(row.getLanCuoiAt())
+                                .build(),
+                        true))
+                .toList();
+    }
+}
+</code></pre></details></div><div class="card" id="f17"><h3>ConfusingPairRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/ConfusingPairRule.java</div><p class="role">CAP_DE_NHAM — cặp từ hay chọn nhầm.</p><ul><li><code>pairStats</code> (B2.9) đã sắp <code>so_lan_nham</code> giảm dần; lọc <code>&gt;= capNham</code> (2).</li><li>Đọc mốc ẩn sổ tay (<code>findByNguoiDungId</code> → <code>anTuAt</code>). Hàm <code>visible</code>: cặp chỉ hiện khi mỗi thẻ chưa bị ẩn hoặc lần nhầm cuối xảy ra <b>sau</b> mốc ẩn (nhầm mới làm thẻ hiện lại) — cùng ý với sổ tay.</li><li>Cả hai thẻ phải dùng được; một thẻ bị xóa thì bỏ cả cặp.</li><li><code>cardIds</code> có 2 phần tử theo thứ tự <code>the_1_id &lt; the_2_id</code>. Khi loại trùng, cặp bị bỏ nếu <b>một trong hai</b> thẻ đã thuộc lý do cao hơn.</li><li>Message: <i>Phân biệt ‘affect’ và ‘effect’: bạn chọn nhầm 3 lần</i>. Evidence: <code>capId</code>, <code>soLanNham</code>, <code>lanCuoiAt</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.entity.SoTayTuKho;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.PairStatRow;
+import com.do_an_tot_nghiep.k28.practice.service.NotebookProperties;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class ConfusingPairRule implements RecommendationRule {
+
+    private final SoTayTuKhoRepository notebook;
+    private final RecommendationCards cards;
+    private final NotebookProperties properties;
+
+    @Override
+    public MaLyDoGoiY code() {
+        return MaLyDoGoiY.CAP_DE_NHAM;
+    }
+
+    @Override
+    public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+        List&lt;PairStatRow&gt; pairs = notebook.pairStats(userId).stream()
+                .filter(pair -&gt; pair.getSoLanNham() &gt;= properties.capNham())
+                .toList();
+        if (pairs.isEmpty()) {
+            return List.of();
+        }
+        Map&lt;Long, Instant&gt; hidden = new HashMap&lt;&gt;();
+        notebook.findByNguoiDungId(userId).stream()
+                .filter(row -&gt; row.getAnTuAt() != null)
+                .forEach(row -&gt; hidden.put(row.getTheId(), row.getAnTuAt()));
+        Set&lt;Long&gt; ids = new HashSet&lt;&gt;();
+        pairs.forEach(pair -&gt; {
+            ids.add(pair.getThe1Id());
+            ids.add(pair.getThe2Id());
+        });
+        Map&lt;Long, NotebookCardRow&gt; usable = cards.usable(userId, ids);
+        return pairs.stream()
+                .filter(pair -&gt; usable.containsKey(pair.getThe1Id()) &amp;&amp; usable.containsKey(pair.getThe2Id()))
+                .filter(pair -&gt; visible(hidden, pair.getThe1Id(), pair) &amp;&amp; visible(hidden, pair.getThe2Id(), pair))
+                .map(pair -&gt; new RecommendationCandidate(
+                        code(),
+                        &quot;Phân biệt ‘%s’ và ‘%s’: bạn chọn nhầm %d lần&quot;.formatted(
+                                usable.get(pair.getThe1Id()).tu(), usable.get(pair.getThe2Id()).tu(), pair.getSoLanNham()),
+                        List.of(pair.getThe1Id(), pair.getThe2Id()),
+                        RecommendationEvidenceResponse.builder()
+                                .capId(String.valueOf(pair.getId()))
+                                .soLanNham(pair.getSoLanNham())
+                                .lanCuoiAt(pair.getLanCuoiAt())
+                                .build(),
+                        true))
+                .toList();
+    }
+
+    private static boolean visible(Map&lt;Long, Instant&gt; hidden, Long theId, PairStatRow pair) {
+        Instant anTuAt = hidden.get(theId);
+        return anTuAt == null || pair.getLanCuoiAt().isAfter(anTuAt);
+    }
+}
+</code></pre></details></div><div class="card" id="f18"><h3>OverdueRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/OverdueRule.java</div><p class="role">QUA_HAN_NHIEU — nợ ôn vượt khả năng một ngày.</p><ul><li>Gọi <code>learningPlanService.overdue(userId, toiDaTheQuaHan)</code> — đi qua service của module <code>learning</code>, không truy cập repository của module khác.</li><li><code>Optional.map(...).orElse(List.of())</code>: không quá hạn → không có ứng viên; có → đúng một ứng viên.</li><li><code>exclusive = false</code>: không chiếm thẻ, không bị lý do khác chặn.</li><li>Message: <i>Bạn có 120 lượt ôn quá hạn, nhiều hơn 30 lượt mỗi ngày với 10 phút học. Chia kế hoạch cứu lịch trong 5 ngày</i>. FE nối sang kế hoạch cứu lịch (<code>cuuLichOn</code>, phiên <code>CUU_LICH</code>).</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import java.time.Instant;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class OverdueRule implements RecommendationRule {
+
+    private final LearningPlanService learningPlanService;
+    private final RecommendationProperties properties;
+
+    @Override
+    public MaLyDoGoiY code() {
+        return MaLyDoGoiY.QUA_HAN_NHIEU;
+    }
+
+    @Override
+    public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+        return learningPlanService.overdue(userId, properties.toiDaTheQuaHan())
+                .map(summary -&gt; List.of(new RecommendationCandidate(
+                        code(),
+                        &quot;Bạn có %d lượt ôn quá hạn, nhiều hơn %d lượt mỗi ngày với %d phút học. Chia kế hoạch cứu lịch trong %d ngày&quot;
+                                .formatted(summary.soQuaHan(), summary.luotMoiNgay(), summary.phutMoiNgay(),
+                                        summary.soNgayKeHoach()),
+                        summary.theIds(),
+                        RecommendationEvidenceResponse.builder()
+                                .soQuaHan(summary.soQuaHan())
+                                .soDenHan(summary.soDenHan())
+                                .luotMoiNgay(summary.luotMoiNgay())
+                                .phutMoiNgay(summary.phutMoiNgay())
+                                .soNgayKeHoach(summary.soNgayKeHoach())
+                                .build(),
+                        false)))
+                .orElse(List.of());
+    }
+}
+</code></pre></details></div><div class="card" id="f19"><h3>ProgressRule.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/ProgressRule.java</div><p class="role">TIEN_BO (R-04) — thẻ từng sai nhiều nay đã đúng đều.</p><ul><li>Tạo <code>ProgressPolicy</code> từ cấu hình, gọi <code>progressStats(userId, oldFrom, recentFrom)</code>, lọc bằng <code>policy.matches(...)</code>.</li><li><code>soDungMoi = soLuotMoi − soSaiMoi</code>; <code>soNgayCu = soNgayCu − soNgayMoi</code> (độ dài thật của cửa sổ cũ: 30 − 7 = 23 ngày).</li><li>Message: <i>‘reimbursement’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây</i>. Câu TK “tháng trước / tuần này” là ví dụ; câu sinh tự động ghi số ngày theo cấu hình để luôn đúng khi đổi ngưỡng.</li><li><code>exclusive = true</code> và đứng cuối thứ tự: nếu thẻ vẫn còn trong QUEN_NHIEU (quên trong 30 ngày) thì chỉ hiện QUEN_NHIEU, tránh vừa chê vừa khen một thẻ.</li><li>Thẻ khen không có hành động (TK §8.3: “Ghi nhận tiến bộ, không yêu cầu hành động”).</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.ProgressStatRow;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class ProgressRule implements RecommendationRule {
+
+    private final SoTayTuKhoRepository notebook;
+    private final RecommendationCards cards;
+    private final RecommendationProperties properties;
+
+    @Override
+    public MaLyDoGoiY code() {
+        return MaLyDoGoiY.TIEN_BO;
+    }
+
+    @Override
+    public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+        ProgressPolicy policy = new ProgressPolicy(properties.tienBo());
+        List&lt;ProgressStatRow&gt; rows = notebook.progressStats(userId, policy.oldFrom(now), policy.recentFrom(now))
+                .stream()
+                .filter(row -&gt; policy.matches(row.getSoLuotCu(), row.getSoSaiCu(), row.getSoLuotMoi(), row.getSoSaiMoi()))
+                .toList();
+        Map&lt;Long, NotebookCardRow&gt; usable = cards.usable(userId, rows.stream().map(ProgressStatRow::getTheId).toList());
+        int soNgayMoi = properties.tienBo().soNgayMoi();
+        return rows.stream()
+                .filter(row -&gt; usable.containsKey(row.getTheId()))
+                .map(row -&gt; {
+                    long soDungMoi = row.getSoLuotMoi() - row.getSoSaiMoi();
+                    return new RecommendationCandidate(
+                            code(),
+                            &quot;‘%s’: sai %d/%d lượt trước đó, đúng %d/%d lượt trong %d ngày gần đây&quot;.formatted(
+                                    usable.get(row.getTheId()).tu(), row.getSoSaiCu(), row.getSoLuotCu(),
+                                    soDungMoi, row.getSoLuotMoi(), soNgayMoi),
+                            List.of(row.getTheId()),
+                            RecommendationEvidenceResponse.builder()
+                                    .soLuotCu(row.getSoLuotCu().intValue())
+                                    .soSaiCu(row.getSoSaiCu().intValue())
+                                    .soNgayCu(properties.tienBo().soNgayCu() - soNgayMoi)
+                                    .soLuotMoi(row.getSoLuotMoi().intValue())
+                                    .soDungMoi((int) soDungMoi)
+                                    .soNgayMoi(soNgayMoi)
+                                    .lanCuoiAt(row.getLanCuoiAt())
+                                    .build(),
+                            true);
+                })
+                .toList();
+    }
+}
+</code></pre></details></div><h2>7. Service và controller</h2><div class="card" id="f20"><h3>RecommendationService.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationService.java</div><p class="role">Gom mọi rule, áp thứ tự, giới hạn và loại trùng.</p><ul><li><b>Inject <code>List&lt;RecommendationRule&gt;</code></b>: Spring đưa vào mọi bean cài interface này (5 rule).</li><li><code>Instant now = clock.instant()</code>: một mốc chung; <code>Clock</code> inject để test cố định thời gian (quy ước dự án, không dùng <code>Instant.now()</code>).</li><li>Sắp rule theo <code>code()</code> (ordinal enum) — không phụ thuộc thứ tự Spring tạo bean.</li><li>Vòng ngoài dừng khi đủ <code>toiDaGoiY</code>. Vòng trong dừng khi lý do hiện tại đủ <code>toiDaMoiLyDo</code>.</li><li>Loại trùng: ứng viên <code>exclusive</code> có thẻ đã nằm trong <code>used</code> → <code>continue</code> (bỏ, xét ứng viên kế tiếp của cùng rule, nên rule vẫn có thể đủ 2 gợi ý); nếu không trùng → thêm thẻ vào <code>used</code>.</li><li><b>@Transactional</b> (không <code>readOnly</code>): mọi truy vấn chạy trong một transaction; cần quyền ghi vì <code>OverdueRule</code> → <code>SettingsService.learning</code> có thể tạo hồ sơ mặc định (đặt <code>readOnly</code> sẽ lỗi khi insert).</li><li>User chưa có dữ liệu: mọi rule trả rỗng → <code>result</code> rỗng → JSON <code>[]</code>, không phải 404.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationResponse;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class RecommendationService {
+
+    private final List&lt;RecommendationRule&gt; rules;
+    private final RecommendationProperties properties;
+    private final Clock clock;
+
+    @Transactional
+    public List&lt;RecommendationResponse&gt; list(Long userId) {
+        Instant now = clock.instant();
+        Set&lt;Long&gt; used = new HashSet&lt;&gt;();
+        List&lt;RecommendationResponse&gt; result = new ArrayList&lt;&gt;();
+        List&lt;RecommendationRule&gt; ordered = rules.stream()
+                .sorted(Comparator.comparing(RecommendationRule::code))
+                .toList();
+        for (RecommendationRule rule : ordered) {
+            if (result.size() &gt;= properties.toiDaGoiY()) {
+                break;
+            }
+            int taken = 0;
+            for (RecommendationCandidate candidate : rule.evaluate(userId, now)) {
+                if (taken &gt;= properties.toiDaMoiLyDo() || result.size() &gt;= properties.toiDaGoiY()) {
+                    break;
+                }
+                if (candidate.exclusive()) {
+                    if (candidate.cardIds().stream().anyMatch(used::contains)) {
+                        continue;
+                    }
+                    used.addAll(candidate.cardIds());
+                }
+                result.add(candidate.toResponse());
+                taken++;
+            }
+        }
+        return result;
+    }
+}
+</code></pre></details></div><div class="card" id="f21"><h3>RecommendationController.java<span class="tag">Mới</span></h3><div class="path">backend/k28/src/main/java/com/do_an_tot_nghiep/k28/practice/controller/RecommendationController.java</div><p class="role">Endpoint <code>GET /api/v1/learning/recommendations</code>.</p><ul><li>Controller mỏng: lấy <code>currentUser.id()</code> từ phiên (không bao giờ nhận <code>userId</code> từ client) rồi gọi service.</li><li>Đặt trong module <code>practice</code> dù path là <code>/learning/...</code>: theo tiền lệ <code>/learning/confusing-pairs</code> nằm ở <code>NotebookController</code>; dữ liệu chính (lỗi, cặp nhầm, sổ tay) thuộc module này.</li><li>Không cần CSRF vì là <code>GET</code>. Chưa đăng nhập → Spring Security trả 401 <code>UNAUTHENTICATED</code> trước khi vào controller.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.controller;
+
+import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationResponse;
+import com.do_an_tot_nghiep.k28.practice.service.recommendation.RecommendationService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/api/v1/learning&quot;)
+@RequiredArgsConstructor
+public class RecommendationController {
+
+    private final RecommendationService recommendationService;
+    private final CurrentUser currentUser;
+
+    @GetMapping(&quot;/recommendations&quot;)
+    public List&lt;RecommendationResponse&gt; list() {
+        return recommendationService.list(currentUser.id());
+    }
+}
+</code></pre></details></div><h2>8. Test</h2><div class="card" id="f22"><h3>ProgressPolicyTest.java<span class="tag">Mới — 8 test</span></h3><div class="path">backend/k28/src/test/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/ProgressPolicyTest.java</div><p class="role">Unit test thuần cho biên ngưỡng TIEN_BO (không Spring, chạy dưới 1 giây).</p><ul><li>Mỗi test đổi đúng một biến quanh ngưỡng: đủ ngưỡng (đạt), thiếu 1 lượt cũ, thiếu 1 lỗi cũ, tỷ lệ 3/6 (đạt) và 3/7 (không đạt), thiếu 1 lượt mới, có 1 lỗi mới.</li><li><code>windowsEndAtNow</code>: mốc cửa sổ đúng 30 và 7 ngày trước <code>now</code> cố định.</li><li><code>rejectsOverlappingWindowConfig</code>: cấu hình 7/7 ném <code>IllegalArgumentException</code> (compact constructor).</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.time.Duration;
+import java.time.Instant;
+import org.junit.jupiter.api.Test;
+
+class ProgressPolicyTest {
+
+    private static final Instant NOW = Instant.parse(&quot;2026-11-12T03:00:00Z&quot;);
+    private final ProgressPolicy policy = new ProgressPolicy(
+            new RecommendationProperties.TienBo(30, 7, 5, 3, 0.5, 5, 0));
+
+    @Test
+    void matchesExactlyAtEveryThreshold() {
+        assertThat(policy.matches(5, 3, 5, 0)).isTrue();
+    }
+
+    @Test
+    void rejectsTooFewOldObservations() {
+        assertThat(policy.matches(4, 3, 5, 0)).isFalse();
+    }
+
+    @Test
+    void rejectsTooFewOldMistakes() {
+        assertThat(policy.matches(5, 2, 5, 0)).isFalse();
+    }
+
+    @Test
+    void appliesOldMistakeRatio() {
+        assertThat(policy.matches(6, 3, 5, 0)).isTrue();
+        assertThat(policy.matches(7, 3, 5, 0)).isFalse();
+    }
+
+    @Test
+    void rejectsTooFewRecentObservations() {
+        assertThat(policy.matches(5, 3, 4, 0)).isFalse();
+    }
+
+    @Test
+    void rejectsAnyRecentMistake() {
+        assertThat(policy.matches(5, 3, 5, 1)).isFalse();
+        assertThat(policy.matches(5, 3, 10, 1)).isFalse();
+    }
+
+    @Test
+    void windowsEndAtNow() {
+        assertThat(policy.oldFrom(NOW)).isEqualTo(NOW.minus(Duration.ofDays(30)));
+        assertThat(policy.recentFrom(NOW)).isEqualTo(NOW.minus(Duration.ofDays(7)));
+    }
+
+    @Test
+    void rejectsOverlappingWindowConfig() {
+        assertThatThrownBy(() -&gt; new RecommendationProperties.TienBo(7, 7, 5, 3, 0.5, 5, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+}
+</code></pre></details></div><div class="card" id="f23"><h3>RecommendationServiceTest.java<span class="tag">Mới — 5 test</span></h3><div class="path">backend/k28/src/test/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationServiceTest.java</div><p class="role">Unit test cho thuật toán gom của service, dùng rule giả viết bằng lớp ẩn danh.</p><ul><li><code>returnsEmptyListWhenNoRuleMatches</code>: rule rỗng → <code>[]</code>.</li><li><code>ordersByReasonAndCapsEachReason</code>: truyền rule TIEN_BO trước QUEN_NHIEU nhưng kết quả vẫn QUEN_NHIEU trước; QUEN_NHIEU có 3 ứng viên chỉ lấy 2.</li><li><code>skipsCardsAlreadyUsedByHigherReason</code>: thẻ 1 thuộc QUEN_NHIEU nên cặp (1, 2) và TIEN_BO thẻ 1 bị bỏ; lấy ứng viên kế tiếp (cặp 3-4, TIEN_BO thẻ 5).</li><li><code>overdueNeitherConsumesNorSkipsCards</code>: QUA_HAN_NHIEU chứa thẻ 1 vẫn hiện, và thẻ 2 vẫn dùng được cho TIEN_BO.</li><li><code>capsTotalRecommendations</code>: trần tổng 4 (cấu hình test) cắt TIEN_BO.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationEvidenceResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.RecommendationResponse;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class RecommendationServiceTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse(&quot;2026-11-12T03:00:00Z&quot;), ZoneOffset.UTC);
+    private static final RecommendationProperties PROPERTIES = new RecommendationProperties(
+            4, 2, 20,
+            new RecommendationProperties.TienBo(30, 7, 5, 3, 0.5, 5, 0),
+            new RecommendationProperties.PhatAmThap(false, 60));
+
+    @Test
+    void returnsEmptyListWhenNoRuleMatches() {
+        RecommendationService service = new RecommendationService(
+                List.of(rule(MaLyDoGoiY.QUEN_NHIEU), rule(MaLyDoGoiY.TIEN_BO)), PROPERTIES, CLOCK);
+        assertThat(service.list(1L)).isEmpty();
+    }
+
+    @Test
+    void ordersByReasonAndCapsEachReason() {
+        RecommendationService service = new RecommendationService(List.of(
+                rule(MaLyDoGoiY.TIEN_BO, card(MaLyDoGoiY.TIEN_BO, 9L)),
+                rule(MaLyDoGoiY.QUEN_NHIEU,
+                        card(MaLyDoGoiY.QUEN_NHIEU, 1L),
+                        card(MaLyDoGoiY.QUEN_NHIEU, 2L),
+                        card(MaLyDoGoiY.QUEN_NHIEU, 3L))), PROPERTIES, CLOCK);
+
+        List&lt;RecommendationResponse&gt; result = service.list(1L);
+
+        assertThat(result).extracting(RecommendationResponse::reasonCode)
+                .containsExactly(MaLyDoGoiY.QUEN_NHIEU, MaLyDoGoiY.QUEN_NHIEU, MaLyDoGoiY.TIEN_BO);
+        assertThat(result.get(0).cardIds()).containsExactly(&quot;1&quot;);
+    }
+
+    @Test
+    void skipsCardsAlreadyUsedByHigherReason() {
+        RecommendationService service = new RecommendationService(List.of(
+                rule(MaLyDoGoiY.QUEN_NHIEU, card(MaLyDoGoiY.QUEN_NHIEU, 1L)),
+                rule(MaLyDoGoiY.CAP_DE_NHAM, card(MaLyDoGoiY.CAP_DE_NHAM, 1L, 2L), card(MaLyDoGoiY.CAP_DE_NHAM, 3L, 4L)),
+                rule(MaLyDoGoiY.TIEN_BO, card(MaLyDoGoiY.TIEN_BO, 1L), card(MaLyDoGoiY.TIEN_BO, 5L))),
+                PROPERTIES, CLOCK);
+
+        List&lt;RecommendationResponse&gt; result = service.list(1L);
+
+        assertThat(result).extracting(response -&gt; response.reasonCode() + &quot;:&quot; + response.cardIds())
+                .containsExactly(&quot;QUEN_NHIEU:[1]&quot;, &quot;CAP_DE_NHAM:[3, 4]&quot;, &quot;TIEN_BO:[5]&quot;);
+    }
+
+    @Test
+    void overdueNeitherConsumesNorSkipsCards() {
+        RecommendationCandidate overdue = new RecommendationCandidate(
+                MaLyDoGoiY.QUA_HAN_NHIEU, &quot;quá hạn&quot;, List.of(1L, 2L), RecommendationEvidenceResponse.builder().build(), false);
+        RecommendationService service = new RecommendationService(List.of(
+                rule(MaLyDoGoiY.QUEN_NHIEU, card(MaLyDoGoiY.QUEN_NHIEU, 1L)),
+                rule(MaLyDoGoiY.QUA_HAN_NHIEU, overdue),
+                rule(MaLyDoGoiY.TIEN_BO, card(MaLyDoGoiY.TIEN_BO, 2L))), PROPERTIES, CLOCK);
+
+        assertThat(service.list(1L)).extracting(RecommendationResponse::reasonCode)
+                .containsExactly(MaLyDoGoiY.QUEN_NHIEU, MaLyDoGoiY.QUA_HAN_NHIEU, MaLyDoGoiY.TIEN_BO);
+    }
+
+    @Test
+    void capsTotalRecommendations() {
+        RecommendationService service = new RecommendationService(List.of(
+                rule(MaLyDoGoiY.QUEN_NHIEU, card(MaLyDoGoiY.QUEN_NHIEU, 1L), card(MaLyDoGoiY.QUEN_NHIEU, 2L)),
+                rule(MaLyDoGoiY.SAI_CHINH_TA, card(MaLyDoGoiY.SAI_CHINH_TA, 3L), card(MaLyDoGoiY.SAI_CHINH_TA, 4L)),
+                rule(MaLyDoGoiY.TIEN_BO, card(MaLyDoGoiY.TIEN_BO, 5L))), PROPERTIES, CLOCK);
+
+        assertThat(service.list(1L)).hasSize(4)
+                .extracting(RecommendationResponse::reasonCode)
+                .doesNotContain(MaLyDoGoiY.TIEN_BO);
+    }
+
+    private static RecommendationCandidate card(MaLyDoGoiY code, Long... ids) {
+        return new RecommendationCandidate(code, code.name(), List.of(ids), RecommendationEvidenceResponse.builder().build(), true);
+    }
+
+    private static RecommendationRule rule(MaLyDoGoiY code, RecommendationCandidate... candidates) {
+        return new RecommendationRule() {
+            @Override
+            public MaLyDoGoiY code() {
+                return code;
+            }
+
+            @Override
+            public List&lt;RecommendationCandidate&gt; evaluate(Long userId, Instant now) {
+                return List.of(candidates);
+            }
+        };
+    }
+}
+</code></pre></details></div><div class="card" id="f24"><h3>RecommendationRulesTest.java<span class="tag">Mới — 5 test</span></h3><div class="path">backend/k28/src/test/java/com/do_an_tot_nghiep/k28/practice/service/recommendation/RecommendationRulesTest.java</div><p class="role">Unit test từng rule với repository giả (Mockito).</p><ul><li><code>mock(SoTayTuKhoRepository.class)</code>, <code>mock(RecommendationCards.class)</code>; projection interface cũng được mock và stub getter.</li><li>Hàm <code>usable(...)</code> giả lập lọc thẻ: chỉ trả các ID được khai báo, tên thẻ là <code>w&lt;id&gt;</code>.</li><li>ForgettingRule: thẻ quên 2 lần bị loại (dưới ngưỡng), thẻ 4 không dùng được bị loại, thứ tự 5 lần trước 3 lần; kiểm tra message nguyên văn.</li><li>SpellingRule: message và evidence lấy số từ repository.</li><li>ConfusingPairRule: cặp 1 lần (dưới ngưỡng) và cặp có thẻ 9 (đã xóa) bị loại.</li><li>ProgressRule: hàng 5/3/5/0 đạt, hàng 5/3/4/0 bị <code>ProgressPolicy</code> loại; <code>soNgayCu</code> = 23.</li><li>OverdueRule: <code>Optional.empty()</code> → rỗng; có dữ liệu → 1 ứng viên <code>exclusive = false</code>.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice.service.recommendation;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.do_an_tot_nghiep.k28.learning.entity.enums.DanhGia;
+import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
+import com.do_an_tot_nghiep.k28.learning.service.OverdueSummary;
+import com.do_an_tot_nghiep.k28.practice.repository.LapseStatRow;
+import com.do_an_tot_nghiep.k28.practice.repository.NotebookCardRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.PairStatRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.ProgressStatRow;
+import com.do_an_tot_nghiep.k28.practice.repository.SoTayTuKhoRepository.SpellingStatRow;
+import com.do_an_tot_nghiep.k28.practice.service.NotebookProperties;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
+
+class RecommendationRulesTest {
+
+    private static final Instant NOW = Instant.parse(&quot;2026-11-12T03:00:00Z&quot;);
+    private static final Long USER = 7L;
+    private static final NotebookProperties NOTEBOOK = new NotebookProperties(3, 30, 5, 2, 2);
+    private static final RecommendationProperties PROPERTIES = new RecommendationProperties(
+            10, 2, 20,
+            new RecommendationProperties.TienBo(30, 7, 5, 3, 0.5, 5, 0),
+            new RecommendationProperties.PhatAmThap(false, 60));
+
+    private final SoTayTuKhoRepository notebook = mock(SoTayTuKhoRepository.class);
+    private final RecommendationCards cards = mock(RecommendationCards.class);
+
+    @Test
+    void forgettingKeepsCardsAtThresholdAndSortsByCount() {
+        when(notebook.lapseStats(eq(USER), eq(NOW.minus(Duration.ofDays(30))), eq(DanhGia.QUEN), eq(&quot;ON_TAP&quot;)))
+                .thenReturn(List.of(
+                        new LapseStatRow(1L, 2L, NOW),
+                        new LapseStatRow(2L, 3L, NOW),
+                        new LapseStatRow(3L, 5L, NOW.minusSeconds(60)),
+                        new LapseStatRow(4L, 4L, NOW)));
+        usable(2L, 3L);
+
+        List&lt;RecommendationCandidate&gt; result = new ForgettingRule(notebook, cards, NOTEBOOK).evaluate(USER, NOW);
+
+        assertThat(result).extracting(RecommendationCandidate::cardIds).containsExactly(List.of(3L), List.of(2L));
+        assertThat(result.get(0).message()).isEqualTo(&quot;Ôn lại ‘w3’ và thêm mẹo nhớ: bạn quên 5 lần trong 30 ngày qua&quot;);
+        assertThat(result.get(0).evidence().soLanQuen()).isEqualTo(5);
+        assertThat(result.get(0).evidence().soNgay()).isEqualTo(30);
+        assertThat(result.get(0).exclusive()).isTrue();
+    }
+
+    @Test
+    void spellingUsesRepositoryCountsInMessage() {
+        SpellingStatRow row = mock(SpellingStatRow.class);
+        when(row.getTheId()).thenReturn(5L);
+        when(row.getSoSai()).thenReturn(3L);
+        when(row.getSoLuot()).thenReturn(5L);
+        when(row.getLanCuoiAt()).thenReturn(NOW);
+        when(notebook.spellingStats(USER, 5, 2)).thenReturn(List.of(row));
+        usable(5L);
+
+        List&lt;RecommendationCandidate&gt; result = new SpellingRule(notebook, cards, NOTEBOOK).evaluate(USER, NOW);
+
+        assertThat(result).singleElement().satisfies(candidate -&gt; {
+            assertThat(candidate.reasonCode()).isEqualTo(MaLyDoGoiY.SAI_CHINH_TA);
+            assertThat(candidate.message()).isEqualTo(&quot;Luyện viết ‘w5’ vì bạn viết sai 3 trong 5 lượt gần đây&quot;);
+            assertThat(candidate.evidence().soSai()).isEqualTo(3);
+            assertThat(candidate.evidence().soLuot()).isEqualTo(5);
+        });
+    }
+
+    @Test
+    void confusingPairNeedsThresholdAndBothUsableCards() {
+        PairStatRow strong = pair(10L, 1L, 2L, 3);
+        PairStatRow weak = pair(11L, 3L, 4L, 1);
+        PairStatRow deleted = pair(12L, 1L, 9L, 4);
+        when(notebook.pairStats(USER)).thenReturn(List.of(deleted, strong, weak));
+        when(notebook.findByNguoiDungId(USER)).thenReturn(List.of());
+        usable(1L, 2L, 3L, 4L);
+
+        List&lt;RecommendationCandidate&gt; result = new ConfusingPairRule(notebook, cards, NOTEBOOK).evaluate(USER, NOW);
+
+        assertThat(result).singleElement().satisfies(candidate -&gt; {
+            assertThat(candidate.cardIds()).containsExactly(1L, 2L);
+            assertThat(candidate.message()).isEqualTo(&quot;Phân biệt ‘w1’ và ‘w2’: bạn chọn nhầm 3 lần&quot;);
+            assertThat(candidate.evidence().capId()).isEqualTo(&quot;10&quot;);
+        });
+    }
+
+    @Test
+    void progressFiltersByPolicyAndBuildsEvidence() {
+        ProgressStatRow passed = progress(6L, 5, 3, 5, 0);
+        ProgressStatRow fewRecent = progress(7L, 5, 3, 4, 0);
+        when(notebook.progressStats(USER, NOW.minus(Duration.ofDays(30)), NOW.minus(Duration.ofDays(7))))
+                .thenReturn(List.of(passed, fewRecent));
+        usable(6L, 7L);
+
+        List&lt;RecommendationCandidate&gt; result = new ProgressRule(notebook, cards, PROPERTIES).evaluate(USER, NOW);
+
+        assertThat(result).singleElement().satisfies(candidate -&gt; {
+            assertThat(candidate.reasonCode()).isEqualTo(MaLyDoGoiY.TIEN_BO);
+            assertThat(candidate.message()).isEqualTo(&quot;‘w6’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây&quot;);
+            assertThat(candidate.evidence().soLuotCu()).isEqualTo(5);
+            assertThat(candidate.evidence().soSaiCu()).isEqualTo(3);
+            assertThat(candidate.evidence().soNgayCu()).isEqualTo(23);
+            assertThat(candidate.evidence().soDungMoi()).isEqualTo(5);
+            assertThat(candidate.evidence().soNgayMoi()).isEqualTo(7);
+        });
+    }
+
+    @Test
+    void overdueIsSharedAndEmptyWhenNoBacklog() {
+        LearningPlanService plan = mock(LearningPlanService.class);
+        when(plan.overdue(USER, 20)).thenReturn(Optional.empty());
+        assertThat(new OverdueRule(plan, PROPERTIES).evaluate(USER, NOW)).isEmpty();
+
+        when(plan.overdue(USER, 20)).thenReturn(Optional.of(new OverdueSummary(120, 10, 15, 45, 3, List.of(1L, 2L))));
+        assertThat(new OverdueRule(plan, PROPERTIES).evaluate(USER, NOW)).singleElement().satisfies(candidate -&gt; {
+            assertThat(candidate.exclusive()).isFalse();
+            assertThat(candidate.cardIds()).containsExactly(1L, 2L);
+            assertThat(candidate.evidence().soQuaHan()).isEqualTo(120);
+            assertThat(candidate.evidence().soNgayKeHoach()).isEqualTo(3);
+            assertThat(candidate.message()).contains(&quot;120 lượt ôn quá hạn&quot;, &quot;45 lượt mỗi ngày&quot;, &quot;3 ngày&quot;);
+        });
+    }
+
+    private void usable(Long... ids) {
+        Map&lt;Long, NotebookCardRow&gt; rows = List.of(ids).stream()
+                .collect(Collectors.toMap(Function.identity(),
+                        id -&gt; new NotebookCardRow(id, &quot;w&quot; + id, null, null, &quot;nghĩa&quot;, null, 1L, &quot;Bộ&quot;)));
+        when(cards.usable(eq(USER), anyCollection())).thenAnswer(invocation -&gt; {
+            Collection&lt;Long&gt; asked = invocation.getArgument(1);
+            return rows.entrySet().stream()
+                    .filter(entry -&gt; asked.contains(entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        });
+    }
+
+    private static PairStatRow pair(Long id, Long a, Long b, int count) {
+        PairStatRow row = mock(PairStatRow.class);
+        when(row.getId()).thenReturn(id);
+        when(row.getThe1Id()).thenReturn(a);
+        when(row.getThe2Id()).thenReturn(b);
+        when(row.getSoLanNham()).thenReturn(count);
+        when(row.getLanCuoiAt()).thenReturn(NOW);
+        return row;
+    }
+
+    private static ProgressStatRow progress(Long id, long cu, long saiCu, long moi, long saiMoi) {
+        ProgressStatRow row = mock(ProgressStatRow.class);
+        when(row.getTheId()).thenReturn(id);
+        when(row.getSoLuotCu()).thenReturn(cu);
+        when(row.getSoSaiCu()).thenReturn(saiCu);
+        when(row.getSoLuotMoi()).thenReturn(moi);
+        when(row.getSoSaiMoi()).thenReturn(saiMoi);
+        when(row.getLanCuoiAt()).thenReturn(NOW);
+        return row;
+    }
+}
+</code></pre></details></div><div class="card" id="f25"><h3>FR08RecommendationTest.java<span class="tag">Mới — 3 test tích hợp (Testcontainers MySQL + Redis)</span></h3><div class="path">backend/k28/src/test/java/com/do_an_tot_nghiep/k28/practice/FR08RecommendationTest.java</div><p class="role">Gọi API thật qua MockMvc với dữ liệu thật trong MySQL.</p><ul><li><code>fr08_emptyUserGetsEmptyListAndAnonymousGets401</code>: user mới → 200 <code>[]</code>; không cookie → 401.</li><li><code>fr08_reasonsCarryEvidenceAndHideOtherUsersData</code>: tạo 6 thẻ qua API rồi chèn dữ liệu bằng JDBC: thẻ 0 quên 3 lần từ ON_TAP (QUEN_NHIEU); cặp thẻ 1-2 nhầm 3 lần (CAP_DE_NHAM); thẻ 3: 20 ngày trước 5 lượt (3 Quên từ DANG_HOC nên không tính là lapse) + 2 ngày trước 5 lượt Nhớ (TIEN_BO); thẻ 4 chỉ 4 lượt mới (biên, không ra); thẻ 5 đủ điều kiện nhưng bị xóa mềm (không ra). Kỳ vọng đúng thứ tự <code>QUEN_NHIEU, CAP_DE_NHAM, TIEN_BO</code>, message nguyên văn, evidence. User khác gọi → <code>[]</code> (TC-02).</li><li><code>tc10_overdueRecommendationMatchesRescuePlanAndKeepsSchedule</code>: đặt <code>phut_moi_ngay = 1</code> (→ 3 lượt/ngày), tạo 4 thẻ-chiều quá hạn 3 ngày → QUA_HAN_NHIEU với <code>soQuaHan 4, luotMoiNgay 3, soNgayKeHoach 2</code>, <code>cardIds</code> theo thứ tự quá hạn lâu nhất; <code>/learning/today</code> cho cùng số trong <code>cuuLichOn</code>; <code>han_on_at</code> không đổi (TC-10).</li><li>Ghi <code>DATETIME</code> bằng <code>LocalDateTime</code> UTC (tiền lệ <code>FR08NotebookTest</code>) vì dự án lưu thời gian UTC.</li></ul><details open><summary>Mã nguồn</summary><pre><code>package com.do_an_tot_nghiep.k28.practice;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
+import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
+import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
+import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
+import jakarta.servlet.http.Cookie;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.ResultActions;
+import tools.jackson.databind.JsonNode;
+
+class FR08RecommendationTest extends AbstractIntegrationTest {
+
+    private static final String PASSWORD = &quot;matkhau123&quot;;
+    private static final String HCM = &quot;Asia/Ho_Chi_Minh&quot;;
+    private static final String[] WORDS = {&quot;receipt&quot;, &quot;affect&quot;, &quot;effect&quot;, &quot;reimbursement&quot;, &quot;invoice&quot;, &quot;deadline&quot;};
+
+    @Autowired
+    NguoiDungRepository users;
+    @Autowired
+    VaiTroRepository roles;
+    @Autowired
+    PasswordEncoder passwords;
+    @Autowired
+    Clock clock;
+    @Autowired
+    JdbcTemplate jdbc;
+
+    @Test
+    void fr08_emptyUserGetsEmptyListAndAnonymousGets401() throws Exception {
+        Learner learner = learner();
+        mockMvc.perform(get(&quot;/api/v1/learning/recommendations&quot;).cookie(learner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(&quot;$&quot;).isArray())
+                .andExpect(jsonPath(&quot;$&quot;).isEmpty());
+        mockMvc.perform(get(&quot;/api/v1/learning/recommendations&quot;))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void fr08_reasonsCarryEvidenceAndHideOtherUsersData() throws Exception {
+        Learner learner = learner();
+        List&lt;Long&gt; cards = cards(learner);
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MILLIS);
+
+        long forgotten = progress(learner, cards.get(0), &quot;EN_VI&quot;);
+        for (int i = 0; i &lt; 3; i++) {
+            review(learner, forgotten, &quot;QUEN&quot;, &quot;ON_TAP&quot;, now.minus(Duration.ofHours(i + 1)));
+        }
+
+        jdbc.update(&quot;INSERT INTO cap_tu_de_nham (nguoi_dung_id, the_1_id, the_2_id, so_lan_nham, lan_cuoi_at) VALUES (?, ?, ?, 3, ?)&quot;,
+                learner.id(), cards.get(1), cards.get(2), utc(now.minus(Duration.ofHours(2))));
+
+        improve(learner, cards.get(3), now, 5);
+        improve(learner, cards.get(4), now, 4);
+        improve(learner, cards.get(5), now, 5);
+        jdbc.update(&quot;UPDATE the_tu_vung SET xoa_at = ? WHERE id = ?&quot;, utc(now), cards.get(5));
+
+        JsonNode body = recommendations(learner);
+        List&lt;String&gt; codes = new ArrayList&lt;&gt;();
+        body.forEach(item -&gt; codes.add(item.get(&quot;reasonCode&quot;).asText()));
+        assertThat(codes).containsExactly(&quot;QUEN_NHIEU&quot;, &quot;CAP_DE_NHAM&quot;, &quot;TIEN_BO&quot;);
+
+        JsonNode quen = body.get(0);
+        assertThat(quen.get(&quot;cardIds&quot;).toString()).isEqualTo(&quot;[\&quot;&quot; + cards.get(0) + &quot;\&quot;]&quot;);
+        assertThat(quen.get(&quot;message&quot;).asText()).isEqualTo(&quot;Ôn lại ‘receipt’ và thêm mẹo nhớ: bạn quên 3 lần trong 30 ngày qua&quot;);
+        assertThat(quen.get(&quot;evidence&quot;).get(&quot;soLanQuen&quot;).asInt()).isEqualTo(3);
+        assertThat(quen.get(&quot;evidence&quot;).has(&quot;soQuaHan&quot;)).isFalse();
+
+        JsonNode pair = body.get(1);
+        assertThat(pair.get(&quot;cardIds&quot;)).hasSize(2);
+        assertThat(pair.get(&quot;message&quot;).asText()).isEqualTo(&quot;Phân biệt ‘affect’ và ‘effect’: bạn chọn nhầm 3 lần&quot;);
+        assertThat(pair.get(&quot;evidence&quot;).get(&quot;soLanNham&quot;).asInt()).isEqualTo(3);
+
+        JsonNode tienBo = body.get(2);
+        assertThat(tienBo.get(&quot;cardIds&quot;).toString()).isEqualTo(&quot;[\&quot;&quot; + cards.get(3) + &quot;\&quot;]&quot;);
+        assertThat(tienBo.get(&quot;message&quot;).asText())
+                .isEqualTo(&quot;‘reimbursement’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây&quot;);
+        JsonNode evidence = tienBo.get(&quot;evidence&quot;);
+        assertThat(evidence.get(&quot;soLuotCu&quot;).asInt()).isEqualTo(5);
+        assertThat(evidence.get(&quot;soSaiCu&quot;).asInt()).isEqualTo(3);
+        assertThat(evidence.get(&quot;soLuotMoi&quot;).asInt()).isEqualTo(5);
+        assertThat(evidence.get(&quot;soDungMoi&quot;).asInt()).isEqualTo(5);
+        assertThat(evidence.get(&quot;soNgayMoi&quot;).asInt()).isEqualTo(7);
+
+        Learner other = learner();
+        assertThat(recommendations(other)).isEmpty();
+    }
+
+    @Test
+    void tc10_overdueRecommendationMatchesRescuePlanAndKeepsSchedule() throws Exception {
+        Learner learner = learner();
+        List&lt;Long&gt; cards = cards(learner);
+        jdbc.update(&quot;INSERT INTO ho_so_hoc_tap (nguoi_dung_id, phut_moi_ngay) VALUES (?, 1) &quot;
+                + &quot;ON DUPLICATE KEY UPDATE phut_moi_ngay = 1&quot;, learner.id());
+        Instant due = clock.instant().minus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
+        for (int i = 0; i &lt; 2; i++) {
+            for (String chieu : List.of(&quot;EN_VI&quot;, &quot;VI_EN&quot;)) {
+                jdbc.update(&quot;INSERT INTO tien_do_the (nguoi_dung_id, the_id, chieu_hoc, trang_thai, han_on_at) VALUES (?, ?, ?, &#x27;ON_TAP&#x27;, ?)&quot;,
+                        learner.id(), cards.get(i), chieu, utc(due.plusSeconds(i)));
+            }
+        }
+
+        JsonNode body = recommendations(learner);
+        assertThat(body).hasSize(1);
+        JsonNode overdue = body.get(0);
+        assertThat(overdue.get(&quot;reasonCode&quot;).asText()).isEqualTo(&quot;QUA_HAN_NHIEU&quot;);
+        assertThat(overdue.get(&quot;cardIds&quot;).toString())
+                .isEqualTo(&quot;[\&quot;&quot; + cards.get(0) + &quot;\&quot;,\&quot;&quot; + cards.get(1) + &quot;\&quot;]&quot;);
+        assertThat(overdue.get(&quot;evidence&quot;).get(&quot;soQuaHan&quot;).asInt()).isEqualTo(4);
+        assertThat(overdue.get(&quot;evidence&quot;).get(&quot;luotMoiNgay&quot;).asInt()).isEqualTo(3);
+        assertThat(overdue.get(&quot;evidence&quot;).get(&quot;phutMoiNgay&quot;).asInt()).isEqualTo(1);
+        assertThat(overdue.get(&quot;evidence&quot;).get(&quot;soNgayKeHoach&quot;).asInt()).isEqualTo(2);
+
+        mockMvc.perform(get(&quot;/api/v1/learning/today&quot;).cookie(learner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(&quot;$.cuuLichOn.soQuaHan&quot;).value(4))
+                .andExpect(jsonPath(&quot;$.cuuLichOn.soNgay&quot;).value(2));
+
+        Integer unchanged = jdbc.queryForObject(
+                &quot;SELECT COUNT(*) FROM tien_do_the WHERE nguoi_dung_id = ? AND trang_thai = &#x27;ON_TAP&#x27; AND han_on_at IN (?, ?)&quot;,
+                Integer.class, learner.id(), utc(due), utc(due.plusSeconds(1)));
+        assertThat(unchanged).isEqualTo(4);
+    }
+
+    private void improve(Learner learner, long theId, Instant now, int recent) {
+        long tienDoId = progress(learner, theId, &quot;EN_VI&quot;);
+        Instant old = now.minus(Duration.ofDays(20));
+        for (int i = 0; i &lt; 5; i++) {
+            review(learner, tienDoId, i &lt; 3 ? &quot;QUEN&quot; : &quot;NHO&quot;, &quot;DANG_HOC&quot;, old.plus(Duration.ofHours(i)));
+        }
+        Instant fresh = now.minus(Duration.ofDays(2));
+        for (int i = 0; i &lt; recent; i++) {
+            review(learner, tienDoId, &quot;NHO&quot;, &quot;ON_TAP&quot;, fresh.plus(Duration.ofHours(i)));
+        }
+    }
+
+    private long progress(Learner learner, long theId, String chieu) {
+        jdbc.update(&quot;INSERT INTO tien_do_the (nguoi_dung_id, the_id, chieu_hoc, trang_thai, han_on_at) VALUES (?, ?, ?, &#x27;HOC_LAI&#x27;, ?)&quot;,
+                learner.id(), theId, chieu, utc(clock.instant()));
+        return jdbc.queryForObject(&quot;SELECT id FROM tien_do_the WHERE nguoi_dung_id = ? AND the_id = ? AND chieu_hoc = ?&quot;,
+                Long.class, learner.id(), theId, chieu);
+    }
+
+    private void review(Learner learner, long tienDoId, String danhGia, String truoc, Instant at) {
+        jdbc.update(&quot;INSERT INTO phien_hoc (nguoi_dung_id, chieu_hoc, mui_gio, bat_dau_at, quy_thoi_gian) VALUES (?, &#x27;EN_VI&#x27;, ?, ?, 10)&quot;,
+                learner.id(), HCM, utc(at));
+        Long phienId = jdbc.queryForObject(&quot;SELECT MAX(id) FROM phien_hoc WHERE nguoi_dung_id = ?&quot;, Long.class, learner.id());
+        jdbc.update(&quot;INSERT INTO lich_su_on (nguoi_dung_id, client_event_id, phien_id, tien_do_id, danh_gia, thoi_gian, &quot;
+                        + &quot;truoc_json, sau_json, phien_ban_thuat_toan, created_at, updated_at) &quot;
+                        + &quot;VALUES (?, ?, ?, ?, ?, 1000, ?, &#x27;{\&quot;trangThai\&quot;: \&quot;ON_TAP\&quot;}&#x27;, &#x27;SM2-VN-2&#x27;, ?, ?)&quot;,
+                learner.id(), UUID.randomUUID().toString(), phienId, tienDoId, danhGia,
+                &quot;{\&quot;trangThai\&quot;: \&quot;&quot; + truoc + &quot;\&quot;}&quot;, utc(at), utc(at));
+    }
+
+    private static LocalDateTime utc(Instant at) {
+        return LocalDateTime.ofInstant(at, ZoneOffset.UTC);
+    }
+
+    private JsonNode recommendations(Learner learner) throws Exception {
+        return body(mockMvc.perform(get(&quot;/api/v1/learning/recommendations&quot;).cookie(learner.session()))
+                .andExpect(status().isOk()));
+    }
+
+    private List&lt;Long&gt; cards(Learner learner) throws Exception {
+        List&lt;Long&gt; ids = new ArrayList&lt;&gt;();
+        for (String word : WORDS) {
+            ids.add(Long.parseLong(body(send(learner.session(), &quot;/api/v1/decks/&quot; + learner.deckId() + &quot;/cards&quot;,
+                    Map.of(&quot;tu&quot;, word, &quot;nghiaVi&quot;, &quot;nghĩa &quot; + word)).andExpect(status().isCreated())).get(&quot;id&quot;).asText()));
+        }
+        return ids;
+    }
+
+    private Learner learner() throws Exception {
+        String email = UUID.randomUUID() + &quot;@test.local&quot;;
+        NguoiDung user = NguoiDung.register(email, &quot;Recommendation tester&quot;, passwords.encode(PASSWORD),
+                HCM, roles.findByMa(&quot;USER&quot;).orElseThrow());
+        user.verifyEmail(clock.instant());
+        Long userId = users.saveAndFlush(user).getId();
+        Cookie session = mockMvc.perform(post(&quot;/api/v1/auth/login&quot;).with(xsrf()).with(randomIp())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of(&quot;email&quot;, email, &quot;password&quot;, PASSWORD))))
+                .andExpect(status().isOk()).andReturn().getResponse().getCookie(&quot;SESSION&quot;);
+        assertThat(session).isNotNull();
+        String deckId = body(send(session, &quot;/api/v1/decks&quot;, Map.of(
+                &quot;ten&quot;, &quot;Recommendation deck &quot; + UUID.randomUUID(),
+                &quot;trinhDo&quot;, &quot;CO_BAN&quot;,
+                &quot;quyenTruyCap&quot;, &quot;RIENG_TU&quot;)).andExpect(status().isCreated())).get(&quot;id&quot;).asText();
+        return new Learner(userId, session, deckId);
+    }
+
+    private ResultActions send(Cookie session, String path, Object body) throws Exception {
+        return mockMvc.perform(post(path).cookie(session).with(xsrf())
+                .contentType(MediaType.APPLICATION_JSON).content(toJson(body)));
+    }
+
+    private JsonNode body(ResultActions actions) throws Exception {
+        return jsonMapper.readTree(actions.andReturn().getResponse().getContentAsString());
+    }
+
+    private record Learner(Long id, Cookie session, String deckId) {
+    }
+}
+</code></pre></details></div><h2 id="chay-thu">Chạy thử, JSON mẫu, Postman</h2><div class="card"><p>Từ <code>backend/k28</code> (PowerShell):</p><pre><code>.\mvnw.cmd -q -DskipTests compile
+.\mvnw.cmd -q test "-Dtest=ProgressPolicyTest,RecommendationServiceTest,RecommendationRulesTest,FR08RecommendationTest,FR08NotebookTest"</code></pre><p>Kết quả đã chạy 12/11/2026: 8 + 5 + 5 + 3 + 4 test, 0 lỗi; toàn bộ <code>mvnw test</code> 452/452 pass (Testcontainers MySQL 8.4/Redis). Chưa gọi HTTP thật trên môi trường dev.</p><p><b>Postman</b> (thư mục “06 Tương tác &amp; thống kê”, chưa đồng bộ lên collection): <code>GET {{baseUrl}}/api/v1/learning/recommendations</code>, cookie <code>SESSION</code> từ request đăng nhập, không body, không header XSRF. Test script gợi ý:</p><pre><code>pm.test("200 và là mảng", () =&gt; {
+  pm.response.to.have.status(200);
+  pm.expect(pm.response.json()).to.be.an("array");
+});
+pm.test("mỗi phần tử đủ 4 trường", () =&gt; {
+  pm.response.json().forEach(r =&gt; {
+    pm.expect(r).to.have.keys("reasonCode", "message", "cardIds", "evidence");
+    r.cardIds.forEach(id =&gt; pm.expect(id).to.be.a("string"));
+  });
+});</code></pre><p><b>JSON mẫu</b> (rút gọn từ kỳ vọng của <code>FR08RecommendationTest</code>; ID và thời điểm minh họa):</p><pre><code>[
+  {"reasonCode": "QUEN_NHIEU", "message": "Ôn lại ‘receipt’ và thêm mẹo nhớ: bạn quên 3 lần trong 30 ngày qua",
+   "cardIds": ["101"], "evidence": {"soLanQuen": 3, "soNgay": 30, "lanCuoiAt": "2026-11-12T02:00:00Z"}},
+  {"reasonCode": "CAP_DE_NHAM", "message": "Phân biệt ‘affect’ và ‘effect’: bạn chọn nhầm 3 lần",
+   "cardIds": ["102", "103"], "evidence": {"capId": "7", "soLanNham": 3, "lanCuoiAt": "2026-11-12T01:00:00Z"}},
+  {"reasonCode": "QUA_HAN_NHIEU", "message": "Bạn có 4 lượt ôn quá hạn, nhiều hơn 3 lượt mỗi ngày với 1 phút học. Chia kế hoạch cứu lịch trong 2 ngày",
+   "cardIds": ["201", "202"], "evidence": {"soQuaHan": 4, "soDenHan": 0, "luotMoiNgay": 3, "phutMoiNgay": 1, "soNgayKeHoach": 2}},
+  {"reasonCode": "TIEN_BO", "message": "‘reimbursement’: sai 3/5 lượt trước đó, đúng 5/5 lượt trong 7 ngày gần đây",
+   "cardIds": ["104"], "evidence": {"soLuotCu": 5, "soSaiCu": 3, "soNgayCu": 23, "soLuotMoi": 5, "soDungMoi": 5, "soNgayMoi": 7, "lanCuoiAt": "2026-11-10T07:00:00Z"}}
+]</code></pre><p>Lỗi: 401 <code>UNAUTHENTICATED</code> khi không có phiên. API không có 400/404 vì không nhận tham số.</p></div><h2 id="tc">Ánh xạ kiểm thử (TK §19)</h2><div class="card"><ul><li>FR-08 không có TC riêng (SPRINT_PLAN ghi “—”).</li><li><b>TC-02</b> (không xem dữ liệu người khác): user khác gọi API nhận <code>[]</code>; mọi thẻ đi qua <code>RecommendationCards</code> (lọc theo chủ bộ).</li><li><b>TC-10</b> (nhiều thẻ quá hạn, không xóa nợ ôn): <code>tc10_overdueRecommendationMatchesRescuePlanAndKeepsSchedule</code>.</li><li>FR-08 “không gợi ý nội dung đã xóa/tạm ngưng”: thẻ xóa mềm bị loại trong test tích hợp; thẻ tạm ngưng/đã xóa trong unit test rule.</li></ul></div><h2 id="checklist">Checklist tài liệu</h2><div class="tablewrap"><table><tr><th>Mục</th><th>Nội dung</th><th>File</th></tr><tr><td>Roadmap B3.5</td><td>Đã tick [x] và ghi “Đã làm 12/11/2026” (toàn bộ <code>mvnw test</code> 452/452 pass)</td><td><code>roadmap/TienDoDuKien_backend.md</code></td></tr><tr><td>TK §8.3</td><td>Đã sửa dòng QUA_HAN_NHIEU và thêm đoạn quyết định B3.5</td><td><code>docs/PHAN_TICH_THIET_KE_HE_THONG_HOC_TU_VUNG_K28.md</code></td></tr><tr><td>Luồng backend</td><td>Tài liệu mới + mục trong README</td><td><code>docs/luong-backend/B3.5-goi-y-co-ly-do.md</code></td></tr><tr><td>Báo cáo bàn giao</td><td>Mục 1 (bảng), 5.4 (API), 8 (checklist F3.4), 9 (đã giao), 10 (kiểm chứng, quyết định, giới hạn)</td><td><code>ban-giao-cho fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md</code></td></tr><tr><td>Chưa làm</td><td>Mockup UI28 (/ui-mockup), request Postman (/postman-sync B3.5), gọi HTTP thật trên dev, test tích hợp riêng cho SAI_CHINH_TA</td><td><code>—</code></td></tr></table></div></main></div></body></html>

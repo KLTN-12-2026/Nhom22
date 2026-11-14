@@ -303,7 +303,7 @@ Mỗi PR có một người review khác module. Kiểm thử và tài liệu l�
 
 - [ ] "Sửa câu tiếng Việt": giữ thiết kế viết câu tiếng Anh, AI giải thích tiếng Việt?
 - [ ] Bảng SRS §7.2 và trần 365 ngày.
-- [ ] Nhà cung cấp AI và phát âm (OpenAI / Azure Speech), ngân sách, hạn mức mặc định.
+- [ ] Nhà cung cấp AI và phát âm (OpenAI / Azure Speech), ngân sách, hạn mức mặc định. AI văn bản: **OpenAI** (chốt 13/11/2026, B3.2; chưa có khóa thì dùng `FakeAiClient` nhãn "Mô phỏng"); hạn mức mặc định theo gói ở `han_muc_dich_vu` (B3.1); còn Azure Speech (mốc 16/11) và ngân sách.
 - [ ] Chính sách xóa dữ liệu: thời hạn xử lý, dữ liệu đã chia sẻ.
 - [ ] Trần điểm/ngày (đề xuất 100) và điều kiện chuỗi ngày (≥ 5 lượt hợp lệ).
 

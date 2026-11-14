@@ -1,5 +1,5 @@
 (function () {
-  const KEY = "vl-demo-v7";
+  const KEY = "vl-demo-v8";
   const SESSION = "vl-demo-session";
   const DEMO_PASSWORD = "Vocab@12345";
 
@@ -197,7 +197,7 @@
       ["EN_VI", "VI_EN"].forEach((dir, j) => put("3", x.id, dir, { trangThai: "ON_TAP", ef: 2.3, khoangOnNgay: 3 + (i % 4), chuoiThanhCong: 2, soLanQuen: (i * 7 + j) % 5, hanOnAt: iso(sod - (12 + (i % 9)) * DAY), version: 3 }));
     });
 
-    const anCards = s.cards.filter((x) => x.deckId === "21" || x.deckId === "22");
+    const anCards = s.cards.filter((x) => (x.deckId === "21" || x.deckId === "22") && x.word !== "How's it going?");
     const ratings = ["NHO", "NHO", "KHO", "NHO", "DE", "QUEN", "NHO", "KHO", "NHO", "DE"];
     const studyDays = { 1: 12, 2: 9, 3: 14, 5: 6, 6: 11, 8: 4, 9: 10, 10: 8, 13: 12, 16: 7, 17: 9, 22: 6, 24: 5 };
     let k = 0;
@@ -216,6 +216,9 @@
       { id: "p1", uid: "2", the1Id: cp, the2Id: cm, soLanNham: 2, lanCuoiAt: at(14, 20) },
       { id: "p2", uid: "2", the1Id: rc, the2Id: rp, soLanNham: 1, lanCuoiAt: at(15, 20) }
     );
+    const hg = card("22", "How's it going?");
+    ["QUEN", "NHO", "QUEN", "KHO", "QUEN"].forEach((r, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-tb" + i, theId: hg, chieuHoc: "EN_VI", danhGia: r, thoiGianTraLoiMs: 9000, createdAt: at(12 + i * 2, 19), truoc: { trangThai: "DANG_HOC" }, sau: { trangThai: r === "QUEN" ? "DANG_HOC" : "ON_TAP" }, phienBanThuatToan: ALGO }));
+    [1, 2, 3, 4, 5].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-tbm" + i, theId: hg, chieuHoc: i % 2 ? "VI_EN" : "EN_VI", danhGia: "NHO", thoiGianTraLoiMs: 5000, createdAt: at(d, 7), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "ON_TAP" }, phienBanThuatToan: ALGO }));
     [3, 9, 20].forEach((d, i) => s.reviews.push({ id: "r" + (++k), uid: "2", clientEventId: "seed-" + k, phienId: "seed-" + d, theId: rc, chieuHoc: i === 1 ? "VI_EN" : "EN_VI", danhGia: "QUEN", thoiGianTraLoiMs: 12000, createdAt: at(d, 20.5), truoc: { trangThai: "ON_TAP" }, sau: { trangThai: "HOC_LAI" }, phienBanThuatToan: ALGO }));
     s.notebook["2"] = { [un]: { ghiChu: "Đọc tách: un-cha-rac-te-ris-ti-cal-ly. Đuôi -ically, không phải -icly.", danhDauThuCong: true, anTu: null } };
 
@@ -280,6 +283,23 @@
     const s = session.get();
     if (!s) return null;
     return db.users.find((u) => u.id === s.userId) || null;
+  }
+  function inboxOf(u) {
+    db.thongBao = db.thongBao || {};
+    if (!db.thongBao[u.id]) {
+      const tz = tzOf(u);
+      const today = localDate(Date.now(), tz);
+      const yesterday = shiftDate(today, -1);
+      db.thongBao[u.id] = [
+        { id: String(u.id * 100 + 2), loai: "NHAC_HOC", tieuDe: "Đến giờ ôn từ vựng", noiDung: "Hôm nay bạn đã ôn 2/5 lượt. Ôn thêm vài thẻ để giữ chuỗi ngày học.", lienKet: "/hom-nay", ngayDiaPhuong: today, hienThi: true, daDocAt: null, createdAt: new Date(Date.now() - 3600000).toISOString() },
+        { id: String(u.id * 100 + 1), loai: "NHAC_HOC", tieuDe: "Đến giờ ôn từ vựng", noiDung: "Hôm nay bạn đã ôn 0/5 lượt. Ôn thêm vài thẻ để giữ chuỗi ngày học.", lienKet: "/hom-nay", ngayDiaPhuong: yesterday, hienThi: true, daDocAt: new Date(Date.now() - 86400000).toISOString(), createdAt: new Date(Date.now() - 90000000).toISOString() }
+      ];
+      save(db);
+    }
+    return db.thongBao[u.id];
+  }
+  function notificationView(n) {
+    return { id: n.id, loai: n.loai, tieuDe: n.tieuDe, noiDung: n.noiDung, lienKet: n.lienKet, ngayDiaPhuong: n.ngayDiaPhuong, daDocAt: n.daDocAt, createdAt: n.createdAt };
   }
   function requireMe() { const u = me(); if (!u) unauth(); return u; }
   function ownedFile(id, allowDeleted) {
@@ -966,6 +986,91 @@
     if (filter) list = list.filter((it) => notebookIn(it, filter));
     return list.sort((a, b) => (b.lanGanNhatAt || "").localeCompare(a.lanGanNhatAt || "") || Number(b.theId) - Number(a.theId));
   }
+  const REC = { toiDaGoiY: 10, toiDaMoiLyDo: 2, toiDaTheQuaHan: 20, soNgayCu: 30, soNgayMoi: 7, soLuotCu: 5, soSaiCu: 3, tyLeSaiCu: 0.5, soLuotMoi: 5, soSaiMoi: 0 };
+  const REC_ORDER = ["QUEN_NHIEU", "SAI_CHINH_TA", "CAP_DE_NHAM", "PHAT_AM_THAP", "QUA_HAN_NHIEU", "TIEN_BO"];
+  function recommendations(u) {
+    const uid = u.id;
+    const now = Date.now();
+    const nb = db.notebook[uid] || {};
+    const after = (theId, at) => { const h = nb[theId] && nb[theId].anTu; return !h || Date.parse(at) > Date.parse(h); };
+    const usable = (theId) => !!notebookCard(uid, theId, false);
+    const word = (theId) => notebookCard(uid, theId, false).x.word;
+    const later = (a, b) => (!a || (b && b > a) ? b : a);
+    const byReason = {};
+
+    const lapses = {};
+    db.reviews.filter((r) => r.uid === uid && r.danhGia === "QUEN" && r.truoc && r.truoc.trangThai === "ON_TAP" && Date.parse(r.createdAt) >= now - NB.quenNgay * DAY && after(r.theId, r.createdAt))
+      .forEach((r) => { const o = lapses[r.theId] = lapses[r.theId] || { n: 0, last: null }; o.n++; o.last = later(o.last, r.createdAt); });
+    byReason.QUEN_NHIEU = Object.keys(lapses).filter((id) => lapses[id].n >= NB.quenNhieu && usable(id))
+      .sort((a, b) => lapses[b].n - lapses[a].n || lapses[b].last.localeCompare(lapses[a].last) || Number(b) - Number(a))
+      .map((id) => ({ reasonCode: "QUEN_NHIEU", message: "Ôn lại ‘" + word(id) + "’ và thêm mẹo nhớ: bạn quên " + lapses[id].n + " lần trong " + NB.quenNgay + " ngày qua", cardIds: [id], evidence: { soLanQuen: lapses[id].n, soNgay: NB.quenNgay, lanCuoiAt: lapses[id].last }, exclusive: true }));
+
+    const typed = {};
+    db.answers.filter((a) => a.uid === uid && a.theId && a.coTraLoi && TYPED.includes(a.loaiCau) && after(a.theId, a.createdAt))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .forEach((a) => { (typed[a.theId] = typed[a.theId] || []).push(a); });
+    byReason.SAI_CHINH_TA = Object.keys(typed).map((id) => { const w = typed[id].slice(0, NB.chinhTaLuot); return { id, soSai: w.filter((a) => a.nhomLoi === "CHINH_TA").length, soLuot: w.length, last: w[0].createdAt }; })
+      .filter((x) => x.soSai >= NB.chinhTaSai && usable(x.id))
+      .sort((a, b) => b.soSai - a.soSai || b.last.localeCompare(a.last) || Number(b.id) - Number(a.id))
+      .map((x) => ({ reasonCode: "SAI_CHINH_TA", message: "Luyện viết ‘" + word(x.id) + "’ vì bạn viết sai " + x.soSai + " trong " + x.soLuot + " lượt gần đây", cardIds: [x.id], evidence: { soSai: x.soSai, soLuot: x.soLuot, lanCuoiAt: x.last }, exclusive: true }));
+
+    byReason.CAP_DE_NHAM = db.pairs.filter((p) => p.uid === uid && p.soLanNham >= NB.capNham && usable(p.the1Id) && usable(p.the2Id) && after(p.the1Id, p.lanCuoiAt) && after(p.the2Id, p.lanCuoiAt))
+      .sort((a, b) => b.soLanNham - a.soLanNham || b.lanCuoiAt.localeCompare(a.lanCuoiAt))
+      .map((p) => ({ reasonCode: "CAP_DE_NHAM", message: "Phân biệt ‘" + word(p.the1Id) + "’ và ‘" + word(p.the2Id) + "’: bạn chọn nhầm " + p.soLanNham + " lần", cardIds: [p.the1Id, p.the2Id], evidence: { capId: p.id, soLanNham: p.soLanNham, lanCuoiAt: p.lanCuoiAt }, exclusive: true }));
+
+    const plan = todayPlan(u, {});
+    byReason.QUA_HAN_NHIEU = [];
+    if (plan.cuuLichOn) {
+      const sod = startOfLocalDay(now, tzOf(u));
+      const due = {};
+      ownCards(uid).forEach((x) => DIRS.forEach((dir) => {
+        const pr = progressOf(uid, x.id, dir);
+        if (pr.trangThai === "MOI" || pr.trangThai === "TAM_NGUNG" || !pr.hanOnAt) return;
+        const h = Date.parse(pr.hanOnAt);
+        if (h < sod) due[x.id] = due[x.id] === undefined ? h : Math.min(due[x.id], h);
+      }));
+      const r = plan.cuuLichOn;
+      byReason.QUA_HAN_NHIEU.push({
+        reasonCode: "QUA_HAN_NHIEU",
+        message: "Bạn có " + plan.soQuaHan + " lượt ôn quá hạn, nhiều hơn " + r.luotMoiNgay + " lượt mỗi ngày với " + r.phutMoiNgay + " phút học. Chia kế hoạch cứu lịch trong " + r.soNgay + " ngày",
+        cardIds: Object.keys(due).sort((a, b) => due[a] - due[b] || Number(a) - Number(b)).slice(0, REC.toiDaTheQuaHan),
+        evidence: { soQuaHan: plan.soQuaHan, soDenHan: plan.soDenHan, luotMoiNgay: r.luotMoiNgay, phutMoiNgay: r.phutMoiNgay, soNgayKeHoach: r.soNgay },
+        exclusive: false
+      });
+    }
+
+    const cuTu = now - REC.soNgayCu * DAY;
+    const moiTu = now - REC.soNgayMoi * DAY;
+    const obs = {};
+    const add = (theId, at, dung) => {
+      const t = Date.parse(at);
+      if (!theId || t < cuTu) return;
+      const o = obs[theId] = obs[theId] || { cu: 0, saiCu: 0, moi: 0, saiMoi: 0, last: null };
+      if (t < moiTu) { o.cu++; if (!dung) o.saiCu++; } else { o.moi++; if (!dung) o.saiMoi++; }
+      o.last = later(o.last, at);
+    };
+    db.reviews.filter((r) => r.uid === uid).forEach((r) => add(r.theId, r.createdAt, r.danhGia !== "QUEN"));
+    db.answers.filter((a) => a.uid === uid).forEach((a) => add(a.theId, a.createdAt, a.dung));
+    byReason.TIEN_BO = Object.keys(obs).filter((id) => { const o = obs[id]; return o.cu >= REC.soLuotCu && o.saiCu >= REC.soSaiCu && o.saiCu >= REC.tyLeSaiCu * o.cu && o.moi >= REC.soLuotMoi && o.saiMoi <= REC.soSaiMoi && usable(id); })
+      .sort((a, b) => obs[b].moi - obs[a].moi || obs[b].last.localeCompare(obs[a].last) || Number(b) - Number(a))
+      .map((id) => { const o = obs[id]; return { reasonCode: "TIEN_BO", message: "‘" + word(id) + "’: sai " + o.saiCu + "/" + o.cu + " lượt trước đó, đúng " + (o.moi - o.saiMoi) + "/" + o.moi + " lượt trong " + REC.soNgayMoi + " ngày gần đây", cardIds: [id], evidence: { soLuotCu: o.cu, soSaiCu: o.saiCu, soNgayCu: REC.soNgayCu - REC.soNgayMoi, soLuotMoi: o.moi, soDungMoi: o.moi - o.saiMoi, soNgayMoi: REC.soNgayMoi, lanCuoiAt: o.last }, exclusive: true }; });
+
+    const used = new Set();
+    const out = [];
+    REC_ORDER.forEach((code) => {
+      let taken = 0;
+      (byReason[code] || []).forEach((c) => {
+        if (taken >= REC.toiDaMoiLyDo || out.length >= REC.toiDaGoiY) return;
+        if (c.exclusive) {
+          if (c.cardIds.some((id) => used.has(id))) return;
+          c.cardIds.forEach((id) => used.add(id));
+        }
+        out.push({ reasonCode: c.reasonCode, message: c.message, cardIds: c.cardIds, evidence: c.evidence });
+        taken++;
+      });
+    });
+    return out;
+  }
   function notebookIn(it, key) {
     if (key === "TAT_CA") return true;
     if (key === "QUEN_NHIEU") return it.lyDo.includes("QUEN_NHIEU");
@@ -1065,8 +1170,122 @@
     return { tu, den, list };
   }
 
+  const AI_DRAFT = { maxKyTu: 5000, maxThe: 50, hanMuc: 20, zone: "Asia/Ho_Chi_Minh" };
+  function aiStore() { db.aiRequests = db.aiRequests || []; db.aiCommits = db.aiCommits || {}; return db; }
+  function aiOwned(id) {
+    const u = requireMe();
+    const r = aiStore().aiRequests.find((x) => x.id === id && x.uid === u.id);
+    if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy yêu cầu AI");
+    return aiAdvance(r);
+  }
+  function aiCreate(u, b) {
+    aiStore();
+    const doanVan = typeof b.doanVan === "string" && b.doanVan.trim() ? b.doanVan.trim() : null;
+    const tepId = b.tepId ? String(b.tepId) : null;
+    if (!doanVan === !tepId) bad([fe("doanVan", "Gửi đoạn văn hoặc tệp Word, không gửi cả hai")]);
+    if (doanVan && [...doanVan].length > AI_DRAFT.maxKyTu) bad([fe("doanVan", "Đoạn văn tối đa " + AI_DRAFT.maxKyTu + " ký tự")]);
+    if (tepId) throw new ApiError(422, "BUSINESS_RULE", "Chọn tệp Word (.docx) đã tải lên xong", [fe("tepId", "Bản mẫu chưa đọc tệp Word; tệp .txt/.csv được đọc ngay trên trình duyệt")]);
+    if (b.boTheId) ownDeck(String(b.boTheId));
+    const ngay = localDate(Date.now(), AI_DRAFT.zone);
+    const used = db.aiRequests.filter((r) => r.uid === u.id && r.ngay === ngay && r.hanMucTrangThai !== "DA_HOAN").length;
+    if (used >= AI_DRAFT.hanMuc) {
+      const reset = startOfLocalDay(Date.now(), AI_DRAFT.zone) + DAY;
+      throw new ApiError(429, "RATE_LIMITED", "Bạn đã dùng hết lượt AI hôm nay, vui lòng thử lại vào ngày mai", [], { retryAfter: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) });
+    }
+    const r = { id: nextId(), uid: u.id, loai: "TAO_THE", trangThai: "CHO", maLoi: null, nhaCungCap: "fake", model: null, phienBanPrompt: "card-draft-v1", createdAt: new Date().toISOString(), batDau: Date.now(), ngay, hanMucTrangThai: "GIU_CHO", doanVan, boTheId: b.boTheId ? String(b.boTheId) : null, banNhap: [] };
+    db.aiRequests.unshift(r);
+    return { status: 202, body: { requestId: r.id, trangThai: "CHO" } };
+  }
+  function aiAdvance(r) {
+    if (["HOAN_TAT", "LOI", "KHONG_XAC_DINH"].includes(r.trangThai)) return r;
+    const elapsed = Date.now() - r.batDau;
+    if (elapsed < 700) return r;
+    r.trangThai = "DANG_XU_LY";
+    const mode = ((r.doanVan || "").match(/#mo-phong:([A-Z_]+)/) || [])[1] || "THANH_CONG";
+    if (elapsed < (mode === "THU_LAI" ? 4000 : 1600)) return r;
+    r.model = "fake-card-draft";
+    const fail = { LOI: ["LOI", "MO_PHONG_LOI"], SAI_SCHEMA: ["LOI", "SAI_SCHEMA"], THU_LAI: ["LOI", "MO_PHONG_TAM_THOI"], TIMEOUT: ["KHONG_XAC_DINH", "TIMEOUT"] }[mode];
+    if (fail) { r.trangThai = fail[0]; r.maLoi = fail[1]; r.hanMucTrangThai = fail[0] === "LOI" ? "DA_HOAN" : "DA_DUNG"; return r; }
+    const text = r.doanVan.replace(/#mo-phong:[A-Z_]+/g, " ");
+    const existing = {};
+    if (r.boTheId) db.cards.filter((c) => c.deckId === r.boTheId && !c.deleted).forEach((c) => { const k = norm(c.word); if (!existing[k]) existing[k] = c.id; });
+    const sentences = (text.match(/[^.!?\n]+[.!?]?/g) || []).map((s) => s.trim());
+    const seen = new Set();
+    (text.match(/\p{L}[\p{L}'-]{3,}/gu) || []).forEach((w) => {
+      const tu = w.toLowerCase();
+      if (seen.has(tu) || r.banNhap.length >= AI_DRAFT.maxThe) return;
+      seen.add(tu);
+      const known = db.cards.find((c) => norm(c.word) === tu && !c.deleted);
+      const viDuEn = sentences.find((s) => s.toLowerCase().includes(tu) && s.length <= 300) || null;
+      r.banNhap.push({ id: nextId(), thuTu: r.banNhap.length + 1, tu, tuLoai: known && known.pos ? known.pos : null, nghiaVi: known ? known.meaningVi : "Nghĩa mô phỏng của “" + tu + "”", viDuEn, dichVi: null, trung: !!existing[tu], theTrungId: existing[tu] || null, trangThaiDuyet: "CHO_DUYET", theDaLuuId: null });
+    });
+    if (!r.banNhap.length) { r.trangThai = "LOI"; r.maLoi = "KHONG_CO_TU"; r.hanMucTrangThai = "DA_HOAN"; return r; }
+    r.trangThai = "HOAN_TAT";
+    r.hanMucTrangThai = "DA_DUNG";
+    return r;
+  }
+  function aiRequestView(r) {
+    return { id: r.id, loai: r.loai, trangThai: r.trangThai, maLoi: r.maLoi, moPhong: true, nhaCungCap: r.nhaCungCap, model: r.model, phienBanPrompt: r.phienBanPrompt, createdAt: r.createdAt, banNhap: r.trangThai === "HOAN_TAT" ? r.banNhap.map((x) => Object.assign({}, x)) : [] };
+  }
+  function aiCommit(u, id, b, h) {
+    aiStore();
+    const key = h["Idempotency-Key"];
+    if (!key || !/^[A-Za-z0-9._:-]{1,128}$/.test(key)) bad([fe("Idempotency-Key", "Gửi Idempotency-Key từ 1 đến 128 ký tự ASCII hợp lệ")]);
+    const ids = Array.isArray(b.banNhapIds) ? b.banNhapIds.map(String) : [];
+    if (!ids.length || ids.length > 50) bad([fe("banNhapIds", "Chọn từ 1 đến 50 thẻ nháp")]);
+    if (new Set(ids).size !== ids.length) bad([fe("banNhapIds", "Các thẻ nháp không được trùng nhau")]);
+    const tenBoMoi = typeof b.tenBoMoi === "string" ? b.tenBoMoi.trim() : "";
+    if (!b.boTheId === !tenBoMoi) bad([fe("boTheId", "Chọn bộ thẻ có sẵn hoặc nhập tên bộ mới, không chọn cả hai")]);
+    if (tenBoMoi.length > 150) bad([fe("tenBoMoi", "Tên bộ thẻ tối đa 150 ký tự")]);
+    const clean = (v) => { const t = (v == null ? "" : String(v)).normalize("NFC").trim().replace(/\s+/g, " "); return t || null; };
+    const edits = {};
+    (Array.isArray(b.sua) ? b.sua : []).forEach((x) => {
+      const key2 = String(x && x.banNhapId);
+      const e2 = { tu: clean(x.tu), tuLoai: clean(x.tuLoai), nghiaVi: clean(x.nghiaVi), viDuEn: clean(x.viDuEn), dichVi: clean(x.dichVi) };
+      if (!ids.includes(key2) || edits[key2]) bad([fe("sua", "Chỉ sửa thẻ nháp đang chọn, mỗi thẻ một lần")]);
+      if (!e2.tu || !e2.nghiaVi) bad([fe("sua", "Nhập từ tiếng Anh và nghĩa tiếng Việt")]);
+      const unsafe = [e2.tuLoai, e2.nghiaVi, e2.viDuEn, e2.dichVi].some((v) => v && /[<>{}]/.test(v));
+      if (e2.tu.length > 100 || !/^\p{L}[\p{L}\p{M}'’ -]*$/u.test(e2.tu) || e2.tu.split(" ").length > 6 || unsafe
+        || e2.nghiaVi.length > 500 || (e2.tuLoai || "").length > 30 || (e2.viDuEn || "").length > 300 || (e2.dichVi || "").length > 300) {
+        bad([fe("sua", "Từ chỉ gồm chữ cái, khoảng trắng, dấu nháy hoặc gạch nối, tối đa 6 từ; không dùng ký tự < > { }")]);
+      }
+      edits[key2] = e2;
+    });
+    const hash = id + ":" + ids.slice().sort((a, c) => Number(a) - Number(c)).join(",") + ":" + (b.boTheId ? "deck:" + b.boTheId : "new:" + tenBoMoi) + ":" + JSON.stringify(Object.keys(edits).sort().map((k) => [k, edits[k]]));
+    const slot = u.id + ":" + key;
+    const prev = db.aiCommits[slot];
+    if (prev) {
+      if (prev.hash !== hash) throw new ApiError(409, "CONFLICT", "Idempotency-Key đã dùng cho yêu cầu khác", [fe("Idempotency-Key", "Idempotency-Key đã dùng cho yêu cầu khác")]);
+      return prev.response;
+    }
+    const r = aiOwned(id);
+    if (r.trangThai !== "HOAN_TAT") throw new ApiError(422, "BUSINESS_RULE", "Yêu cầu AI chưa tạo xong thẻ nháp");
+    const picked = r.banNhap.filter((x) => ids.includes(x.id)).sort((a, c) => a.thuTu - c.thuTu);
+    if (picked.length !== ids.length) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy thẻ nháp", [fe("banNhapIds", "Không tìm thấy thẻ nháp")]);
+    if (picked.some((x) => x.trangThaiDuyet !== "CHO_DUYET")) throw new ApiError(409, "CONFLICT", "Có thẻ nháp đã được lưu trước đó", [fe("banNhapIds", "Có thẻ nháp đã được lưu trước đó")]);
+    let deck;
+    if (b.boTheId) deck = ownDeck(String(b.boTheId)).d;
+    else {
+      deck = { id: nextId(), name: tenBoMoi, description: "", goal: null, topicId: null, level: "CO_BAN", visibility: "RIENG_TU", kind: "CA_NHAN", ownerId: u.id, ownerName: u.tenHienThi, source: "Xưởng thẻ AI", updatedAt: new Date().toISOString(), createdAt: new Date().toISOString(), version: 0, sourceDeckId: null };
+      db.decks.push(deck);
+    }
+    const ketQua = picked.map((x) => {
+      if (edits[x.id]) Object.assign(x, edits[x.id]);
+      const theTrungIds = db.cards.filter((c) => c.deckId === deck.id && !c.deleted && norm(c.word) === norm(x.tu)).map((c) => c.id);
+      const card = { id: nextId(), deckId: deck.id, word: x.tu, pos: x.tuLoai || "", ipa: "", meaningVi: x.nghiaVi, exampleEn: x.viDuEn || "", exampleVi: x.dichVi || "", difficulty: 1, tagIds: [], imageUrl: null, audioUrl: null, version: 0, createdAt: new Date().toISOString() };
+      db.cards.push(card);
+      x.trangThaiDuyet = "DA_LUU";
+      x.theDaLuuId = card.id;
+      return { banNhapId: x.id, theId: card.id, trung: theTrungIds.length > 0, theTrungIds };
+    });
+    deck.updatedAt = new Date().toISOString();
+    const response = { yeuCauId: r.id, boTheId: deck.id, boMoi: !b.boTheId, soTheDaLuu: ketQua.length, ketQua };
+    db.aiCommits[slot] = { hash, response };
+    return response;
+  }
+
   const routes = [
-    ["GET", /^\/public\/ping$/, () => ({ status: "UP", serverTime: new Date().toISOString() })],
+    ["GET", /^\/public\/ping$/,() => ({ status: "UP", serverTime: new Date().toISOString() })],
     ["GET", /^\/auth\/csrf$/, () => ({ headerName: "X-XSRF-TOKEN", token: "demo-csrf" })],
 
     ["POST", /^\/auth\/register$/, (m, b) => {
@@ -1635,6 +1854,10 @@
       nb[m[1]] = Object.assign({ ghiChu: null }, nb[m[1]] || {}, { danhDauThuCong: false, anTu: new Date().toISOString(), capNhatAt: new Date().toISOString() });
       return { status: 204 };
     }],
+    ["GET", /^\/learning\/recommendations$/, () => recommendations(requireMe())],
+    ["POST", /^\/ai\/card-drafts$/, (m, b) => aiCreate(requireMe(), b)],
+    ["GET", /^\/ai\/requests\/(\w+)$/, (m) => aiRequestView(aiOwned(m[1]))],
+    ["POST", /^\/ai\/card-drafts\/(\w+)\/commit$/, (m, b, q, h) => aiCommit(requireMe(), m[1], b, h)],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();
       const v = (x) => ({ id: x.id, tu: x.word, tuLoai: x.pos || null, phienAm: x.ipa || null, nghiaVi: x.meaningVi, viDuEn: x.exampleEn || null });
@@ -1685,6 +1908,28 @@
         diemToiDaNgay: REWARD_CAP,
         lichSu: { items: list.slice(pg * size, pg * size + size), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) }
       };
+    }],
+    ["GET", /^\/notifications$/, (m, b, q) => {
+      const u = requireMe();
+      const size = parseInt(q.size || "20", 10);
+      const pg = parseInt(q.page || "0", 10);
+      if (!(size >= 1 && size <= 100)) bad([fe("size", size < 1 ? "size tối thiểu là 1" : "size tối đa là 100")]);
+      if (!(pg >= 0)) bad([fe("page", "page phải không âm")]);
+      const all = inboxOf(u).filter((n) => n.hienThi);
+      const list = q.chuaDoc === "true" ? all.filter((n) => !n.daDocAt) : all;
+      return {
+        soChuaDoc: all.filter((n) => !n.daDocAt).length,
+        thongBao: { items: list.slice(pg * size, pg * size + size).map(notificationView), page: pg, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) }
+      };
+    }],
+    ["PATCH", /^\/notifications\/([^/]+)$/, (m, b) => {
+      const u = requireMe();
+      if (typeof b.daDoc !== "boolean") bad([fe("daDoc", "Chọn đã đọc hoặc chưa đọc")]);
+      const n = inboxOf(u).find((x) => x.id === m[1] && x.hienThi);
+      if (!n) notFound();
+      n.daDocAt = b.daDoc ? (n.daDocAt || new Date().toISOString()) : null;
+      save(db);
+      return notificationView(n);
     }],
     ["GET", /^\/badges$/, () => {
       const u = requireMe();

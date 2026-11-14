@@ -25,7 +25,7 @@ public class TepTin extends BaseEntity {
     private Long chuSoHuuId;
     @Column(nullable = false, length = 200)
     private String objectKey;
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String mimeType;
     @Column(nullable = false)
     private long kichThuoc;

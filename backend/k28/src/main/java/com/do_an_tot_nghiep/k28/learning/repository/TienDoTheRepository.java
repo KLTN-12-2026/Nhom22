@@ -142,6 +142,27 @@ public interface TienDoTheRepository extends JpaRepository<TienDoThe, Long> {
     );
 
     @Query("""
+            select t.theId
+            from TienDoThe t
+            join TheTuVung c on c.id = t.theId
+            join BoThe b on b.id = c.boTheId
+            where t.nguoiDungId = :userId
+              and t.trangThai in :trangThais
+              and t.hanOnAt < :batDau
+              and c.xoaAt is null
+              and b.xoaAt is null
+              and b.chuSoHuuId = :userId
+            group by t.theId
+            order by min(t.hanOnAt), t.theId
+            """)
+    List<Long> overdueCardIds(
+            @Param("userId") Long userId,
+            @Param("trangThais") Collection<TrangThaiTienDo> trangThais,
+            @Param("batDau") Instant batDau,
+            Pageable page
+    );
+
+    @Query("""
             select new com.do_an_tot_nghiep.k28.learning.repository.DeckCardRow(
                 b.id,
                 b.ten,
