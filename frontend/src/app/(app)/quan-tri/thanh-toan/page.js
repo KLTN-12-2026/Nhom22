@@ -173,8 +173,8 @@ function PaymentAdmin() {
           <><strong>{t.id}</strong><small>{date(t.created)} · {time(t.created)}</small></>,
           <><strong>{t.name}</strong><small>{t.email}</small></>,
           <><span className={styles.planLabel}>{planName(t.plan)}</span><small>{t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</small></>,
-          <span className={styles.money}>{money(t.amount)}</span>, <StatusBadge status={PAYMENT_STATUSES[t.status]} />,
-          <button type="button" className="btn btn-quiet" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => openDialog({ type: 'detail', transaction: t })}>Chi tiết ↗</button>,
+          <span key="amount" className={styles.money}>{money(t.amount)}</span>, <StatusBadge key="status" status={PAYMENT_STATUSES[t.status]} />,
+          <button key="detail" type="button" className="btn btn-quiet" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => openDialog({ type: 'detail', transaction: t })}>Chi tiết ↗</button>,
         ] }))} /> : <Empty title="Không có giao dịch" description="Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm kết quả."><button className="btn btn-secondary" type="button" onClick={clearFilters}>Xóa bộ lọc</button></Empty>}
         <div className={styles.tableFooter}><span role="status" aria-live="polite">{items.length ? `Hiển thị ${offset + 1}–${Math.min(offset + PAGE_SIZE, items.length)} / ${items.length} giao dịch` : '0 giao dịch'}</span><nav className="pager" aria-label="Phân trang giao dịch">
           <button type="button" disabled={currentPage === 1} aria-label="Trang trước" onClick={() => setPage(currentPage - 1)}><Icon name="chevron-left" /></button>
@@ -192,8 +192,8 @@ function PaymentAdmin() {
           <button className="btn btn-quiet" type="reset">Xóa bộ lọc</button>
         </form>
         {subscriptions.length ? <DataTable headers={['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái']} caption="Gói dịch vụ của người dùng" rows={subscriptions.map(s => ({ id: s.id, cells: [
-          <><strong>{s.name}</strong><small>{s.email}</small></>, <span className={styles.planLabel}>{planName(s.plan)}</span>, date(s.start),
-          <><strong>{date(s.expiry)}</strong><small>{time(s.expiry)} · Giờ Việt Nam</small></>, <StatusBadge status={subscriptionStatus(s)} />,
+          <><strong>{s.name}</strong><small>{s.email}</small></>, <span key="plan" className={styles.planLabel}>{planName(s.plan)}</span>, date(s.start),
+          <><strong>{date(s.expiry)}</strong><small>{time(s.expiry)} · Giờ Việt Nam</small></>, <StatusBadge key="status" status={subscriptionStatus(s)} />,
         ] }))} /> : <Empty title="Không có gói phù hợp" description="Thử thay đổi tên, email hoặc điều kiện lọc." />}
       </section>
 

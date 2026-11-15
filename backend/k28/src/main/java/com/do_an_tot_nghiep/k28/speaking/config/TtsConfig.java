@@ -11,7 +11,7 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@EnableConfigurationProperties({TtsProperties.class, AiProperties.class})
+@EnableConfigurationProperties(TtsProperties.class)
 public class TtsConfig {
 
     @Bean

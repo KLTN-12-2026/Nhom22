@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.speaking.dto;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Pattern;
 public record PronunciationHistoryQuery(
 
         @Pattern(regexp = "[1-9]\\d{0,18}", message = "theId không hợp lệ")
+        @DecimalMax(value = "9223372036854775807", message = "theId không hợp lệ")
         String theId,
 
         @Min(value = 0, message = "page phải không âm")

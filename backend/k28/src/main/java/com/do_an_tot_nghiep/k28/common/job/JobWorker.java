@@ -42,7 +42,11 @@ public class JobWorker {
 
     public JobWorker(List<JobHandler> handlers, TacVuNenRepository jobs, TransactionTemplate tx,
                      JobProperties props, Clock clock) {
-        handlers.forEach(handler -> this.handlers.put(handler.loai(), handler));
+        handlers.forEach(handler -> {
+            if (this.handlers.putIfAbsent(handler.loai(), handler) != null) {
+                throw new IllegalStateException("Duplicate job handler for type " + handler.loai());
+            }
+        });
         this.jobs = jobs;
         this.tx = tx;
         this.props = props;

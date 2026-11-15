@@ -62,6 +62,9 @@ public class PronunciationService {
                     "Từ của thẻ quá dài để đánh giá phát âm");
         }
         int thoiLuongMs = WavAudio.durationMs(wav);
+        if (thoiLuongMs < props.minMs()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "file", "Bản ghi quá ngắn, hãy ghi lại");
+        }
         if (thoiLuongMs > props.maxGiay() * 1000) {
             throw new ApiException(ErrorCode.BUSINESS_RULE, "file",
                     "Bản ghi tối đa " + props.maxGiay() + " giây");

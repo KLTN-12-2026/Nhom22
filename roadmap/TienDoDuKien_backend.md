@@ -66,14 +66,16 @@ backend/k28/
     │   │   ├── entity/      # BaseEntity (createdAt, updatedAt)
     │   │   ├── storage/     # StorageService (S3 — RustFS khi dev)
     │   │   ├── mail/        # MailService
-    │   │   └── job/         # tac_vu_nen: JobService, JobWorker (Đợt 3)
+    │   │   ├── job/         # tac_vu_nen: JobService, JobWorker (Đợt 3)
+    │   │   ├── quota/       # han_muc_dich_vu: QuotaService, GoiDichVuResolver (Đợt 3)
+    │   │   └── document/    # DocxTextReader (B3.2)
     │   ├── account/         # tai_khoan: đăng ký, đăng nhập, OAuth, hồ sơ, xóa dữ liệu
     │   ├── content/         # noi_dung: chủ đề, nhãn, bộ, thẻ, thư viện, CSV, tệp
     │   ├── learning/        # hoc_tap: tiến độ SRS, phiên học, kế hoạch hôm nay
-    │   ├── practice/        # luyen_tap: bài luyện, chấm, lỗi, sổ tay
-    │   ├── ai/              # ho_tro_ai: adapter AI, bản nháp, hạn mức
-    │   ├── speaking/        # phat_am: âm mẫu, ghi âm, đánh giá
-    │   ├── stats/           # thong_ke: tổng quan, kỹ năng, tổng kết tuần, gợi ý
+    │   ├── practice/        # luyen_tap: bài luyện, chấm, lỗi, sổ tay, gợi ý có lý do (B3.5)
+    │   ├── ai/              # ho_tro_ai: adapter AI, bản nháp (hạn mức ở common/quota)
+    │   ├── speaking/        # phat_am: âm mẫu TTS, ghi âm, đánh giá
+    │   ├── stats/           # thong_ke: tổng quan, kỹ năng, tổng kết tuần
     │   ├── engagement/      # dong_luc: điểm, chuỗi ngày, huy hiệu, thử thách
     │   ├── notification/    # thong_bao: thông báo, nhắc học
     │   └── admin/           # quan_tri: người dùng, vai trò, kiểm duyệt, nhật ký
@@ -506,7 +508,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Gọn** (S9): bản đồ làm chủ UI36 dùng `/statistics/skills` theo bộ thẻ × kỹ năng; **Cắt** lưới màu từng từ.
 
 ### [ ] B3.10 Xóa tài khoản & dữ liệu — FR-14, TC-16
-- `V18__privacy.sql` (số thực tế lấy số kế tiếp chưa dùng): `yeu_cau_xoa_du_lieu`.
+- `V<n>__privacy.sql` (số kế tiếp chưa dùng; sau B3.4b là V21): `yeu_cau_xoa_du_lieu`.
 - API: `POST /me/deletion-requests`; job nền xóa dữ liệu riêng, tệp S3, phiên Redis; ẩn danh nội dung đã chia sẻ theo chính sách.
 - Tệp: từ 03/11/2026 (RS-059) bản sao bộ có tệp riêng nên xóa tệp của tác giả không ảnh hưởng bản sao. Bản sao tạo trước ngày này (dùng chung `tep_id` với nguồn): **gỡ media khỏi bản sao** (chốt 07/11/2026).
 - **Gọn** (S9). **Cắt:** `GET /admin/deletion-requests`; Admin theo dõi qua nhật ký thao tác.
@@ -517,7 +519,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 ### [ ] B3.12a Gói dịch vụ & thanh toán VNPay — FR-15, TC-21 (bổ sung 07/11/2026)
 - Thiết kế: TK §6.9, §12.2 (`goi_dich_vu`, `dang_ky_goi`, `giao_dich_thanh_toan`), §13.2. Nguồn: UI55, UI56 nhóm FE làm ngày 07/11/2026 (commit `ff3c54e`).
-- `V<n>__billing.sql` (số kế tiếp chưa dùng, hiện là V18): 3 bảng + seed 2 gói `PRO`/`PREMIUM` theo bảng giá TK §6.9 (không có gói miễn phí, sửa 10/11/2026).
+- `V<n>__billing.sql` (số kế tiếp chưa dùng; sau B3.4b là V21): 3 bảng + seed 2 gói `PRO`/`PREMIUM` theo bảng giá TK §6.9 (không có gói miễn phí, sửa 10/11/2026).
 - API: `GET /billing/plans` (công khai), `GET /me/subscription`, `POST /billing/checkouts {goi, chuKy}` → `{maDon, paymentUrl}`, `GET /billing/vnpay/ipn`, `GET /billing/vnpay/return` (chuyển về FE `/thanh-toan-ket-qua?maDon=`), `GET /billing/transactions/{maDon}`.
 - `PaymentGateway` + `VnpayGateway` (ký/kiểm HMAC-SHA512, `RestClient` không cần) + `FakePaymentGateway` (test, demo không mạng). Số tiền lấy từ `goi_dich_vu`; xác nhận IPN/return dùng một hàm, khóa hàng đơn, chuyển trạng thái một lần; kiểm chữ ký, số tiền, chủ đơn. Không nhận, không lưu dữ liệu thẻ.
 - `EntitlementService.current(userId)` → `Optional` gói hiệu lực (`HIEU_LUC` và `het_han_at > now`); B3.12a thay `ProGoiResolver` (B3.1) bằng bản đọc `EntitlementService` để `QuotaService` lấy `goi_ma`; hạn mức AI/ảnh đọc từ `han_muc_dich_vu(goi_ma, loai)` (V15, đã seed `PRO`/`PREMIUM`), `goi_dich_vu` không có cột `han_muc_*`.

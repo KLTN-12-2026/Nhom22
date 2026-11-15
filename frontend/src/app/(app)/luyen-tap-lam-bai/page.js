@@ -288,7 +288,6 @@ function PracticeSessionContent() {
   const currentQ = questions[currentIndex] || questions[0];
   const total = questions.length;
   const isLastQuestion = currentIndex === total - 1;
-  const progressPercent = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
   const currentAnswer = currentQ ? answers[currentQ.id] : null;
   const currentFb = currentQ ? feedback[currentQ.id] : null;
 
@@ -760,7 +759,7 @@ function PracticeSessionContent() {
                   )}
                 </div>
                 {currentFb.selectedMeaning && (
-                  <div className={styles.analysisDesc}>Nghĩa: "{currentFb.selectedMeaning}"</div>
+                  <div className={styles.analysisDesc}>Nghĩa: &ldquo;{currentFb.selectedMeaning}&rdquo;</div>
                 )}
               </div>
             )}
@@ -771,7 +770,7 @@ function PracticeSessionContent() {
                 ĐÁP ÁN ĐÚNG: <strong>{currentFb.correctText}</strong>
               </div>
               {currentFb.correctMeaning && (
-                <div className={styles.analysisDesc}>Nghĩa: "{currentFb.correctMeaning}"</div>
+                <div className={styles.analysisDesc}>Nghĩa: &ldquo;{currentFb.correctMeaning}&rdquo;</div>
               )}
             </div>
           </div>

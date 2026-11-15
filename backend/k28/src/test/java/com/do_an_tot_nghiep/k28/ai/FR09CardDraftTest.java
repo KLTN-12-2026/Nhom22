@@ -439,6 +439,10 @@ class FR09CardDraftTest extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest());
         commit(id, "bad-4", with(target, Map.of("banNhapId", first, "tu", " ", "nghiaVi", "bến cảng")))
                 .andExpect(status().isBadRequest());
+        commit(id, "bad-5", with(target, Map.of("banNhapId", "9999999999999999999", "tu", "harbor", "nghiaVi", "bến cảng")))
+                .andExpect(status().isBadRequest());
+        commit(id, "bad-6", Map.of("banNhapIds", List.of("9999999999999999999"), "boTheId", deckId.toString()))
+                .andExpect(status().isBadRequest());
         assertThat(countCards(deckId)).isZero();
     }
 

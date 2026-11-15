@@ -8,6 +8,7 @@ public record SpeechProperties(
         String provider,
         String ngonNgu,
         int maxGiay,
+        int minMs,
         int maxBytes,
         int maxKyTu,
         Duration connectTimeout,

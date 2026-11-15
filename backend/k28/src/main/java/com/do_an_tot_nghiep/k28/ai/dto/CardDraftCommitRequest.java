@@ -12,7 +12,8 @@ public record CardDraftCommitRequest(
         @NotNull(message = "Chọn thẻ nháp cần lưu")
         @Size(min = 1, max = 50, message = "Chọn từ 1 đến 50 thẻ nháp")
         List<@NotNull(message = "ID thẻ nháp không hợp lệ")
-        @Pattern(regexp = "[1-9][0-9]{0,18}", message = "ID thẻ nháp không hợp lệ") String> banNhapIds,
+        @Pattern(regexp = "[1-9][0-9]{0,18}", message = "ID thẻ nháp không hợp lệ")
+        @DecimalMax(value = "9223372036854775807", message = "ID thẻ nháp không hợp lệ") String> banNhapIds,
 
         @Pattern(regexp = "[1-9][0-9]{0,18}", message = "ID bộ thẻ không hợp lệ")
         @DecimalMax(value = "9223372036854775807", message = "ID bộ thẻ không hợp lệ")

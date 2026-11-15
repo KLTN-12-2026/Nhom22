@@ -84,7 +84,7 @@ export default function ThanhToanLichSuPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
 
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
+  const [transactions] = useState(INITIAL_TRANSACTIONS);
   const [savedCards, setSavedCards] = useState(INITIAL_CARDS);
   const [downloadingId, setDownloadingId] = useState(null);
 

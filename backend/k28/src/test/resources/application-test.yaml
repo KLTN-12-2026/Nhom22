@@ -18,6 +18,10 @@ app:
     provider: fake
     fake:
       do-tre: 0s
+  tts:
+    provider: fake
+  speech:
+    provider: fake
   reminders:
     enabled: false
 

@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MissingServletRequestPartException.class, MaxUploadSizeExceededException.class})
     ResponseEntity<ErrorResponse> handleMultipart(Exception ex) {
         return build(ErrorCode.VALIDATION_FAILED, "Thiếu phần bắt buộc hoặc tệp vượt giới hạn 1 MB",
-                List.of(new ErrorResponse.FieldErrorItem("file", "Kiểm tra tệp CSV và các phần của yêu cầu")));
+                List.of(new ErrorResponse.FieldErrorItem("file", "Kiểm tra tệp và các phần của yêu cầu")));
     }
 
     private ResponseEntity<ErrorResponse> build(ErrorCode code, String message,

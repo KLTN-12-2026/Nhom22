@@ -8,10 +8,11 @@ Các link người học dùng `?as=an`; quản trị dùng `?as=admin`, chỉ �
 
 ## Trạng thái triển khai
 
-Đối chiếu controller ngày 09/11/2026: backend chưa có API đợt 3 (B3.x chưa bắt đầu).
-Các endpoint bên dưới là **hợp đồng dự kiến trong tài liệu**, không phải API
-đã triển khai hoặc schema OpenAPI đã chốt. Không gọi backend thật từ các trang này.
-`ui.js` dùng fixture, mô phỏng xử lý; `shared/flow.js` nối điều hướng và dữ liệu đợt 3 trong sessionStorage
+Đối chiếu ngày 14/11/2026: backend đã có API cho UI28 (B3.5), UI29 (B3.2), UI33/UI34 (B3.4a, B3.4b),
+UI38 (B3.6), UI39 (B3.7); hợp đồng thật ở `ban-giao-cho fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md` mục 5.
+Sáu màn này đọc route demo cùng DTO trong `shared/demo.js` (`VLDemo`). Endpoint của các màn còn lại là
+**hợp đồng dự kiến trong tài liệu**. Mockup không bao giờ gọi backend thật.
+Các màn chưa có API: `ui.js` dùng fixture, mô phỏng xử lý; `shared/flow.js` nối điều hướng và dữ liệu đợt 3 trong sessionStorage
 `vocab:dot3:demo:v1`; nút “Đặt lại mẫu đợt 3” không xóa dữ liệu đợt 1/2.
 
 | UI | Tệp | API dự kiến (prefix `/api/v1`) |
@@ -47,7 +48,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 
 ## Lệch cần sửa so với tài liệu đã thống nhất
 
-- UI29: chưa có X-01 (tải tệp Word/TXT/CSV), X-02 (tên bộ mới), X-03 (hoàn thiện IPA + ví dụ), X-04 (sinh ảnh AI), X-06 (xóa tất cả); chỉ lưu vào bộ có sẵn. Xem `KE_HOACH_CAT_DOT3.md` §7.
+- UI29: đã có lưu vào bộ mới (X-02) và "Sửa trước khi lưu" (X-06) theo B3.2; còn thiếu X-03 (hoàn thiện IPA + ví dụ) và X-04 (sinh ảnh AI), chờ B3.3. Xem `KE_HOACH_CAT_DOT3.md` §7.
 - UI55/UI56: bỏ form thẻ, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên"; bỏ thẻ gói Miễn phí (bắt buộc mua gói, 10/11/2026), xuất CSV không phụ thuộc gói; chỉ còn VNPay; thêm banner sắp hết hạn trong khung ứng dụng. Xem `KE_HOACH_CAT_DOT3.md` §8.
 - Chuỗi ngày trên mockup Hôm nay cần dòng "Đã dùng ngày nghỉ tuần này" (R-03).
 
@@ -58,12 +59,12 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 - Xưởng thẻ: yêu cầu bộ đích, mô phỏng chờ/đang xử lý/xong/lỗi/chưa xác định;
   chọn từng thẻ, sửa từ/nghĩa, nghe qua Web Speech, xem đoạn nguồn. Trùng không
   được chọn mặc định. Lưu đúng các thẻ đã chọn, đã sửa vào bộ đích trong VLDemo (localStorage); khóa nút khi đang lưu. Link xem bộ và học bộ giữ đúng ID. Bản nháp giữ lại khi chuyển sang lịch sử hoặc tải lại trang. Đặt lại đợt 3 không xóa thẻ đã thêm vào bộ demo.
-  Bản nháp là fixture cố định, không phân tích văn bản thật. Việc lưu dùng thao tác tạo thẻ trong demo đã có từ đợt 1, không gọi endpoint commit AI thật. Chống gửi trùng trong giao diện không thay thế idempotency phía server.
+  Từ B3.2 (14/11/2026) bản nháp và việc lưu đi qua ba route demo cùng DTO với backend (202, hỏi trạng thái, `Idempotency-Key`); không gọi endpoint AI thật. Chống gửi trùng trong giao diện không thay thế idempotency phía server.
 - Viết câu/ngữ cảnh: chỉ render text đã escape; phản hồi cố định được ghi rõ
   là ví dụ cho câu mẫu. Không gửi đoạn văn/câu tới nhà cung cấp AI.
 - Phát âm: chỉ xin micro sau khi bấm ghi; MediaRecorder ghi ≤15 giây, nghe lại,
-  ghi lại, dừng track khi rời trang. Blob chỉ ở bộ nhớ tab. Chuẩn bị gửi không
-  upload/chấm thật. “Xem kết quả mẫu” dùng fixture và không chấm giọng người dùng.
+  ghi lại, dừng track khi rời trang. Blob chỉ ở bộ nhớ tab. Từ B3.4b (14/11/2026) bản ghi
+  được đổi sang WAV 16 kHz rồi gửi route demo; điểm là mô phỏng, không chấm giọng người dùng.
   `null` hiển thị “Chưa có”, không biến thành 0. Cần localhost/HTTPS để ghi âm.
 - Thông báo/động lực/kiểm duyệt/hạn mức: thay đổi fixture trong tab, không gửi
   email, cấp điểm, đổi quyền hoặc sửa tài khoản thật. Chi phí thiếu đơn giá luôn
@@ -71,7 +72,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 - Dữ liệu cá nhân: xác nhận phạm vi rồi nhập XÓA; chỉ chuyển trạng thái mẫu,
   không thực thi xóa. Khi tích hợp cần CSRF, xác thực lại theo chính sách và
   trạng thái tác vụ thực tế; không tự thêm endpoint chưa được đặc tả.
-- Hạn mức mẫu 20/60/10 và giới hạn đoạn văn/câu là giả định trình bày. Thay bằng
+- Hạn mức mẫu 20/60/10 và giới hạn đoạn văn/câu là giả định trình bày (backend: `PRO` AI 20, ảnh 10, TTS 100, phát âm 30). Thay bằng
   cấu hình/validation chính thức khi B3.1–B3.12b có OpenAPI. Không coi là giá hoặc
   giới hạn hiện hành của dịch vụ ngoài.
 
@@ -87,7 +88,7 @@ CSS `ui.css` chỉ chứa bố cục đợt 3, không sao chép palette. Toàn b
 nút và hình giấy dùng shared tokens/base/components/learning-refinements của FE.
 Không thay đổi frontend hoặc đánh dấu F3/B3 hoàn thành triển khai.
 
-Đã kiểm tra ngày 12/10/2026: 19 trang ở desktop sáng và 360px tối không tràn
+Đã kiểm tra ngày 12/10/2026 (ngày ghi trong bản gốc, trước Đợt 3; chưa kiểm lại sau các thay đổi 11–14/11/2026): 19 trang ở desktop sáng và 360px tối không tràn
 ngang, không lỗi runtime; luồng chọn/sửa/lưu 1 thẻ, phản hồi câu, so sánh 2 lượt,
 đánh dấu đã đọc, kiểm duyệt có lý do và xác nhận xóa mẫu hai bước chạy đúng.
 Đã thử các trạng thái tải/trống/lỗi/hết hạn mức/chưa xác định; kiểm tra bổ sung

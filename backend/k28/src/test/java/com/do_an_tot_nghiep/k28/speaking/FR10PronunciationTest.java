@@ -135,12 +135,17 @@ class FR10PronunciationTest extends AbstractIntegrationTest {
         assess(learner, card, wav(8000, 1, 16, 1000, 1)).andExpect(status().isUnprocessableContent());
         assess(learner, card, wav(16000, 2, 16, 1000, 1)).andExpect(status().isUnprocessableContent());
         assess(learner, card, wav(16000, 1, 16, 15100, 1)).andExpect(status().isUnprocessableContent());
+        assess(learner, card, wav(16000, 1, 16, 1, 1)).andExpect(status().isUnprocessableContent());
+        assess(learner, card, wav(16000, 1, 16, 200, 1)).andExpect(status().isUnprocessableContent());
         assess(learner, privateCard, wav(16000, 1, 16, 1000, 1))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"));
         mockMvc.perform(multipart("/api/v1/pronunciation/assessments").file(recording(wav(16000, 1, 16, 500, 1)))
                         .param("theId", String.valueOf(card)).with(xsrf()))
                 .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/pronunciation/history").param("theId", "9999999999999999999")
+                        .cookie(learner.session()))
+                .andExpect(status().isBadRequest());
         assertThat(used(learner)).isZero();
         assertThat(reserved(learner)).isZero();
         assertThat(rows(learner)).isZero();

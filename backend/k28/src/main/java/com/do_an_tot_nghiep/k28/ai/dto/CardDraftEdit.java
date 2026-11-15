@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.ai.dto;
 
 import com.do_an_tot_nghiep.k28.content.service.CardText;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Size;
 public record CardDraftEdit(
         @NotNull(message = "Thiếu ID thẻ nháp cần sửa")
         @Pattern(regexp = "[1-9][0-9]{0,18}", message = "ID thẻ nháp không hợp lệ")
+        @DecimalMax(value = "9223372036854775807", message = "ID thẻ nháp không hợp lệ")
         String banNhapId,
 
         @NotBlank(message = "Nhập từ tiếng Anh")

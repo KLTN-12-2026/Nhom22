@@ -26,7 +26,8 @@ public class DocxTextReader {
     }
 
     public String read(byte[] content) {
-        try (var extractor = new XWPFWordExtractor(new XWPFDocument(new ByteArrayInputStream(content)))) {
+        try (var document = new XWPFDocument(new ByteArrayInputStream(content));
+             var extractor = new XWPFWordExtractor(document)) {
             return normalize(extractor.getText());
         } catch (IOException | RuntimeException e) {
             throw new UnreadableDocumentException("Không đọc được tệp Word");
