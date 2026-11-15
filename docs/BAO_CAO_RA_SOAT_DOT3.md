@@ -110,9 +110,9 @@ Màn hình chưa có route nào trong `frontend/src/app`: UI30 (ngăn giải th�
 
 | ID | Vị trí | Vấn đề |
 |---|---|---|
-| FE-09 | `frontend/src/app/(app)/thanh-toan-goi/page.js` | Còn form số thẻ/CVV, "Chuyển khoản", MoMo/ZaloPay, "Hỗ trợ ưu tiên". TK §6.9 và roadmap F3.12 yêu cầu bỏ (hệ thống không nhận dữ liệu thẻ, chỉ còn VNPay) |
-| FE-10 | `frontend/src/app/(app)/thanh-toan-lich-su/page.js` dòng 182, 394 | Còn gói "Miễn Phí" (đã bỏ từ 10/11/2026) |
-| FE-11 | `mockups/dot3/thanh-toan-goi.html` | Còn khối `Free plan`, CVV, MoMo. Mockup là nguồn FE sao chép nên lệch này lan sang FE |
+| FE-09 ✅ đã sửa 15/11 | `frontend/src/app/(app)/thanh-toan-goi/page.js` | Còn form số thẻ/CVV, "Chuyển khoản", MoMo/ZaloPay, "Hỗ trợ ưu tiên". TK §6.9 và roadmap F3.12 yêu cầu bỏ (hệ thống không nhận dữ liệu thẻ, chỉ còn VNPay) |
+| FE-10 ✅ đã sửa 15/11 | `frontend/src/app/(app)/thanh-toan-lich-su/page.js` dòng 182, 394 | Còn gói "Miễn Phí" (đã bỏ từ 10/11/2026) |
+| FE-11 ✅ đã sửa 15/11 | `mockups/dot3/thanh-toan-goi.html` | Còn khối `Free plan`, CVV, MoMo. Mockup là nguồn FE sao chép nên lệch này lan sang FE |
 
 ### 5.3 Chất lượng mã (Trung bình)
 

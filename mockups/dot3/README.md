@@ -3,7 +3,7 @@
 Các màn hình/khối UI28–UI59 (UI57 chưa có mockup), theo `roadmap/TienDoDuKien_fronend.md`,
 `roadmap/SPRINT_PLAN.md` S7–S9 và phạm vi đã cắt `docs/KE_HOACH_CAT_DOT3.md` (07/11/2026).
 Mở từ `mockups/index.html#dot3`. UI46, UI52, UI54 và UI53 (tab tác vụ nền) là **Cắt** khỏi Đợt 3:
-tệp mockup giữ để tham khảo, không làm FE/BE. UI29 và UI55/56 còn lệch tài liệu, xem mục "Lệch cần sửa".
+tệp mockup giữ để tham khảo, không làm FE/BE. UI29 còn lệch tài liệu, xem mục "Lệch cần sửa".
 Các link người học dùng `?as=an`; quản trị dùng `?as=admin`, chỉ đăng nhập demo.
 
 ## Trạng thái triển khai
@@ -49,7 +49,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 ## Lệch cần sửa so với tài liệu đã thống nhất
 
 - UI29: đã có lưu vào bộ mới (X-02) và "Sửa trước khi lưu" (X-06) theo B3.2; còn thiếu X-03 (hoàn thiện IPA + ví dụ) và X-04 (sinh ảnh AI), chờ B3.3. Xem `KE_HOACH_CAT_DOT3.md` §7.
-- UI55/UI56: bỏ form thẻ, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên"; bỏ thẻ gói Miễn phí (bắt buộc mua gói, 10/11/2026), xuất CSV không phụ thuộc gói; chỉ còn VNPay; thêm banner sắp hết hạn trong khung ứng dụng. Xem `KE_HOACH_CAT_DOT3.md` §8.
+- UI55/UI56 (đã sửa 15/11/2026, mockup và FE): bỏ form thẻ/CVV, chuyển khoản, ví điện tử, thẻ đã lưu, "Hỗ trợ ưu tiên", gói Miễn phí, "Hủy gói", "Đổi gói" và tạo hóa đơn ở trình duyệt; giá và quyền lợi theo TK §6.9 (Pro 299.000/2.990.000 đ, Premium 999.000/9.990.000 đ; thẻ, AI văn bản, ảnh AI, phát âm, bộ mẫu cao cấp); chỉ còn VNPay; UI56 có "Gia hạn gói", trạng thái `THANH_CONG`/`THAT_BAI`/`HET_HAN` và nút "Biên nhận"; token màu thật cho theme tối, bỏ gradient và chữ in hoa. Dữ liệu vẫn mô phỏng, nút thanh toán chỉ mô phỏng (chờ B3.12a). Còn thiếu: banner sắp hết hạn trong khung ứng dụng (F3.12, chờ `GET /me/subscription`).
 - Chuỗi ngày trên mockup Hôm nay cần dòng "Đã dùng ngày nghỉ tuần này" (R-03).
 
 ## Tương tác và ranh giới dữ liệu mẫu

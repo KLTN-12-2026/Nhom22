@@ -28,7 +28,7 @@
       align-items: center;
       gap: var(--sp-3);
       padding: var(--sp-4) var(--sp-5);
-      background: var(--surface-2, #f5f6fa);
+      background: var(--sunk);
       border: 1.5px solid var(--primary-line, #c5cbef);
       border-radius: var(--radius-field, 10px);
       margin-bottom: var(--sp-6);
@@ -39,9 +39,9 @@
       display: inline-flex;
       align-items: center;
       gap: var(--sp-2);
-      background: var(--primary, #3549bb);
-      color: #fff;
-      font-size: var(--fs-xs, 0.75rem);
+      background: var(--primary-fill);
+      color: var(--on-primary);
+      font-size: var(--fs-caption);
       font-weight: 700;
       padding: 3px 10px;
       border-radius: 20px;
@@ -55,12 +55,12 @@
     }
 
     .plan-current-banner .plan-info strong {
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       color: var(--ink, #1a1f36);
     }
 
     .plan-current-banner .plan-info span {
-      font-size: var(--fs-xs, 0.75rem);
+      font-size: var(--fs-caption);
       color: var(--ink-2, #5a6076);
     }
 
@@ -73,7 +73,7 @@
     /* Plan grid */
     .plan-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--sp-4);
       margin-bottom: var(--sp-7);
     }
@@ -87,11 +87,11 @@
     .plan-card {
       display: flex;
       flex-direction: column;
-      border: 2px solid var(--border, #e2e5f0);
+      border: 2px solid var(--line-2);
       border-radius: var(--radius-field, 10px);
       overflow: hidden;
       transition: box-shadow .18s, border-color .18s;
-      background: var(--surface, #fff);
+      background: var(--sheet);
       position: relative;
     }
 
@@ -101,7 +101,7 @@
 
     .plan-card.is-current {
       border-color: var(--primary-line, #c5cbef);
-      background: var(--surface-2, #f5f6fa);
+      background: var(--sunk);
     }
 
     .plan-card.is-recommended {
@@ -119,17 +119,16 @@
       top: -1px;
       right: 14px;
       background: var(--accent, #f2b32b);
-      color: #3a2800;
+      color: var(--on-accent);
       font-size: 0.7rem;
       font-weight: 700;
       padding: 2px 10px;
       border-radius: 0 0 8px 8px;
       letter-spacing: 0.04em;
-      text-transform: uppercase;
     }
 
     .plan-name {
-      font-size: var(--fs-base, 1rem);
+      font-size: var(--fs-body);
       font-weight: 700;
       color: var(--ink, #1a1f36);
       margin: 0 0 var(--sp-2) 0;
@@ -150,7 +149,7 @@
     }
 
     .plan-price .period {
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       color: var(--ink-2, #5a6076);
     }
 
@@ -160,7 +159,7 @@
 
     .plan-card-divider {
       height: 1px;
-      background: var(--border, #e2e5f0);
+      background: var(--line-2);
       margin: 0 var(--sp-5);
     }
 
@@ -178,7 +177,7 @@
       display: flex;
       align-items: flex-start;
       gap: var(--sp-2);
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       color: var(--ink, #1a1f36);
       line-height: 1.45;
     }
@@ -196,12 +195,12 @@
     }
 
     .feat-icon.ok {
-      background: #d1f5e7;
-      color: #1e8a5a;
+      background: var(--secondary-bg);
+      color: var(--secondary-text);
     }
 
     .feat-icon.no {
-      background: #f0f1f7;
+      background: var(--sunk);
       color: var(--ink-3, #9ba0b8);
     }
 
@@ -251,7 +250,7 @@
     }
 
     .payment-form-title {
-      font-size: var(--fs-lg, 1.125rem);
+      font-size: var(--fs-lead);
       font-weight: 700;
       color: var(--ink, #1a1f36);
       margin: 0 0 var(--sp-5) 0;
@@ -273,7 +272,7 @@
     }
 
     .payment-form-title .back-btn:hover {
-      background: var(--surface-2, #f5f6fa);
+      background: var(--sunk);
     }
 
     /* Billing cycle toggle */
@@ -303,26 +302,26 @@
       align-items: flex-start;
       gap: 2px;
       padding: var(--sp-3) var(--sp-4);
-      border: 2px solid var(--border, #e2e5f0);
+      border: 2px solid var(--line-2);
       border-radius: var(--radius-field, 10px);
       cursor: pointer;
       transition: border-color .15s, background .15s;
-      background: var(--surface, #fff);
+      background: var(--sheet);
     }
 
     .cycle-option input:checked+label {
       border-color: var(--primary, #3549bb);
-      background: var(--primary-pale, #eef0fb);
+      background: var(--primary-tint);
     }
 
     .cycle-option label .cycle-name {
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       font-weight: 600;
       color: var(--ink, #1a1f36);
     }
 
     .cycle-option label .cycle-price {
-      font-size: var(--fs-base, 1rem);
+      font-size: var(--fs-body);
       font-weight: 700;
       color: var(--primary, #3549bb);
     }
@@ -330,232 +329,81 @@
     .cycle-option label .cycle-save {
       font-size: 0.7rem;
       font-weight: 600;
-      color: var(--success, #1e8a5a);
-      background: #d1f5e7;
+      color: var(--secondary);
+      background: var(--secondary-bg);
       padding: 1px 7px;
       border-radius: 20px;
     }
 
-    /* Payment method tabs */
-    .pay-methods {
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-3);
-      margin-bottom: var(--sp-5);
-    }
+    
 
-    .pay-method-option {
-      position: relative;
-    }
+    
 
-    .pay-method-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+    
 
-    .pay-method-label {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-      padding: var(--sp-3) var(--sp-4);
-      border: 2px solid var(--border, #e2e5f0);
-      border-radius: var(--radius-field, 10px);
-      cursor: pointer;
-      transition: border-color .15s;
-      background: var(--surface, #fff);
-    }
+    
 
-    .pay-method-option input:checked+.pay-method-label {
-      border-color: var(--primary, #3549bb);
-    }
+    
 
-    .pay-method-label .pm-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: var(--surface-2, #f5f6fa);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 1.1rem;
-    }
+    
 
-    .pay-method-label .pm-text strong {
-      display: block;
-      font-size: var(--fs-sm, 0.875rem);
-      font-weight: 600;
-      color: var(--ink, #1a1f36);
-    }
+    
 
-    .pay-method-label .pm-text span {
-      font-size: var(--fs-xs, 0.75rem);
-      color: var(--ink-2, #5a6076);
-    }
+    
 
-    .pm-radio-dot {
-      margin-left: auto;
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--border, #e2e5f0);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: border-color .15s;
-    }
+    
 
-    .pay-method-option input:checked+.pay-method-label .pm-radio-dot {
-      border-color: var(--primary, #3549bb);
-      background: var(--primary, #3549bb);
-    }
+    
 
-    .pay-method-option input:checked+.pay-method-label .pm-radio-dot::after {
-      content: '';
-      width: 6px;
-      height: 6px;
-      background: #fff;
-      border-radius: 50%;
-    }
+    
 
-    /* Payment detail panels */
-    .pay-detail {
-      display: none;
-    }
+    
 
-    .pay-detail.is-active {
-      display: block;
-      animation: fadeSlideIn .2s ease;
-    }
+    
 
-    .card-form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--sp-3);
-    }
+    
 
-    .card-field-error {
-      color: var(--danger, #d9383a);
-      font-size: var(--fs-xs, 0.75rem);
-      margin-top: 4px;
-      display: none;
-    }
+    
 
-    .qr-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--sp-4);
-      padding: var(--sp-5);
-      background: var(--surface-2, #f5f6fa);
-      border-radius: var(--radius-field, 10px);
-    }
+    
 
-    .qr-placeholder {
-      width: 160px;
-      height: 160px;
-      background: #fff;
-      border: 2px dashed var(--border, #e2e5f0);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--ink-3, #9ba0b8);
-      font-size: 0.75rem;
-      text-align: center;
-      padding: var(--sp-3);
-    }
+    
 
-    .bank-info-list {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-2);
-    }
+    
 
-    .bank-info-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: var(--fs-sm, 0.875rem);
-      gap: var(--sp-3);
-    }
+    
 
-    .bank-info-row .label {
-      color: var(--ink-2, #5a6076);
-    }
+    
 
-    .bank-info-row .value {
-      font-weight: 600;
-      color: var(--ink, #1a1f36);
-      text-align: right;
-    }
+    
 
-    .ewallet-btns {
-      display: flex;
-      flex-direction: column;
-      gap: var(--sp-3);
-    }
+    
 
-    .ewallet-btn {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-3);
-      padding: var(--sp-3) var(--sp-4);
-      border: 2px solid var(--border, #e2e5f0);
-      border-radius: var(--radius-field, 10px);
-      background: var(--surface, #fff);
-      cursor: pointer;
-      font-size: var(--fs-sm, 0.875rem);
-      font-weight: 600;
-      color: var(--ink, #1a1f36);
-      transition: border-color .15s, background .15s;
-      text-decoration: none;
-    }
+    
 
-    .ewallet-btn:hover {
-      border-color: var(--primary, #3549bb);
-      background: var(--primary-pale, #eef0fb);
-    }
+    
 
-    .ewallet-btn .ew-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
+    
 
-    .ew-momo {
-      background: #ae2070;
-      color: #fff;
-    }
+    
 
-    .ew-zalo {
-      background: #0068ff;
-      color: #fff;
-    }
+    
 
     /* Order summary card */
     .order-summary {
       position: sticky;
       top: var(--sp-5);
-      background: var(--surface, #fff);
-      border: 2px solid var(--border, #e2e5f0);
+      background: var(--sheet);
+      border: 2px solid var(--line-2);
       border-radius: var(--radius-field, 10px);
       overflow: hidden;
     }
 
     .order-summary-head {
-      background: var(--primary, #3549bb);
-      color: #fff;
+      background: var(--primary-fill);
+      color: var(--on-primary);
       padding: var(--sp-4) var(--sp-5);
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       font-weight: 700;
     }
 
@@ -569,7 +417,7 @@
     .order-row {
       display: flex;
       justify-content: space-between;
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       gap: var(--sp-3);
     }
 
@@ -585,7 +433,7 @@
 
     .order-divider {
       height: 1px;
-      background: var(--border, #e2e5f0);
+      background: var(--line-2);
       margin: var(--sp-1) 0;
     }
 
@@ -608,11 +456,11 @@
     }
 
     .order-note {
-      font-size: var(--fs-xs, 0.75rem);
+      font-size: var(--fs-caption);
       color: var(--ink-2, #5a6076);
       line-height: 1.5;
       padding: var(--sp-3) var(--sp-5) var(--sp-4);
-      border-top: 1px solid var(--border, #e2e5f0);
+      border-top: 1px solid var(--line-2);
     }
 
     .order-submit {
@@ -652,7 +500,7 @@
     }
 
     .success-card {
-      background: var(--surface, #fff);
+      background: var(--sheet);
       border-radius: 16px;
       padding: var(--sp-7) var(--sp-8);
       max-width: 380px;
@@ -677,7 +525,8 @@
     .success-icon {
       width: 64px;
       height: 64px;
-      background: #d1f5e7;
+      background: var(--secondary-bg);
+      color: var(--secondary-text);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -686,14 +535,14 @@
     }
 
     .success-card h2 {
-      font-size: var(--fs-lg, 1.125rem);
+      font-size: var(--fs-lead);
       font-weight: 700;
       color: var(--ink, #1a1f36);
       margin: 0 0 var(--sp-2) 0;
     }
 
     .success-card p {
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       color: var(--ink-2, #5a6076);
       margin: 0 0 var(--sp-6) 0;
       line-height: 1.6;
@@ -701,12 +550,32 @@
 
     /* Section divider */
     .section-heading {
-      font-size: var(--fs-sm, 0.875rem);
+      font-size: var(--fs-small);
       font-weight: 700;
       color: var(--ink-2, #5a6076);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
       margin: 0 0 var(--sp-4) 0;
+    }
+
+    .plan-note,
+    .vnpay-note {
+      font-size: var(--fs-small);
+      color: var(--ink-2, #5a6076);
+      margin: 0 0 var(--sp-6) 0;
+      line-height: 1.5;
+    }
+
+    .vnpay-method {
+      display: grid;
+      gap: var(--sp-1);
+      padding: var(--sp-4);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      margin-bottom: var(--sp-3);
+    }
+
+    .vnpay-method span {
+      font-size: var(--fs-small);
+      color: var(--ink-2, #5a6076);
     }
   </style>
 </head>
@@ -732,374 +601,126 @@
 
             <div id="d3-content" class="d3-section">
 
-              <!-- Part 1: Current plan status -->
               <div class="plan-current-banner">
-                <div class="plan-badge">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                    <circle cx="6" cy="6" r="6" fill="#fff" fill-opacity=".25" />
-                    <path d="M6 2l1.09 2.21L9.5 4.6l-1.75 1.7.41 2.4L6 7.5l-2.16 1.2.41-2.4L2.5 4.6l2.41-.39L6 2z"
-                      fill="#fff" />
-                  </svg>
-                  Đang dùng: Gói Miễn Phí
-                </div>
                 <div class="plan-info">
-                  <strong>Tài khoản cơ bản</strong>
-                  <span>Nâng cấp để mở thêm tính năng học tập</span>
+                  <strong>Bạn chưa có gói đang hiệu lực</strong>
+                  <span>Chọn Pro hoặc Premium để học tiếp. Bộ thẻ, tiến độ và sổ tay của bạn vẫn được giữ nguyên.</span>
                 </div>
                 <div class="plan-actions">
                   <a href="thanh-toan-lich-su.html" class="btn btn-quiet btn-sm">Lịch sử thanh toán</a>
                 </div>
               </div>
 
-              <!-- Part 2: Plan comparison -->
               <p class="section-heading">Chọn gói</p>
               <div class="plan-grid" role="list">
 
-                <!-- Free plan -->
-                <div class="plan-card is-current" role="listitem">
-                  <div class="plan-card-top">
-                    <p class="plan-name">Miễn Phí</p>
-                    <div class="plan-price">
-                      <span class="amount">0 đ</span>
-                      <span class="period">/tháng</span>
-                    </div>
-                  </div>
-                  <div class="plan-card-divider"></div>
-                  <ul class="plan-features">
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Tối đa <strong>500 thẻ</strong></span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không có yêu cầu AI</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không đánh giá phát âm</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không có bộ mẫu cao cấp</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không xuất dữ liệu</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không hỗ trợ ưu tiên</span>
-                    </li>
-                  </ul>
-                  <div class="plan-card-footer">
-                    <button class="btn btn-quiet" disabled aria-label="Đang dùng gói Miễn Phí">Đang dùng</button>
-                  </div>
-                </div>
-
-                <!-- Pro plan -->
                 <div class="plan-card is-recommended" role="listitem">
                   <div class="plan-card-top">
                     <div class="plan-card-badge">Phổ biến nhất</div>
                     <p class="plan-name">Pro</p>
                     <div class="plan-price">
-                      <span class="amount" id="pro-price-display">299.000 đ</span>
+                      <span class="amount">299.000 đ</span>
                       <span class="period">/tháng</span>
                     </div>
                   </div>
                   <div class="plan-card-divider"></div>
                   <ul class="plan-features">
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Tối đa <strong>5.000 thẻ</strong></span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span><strong>20</strong> yêu cầu AI/ngày</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Đánh giá phát âm</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không có bộ mẫu cao cấp</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Xuất dữ liệu</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon no" aria-hidden="true">–</span>
-                      <span>Không hỗ trợ ưu tiên</span>
-                    </li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Tối đa <strong>5.000 thẻ</strong></span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>20</strong> yêu cầu AI văn bản/ngày</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>10</strong> ảnh AI/ngày</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Đánh giá phát âm</span></li>
+                    <li><span class="feat-icon no" aria-hidden="true">–</span><span>Không có bộ mẫu cao cấp</span></li>
                   </ul>
                   <div class="plan-card-footer">
-                    <button class="btn btn-primary" onclick="showPaymentForm('pro')" aria-label="Nâng cấp lên gói Pro">
-                      Nâng cấp – Gói Pro
-                    </button>
+                    <button class="btn btn-primary" type="button" onclick="showPaymentForm('pro')">Chọn gói Pro</button>
                   </div>
                 </div>
 
-                <!-- Premium plan -->
                 <div class="plan-card" role="listitem">
                   <div class="plan-card-top">
                     <p class="plan-name">Premium</p>
                     <div class="plan-price">
-                      <span class="amount" id="premium-price-display">999.000 đ</span>
+                      <span class="amount">999.000 đ</span>
                       <span class="period">/tháng</span>
                     </div>
                   </div>
                   <div class="plan-card-divider"></div>
                   <ul class="plan-features">
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span><strong>Không giới hạn</strong> thẻ</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span><strong>100</strong> yêu cầu AI/ngày</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Đánh giá phát âm</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Bộ mẫu cao cấp</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Xuất dữ liệu</span>
-                    </li>
-                    <li>
-                      <span class="feat-icon ok" aria-hidden="true">✓</span>
-                      <span>Hỗ trợ ưu tiên</span>
-                    </li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>Không giới hạn</strong> thẻ</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>100</strong> yêu cầu AI văn bản/ngày</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>30</strong> ảnh AI/ngày</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Đánh giá phát âm</span></li>
+                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Bộ mẫu cao cấp</span></li>
                   </ul>
                   <div class="plan-card-footer">
-                    <button class="btn btn-primary" onclick="showPaymentForm('premium')"
-                      aria-label="Nâng cấp lên gói Premium">
-                      Nâng cấp – Gói Premium
-                    </button>
+                    <button class="btn btn-primary" type="button" onclick="showPaymentForm('premium')">Chọn gói Premium</button>
                   </div>
                 </div>
 
-              </div><!-- /plan-grid -->
+              </div>
 
-              <!-- Part 3: Payment form -->
+              <p class="plan-note">Xuất dữ liệu CSV và yêu cầu xóa dữ liệu luôn dùng được, không phụ thuộc gói.</p>
+
               <div id="payment-section" class="payment-section" aria-labelledby="payment-form-title">
-                <div class="plan-card-divider" style="margin: 0 0 var(--sp-6) 0;"></div>
+                <div class="plan-card-divider"></div>
                 <div class="payment-form-wrap">
 
-                  <!-- Left: form -->
                   <div class="payment-form-left">
                     <h2 class="payment-form-title" id="payment-form-title">
-                      <button class="back-btn" onclick="hidePaymentForm()" aria-label="Quay lại chọn gói"
-                        title="Quay lại">
+                      <button class="back-btn" type="button" onclick="hidePaymentForm()" aria-label="Quay lại chọn gói" title="Quay lại">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                          <path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
-                            stroke-linejoin="round" />
+                          <path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                       </button>
-                      <span id="payment-form-title-text">Thanh toán – Gói Pro</span>
+                      <span id="payment-form-title-text">Thanh toán gói Pro</span>
                     </h2>
 
-                    <!-- Billing cycle -->
                     <p class="section-heading">Chu kỳ thanh toán</p>
                     <div class="cycle-toggle" role="group" aria-label="Chọn chu kỳ thanh toán">
                       <div class="cycle-option">
-                        <input type="radio" name="cycle" id="cycle-monthly" value="monthly" checked
-                          onchange="updateCycle()">
+                        <input type="radio" name="cycle" id="cycle-monthly" value="THANG" checked onchange="updateCycle()">
                         <label for="cycle-monthly">
                           <span class="cycle-name">Hàng tháng</span>
-                          <span class="cycle-price" id="monthly-price">49.000 đ</span>
+                          <span class="cycle-price" id="monthly-price">299.000 đ</span>
                         </label>
                       </div>
                       <div class="cycle-option">
-                        <input type="radio" name="cycle" id="cycle-yearly" value="yearly" onchange="updateCycle()">
+                        <input type="radio" name="cycle" id="cycle-yearly" value="NAM" onchange="updateCycle()">
                         <label for="cycle-yearly">
                           <span class="cycle-name">Hàng năm</span>
-                          <span class="cycle-price" id="yearly-price">490.000 đ</span>
+                          <span class="cycle-price" id="yearly-price">2.990.000 đ</span>
                           <span class="cycle-save">Tiết kiệm 2 tháng</span>
                         </label>
                       </div>
                     </div>
 
-                    <!-- Payment method -->
                     <p class="section-heading">Phương thức thanh toán</p>
-                    <div class="pay-methods" role="group" aria-label="Chọn phương thức thanh toán">
-                      <div class="pay-method-option">
-                        <input type="radio" name="pay-method" id="pm-card" value="card" checked
-                          onchange="switchPayMethod('card')">
-                        <label class="pay-method-label" for="pm-card">
-                          <span class="pm-icon">💳</span>
-                          <span class="pm-text">
-                            <strong>Thẻ ngân hàng / VISA / Mastercard</strong>
-                            <span>Thẻ ghi nợ hoặc thẻ tín dụng</span>
-                          </span>
-                          <span class="pm-radio-dot" aria-hidden="true"></span>
-                        </label>
-                      </div>
-                      <div class="pay-method-option">
-                        <input type="radio" name="pay-method" id="pm-bank" value="bank"
-                          onchange="switchPayMethod('bank')">
-                        <label class="pay-method-label" for="pm-bank">
-                          <span class="pm-icon">🏦</span>
-                          <span class="pm-text">
-                            <strong>Chuyển khoản ngân hàng</strong>
-                            <span>Quét mã QR hoặc chuyển khoản thủ công</span>
-                          </span>
-                          <span class="pm-radio-dot" aria-hidden="true"></span>
-                        </label>
-                      </div>
-                      <div class="pay-method-option">
-                        <input type="radio" name="pay-method" id="pm-ewallet" value="ewallet"
-                          onchange="switchPayMethod('ewallet')">
-                        <label class="pay-method-label" for="pm-ewallet">
-                          <span class="pm-icon">📱</span>
-                          <span class="pm-text">
-                            <strong>Ví điện tử</strong>
-                            <span>MoMo hoặc ZaloPay</span>
-                          </span>
-                          <span class="pm-radio-dot" aria-hidden="true"></span>
-                        </label>
-                      </div>
+                    <div class="vnpay-method">
+                      <strong>VNPay</strong>
+                      <span>Thẻ ATM nội địa, VISA, Mastercard hoặc VNPAY-QR</span>
                     </div>
+                    <p class="vnpay-note">Bạn nhập thông tin thẻ hoặc quét mã trên trang của VNPay. VocabLearning không nhận và không lưu số thẻ.</p>
+                  </div>
 
-                    <!-- Card form -->
-                    <div class="pay-detail is-active" id="detail-card">
-                      <div class="card-form-grid">
-                        <div class="field" id="field-card-number">
-                          <label class="field-label" for="card-number">Số thẻ <span
-                              style="color:var(--danger,#d9383a)">*</span></label>
-                          <input class="input" type="text" id="card-number" placeholder="1234 5678 9012 3456"
-                            maxlength="19" autocomplete="cc-number" inputmode="numeric">
-                          <p class="card-field-error" id="err-card-number"></p>
-                        </div>
-                        <div class="field" id="field-card-name">
-                          <label class="field-label" for="card-name">Tên chủ thẻ <span
-                              style="color:var(--danger,#d9383a)">*</span></label>
-                          <input class="input" type="text" id="card-name" placeholder="NGUYEN VAN A"
-                            autocomplete="cc-name" style="text-transform:uppercase">
-                          <p class="card-field-error" id="err-card-name"></p>
-                        </div>
-                        <div class="field" id="field-card-expiry">
-                          <label class="field-label" for="card-expiry">Ngày hết hạn <span
-                              style="color:var(--danger,#d9383a)">*</span></label>
-                          <input class="input" type="text" id="card-expiry" placeholder="MM/YY" maxlength="5"
-                            autocomplete="cc-exp" inputmode="numeric">
-                          <p class="card-field-error" id="err-card-expiry"></p>
-                        </div>
-                        <div class="field" id="field-card-cvv">
-                          <label class="field-label" for="card-cvv">CVV <span
-                              style="color:var(--danger,#d9383a)">*</span></label>
-                          <input class="input" type="text" id="card-cvv" placeholder="123" maxlength="4"
-                            autocomplete="cc-csc" inputmode="numeric">
-                          <p class="card-field-error" id="err-card-cvv"></p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Bank transfer / QR -->
-                    <div class="pay-detail" id="detail-bank">
-                      <div class="qr-block">
-                        <div class="qr-placeholder" aria-label="Mã QR thanh toán (mẫu)">
-                          <span>Mã QR<br>sẽ hiển thị<br>ở đây</span>
-                        </div>
-                        <div class="bank-info-list">
-                          <div class="bank-info-row">
-                            <span class="label">Ngân hàng</span>
-                            <span class="value">Vietcombank</span>
-                          </div>
-                          <div class="bank-info-row">
-                            <span class="label">Số tài khoản</span>
-                            <span class="value">1234 5678 90</span>
-                          </div>
-                          <div class="bank-info-row">
-                            <span class="label">Chủ tài khoản</span>
-                            <span class="value">CÔNG TY VOCABLEARNING</span>
-                          </div>
-                          <div class="bank-info-row">
-                            <span class="label">Nội dung CK</span>
-                            <span class="value" id="bank-ref">THANHTOAN PRO USER12345</span>
-                          </div>
-                        </div>
-                        <p
-                          style="font-size:var(--fs-xs,0.75rem);color:var(--ink-2,#5a6076);text-align:center;margin:0;line-height:1.5;">
-                          Chuyển đúng nội dung để hệ thống xác nhận tự động trong vòng 15 phút.
-                        </p>
-                      </div>
-                    </div>
-
-                    <!-- E-wallet -->
-                    <div class="pay-detail" id="detail-ewallet">
-                      <div class="ewallet-btns">
-                        <button class="ewallet-btn" onclick="fakeEwalletRedirect('MoMo')">
-                          <span class="ew-logo ew-momo" aria-hidden="true">M</span>
-                          <span>Tiếp tục với <strong>MoMo</strong></span>
-                          <svg style="margin-left:auto" width="16" height="16" viewBox="0 0 16 16" fill="none"
-                            aria-hidden="true">
-                            <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                              stroke-linejoin="round" />
-                          </svg>
-                        </button>
-                        <button class="ewallet-btn" onclick="fakeEwalletRedirect('ZaloPay')">
-                          <span class="ew-logo ew-zalo" aria-hidden="true">Z</span>
-                          <span>Tiếp tục với <strong>ZaloPay</strong></span>
-                          <svg style="margin-left:auto" width="16" height="16" viewBox="0 0 16 16" fill="none"
-                            aria-hidden="true">
-                            <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                              stroke-linejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-                      <p
-                        style="font-size:var(--fs-xs,0.75rem);color:var(--ink-2,#5a6076);margin-top:var(--sp-3);line-height:1.5;">
-                        Bạn sẽ được chuyển sang ứng dụng ví điện tử để hoàn tất thanh toán.
-                      </p>
-                    </div>
-                  </div><!-- /left -->
-
-                  <!-- Right: order summary -->
                   <div class="payment-form-right">
                     <div class="order-summary" aria-label="Tóm tắt đơn hàng">
                       <div class="order-summary-head">Tóm tắt đơn hàng</div>
                       <div class="order-summary-body">
-                        <div class="order-row">
-                          <span class="label">Gói</span>
-                          <span class="value" id="summary-plan">Pro</span>
-                        </div>
-                        <div class="order-row">
-                          <span class="label">Chu kỳ</span>
-                          <span class="value" id="summary-cycle">Hàng tháng</span>
-                        </div>
-                        <div class="order-row">
-                          <span class="label">Đơn giá</span>
-                          <span class="value" id="summary-unit">49.000 đ/tháng</span>
-                        </div>
+                        <div class="order-row"><span class="label">Gói</span><span class="value" id="summary-plan">Pro</span></div>
+                        <div class="order-row"><span class="label">Chu kỳ</span><span class="value" id="summary-cycle">Hàng tháng</span></div>
+                        <div class="order-row"><span class="label">Đơn giá</span><span class="value" id="summary-unit">299.000 đ/tháng</span></div>
                         <div class="order-divider"></div>
-                        <div class="order-total">
-                          <span class="label">Tổng thanh toán</span>
-                          <span class="value" id="summary-total">49.000 đ</span>
-                        </div>
+                        <div class="order-total"><span class="label">Tổng thanh toán</span><span class="value" id="summary-total">299.000 đ</span></div>
                       </div>
-                      <div class="order-note">
-                        Có thể hủy bất cứ lúc nào. Không tự gia hạn nếu không có thẻ lưu.
-                      </div>
+                      <div class="order-note">Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.</div>
                       <div class="order-submit">
-                        <button class="btn btn-primary" id="btn-confirm" onclick="confirmPayment()">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                            <path d="M13 5l-6 6-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                              stroke-linejoin="round" />
-                          </svg>
-                          Xác nhận thanh toán
-                        </button>
+                        <button class="btn btn-primary" type="button" id="btn-confirm" onclick="confirmPayment()">Thanh toán qua VNPay</button>
                       </div>
                     </div>
-                  </div><!-- /right -->
+                  </div>
 
-                </div><!-- /payment-form-wrap -->
-              </div><!-- /payment-section -->
+                </div>
+              </div>
 
             </div><!-- /d3-content -->
 
@@ -1132,16 +753,13 @@
     <div class="success-card">
       <div class="success-icon" aria-hidden="true">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <path d="M7 16l6 6 12-12" stroke="#1e8a5a" stroke-width="2.5" stroke-linecap="round"
+          <path d="M7 16l6 6 12-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
             stroke-linejoin="round" />
         </svg>
       </div>
-      <h2 id="success-title">Thanh toán thành công!</h2>
-      <p id="success-msg">Gói <strong>Pro</strong> đã được kích hoạt cho tài khoản của bạn. Chúc bạn học tập hiệu quả!
-      </p>
-      <button class="btn btn-primary" onclick="closeSuccess()" style="width:100%;justify-content:center;">
-        Tiếp tục học
-      </button>
+      <h2 id="success-title">Thanh toán mô phỏng thành công</h2>
+      <p id="success-msg">Gói <strong>Pro</strong> đã được kích hoạt. Bản thật sẽ chuyển sang trang VNPay rồi về trang kết quả.</p>
+      <a class="btn btn-primary" href="../dot2/hom-nay.html" style="width:100%;justify-content:center;">Học hôm nay</a>
     </div>
   </div>
 
@@ -1153,229 +771,57 @@
   <script src="../shared/flow.js?v=b94b7801197e"></script>
   <script src="../shared/mascot.js?v=f38c732c1a4f"></script>
   <script>
-    /* ── UI55 Payment logic ─────────────────────────────── */
     const PLANS = {
-      pro: {
-        name: 'Pro',
-        monthly: { price: 299000, label: '299.000 đ', unit: '299.000 đ/tháng', yearly: 2990000, yearlyLabel: '2.990.000 đ', yearlyUnit: '2.990.000 đ/năm' }
-      },
-      premium: {
-        name: 'Premium',
-        monthly: { price: 999000, label: '999.000 đ', unit: '999.000 đ/tháng', yearly: 9990000, yearlyLabel: '9.990.000 đ', yearlyUnit: '9.990.000 đ/năm' }
-      }
+      pro: { name: 'Pro', THANG: 299000, NAM: 2990000 },
+      premium: { name: 'Premium', THANG: 999000, NAM: 9990000 }
     };
-
     let currentPlan = 'pro';
-
-    function fmt(num) {
-      return num.toLocaleString('vi-VN') + ' đ';
-    }
+    const fmt = n => n.toLocaleString('vi-VN') + ' đ';
 
     function showPaymentForm(plan) {
       currentPlan = plan;
       const info = PLANS[plan];
-      document.getElementById('payment-form-title-text').textContent = 'Thanh toán – Gói ' + info.name;
+      document.getElementById('payment-form-title-text').textContent = 'Thanh toán gói ' + info.name;
       document.getElementById('summary-plan').textContent = info.name;
-      // reset to monthly
+      document.getElementById('monthly-price').textContent = fmt(info.THANG);
+      document.getElementById('yearly-price').textContent = fmt(info.NAM);
       document.getElementById('cycle-monthly').checked = true;
-      document.getElementById('monthly-price').textContent = info.monthly.label;
-      document.getElementById('yearly-price').textContent = info.monthly.yearly ? fmt(info.monthly.yearly) : '';
       updateCycle();
       const section = document.getElementById('payment-section');
       section.classList.add('is-visible');
-      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-      // Update bank ref
-      document.getElementById('bank-ref').textContent = 'THANHTOAN ' + info.name.toUpperCase() + ' USER12345';
+      setTimeout(() => section.scrollIntoView({ block: 'start' }), 50);
     }
 
     function hidePaymentForm() {
       document.getElementById('payment-section').classList.remove('is-visible');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0 });
     }
 
     function updateCycle() {
-      const info = PLANS[currentPlan];
-      const isYearly = document.getElementById('cycle-yearly').checked;
-      const cycleLabel = isYearly ? 'Hàng năm' : 'Hàng tháng';
-      const unitLabel = isYearly
-        ? (currentPlan === 'pro' ? '490.000 đ/năm' : '990.000 đ/năm')
-        : (currentPlan === 'pro' ? '49.000 đ/tháng' : '99.000 đ/tháng');
-      const totalLabel = isYearly
-        ? (currentPlan === 'pro' ? '490.000 đ' : '990.000 đ')
-        : (currentPlan === 'pro' ? '49.000 đ' : '99.000 đ');
-
-      document.getElementById('summary-cycle').textContent = cycleLabel;
-      document.getElementById('summary-unit').textContent = unitLabel;
-      document.getElementById('summary-total').textContent = totalLabel;
-    }
-
-    function switchPayMethod(method) {
-      document.querySelectorAll('.pay-detail').forEach(el => el.classList.remove('is-active'));
-      document.getElementById('detail-' + method).classList.add('is-active');
-    }
-
-    function validateCardForm() {
-      let isValid = true;
-      const numInput = document.getElementById('card-number');
-      const nameInput = document.getElementById('card-name');
-      const expInput = document.getElementById('card-expiry');
-      const cvvInput = document.getElementById('card-cvv');
-
-      const errNum = document.getElementById('err-card-number');
-      const errName = document.getElementById('err-card-name');
-      const errExp = document.getElementById('err-card-expiry');
-      const errCvv = document.getElementById('err-card-cvv');
-
-      [errNum, errName, errExp, errCvv].forEach(el => {
-        if (el) { el.style.display = 'none'; el.textContent = ''; }
-      });
-      [numInput, nameInput, expInput, cvvInput].forEach(el => {
-        if (el) el.style.borderColor = '';
-      });
-
-      const numDigits = (numInput?.value || '').replace(/\D/g, '');
-      if (!numDigits) {
-        if (errNum) { errNum.textContent = 'Vui lòng nhập số thẻ'; errNum.style.display = 'block'; }
-        if (numInput) numInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      } else if (numDigits.length < 16) {
-        if (errNum) { errNum.textContent = 'Số thẻ không hợp lệ (cần 16 chữ số)'; errNum.style.display = 'block'; }
-        if (numInput) numInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      }
-
-      const nameVal = (nameInput?.value || '').trim();
-      if (!nameVal) {
-        if (errName) { errName.textContent = 'Vui lòng nhập tên chủ thẻ'; errName.style.display = 'block'; }
-        if (nameInput) nameInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      } else if (nameVal.length < 2) {
-        if (errName) { errName.textContent = 'Tên chủ thẻ không hợp lệ'; errName.style.display = 'block'; }
-        if (nameInput) nameInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      }
-
-      const expVal = (expInput?.value || '').trim();
-      if (!expVal) {
-        if (errExp) { errExp.textContent = 'Vui lòng nhập ngày hết hạn'; errExp.style.display = 'block'; }
-        if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      } else {
-        const match = expVal.match(/^(0[1-9]|1[0-2])\/([0-9]{2})$/);
-        if (!match) {
-          if (errExp) { errExp.textContent = 'Định dạng MM/YY không hợp lệ'; errExp.style.display = 'block'; }
-          if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
-          isValid = false;
-        } else {
-          const month = parseInt(match[1], 10);
-          const year = parseInt('20' + match[2], 10);
-          const now = new Date();
-          const currentYear = now.getFullYear();
-          const currentMonth = now.getMonth() + 1;
-          if (year < currentYear || (year === currentYear && month < currentMonth)) {
-            if (errExp) { errExp.textContent = 'Thẻ đã hết hạn'; errExp.style.display = 'block'; }
-            if (expInput) expInput.style.borderColor = 'var(--danger, #d9383a)';
-            isValid = false;
-          }
-        }
-      }
-
-      const cvvDigits = (cvvInput?.value || '').replace(/\D/g, '');
-      if (!cvvDigits) {
-        if (errCvv) { errCvv.textContent = 'Vui lòng nhập mã CVV'; errCvv.style.display = 'block'; }
-        if (cvvInput) cvvInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      } else if (cvvDigits.length < 3) {
-        if (errCvv) { errCvv.textContent = 'Mã CVV gồm 3 hoặc 4 chữ số'; errCvv.style.display = 'block'; }
-        if (cvvInput) cvvInput.style.borderColor = 'var(--danger, #d9383a)';
-        isValid = false;
-      }
-
-      return isValid;
+      const yearly = document.getElementById('cycle-yearly').checked;
+      const price = PLANS[currentPlan][yearly ? 'NAM' : 'THANG'];
+      document.getElementById('summary-cycle').textContent = yearly ? 'Hàng năm' : 'Hàng tháng';
+      document.getElementById('summary-unit').textContent = fmt(price) + (yearly ? '/năm' : '/tháng');
+      document.getElementById('summary-total').textContent = fmt(price);
     }
 
     function confirmPayment() {
-      const isCard = document.getElementById('detail-card').classList.contains('is-active');
-      if (isCard && !validateCardForm()) {
-        return;
-      }
       const btn = document.getElementById('btn-confirm');
       btn.disabled = true;
-      btn.textContent = 'Đang xử lý...';
+      btn.textContent = 'Đang chuyển sang VNPay...';
       setTimeout(() => {
-        const planName = PLANS[currentPlan].name;
         document.getElementById('success-msg').innerHTML =
-          'Gói <strong>' + planName + '</strong> đã được kích hoạt cho tài khoản của bạn. Chúc bạn học tập hiệu quả!';
-        document.getElementById('success-overlay').classList.add('is-visible');
-        document.getElementById('success-overlay').focus();
+          'Gói <strong>' + PLANS[currentPlan].name + '</strong> đã được kích hoạt. Bản thật sẽ chuyển sang trang VNPay rồi về trang kết quả.';
+        const overlay = document.getElementById('success-overlay');
+        overlay.classList.add('is-visible');
+        overlay.focus();
         btn.disabled = false;
-        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 5l-6 6-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Xác nhận thanh toán';
-      }, 1500);
+        btn.textContent = 'Thanh toán qua VNPay';
+      }, 900);
     }
 
-    function closeSuccess() {
-      document.getElementById('success-overlay').classList.remove('is-visible');
-      hidePaymentForm();
-    }
-
-    function fakeEwalletRedirect(wallet) {
-      const btn = event.currentTarget;
-      btn.disabled = true;
-      btn.querySelector('span:last-of-type').textContent = 'Đang chuyển sang ' + wallet + '...';
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.querySelector('span:last-of-type').innerHTML = 'Tiếp tục với <strong>' + wallet + '</strong>';
-        // Show success after wallet "redirect"
-        confirmPayment();
-      }, 1200);
-    }
-
-    // Close overlay on backdrop click
     document.getElementById('success-overlay').addEventListener('click', function (e) {
-      if (e.target === this) closeSuccess();
-    });
-
-    // Card number formatting & listeners
-    document.addEventListener('DOMContentLoaded', function () {
-      const cardNum = document.getElementById('card-number');
-      if (cardNum) {
-        cardNum.addEventListener('input', function () {
-          let v = this.value.replace(/\D/g, '').substring(0, 16);
-          this.value = v.replace(/(.{4})/g, '$1 ').trim();
-          const err = document.getElementById('err-card-number');
-          if (err) { err.style.display = 'none'; err.textContent = ''; }
-          this.style.borderColor = '';
-        });
-      }
-      const cardName = document.getElementById('card-name');
-      if (cardName) {
-        cardName.addEventListener('input', function () {
-          this.value = this.value.toUpperCase();
-          const err = document.getElementById('err-card-name');
-          if (err) { err.style.display = 'none'; err.textContent = ''; }
-          this.style.borderColor = '';
-        });
-      }
-      const expiry = document.getElementById('card-expiry');
-      if (expiry) {
-        expiry.addEventListener('input', function () {
-          let v = this.value.replace(/\D/g, '').substring(0, 4);
-          if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
-          this.value = v;
-          const err = document.getElementById('err-card-expiry');
-          if (err) { err.style.display = 'none'; err.textContent = ''; }
-          this.style.borderColor = '';
-        });
-      }
-      const cvv = document.getElementById('card-cvv');
-      if (cvv) {
-        cvv.addEventListener('input', function () {
-          this.value = this.value.replace(/\D/g, '').substring(0, 4);
-          const err = document.getElementById('err-card-cvv');
-          if (err) { err.style.display = 'none'; err.textContent = ''; }
-          this.style.borderColor = '';
-        });
-      }
+      if (e.target === this) this.classList.remove('is-visible');
     });
   </script>
 </body>
