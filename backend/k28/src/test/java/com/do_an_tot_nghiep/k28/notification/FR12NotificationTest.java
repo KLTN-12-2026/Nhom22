@@ -83,6 +83,19 @@ class FR12NotificationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc15_lateReminderTimeStillFiresBeforeMidnight() throws Exception {
+        Learner late = learner(HCM);
+        settings(late, true, true, true, "23:55");
+
+        reminderService.run(Instant.parse("2030-01-15T16:20:00Z"));
+        assertThat(count(late)).isZero();
+
+        reminderService.run(Instant.parse("2030-01-15T16:35:00Z"));
+        reminderService.run(Instant.parse("2030-01-15T16:58:00Z"));
+        assertThat(count(late)).isEqualTo(1);
+    }
+
+    @Test
     void tc15_skipsBeforeReminderTimeAfterGoalOrWhenDisabled() throws Exception {
         Learner early = learner(HCM);
         settings(early, true, true, true, "10:00");

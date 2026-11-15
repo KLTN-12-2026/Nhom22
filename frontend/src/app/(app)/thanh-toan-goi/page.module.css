@@ -1,71 +1,56 @@
 .pageSheet { max-width: 1120px; }
 .currentBanner { display:flex; align-items:center; gap:var(--sp-3); padding:var(--sp-4) var(--sp-5); background:var(--desk); border:1.5px solid var(--primary-line); border-radius:var(--radius-field); margin-bottom:var(--sp-6); flex-wrap:wrap; }
 .currentBanner > a { margin-left:auto; }
-.planBadge { display:inline-flex; align-items:center; background:var(--primary); color:var(--on-primary); font-size:var(--fs-xs); font-weight:700; padding:4px 10px; border-radius:20px; }
-.planInfo { display:flex; flex-direction:column; gap:2px; }
-.planInfo strong { font-size:var(--fs-sm); }
-.planInfo span, .summaryRow span, .summaryNote { color:var(--ink-2); font-size:var(--fs-xs); }
-.sectionHeading { color:var(--ink-2); font-size:var(--fs-sm); font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin:0 0 var(--sp-4); }
-.planGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-4); margin-bottom:var(--sp-7); }
-.planCard { position:relative; display:flex; flex-direction:column; overflow:hidden; background:var(--sheet); border:2px solid var(--primary-line); border-radius:var(--radius-field); transition:box-shadow .18s,border-color .18s; }
-.planCard:hover { box-shadow:0 4px 18px rgba(53,73,187,.1); }
-.planCard.current { background:var(--desk); }
-.planCard.recommended { border-color:var(--primary); box-shadow:0 4px 24px rgba(53,73,187,.16); }
+.planInfo { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
+.planInfo strong { font-size:var(--fs-small); }
+.planInfo span, .summaryRow span, .summaryNote { color:var(--ink-2); font-size:var(--fs-caption); }
+.sectionHeading { color:var(--ink-2); font-size:var(--fs-small); font-weight:700; margin:0 0 var(--sp-4); }
+.planGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4); margin-bottom:var(--sp-4); }
+.planNote { color:var(--ink-2); font-size:var(--fs-small); line-height:1.5; margin:0 0 var(--sp-6); }
+.planCard { position:relative; display:flex; flex-direction:column; overflow:hidden; background:var(--sheet); border:2px solid var(--primary-line); border-radius:var(--radius-field); }
+.planCard.recommended { border-color:var(--primary); }
 .planTop { padding:var(--sp-5) var(--sp-5) var(--sp-4); }
-.planTop h2 { font-size:var(--fs-base); margin:0 0 var(--sp-2); }
+.planTop h3 { font-size:var(--fs-body); margin:0 0 var(--sp-2); }
 .price { display:flex; align-items:baseline; gap:4px; }
 .price strong { color:var(--primary); font-size:1.75rem; }
-.current .price strong { color:var(--ink-2); }
-.price span { color:var(--ink-2); font-size:var(--fs-sm); }
-.recommendedBadge { position:absolute; top:-1px; right:14px; padding:2px 10px; border-radius:0 0 8px 8px; background:var(--accent); color:var(--accent-text); font-size:.7rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+.price span { color:var(--ink-2); font-size:var(--fs-small); }
+.recommendedBadge { position:absolute; top:-1px; right:14px; padding:2px 10px; border-radius:0 0 8px 8px; background:var(--accent); color:var(--on-accent); font-size:var(--fs-caption); font-weight:700; }
 .divider { height:1px; background:var(--primary-line); }
 .planCard > .divider { margin:0 var(--sp-5); }
+.paymentSection > .divider { margin-bottom:var(--sp-6); }
 .features { display:flex; flex:1; flex-direction:column; gap:var(--sp-2); list-style:none; margin:0; padding:var(--sp-4) var(--sp-5); }
-.features li { display:flex; align-items:flex-start; gap:var(--sp-2); color:var(--ink); font-size:var(--fs-sm); line-height:1.45; }
-.featureIcon { display:flex; align-items:center; justify-content:center; flex:none; width:18px; height:18px; border-radius:50%; font-size:.7rem; margin-top:1px; }
+.features li { display:flex; align-items:flex-start; gap:var(--sp-2); color:var(--ink); font-size:var(--fs-small); line-height:1.45; }
+.featureIcon { display:flex; align-items:center; justify-content:center; flex:none; width:18px; height:18px; border-radius:50%; font-size:var(--fs-caption); margin-top:1px; }
 .ok { background:var(--secondary-bg); color:var(--secondary-text); }
 .no { background:var(--desk); color:var(--ink-3); }
 .planFooter { padding:var(--sp-4) var(--sp-5) var(--sp-5); }
-.planFooter .btn { width:100%; justify-content:center; }
-.paymentSection { animation:fadeSlideIn .25s ease; }
+.planFooter :global(.btn) { width:100%; justify-content:center; }
 .paymentGrid { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--sp-6); align-items:start; }
-.paymentTitle { display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-lg); margin:0 0 var(--sp-5); }
-.backButton { border:0; background:none; color:var(--ink-2); cursor:pointer; font-size:2rem; line-height:1; }
+.paymentTitle { display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-lead); margin:0 0 var(--sp-5); }
+.backButton { min-width:44px; min-height:44px; border:0; background:none; color:var(--ink-2); cursor:pointer; font-size:2rem; line-height:1; }
 .cycleToggle { display:flex; gap:var(--sp-3); margin-bottom:var(--sp-5); }
-.cycleOption { display:flex; flex:1; flex-direction:column; gap:2px; padding:var(--sp-3) var(--sp-4); border:2px solid var(--primary-line); border-radius:var(--radius-field); cursor:pointer; }
-.cycleOption input, .method input { position:absolute; opacity:0; }
-.cycleOption.selected, .method.selected { border-color:var(--primary); background:var(--primary-tint); }
-.cycleOption span, .method strong { font-size:var(--fs-sm); font-weight:600; }
+.cycleOption { position:relative; display:flex; flex:1; flex-direction:column; gap:2px; padding:var(--sp-3) var(--sp-4); border:2px solid var(--primary-line); border-radius:var(--radius-field); cursor:pointer; }
+.cycleOption input { position:absolute; opacity:0; }
+.cycleOption:focus-within { outline:2px solid var(--primary); outline-offset:2px; }
+.cycleOption.selected { border-color:var(--primary); background:var(--primary-tint); }
+.cycleOption span { font-size:var(--fs-small); font-weight:600; }
 .cycleOption strong { color:var(--primary); }
-.cycleOption small { color:var(--secondary-text); font-size:.7rem; font-weight:600; }
-.methods { display:flex; flex-direction:column; gap:var(--sp-3); margin-bottom:var(--sp-5); }
-.method { position:relative; display:flex; align-items:center; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border:2px solid var(--primary-line); border-radius:var(--radius-field); cursor:pointer; }
-.method > span:nth-child(3) { display:flex; flex-direction:column; gap:2px; }
-.method small { color:var(--ink-2); font-size:var(--fs-xs); }
-.method i { width:18px; height:18px; margin-left:auto; border:2px solid var(--primary-line); border-radius:50%; }
-.method.selected i { border-color:var(--primary); background:var(--primary); box-shadow:inset 0 0 0 4px var(--sheet); }
-.methodGlyph { display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; background:var(--desk); color:var(--primary); font-size:1.15rem; }
-.cardForm { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
-.fieldInvalid input { border-color:var(--danger, #d9383a) !important; }
-.fieldErrorText { color:var(--danger, #d9383a); font-size:var(--fs-xs, 0.75rem); margin-top:4px; display:block; }
-.required { color:var(--danger, #d9383a); margin-left:2px; }
-.bankPanel, .walletPanel { display:grid; gap:var(--sp-3); padding:var(--sp-5); background:var(--desk); border-radius:var(--radius-field); }
-.bankPanel code { padding:var(--sp-3); background:var(--sheet); color:var(--primary); font-weight:700; }
-.walletPanel { grid-template-columns:1fr 1fr; }
+.cycleOption small { color:var(--secondary-text); font-size:var(--fs-caption); font-weight:600; }
+.vnpay { display:grid; gap:var(--sp-1); padding:var(--sp-4); border:1px solid var(--line-2); border-radius:var(--radius-card); margin-bottom:var(--sp-3); }
+.vnpay span { color:var(--ink-2); font-size:var(--fs-small); }
 .summary { position:sticky; top:var(--sp-5); overflow:hidden; border:2px solid var(--primary-line); border-radius:var(--radius-field); background:var(--sheet); }
-.summaryHead { padding:var(--sp-4) var(--sp-5); background:var(--primary); color:var(--on-primary); font-size:var(--fs-sm); font-weight:700; }
+.summaryHead { padding:var(--sp-4) var(--sp-5); background:var(--primary-fill); color:var(--on-primary); font-size:var(--fs-small); font-weight:700; }
 .summaryBody { display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-4) var(--sp-5); }
-.summaryRow, .total { display:flex; justify-content:space-between; gap:var(--sp-3); font-size:var(--fs-sm); }
+.summaryRow, .total { display:flex; justify-content:space-between; gap:var(--sp-3); font-size:var(--fs-small); }
 .summaryRow strong, .total strong:last-child { text-align:right; }
 .total strong:last-child { color:var(--primary); font-size:1.25rem; }
 .summaryNote { line-height:1.5; margin:0; padding:var(--sp-3) var(--sp-5) var(--sp-4); border-top:1px solid var(--primary-line); }
-.summary > .btn { width:calc(100% - var(--sp-10)); justify-content:center; margin:0 var(--sp-5) var(--sp-5); }
+.summary > :global(.btn) { width:calc(100% - 2 * var(--sp-5)); justify-content:center; margin:0 var(--sp-5) var(--sp-5); }
 .overlay { position:fixed; inset:0; z-index:999; display:flex; align-items:center; justify-content:center; padding:var(--sp-5); background:rgba(10,15,40,.55); }
-.successCard { width:100%; max-width:380px; padding:var(--sp-7) var(--sp-8); border-radius:16px; background:var(--sheet); text-align:center; box-shadow:0 20px 60px rgba(10,15,40,.2); }
-.successCard h2 { font-size:var(--fs-lg); margin:0 0 var(--sp-2); }
-.successCard p { color:var(--ink-2); font-size:var(--fs-sm); line-height:1.6; margin:0 0 var(--sp-6); }
-.successCard .btn { width:100%; justify-content:center; }
+.successCard { width:100%; max-width:380px; padding:var(--sp-7) var(--sp-6); border-radius:var(--radius-card); background:var(--sheet); text-align:center; }
+.successCard h2 { font-size:var(--fs-lead); margin:0 0 var(--sp-2); }
+.successCard p { color:var(--ink-2); font-size:var(--fs-small); line-height:1.6; margin:0 0 var(--sp-6); }
+.successCard :global(.btn) { width:100%; justify-content:center; }
 .successIcon { display:flex; align-items:center; justify-content:center; width:64px; height:64px; margin:0 auto var(--sp-5); border-radius:50%; background:var(--secondary-bg); color:var(--secondary-text); font-size:2rem; }
-@keyframes fadeSlideIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 @media (max-width:800px) { .planGrid, .paymentGrid { grid-template-columns:1fr; } .summary { position:static; } }
-@media (max-width:520px) { .cycleToggle, .walletPanel { grid-template-columns:1fr; flex-direction:column; } .cardForm { grid-template-columns:1fr; } .cardFields { grid-column:1; } .currentBanner > a { margin-left:0; } }
+@media (max-width:520px) { .cycleToggle, .currentBanner { flex-direction:column; align-items:stretch; } .currentBanner > a { margin-left:0; } }

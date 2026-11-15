@@ -16,8 +16,10 @@ import com.do_an_tot_nghiep.k28.notification.entity.enums.LoaiThongBao;
 import com.do_an_tot_nghiep.k28.notification.mapper.NotificationMapper;
 import com.do_an_tot_nghiep.k28.notification.repository.ThongBaoRepository;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,9 @@ public class NotificationService {
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
+
+    @Value("${app.reminders.interval-ms:900000}")
+    private long intervalMs;
 
     @Transactional(readOnly = true)
     public NotificationListResponse list(Long userId, NotificationQuery query) {
@@ -79,7 +84,9 @@ public class NotificationService {
     @Transactional
     public boolean remind(ReminderTarget target, Instant now) {
         ZonedDateTime local = now.atZone(ZoneId.of(target.muiGio()));
-        if (local.toLocalTime().isBefore(target.gioNhac())) {
+        LocalTime muonNhat = LocalTime.MAX.minus(Duration.ofMillis(Math.min(2 * intervalMs, 43_200_000L)));
+        LocalTime gioNhac = target.gioNhac().isAfter(muonNhat) ? muonNhat : target.gioNhac();
+        if (local.toLocalTime().isBefore(gioNhac)) {
             return false;
         }
         LocalDate ngay = local.toLocalDate();

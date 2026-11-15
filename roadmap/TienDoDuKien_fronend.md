@@ -20,7 +20,7 @@
 | Kiểm thử | Node test runner (logic/hợp đồng), Playwright trên Edge (UI thật và demo tách riêng) |
 | Kết nối BE | `rewrites` `/api/:path*` → `http://localhost:8080/api/:path*` (cùng site, cookie SameSite=Lax) |
 
-## 0.1. Lịch theo đề cương (khớp `ROADMAP_BE.md` §0.2)
+## 0.1. Lịch theo đề cương (khớp `TienDoDuKien_backend.md` §0.2)
 
 | Giai đoạn | Sprint | Thời gian | Kết quả FE | Bước |
 |---|---|---|---|---|
@@ -235,7 +235,7 @@ frontend/
 - **Gọn mạnh** (S9). **Cắt:** UI46 tổng quan, chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu.
 
 ### [ ] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
-- Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng, "Xác nhận thanh toán" chỉ hẹn giờ 0,7 giây; lint lỗi `thanh-toan-lich-su/page.js:77`.
+- Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng. **15/11/2026:** đã bỏ khỏi mockup và FE mọi mục ở dòng "Bỏ khỏi giao diện" dưới đây, cùng "Hủy gói", "Đổi gói" và tạo hóa đơn ở trình duyệt; giá/quyền lợi theo TK §6.9; nút "Thanh toán qua VNPay" còn mô phỏng; UI56 có "Gia hạn gói" và trạng thái `THANH_CONG`/`THAT_BAI`/`HET_HAN`. Kiểm chứng: lint hai trang sạch, `npm run build` pass, `npm test` 53/53, xem trên trình duyệt 1280/390 px cả theme sáng và tối. Chưa nối API (chờ B3.12a/B3.12b).
 - Nối API (S8): UI55 đọc `GET /billing/plans`, `GET /me/subscription` (bỏ mảng `PLANS` cứng); "Xác nhận thanh toán" gọi `POST /billing/checkouts` rồi `window.location.assign(paymentUrl)`. Thêm **UI57** `/thanh-toan-ket-qua?maDon=` đọc `GET /billing/transactions/{maDon}` (thành công/thất bại/đang chờ, nút thử lại).
 - **Bỏ khỏi giao diện:** form số thẻ/tên chủ thẻ/hạn/CVV (thẻ nhập trên trang VNPay), "Chuyển khoản ngân hàng" mã cứng, MoMo/ZaloPay (chưa có cổng), danh sách "thẻ đã lưu", dòng "Hỗ trợ ưu tiên"; toàn bộ thẻ gói Miễn phí (không còn gói miễn phí, sửa 10/11/2026: chỉ `PRO`, `PREMIUM`); xuất CSV không phụ thuộc gói. Phương thức còn lại: "Thẻ ATM / VISA / Mastercard / VNPAY-QR qua VNPay".
 - Nối API (S9): UI56 đọc `GET /billing/transactions`, "Tải biên nhận" mở `.../receipt` (bỏ tạo tệp văn bản ở trình duyệt). Màn giao dịch của Admin chuyển sang UI59 (F3.13), không làm tab trong UI51.
@@ -249,7 +249,7 @@ frontend/
 - UI58 `/quan-tri/doanh-thu`: chuyển kỳ Tháng / Quý / Năm, chọn năm; thẻ tổng (doanh thu, số giao dịch, so với kỳ trước, gói hiệu lực, sắp hết hạn, tỷ lệ thành công); biểu đồ cột chồng theo gói; bảng số liệu bên dưới. Đọc `GET /admin/revenue`.
 - Thêm 2 mục vào menu quản trị.
 - **Giữ** (S9).
-- **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b mua gói bắt buộc + 9c hết hạn và doanh thu); nhận `report/DOT3_BAO_CAO_FE.md`.
+- **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b mua gói bắt buộc + 9c hết hạn và doanh thu); nhận `ban-giao-cho fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md`.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 

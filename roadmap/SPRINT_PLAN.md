@@ -132,7 +132,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 |---|---|---|---|
 | — (tồn Đợt 2) | — | F2.2 | UI19 hàng đợi chưa đồng bộ khi mất mạng, nhánh 409 |
 | B3.1 Tác vụ nền & hạn mức | (hạ tầng `tac_vu_nen`, `QuotaService`) | — | — |
-| B3.2 Tạo thẻ bằng AI | `POST /ai/card-drafts` (202, + `tepId` X-01), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (+ `tenBoMoi` X-02) | F3.1 | UI29 `/ai/xuong-the` (trái đoạn văn + tải tệp Word/TXT/CSV, phải thẻ nháp sửa/xóa/nghe, "Lưu N thẻ đã chọn" vào bộ có sẵn hoặc bộ mới) |
+| B3.2 Tạo thẻ bằng AI | `POST /ai/card-drafts` (202, + `tepId` X-01), `GET /ai/requests/{id}`, `POST /ai/card-drafts/{id}/commit` (+ `tenBoMoi` X-02) | F3.1 | UI29 `/ai-xuong-the` (trái đoạn văn + tải tệp Word/TXT/CSV, phải thẻ nháp sửa/xóa/nghe, "Lưu N thẻ đã chọn" vào bộ có sẵn hoặc bộ mới) |
 | B3.4a TTS | `GET /cards/{id}/audio` | F3.5 (phần nghe) | Nút nghe trên UI19, bài nghe viết UI24 dùng audio thật |
 | B5.2a Thư viện mẫu (R-01) | (seed 200–300 thẻ có IPA) | — | UI02, UI03 |
 
@@ -141,7 +141,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 ### S8 · 16/11–22/11 · AI hỗ trợ, gợi ý, động lực, nhắc học, thanh toán — FR-08, FR-09, FR-12, FR-15
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B3.3 Tác vụ AI khác (gọn) | `POST /ai/context-explanations`, `/ai/sentence-feedback`, `POST /ai/card-images` (X-04), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai/viet-cau`, UI32 `/ai/lich-su`, nút "Gợi ý" tự điền trên UI16 (R-02), "Hoàn thiện với AI" + "Sinh ảnh AI" trên thẻ nháp UI29 (X-03, X-04) |
+| B3.3 Tác vụ AI khác (gọn) | `POST /ai/context-explanations`, `/ai/sentence-feedback`, `POST /ai/card-images` (X-04), `GET /ai/history`, `GET /me/service-quota` | F3.2, F3.3 | UI30, UI31 `/ai-viet-cau`, UI32 `/ai-lich-su`, nút "Gợi ý" tự điền trên UI16 (R-02), "Hoàn thiện với AI" + "Sinh ảnh AI" trên thẻ nháp UI29 (X-03, X-04) |
 | B3.5 Gợi ý có lý do | `GET /learning/recommendations` (+ `TIEN_BO`, R-04) | F3.4 | UI28 thẻ gợi ý trên UI12 và UI27 |
 | B3.6 Điểm, chuỗi, huy hiệu, thử thách (gọn) | `GET /rewards/history`, `GET /badges`, `GET /challenges` | F3.6 | UI38 `/thanh-tich`, chuỗi ngày + ngày đóng băng trên UI12 (R-03) |
 | B3.7 Thông báo & nhắc học (gọn) | `GET /notifications`, `PATCH /notifications/{id}` | F3.7 | UI39 chuông + `/thong-bao` |
@@ -152,9 +152,9 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 ### S9 · 23/11–29/11 · Phát âm, kiểm duyệt, tổng kết, dữ liệu cá nhân, vận hành, giao dịch — FR-10, 11, 13, 14, 15
 | BE | API | FE | Màn hình |
 |---|---|---|---|
-| B3.4b Đánh giá phát âm (gọn) | `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am/lich-su` |
+| B3.4b Đánh giá phát âm (gọn) | `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` | F3.5 | UI33 `/phat-am`, UI34 `/phat-am-lich-su` |
 | B3.8 Báo cáo & kiểm duyệt (gọn) | `POST /reports`, `GET /admin/reports`, `POST /admin/reports/{id}/resolve` (giữ/ẩn) | F3.8 | UI45 hộp "Báo cáo" (bộ/thẻ/đầu ra AI), UI50 `/quan-tri/bao-cao` |
-| B3.9 Tổng kết tuần (gọn) | `GET /statistics/weekly-summary` | F3.9 | UI37 `/thong-ke/tuan`, UI36 `/thong-ke/ban-do` (bảng bộ thẻ × kỹ năng) |
+| B3.9 Tổng kết tuần (gọn) | `GET /statistics/weekly-summary` | F3.9 | UI37 `/tong-ket-tuan`, UI36 `/ban-do-lam-chu` (bảng bộ thẻ × kỹ năng) |
 | B3.10 Xóa tài khoản (gọn) | `POST /me/deletion-requests` | F3.10 | UI44 `/ca-nhan/du-lieu` |
 | B3.11 Quản trị vận hành (gọn mạnh) | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
 | B3.12b Lịch sử giao dịch, nhắc/hết hạn gói, áp quyền lợi | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`; job nhắc 7 ngày + hết hạn | F3.12 | UI56 `/thanh-toan-lich-su`, banner hết hạn trong `AppShell`, UI44 thông báo |
@@ -235,16 +235,16 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI25 | Kết quả, đáp án, giải thích | `/luyen-tap-ket-qua` | O | S6 |
 | UI26 | Lịch sử bài luyện | `/luyen-tap-lich-su` | L | S6 |
 | UI27 | Sổ tay từ khó & cặp nhầm | `/so-tay` | L | S6 |
-| UI28 | Gợi ý có lý do | khối trên `/hom-nay`, `/so-tay` | L | S8 |
-| UI29 | Xưởng thẻ AI (+ tải tệp, lưu bộ mới, hoàn thiện/ảnh AI từng thẻ: X-01…X-06) | `/ai/xuong-the` | L | S7 (X-03, X-04: S8) |
+| UI28 | Gợi ý có lý do | khối trên `/hom-nay`, `/so-tay`; trang riêng `/goi-y` | L | S8 |
+| UI29 | Xưởng thẻ AI (+ tải tệp, lưu bộ mới, hoàn thiện/ảnh AI từng thẻ: X-01…X-06) | `/ai-xuong-the` | L | S7 (X-03, X-04: S8) |
 | UI30 | Giải thích theo ngữ cảnh (+ tự điền thẻ trên UI16, R-02) | ngăn bên trên UI15/UI19 | L | S8 |
-| UI31 | Viết câu "dùng thử" | `/ai/viet-cau` | L | S8 |
-| UI32 | Lịch sử AI & hạn mức | `/ai/lich-su` | L | S8 |
+| UI31 | Viết câu "dùng thử" | `/ai-viet-cau` | L | S8 |
+| UI32 | Lịch sử AI & hạn mức | `/ai-lich-su` | L | S8 |
 | UI33 | Góc phát âm | `/phat-am` | L | S9 |
-| UI34 | Lịch sử phát âm | `/phat-am/lich-su` | L | S9 |
+| UI34 | Lịch sử phát âm | `/phat-am-lich-su` | L | S9 |
 | UI35 | Thống kê tổng quan & kỹ năng | `/thong-ke` | L | S6 |
-| UI36 | Bản đồ làm chủ | `/thong-ke/ban-do` | L | S9 |
-| UI37 | Tổng kết tuần | `/thong-ke/tuan` | L | S9 |
+| UI36 | Bản đồ làm chủ | `/ban-do-lam-chu` | L | S9 |
+| UI37 | Tổng kết tuần | `/tong-ket-tuan` | L | S9 |
 | UI38 | Thành tích (điểm, huy hiệu, thử thách) | `/thanh-tich` | L | S8 |
 | UI39 | Thông báo | chuông + `/thong-bao` | L | S8 |
 | UI40 | Hồ sơ & ảnh đại diện | `/ca-nhan` | L | S3 |
