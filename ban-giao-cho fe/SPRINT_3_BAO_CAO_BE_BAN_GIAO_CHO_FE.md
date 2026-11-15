@@ -3,8 +3,8 @@
 | Mục | Giá trị |
 |---|---|
 | Giai đoạn | Đợt 3 — AI, phát âm, động lực, vận hành & thanh toán (09/11 – 29/11/2026, Sprint S7–S9) |
-| Ngày cập nhật | 14/11/2026 — **B3.4b code xong** (đánh giá phát âm: 4 API, Fake + Azure Speech REST; còn 1 lượt gọi Azure thật). 14/11/2026 — **B3.4a code xong** (âm thanh TTS `GET /cards/{id}/audio`, bài `NGHE_VIET` dùng TTS; còn 1 lượt gọi OpenAI TTS thật). 14/11/2026 — **B3.2 code xong** (tạo thẻ bằng AI: 3 API, Fake + OpenAI, `.docx`, lưu vào bộ mới; còn 1 lượt gọi OpenAI thật). 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
-| Trạng thái BE | 🟡 Đang làm: **B3.4b** code xong, `FR10PronunciationTest` 5 + `AzureSpeechClientTest` 3 pass (14/11/2026); chưa gọi Azure Speech thật và HTTP thật. **B3.4a** code xong, `FR10TtsTest` 7 test + `FR07PracticeSessionTest` cập nhật pass, toàn bộ `mvnw -q verify` pass (exit 0, 14/11/2026); chưa gọi OpenAI TTS thật và HTTP thật. **B3.2** code xong, `CardDraftParserTest` 14 + `FakeAiClientTest` 8 + `FR09CardDraftTest` 18 pass, toàn bộ `mvnw test` 492/492 pass (14/11/2026); chưa gọi OpenAI thật và HTTP thật. B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. **B3.5 xong**, toàn bộ `mvnw test` 452/452 pass (12/11/2026); **B3.7 xong**, `FR12NotificationTest` 4/4 pass (11/11/2026). Chưa bắt đầu: B3.3, B3.8–B3.11, B3.12a–B3.12c |
+| Ngày cập nhật | 15/11/2026 — **B5.2a xong** (thư viện mẫu 8 bộ × 30 = 240 thẻ có IPA, ví dụ, bản dịch; không API mới, xem mục 7). 14/11/2026 — **B3.4b code xong** (đánh giá phát âm: 4 API, Fake + Azure Speech REST; còn 1 lượt gọi Azure thật). 14/11/2026 — **B3.4a code xong** (âm thanh TTS `GET /cards/{id}/audio`, bài `NGHE_VIET` dùng TTS; còn 1 lượt gọi OpenAI TTS thật). 14/11/2026 — **B3.2 code xong** (tạo thẻ bằng AI: 3 API, Fake + OpenAI, `.docx`, lưu vào bộ mới; còn 1 lượt gọi OpenAI thật). 11/11/2026 — B3.1 xong (hạ tầng tác vụ nền và hạn mức, không API); **B3.6 xong** (điểm thưởng, chuỗi ngày + ngày đóng băng, huy hiệu, thử thách tuần; 3 API mới). Các bước còn lại ghi ở mục 1 và mục 9 là **dự kiến** |
+| Trạng thái BE | 🟡 Đang làm: **B5.2a xong** (15/11/2026): `FR04LibrarySeedTest` 12/12, toàn bộ `mvnw -B verify` 511/511 pass; chưa chạy lại seed trên DB dev. **B3.4b** code xong, `FR10PronunciationTest` 5 + `AzureSpeechClientTest` 3 pass (14/11/2026); chưa gọi Azure Speech thật và HTTP thật. **B3.4a** code xong, `FR10TtsTest` 7 test + `FR07PracticeSessionTest` cập nhật pass, toàn bộ `mvnw -q verify` pass (exit 0, 14/11/2026); chưa gọi OpenAI TTS thật và HTTP thật. **B3.2** code xong, `CardDraftParserTest` 14 + `FakeAiClientTest` 8 + `FR09CardDraftTest` 18 pass, toàn bộ `mvnw test` 492/492 pass (14/11/2026); chưa gọi OpenAI thật và HTTP thật. B3.1 xong theo test người dùng chạy; **B3.6 xong**, toàn bộ `mvnw test` 427/427 pass ngày 11/11/2026 (gồm `FR12RewardTest` 6, `StreakCalculatorTest` 13). Chưa gọi HTTP thật trên môi trường dev. **B3.5 xong**, toàn bộ `mvnw test` 452/452 pass (12/11/2026); **B3.7 xong**, `FR12NotificationTest` 4/4 pass (11/11/2026). Chưa bắt đầu: B3.3, B3.8–B3.11, B3.12a–B3.12c |
 | FE làm tương ứng | F3.1–F3.13 (`roadmap/TienDoDuKien_fronend.md`, mục Đợt 3): UI29 xưởng thẻ AI, UI30–UI32 AI, UI28 gợi ý, UI33–UI34 phát âm, UI38 thành tích, UI39 thông báo, UI45/UI50 báo cáo, UI36–UI37 thống kê, UI44 dữ liệu cá nhân, UI51 vận hành, UI55–UI57 thanh toán, UI58–UI59 quản lý thanh toán |
 | Báo cáo trước | [Đợt 2](SPRINT_2_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) — hợp đồng chung (lỗi `{code,message,fieldErrors,requestId}`, CSRF, phân trang, ID dạng chuỗi, cookie `SESSION`) xem ở đó và ở [Đợt 1](SPRINT_1_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) |
 
@@ -230,7 +230,7 @@ Quy tắc FE cần biết:
 
 ### 5.5 B3.2 — Tạo thẻ bằng AI (UI29)
 
-Hợp đồng theo mã nguồn và `FR09CardDraftTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi OpenAI thật. Luồng: [B3.2](../docs/luong-backend/B3.2-tao-the-ai.md).
+Hợp đồng theo mã nguồn và `FR09CardDraftTest` (MockMvc + Testcontainers, 14/11/2026); HTTP thật trên dev với Fake pass 15/11/2026 (202 → `HOAN_TAT` → commit, gửi lại cùng key trả kết quả cũ); chưa gọi OpenAI thật. Luồng: [B3.2](../docs/luong-backend/B3.2-tao-the-ai.md).
 
 | API | Request | Response |
 |---|---|---|
@@ -265,7 +265,7 @@ Quy tắc FE:
 
 ### 5.6 B3.4a — Âm thanh TTS (UI19, UI24, X-05)
 
-Hợp đồng theo mã nguồn và `FR10TtsTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi OpenAI thật. Luồng: [B3.4a](../docs/luong-backend/B3.4a-am-thanh-tts.md).
+Hợp đồng theo mã nguồn và `FR10TtsTest` (MockMvc + Testcontainers, 14/11/2026); HTTP thật trên dev với Fake pass 15/11/2026 (200, tải được `downloadUrl`, lần hai dùng cache); chưa gọi OpenAI thật. Luồng: [B3.4a](../docs/luong-backend/B3.4a-am-thanh-tts.md).
 
 | Method / path | Quyền | Request | Response |
 |---|---|---|---|
@@ -290,7 +290,7 @@ Hợp đồng theo mã nguồn và `FR10TtsTest` (MockMvc + Testcontainers, 14/1
 
 ### 5.7 B3.4b — Đánh giá phát âm (UI33, UI34)
 
-Hợp đồng theo mã nguồn và `FR10PronunciationTest` (MockMvc + Testcontainers, 14/11/2026), chưa gọi HTTP thật, chưa gọi Azure Speech thật. Luồng: [B3.4b](../docs/luong-backend/B3.4b-danh-gia-phat-am.md).
+Hợp đồng theo mã nguồn và `FR10PronunciationTest` (MockMvc + Testcontainers, 14/11/2026); HTTP thật trên dev với Fake pass 15/11/2026 (201 `DAY_DU`, lịch sử, xóa bản ghi 204, chỉ số giữ nguyên); chưa gọi Azure Speech thật. Luồng: [B3.4b](../docs/luong-backend/B3.4b-danh-gia-phat-am.md).
 
 | Method / path | Quyền | Request | Response |
 |---|---|---|---|
@@ -366,6 +366,7 @@ Sau khi ghi lượt ôn hoặc nộp bài thành công: invalidate `['rewards']`
 
 - Tài khoản demo giữ nguyên như Đợt 2: `admin@vocab.local` (ADMIN), `an@vocab.local`, `binh@vocab.local`, `chi@vocab.local` (USER), mật khẩu `Vocab@12345` (seed dev).
 - Hạn mức seed bởi `V15__jobs_ai.sql` (theo TK §6.9, mọi môi trường): `PRO` AI 20 / ảnh 10; `PREMIUM` AI 100 / ảnh 30 mỗi ngày. `V19` thêm `TTS` 100 / 300, `V20` thêm `PHAT_AM` 30 / 100 (PRO / PREMIUM). Chưa có B3.12a nên mọi người dùng được coi là `PRO`. Quản trị đổi mức qua `PUT /admin/service-quotas` (B3.11, chưa có).
+- **Thư viện mẫu (B5.2a, R-01, 15/11/2026):** `R__library_starter.sql` (seed dev) có 8 bộ mẫu `nguon=MAU`, mỗi bộ 30 thẻ, đủ 2 mục tiêu × 4 trình độ: "Giao tiếp mới bắt đầu — Chào hỏi và sinh hoạt hằng ngày", "Giao tiếp cơ bản — Hẹn gặp, hỏi đường và mua sắm", "Giao tiếp trung cấp — Trao đổi ý kiến và giải quyết vấn đề", "Giao tiếp nâng cao — Thuyết phục và diễn đạt tinh tế", "TOEIC mới bắt đầu — Văn phòng và đi lại", "TOEIC cơ bản — Mua bán, giao hàng và đặt chỗ", "TOEIC trung cấp — Tài chính, nhân sự và quy trình", "TOEIC nâng cao — Hợp đồng, rủi ro và chiến lược". Tên cũ "Khởi động — …" được đổi tại chỗ khi app dev khởi động lại (Flyway chạy lại seed). Mọi thẻ có `phienAm` (IPA giọng Mỹ, dạng `/…/`), `tuLoai`, `viDuEn` chứa đúng từ, `dichVi`; không thẻ nào có `AM_TU`, nên bài `NGHE_VIET` luôn trả `deBai.amThanhTts: true` và FE lấy âm qua `GET /practice/sessions/{id}/questions/{qid}/audio` (TTS B3.4a). Không đổi API; FE không cần sửa gì ngoài chuỗi tìm kiếm cũ "Khởi động —" nếu có (FE hiện không dùng).
 - Dev mặc định `AI_PROVIDER=fake` (mọi tài khoản demo tạo thẻ AI được, nhãn "Mô phỏng"), độ trễ 1 giây. Bật OpenAI: đặt `AI_PROVIDER=openai` và `OPENAI_API_KEY` trong `.env` của máy (không ghi khóa thật vào `.env.example`). Tương tự `TTS_PROVIDER=openai` cho giọng đọc và `SPEECH_PROVIDER=azure` + `AZURE_SPEECH_KEY` cho phát âm; mặc định cả hai là `fake`.
 
 ## 8. Checklist FE hoàn thành Đợt 3
