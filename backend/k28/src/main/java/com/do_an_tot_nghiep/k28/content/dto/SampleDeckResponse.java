@@ -16,6 +16,7 @@ public record SampleDeckResponse(
         TrinhDo trinhDo,
         QuyenTruyCap quyenTruyCap,
         TrangThaiKiemDuyet trangThaiKiemDuyet,
+        boolean caoCap,
         int soThe,
         int soBanSao,
         Instant createdAt,

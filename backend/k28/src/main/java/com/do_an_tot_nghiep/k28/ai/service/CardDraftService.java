@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
@@ -81,10 +82,14 @@ public class CardDraftService {
     public AiRequestResponse get(Long userId, Long id) {
         YeuCauAi yeuCau = requests.findByIdAndNguoiDungId(id, userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy yêu cầu AI"));
-        List<CardDraftResponse> banNhap = yeuCau.getTrangThai() == TrangThaiYeuCauAi.HOAN_TAT
+        boolean coKetQua = yeuCau.getTrangThai() == TrangThaiYeuCauAi.HOAN_TAT && !yeuCau.isAnKiemDuyet();
+        List<CardDraftResponse> banNhap = coKetQua
                 ? drafts.findByYeuCauIdOrderByThuTu(id).stream().map(draft -> mapper.toResponse(draft, read(draft))).toList()
                 : List.of();
-        return mapper.toResponse(yeuCau, banNhap);
+        JsonNode ketQua = coKetQua && yeuCau.getKetQuaJson() != null
+                ? json.readTree(yeuCau.getKetQuaJson())
+                : null;
+        return mapper.toResponse(yeuCau, banNhap, ketQua);
     }
 
     public CardDraftData read(BanNhapTheAi draft) {

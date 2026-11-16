@@ -1,0 +1,23 @@
+package com.do_an_tot_nghiep.k28.billing.dto;
+
+import com.do_an_tot_nghiep.k28.billing.entity.enums.ChuKy;
+import com.do_an_tot_nghiep.k28.billing.entity.enums.CongThanhToan;
+import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiGiaoDich;
+import java.time.Instant;
+
+public record AdminPaymentResponse(
+        String maDon,
+        String nguoiDungId,
+        String email,
+        String goiMa,
+        String tenGoi,
+        ChuKy chuKy,
+        long soTien,
+        CongThanhToan cong,
+        TrangThaiGiaoDich trangThai,
+        String maGiaoDichCong,
+        String maPhanHoi,
+        Instant taoAt,
+        Instant hoanTatAt
+) {
+}

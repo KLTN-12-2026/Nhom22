@@ -472,82 +472,6 @@
       justify-content: center;
     }
 
-    /* Success overlay */
-    .success-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 15, 40, .55);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-      padding: var(--sp-5);
-    }
-
-    .success-overlay.is-visible {
-      display: flex;
-      animation: fadeIn .2s ease;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    .success-card {
-      background: var(--sheet);
-      border-radius: 16px;
-      padding: var(--sp-7) var(--sp-8);
-      max-width: 380px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(10, 15, 40, .2);
-      animation: popIn .28s cubic-bezier(.34, 1.56, .64, 1);
-    }
-
-    @keyframes popIn {
-      from {
-        opacity: 0;
-        transform: scale(.85);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .success-icon {
-      width: 64px;
-      height: 64px;
-      background: var(--secondary-bg);
-      color: var(--secondary-text);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto var(--sp-5);
-    }
-
-    .success-card h2 {
-      font-size: var(--fs-lead);
-      font-weight: 700;
-      color: var(--ink, #1a1f36);
-      margin: 0 0 var(--sp-2) 0;
-    }
-
-    .success-card p {
-      font-size: var(--fs-small);
-      color: var(--ink-2, #5a6076);
-      margin: 0 0 var(--sp-6) 0;
-      line-height: 1.6;
-    }
-
     /* Section divider */
     .section-heading {
       font-size: var(--fs-small);
@@ -601,95 +525,42 @@
 
             <div id="d3-content" class="d3-section">
 
-              <div class="plan-current-banner">
-                <div class="plan-info">
-                  <strong>Bạn chưa có gói đang hiệu lực</strong>
-                  <span>Chọn Pro hoặc Premium để học tiếp. Bộ thẻ, tiến độ và sổ tay của bạn vẫn được giữ nguyên.</span>
-                </div>
-                <div class="plan-actions">
-                  <a href="thanh-toan-lich-su.html" class="btn btn-quiet btn-sm">Lịch sử thanh toán</a>
-                </div>
-              </div>
+              <div id="sub-banner" aria-live="polite"></div>
 
               <p class="section-heading">Chọn gói</p>
-              <div class="plan-grid" role="list">
-
-                <div class="plan-card is-recommended" role="listitem">
-                  <div class="plan-card-top">
-                    <div class="plan-card-badge">Phổ biến nhất</div>
-                    <p class="plan-name">Pro</p>
-                    <div class="plan-price">
-                      <span class="amount">299.000 đ</span>
-                      <span class="period">/tháng</span>
-                    </div>
-                  </div>
-                  <div class="plan-card-divider"></div>
-                  <ul class="plan-features">
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Tối đa <strong>5.000 thẻ</strong></span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>20</strong> yêu cầu AI văn bản/ngày</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>10</strong> ảnh AI/ngày</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Đánh giá phát âm</span></li>
-                    <li><span class="feat-icon no" aria-hidden="true">–</span><span>Không có bộ mẫu cao cấp</span></li>
-                  </ul>
-                  <div class="plan-card-footer">
-                    <button class="btn btn-primary" type="button" onclick="showPaymentForm('pro')">Chọn gói Pro</button>
-                  </div>
-                </div>
-
-                <div class="plan-card" role="listitem">
-                  <div class="plan-card-top">
-                    <p class="plan-name">Premium</p>
-                    <div class="plan-price">
-                      <span class="amount">999.000 đ</span>
-                      <span class="period">/tháng</span>
-                    </div>
-                  </div>
-                  <div class="plan-card-divider"></div>
-                  <ul class="plan-features">
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>Không giới hạn</strong> thẻ</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>100</strong> yêu cầu AI văn bản/ngày</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span><strong>30</strong> ảnh AI/ngày</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Đánh giá phát âm</span></li>
-                    <li><span class="feat-icon ok" aria-hidden="true">✓</span><span>Bộ mẫu cao cấp</span></li>
-                  </ul>
-                  <div class="plan-card-footer">
-                    <button class="btn btn-primary" type="button" onclick="showPaymentForm('premium')">Chọn gói Premium</button>
-                  </div>
-                </div>
-
-              </div>
+              <div id="plan-region"></div>
 
               <p class="plan-note">Xuất dữ liệu CSV và yêu cầu xóa dữ liệu luôn dùng được, không phụ thuộc gói.</p>
 
               <div id="payment-section" class="payment-section" aria-labelledby="payment-form-title">
                 <div class="plan-card-divider"></div>
-                <div class="payment-form-wrap">
+                <form class="payment-form-wrap" id="checkout-form" novalidate>
 
                   <div class="payment-form-left">
                     <h2 class="payment-form-title" id="payment-form-title">
-                      <button class="back-btn" type="button" onclick="hidePaymentForm()" aria-label="Quay lại chọn gói" title="Quay lại">
+                      <button class="back-btn" type="button" data-action="back" aria-label="Quay lại chọn gói" title="Quay lại">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                           <path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                       </button>
-                      <span id="payment-form-title-text">Thanh toán gói Pro</span>
+                      <span id="payment-form-title-text">Thanh toán gói</span>
                     </h2>
 
                     <p class="section-heading">Chu kỳ thanh toán</p>
                     <div class="cycle-toggle" role="group" aria-label="Chọn chu kỳ thanh toán">
                       <div class="cycle-option">
-                        <input type="radio" name="cycle" id="cycle-monthly" value="THANG" checked onchange="updateCycle()">
+                        <input type="radio" name="chuKy" id="cycle-monthly" value="THANG" checked>
                         <label for="cycle-monthly">
                           <span class="cycle-name">Hàng tháng</span>
-                          <span class="cycle-price" id="monthly-price">299.000 đ</span>
+                          <span class="cycle-price" id="monthly-price"></span>
                         </label>
                       </div>
                       <div class="cycle-option">
-                        <input type="radio" name="cycle" id="cycle-yearly" value="NAM" onchange="updateCycle()">
+                        <input type="radio" name="chuKy" id="cycle-yearly" value="NAM">
                         <label for="cycle-yearly">
                           <span class="cycle-name">Hàng năm</span>
-                          <span class="cycle-price" id="yearly-price">2.990.000 đ</span>
-                          <span class="cycle-save">Tiết kiệm 2 tháng</span>
+                          <span class="cycle-price" id="yearly-price"></span>
+                          <span class="cycle-save" id="yearly-save"></span>
                         </label>
                       </div>
                     </div>
@@ -706,20 +577,21 @@
                     <div class="order-summary" aria-label="Tóm tắt đơn hàng">
                       <div class="order-summary-head">Tóm tắt đơn hàng</div>
                       <div class="order-summary-body">
-                        <div class="order-row"><span class="label">Gói</span><span class="value" id="summary-plan">Pro</span></div>
-                        <div class="order-row"><span class="label">Chu kỳ</span><span class="value" id="summary-cycle">Hàng tháng</span></div>
-                        <div class="order-row"><span class="label">Đơn giá</span><span class="value" id="summary-unit">299.000 đ/tháng</span></div>
+                        <div class="order-row"><span class="label">Gói</span><span class="value" id="summary-plan"></span></div>
+                        <div class="order-row"><span class="label">Chu kỳ</span><span class="value" id="summary-cycle"></span></div>
+                        <div class="order-row"><span class="label">Đơn giá</span><span class="value" id="summary-unit"></span></div>
                         <div class="order-divider"></div>
-                        <div class="order-total"><span class="label">Tổng thanh toán</span><span class="value" id="summary-total">299.000 đ</span></div>
+                        <div class="order-total"><span class="label">Tổng thanh toán</span><span class="value" id="summary-total"></span></div>
                       </div>
-                      <div class="order-note">Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.</div>
+                      <div class="order-note" id="order-note">Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.</div>
+                      <div id="checkout-error" aria-live="polite"></div>
                       <div class="order-submit">
-                        <button class="btn btn-primary" type="button" id="btn-confirm" onclick="confirmPayment()">Thanh toán qua VNPay</button>
+                        <button class="btn btn-primary" type="submit" id="btn-confirm">Thanh toán qua VNPay</button>
                       </div>
                     </div>
                   </div>
 
-                </div>
+                </form>
               </div>
 
             </div><!-- /d3-content -->
@@ -736,7 +608,14 @@
                       <option value="error">Lỗi</option>
                     </select>
                   </label>
-                  <button class="btn btn-quiet" type="button" id="d3-reset">Đặt lại mẫu đợt 3</button>
+                  <label for="d3-vnpay">Kết quả VNPay
+                    <select class="select" id="d3-vnpay">
+                      <option value="THANH_CONG">Thành công</option>
+                      <option value="CHO_IPN">IPN đến chậm</option>
+                      <option value="THAT_BAI">Người dùng hủy</option>
+                    </select>
+                  </label>
+                  <button class="btn btn-quiet" type="button" id="d3-reset">Đặt lại mẫu thanh toán</button>
                 </div>
               </details>
               <a href="../index.html#dot3">Danh sách giao diện</a>
@@ -748,21 +627,6 @@
     <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
   </div>
 
-  <!-- Success overlay -->
-  <div class="success-overlay" id="success-overlay" role="dialog" aria-modal="true" aria-labelledby="success-title">
-    <div class="success-card">
-      <div class="success-icon" aria-hidden="true">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <path d="M7 16l6 6 12-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-            stroke-linejoin="round" />
-        </svg>
-      </div>
-      <h2 id="success-title">Thanh toán mô phỏng thành công</h2>
-      <p id="success-msg">Gói <strong>Pro</strong> đã được kích hoạt. Bản thật sẽ chuyển sang trang VNPay rồi về trang kết quả.</p>
-      <a class="btn btn-primary" href="../dot2/hom-nay.html" style="width:100%;justify-content:center;">Học hôm nay</a>
-    </div>
-  </div>
-
   <noscript>
     <p class="notice">Bật JavaScript để xem và tương tác với dữ liệu mô phỏng.</p>
   </noscript>
@@ -771,58 +635,152 @@
   <script src="../shared/flow.js?v=b94b7801197e"></script>
   <script src="../shared/mascot.js?v=f38c732c1a4f"></script>
   <script>
-    const PLANS = {
-      pro: { name: 'Pro', THANG: 299000, NAM: 2990000 },
-      premium: { name: 'Premium', THANG: 999000, NAM: 9990000 }
-    };
-    let currentPlan = 'pro';
-    const fmt = n => n.toLocaleString('vi-VN') + ' đ';
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const esc = VL.esc;
+      const money = (n) => Number(n).toLocaleString('vi-VN') + ' đ';
+      const notice = (type, title, extra) => `<div class="notice notice-${type}">${VL.icon('alert')}<div><p class="notice-title">${esc(title)}</p>${extra || ''}</div></div>`;
+      const reqId = (err) => `<p class="request-id">Mã yêu cầu: ${esc(err.requestId || '—')}</p>`;
+      let plans = [], sub = null, current = null;
 
-    function showPaymentForm(plan) {
-      currentPlan = plan;
-      const info = PLANS[plan];
-      document.getElementById('payment-form-title-text').textContent = 'Thanh toán gói ' + info.name;
-      document.getElementById('summary-plan').textContent = info.name;
-      document.getElementById('monthly-price').textContent = fmt(info.THANG);
-      document.getElementById('yearly-price').textContent = fmt(info.NAM);
-      document.getElementById('cycle-monthly').checked = true;
-      updateCycle();
-      const section = document.getElementById('payment-section');
-      section.classList.add('is-visible');
-      setTimeout(() => section.scrollIntoView({ block: 'start' }), 50);
-    }
+      function banner() {
+        const lyDo = VL.params().lyDo;
+        const lich = '<div class="plan-actions"><a href="thanh-toan-lich-su.html" class="btn btn-quiet btn-sm">Lịch sử thanh toán</a></div>';
+        let title, text;
+        if (sub.trangThai === 'HIEU_LUC') {
+          title = `Đang dùng gói ${sub.tenGoi} đến ${VL.fmtDateTime(sub.hetHanAt)}`;
+          text = (sub.soNgayConLai <= 0 ? 'Gói hết hạn trong hôm nay.' : `Còn ${sub.soNgayConLai} ngày.`) + ` Chỉ gia hạn được gói ${sub.tenGoi}; thời gian mua thêm được cộng dồn. Muốn đổi gói, hãy mua sau khi gói hiện tại hết hạn.`;
+        } else if (sub.trangThai === 'HET_HAN') {
+          title = `Gói ${sub.tenGoi} đã hết hạn lúc ${VL.fmtDateTime(sub.hetHanAt)}`;
+          text = 'Mua gói để học tiếp. Bộ thẻ, tiến độ và sổ tay của bạn vẫn được giữ nguyên.';
+        } else {
+          title = 'Bạn chưa có gói đang hiệu lực';
+          text = 'Chọn Pro hoặc Premium để học tiếp. Bộ thẻ, tiến độ và sổ tay của bạn vẫn được giữ nguyên.';
+        }
+        const lock = lyDo && sub.trangThai !== 'HIEU_LUC' ? notice('warning', 'Tính năng học đang tạm khóa', '<p>Trang bạn vừa mở cần gói dịch vụ còn hạn.</p>') : '';
+        $('sub-banner').innerHTML = lock + `<div class="plan-current-banner"><div class="plan-info"><strong>${esc(title)}</strong><span>${esc(text)}</span></div>${lich}</div>`;
+      }
 
-    function hidePaymentForm() {
-      document.getElementById('payment-section').classList.remove('is-visible');
-      window.scrollTo({ top: 0 });
-    }
+      function feature(ok, html) { return `<li><span class="feat-icon ${ok ? 'ok' : 'no'}" aria-hidden="true">${ok ? '✓' : '–'}</span><span>${html}</span></li>`; }
 
-    function updateCycle() {
-      const yearly = document.getElementById('cycle-yearly').checked;
-      const price = PLANS[currentPlan][yearly ? 'NAM' : 'THANG'];
-      document.getElementById('summary-cycle').textContent = yearly ? 'Hàng năm' : 'Hàng tháng';
-      document.getElementById('summary-unit').textContent = fmt(price) + (yearly ? '/năm' : '/tháng');
-      document.getElementById('summary-total').textContent = fmt(price);
-    }
+      function card(p) {
+        const active = sub.trangThai === 'HIEU_LUC';
+        const mine = active && sub.goiMa === p.ma;
+        const blocked = active && !mine;
+        const label = mine ? `Gia hạn gói ${p.ten}` : blocked ? `Đang dùng gói ${sub.tenGoi}` : `Chọn gói ${p.ten}`;
+        const cls = mine ? ' is-current' : p.ma === 'PRO' && !active ? ' is-recommended' : '';
+        return `<div class="plan-card${cls}" role="listitem">
+          <div class="plan-card-top">${mine ? '<div class="plan-card-badge">Gói của bạn</div>' : ''}
+            <p class="plan-name">${esc(p.ten)}</p>
+            <div class="plan-price"><span class="amount">${money(p.giaThang)}</span><span class="period">/tháng</span></div>
+          </div>
+          <div class="plan-card-divider"></div>
+          <ul class="plan-features">
+            ${feature(true, p.gioiHanThe == null ? '<strong>Không giới hạn</strong> thẻ' : `Tối đa <strong>${p.gioiHanThe.toLocaleString('vi-VN')} thẻ</strong>`)}
+            ${feature(p.hanMucAi != null, p.hanMucAi != null ? `<strong>${p.hanMucAi}</strong> yêu cầu AI văn bản/ngày` : 'Không có AI văn bản')}
+            ${feature(p.hanMucAnh != null, p.hanMucAnh != null ? `<strong>${p.hanMucAnh}</strong> ảnh AI/ngày` : 'Không có ảnh AI')}
+            ${feature(p.phatAm, p.phatAm ? `Đánh giá phát âm${p.hanMucPhatAm != null ? `, <strong>${p.hanMucPhatAm}</strong> lượt/ngày` : ''}` : 'Không có đánh giá phát âm')}
+            ${feature(p.boMauCaoCap, p.boMauCaoCap ? 'Bộ mẫu cao cấp' : 'Không có bộ mẫu cao cấp')}
+          </ul>
+          <div class="plan-card-footer">
+            <button class="btn btn-primary" type="button" data-plan="${esc(p.ma)}"${blocked ? ' disabled aria-describedby="sub-banner"' : ''}>${esc(label)}</button>
+          </div>
+        </div>`;
+      }
 
-    function confirmPayment() {
-      const btn = document.getElementById('btn-confirm');
-      btn.disabled = true;
-      btn.textContent = 'Đang chuyển sang VNPay...';
-      setTimeout(() => {
-        document.getElementById('success-msg').innerHTML =
-          'Gói <strong>' + PLANS[currentPlan].name + '</strong> đã được kích hoạt. Bản thật sẽ chuyển sang trang VNPay rồi về trang kết quả.';
-        const overlay = document.getElementById('success-overlay');
-        overlay.classList.add('is-visible');
-        overlay.focus();
-        btn.disabled = false;
-        btn.textContent = 'Thanh toán qua VNPay';
-      }, 900);
-    }
+      function renderPlans() {
+        banner();
+        $('plan-region').innerHTML = plans.length
+          ? `<div class="plan-grid" role="list">${plans.map(card).join('')}</div>`
+          : notice('warning', 'Hiện chưa có gói nào đang bán', '<p>Quay lại sau hoặc liên hệ quản trị viên.</p>');
+      }
 
-    document.getElementById('success-overlay').addEventListener('click', function (e) {
-      if (e.target === this) this.classList.remove('is-visible');
-    });
+      async function load() {
+        const forced = $('d3-state').value;
+        $('payment-section').classList.remove('is-visible');
+        $('sub-banner').innerHTML = '';
+        if (forced === 'loading') { $('plan-region').innerHTML = '<p class="muted" role="status">Đang tải gói dịch vụ…</p>'; return; }
+        if (forced === 'error') {
+          $('plan-region').innerHTML = notice('danger', 'Không tải được danh sách gói', '<p class="request-id">Mã yêu cầu: req-demo-500</p><div><button type="button" class="btn btn-secondary btn-sm" data-action="retry">Thử lại</button></div>');
+          return;
+        }
+        $('plan-region').innerHTML = '<p class="muted" role="status">Đang tải gói dịch vụ…</p>';
+        try {
+          [plans, sub] = await Promise.all([VL.api('GET', '/billing/plans'), VL.api('GET', '/me/subscription')]);
+          if (forced === 'empty') plans = [];
+          renderPlans();
+        } catch (err) {
+          $('plan-region').innerHTML = notice('danger', err.message || 'Không tải được danh sách gói', reqId(err) + '<div><button type="button" class="btn btn-secondary btn-sm" data-action="retry">Thử lại</button></div>');
+        }
+      }
+
+      function summary() {
+        const yearly = $('cycle-yearly').checked;
+        const price = yearly ? current.giaNam : current.giaThang;
+        $('summary-cycle').textContent = yearly ? 'Hàng năm' : 'Hàng tháng';
+        $('summary-unit').textContent = money(price) + (yearly ? '/năm' : '/tháng');
+        $('summary-total').textContent = money(price);
+      }
+
+      function openCheckout(ma) {
+        current = plans.find((p) => p.ma === ma);
+        if (!current) return;
+        const renew = sub.trangThai === 'HIEU_LUC' && sub.goiMa === ma;
+        $('payment-form-title-text').textContent = (renew ? 'Gia hạn gói ' : 'Thanh toán gói ') + current.ten;
+        $('summary-plan').textContent = current.ten;
+        $('monthly-price').textContent = money(current.giaThang);
+        $('yearly-price').textContent = money(current.giaNam);
+        const save = current.giaThang * 12 - current.giaNam;
+        $('yearly-save').textContent = save > 0 ? 'Rẻ hơn ' + money(save) + ' so với 12 tháng' : '';
+        $('order-note').textContent = renew
+          ? `Thời gian mua thêm được cộng vào sau ${VL.fmtDateTime(sub.hetHanAt)}. Gói không tự gia hạn và không hoàn tiền.`
+          : 'Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.';
+        $('cycle-monthly').checked = true;
+        $('checkout-error').innerHTML = '';
+        summary();
+        const section = $('payment-section');
+        section.classList.add('is-visible');
+        setTimeout(() => { section.scrollIntoView({ block: 'start' }); $('payment-form-title').querySelector('.back-btn').focus(); }, 50);
+      }
+
+      document.addEventListener('click', (e) => {
+        const plan = e.target.closest('[data-plan]');
+        if (plan && !plan.disabled) openCheckout(plan.dataset.plan);
+        const act = e.target.closest('[data-action]');
+        if (!act) return;
+        if (act.dataset.action === 'back') { $('payment-section').classList.remove('is-visible'); window.scrollTo({ top: 0 }); }
+        if (act.dataset.action === 'retry') { $('d3-state').value = 'ready'; load(); }
+      });
+      $('checkout-form').addEventListener('change', (e) => { if (e.target.name === 'chuKy') summary(); });
+      $('checkout-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = $('btn-confirm');
+        const chuKy = new FormData(e.target).get('chuKy');
+        $('checkout-error').innerHTML = '';
+        VL.busy(btn, async () => {
+          btn.textContent = 'Đang tạo đơn…';
+          try {
+            const r = await VL.api('POST', '/billing/checkouts', { goiMa: current.ma, chuKy });
+            if (r.moPhong) {
+              btn.textContent = 'Đang chuyển sang trang thanh toán mô phỏng…';
+              $('checkout-error').innerHTML = notice('warning', 'Thanh toán mô phỏng', `<p>Đơn ${esc(r.maDon)} · ${money(r.soTien)}. Bản thật mở trang VNPay; bản mô phỏng chuyển thẳng về trang kết quả.</p>`);
+              await new Promise((res) => setTimeout(res, 1000));
+            }
+            window.location.assign(r.paymentUrl);
+          } catch (err) {
+            const type = err.status === 409 || err.status === 422 ? 'warning' : 'danger';
+            $('checkout-error').innerHTML = notice(type, err.message || 'Không tạo được đơn thanh toán', reqId(err));
+            btn.textContent = 'Thanh toán qua VNPay';
+            if (err.status === 422) load();
+          }
+        });
+      });
+      $('d3-state').addEventListener('change', load);
+      $('d3-vnpay').addEventListener('change', (e) => { VLDemo.flags.vnpay = e.target.value; });
+      VLDemo.flags.vnpay = $('d3-vnpay').value;
+      $('d3-reset').addEventListener('click', () => { delete VLDemo.db.billing; VLDemo.persist(); $('d3-state').value = 'ready'; load(); VL.toast('Đã đặt lại dữ liệu thanh toán mẫu.'); });
+      load();
+    })();
   </script>
 </body>
 

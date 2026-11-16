@@ -103,7 +103,6 @@
 <script src="../shared/theme.js"></script>
 </head>
 <body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="quan-ly-thanh-toan" data-nav="admin-payments" data-role="ADMIN">
-<!-- F3.13 · UI59. Local fixtures only; see README.md. -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -115,22 +114,21 @@
           <nav class="flow-breadcrumb" aria-label="Đường dẫn"><a href="quan-tri-dich-vu.html">Quản trị</a><span aria-hidden="true">/</span><span>Quản lý thanh toán</span></nav>
           <div class="pa-heading">
             <div class="form-head"><div class="form-code"><span>Quản trị</span><span>UI59 · Đợt 3</span></div><h1 id="page-title">Quản lý thanh toán</h1><p>Theo dõi giao dịch, quản lý thời hạn và quyền lợi gói dịch vụ.</p></div>
-            <span class="pa-environment"><span aria-hidden="true"></span> VNPay Sandbox</span>
-          </div>
-          <div class="pa-summary" aria-label="Tổng quan dữ liệu mẫu" id="payment-summary"></div>
+                      </div>
+          <div class="pa-summary" aria-label="Tổng quan thanh toán" id="payment-summary" aria-live="polite"></div>
           <div class="pa-tabs" role="tablist" aria-label="Quản lý thanh toán">
             <button class="pa-tab" id="tab-payments" role="tab" aria-selected="true" aria-controls="panel-payments" tabindex="0" data-tab="payments">Giao dịch</button>
             <button class="pa-tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="panel-subscriptions" tabindex="-1" data-tab="subscriptions">Gói người dùng</button>
             <button class="pa-tab" id="tab-plans" role="tab" aria-selected="false" aria-controls="panel-plans" tabindex="-1" data-tab="plans">Cấu hình gói</button>
           </div>
           <section id="panel-payments" role="tabpanel" aria-labelledby="tab-payments" tabindex="0">
-            <div class="pa-section-head"><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói qua VNPay.</p></div><button class="btn btn-secondary" type="button" id="export-payments">↓ Xuất CSV</button></div>
+            <div class="pa-section-head"><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói. Lọc ngày theo thời điểm tạo đơn, giờ Việt Nam.</p></div><button class="btn btn-secondary" type="button" id="export-payments">Xuất CSV</button></div>
             <form id="payment-filters" class="pa-filters" aria-label="Lọc giao dịch">
-              <label class="field pa-search">Tìm giao dịch<input class="input" type="search" name="query" placeholder="Mã đơn, tên hoặc email…" autocomplete="off"></label>
-              <label class="field">Trạng thái<select class="select" name="status"><option value="">Tất cả trạng thái</option><option value="THANH_CONG">Thành công</option><option value="CHO_THANH_TOAN">Chờ thanh toán</option><option value="THAT_BAI">Thất bại</option><option value="HET_HAN">Hết hạn</option></select></label>
-              <label class="field">Gói dịch vụ<select class="select" name="plan"><option value="">Tất cả gói</option><option value="PRO">Pro</option><option value="PREMIUM">Premium</option></select></label>
-              <label class="field">Từ ngày<input class="input" type="date" name="from"></label>
-              <label class="field">Đến ngày<input class="input" type="date" name="to"></label>
+              <label class="field pa-search">Email người dùng<input class="input" type="search" name="email" maxlength="255" placeholder="Một phần email…" autocomplete="off"></label>
+              <label class="field">Trạng thái<select class="select" name="trangThai"><option value="">Tất cả trạng thái</option><option value="THANH_CONG">Thành công</option><option value="CHO_THANH_TOAN">Chờ thanh toán</option><option value="THAT_BAI">Thất bại</option><option value="HET_HAN">Hết hạn</option></select></label>
+              <label class="field">Gói dịch vụ<select class="select" name="goiMa" data-plan-select><option value="">Tất cả gói</option></select></label>
+              <label class="field">Từ ngày<input class="input" type="date" name="tuNgay"></label>
+              <label class="field" data-field="rangeValid">Đến ngày<input class="input" type="date" name="denNgay"></label>
               <button class="btn btn-quiet" type="reset">Xóa bộ lọc</button>
             </form>
             <p class="pa-feedback" id="payment-feedback" role="status" aria-live="polite"></p>
@@ -140,21 +138,22 @@
           <section id="panel-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" tabindex="0" hidden>
             <div class="pa-section-head"><div><h2>Gói người dùng</h2><p>Theo dõi hiệu lực gói và các tài khoản cần gia hạn.</p></div></div>
             <form id="subscription-filters" class="pa-filters pa-sub-filters" aria-label="Lọc gói người dùng">
-              <label class="field pa-search">Người dùng<input class="input" type="search" name="query" placeholder="Tên hoặc email…"></label>
-              <label class="field">Gói dịch vụ<select class="select" name="plan"><option value="">Tất cả gói</option><option value="PRO">Pro</option><option value="PREMIUM">Premium</option></select></label>
-              <label class="field">Hiệu lực<select class="select" name="status"><option value="">Tất cả trạng thái</option><option value="active">Còn hiệu lực</option><option value="soon">Sắp hết hạn 7 ngày</option><option value="expired">Đã hết hạn</option></select></label>
+              <label class="field pa-search">Email người dùng<input class="input" type="search" name="email" maxlength="255" placeholder="Một phần email…"></label>
+              <label class="field">Gói dịch vụ<select class="select" name="goiMa" data-plan-select><option value="">Tất cả gói</option></select></label>
+              <label class="field">Hiệu lực<select class="select" name="trangThai"><option value="">Tất cả trạng thái</option><option value="HIEU_LUC">Còn hiệu lực</option><option value="SAP_HET_HAN">Sắp hết hạn 7 ngày</option><option value="HET_HAN">Đã hết hạn</option></select></label>
               <button class="btn btn-quiet" type="reset">Xóa bộ lọc</button>
             </form>
-            <div class="pa-demo-tools"><div><strong>Công cụ demo</strong><p>Thử luồng nhắc và hết hạn trên dữ liệu mẫu.</p></div><label class="pa-check"><input type="checkbox" id="enable-demo-tools"> Bật công cụ demo</label><button class="btn btn-secondary" type="button" id="check-expiry" hidden>Chạy kiểm tra ngay</button></div>
-            <div id="subscription-results"></div>
+            <div class="pa-demo-tools" id="demo-tools"><div><strong>Công cụ demo</strong><p>Sửa ngày hết hạn của gói đang hiệu lực và chạy ngay job nhắc/hết hạn. Chỉ có khi máy chủ bật BILLING_DEMO_TOOLS; mỗi lần dùng ghi nhật ký quản trị.</p></div><button class="btn btn-secondary" type="button" id="check-expiry">Chạy kiểm tra hết hạn</button></div>
             <p class="pa-feedback" id="expiry-feedback" role="status" aria-live="polite"></p>
+            <div id="subscription-results"></div>
+            <div class="pa-table-footer"><span id="subscription-count"></span><nav class="pager" id="subscription-pagination" aria-label="Phân trang gói người dùng"></nav></div>
           </section>
           <section id="panel-plans" role="tabpanel" aria-labelledby="tab-plans" tabindex="0" hidden>
-            <div class="pa-section-head"><div><h2>Cấu hình gói dịch vụ</h2><p>Thiết lập giá và quyền lợi cho các đơn mua mới.</p></div></div>
+            <div class="pa-section-head"><div><h2>Cấu hình gói dịch vụ</h2><p>Thiết lập giá và quyền lợi cho các đơn mua mới. Hạn mức AI, ảnh, phát âm và TTS sửa ở <a href="quan-tri-dich-vu.html">Hạn mức dịch vụ</a>.</p></div></div>
             <div class="pa-plan-grid" id="plan-cards"></div>
             <p class="pa-info">Giá mới chỉ áp dụng cho đơn tạo sau khi lưu. Đơn đã tạo giữ nguyên số tiền và gói người dùng đang dùng giữ nguyên thời hạn.</p>
           </section>
-          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="payment-state">Xem trạng thái <select class="select" id="payment-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Trống</option><option value="error">Lỗi</option></select></label><button class="btn btn-quiet" type="button" id="reset-payment-demo">Đặt lại mẫu thanh toán</button></div></details><span class="pa-caption">Mốc dữ liệu mẫu: 12/11/2026 · Giờ Việt Nam</span></footer>
+          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="payment-state">Xem trạng thái <select class="select" id="payment-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Trống</option><option value="error">Lỗi</option></select></label><label for="demo-flag">Công cụ demo trên máy chủ <select class="select" id="demo-flag"><option value="on">Bật</option><option value="off">Tắt (404)</option></select></label><button class="btn btn-quiet" type="button" id="reset-payment-demo">Đặt lại mẫu thanh toán</button></div></details><span class="pa-caption">Giờ Việt Nam</span></footer>
         </article>
       </div>
     </main>
@@ -167,7 +166,6 @@
 <script src="../shared/app.js"></script>
 <script src="../shared/flow.js"></script>
 <script>
-/* Tương tác và dữ liệu mô phỏng quản lý thanh toán. */
 (function () {
   'use strict';
   if (!window.VL?.ready || !VL.me()?.vaiTro.includes('ADMIN')) return;
@@ -175,59 +173,30 @@
   const $ = (selector) => document.querySelector(selector);
   const esc = VL.esc;
   const money = (value) => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
-  const date = (value) => new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value));
-  const time = (value) => new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value));
-  const normalize = (value) => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').toLowerCase();
-  const clock = new Date('2026-11-12T10:00:00+07:00');
-  const storageKey = 'vocab:payment-admin:v1';
-  const statuses = { THANH_CONG: ['Thành công', 'success'], CHO_THANH_TOAN: ['Chờ thanh toán', 'pending'], THAT_BAI: ['Thất bại', 'failed'], HET_HAN: ['Hết hạn', 'expired'] };
+  const vn = (opts) => new Intl.DateTimeFormat('vi-VN', Object.assign({ timeZone: 'Asia/Ho_Chi_Minh' }, opts));
+  const date = (value) => vn({ day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value));
+  const time = (value) => vn({ hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value));
+  const localInput = (value) => new Date(Date.parse(value) + 7 * 3600000).toISOString().slice(0, 16);
+  const STATUS = { THANH_CONG: ['Thành công', 'success'], CHO_THANH_TOAN: ['Chờ thanh toán', 'pending'], THAT_BAI: ['Thất bại', 'failed'], HET_HAN: ['Hết hạn', 'expired'] };
+  const CYCLE = { THANG: '1 tháng', NAM: '12 tháng' };
+  const GATE = { VNPAY: 'VNPay', MO_PHONG: 'Mô phỏng' };
+  const RESPONSE = { '00': 'Thành công', '24': 'Người dùng hủy giao dịch', '11': 'Hết thời gian chờ', '51': 'Không đủ số dư' };
   const badge = (label, type) => `<span class="pa-badge ${type}">${esc(label)}</span>`;
-  const planName = (code) => code === 'PRO' ? 'Pro' : 'Premium';
-  const seedPlans = [
-    { code: 'PRO', month: 299000, year: 2990000, cards: 5000, ai: 20, images: 10, speech: true, premium: false, active: true, version: 1 },
-    { code: 'PREMIUM', month: 999000, year: 9990000, cards: null, ai: 100, images: 30, speech: true, premium: true, active: true, version: 1 }
-  ];
-  const users = [
-    ['Nguyễn Hoài An', 'an@example.com'], ['Trần Minh Anh', 'minhanh@example.com'], ['Lê Quang Huy', 'quanghuy@example.com'],
-    ['Phạm Thu Hà', 'thuha@example.com'], ['Võ Đức Minh', 'ducminh@example.com'], ['Đặng Ngọc Linh', 'ngoclinh@example.com'],
-    ['Bùi Tuấn Khang', 'tuankhang@example.com'], ['Hoàng Mai Chi', 'maichi@example.com']
-  ];
-  const transactions = [
-    [0, 'PRO', 'THANG', 'THANH_CONG', '12', '09:42'], [1, 'PREMIUM', 'NAM', 'THANH_CONG', '12', '09:30'],
-    [2, 'PRO', 'THANG', 'CHO_THANH_TOAN', '12', '09:55'], [3, 'PREMIUM', 'THANG', 'THAT_BAI', '12', '08:32'],
-    [4, 'PRO', 'NAM', 'THANH_CONG', '11', '16:05'], [5, 'PREMIUM', 'THANG', 'THANH_CONG', '11', '14:20'],
-    [6, 'PRO', 'THANG', 'HET_HAN', '11', '10:15'], [7, 'PRO', 'THANG', 'THANH_CONG', '10', '17:48'],
-    [0, 'PRO', 'THANG', 'THANH_CONG', '09', '09:10'], [3, 'PREMIUM', 'THANG', 'THANH_CONG', '08', '11:25'],
-    [2, 'PRO', 'NAM', 'THAT_BAI', '07', '15:40'], [6, 'PRO', 'THANG', 'THANH_CONG', '06', '08:30']
-  ].map(([user, plan, cycle, status, day, hour], i) => ({
-    id: `DEMO-202611${day}-${String(128 - i).padStart(4, '0')}`, name: users[user][0], email: users[user][1], plan, cycle, status,
-    amount: seedPlans.find((p) => p.code === plan)[cycle === 'NAM' ? 'year' : 'month'],
-    created: `2026-11-${day}T${hour}:00+07:00`, gatewayId: status === 'THANH_CONG' ? String(14882900 + i) : null,
-    response: status === 'THANH_CONG' ? '00' : status === 'THAT_BAI' ? '24' : null
-  }));
-  const seedSubscriptions = users.map(([name, email], i) => ({
-    id: `SUB-${String(i + 1).padStart(4, '0')}`, name, email, plan: [1, 3, 5].includes(i) ? 'PREMIUM' : 'PRO',
-    start: '2026-10-15T09:00:00+07:00', expiry: ['2026-12-12', '2027-11-12', '2026-11-15', '2026-11-18', '2026-11-10', '2026-12-11', '2026-11-12', '2026-11-20'][i] + 'T09:00:00+07:00'
-  }));
-  let data = { plans: structuredClone(seedPlans), subscriptions: structuredClone(seedSubscriptions), reminders: [], expired: [], audit: [] };
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(storageKey));
-    if (saved && Array.isArray(saved.plans) && Array.isArray(saved.subscriptions) && Array.isArray(saved.audit) && Array.isArray(saved.reminders) && Array.isArray(saved.expired)) data = saved;
-  } catch { /* The mockup also works when storage is unavailable. */ }
-  let activeTab = 'payments';
-  let page = 1;
-  const pageSize = 6;
+  const reqId = (err) => `<p class="pa-caption">Mã yêu cầu: ${esc(err.requestId || '—')}</p>`;
+  const PAGE_SIZE = 10;
   const dialog = $('#payment-dialog');
   const paymentForm = $('#payment-filters');
   const subscriptionForm = $('#subscription-filters');
-  const demoEnabled = () => $('#enable-demo-tools').checked;
-  const dayCount = (subscription) => Math.round((Date.parse(subscription.expiry.slice(0, 10)) - Date.parse('2026-11-12')) / 86400000);
-  const isExpired = (subscription) => new Date(subscription.expiry) <= clock;
-  const isSoon = (subscription) => !isExpired(subscription) && dayCount(subscription) <= 7;
-  const subscriptionBadge = (subscription) => isExpired(subscription) ? badge('Đã hết hạn', 'expired') : isSoon(subscription) ? badge(dayCount(subscription) === 0 ? 'Hết hạn hôm nay' : `Còn ${dayCount(subscription)} ngày`, 'pending') : badge('Còn hiệu lực', 'success');
-  function save(message) {
-    try { sessionStorage.setItem(storageKey, JSON.stringify(data)); VL.toast(message); }
-    catch { VL.toast(message + ' Thay đổi chỉ được giữ đến khi tải lại trang.'); }
+  let activeTab = 'payments', payPage = 0, subPage = 0, plans = [], demoTools = true;
+
+  const forced = () => $('#payment-state').value;
+  function empty(title, text, button = '') {
+    return `<div class="pa-empty"><span aria-hidden="true">${VL.icon('file', 'icon-lg')}</span><h3>${esc(title)}</h3><p>${text}</p>${button}</div>`;
+  }
+  const loading = (what) => `<div class="pa-empty" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div></div><p>Đang tải ${what}…</p></div>`;
+  const failure = (err) => empty(err.message || 'Không tải được dữ liệu', 'Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.', reqId(err) + '<button class="btn btn-secondary" type="button" data-retry>Thử lại</button>');
+  function table(headers, rows, caption) {
+    return `<div class="d3-table-wrap"><table class="d3-table pa-table"><caption class="sr-only">${caption}</caption><thead><tr>${headers.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map((cells) => `<tr>${cells.map((cell, i) => `<td data-label="${headers[i]}">${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
   function download(content, filename, type) {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -238,76 +207,109 @@
     $('#payment-dialog-content').innerHTML = `<div class="pa-dialog-head"><div><h2 id="payment-dialog-title">${esc(title)}</h2><p>${esc(subtitle)}</p></div><button class="btn btn-quiet btn-icon" type="button" data-close aria-label="Đóng hộp thoại">${VL.icon('x')}</button></div>${content}`;
     dialog.showModal();
   }
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog || event.target.closest('[data-close]')) dialog.close();
-  });
-  function renderSummary() {
-    const paid = transactions.filter((t) => t.status === 'THANH_CONG');
-    const items = [
-      ['Tổng đã thanh toán', money(paid.reduce((sum, t) => sum + t.amount, 0)), `${paid.length} giao dịch thành công`, 'pa-positive'],
-      ['Tổng giao dịch', transactions.length, 'Toàn bộ dữ liệu mẫu', ''],
-      ['Gói còn hiệu lực', data.subscriptions.filter((s) => !isExpired(s)).length, 'Tính tại mốc dữ liệu mẫu', ''],
-      ['Sắp hết hạn', data.subscriptions.filter(isSoon).length, 'Trong 7 ngày tới', '']
-    ];
-    $('#payment-summary').innerHTML = items.map(([label, value, note, color]) => `<article><p>${label}</p><strong class="${color}">${value}</strong><small>${note}</small></article>`).join('');
+  dialog.addEventListener('click', (event) => { if (event.target === dialog || event.target.closest('[data-close]')) dialog.close(); });
+  function query(form, extra) {
+    const params = new URLSearchParams();
+    for (const [k, v] of new FormData(form)) if (String(v).trim()) params.set(k, String(v).trim());
+    Object.entries(extra).forEach(([k, v]) => params.set(k, v));
+    return params;
   }
-  function filteredPayments() {
-    const filters = new FormData(paymentForm);
-    const query = normalize(filters.get('query').trim());
-    const from = filters.get('from'), to = filters.get('to');
-    if (from && to && from > to) return [];
-    return transactions.filter((t) => (!query || normalize(`${t.id} ${t.name} ${t.email}`).includes(query)) &&
-      (!filters.get('status') || t.status === filters.get('status')) && (!filters.get('plan') || t.plan === filters.get('plan')) &&
-      (!from || t.created.slice(0, 10) >= from) && (!to || t.created.slice(0, 10) <= to));
+
+  async function renderSummary() {
+    const box = $('#payment-summary');
+    if (forced() !== 'ready') { box.innerHTML = '<article><p>Tổng quan</p><strong>—</strong><small>Chưa có dữ liệu để tổng hợp</small></article>'; return; }
+    try {
+      const [rev, all] = await Promise.all([VL.api('GET', '/admin/revenue?ky=THANG'), VL.api('GET', '/admin/payments?size=1')]);
+      const t = rev.tongQuan;
+      const items = [
+        ['Doanh thu năm ' + rev.nam, money(rev.tongDoanhThu), `${rev.soGiaoDich} giao dịch thành công`, 'pa-positive'],
+        ['Tổng giao dịch', all.totalElements.toLocaleString('vi-VN'), t.tyLeThanhCong == null ? 'Tỷ lệ thành công năm nay: —' : `Tỷ lệ thành công năm nay: ${t.tyLeThanhCong.toLocaleString('vi-VN')} %`, ''],
+        ['Gói còn hiệu lực', t.soGoiHieuLuc, 'Tính tại thời điểm tải', ''],
+        ['Sắp hết hạn', t.soSapHetHan7Ngay, 'Trong 7 ngày tới', '']
+      ];
+      box.innerHTML = items.map(([label, value, note, color]) => `<article><p>${esc(label)}</p><strong class="${color}">${esc(value)}</strong><small>${esc(note)}</small></article>`).join('');
+    } catch (err) {
+      box.innerHTML = `<article><p>Tổng quan</p><strong>—</strong><small>${esc(err.message)}</small></article>`;
+    }
   }
-  function empty(title, text, button = '') {
-    return `<div class="pa-empty"><span aria-hidden="true">${VL.icon('file', 'icon-lg')}</span><h3>${title}</h3><p>${text}</p>${button}</div>`;
+
+  async function renderPayments() {
+    const box = $('#payment-results');
+    VL.clearErrors(paymentForm);
+    $('#payment-count').textContent = ''; $('#payment-pagination').innerHTML = ''; $('#export-payments').disabled = true; $('#payment-feedback').textContent = '';
+    if (forced() === 'loading') { box.innerHTML = loading('giao dịch'); return; }
+    if (forced() === 'error') { box.innerHTML = failure({ message: 'Không tải được giao dịch', requestId: 'req-demo-500' }); return; }
+    box.innerHTML = loading('giao dịch');
+    try {
+      const d = await VL.api('GET', '/admin/payments?' + query(paymentForm, { page: payPage, size: PAGE_SIZE }));
+      if (!d.items.length || forced() === 'empty') {
+        const filtered = [...new FormData(paymentForm).values()].some((v) => String(v).trim());
+        box.innerHTML = filtered ? empty('Không có giao dịch', 'Thử đổi email, trạng thái, gói hoặc khoảng ngày.', '<button class="btn btn-secondary" type="button" data-clear-payments>Xóa bộ lọc</button>') : empty('Chưa có giao dịch', 'Giao dịch xuất hiện khi người dùng tạo đơn mua gói.');
+        $('#payment-count').textContent = '0 giao dịch';
+        return;
+      }
+      box.innerHTML = table(['Mã đơn / Thời gian', 'Người dùng', 'Gói dịch vụ', 'Số tiền', 'Trạng thái', 'Thao tác'], d.items.map((t) => [
+        `<strong>${esc(t.maDon)}</strong><small>${date(t.taoAt)} · ${time(t.taoAt)}</small>`,
+        t.email ? `<strong>${esc(t.email)}</strong><small>Mã người dùng ${esc(t.nguoiDungId)}</small>` : `<strong>Người dùng đã xóa</strong><small>Mã ${esc(t.nguoiDungId)}</small>`,
+        `<span class="pa-plan-label">${esc(t.tenGoi)}</span><small>${CYCLE[t.chuKy] || esc(t.chuKy)} · ${GATE[t.cong] || esc(t.cong)}</small>`,
+        `<span class="pa-money">${money(t.soTien)}</span>`, badge(...(STATUS[t.trangThai] || [t.trangThai, 'expired'])),
+        `<button class="btn btn-quiet" type="button" data-detail="${esc(t.maDon)}" aria-label="Xem chi tiết đơn ${esc(t.maDon)}">Chi tiết</button>`
+      ]), 'Các giao dịch thanh toán');
+      const start = d.page * d.size;
+      $('#payment-count').textContent = `Hiển thị ${start + 1}–${start + d.items.length} / ${d.totalElements} giao dịch`;
+      $('#payment-pagination').innerHTML = VL.pagination(d.page, d.totalPages);
+      $('#export-payments').disabled = false;
+    } catch (err) {
+      if (err.status === 400 && err.fieldErrors?.length) {
+        VL.showErrors(paymentForm, err);
+        box.innerHTML = empty('Bộ lọc chưa hợp lệ', esc(err.fieldErrors.map((f) => f.message).join('. ')));
+      } else box.innerHTML = failure(err);
+    }
   }
-  function table(headers, rows, caption) {
-    return `<div class="d3-table-wrap"><table class="d3-table pa-table"><caption class="sr-only">${caption}</caption><thead><tr>${headers.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map((cells) => `<tr>${cells.map((cell, i) => `<td data-label="${headers[i]}">${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+
+  async function renderSubscriptions() {
+    const box = $('#subscription-results');
+    $('#subscription-count').textContent = ''; $('#subscription-pagination').innerHTML = '';
+    $('#demo-tools').hidden = !demoTools;
+    if (forced() === 'loading') { box.innerHTML = loading('gói người dùng'); return; }
+    if (forced() === 'error') { box.innerHTML = failure({ message: 'Không tải được gói người dùng', requestId: 'req-demo-500' }); return; }
+    box.innerHTML = loading('gói người dùng');
+    const status = subscriptionForm.elements.trangThai.value;
+    const params = query(subscriptionForm, { page: subPage, size: PAGE_SIZE });
+    if (status === 'SAP_HET_HAN') { params.delete('trangThai'); params.set('sapHetHan', '7'); }
+    try {
+      const d = await VL.api('GET', '/admin/subscriptions?' + params);
+      if (!d.items.length || forced() === 'empty') { box.innerHTML = empty('Không có gói phù hợp', 'Thử đổi email, gói hoặc điều kiện hiệu lực.'); $('#subscription-count').textContent = '0 gói'; return; }
+      box.innerHTML = table(['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái', 'Thao tác'], d.items.map((s) => {
+        const live = s.soNgayConLai != null;
+        const state = s.trangThai === 'HET_HAN' ? badge('Đã hết hạn', 'expired') : !live ? badge('Quá hạn, chờ job', 'pending') : s.soNgayConLai <= 7 ? badge(s.soNgayConLai <= 0 ? 'Hết hạn hôm nay' : `Còn ${s.soNgayConLai} ngày`, 'pending') : badge('Còn hiệu lực', 'success');
+        return [
+          `<strong>${esc(s.tenHienThi || 'Người dùng đã xóa')}</strong><small>${esc(s.email || 'Mã ' + s.nguoiDungId)}</small>`,
+          `<span class="pa-plan-label">${esc(s.tenGoi)}</span>`, date(s.batDauAt),
+          `<strong>${date(s.hetHanAt)}</strong><small>${time(s.hetHanAt)} · Giờ Việt Nam</small>`, state,
+          demoTools && s.trangThai === 'HIEU_LUC' ? `<button class="btn btn-secondary" type="button" data-expiry="${esc(s.id)}" data-version="${s.version}" data-start="${esc(s.batDauAt)}" data-end="${esc(s.hetHanAt)}" data-name="${esc(s.tenHienThi || s.email || '')}" data-plan="${esc(s.tenGoi)}" aria-label="Sửa ngày hết hạn của ${esc(s.tenHienThi || s.email || '')}">Sửa ngày hết hạn</button>` : '<span class="pa-caption">—</span>'
+        ];
+      }), 'Gói dịch vụ của người dùng');
+      const start = d.page * d.size;
+      $('#subscription-count').textContent = `Hiển thị ${start + 1}–${start + d.items.length} / ${d.totalElements} gói`;
+      $('#subscription-pagination').innerHTML = VL.pagination(d.page, d.totalPages);
+    } catch (err) { box.innerHTML = failure(err); }
   }
-  function renderPayments() {
-    const items = filteredPayments();
-    const lastPage = Math.max(1, Math.ceil(items.length / pageSize)); page = Math.min(page, lastPage);
-    const start = (page - 1) * pageSize;
-    $('#payment-results').innerHTML = items.length ? table(['Mã đơn / Thời gian', 'Người dùng', 'Gói dịch vụ', 'Số tiền', 'Trạng thái', 'Thao tác'], items.slice(start, start + pageSize).map((t) => [
-      `<strong>${t.id}</strong><small>${date(t.created)} · ${time(t.created)}</small>`,
-      `<strong>${esc(t.name)}</strong><small>${esc(t.email)}</small>`,
-      `<span class="pa-plan-label">${planName(t.plan)}</span><small>${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</small>`,
-      `<span class="pa-money">${money(t.amount)}</span>`, badge(...statuses[t.status]),
-      `<button class="btn btn-quiet" type="button" data-detail="${t.id}" aria-label="Xem chi tiết đơn ${t.id}">Chi tiết ↗</button>`
-    ]), 'Các giao dịch thanh toán qua VNPay') : empty('Không có giao dịch', 'Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm kết quả.', '<button class="btn btn-secondary" type="button" data-clear-payments>Xóa bộ lọc</button>');
-    const from = paymentForm.elements.from.value, to = paymentForm.elements.to.value;
-    $('#payment-feedback').textContent = from && to && from > to ? 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.' : '';
-    $('#payment-count').textContent = items.length ? `Hiển thị ${start + 1}–${Math.min(start + pageSize, items.length)} / ${items.length} giao dịch` : '0 giao dịch';
-    $('#payment-pagination').innerHTML = `<button type="button" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''} aria-label="Trang trước">‹</button>${Array.from({ length: lastPage }, (_, i) => `<button type="button" data-page="${i + 1}" ${page === i + 1 ? 'aria-current="page"' : ''} aria-label="Trang ${i + 1}">${i + 1}</button>`).join('')}<button type="button" data-page="${page + 1}" ${page === lastPage ? 'disabled' : ''} aria-label="Trang sau">›</button>`;
-    $('#export-payments').disabled = !items.length || $('#payment-state').value !== 'ready';
+
+  async function renderPlans() {
+    const box = $('#plan-cards');
+    if (forced() === 'loading') { box.innerHTML = loading('cấu hình gói'); return; }
+    if (forced() === 'error') { box.innerHTML = failure({ message: 'Không tải được cấu hình gói', requestId: 'req-demo-500' }); return; }
+    try {
+      plans = await VL.api('GET', '/admin/plans');
+      document.querySelectorAll('[data-plan-select]').forEach((sel) => { const v = sel.value; sel.innerHTML = '<option value="">Tất cả gói</option>' + plans.map((p) => `<option value="${esc(p.ma)}">${esc(p.ten)}</option>`).join(''); sel.value = v; });
+      if (forced() === 'empty') { box.innerHTML = empty('Chưa có gói dịch vụ', 'Gói được tạo bằng migration khi triển khai.'); return; }
+      box.innerHTML = plans.map((p) => `<article class="pa-plan-card"><div class="pa-section-head"><h3>${esc(p.ten)}</h3>${badge(p.hoatDong ? 'Đang mở bán' : 'Ngừng mở bán', p.hoatDong ? 'success' : 'expired')}</div><p class="pa-price">${money(p.giaThang)} <small>/ tháng</small></p><p class="pa-year-price">${money(p.giaNam)} / năm</p><ul class="pa-feature-list"><li><span>Mã gói</span><strong>${esc(p.ma)}</strong></li><li><span>Số thẻ tối đa</span><strong>${p.gioiHanThe == null ? 'Không giới hạn' : p.gioiHanThe.toLocaleString('vi-VN')}</strong></li><li><span>Đánh giá phát âm</span><strong>${p.phatAm ? 'Có' : 'Không'}</strong></li><li><span>Bộ mẫu cao cấp</span><strong>${p.boMauCaoCap ? 'Có' : 'Không'}</strong></li><li><span>Đang dùng gói</span><strong>${p.soDangKyHieuLuc.toLocaleString('vi-VN')} người</strong></li></ul><button class="btn btn-secondary" type="button" data-edit-plan="${esc(p.ma)}">${VL.icon('edit')} Chỉnh sửa gói</button><p class="pa-caption" style="margin-top:12px">Phiên bản ${p.version}</p></article>`).join('');
+    } catch (err) { box.innerHTML = failure(err); }
   }
-  function renderSubscriptions() {
-    const filters = new FormData(subscriptionForm), query = normalize(filters.get('query').trim());
-    const items = data.subscriptions.filter((s) => (!query || normalize(`${s.name} ${s.email}`).includes(query)) &&
-      (!filters.get('plan') || filters.get('plan') === s.plan) && (!filters.get('status') ||
-        (filters.get('status') === 'expired' ? isExpired(s) : filters.get('status') === 'soon' ? isSoon(s) : !isExpired(s))));
-    $('#subscription-results').innerHTML = items.length ? table(['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái', 'Thao tác'], items.map((s) => [
-      `<strong>${esc(s.name)}</strong><small>${esc(s.email)}</small>`, `<span class="pa-plan-label">${planName(s.plan)}</span>`, date(s.start),
-      `<strong>${date(s.expiry)}</strong><small>${time(s.expiry)} · Giờ Việt Nam</small>`, subscriptionBadge(s),
-      demoEnabled() ? `<button class="btn btn-secondary" type="button" data-expiry="${s.id}" aria-label="Sửa ngày hết hạn của ${esc(s.name)}">Sửa ngày hết hạn</button>` : '<span class="pa-caption">—</span>'
-    ]), 'Gói dịch vụ của người dùng') : empty('Không có gói phù hợp', 'Thử thay đổi tên, email hoặc điều kiện lọc.');
-    $('#check-expiry').hidden = !demoEnabled();
-  }
-  function renderPlans() {
-    $('#plan-cards').innerHTML = data.plans.map((p) => `<article class="pa-plan-card"><div class="pa-section-head"><h3>${planName(p.code)}</h3>${badge(p.active ? 'Đang mở bán' : 'Ngừng mở bán', p.active ? 'success' : 'expired')}</div><p class="pa-price">${money(p.month)} <small>/ tháng</small></p><p class="pa-year-price">${money(p.year)} / năm</p><ul class="pa-feature-list"><li><span>Số thẻ tối đa</span><strong>${p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')}</strong></li><li><span>AI văn bản / ngày</span><strong>${p.ai} lượt</strong></li><li><span>Ảnh AI / ngày</span><strong>${p.images} ảnh</strong></li><li><span>Đánh giá phát âm</span><strong>${p.speech ? 'Có' : 'Không'}</strong></li><li><span>Bộ mẫu cao cấp</span><strong>${p.premium ? 'Có' : 'Không'}</strong></li></ul><button class="btn btn-secondary" type="button" data-edit-plan="${p.code}">${VL.icon('edit')} Chỉnh sửa gói</button><p class="pa-caption" style="margin-top:12px">Phiên bản ${p.version}</p></article>`).join('');
-  }
-  function render() {
-    renderSummary(); renderPayments(); renderSubscriptions(); renderPlans();
-    const state = $('#payment-state').value;
-    if (state === 'ready') return;
-    const content = state === 'loading' ? '<div class="pa-empty" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div></div><p>Đang tải dữ liệu thanh toán…</p></div>' :
-      state === 'error' ? empty('Không tải được dữ liệu', 'Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.', '<button class="btn btn-secondary" type="button" data-retry>Thử lại</button>') : empty('Chưa có dữ liệu', 'Dữ liệu sẽ xuất hiện khi có giao dịch và đăng ký gói.', '<button class="btn btn-secondary" type="button" data-retry>Xem dữ liệu mẫu</button>');
-    ['#payment-results', '#subscription-results', '#plan-cards'].forEach((selector) => { $(selector).innerHTML = content; });
-    $('#payment-summary').innerHTML = '<article><p>Tổng quan</p><strong>—</strong><small>Chưa có dữ liệu để tổng hợp</small></article>';
-    $('#payment-count').textContent = ''; $('#payment-pagination').innerHTML = ''; $('#check-expiry').hidden = true;
-  }
+
+  function render() { renderSummary(); renderPayments(); renderSubscriptions(); renderPlans(); }
+
   function selectTab(tab) {
     activeTab = tab;
     document.querySelectorAll('[data-tab]').forEach((button) => {
@@ -326,84 +328,120 @@
     else return;
     event.preventDefault(); selectTab(tabs[index]); $(`#tab-${tabs[index]}`).focus();
   });
-  function showDetail(id) {
-    const t = transactions.find((item) => item.id === id);
-    const details = [['Mã đơn', t.id], ['Người thanh toán', t.name], ['Email', t.email], ['Gói dịch vụ', `${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}`], ['Tạo lúc', `${time(t.created)} ${date(t.created)}`], ['Cổng thanh toán', 'VNPay Sandbox'], ['Mã giao dịch VNPay', t.gatewayId || 'Chưa có'], ['Mã phản hồi', t.response ? `${t.response} · ${t.response === '00' ? 'Thành công' : 'Người dùng hủy giao dịch'}` : 'Chưa nhận phản hồi']];
-    openDialog('Chi tiết giao dịch', 'Thông tin giao dịch mẫu · Giờ Việt Nam', `<div class="pa-detail-total"><div><span class="pa-caption">Số tiền thanh toán</span><strong>${money(t.amount)}</strong></div>${badge(...statuses[t.status])}</div><dl class="pa-detail-list">${details.map(([label, value]) => `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><div class="dialog-actions"><button class="btn btn-secondary" type="button" data-close>Đóng</button>${t.status === 'THANH_CONG' ? `<button class="btn btn-primary" type="button" data-receipt="${t.id}">${VL.icon('download')} Tải biên nhận mẫu</button>` : ''}</div>`);
+
+  async function showDetail(maDon) {
+    openDialog('Chi tiết giao dịch', 'Đang tải…', loading('chi tiết'));
+    try {
+      const { giaoDich: t, duLieuCong } = await VL.api('GET', '/admin/payments/' + encodeURIComponent(maDon));
+      const rows = [['Mã đơn', t.maDon], ['Người dùng', t.email || 'Người dùng đã xóa'], ['Mã người dùng', t.nguoiDungId], ['Gói dịch vụ', `${t.tenGoi} · ${CYCLE[t.chuKy] || t.chuKy}`], ['Tạo lúc', `${time(t.taoAt)} ${date(t.taoAt)}`], ['Kết thúc lúc', t.hoanTatAt ? `${time(t.hoanTatAt)} ${date(t.hoanTatAt)}` : 'Chưa kết thúc'], ['Cổng thanh toán', GATE[t.cong] || t.cong], ['Mã giao dịch cổng', t.maGiaoDichCong || 'Chưa có'], ['Mã phản hồi', t.maPhanHoi ? `${t.maPhanHoi} · ${RESPONSE[t.maPhanHoi] || 'Xem bảng mã VNPay'}` : 'Chưa nhận phản hồi']];
+      const raw = duLieuCong ? `<details><summary>Dữ liệu cổng trả về (đã bỏ chữ ký)</summary><dl class="pa-detail-list">${Object.entries(duLieuCong).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></details>` : '<p class="pa-caption">Chưa có dữ liệu cổng trả về.</p>';
+      openDialog('Chi tiết giao dịch', 'Giờ Việt Nam', `<div class="pa-detail-total"><div><span class="pa-caption">Số tiền</span><strong>${money(t.soTien)}</strong></div>${badge(...(STATUS[t.trangThai] || [t.trangThai, 'expired']))}</div><dl class="pa-detail-list">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>${raw}<div class="dialog-actions"><button class="btn btn-secondary" type="button" data-close>Đóng</button></div>`);
+    } catch (err) {
+      openDialog('Chi tiết giao dịch', maDon, `<p class="pa-form-error">${esc(err.message)}</p>${reqId(err)}<div class="dialog-actions"><button class="btn btn-secondary" type="button" data-close>Đóng</button></div>`);
+    }
   }
-  function editPlan(code) {
-    const p = data.plans.find((item) => item.code === code);
-    const numericField = (label, name, value, min = 0) => `<label class="field">${label}<input class="input" type="number" name="${name}" value="${value ?? ''}" min="${min}" max="1000000000" step="1" ${name === 'cards' ? 'placeholder="Không giới hạn"' : 'required'}></label>`;
-    openDialog(`Chỉnh sửa gói ${planName(code)}`, `Phiên bản ${p.version} · Thay đổi trên dữ liệu mẫu`, `<form id="edit-plan-form"><div class="pa-edit-grid">${numericField('Giá tháng (VND)', 'month', p.month, 1)}${numericField('Giá năm (VND)', 'year', p.year, 1)}${numericField('Số thẻ tối đa (trống = không giới hạn)', 'cards', p.cards, 1)}${numericField('AI văn bản / ngày', 'ai', p.ai)}${numericField('Ảnh AI / ngày', 'images', p.images)}<label class="pa-check"><input name="active" type="checkbox" ${p.active ? 'checked' : ''}> Mở bán gói</label><label class="pa-check"><input name="speech" type="checkbox" ${p.speech ? 'checked' : ''}> Đánh giá phát âm</label><label class="pa-check"><input name="premium" type="checkbox" ${p.premium ? 'checked' : ''}> Bộ mẫu cao cấp</label></div><details><summary>Thử trạng thái mô phỏng</summary><label class="pa-check"><input type="checkbox" name="conflict"> Xung đột phiên bản (409)</label></details><p class="pa-form-error" id="plan-form-error" role="alert"></p><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-secondary" type="button" data-reload-plan="${code}" hidden>Tải lại cấu hình</button><button class="btn btn-primary" type="submit">Lưu thay đổi</button></div></form>`);
-    $('#edit-plan-form').addEventListener('submit', (event) => {
-      event.preventDefault(); const fields = new FormData(event.currentTarget);
-      if (fields.has('conflict')) {
-        $('#plan-form-error').textContent = 'Cấu hình đã thay đổi ở phiên khác (409 mô phỏng). Tải lại cấu hình trước khi chỉnh sửa.';
-        $('[data-reload-plan]').hidden = false; event.currentTarget.querySelector('[type="submit"]').disabled = true; return;
-      }
-      for (const field of ['month', 'year', 'cards', 'ai', 'images']) p[field] = field === 'cards' && fields.get(field) === '' ? null : Number(fields.get(field));
-      for (const field of ['speech', 'premium', 'active']) p[field] = fields.has(field);
-      p.version++; data.audit.push({ action: 'SUA_GOI_DICH_VU', target: code, at: clock.toISOString() });
-      save(`Đã lưu cấu hình gói ${planName(code)} trong dữ liệu mẫu.`); dialog.close(); render();
+
+  function editPlan(ma) {
+    const p = plans.find((item) => item.ma === ma);
+    if (!p) return;
+    const num = (label, name, value, extra) => `<label class="field">${label}<input class="input" type="number" name="${name}" value="${value ?? ''}" step="1" ${extra}></label>`;
+    openDialog(`Chỉnh sửa gói ${p.ten}`, `Mã ${p.ma} · phiên bản ${p.version} · ${p.soDangKyHieuLuc} người đang dùng`, `<form id="edit-plan-form" novalidate><div class="pa-edit-grid"><label class="field">Tên gói<input class="input" name="ten" value="${esc(p.ten)}" maxlength="50" required></label>${num('Giá tháng (VND)', 'giaThang', p.giaThang, 'min="1000" max="100000000" required')}${num('Giá năm (VND)', 'giaNam', p.giaNam, 'min="1000" max="1000000000" required')}${num('Số thẻ tối đa (trống = không giới hạn)', 'gioiHanThe', p.gioiHanThe, 'min="1" placeholder="Không giới hạn"')}<label class="pa-check"><input name="hoatDong" type="checkbox" ${p.hoatDong ? 'checked' : ''}> Mở bán gói</label><label class="pa-check"><input name="phatAm" type="checkbox" ${p.phatAm ? 'checked' : ''}> Đánh giá phát âm</label><label class="pa-check"><input name="boMauCaoCap" type="checkbox" ${p.boMauCaoCap ? 'checked' : ''}> Bộ mẫu cao cấp</label></div><label class="field">Lý do (không bắt buộc, 10–500 ký tự)<textarea class="input" name="lyDo" rows="2" maxlength="500"></textarea></label><p class="pa-caption">Giá mới chỉ áp dụng cho đơn tạo sau khi lưu.</p><div class="pa-form-error" data-form-error hidden></div><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-secondary" type="button" data-reload-plan="${esc(ma)}" hidden>Tải lại cấu hình</button><button class="btn btn-primary" type="submit">Lưu thay đổi</button></div></form>`);
+    const form = $('#edit-plan-form');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const f = new FormData(form), submit = form.querySelector('[type="submit"]');
+      const n = (k) => f.get(k) === '' ? null : Number(f.get(k));
+      VL.busy(submit, async () => {
+        try {
+          await VL.api('PUT', '/admin/plans/' + encodeURIComponent(ma), { ten: f.get('ten'), giaThang: n('giaThang'), giaNam: n('giaNam'), gioiHanThe: n('gioiHanThe'), phatAm: f.has('phatAm'), boMauCaoCap: f.has('boMauCaoCap'), hoatDong: f.has('hoatDong'), lyDo: f.get('lyDo').trim() || null, version: p.version });
+          dialog.close(); VL.toast(`Đã lưu cấu hình gói ${f.get('ten')}.`); renderPlans(); renderSummary();
+        } catch (err) {
+          VL.showErrors(form, err);
+          if (err.status === 409) { form.querySelector('[data-reload-plan]').hidden = false; submit.hidden = true; }
+        }
+      });
     });
   }
-  function demoAction(id) {
-    if (!demoEnabled()) return;
-    const subscription = data.subscriptions.find((s) => s.id === id);
-    openDialog(subscription ? 'Sửa ngày hết hạn' : 'Chạy kiểm tra hết hạn', subscription ? `${subscription.name} · ${planName(subscription.plan)}` : 'Chạy mô phỏng tại 10:00 ngày 12/11/2026, giờ Việt Nam', `<form id="demo-action-form">${subscription ? `<label class="field">Ngày hết hạn mới (giờ Việt Nam)<input class="input" type="datetime-local" name="expiry" value="${subscription.expiry.slice(0, 16)}" min="${subscription.start.slice(0, 16)}" max="2099-12-31T23:59" required></label>` : '<p class="pa-caption">Kiểm tra các gói cần nhắc và đã hết hạn trong dữ liệu mẫu. Chạy lại trong cùng ngày sẽ bỏ qua thông báo đã tạo.</p>'}<label class="field">Lý do<textarea class="input" name="reason" rows="3" minlength="10" maxlength="500" placeholder="Nhập lý do thực hiện (10–500 ký tự)" required></textarea></label><p class="pa-form-error" id="demo-form-error" role="alert"></p><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-primary" type="submit">${subscription ? 'Lưu ngày hết hạn mẫu' : 'Chạy kiểm tra mẫu'}</button></div></form>`);
-    $('#demo-action-form').addEventListener('submit', (event) => {
-      event.preventDefault(); if (!demoEnabled()) return;
-      const fields = new FormData(event.currentTarget), reason = fields.get('reason').trim();
-      if (reason.length < 10 || reason.length > 500) { $('#demo-form-error').textContent = 'Nhập lý do từ 10 đến 500 ký tự.'; return; }
-      if (subscription) subscription.expiry = fields.get('expiry') + ':00+07:00';
-      else {
-        let reminders = 0, expired = 0;
-        data.subscriptions.forEach((s) => {
-          const reminderKey = `${s.id}:${s.expiry}:2026-11-12`;
-          if (isExpired(s) && !data.expired.includes(s.id + ':' + s.expiry)) { data.expired.push(s.id + ':' + s.expiry); expired++; }
-          else if (isSoon(s) && !data.reminders.includes(reminderKey)) { data.reminders.push(reminderKey); reminders++; }
-        });
-        $('#expiry-feedback').textContent = `Kết quả mẫu: ${reminders} thông báo sắp hết hạn và ${expired} thông báo hết hạn mới. Không gửi email hoặc thông báo thật.`;
-      }
-      data.audit.push({ action: subscription ? 'SUA_HAN_GOI' : 'CHAY_KIEM_TRA_HET_HAN', target: id || 'ALL', reason, at: clock.toISOString() });
-      save(subscription ? 'Đã cập nhật ngày hết hạn mẫu.' : 'Đã chạy kiểm tra trên dữ liệu mẫu.'); dialog.close(); render();
+
+  function demoAction(btn) {
+    const editing = !!btn?.dataset.expiry;
+    openDialog(editing ? 'Sửa ngày hết hạn' : 'Chạy kiểm tra hết hạn', editing ? `${btn.dataset.name} · ${btn.dataset.plan}` : 'Chạy ngay job nhắc D−7…D và chuyển gói quá hạn sang hết hạn', `<form id="demo-action-form" novalidate>${editing ? `<label class="field">Ngày hết hạn mới (giờ Việt Nam)<input class="input" type="datetime-local" name="hetHanAt" value="${localInput(btn.dataset.end)}" min="${localInput(btn.dataset.start)}" required></label><p class="pa-caption">Đặt thời điểm đã qua rồi chạy kiểm tra để chuyển gói sang hết hạn.</p>` : '<p class="pa-caption">Gói còn ≤ 7 ngày nhận một thông báo mỗi ngày (sau 08:00 giờ người dùng); gói quá hạn chuyển sang hết hạn; đơn chờ quá 15 phút chuyển sang hết hạn.</p>'}<label class="field">Lý do<textarea class="input" name="lyDo" rows="3" maxlength="500" placeholder="10–500 ký tự" required></textarea></label><div class="pa-form-error" data-form-error hidden></div><div class="dialog-actions"><button class="btn btn-quiet" type="button" data-close>Hủy</button><button class="btn btn-primary" type="submit">${editing ? 'Lưu ngày hết hạn' : 'Chạy kiểm tra'}</button></div></form>`);
+    const form = $('#demo-action-form');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const f = new FormData(form), submit = form.querySelector('[type="submit"]');
+      VL.busy(submit, async () => {
+        try {
+          if (editing) {
+            const at = f.get('hetHanAt');
+            await VL.api('PATCH', `/admin/subscriptions/${encodeURIComponent(btn.dataset.expiry)}/expiry`, { hetHanAt: at ? new Date(at + ':00+07:00').toISOString() : null, lyDo: f.get('lyDo'), version: Number(btn.dataset.version) });
+            dialog.close(); VL.toast('Đã cập nhật ngày hết hạn.');
+          } else {
+            const r = await VL.api('POST', '/admin/subscriptions/expiry-check', { lyDo: f.get('lyDo') });
+            dialog.close();
+            $('#expiry-feedback').textContent = `Đã chạy: ${r.soNhacSapHetHan} thông báo sắp hết hạn, ${r.soChuyenHetHan} gói chuyển sang hết hạn, ${r.soDonHetHan} đơn chờ quá hạn.`;
+          }
+          renderSubscriptions(); renderSummary(); renderPayments();
+        } catch (err) {
+          if (err.status === 404 && err.message === 'Công cụ demo đang tắt') {
+            dialog.close(); demoTools = false;
+            $('#expiry-feedback').textContent = 'Máy chủ đang tắt công cụ demo (404). Đã ẩn khối công cụ.';
+            renderSubscriptions(); return;
+          }
+          VL.showErrors(form, err);
+        }
+      });
     });
   }
+
+  async function exportPayments() {
+    const btn = $('#export-payments');
+    await VL.busy(btn, async () => {
+      try {
+        const rows = [['Mã đơn', 'Email', 'Gói', 'Chu kỳ', 'Số tiền (VND)', 'Cổng', 'Trạng thái', 'Mã phản hồi', 'Tạo lúc (giờ Việt Nam)', 'Kết thúc lúc (giờ Việt Nam)']];
+        for (let pg = 0, total = 1; pg < total && pg < 50; pg++) {
+          const d = await VL.api('GET', '/admin/payments?' + query(paymentForm, { page: pg, size: 100 }));
+          total = d.totalPages;
+          d.items.forEach((t) => rows.push([t.maDon, t.email || '', t.tenGoi, t.chuKy === 'NAM' ? 'Năm' : 'Tháng', t.soTien, GATE[t.cong] || t.cong, STATUS[t.trangThai]?.[0] || t.trangThai, t.maPhanHoi || '', `${date(t.taoAt)} ${time(t.taoAt)}`, t.hoanTatAt ? `${date(t.hoanTatAt)} ${time(t.hoanTatAt)}` : '']));
+        }
+        const cell = (value) => '"' + String(value).replace(/^[=+@-]/, "'$&").replace(/"/g, '""') + '"';
+        download('﻿' + rows.map((row) => row.map(cell).join(',')).join('\r\n'), 'giao-dich.csv', 'text/csv;charset=utf-8');
+        VL.toast(`Đã xuất ${rows.length - 1} giao dịch theo bộ lọc hiện tại.`);
+      } catch (err) { VL.toast((err.message || 'Không xuất được CSV') + ' · Mã ' + (err.requestId || '—'), 'error'); }
+    });
+  }
+
   document.addEventListener('click', (event) => {
     const button = event.target.closest('button'); if (!button) return;
     if (button.dataset.tab) selectTab(button.dataset.tab);
     if (button.dataset.detail) showDetail(button.dataset.detail);
-    if (button.dataset.page) { page = Number(button.dataset.page); renderPayments(); }
+    if (button.dataset.page && !button.disabled) {
+      if (button.closest('#payment-pagination')) { payPage = Number(button.dataset.page); renderPayments(); }
+      if (button.closest('#subscription-pagination')) { subPage = Number(button.dataset.page); renderSubscriptions(); }
+    }
     if (button.hasAttribute('data-clear-payments')) paymentForm.reset();
     if (button.hasAttribute('data-retry')) { $('#payment-state').value = 'ready'; render(); }
     if (button.dataset.editPlan) editPlan(button.dataset.editPlan);
-    if (button.dataset.reloadPlan) { dialog.close(); editPlan(button.dataset.reloadPlan); }
-    if (button.dataset.expiry) demoAction(button.dataset.expiry);
-    if (button.dataset.receipt) {
-      const t = transactions.find((item) => item.id === button.dataset.receipt);
-      download(`<!doctype html><html lang="vi"><meta charset="utf-8"><title>Biên nhận ${esc(t.id)}</title><body><h1>VocabLearning · Biên nhận mẫu</h1><p>Dữ liệu mô phỏng · VNPay Sandbox</p><dl><dt>Mã đơn</dt><dd>${t.id}</dd><dt>Người thanh toán</dt><dd>${esc(t.name)} · ${esc(t.email)}</dd><dt>Gói</dt><dd>${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</dd><dt>Số tiền</dt><dd>${money(t.amount)}</dd><dt>Trạng thái</dt><dd>Thành công</dd><dt>Ngày tạo</dt><dd>${date(t.created)} ${time(t.created)} (giờ Việt Nam)</dd></dl><p>Biên nhận này dùng để xem thử giao diện.</p></body></html>`, `${t.id}-bien-nhan-mau.html`, 'text/html;charset=utf-8');
-    }
+    if (button.dataset.reloadPlan) { const ma = button.dataset.reloadPlan; dialog.close(); renderPlans().then(() => editPlan(ma)); }
+    if (button.dataset.expiry) demoAction(button);
   });
+  let timer = null;
+  const debounce = (fn) => { clearTimeout(timer); timer = setTimeout(fn, 300); };
   paymentForm.addEventListener('submit', (event) => event.preventDefault());
   subscriptionForm.addEventListener('submit', (event) => event.preventDefault());
-  paymentForm.addEventListener('input', () => { page = 1; render(); });
-  subscriptionForm.addEventListener('input', render);
-  paymentForm.addEventListener('reset', () => setTimeout(() => { page = 1; render(); }, 0));
-  subscriptionForm.addEventListener('reset', () => setTimeout(render, 0));
+  paymentForm.addEventListener('input', () => { payPage = 0; debounce(renderPayments); });
+  subscriptionForm.addEventListener('input', () => { subPage = 0; debounce(renderSubscriptions); });
+  paymentForm.addEventListener('reset', () => setTimeout(() => { payPage = 0; renderPayments(); }, 0));
+  subscriptionForm.addEventListener('reset', () => setTimeout(() => { subPage = 0; renderSubscriptions(); }, 0));
   $('#payment-state').addEventListener('change', render);
-  $('#enable-demo-tools').addEventListener('change', render);
-  $('#check-expiry').addEventListener('click', () => demoAction());
-  $('#export-payments').addEventListener('click', () => {
-    const rows = [['Mã đơn', 'Người dùng', 'Email', 'Gói', 'Chu kỳ', 'Số tiền (VND)', 'Trạng thái', 'Ngày tạo (giờ Việt Nam)'],
-      ...filteredPayments().map((t) => [t.id, t.name, t.email, planName(t.plan), t.cycle === 'NAM' ? 'Năm' : 'Tháng', t.amount, statuses[t.status][0], `${date(t.created)} ${time(t.created)}`])];
-    const cell = (value) => '"' + String(value).replace(/^[=+@-]/, "'$&").replace(/"/g, '""') + '"';
-    download('\ufeff' + rows.map((row) => row.map(cell).join(',')).join('\r\n'), 'giao-dich-mau-2026-11.csv', 'text/csv;charset=utf-8');
-    VL.toast(`Đã xuất ${rows.length - 1} giao dịch theo bộ lọc hiện tại.`);
-  });
+  $('#demo-flag').addEventListener('change', (event) => { VLDemo.flags.billingDemoTools = event.target.value === 'on'; demoTools = true; $('#expiry-feedback').textContent = ''; renderSubscriptions(); });
+  VLDemo.flags.billingDemoTools = $('#demo-flag').value === 'on';
+  $('#check-expiry').addEventListener('click', () => demoAction(null));
+  $('#export-payments').addEventListener('click', exportPayments);
   $('#reset-payment-demo').addEventListener('click', () => {
-    data = { plans: structuredClone(seedPlans), subscriptions: structuredClone(seedSubscriptions), reminders: [], expired: [], audit: [] };
-    $('#payment-state').value = 'ready'; $('#enable-demo-tools').checked = false; $('#expiry-feedback').textContent = '';
-    paymentForm.reset(); subscriptionForm.reset(); page = 1; selectTab('payments'); save('Đã đặt lại dữ liệu mẫu thanh toán.'); render();
+    delete VLDemo.db.billing; VLDemo.persist();
+    $('#payment-state').value = 'ready'; $('#demo-flag').value = 'on'; VLDemo.flags.billingDemoTools = true; demoTools = true; $('#expiry-feedback').textContent = '';
+    paymentForm.reset(); subscriptionForm.reset(); payPage = 0; subPage = 0; selectTab('payments'); VL.toast('Đã đặt lại dữ liệu thanh toán mẫu.'); render();
   });
   render();
 })();

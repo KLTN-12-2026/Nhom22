@@ -14,5 +14,12 @@ public enum HanhDongQuanTri {
     XOA_BO_MAU,
     TAO_THE_MAU,
     SUA_THE_MAU,
-    XOA_THE_MAU
+    XOA_THE_MAU,
+    SUA_GOI_DICH_VU,
+    SUA_HAN_GOI,
+    CHAY_KIEM_TRA_HET_HAN,
+    XOA_TAI_KHOAN,
+    GIU_NOI_DUNG,
+    AN_NOI_DUNG,
+    SUA_HAN_MUC
 }

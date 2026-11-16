@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.common.exception;
 import com.do_an_tot_nghiep.k28.common.web.RequestIdFilter;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -30,7 +31,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ErrorResponse> handleApi(ApiException ex) {
         ResponseEntity<ErrorResponse> response = build(ex.getErrorCode(), ex.getMessage(), ex.getField() == null
                 ? List.of()
-                : List.of(new ErrorResponse.FieldErrorItem(ex.getField(), ex.getMessage())));
+                : List.of(new ErrorResponse.FieldErrorItem(ex.getField(), ex.getMessage())), ex.getDetails());
         if (ex.getRetryAfterSeconds() == null) {
             return response;
         }
@@ -97,7 +98,12 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorResponse> build(ErrorCode code, String message,
                                                 List<ErrorResponse.FieldErrorItem> fields) {
-        ErrorResponse body = new ErrorResponse(code.name(), message, fields, MDC.get(RequestIdFilter.MDC_KEY));
+        return build(code, message, fields, null);
+    }
+
+    private ResponseEntity<ErrorResponse> build(ErrorCode code, String message,
+                                                List<ErrorResponse.FieldErrorItem> fields, Map<String, Object> details) {
+        ErrorResponse body = new ErrorResponse(code.name(), message, fields, MDC.get(RequestIdFilter.MDC_KEY), details);
         return ResponseEntity.status(code.getStatus()).body(body);
     }
 

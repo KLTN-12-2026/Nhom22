@@ -6,6 +6,9 @@ import com.do_an_tot_nghiep.k28.stats.dto.SkillStatResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.SkillsQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.StatisticsOverviewResponse;
 import com.do_an_tot_nghiep.k28.stats.service.StatisticsService;
+import com.do_an_tot_nghiep.k28.stats.service.WeeklySummaryService;
+import com.do_an_tot_nghiep.k28.stats.dto.WeeklySummaryQuery;
+import com.do_an_tot_nghiep.k28.stats.dto.WeeklySummaryResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StatisticsController {
 
     private final StatisticsService statisticsService;
+    private final WeeklySummaryService weeklySummaryService;
     private final CurrentUser currentUser;
 
     @GetMapping("/overview")
@@ -30,5 +34,10 @@ public class StatisticsController {
     @GetMapping("/skills")
     public List<SkillStatResponse> skills(@Valid @ModelAttribute SkillsQuery query) {
         return statisticsService.skills(currentUser.id(), query);
+    }
+
+    @GetMapping("/weekly-summary")
+    public WeeklySummaryResponse weeklySummary(@Valid @ModelAttribute WeeklySummaryQuery query) {
+        return weeklySummaryService.summary(currentUser.id(), query);
     }
 }

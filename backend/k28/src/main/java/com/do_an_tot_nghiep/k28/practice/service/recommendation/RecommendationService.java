@@ -49,4 +49,14 @@ public class RecommendationService {
         }
         return result;
     }
+
+    @Transactional(readOnly = true)
+    public List<RecommendationResponse> progressed(Long userId, Instant until) {
+        return rules.stream()
+                .filter(rule -> rule.code() == MaLyDoGoiY.TIEN_BO)
+                .flatMap(rule -> rule.evaluate(userId, until).stream())
+                .limit(properties.toiDaGoiY())
+                .map(RecommendationCandidate::toResponse)
+                .toList();
+    }
 }

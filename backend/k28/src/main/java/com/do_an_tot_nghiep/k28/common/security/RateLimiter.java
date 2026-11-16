@@ -24,6 +24,7 @@ public class RateLimiter {
         public static final Policy RESEND_EMAIL = new Policy("resend-email", 3, Duration.ofMinutes(15));
         public static final Policy FORGOT_PASSWORD = new Policy("forgot-password", 3, Duration.ofMinutes(15));
         public static final Policy CHANGE_PASSWORD = new Policy("change-password", 5, Duration.ofMinutes(15));
+        public static final Policy REPORT = new Policy("report", 20, Duration.ofHours(1));
     }
 
     static final RedisScript<Long> HIT = RedisScript.of("""

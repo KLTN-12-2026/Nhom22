@@ -17,6 +17,7 @@ import com.do_an_tot_nghiep.k28.ai.repository.YeuCauAiRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.content.service.CardDraftTargetService;
+import com.do_an_tot_nghiep.k28.content.service.CardLimitService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class CardDraftCommitService {
     private final YeuCauAiRepository requests;
     private final BanNhapTheAiRepository drafts;
     private final CardDraftTargetService targets;
+    private final CardLimitService limits;
     private final CardDraftService cardDrafts;
     private final CardDraftParser parser;
     private final AiProperties props;
@@ -83,6 +85,9 @@ public class CardDraftCommitService {
         if (yeuCau.getTrangThai() != TrangThaiYeuCauAi.HOAN_TAT) {
             throw new ApiException(ErrorCode.BUSINESS_RULE, "Yêu cầu AI chưa tạo xong thẻ nháp");
         }
+        if (yeuCau.isAnKiemDuyet()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Đầu ra AI này đã bị ẩn sau kiểm duyệt");
+        }
         List<BanNhapTheAi> selected = drafts.findByYeuCauIdAndIdInOrderByThuTu(yeuCauId, ids);
         if (selected.size() != ids.size()) {
             throw new ApiException(ErrorCode.NOT_FOUND, "banNhapIds", "Không tìm thấy thẻ nháp");
@@ -91,6 +96,7 @@ public class CardDraftCommitService {
             throw new ApiException(ErrorCode.CONFLICT, "banNhapIds", "Có thẻ nháp đã được lưu trước đó");
         }
 
+        limits.requireCapacity(userId, selected.size());
         Long deckId = existingDeck
                 ? targets.lockOwnedDeck(userId, Long.valueOf(request.boTheId()))
                 : targets.createPrivateDeck(userId, request.tenBoMoi());

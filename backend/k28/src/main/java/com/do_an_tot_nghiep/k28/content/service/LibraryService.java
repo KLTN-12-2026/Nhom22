@@ -85,7 +85,7 @@ public class LibraryService {
         ));
 
         Page<TheTuVung> cardPage =
-                cards.findByBoTheIdAndXoaAtIsNullOrderByIdDesc(
+                cards.findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
                         deck.getId(),
                         PageRequest.of(request.page(), request.size())
                 );
@@ -167,7 +167,7 @@ public class LibraryService {
 
         Map<Long, Long> cardCounts = deckIds.isEmpty()
                 ? Map.of()
-                : cards.countActiveByDeckId(deckIds).stream()
+                : cards.countVisibleByDeckId(deckIds).stream()
                 .collect(Collectors.toMap(
                         TheTuVungRepository.DeckCardCount::getBoTheId,
                         TheTuVungRepository.DeckCardCount::getSoThe

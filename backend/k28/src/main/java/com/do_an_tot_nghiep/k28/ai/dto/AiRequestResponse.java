@@ -4,6 +4,7 @@ import com.do_an_tot_nghiep.k28.ai.entity.enums.LoaiYeuCauAi;
 import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiYeuCauAi;
 import java.time.Instant;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 public record AiRequestResponse(
         String id,
@@ -15,6 +16,8 @@ public record AiRequestResponse(
         String model,
         String phienBanPrompt,
         Instant createdAt,
-        List<CardDraftResponse> banNhap
+        boolean anKiemDuyet,
+        List<CardDraftResponse> banNhap,
+        JsonNode ketQua
 ) {
 }

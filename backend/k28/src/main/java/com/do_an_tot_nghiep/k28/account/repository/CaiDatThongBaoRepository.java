@@ -1,8 +1,10 @@
 package com.do_an_tot_nghiep.k28.account.repository;
 
+import com.do_an_tot_nghiep.k28.account.dto.NotificationContact;
 import com.do_an_tot_nghiep.k28.account.dto.ReminderTarget;
 import com.do_an_tot_nghiep.k28.account.entity.CaiDatThongBao;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +23,12 @@ public interface CaiDatThongBaoRepository extends JpaRepository<CaiDatThongBao, 
             order by u.id
             """)
     List<ReminderTarget> reminderTargets(@Param("trangThai") TrangThaiNguoiDung trangThai);
+
+    @Query("""
+            select new com.do_an_tot_nghiep.k28.account.dto.NotificationContact(
+                u.id, u.email, u.tenHienThi, u.muiGio, u.trangThai, c.nhanEmail)
+            from NguoiDung u left join CaiDatThongBao c on c.nguoiDungId = u.id
+            where u.id in :ids
+            """)
+    List<NotificationContact> contacts(@Param("ids") Collection<Long> ids);
 }

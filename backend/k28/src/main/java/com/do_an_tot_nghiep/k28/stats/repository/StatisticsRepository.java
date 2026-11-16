@@ -92,4 +92,67 @@ public interface StatisticsRepository extends Repository<LichSuOn, Long> {
             @Param("boTheId") Long boTheId,
             @Param("window") int window
     );
+
+    @Query(value = """
+            select count(*)
+            from (
+                select t.the_id, min(l.created_at) as dau_tien
+                from lich_su_on l
+                join tien_do_the t on t.id = l.tien_do_id
+                where l.nguoi_dung_id = :userId
+                group by t.the_id
+            ) x
+            where x.dau_tien >= :batDau
+              and x.dau_tien < :ketThuc
+            """, nativeQuery = true)
+    long countNewCards(@Param("userId") Long userId, @Param("batDau") Instant batDau,
+                       @Param("ketThuc") Instant ketThuc);
+
+    @Query("""
+            select new com.do_an_tot_nghiep.k28.stats.repository.SkillCountRow(
+                q.loaiCau, b.laLuyenLai, count(r), sum(case when r.dung = true then 1 else 0 end))
+            from TraLoiBaiLuyen r
+            join LanLamBai a on a.id = r.lanLamId
+            join CauHoiBaiLuyen q on q.id = r.cauHoiId
+            join BaiLuyen b on b.id = a.baiId
+            where a.nguoiDungId = :userId
+              and a.nopAt >= :batDau
+              and a.nopAt < :ketThuc
+            group by q.loaiCau, b.laLuyenLai
+            """)
+    List<SkillCountRow> skillCountsBetween(@Param("userId") Long userId, @Param("batDau") Instant batDau,
+                                           @Param("ketThuc") Instant ketThuc);
+
+    @Query(value = """
+            select c.id as theId, c.tu as tu, b.id as boTheId, b.ten as tenBo,
+                   sum(x.sai) as soLanSai, count(*) as soLuot
+            from (
+                select t.the_id, case when l.danh_gia = 'QUEN' then 1 else 0 end as sai
+                from lich_su_on l
+                join tien_do_the t on t.id = l.tien_do_id
+                where l.nguoi_dung_id = :userId
+                  and l.created_at >= :batDau
+                  and l.created_at < :ketThuc
+                union all
+                select q.the_id, case when r.dung then 0 else 1 end
+                from tra_loi_bai_luyen r
+                join lan_lam_bai a on a.id = r.lan_lam_id
+                join cau_hoi_bai_luyen q on q.id = r.cau_hoi_id
+                where a.nguoi_dung_id = :userId
+                  and a.nop_at >= :batDau
+                  and a.nop_at < :ketThuc
+                  and q.the_id is not null
+            ) x
+            join the_tu_vung c on c.id = x.the_id
+            join bo_the b on b.id = c.bo_the_id
+            where b.chu_so_huu_id = :userId
+              and b.xoa_at is null
+              and c.xoa_at is null
+            group by c.id, c.tu, b.id, b.ten
+            having soLanSai > 0
+            order by soLanSai desc, soLuot desc, c.id desc
+            limit :gioiHan
+            """, nativeQuery = true)
+    List<HardWordRow> hardWords(@Param("userId") Long userId, @Param("batDau") Instant batDau,
+                                @Param("ketThuc") Instant ketThuc, @Param("gioiHan") int gioiHan);
 }

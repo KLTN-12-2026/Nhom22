@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CardService {
 
     private final TheTuVungRepository cards;
+    private final CardLimitService limits;
     private final BoTheRepository decks;
     private final NhanRepository tags;
     private final TepTinRepository files;
@@ -148,6 +149,9 @@ public class CardService {
     @Transactional
     public CardResponse create(Long ownerId, Long fileOwnerId, Long deckId, CreateCardRequest request) {
         BoThe deck = writableDeck(ownerId, deckId);
+        if (!deck.isBoMau()) {
+            limits.requireCapacity(ownerId, 1);
+        }
 
         List<Long> tagIds = validatedTagIds(request.nhanIds());
         List<FileSelection> selections = createFileSelections(request);
@@ -256,7 +260,7 @@ public class CardService {
     public CardAudioSource audioSource(Long userId, Long cardId) {
         TheTuVung card = cards.findByIdAndXoaAtIsNull(cardId).orElseThrow(this::cardNotFound);
         BoThe deck = decks.findByIdAndXoaAtIsNull(card.getBoTheId())
-                .filter(d -> d.getChuSoHuuId().equals(userId) || d.isPublished())
+                .filter(d -> d.getChuSoHuuId().equals(userId) || (d.isPublished() && !card.isAnKiemDuyet()))
                 .orElseThrow(this::cardNotFound);
         List<CardLinkRepository.FileLink> fileLinks = links.findFiles(List.of(card.getId()));
         String amTuId = fileId(fileLinks, VaiTroTep.AM_TU);

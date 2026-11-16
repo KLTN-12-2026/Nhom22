@@ -33,8 +33,34 @@ public interface TheTuVungRepository
 
     Optional<TheTuVung> findByIdAndXoaAtIsNull(Long id);
 
+    Page<TheTuVung> findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
+            Long boTheId,
+            Pageable pageable
+    );
+
+    @Query("""
+            select c.boTheId as boTheId,
+                   count(c.id) as soThe
+            from TheTuVung c
+            where c.boTheId in :deckIds
+              and c.xoaAt is null
+              and c.anKiemDuyet = false
+            group by c.boTheId
+            """)
+    List<DeckCardCount> countVisibleByDeckId(@Param("deckIds") Collection<Long> deckIds);
+
     @Lock(LockModeType.PESSIMISTIC_READ)
-    @Query("select c from TheTuVung c where c.boTheId = :deckId and c.xoaAt is null order by c.id")
+    @Query("""
+            select count(c)
+            from TheTuVung c
+            join BoThe b on b.id = c.boTheId
+            where b.chuSoHuuId = :userId
+              and b.xoaAt is null
+              and c.xoaAt is null
+            """)
+    long countActiveOwnedBy(@Param("userId") Long userId);
+
+    @Query("select c from TheTuVung c where c.boTheId = :deckId and c.xoaAt is null and c.anKiemDuyet = false order by c.id")
     List<TheTuVung> findAllForCopy(@Param("deckId") Long deckId);
 
     @Query("""

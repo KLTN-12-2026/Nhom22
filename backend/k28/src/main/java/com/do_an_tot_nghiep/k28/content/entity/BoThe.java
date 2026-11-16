@@ -57,6 +57,9 @@ public class BoThe extends BaseEntity {
     @Column(nullable = false)
     private boolean boMau;
 
+    @Column(nullable = false)
+    private boolean caoCap;
+
     private Long boNguonId;
 
     private Instant xoaAt;
@@ -125,6 +128,10 @@ public class BoThe extends BaseEntity {
         return deck;
     }
 
+    public void markPremium(boolean caoCap) {
+        this.caoCap = boMau && caoCap;
+    }
+
     public void moderate(TrangThaiKiemDuyet trangThaiKiemDuyet) {
         this.trangThaiKiemDuyet = trangThaiKiemDuyet;
     }
@@ -145,6 +152,7 @@ public class BoThe extends BaseEntity {
         copy.updateGoal(source.getMucTieu());
         copy.boNguonId = source.getId();
         copy.boMau = false;
+        copy.caoCap = false;
         return copy;
     }
 }

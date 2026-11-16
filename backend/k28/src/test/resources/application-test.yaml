@@ -24,6 +24,14 @@ app:
     provider: fake
   reminders:
     enabled: false
+  billing:
+    provider: fake
+    enforce: false
+    demo-tools: true
+    expiry-job:
+      enabled: false
+    fake:
+      hash-secret: test-fake-secret
 
 springdoc:
   api-docs:
