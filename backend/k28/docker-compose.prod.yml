@@ -1,0 +1,113 @@
+name: vocab-prod
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-vocab_learn}
+      MYSQL_USER: ${DB_USER:?set DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD}
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    volumes: [mysql-data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 20
+
+  s3:
+    image: rustfs/rustfs:1.0.3
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY}
+      RUSTFS_CONSOLE_ENABLE: "false"
+    volumes: [s3-data:/data]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/health"]
+      interval: 10s
+      retries: 20
+
+  s3-init:
+    image: amazon/aws-cli:2.38.5
+    depends_on:
+      s3: { condition: service_healthy }
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_DEFAULT_REGION: us-east-1
+      S3_BUCKET: ${S3_BUCKET:-vocab-files}
+      S3_CORS_ORIGINS: https://${DOMAIN:?set DOMAIN}
+    entrypoint: ["/bin/sh", "/config/s3-init.sh"]
+    volumes: ["./docker/s3-init.sh:/config/s3-init.sh:ro"]
+
+  api:
+    build: .
+    image: vocab-api:${APP_VERSION:-1.0.0}
+    restart: unless-stopped
+    env_file: [.env.prod]
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      S3_ENDPOINT: http://s3:9000
+      S3_PUBLIC_ENDPOINT: https://s3.${DOMAIN}
+      APP_FRONTEND_URL: https://${DOMAIN}
+      GOOGLE_REDIRECT_URI: https://${DOMAIN}/api/v1/auth/google/callback
+      VNPAY_RETURN_URL: https://${DOMAIN}/api/v1/billing/vnpay/return
+      FORWARD_HEADERS_STRATEGY: native
+      COOKIE_SECURE: "true"
+      SWAGGER_ENABLED: "false"
+      BILLING_DEMO_TOOLS: "false"
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      s3-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /actuator/health/readiness HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  web:
+    build: ../../frontend
+    image: vocab-web:${APP_VERSION:-1.0.0}
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+    depends_on:
+      api: { condition: service_healthy }
+
+  nginx:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./docker/nginx/templates:/etc/nginx/templates:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      api: { condition: service_healthy }
+      web: { condition: service_started }
+
+volumes:
+  mysql-data:
+  redis-data:
+  s3-data:

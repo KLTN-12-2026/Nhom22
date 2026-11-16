@@ -403,7 +403,7 @@
     if (f.until > Date.now()) throw new ApiError(429, "RATE_LIMITED", "Bạn thao tác quá nhiều lần, vui lòng thử lại sau", [], { retryAfter: Math.ceil((f.until - Date.now()) / 1000) });
     return { fail() { f.n += 1; if (f.n >= limit) { f.until = Date.now() + 60000; f.n = 0; } db.fails[key] = f; }, reset() { delete db.fails[key]; } };
   }
-  const flags = { offline: false, conflictOnce: false, ttsDown: false, speechDown: false, speechPartial: false, vnpay: "THANH_CONG", billingDemoTools: true };
+  const flags = { offline: false, conflictOnce: false, ttsDown: false, speechDown: false, speechPartial: false, vnpay: "THANH_CONG", billingDemoTools: true, aiMode: null, aiQuotaFull: false };
   const iso = (ms) => new Date(ms).toISOString();
   const ORDER_TTL = 15 * 60000;
   const VN_OFFSET = 7 * 3600000;
@@ -1341,12 +1341,7 @@
     if (doanVan && [...doanVan].length > AI_DRAFT.maxKyTu) bad([fe("doanVan", "Đoạn văn tối đa " + AI_DRAFT.maxKyTu + " ký tự")]);
     if (tepId) throw new ApiError(422, "BUSINESS_RULE", "Chọn tệp Word (.docx) đã tải lên xong", [fe("tepId", "Bản mẫu chưa đọc tệp Word; tệp .txt/.csv được đọc ngay trên trình duyệt")]);
     if (b.boTheId) ownDeck(String(b.boTheId));
-    const ngay = localDate(Date.now(), AI_DRAFT.zone);
-    const used = db.aiRequests.filter((r) => r.uid === u.id && r.ngay === ngay && r.hanMucTrangThai !== "DA_HOAN").length;
-    if (used >= AI_DRAFT.hanMuc) {
-      const reset = startOfLocalDay(Date.now(), AI_DRAFT.zone) + DAY;
-      throw new ApiError(429, "RATE_LIMITED", "Bạn đã dùng hết lượt AI hôm nay, vui lòng thử lại vào ngày mai", [], { retryAfter: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) });
-    }
+    const ngay = aiReserve(u, "AI");
     const r = { id: nextId(), uid: u.id, loai: "TAO_THE", trangThai: "CHO", maLoi: null, nhaCungCap: "fake", model: null, phienBanPrompt: "card-draft-v1", createdAt: new Date().toISOString(), batDau: Date.now(), ngay, hanMucTrangThai: "GIU_CHO", doanVan, boTheId: b.boTheId ? String(b.boTheId) : null, banNhap: [] };
     db.aiRequests.unshift(r);
     return { status: 202, body: { requestId: r.id, trangThai: "CHO" } };
@@ -1356,6 +1351,15 @@
     const elapsed = Date.now() - r.batDau;
     if (elapsed < 700) return r;
     r.trangThai = "DANG_XU_LY";
+    if (r.loai !== "TAO_THE") {
+      if (elapsed < (r.mode === "THU_LAI" ? 4000 : 1600)) return r;
+      r.model = "fake-ai-task";
+      const failTask = { LOI: ["LOI", "MO_PHONG_LOI"], SAI_SCHEMA: ["LOI", "SAI_SCHEMA"], THU_LAI: ["LOI", "MO_PHONG_TAM_THOI"], TIMEOUT: ["KHONG_XAC_DINH", "TIMEOUT"] }[r.mode];
+      if (failTask) { r.trangThai = failTask[0]; r.maLoi = failTask[1]; r.hanMucTrangThai = failTask[0] === "LOI" ? "DA_HOAN" : "DA_DUNG"; return r; }
+      r.ketQua = r.loai === "NGU_CANH" ? contextResult(r.tu, r.nguCanh) : sentenceResult(r.tu, r.cau);
+      r.trangThai = "HOAN_TAT"; r.hanMucTrangThai = "DA_DUNG";
+      return r;
+    }
     const mode = ((r.doanVan || "").match(/#mo-phong:([A-Z_]+)/) || [])[1] || "THANH_CONG";
     if (elapsed < (mode === "THU_LAI" ? 4000 : 1600)) return r;
     r.model = "fake-card-draft";
@@ -1380,7 +1384,79 @@
     return r;
   }
   function aiRequestView(r) {
-    return { id: r.id, loai: r.loai, trangThai: r.trangThai, maLoi: r.maLoi, moPhong: true, nhaCungCap: r.nhaCungCap, model: r.model, phienBanPrompt: r.phienBanPrompt, createdAt: r.createdAt, banNhap: r.trangThai === "HOAN_TAT" ? r.banNhap.map((x) => Object.assign({}, x)) : [] };
+    const done = r.trangThai === "HOAN_TAT" && !r.anKiemDuyet;
+    const ketQua = !done ? null : r.loai === "TAO_THE" ? { soThe: r.banNhap.length, soBoQua: 0, soTrung: r.banNhap.filter((x) => x.trung).length } : JSON.parse(JSON.stringify(r.ketQua || null));
+    return { id: r.id, loai: r.loai, trangThai: r.trangThai, maLoi: r.maLoi, moPhong: true, nhaCungCap: r.nhaCungCap, model: r.model, phienBanPrompt: r.phienBanPrompt, createdAt: r.createdAt, anKiemDuyet: !!r.anKiemDuyet, banNhap: done && r.loai === "TAO_THE" ? r.banNhap.map((x) => Object.assign({}, x)) : [], ketQua };
+  }
+  const aiGroup = (loai) => loai === "ANH_THE" ? "ANH" : "AI";
+  function planOf(u) { const s = billing().subs[u.id]; return liveSub(s, Date.now()) ? s.goiMa : null; }
+  function quotaLimit(u, loai) { const goi = planOf(u); const row = goi && quotaStore().find((x) => x.goiMa === goi && x.loai === loai); return row ? row.soLuotNgay : 0; }
+  function aiUsage(u, nhom, ngay) {
+    const list = aiStore().aiRequests.filter((r) => r.uid === u.id && r.ngay === ngay && aiGroup(r.loai) === nhom).map(aiAdvance).filter((r) => r.hanMucTrangThai !== "DA_HOAN");
+    return { soDung: list.filter((r) => r.hanMucTrangThai === "DA_DUNG").length, soGiu: list.filter((r) => r.hanMucTrangThai === "GIU_CHO").length };
+  }
+  function aiReserve(u, nhom) {
+    const ngay = localDate(Date.now(), AI_DRAFT.zone), x = aiUsage(u, nhom, ngay);
+    if (flags.aiQuotaFull || x.soDung + x.soGiu >= quotaLimit(u, nhom)) {
+      const reset = startOfLocalDay(Date.now(), AI_DRAFT.zone) + DAY;
+      throw new ApiError(429, "RATE_LIMITED", nhom === "ANH" ? "Bạn đã dùng hết lượt tạo ảnh AI hôm nay, vui lòng thử lại vào ngày mai" : "Bạn đã dùng hết lượt AI hôm nay, vui lòng thử lại vào ngày mai", [], { retryAfter: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) });
+    }
+    return ngay;
+  }
+  function aiTask(u, loai, b) {
+    const errors = [];
+    const tu = typeof b.tu === "string" ? b.tu.trim() : "";
+    if (!tu) errors.push(fe("tu", "không được để trống")); else if (tu.length > 100) errors.push(fe("tu", "kích thước phải nằm trong khoảng 0 đến 100"));
+    const nguCanh = typeof b.nguCanh === "string" && b.nguCanh.trim() ? b.nguCanh.trim() : null;
+    const cau = typeof b.cau === "string" ? b.cau.trim() : "";
+    if (loai === "NGU_CANH" && nguCanh && nguCanh.length > 1000) errors.push(fe("nguCanh", "kích thước phải nằm trong khoảng 0 đến 1000"));
+    if (loai === "SUA_CAU") { if (!cau) errors.push(fe("cau", "không được để trống")); else if (cau.length > 500) errors.push(fe("cau", "kích thước phải nằm trong khoảng 0 đến 500")); }
+    if (errors.length) bad(errors);
+    const ngay = aiReserve(u, "AI");
+    const r = { id: nextId(), uid: u.id, loai, trangThai: "CHO", maLoi: null, nhaCungCap: "fake", model: null, phienBanPrompt: loai === "NGU_CANH" ? "context-explanation-v1" : "sentence-feedback-v1", createdAt: new Date().toISOString(), batDau: Date.now(), ngay, hanMucTrangThai: "GIU_CHO", tu, nguCanh, cau: cau || null, mode: flags.aiMode || null, banNhap: [], ketQua: null };
+    aiStore().aiRequests.unshift(r);
+    return { status: 202, body: { requestId: r.id, trangThai: "CHO" } };
+  }
+  const AI_HINTS = {
+    receipt: { meoNho: "Chữ p trong receipt không đọc /rɪˈsiːt/. Đừng nhầm với recipe (công thức nấu ăn).", cachDungTu: "Hay đi với keep the receipt, ask for a receipt, a receipt for something. Là danh từ đếm được." },
+    refund: { meoNho: "re- (trả lại) + fund (tiền): tiền được trả lại.", cachDungTu: "Danh từ: get/ask for a refund; động từ: refund the money. Đi với giới từ for: a refund for the shoes." },
+    appointment: { meoNho: "appoint (hẹn, chỉ định) + -ment.", cachDungTu: "make/book an appointment with someone; cancel an appointment. Không dùng appointment cho buổi hẹn hò." }
+  };
+  function contextResult(tu, nguCanh) {
+    const key = tu.toLowerCase(), card = db.cards.find((c) => norm(c.word) === key && !c.deleted);
+    const sentence = nguCanh ? ((nguCanh.match(/[^.!?\n]+[.!?]?/g) || []).map((x) => x.trim()).find((x) => x.toLowerCase().includes(key)) || nguCanh.slice(0, 300)) : null;
+    const nghia = card ? card.meaningVi : "Nghĩa mô phỏng của \"" + key + "\"";
+    return {
+      tu: key, tuLoai: card && card.pos ? card.pos : null, phienAm: card && card.ipa ? card.ipa : null, nghiaVi: nghia,
+      giaiThich: (sentence ? "Trong câu “" + sentence + "”, “" + key + "” mang nghĩa " + nghia + ". " : "") + "Giải thích mô phỏng, chưa gọi dịch vụ AI thật.",
+      viDuEn: card && card.exampleEn ? card.exampleEn : "This is a simple example with " + key + ".",
+      dichVi: card && card.exampleVi ? card.exampleVi : "Đây là ví dụ đơn giản có từ " + key + ".",
+      meoNho: AI_HINTS[key] ? AI_HINTS[key].meoNho : null, doanLienQuan: sentence
+    };
+  }
+  function sentenceResult(tu, cau) {
+    const key = tu.toLowerCase(), loi = [];
+    let sua = cau;
+    const PAST = { keep: "kept", buy: "bought", go: "went", see: "saw", make: "made", get: "got", take: "took", lose: "lost" };
+    const perfect = sua.match(/\b(have|has) (keep|buy|go|see|make|get|take|lose)\b/i);
+    if (perfect && /\b(yesterday|ago|last (week|month|year|night))\b/i.test(sua)) {
+      const fix = PAST[perfect[2].toLowerCase()];
+      loi.push({ loai: "NGU_PHAP", doanGoc: perfect[0], doanSua: fix, giaiThich: "Có mốc thời gian đã kết thúc nên dùng quá khứ đơn; “" + perfect[2] + "” chuyển thành “" + fix + "”." });
+      sua = sua.replace(perfect[0], fix);
+    }
+    [["reciept", "receipt"], ["recieve", "receive"], ["appoinment", "appointment"], ["refound", "refund"]].forEach(([wrong, right]) => {
+      const m = sua.match(new RegExp("\\b" + wrong + "\\b", "i"));
+      if (m) { loi.push({ loai: "CHINH_TA", doanGoc: m[0], doanSua: right, giaiThich: "Viết đúng chính tả là “" + right + "”." }); sua = sua.replace(m[0], right); }
+    });
+    if (sua && sua[0] !== sua[0].toUpperCase()) { const up = sua[0].toUpperCase() + sua.slice(1); loi.push({ loai: "PHONG_CACH", doanGoc: sua.split(" ")[0], doanSua: up.split(" ")[0], giaiThich: "Gợi ý: viết hoa chữ đầu câu." }); sua = up; }
+    if (sua && !/[.!?]$/.test(sua)) { loi.push({ loai: "PHONG_CACH", doanGoc: sua.split(" ").slice(-1)[0], doanSua: sua.split(" ").slice(-1)[0] + ".", giaiThich: "Gợi ý: kết thúc câu bằng dấu chấm." }); sua += "."; }
+    const dung = sua.toLowerCase().includes(key);
+    const hard = loi.filter((x) => x.loai !== "PHONG_CACH").length;
+    return {
+      cauGoc: cau, cauSua: sua, dungTuMucTieu: dung, loi,
+      nhanXet: (dung ? "" : "Câu chưa dùng từ “" + key + "”. ") + (hard ? "Có " + hard + " lỗi cần sửa; ý câu rõ ràng." : "Câu đúng ngữ pháp, ý rõ ràng.") + " Nhận xét mô phỏng, chưa gọi dịch vụ AI thật.",
+      cachDungTu: AI_HINTS[key] ? AI_HINTS[key].cachDungTu : "Cách dùng mô phỏng của \"" + key + "\"."
+    };
   }
   function aiCommit(u, id, b, h) {
     aiStore();
@@ -2064,6 +2140,27 @@
     ["GET", /^\/learning\/recommendations$/, () => recommendations(requireMe())],
     ["POST", /^\/ai\/card-drafts$/, (m, b) => aiCreate(requireMe(), b)],
     ["GET", /^\/ai\/requests\/(\w+)$/, (m) => aiRequestView(aiOwned(m[1]))],
+    ["POST", /^\/ai\/context-explanations$/, (m, b) => aiTask(requireMe(), "NGU_CANH", b)],
+    ["POST", /^\/ai\/sentence-feedback$/, (m, b) => aiTask(requireMe(), "SUA_CAU", b)],
+    ["GET", /^\/ai\/history$/, (m, b, q) => {
+      const u = requireMe(); const errors = [];
+      const [p, size] = pageParams(q, errors);
+      if (q.loai && !["TAO_THE", "NGU_CANH", "SUA_CAU", "ANH_THE"].includes(q.loai)) errors.push(fe("loai", "Giá trị không hợp lệ"));
+      if (errors.length) bad(errors);
+      const list = aiStore().aiRequests.filter((r) => r.uid === u.id && (!q.loai || r.loai === q.loai)).map(aiAdvance).sort((a, c) => c.createdAt.localeCompare(a.createdAt) || Number(c.id) - Number(a.id));
+      const inputRef = (r) => r.loai === "TAO_THE" ? (r.doanVan ? "TEXT:" + (r.doanVan.length * 2654435761 % 4294967296).toString(16).padStart(8, "0") + "00000000" : "FILE:" + r.tepId) : r.tu;
+      return slicePage(list, p, size, (r) => ({ id: r.id, loai: r.loai, trangThai: r.trangThai, maLoi: r.maLoi, inputRef: inputRef(r), moPhong: true, nhaCungCap: r.nhaCungCap, anKiemDuyet: !!r.anKiemDuyet, createdAt: r.createdAt }));
+    }],
+    ["GET", /^\/me\/service-quota$/, () => {
+      const u = requireMe(), now = Date.now(), ngay = localDate(now, AI_DRAFT.zone);
+      const pron = (db.pronunciations || []).filter((x) => x.uid === u.id && localDate(Date.parse(x.createdAt), AI_DRAFT.zone) === ngay).length;
+      const hanMuc = ["AI", "ANH", "TTS", "PHAT_AM"].map((loai) => {
+        const gioiHan = quotaLimit(u, loai);
+        const x = loai === "AI" || loai === "ANH" ? aiUsage(u, loai, ngay) : { soDung: loai === "PHAT_AM" ? pron : 0, soGiu: 0 };
+        return { loai, gioiHan, soDung: x.soDung, soGiu: x.soGiu, conLai: Math.max(0, gioiHan - x.soDung - x.soGiu) };
+      });
+      return { goiMa: planOf(u), ngay, datLaiAt: iso(startOfLocalDay(now, AI_DRAFT.zone) + DAY), hanMuc };
+    }],
     ["POST", /^\/ai\/card-drafts\/(\w+)\/commit$/, (m, b, q, h) => aiCommit(requireMe(), m[1], b, h)],
     ["GET", /^\/learning\/confusing-pairs$/, () => {
       const u = requireMe();

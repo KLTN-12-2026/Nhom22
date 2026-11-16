@@ -462,7 +462,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Hoãn:** `POST /ai/exercise-drafts` (chỉ làm khi dư thời gian sau 29/11).
 - **Quyết định (16/11/2026):** cả ba tác vụ bất đồng bộ qua `tac_vu_nen` (202 + `requestId`, hỏi `GET /ai/requests/{id}`), response thêm `ketQua`; kết quả giải thích dùng tên trường thẻ (`tuLoai`, `phienAm`, `nghiaVi`, `viDuEn`, `dichVi`) để tự điền; lỗi sửa câu có `loai` `NGU_PHAP`/`CHINH_TA`/`TU_VUNG`, `PHONG_CACH` là gợi ý; sai schema → `LOI` hoàn lượt; ảnh: `ImageClient` + `FakeImageClient` (mặc định), lưu PNG thành `tep_tin` loại `ANH` của người dùng dùng ngay làm `anhId`; Imagen thật chưa làm (chưa có khóa). `GET /me/service-quota` trả 4 nhóm hạn mức hôm nay. Không migration.
 - **Đã làm 16/11/2026:** `AiTaskService`, `AiTaskJobHandler`, `CardImageJobHandler`, `AiTaskPrompt`, `AiTaskParser`, `AiTaskPayload`, `AiRequestFinisher` (dùng chung với `CardDraftJobHandler`); `ImageClient`, `FakeImageClient`, `ImageResult`, `ImageProperties` (`app.ai.image.*`); `FakeAiClient` trả schema `context_explanation`/`sentence_feedback`; `YeuCauAi.moi`; DTO `ContextExplanationRequest`, `SentenceFeedbackRequest`, `CardImageRequest`, `ContextExplanationResult`, `SentenceFeedbackResult`, `AiHistoryItem`, `AiHistoryQuery`; `AiRequestResponse.ketQua`; `QuotaService.status` + `QuotaController` + `ServiceQuotaResponse`; `FileService.createGeneratedImage`, `TepTin.generatedImage`. Kiểm chứng: `FR09AiTaskTest` 6/6, `FakeAiClientTest` 8/8, toàn bộ `mvnw test` 524/524 pass (Testcontainers, 16/11/2026); HTTP thật trên dev với Fake 16/11/2026 pass (3 tác vụ 202 → `HOAN_TAT` có `ketQua`, ảnh PNG tải được qua URL ký, lịch sử, `service-quota` AI 2/20, ảnh 1/10). Luồng: [B3.3](../docs/luong-backend/B3.3-tac-vu-ai-khac.md).
-- **Còn lại để tick:** 1 lượt gọi OpenAI thật cho hai prompt mới (cần `OPENAI_API_KEY`); nhà cung cấp ảnh thật (Imagen, cần khóa); mockup UI30/UI31/UI32. Postman 16/11/2026: 6 request ở "05 AI & phát âm" + hạn mức hôm nay ở "01 Tài khoản" (body đã gọi thật: 202).
+- **Còn lại để tick:** 1 lượt gọi OpenAI thật cho hai prompt mới (cần `OPENAI_API_KEY`); nhà cung cấp ảnh thật (Imagen, cần khóa). Mockup UI30/UI31/UI32 đã đọc route demo đúng DTO (16/11/2026, preview). Postman 16/11/2026: 6 request ở "05 AI & phát âm" + hạn mức hôm nay ở "01 Tài khoản" (body đã gọi thật: 202).
 
 ### [ ] B3.4a Âm thanh TTS — FR-10, TC-14 (code xong 14/11/2026, chờ 1 lượt gọi OpenAI TTS thật)
 - `GET /cards/{id}/audio` (TTS, cache theo nội dung+giọng+phiên bản); bài `NGHE_VIET` dùng âm thanh này khi thẻ chưa có tệp âm thanh riêng.
@@ -558,7 +558,7 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **HTTP thật 16/11/2026** (cổng `fake`, tài khoản thử mới): chưa có gói → 402 `SUBSCRIPTION_REQUIRED`; `GET /billing/plans` 200; `GET /me/subscription` `CHUA_CO_GOI`; `POST /billing/checkouts` `PRO`/`THANG` 201 `moPhong: true`, gói không bán 422 `fieldErrors.goiMa`, `chuKy` sai 400; mở `paymentUrl` → 302 `/thanh-toan-ket-qua?maDon=`; IPN gửi lại → `RspCode 02`, chữ ký sai → `97`; giao dịch `THANH_CONG`, gói `HIEU_LUC` 30 ngày, API cần gói trả 200.
 - **Còn lại để tick:** 1 lượt thanh toán VNPay sandbox thật (cần `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` và khai URL IPN công khai trên cổng merchant). Postman 16/11/2026: 8 request ở "01 Tài khoản" (gói, gói của tôi, tạo đơn, IPN mô phỏng, xem đơn, gói không bán 422, IPN sai chữ ký 97). Mockup 16/11/2026: UI55 đọc route demo `plans`/`subscription`/`checkouts`, UI57 mới `mockups/dot3/thanh-toan-ket-qua.html` đọc `GET /billing/transactions/{maDon}` (hỏi lại 2 giây; thành công, IPN chậm, thất bại, 404, sai chữ ký), đã thử trên preview. FE: nối F3.12 và bắt 402.
 
-### [ ] B3.12b Lịch sử giao dịch, nhắc và hết hạn gói, áp quyền lợi — FR-15, TC-22, TC-23
+### [x] B3.12b Lịch sử giao dịch, nhắc và hết hạn gói, áp quyền lợi — FR-15, TC-22, TC-23
 - API: `GET /billing/transactions` (phân trang, của mình), `GET /billing/transactions/{maDon}/receipt` (biên nhận HTML in được, không phải hóa đơn VAT). `GET /admin/payments` làm ở B3.12c (chốt 16/11/2026).
 - `SubscriptionExpiryJob` mỗi 15 phút (cùng bộ lập lịch B3.7): còn `0 ≤ N ≤ 7` ngày địa phương và sau 08:00 → một `GOI_SAP_HET_HAN`/ngày (unique `(nguoi_dung_id, loai, ngay_dia_phuong)`); quá `het_han_at` → `HET_HAN` (UPDATE có điều kiện) + một `GOI_DA_HET_HAN`; tài khoản bị khóa bởi `SubscriptionGuard`, không mất dữ liệu. Trong ứng dụng luôn gửi, email theo `nhan_email`. Đơn `CHO_THANH_TOAN` quá 15 phút → `HET_HAN`.
 - `GET /me/subscription` thêm `soNgayConLai` (tính lúc gọi) cho banner.
@@ -568,9 +568,10 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Quyết định (16/11/2026):** `GET /admin/payments` chỉ làm một lần ở B3.12c. Lỗi quyền lợi 422 có `details {quyenLoi: GIOI_HAN_THE|PHAT_AM|BO_MAU_CAO_CAP, goiCanNangCap, …}`; `goiCanNangCap` = gói đang bán rẻ nhất đáp ứng. Giới hạn thẻ đếm thẻ chưa xóa trong bộ chưa xóa của User, không áp cho bộ mẫu Admin. Chỉ User `HOAT_DONG` nhận thông báo gói; tài khoản khóa vẫn chuyển hết hạn. Job tắt bằng `app.billing.expiry-job.enabled=false` (hồ sơ test). Biên nhận cần cookie phiên nên FE tải bằng `fetch`.
 - **Đã làm 16/11/2026:** `V22__entitlements.sql` (`bo_the.cao_cap`, chỉ bộ mẫu); 2 API lịch sử/biên nhận (`ReceiptRenderer`, CSP chặn script, `no-store`); `SubscriptionExpiryService` + `SubscriptionExpiryWorker` (nhắc D−7…D sau 08:00 giờ User, hết hạn bằng UPDATE có điều kiện, đơn chờ quá 15 phút → `HET_HAN`, email theo `nhan_email`); `EntitlementService.plan/requireCardCapacity/requirePronunciation/requirePremiumSamples`, `CardLimitService` gắn vào tạo thẻ, commit CSV, sao chép bộ, commit thẻ AI; cờ `phat_am` ở đánh giá phát âm; `caoCap` ở `/admin/decks*` và `/library/decks*`. Kiểm chứng: `FR15SubscriptionExpiryTest` 3/3, `FR15EntitlementTest` 2/2, `FR15BillingTest` 8/8 (thêm lịch sử + biên nhận); toàn bộ `mvnw test` 530/530 pass (16/11/2026). Luồng: [B3.12b](../docs/luong-backend/B3.12b-lich-su-het-han-quyen-loi.md).
 - **HTTP thật 16/11/2026:** `GET /billing/transactions` 200, `size=500` 400; biên nhận 200 `text/html; charset=UTF-8`, `Content-Disposition: inline`, CSP `default-src 'none'`; biên nhận của người khác 404; `soNgayConLai` 30.
-- **Còn lại để tick:** chạy job hết hạn một vòng và xem email nhắc trên Mailpit (server dev đang chạy tắt công cụ demo, xem B3.12c); mockup UI56 đã đọc route demo lịch sử/biên nhận đúng DTO (16/11/2026, preview). Postman 16/11/2026: lịch sử giao dịch, biên nhận HTML. FE: F3.12 UI56, banner `AppShell`, bắt 422 `details.quyenLoi`.
+- **HTTP thật profile `dev` 16/11/2026 (cổng 8081, `scripts/smoke_billing_expiry.py`, 17/17 pass):** User mới mua `PRO` qua Fake → `HIEU_LUC`; Admin sửa hạn còn 3 ngày → kiểm tra hết hạn lần 1 `soNhacSapHetHan 1`, lần 2 trong ngày `0` (không trùng); `soNgayConLai 3`; thông báo `GOI_SAP_HET_HAN`; sửa hạn qua mốc → `soChuyenHetHan 1`, gói `HET_HAN`, API học 402 `SUBSCRIPTION_REQUIRED`, `/billing/**` vẫn 200; Mailpit nhận "Gói sắp hết hạn" và "Gói đã hết hạn".
+- **Ghi chú:** mockup UI56 đã đọc route demo lịch sử/biên nhận đúng DTO (16/11/2026, preview). Postman 16/11/2026: lịch sử giao dịch, biên nhận HTML. FE: F3.12 UI56, banner `AppShell`, bắt 422 `details.quyenLoi`.
 
-### [ ] B3.12c Quản lý thanh toán & thống kê doanh thu (Admin) — FR-15, TC-23, TC-24 (góp ý GVHD 10/11/2026)
+### [x] B3.12c Quản lý thanh toán & thống kê doanh thu (Admin) — FR-15, TC-23, TC-24 (góp ý GVHD 10/11/2026)
 - Thiết kế: TK §6.9 mục "Quản lý thanh toán" và "Thống kê doanh thu".
 - API: `GET /admin/payments` (lọc trạng thái, gói, ngày, email; phân trang), `GET /admin/payments/{maDon}`, `GET /admin/subscriptions` (lọc trạng thái, gói, email, `sapHetHan=7`), `GET /admin/plans`, `PUT /admin/plans/{ma}` (`version`, 409), `GET /admin/revenue?ky=THANG|QUY|NAM&nam=` (kỳ `NAM`: `tuNam`, `denNam`).
 - Công cụ demo (bật bằng `app.billing.demo-tools=true`): `PATCH /admin/subscriptions/{id}/expiry {hetHanAt, lyDo}`, `POST /admin/subscriptions/expiry-check`; lý do bắt buộc, ghi `nhat_ky_quan_tri` (thêm `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN`; đối tượng `GOI_DICH_VU`, `DANG_KY_GOI`; cần migration nới ràng buộc nếu cột là ENUM/CHECK).
@@ -581,39 +582,46 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Quyết định (16/11/2026):** `AdminBillingController` ở module `billing`. Lọc ngày theo `tao_at` giờ VN; chi tiết bỏ `vnp_SecureHash`. `PUT /admin/plans/{ma}` thay toàn bộ, `lyDo` tùy chọn, phải còn ≥ 1 gói đang bán; hạn mức ngày để B3.11. Doanh thu gom bằng Java theo giờ VN; so với kỳ trước = năm trước (`THANG`/`QUY`) hoặc khoảng năm liền trước (`NAM`); `tyLeThanhCong` là phần trăm theo `tao_at`. Công cụ demo mặc định tắt (`BILLING_DEMO_TOOLS`, dev/test bật), tắt → 404, chỉ sửa gói `HIEU_LUC`. Seed demo `db/demo` nạp bằng profile `demo` (`application-demo.yaml`).
 - **Đã làm 16/11/2026:** `V23__billing_admin.sql`; 8 API (`AdminBillingService`, `RevenueService`); `R__seed_demo_billing.sql` 160 đơn `DEMO-…`. Kiểm chứng: `FR15AdminBillingTest` 4/4 (TC-23, TC-24), toàn bộ `mvnw test` 534/534 pass (16/11/2026); seed demo chạy thử trên DB dev trong transaction rồi rollback. Luồng: [B3.12c](../docs/luong-backend/B3.12c-quan-ly-thanh-toan-doanh-thu.md).
 - **HTTP thật 16/11/2026:** learner 403; `GET /admin/payments` 200 (lọc `email`), khoảng ngày ngược 400; `GET /admin/payments/{maDon}` 200 kèm `duLieuCong`; `GET /admin/subscriptions` 200 có `version`; `GET /admin/plans` 200 có `soDangKyHieuLuc`; `PUT /admin/plans/PRO` giá 10 → 400, `version` cũ 409 (không đổi giá thật); `GET /admin/revenue?ky=THANG&nam=2026` 200, thiếu `ky` 400, khoảng năm ngược 400. `PATCH /admin/subscriptions/{id}/expiry` và `POST /admin/subscriptions/expiry-check`: kiểm tra 400 lý do ngắn đúng, nhưng nhánh chính trả 404 "Công cụ demo đang tắt" vì tiến trình đang chạy ở cổng 8080 không bật `BILLING_DEMO_TOOLS` (profile `dev` mặc định bật; tiến trình này cũng trả cookie `Secure`, nên có thể không chạy profile `dev`).
-- **Còn lại để tick:** gọi lại 2 công cụ demo trên server chạy profile `dev`/`demo`. Mockup 16/11/2026: UI58 đọc route demo `GET /admin/revenue`, UI59 đọc 7 route demo còn lại đúng DTO (lọc, chi tiết `duLieuCong`, 400/409/422, công cụ demo tắt → 404 ẩn khối), đã thử trên preview. Postman 16/11/2026: 11 request ở "07 Quản trị" (giao dịch, chi tiết, gói người dùng, 2 công cụ demo, cấu hình gói, giá < 1.000 → 400, doanh thu, thiếu kỳ 400). FE: F3.13.
+- **HTTP thật profile `dev` 16/11/2026 (cổng 8081):** `PATCH /admin/subscriptions/{id}/expiry` 200 (`version` tăng), `version` cũ 409; `POST /admin/subscriptions/expiry-check` lý do ngắn 400, chạy 200 trả `{soNhacSapHetHan, soChuyenHetHan, soDonHetHan}`; nhật ký quản trị có `CHAY_KIEM_TRA_HET_HAN`. Tiến trình 8080 cũ không chạy profile `dev` (`.env` thiếu `SPRING_PROFILES_ACTIVE`) nên công cụ demo tắt.
+- **Ghi chú:** Mockup 16/11/2026: UI58 đọc route demo `GET /admin/revenue`, UI59 đọc 7 route demo còn lại đúng DTO (lọc, chi tiết `duLieuCong`, 400/409/422, công cụ demo tắt → 404 ẩn khối), đã thử trên preview. Postman 16/11/2026: 11 request ở "07 Quản trị" (giao dịch, chi tiết, gói người dùng, 2 công cụ demo, cấu hình gói, giá < 1.000 → 400, doanh thu, thiếu kỳ 400). FE: F3.13.
 - **Cuối Đợt 3 →** `/fe-report DOT3`.
 
 ---
 
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
 
-### [ ] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24
+### [x] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24
 - Mỗi TC ở TK §19 có ít nhất một test tự động (trừ TC-18 thủ công, TC-19/20 có biên bản). Bảng truy vết `FR ↔ API ↔ TC` trong `docs/`.
+- **Đã làm 16/11/2026:** [docs/TRUY_VET_FR_API_TC.md](../docs/TRUY_VET_FR_API_TC.md): FR-01…15 ↔ API ↔ TC; TC-01…17, 21…24 đều có test `tcNN_…` (đếm theo lớp); TC-18 thủ công (B5.4), TC-19/20 biên bản ở `docs/kiem-thu/`.
 
-### [ ] B4.2 Rà soát bảo mật
+### [x] B4.2 Rà soát bảo mật
 - Swagger UI và `/v3/api-docs` bật mặc định và `permitAll`: đặt `SWAGGER_ENABLED=false` ở production. Image `rustfs/rustfs`, `axllent/mailpit`, `amazon/aws-cli` đang dùng tag `latest`: ghim phiên bản trước khi triển khai.
 - Chạy `/security-review`; kiểm rate limit (đăng nhập, quên mật khẩu, upload, AI, báo cáo), kiểm quyền cha–con, không log token/mật khẩu/khóa, CORS/CSRF, header bảo mật.
+- **Đã làm 16/11/2026:** Swagger mặc định tắt (chỉ `dev` bật), profile `prod` tắt cứng; image đã ghim (`rustfs 1.0.3`, `mailpit v1.32.0`, `aws-cli 2.38.5`, `nginx 1.28-alpine`). Sửa 2 lỗi: `MailDispatcher` log cả `event` (gồm HTML có link token xác thực/đặt lại mật khẩu) → chỉ log tiêu đề; `R__seed_dev.sql` (admin mật khẩu mặc định) chuyển `db/seed` → `db/dev` để prod nạp được chủ đề + thư viện mẫu mà không có tài khoản dev. Rate limit: đăng nhập, đăng ký, quên/đổi mật khẩu, upload, báo cáo có `RateLimiter`; AI theo hạn mức ngày/gói. Header: `nosniff`, `X-Frame-Options DENY`, `no-store`; HSTS ở Nginx. CORS chỉ `APP_FRONTEND_URL`, CSRF cookie. `/security-review` 16/11/2026: không có lỗ hổng mức cao. Toàn bộ `mvnw -B test` 544/544 pass sau thay đổi GĐ4 (16/11/2026).
 
-### [ ] B4.3 Hiệu năng — TC-20
+### [x] B4.3 Hiệu năng — TC-20
 - Dữ liệu minh họa + 1 kịch bản k6, 50 User đồng thời, 3 endpoint phổ biến; ghi p95, tỷ lệ lỗi. Thêm index thiếu theo `EXPLAIN`.
 - **Gọn:** không đo riêng upload/AI.
+- **Đã làm 16/11/2026:** `scripts/k6/tc20.js` + `seed_load_users.sql` (50 User `PRO`); 50 VU giữ 2 phút: p95 `/learning/today` 105,7 ms, `/decks` 69,0 ms, `/library/decks` 80,7 ms, `/statistics/overview` 89,0 ms; 0/7.152 request lỗi. Không cần thêm index. Biên bản: [TC20](../docs/kiem-thu/TC20_BIEN_BAN_HIEU_NANG.md).
 
-### [ ] B4.4 Sao lưu & khôi phục — TC-19
+### [x] B4.4 Sao lưu & khôi phục — TC-19
 - Script `mysqldump` + `aws s3 sync` kho S3; thử khôi phục 1 lần sang môi trường mới, ghi biên bản thời gian/kết quả.
 - **Gọn:** không lập lịch tự động hằng ngày.
+- **Đã làm 16/11/2026:** `scripts/backup.sh` (mysqldump gzip + `aws s3 sync`, `SHA256SUMS`), `restore.sh`, `verify_restore.sh`. Khôi phục sang MySQL + RustFS mới: sao lưu 8 giây, khôi phục 23 giây, 10 bảng khớp số dòng, 43/43 tệp có object. Biên bản: [TC19](../docs/kiem-thu/TC19_BIEN_BAN_SAO_LUU_KHOI_PHUC.md).
 
-### [ ] B4.5 Log & giám sát
+### [x] B4.5 Log & giám sát
 - Log JSON có `requestId`; Actuator health.
 - **Gọn:** không làm cảnh báo job lỗi.
+- **Đã làm 16/11/2026:** profile `prod` log JSON ECS (`application-prod.yaml`); `RequestIdFilter` thêm 1 dòng logger `access` cho mỗi request `/api/**` (method, path không query, status, `durationMs`, `requestId`). Kiểm trên server JSON: dòng log có `"requestId":"b45-json-log-check-03"`. Actuator health/liveness/readiness có sẵn.
 - **Cuối GĐ4 →** `/fe-report GD4`.
 
 ---
 
 ## GĐ5 — Triển khai & bàn giao (07/12–14/12)
 
-### [ ] B5.1 Compose production
+### [x] B5.1 Compose production
 - `docker-compose.prod.yml`: Nginx reverse proxy (FE + `/api` cùng domain), HTTPS, không mở cổng MySQL/Redis/S3 ra ngoài, biến bí mật qua `.env` không commit. Đặt `FORWARD_HEADERS_STRATEGY=native` cho service `api` (Nginx gửi `X-Forwarded-For`/`-Proto`) để rate limit theo IP thật; nếu không, mọi người dùng chung một IP proxy. Bật `COOKIE_SECURE=true`, `SPRING_PROFILES_ACTIVE` khác `dev`.
+- **Đã làm 16/11/2026:** `docker-compose.prod.yml` (mysql, redis, s3, s3-init, api profile `prod`, web, nginx; chỉ Nginx mở 80/443), `docker/nginx/templates/default.conf.template` (HTTPS, `/api/` → api, `/` → web, `s3.<domain>` → s3 cho URL ký sẵn, chặn `/actuator/`, `/v3/`, ghi đè `X-Forwarded-For`), `frontend/Dockerfile`, `.env.prod.example`. `docker compose config` hợp lệ. **Chưa** dựng thử trên máy chủ thật (cần tên miền + chứng chỉ).
 
 ### [x] B5.2a Thư viện mẫu (R-01) — TK §20.1, kéo lên S7 (xong 15/11/2026)
 - 6–10 bộ giao tiếp/TOEIC, 200–300 thẻ tự biên soạn (có thể nháp bằng AI B3.2 rồi duyệt tay), đủ IPA, ví dụ, bản dịch; âm thanh từ B3.4a. Thay nội dung `R__library_starter.sql` (trước đây 8 bộ × 3 thẻ, chưa có IPA).
@@ -621,11 +629,13 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Quyết định (15/11/2026):** giữ 8 bộ (2 mục tiêu × 4 trình độ để luồng khởi đầu B1.10 luôn có bộ phù hợp), mỗi bộ 30 thẻ = 240 thẻ, tự biên soạn tay (không dùng AI vì chưa có khóa OpenAI); IPA giọng Mỹ khớp giọng TTS `alloy`; câu ví dụ chứa đúng từ để dùng được cho `DIEN_CHO_TRONG`. Không sinh trước âm thanh: thẻ mẫu không có `AM_TU`, bài `NGHE_VIET` dùng `amThanhTts` (B3.4a). Bộ "Khởi động — …" cũ được đổi tên tại chỗ (trường `cu` của catalog); catalog là nguồn nội dung, seed đồng bộ thẻ khớp `(bộ, tu)` khi khác (thay quy tắc "không ghi đè" của B1.10, xem luồng B1.10).
 - **Đã làm (15/11/2026):** viết lại `db/seed/R__library_starter.sql` (catalog JSON 8 bộ × 30 thẻ, đổi tên bộ cũ, đồng bộ mô tả bộ và nội dung thẻ, thêm bộ/thẻ còn thiếu; không migration). `FR04LibrarySeedTest` viết lại: 8 bộ đúng mục tiêu/trình độ và 30 thẻ, không thẻ thiếu IPA/từ loại/ví dụ/bản dịch và ví dụ chứa từ, chạy lại không trùng (8/240), nâng cấp bộ "Khởi động — TOEIC cơ bản" cũ, sao chép từng bộ mẫu rồi tạo bài `NGHE_VIET` 20 câu đều `amThanhTts`. **Kiểm chứng:** `FR04LibrarySeedTest` 12/12, toàn bộ `mvnw -B verify` 511/511 pass (Testcontainers, 15/11/2026). **DB dev (15/11/2026):** khởi động app dev, Flyway chạy lại seed; `GET /library/decks?nguon=MAU` trả 8 bộ mới × 30 thẻ, không còn tên "Khởi động —". Trên DB dev còn 30 bộ mẫu theo chủ đề (900 thẻ, IPA giọng Anh) nhập bằng `data/import_library.py` + `data/csv` (commit `b8eaf80`, qua `POST /admin/decks`), không nằm trong seed: tổng cộng 38 bộ mẫu, vượt mức 6–10 bộ/200–300 thẻ của TK §20.1 và lệch giọng IPA; cần chốt giữ hay bỏ bộ CSV trước demo (B5.2b). **Chưa:** nghe TTS thật (thuộc B3.4a, cần `OPENAI_API_KEY`). Không API mới nên không đổi mockup/Postman. Bàn giao: [Sprint 3](../ban-giao-cho%20fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md) mục 7.
 
-### [ ] B5.2b Tài khoản & lịch sử demo — TK §20.1
+### [x] B5.2b Tài khoản & lịch sử demo — TK §20.1
 - 1 Admin, 3 User có lịch sử khác nhau, thẻ quá hạn, cặp nhầm, AI nháp, một báo cáo, một ca dịch vụ lỗi.
+- **Đã làm 16/11/2026:** `scripts/demo/seed_demo.py` (qua API: sao chép bộ, ôn, luyện sai, AI tạo thẻ còn nháp, báo cáo, ảnh AI lỗi `#mo-phong:LOI`) + `make_overdue.sql` (đẩy thẻ của Bình quá hạn). Chạy trên DB dev: An 2 bộ + nháp AI + báo cáo; Bình 10 thẻ quá hạn; Chi 1 bài luyện + 1 ca ảnh AI lỗi (`service-usage` `ANH.soLoi`). **Chốt 30 bộ CSV:** không đưa vào seed/demo (lệch giọng IPA, vượt mức TK §20.1); môi trường sạch chỉ có 8 bộ × 30 thẻ. Bảng tài khoản: `huong-dan/03_VAN_HANH.md`.
 
-### [ ] B5.3 Tài liệu
+### [x] B5.3 Tài liệu
 - Xuất `openapi.json`; hướng dẫn cài đặt/vận hành trong `huong-dan/`; danh sách hạn chế đã biết, gồm mọi mục **Cắt/Hoãn** của [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md).
+- **Đã làm 16/11/2026:** `docs/api/openapi.json` (OpenAPI 3.1, 107 đường dẫn, 132 thao tác, xuất từ `/v3/api-docs`); `huong-dan/` 5 tệp (cài đặt dev, triển khai prod, vận hành, hạn chế đã biết). Phát hiện khi viết: ảnh AI chỉ có `FakeImageClient`, **chưa có client Imagen thật** (B3.3 cần code thêm, không chỉ khóa).
 
 ### [ ] B5.4 Diễn tập demo — TK §20.2
 - Chạy kịch bản 10 bước trên môi trường sạch; sửa lỗi phát sinh.

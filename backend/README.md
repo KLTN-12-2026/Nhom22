@@ -71,7 +71,7 @@ Cách này giúp bạn lập trình và debug dễ dàng hơn. Dịch vụ phụ
 | Nơi | Nội dung |
 |---|---|
 | `application.yaml` | Cấu hình chung, **không** có giá trị mặc định cho bí mật. Thiếu hoặc rỗng `DB_USER`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` thì app dừng ngay khi khởi động (`RequiredSettingsConfig`). Mặc định an toàn: `COOKIE_SECURE=true`, `SWAGGER_ENABLED=false`. |
-| `application-dev.yaml` (profile `dev`) | Giá trị dev cho các biến trên, cookie không `Secure`, bật Swagger, nạp `db/seed` (tài khoản ADMIN mẫu). |
+| `application-dev.yaml` (profile `dev`) | Giá trị dev cho các biến trên, cookie không `Secure`, bật Swagger, nạp `db/seed` (chủ đề, thư viện mẫu) và `db/dev` (tài khoản ADMIN mẫu). |
 | `src/test/resources/application-test.yaml` | Giá trị giả cho test; MySQL, Redis, S3 lấy từ Testcontainers. |
 | `.env` | Compose đọc toàn bộ file này cho container `api` (`env_file`). `SPRING_PROFILES_ACTIVE=dev` trong file mẫu. Khi triển khai thật: bỏ profile `dev`, đặt bí mật riêng. |
 

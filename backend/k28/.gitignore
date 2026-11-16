@@ -34,3 +34,6 @@ build/
 
 ### Local env ###
 .env
+backups/
+.env.prod
+docker/nginx/certs/*.pem
