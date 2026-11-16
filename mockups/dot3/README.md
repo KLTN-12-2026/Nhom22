@@ -19,9 +19,9 @@ Các màn chưa có API: `ui.js` dùng fixture, mô phỏng xử lý; `shared/fl
 |---|---|---|
 | UI28 | goi-y.html | GET /learning/recommendations |
 | UI29 | ai-xuong-the.html | POST /ai/card-drafts → 202; GET /ai/requests/{id}; POST /ai/card-drafts/{id}/commit, Idempotency-Key |
-| UI30 | ai-giai-thich.html | POST /ai/context-explanations; GET /ai/requests/{id} |
-| UI31 | ai-viet-cau.html | POST /ai/sentence-feedback; GET /ai/requests/{id} |
-| UI32 | ai-lich-su.html | GET /ai/history; GET /me/service-quota; GET /ai/requests/{id} |
+| UI30 | ai-giai-thich.html | POST /ai/context-explanations; GET /ai/requests/{id} (B3.3, đã đối chiếu DTO 16/11/2026) |
+| UI31 | ai-viet-cau.html | POST /ai/sentence-feedback; GET /ai/requests/{id} (B3.3, đã đối chiếu DTO 16/11/2026) |
+| UI32 | ai-lich-su.html | GET /ai/history; GET /me/service-quota; GET /ai/requests/{id} (B3.3, đã đối chiếu DTO 16/11/2026) |
 | UI33 | phat-am.html | GET /cards/{id}/audio; POST /pronunciation/assessments; GET /pronunciation/assessments/{id} |
 | UI34 | phat-am-lich-su.html | GET /pronunciation/history; DELETE /pronunciation/recordings/{id} |
 | UI36 | ban-do-lam-chu.html | GET /statistics/skills (B2.10); evidence/mức làm chủ cần chốt schema |
@@ -61,8 +61,7 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
   chọn từng thẻ, sửa từ/nghĩa, nghe qua Web Speech, xem đoạn nguồn. Trùng không
   được chọn mặc định. Lưu đúng các thẻ đã chọn, đã sửa vào bộ đích trong VLDemo (localStorage); khóa nút khi đang lưu. Link xem bộ và học bộ giữ đúng ID. Bản nháp giữ lại khi chuyển sang lịch sử hoặc tải lại trang. Đặt lại đợt 3 không xóa thẻ đã thêm vào bộ demo.
   Từ B3.2 (14/11/2026) bản nháp và việc lưu đi qua ba route demo cùng DTO với backend (202, hỏi trạng thái, `Idempotency-Key`); không gọi endpoint AI thật. Chống gửi trùng trong giao diện không thay thế idempotency phía server.
-- Viết câu/ngữ cảnh: chỉ render text đã escape; phản hồi cố định được ghi rõ
-  là ví dụ cho câu mẫu. Không gửi đoạn văn/câu tới nhà cung cấp AI.
+- Viết câu/ngữ cảnh/lịch sử AI (UI30–UI32, 16/11/2026): gọi route demo `POST /ai/context-explanations`, `POST /ai/sentence-feedback`, hỏi `GET /ai/requests/{id}` mỗi 0,9 giây, render `ketQua` đã escape. Phản hồi là luật mô phỏng (quá khứ đơn với mốc thời gian, vài lỗi chính tả, viết hoa/dấu chấm là gợi ý `PHONG_CACH`; mẹo nhớ/cách dùng có sẵn cho receipt, refund, appointment), không gửi câu tới nhà cung cấp AI. Bộ chọn trạng thái: “Lỗi” → `LOI` hoàn lượt, “AI chưa rõ kết quả” → `KHONG_XAC_DINH` tính lượt, “Hết hạn mức AI” → 429. Hạn mức theo gói đang hiệu lực (Pro 20 AI/ngày); tài khoản không có gói (kể cả admin) có hạn mức 0 như BE.
 - Phát âm: chỉ xin micro sau khi bấm ghi; MediaRecorder ghi ≤15 giây, nghe lại,
   ghi lại, dừng track khi rời trang. Blob chỉ ở bộ nhớ tab. Từ B3.4b (14/11/2026) bản ghi
   được đổi sang WAV 16 kHz rồi gửi route demo; điểm là mô phỏng, không chấm giọng người dùng.
