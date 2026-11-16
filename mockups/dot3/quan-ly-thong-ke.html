@@ -105,7 +105,6 @@
 </style>
 </head>
 <body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="quan-ly-thong-ke" data-nav="admin-revenue" data-role="ADMIN">
-<!-- F3.13 · UI58 · Dữ liệu mẫu độc lập, không gọi API thật. -->
 <div class="app">
   <header class="app-header"></header>
   <div class="app-body">
@@ -128,7 +127,7 @@
                 <label class="field">Đến năm<select class="select" id="revenue-to-year" name="toYear"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option></select></label>
               </div>
             </div>
-            <button type="button" class="btn btn-secondary" id="export-revenue">↓ Xuất báo cáo CSV</button>
+            <button type="button" class="btn btn-secondary" id="export-revenue">Xuất báo cáo CSV</button>
           </form>
           <p class="rv-error" id="revenue-error" role="alert"></p>
           <p class="rv-scope" id="revenue-scope" role="status" aria-live="polite"></p>
@@ -153,8 +152,8 @@
               <div class="d3-table-wrap"><table class="d3-table rv-table"><caption class="sr-only" id="revenue-table-caption">Doanh thu theo tháng năm 2026</caption><thead><tr><th scope="col" id="period-column">Tháng</th><th scope="col">Gói Pro</th><th scope="col">Gói Premium</th><th scope="col">Tổng doanh thu</th><th scope="col">Giao dịch thành công</th><th scope="col">So kỳ trước</th></tr></thead><tbody id="revenue-table-body"></tbody><tfoot id="revenue-table-footer"></tfoot></table></div>
             </section>
           </div>
-          <details class="rv-notes"><summary>Cách tính số liệu</summary><ul><li>Doanh thu chỉ gồm giao dịch thành công, theo thời điểm hoàn tất và múi giờ Việt Nam (Asia/Ho_Chi_Minh).</li><li>Tỷ lệ thành công = thành công / (thành công + thất bại + hết hạn). Đơn đang chờ không được tính.</li><li>Thẻ tăng trưởng so với cùng giai đoạn trước; bảng so với tháng, quý hoặc năm liền trước. Kỳ trước bằng 0 thì hiển thị “Chưa có cơ sở”.</li><li>Năm 2026 có dữ liệu đến 10:00 ngày 13/11/2026. Kỳ đang diễn ra là số lũy kế; kỳ chưa bắt đầu hiển thị 0 và ghi “Chưa đến kỳ”.</li><li>Gói hiệu lực và sắp hết hạn là ảnh chụp tại mốc dữ liệu mẫu, không thay đổi khi chọn kỳ doanh thu.</li></ul></details>
-          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="revenue-demo-state">Xem trạng thái <select class="select" id="revenue-demo-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Không có giao dịch</option><option value="error">Lỗi tải dữ liệu</option></select></label><button type="button" class="btn btn-quiet" id="reset-revenue-demo">Đặt lại mẫu thống kê</button></div></details><span class="rv-current-note">Dữ liệu mẫu · 13/11/2026 · Giờ Việt Nam</span></footer>
+          <details class="rv-notes"><summary>Cách tính số liệu</summary><ul><li>Doanh thu chỉ gồm giao dịch thành công, theo thời điểm hoàn tất và múi giờ Việt Nam (Asia/Ho_Chi_Minh).</li><li>Tỷ lệ thành công = thành công / (thành công + thất bại + hết hạn). Đơn đang chờ không được tính.</li><li>Tỷ lệ thành công đếm đơn tạo trong giai đoạn đang xem.</li><li>Thẻ tăng trưởng so với giai đoạn liền trước có cùng độ dài (theo tháng/quý: cả năm trước; theo năm: cùng số năm liền trước). Cột “So kỳ trước” so với kỳ liền trên trong bảng. Kỳ trước bằng 0 thì hiển thị “Chưa có cơ sở”.</li><li>Kỳ đang diễn ra là số lũy kế đến lúc tải; kỳ chưa bắt đầu hiển thị 0 và ghi “Chưa đến kỳ”.</li><li>Gói hiệu lực và sắp hết hạn tính tại thời điểm tải trang, không đổi theo kỳ doanh thu.</li></ul></details>
+          <footer class="d3-footer"><details><summary>Trạng thái mô phỏng</summary><div class="d3-demo"><label for="revenue-demo-state">Xem trạng thái <select class="select" id="revenue-demo-state"><option value="ready">Có dữ liệu</option><option value="loading">Đang tải</option><option value="empty">Không có giao dịch</option><option value="error">Lỗi tải dữ liệu</option></select></label><button type="button" class="btn btn-quiet" id="reset-revenue-demo">Đặt lại bộ lọc</button></div></details><span class="rv-current-note">GET /admin/revenue · Giờ Việt Nam</span></footer>
         </article>
       </div>
     </main>
@@ -166,103 +165,45 @@
 <script src="../shared/app.js"></script>
 <script src="../shared/flow.js"></script>
 <script>
-/* UI58 · Dữ liệu và tương tác thống kê, không cần thư viện biểu đồ bên ngoài. */
 (function () {
   'use strict';
   if (!window.VL?.ready || !VL.me()?.vaiTro.includes('ADMIN')) return;
   const $ = (selector) => document.querySelector(selector);
+  const esc = VL.esc;
   const money = (value) => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
   const number = (value) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(value);
   const percent = (value) => number(value) + '%';
-  const snapshot = new Date('2026-11-13T10:00:00+07:00');
-  const monthStart = (year, month) => new Date(Date.UTC(year, month, 1, -7));
   const periodNames = { THANG: 'tháng', QUY: 'quý', NAM: 'năm' };
-  const fixtures = [];
-  const season = [0, 3, 7, 5, 9, 12, 8, 15, 20, 25, 28, 34];
-  let sequence = 0;
-  // Giao dịch mẫu cố định; có năm trước để tính so sánh cùng kỳ.
-  for (let year = 2017; year <= 2026; year++) {
-    for (let month = 0; month < 12; month++) {
-      if (year === 2026 && month > 10) continue;
-      for (const plan of ['PRO', 'PREMIUM']) {
-        const base = plan === 'PRO' ? 17 + (year - 2017) * 4 + season[month] : 6 + (year - 2017) * 2 + Math.floor(season[month] / 2);
-        const count = year === 2026 && month === 10 ? Math.floor(base * 0.42) : base;
-        for (let i = 0; i < count; i++) {
-          const day = (i % (year === 2026 && month === 10 ? 12 : 28)) + 1;
-          const annual = i % 13 === 0;
-          const amount = (plan === 'PRO' ? 299000 : 999000) * (annual ? 10 : 1);
-          const status = i % 19 === 18 ? 'CHO_THANH_TOAN' : i % 17 === 16 ? 'HET_HAN' : i % 11 === 10 ? 'THAT_BAI' : 'THANH_CONG';
-          fixtures.push({ id: `DEMO-RV-${++sequence}`, plan, amount, status, completed: new Date(Date.UTC(year, month, day, 2, 30)) });
-        }
-      }
-    }
+  const today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+  const thisYear = Number(today.slice(0, 4));
+  let period = 'THANG', rows = [], selected = 0, data = null, seq = 0;
+
+  const yearOptions = (sel, value) => { sel.innerHTML = Array.from({ length: 8 }, (_, i) => thisYear - i).map((y) => `<option value="${y}">${y}</option>`).join(''); sel.value = String(value); };
+  function resetFilters() { yearOptions($('#revenue-year'), thisYear); yearOptions($('#revenue-from-year'), thisYear - 4); yearOptions($('#revenue-to-year'), thisYear); }
+  const total = (row) => row.doanhThu;
+  const plan = (row, code) => (row.theoGoi && row.theoGoi[code]) || 0;
+  const growthText = (value) => value === null ? 'Chưa có cơ sở' : `${value > 0 ? '+' : ''}${percent(value)}`;
+  const growthClass = (value) => value === null || value === 0 ? '' : value > 0 ? 'rv-up' : 'rv-down';
+  const pct = (a, b) => b > 0 ? Math.round((a - b) * 1000 / b) / 10 : null;
+
+  function url() {
+    const p = new URLSearchParams({ ky: period });
+    if (period === 'NAM') { p.set('tuNam', $('#revenue-from-year').value); p.set('denNam', $('#revenue-to-year').value); }
+    else p.set('nam', $('#revenue-year').value);
+    return '/admin/revenue?' + p;
   }
-  const subscriptions = [
-    ['PRO', '2026-12-12'], ['PREMIUM', '2027-11-12'], ['PRO', '2026-11-15'], ['PREMIUM', '2026-11-18'],
-    ['PRO', '2026-11-10'], ['PREMIUM', '2026-12-11'], ['PRO', '2026-11-12'], ['PRO', '2026-11-20']
-  ];
-  let period = 'THANG';
-  let rows = [];
-  let selected = 0;
-  function aggregate(start, end, empty = false) {
-    const result = { PRO: 0, PREMIUM: 0, count: 0, failed: 0, expired: 0 };
-    if (empty) return result;
-    for (const t of fixtures) {
-      if (t.completed < start || t.completed >= end) continue;
-      if (t.status === 'THANH_CONG') { result[t.plan] += t.amount; result.count++; }
-      else if (t.status === 'THAT_BAI') result.failed++;
-      else if (t.status === 'HET_HAN') result.expired++;
-    }
-    return result;
-  }
-  const total = (item) => item.PRO + item.PREMIUM;
-  const growth = (current, previous) => previous > 0 ? (current - previous) / previous * 100 : null;
-  function growthText(value) { return value === null ? 'Chưa có cơ sở' : `${value > 0 ? '+' : ''}${percent(value)}`; }
-  function growthClass(value) { return value === null || value === 0 ? '' : value > 0 ? 'rv-up' : 'rv-down'; }
-  function cutoffForYear(year) {
-    return new Date(Date.UTC(year, snapshot.getUTCMonth(), snapshot.getUTCDate(), snapshot.getUTCHours(), snapshot.getUTCMinutes()));
-  }
-  function getView() {
-    const year = Number($('#revenue-year').value);
-    const from = period === 'NAM' ? Number($('#revenue-from-year').value) : year;
-    const to = period === 'NAM' ? Number($('#revenue-to-year').value) : year;
-    if (from > to) return null;
-    const empty = $('#revenue-demo-state').value === 'empty';
-    const count = period === 'THANG' ? 12 : period === 'QUY' ? 4 : to - from + 1;
-    const items = Array.from({ length: count }, (_, index) => {
-      const bucketYear = period === 'NAM' ? from + index : year;
-      const month = period === 'NAM' ? 0 : period === 'QUY' ? index * 3 : index;
-      const span = period === 'NAM' ? 12 : period === 'QUY' ? 3 : 1;
-      const start = monthStart(bucketYear, month), end = monthStart(bucketYear, month + span);
-      const previous = aggregate(monthStart(bucketYear, month - span), start, empty);
-      const item = aggregate(start, end, empty);
-      const label = period === 'THANG' ? `Tháng ${index + 1}` : period === 'QUY' ? `Quý ${index + 1}` : String(bucketYear);
-      return { ...item, label, short: period === 'THANG' ? `T${index + 1}` : period === 'QUY' ? `Quý ${index + 1}` : label,
-        fullLabel: period === 'NAM' ? `Năm ${bucketYear}` : `${label}/${year}`, start, end,
-        future: start > snapshot, partial: start <= snapshot && end > snapshot,
-        growth: growth(total(item), total(previous)) };
-    });
-    const start = monthStart(from, 0), end = monthStart(to + 1, 0);
-    const sum = aggregate(start, end, empty);
-    const previousYears = period === 'NAM' ? to - from + 1 : 1;
-    const prevStart = monthStart(from - previousYears, 0);
-    const prevEnd = to === 2026 ? cutoffForYear(to - previousYears) : monthStart(to + 1 - previousYears, 0);
-    const comparison = aggregate(prevStart, prevEnd, empty);
-    return { rows: items, sum, growth: growth(total(sum), total(comparison)), range: period === 'NAM' ? `${from}–${to}` : String(year),
-      comparisonLabel: period === 'NAM' ? `So với ${from - previousYears}–${to - previousYears}${to === 2026 ? ', cùng mốc thời gian' : ''}` : `So với cùng kỳ năm ${year - 1}` };
-  }
-  function renderSummary(view) {
-    const sum = view.sum;
-    const resolved = sum.count + sum.failed + sum.expired;
-    const active = subscriptions.filter(([, expiry]) => new Date(expiry + 'T09:00:00+07:00') > snapshot);
-    const soon = active.filter(([, expiry]) => (Date.parse(expiry) - Date.parse('2026-11-13')) / 86400000 <= 7);
+  const range = (d) => d.ky === 'NAM' ? `${d.tuNam}–${d.denNam}` : String(d.nam);
+
+  function renderSummary(d) {
+    const t = d.tongQuan;
+    const compare = d.ky === 'NAM' ? `So với ${d.tuNam - (d.denNam - d.tuNam + 1)}–${d.tuNam - 1}` : `So với cả năm ${d.nam - 1}`;
     const metrics = [
-      ['Tổng doanh thu', money(total(sum)), 'Chỉ tính giao dịch thành công', 'chart', ''],
-      ['Giao dịch thành công', number(sum.count), `Trong giai đoạn ${view.range}`, 'check', ''],
-      ['Tăng trưởng doanh thu', growthText(view.growth), view.comparisonLabel, 'chart', growthClass(view.growth)],
-      ['Tỷ lệ thành công', resolved ? percent(sum.count / resolved * 100) : '—', resolved ? `${number(sum.count)} / ${number(resolved)} đơn đã có kết quả` : 'Chưa có giao dịch để tính tỷ lệ', 'shield', ''],
-      ['Gói còn hiệu lực', number(active.length), 'Tại 10:00 ngày 13/11/2026', 'user', ''],
-      ['Sắp hết hạn 7 ngày', number(soon.length), 'Tại mốc dữ liệu mẫu', 'clock', '']
+      ['Tổng doanh thu', money(d.tongDoanhThu), 'Chỉ tính giao dịch thành công', 'chart', ''],
+      ['Giao dịch thành công', number(d.soGiaoDich), `Trong giai đoạn ${range(d)}`, 'check', ''],
+      ['Tăng trưởng doanh thu', growthText(d.soVoiKyTruocPhanTram), compare, 'chart', growthClass(d.soVoiKyTruocPhanTram)],
+      ['Tỷ lệ thành công', t.tyLeThanhCong == null ? '—' : percent(t.tyLeThanhCong), t.tyLeThanhCong == null ? 'Chưa có đơn đã kết thúc' : 'Đơn tạo trong giai đoạn, không tính đơn đang chờ', 'shield', ''],
+      ['Gói còn hiệu lực', number(t.soGoiHieuLuc), 'Tại thời điểm tải trang', 'user', ''],
+      ['Sắp hết hạn 7 ngày', number(t.soSapHetHan7Ngay), 'Tại thời điểm tải trang', 'clock', '']
     ];
     $('#revenue-summary').innerHTML = metrics.map(([label, value, note, icon, cls]) => `<article class="rv-metric"><p class="rv-metric-label">${VL.icon(icon)}${label}</p><strong class="${cls}">${value}</strong><small>${note}</small></article>`).join('');
   }
@@ -279,54 +220,75 @@
     }
     rows.forEach((row, index) => {
       const x = left + slot * index + (slot - barWidth) / 2;
-      const proHeight = row.PRO / ceiling * height, premiumHeight = row.PREMIUM / ceiling * height;
-      svg += `<g class="rv-column" role="button" tabindex="${index === selected ? 0 : -1}" data-bucket="${index}" aria-pressed="${index === selected}" aria-label="${row.fullLabel}: ${money(total(row))}${row.future ? ', chưa đến kỳ' : row.partial ? ', đang diễn ra' : ''}"><title>${row.fullLabel} · Pro: ${money(row.PRO)} · Premium: ${money(row.PREMIUM)}</title><rect class="rv-hit" x="${left + slot * index + 3}" y="4" width="${slot - 6}" height="290"/>`;
+      const proHeight = plan(row, 'PRO') / ceiling * height, premiumHeight = plan(row, 'PREMIUM') / ceiling * height;
+      svg += `<g class="rv-column" role="button" tabindex="${index === selected ? 0 : -1}" data-bucket="${index}" aria-pressed="${index === selected}" aria-label="${esc(row.fullLabel)}: ${money(total(row))}${row.future ? ', chưa đến kỳ' : row.partial ? ', đang diễn ra' : ''}"><title>${esc(row.fullLabel)} · Pro: ${money(plan(row, 'PRO'))} · Premium: ${money(plan(row, 'PREMIUM'))}</title><rect class="rv-hit" x="${left + slot * index + 3}" y="4" width="${slot - 6}" height="290"/>`;
       if (total(row)) svg += `<rect class="rv-bar-pro" x="${x}" y="${bottom - proHeight}" width="${barWidth}" height="${proHeight}"/><rect class="rv-bar-premium" x="${x}" y="${bottom - proHeight - premiumHeight}" width="${barWidth}" height="${premiumHeight}" rx="3"/>`;
       else svg += `<line class="rv-zero" x1="${x}" x2="${x + barWidth}" y1="${bottom}" y2="${bottom}"/>`;
-      svg += `<text x="${left + slot * (index + 0.5)}" y="283" text-anchor="middle">${row.short}</text></g>`;
+      svg += `<text x="${left + slot * (index + 0.5)}" y="283" text-anchor="middle">${esc(row.short)}</text></g>`;
     });
     $('#revenue-chart').innerHTML = svg;
   }
-  function renderComposition(sum) {
-    const revenue = total(sum), share = revenue ? sum.PRO / revenue * 100 : 0;
+  function renderComposition(d) {
+    const pro = rows.reduce((s, r) => s + plan(r, 'PRO'), 0), premium = rows.reduce((s, r) => s + plan(r, 'PREMIUM'), 0);
+    const revenue = d.tongDoanhThu, share = revenue ? pro / revenue * 100 : 0;
     const circumference = 2 * Math.PI * 70;
     $('#revenue-donut').innerHTML = `<svg viewBox="0 0 180 180" role="img" aria-label="Tỷ trọng doanh thu: Pro ${percent(share)}, Premium ${percent(revenue ? 100 - share : 0)}"><circle cx="90" cy="90" r="70" fill="none" stroke="var(--line)" stroke-width="20"/>${revenue ? `<circle cx="90" cy="90" r="70" fill="none" stroke="var(--rv-pro)" stroke-width="20" stroke-dasharray="${circumference * share / 100} ${circumference}"/><circle cx="90" cy="90" r="70" fill="none" stroke="var(--rv-premium)" stroke-width="20" stroke-dasharray="${circumference * (100 - share) / 100} ${circumference}" stroke-dashoffset="${-circumference * share / 100}"/>` : ''}</svg><div class="rv-donut-center"><span>Tổng doanh thu</span><strong>${number(revenue / 1000000)}</strong><span>triệu đồng</span></div>`;
-    $('#revenue-plan-split').innerHTML = [['PRO', 'Pro', share], ['PREMIUM', 'Premium', revenue ? 100 - share : 0]].map(([code, name, value]) => `<li><div><span class="rv-plan-name"><i class="rv-dot ${code === 'PREMIUM' ? 'premium' : ''}" aria-hidden="true"></i>${name}</span><strong>${percent(value)}</strong></div><small>${money(sum[code])}</small></li>`).join('');
+    $('#revenue-plan-split').innerHTML = [['PRO', 'Pro', share, pro], ['PREMIUM', 'Premium', revenue ? premium / revenue * 100 : 0, premium]].map(([code, name, value, sum]) => `<li><div><span class="rv-plan-name"><i class="rv-dot ${code === 'PREMIUM' ? 'premium' : ''}" aria-hidden="true"></i>${name}</span><strong>${percent(value)}</strong></div><small>${money(sum)}</small></li>`).join('');
   }
-  function renderTable(view) {
+  function renderTable(d) {
     $('#period-column').textContent = periodNames[period][0].toUpperCase() + periodNames[period].slice(1);
-    $('#revenue-table-caption').textContent = `Doanh thu theo ${periodNames[period]} · ${view.range}, đơn vị đồng`;
+    $('#revenue-table-caption').textContent = `Doanh thu theo ${periodNames[period]} · ${range(d)}, đơn vị đồng`;
     $('#revenue-row-count').textContent = `${rows.length} ${periodNames[period]} · Đơn vị: VND`;
-    $('#revenue-table-body').innerHTML = rows.map((row, index) => `<tr data-table-bucket="${index}" class="${index === selected ? 'is-selected' : ''}"><td data-label="Kỳ"><strong>${row.label}</strong>${row.partial ? '<span class="rv-badge">Đang diễn ra</span>' : ''}${row.future ? '<small>Chưa đến kỳ</small>' : ''}</td><td data-label="Gói Pro">${money(row.PRO)}</td><td data-label="Gói Premium">${money(row.PREMIUM)}</td><td data-label="Tổng doanh thu"><strong>${money(total(row))}</strong></td><td data-label="Giao dịch">${number(row.count)}</td><td data-label="So kỳ trước" class="${growthClass(row.future ? null : row.growth)}">${row.future ? '—' : growthText(row.growth)}</td></tr>`).join('');
-    $('#revenue-table-footer').innerHTML = `<tr><td data-label="Kỳ">Tổng cộng</td><td data-label="Gói Pro">${money(view.sum.PRO)}</td><td data-label="Gói Premium">${money(view.sum.PREMIUM)}</td><td data-label="Tổng doanh thu">${money(total(view.sum))}</td><td data-label="Giao dịch">${number(view.sum.count)}</td><td data-label="So kỳ trước">—</td></tr>`;
+    $('#revenue-table-body').innerHTML = rows.map((row, index) => `<tr data-table-bucket="${index}" class="${index === selected ? 'is-selected' : ''}"><td data-label="Kỳ"><strong>${esc(row.nhan)}</strong>${row.partial ? '<span class="rv-badge">Đang diễn ra</span>' : ''}${row.future ? '<small>Chưa đến kỳ</small>' : ''}</td><td data-label="Gói Pro">${money(plan(row, 'PRO'))}</td><td data-label="Gói Premium">${money(plan(row, 'PREMIUM'))}</td><td data-label="Tổng doanh thu"><strong>${money(total(row))}</strong></td><td data-label="Giao dịch">${number(row.soGiaoDich)}</td><td data-label="So kỳ trước" class="${growthClass(row.future ? null : row.growth)}">${row.future || index === 0 ? '—' : growthText(row.growth)}</td></tr>`).join('');
+    const pro = rows.reduce((s, r) => s + plan(r, 'PRO'), 0), premium = rows.reduce((s, r) => s + plan(r, 'PREMIUM'), 0);
+    $('#revenue-table-footer').innerHTML = `<tr><td data-label="Kỳ">Tổng cộng</td><td data-label="Gói Pro">${money(pro)}</td><td data-label="Gói Premium">${money(premium)}</td><td data-label="Tổng doanh thu">${money(d.tongDoanhThu)}</td><td data-label="Giao dịch">${number(d.soGiaoDich)}</td><td data-label="So kỳ trước">${growthText(d.soVoiKyTruocPhanTram)}</td></tr>`;
   }
   function selectBucket(index) {
     selected = index;
     const row = rows[index];
-    $('#revenue-period-detail').innerHTML = `<div><b>${row.fullLabel}</b><small>${row.future ? 'Chưa đến kỳ' : `${number(row.count)} giao dịch thành công · Pro ${money(row.PRO)} · Premium ${money(row.PREMIUM)}`}</small></div><strong>${money(total(row))}</strong>`;
+    if (!row) return;
+    $('#revenue-period-detail').innerHTML = `<div><b>${esc(row.fullLabel)}</b><small>${row.future ? 'Chưa đến kỳ' : `${number(row.soGiaoDich)} giao dịch thành công · Pro ${money(plan(row, 'PRO'))} · Premium ${money(plan(row, 'PREMIUM'))}`}</small></div><strong>${money(total(row))}</strong>`;
     document.querySelectorAll('[data-bucket]').forEach((column) => { const active = Number(column.dataset.bucket) === index; column.setAttribute('aria-pressed', String(active)); column.setAttribute('tabindex', active ? '0' : '-1'); });
     document.querySelectorAll('[data-table-bucket]').forEach((tr) => tr.classList.toggle('is-selected', Number(tr.dataset.tableBucket) === index));
   }
-  function render() {
-    const view = getView(), state = $('#revenue-demo-state').value;
-    const invalid = !view, blocked = invalid || state === 'error' || state === 'loading';
+  function showState(html) {
+    $('#revenue-content').hidden = true; $('#revenue-state-message').hidden = false; $('#export-revenue').disabled = true;
+    $('#revenue-scope').textContent = ''; $('#revenue-state-message').innerHTML = html;
+  }
+  const errorBox = (title, err) => `<div class="rv-state" role="alert"><h2>${esc(title)}</h2><p>${esc(err.message || 'Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.')}</p><p class="rv-current-note">Mã yêu cầu: ${esc(err.requestId || '—')}</p><button class="btn btn-secondary" type="button" id="retry-revenue">Thử lại</button></div>`;
+  async function render() {
+    const state = $('#revenue-demo-state').value, my = ++seq;
     $('#single-year-field').hidden = period === 'NAM'; $('#year-range').hidden = period !== 'NAM';
     document.querySelectorAll('[data-period]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.period === period)));
-    $('#revenue-error').textContent = invalid ? 'Năm kết thúc phải bằng hoặc sau năm bắt đầu.' : '';
-    $('#revenue-content').hidden = blocked; $('#revenue-state-message').hidden = !blocked;
-    $('#export-revenue').disabled = blocked;
-    $('#revenue-content').setAttribute('aria-busy', String(state === 'loading'));
-    if (blocked) {
-      $('#revenue-scope').textContent = '';
-      $('#revenue-state-message').innerHTML = invalid ? '<div class="rv-state"><h2>Khoảng năm chưa hợp lệ</h2><p>Điều chỉnh năm bắt đầu hoặc kết thúc để xem báo cáo.</p></div>' : state === 'loading' ? '<div class="rv-state" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div><p>Đang tổng hợp doanh thu…</p></div>' : '<div class="rv-state" role="alert"><h2>Chưa tải được thống kê</h2><p>Kết nối tạm thời bị gián đoạn. Vui lòng thử lại.</p><button class="btn btn-secondary" type="button" id="retry-revenue">Thử lại</button></div>';
+    $('#revenue-error').textContent = '';
+    const loading = '<div class="rv-state" role="status"><div class="skeleton" aria-hidden="true"><div class="sk sk-row"></div><div class="sk sk-row"></div><div class="sk sk-row"></div></div><p>Đang tổng hợp doanh thu…</p></div>';
+    if (state === 'loading') { showState(loading); return; }
+    if (state === 'error') { showState(errorBox('Chưa tải được thống kê', { requestId: 'req-demo-500' })); return; }
+    $('#revenue-content').setAttribute('aria-busy', 'true');
+    let d;
+    try { d = await VL.api('GET', url()); }
+    catch (err) {
+      if (my !== seq) return;
+      $('#revenue-content').setAttribute('aria-busy', 'false');
+      if (err.status === 400) { $('#revenue-error').textContent = (err.fieldErrors || []).map((f) => f.message).join('. ') || err.message; showState('<div class="rv-state"><h2>Khoảng năm chưa hợp lệ</h2><p>Điều chỉnh năm bắt đầu hoặc kết thúc để xem báo cáo.</p></div>'); }
+      else showState(errorBox('Chưa tải được thống kê', err));
       return;
     }
-    rows = view.rows;
-    selected = Math.max(0, rows.findLastIndex((row) => row.count > 0));
-    $('#revenue-scope').textContent = `Đang xem: ${view.range} · Theo ${periodNames[period]} · ${state === 'empty' ? 'Chưa phát sinh giao dịch trong dữ liệu mẫu.' : 'Dữ liệu mô phỏng, cập nhật đến 10:00 ngày 13/11/2026.'}`;
+    if (my !== seq) return;
+    if (state === 'empty') d = Object.assign({}, d, { tongDoanhThu: 0, soGiaoDich: 0, soVoiKyTruocPhanTram: null, cacKy: d.cacKy.map((k) => Object.assign({}, k, { doanhThu: 0, soGiaoDich: 0, theoGoi: { PRO: 0, PREMIUM: 0 } })), tongQuan: Object.assign({}, d.tongQuan, { tyLeThanhCong: null }) });
+    data = d;
+    rows = d.cacKy.map((k, i, all) => ({ ...k,
+      short: d.ky === 'THANG' ? 'T' + k.nhan.replace('Tháng ', '') : k.nhan,
+      fullLabel: d.ky === 'NAM' ? 'Năm ' + k.nhan : `${k.nhan}/${d.nam}`,
+      future: k.tuNgay > today, partial: k.tuNgay <= today && k.denNgay >= today,
+      growth: i === 0 ? null : pct(k.doanhThu, all[i - 1].doanhThu) }));
+    selected = Math.max(0, rows.map((r) => r.soGiaoDich > 0).lastIndexOf(true));
+    $('#revenue-content').hidden = false; $('#revenue-state-message').hidden = true; $('#export-revenue').disabled = false;
+    $('#revenue-content').setAttribute('aria-busy', 'false');
+    $('#revenue-scope').textContent = `Đang xem: ${range(d)} · Theo ${periodNames[period]} · ${d.soGiaoDich ? 'Số liệu tính đến thời điểm tải trang.' : 'Chưa phát sinh giao dịch thành công.'}`;
     $('#revenue-chart-title').textContent = `Doanh thu theo ${periodNames[period]}`;
-    $('#revenue-chart-subtitle').textContent = `${period === 'NAM' ? 'Giai đoạn' : 'Năm'} ${view.range} · Giao dịch thành công`;
-    renderSummary(view); renderChart(); renderComposition(view.sum); renderTable(view); selectBucket(selected);
+    $('#revenue-chart-subtitle').textContent = `${period === 'NAM' ? 'Giai đoạn' : 'Năm'} ${range(d)} · Giao dịch thành công`;
+    renderSummary(d); renderChart(); renderComposition(d); renderTable(d); selectBucket(selected);
   }
   $('#revenue-filters').addEventListener('submit', (event) => event.preventDefault());
   $('#revenue-filters').addEventListener('change', render);
@@ -345,18 +307,19 @@
   });
   $('#revenue-demo-state').addEventListener('change', render);
   $('#revenue-state-message').addEventListener('click', (event) => { if (event.target.closest('#retry-revenue')) { $('#revenue-demo-state').value = 'ready'; render(); } });
-  $('#reset-revenue-demo').addEventListener('click', () => { $('#revenue-filters').reset(); $('#revenue-demo-state').value = 'ready'; period = 'THANG'; render(); VL.toast('Đã đặt lại mẫu thống kê doanh thu.'); });
+  $('#reset-revenue-demo').addEventListener('click', () => { resetFilters(); $('#revenue-demo-state').value = 'ready'; period = 'THANG'; render(); VL.toast('Đã đặt lại bộ lọc thống kê.'); });
   $('#export-revenue').addEventListener('click', () => {
-    const view = getView(); if (!view) return;
-    const csvRows = [['Kỳ', 'Doanh thu Pro (VND)', 'Doanh thu Premium (VND)', 'Tổng doanh thu (VND)', 'Giao dịch thành công', 'So kỳ trước (%)', 'Ghi chú'],
-      ...rows.map((row) => [row.fullLabel, row.PRO, row.PREMIUM, total(row), row.count, row.future || row.growth === null ? '' : row.growth.toFixed(2), row.future ? 'Chưa đến kỳ' : row.partial ? 'Đang diễn ra' : '']),
-      ['Tổng cộng', view.sum.PRO, view.sum.PREMIUM, total(view.sum), view.sum.count, '', 'Dữ liệu mô phỏng · Giờ Việt Nam']];
-    const cell = (value) => '"' + String(value).replace(/"/g, '""') + '"';
-    const blob = new Blob(['\ufeff' + csvRows.map((row) => row.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob), link = document.createElement('a');
-    link.href = url; link.download = `doanh-thu-${period.toLowerCase()}-${view.range}.csv`; document.body.append(link); link.click(); link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000); VL.toast('Đã xuất báo cáo doanh thu theo kỳ đang xem.');
+    if (!data) return;
+    const csvRows = [['Kỳ', 'Từ ngày', 'Đến ngày', 'Doanh thu Pro (VND)', 'Doanh thu Premium (VND)', 'Tổng doanh thu (VND)', 'Giao dịch thành công', 'So kỳ trước (%)', 'Ghi chú'],
+      ...rows.map((row, i) => [row.fullLabel, row.tuNgay, row.denNgay, plan(row, 'PRO'), plan(row, 'PREMIUM'), total(row), row.soGiaoDich, row.future || i === 0 || row.growth === null ? '' : row.growth, row.future ? 'Chưa đến kỳ' : row.partial ? 'Đang diễn ra' : '']),
+      ['Tổng cộng', '', '', rows.reduce((s, r) => s + plan(r, 'PRO'), 0), rows.reduce((s, r) => s + plan(r, 'PREMIUM'), 0), data.tongDoanhThu, data.soGiaoDich, data.soVoiKyTruocPhanTram ?? '', 'Giờ Việt Nam']];
+    const cell = (value) => '"' + String(value).replace(/^[=+@-]/, "'$&").replace(/"/g, '""') + '"';
+    const blob = new Blob(['﻿' + csvRows.map((row) => row.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const href = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = href; link.download = `doanh-thu-${period.toLowerCase()}-${range(data)}.csv`; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000); VL.toast('Đã xuất báo cáo doanh thu theo kỳ đang xem.');
   });
+  resetFilters();
   render();
 })();
 </script>

@@ -403,8 +403,147 @@
     if (f.until > Date.now()) throw new ApiError(429, "RATE_LIMITED", "Bạn thao tác quá nhiều lần, vui lòng thử lại sau", [], { retryAfter: Math.ceil((f.until - Date.now()) / 1000) });
     return { fail() { f.n += 1; if (f.n >= limit) { f.until = Date.now() + 60000; f.n = 0; } db.fails[key] = f; }, reset() { delete db.fails[key]; } };
   }
-  const flags = { offline: false, conflictOnce: false, ttsDown: false, speechDown: false, speechPartial: false };
+  const flags = { offline: false, conflictOnce: false, ttsDown: false, speechDown: false, speechPartial: false, vnpay: "THANH_CONG", billingDemoTools: true };
   const iso = (ms) => new Date(ms).toISOString();
+  const ORDER_TTL = 15 * 60000;
+  const VN_OFFSET = 7 * 3600000;
+  const VN_TIME = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" });
+  const vnDay = (ms) => new Date(ms + VN_OFFSET).toISOString().slice(0, 10);
+  const vnStart = (day) => Date.parse(day + "T00:00:00Z") - VN_OFFSET;
+  const planName = (ma) => (billing().plans.find((p) => p.ma === ma) || { ten: ma }).ten;
+  function addCycle(ms, chuKy) { const d = new Date(ms + VN_OFFSET); if (chuKy === "NAM") d.setUTCFullYear(d.getUTCFullYear() + 1); else d.setUTCMonth(d.getUTCMonth() + 1); return d.getTime() - VN_OFFSET; }
+  function orderCode(ms) {
+    let s = ""; for (let i = 0; i < 8; i++) s += "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 36)];
+    return "DH" + vnDay(ms).replace(/-/g, "") + s;
+  }
+  function billing() {
+    if (db.billing && db.billing.plans) return db.billing;
+    const now = Date.now();
+    const plans = [
+      { ma: "PRO", ten: "Pro", giaThang: 299000, giaNam: 2990000, gioiHanThe: 5000, phatAm: true, boMauCaoCap: false, hoatDong: true, version: 0 },
+      { ma: "PREMIUM", ten: "Premium", giaThang: 999000, giaNam: 9990000, gioiHanThe: null, phatAm: true, boMauCaoCap: true, hoatDong: true, version: 0 }
+    ];
+    const price = (goiMa, chuKy) => { const p = plans.find((x) => x.ma === goiMa); return chuKy === "NAM" ? p.giaNam : p.giaThang; };
+    const tx = [];
+    const add = (userId, at, goiMa, chuKy, trangThai, code) => tx.push({
+      maDon: code || "DH" + vnDay(at).replace(/-/g, "") + String(tx.length + 1).padStart(8, "0"), userId, goiMa, chuKy, soTien: price(goiMa, chuKy),
+      cong: code ? "MO_PHONG" : "VNPAY", trangThai, maGiaoDichCong: code || trangThai === "HET_HAN" ? null : String(14882000 + tx.length),
+      maPhanHoi: trangThai === "THANH_CONG" ? "00" : trangThai === "THAT_BAI" ? "24" : null, taoAt: iso(at),
+      hoanTatAt: trangThai === "HET_HAN" ? iso(at + ORDER_TTL) : iso(at + 90000)
+    });
+    let seed = 20261116;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    const pool = ["6", "7", "8", "9", "12", "10", "11"];
+    const nowDay = vnDay(now);
+    for (let y = 2022, mo = 1; y * 12 + mo <= Number(nowDay.slice(0, 4)) * 12 + Number(nowDay.slice(5, 7)); mo === 12 ? (y++, mo = 1) : mo++) {
+      const n = 1 + Math.floor(rnd() * (y - 2020));
+      for (let i = 0; i < n; i++) {
+        const day = 1 + Math.floor(rnd() * 27);
+        const at = vnStart(`${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`) + Math.floor((8 + rnd() * 13) * 3600000);
+        if (at > now - 20 * DAY) continue;
+        const r = rnd();
+        add(pool[Math.floor(rnd() * pool.length)], at, r < 0.35 ? "PREMIUM" : "PRO", rnd() < 0.2 ? "NAM" : "THANG", r < 0.8 ? "THANH_CONG" : r < 0.92 ? "THAT_BAI" : "HET_HAN");
+      }
+    }
+    const start = now - 15 * DAY;
+    const code = (ago, c) => "DH" + vnDay(now - ago).replace(/-/g, "") + c;
+    add("2", now - 46 * DAY, "PRO", "THANG", "HET_HAN", code(46 * DAY, "Q4N7W2LB"));
+    add("2", start - 240000, "PRO", "THANG", "THAT_BAI", code(15 * DAY + 240000, "3HX9P1TC"));
+    add("2", start, "PRO", "THANG", "THANH_CONG", code(15 * DAY, "7KQ2M8ZA"));
+    add("3", start, "PREMIUM", "NAM", "THANH_CONG", code(15 * DAY, "P2D8RX5N"));
+    add("7", now - 28 * DAY + 3 * 3600000, "PREMIUM", "THANG", "THANH_CONG", code(28 * DAY, "M3V6T1QE"));
+    add("8", now - 29 * DAY, "PRO", "THANG", "THANH_CONG", code(29 * DAY, "B8L4K9WJ"));
+    add("12", now - 5 * DAY, "PRO", "NAM", "THANH_CONG", code(5 * DAY, "Z5C2H7YF"));
+    add("12", now - 5 * 60000, "PREMIUM", "THANG", "CHO_THANH_TOAN", code(5 * 60000, "R9N1G4UA"));
+    tx[tx.length - 1].hoanTatAt = null; tx[tx.length - 1].maPhanHoi = null;
+    tx.sort((a, b) => b.taoAt.localeCompare(a.taoAt));
+    let subSeq = 0;
+    const sub = (goiMa, from, to) => ({ id: String(++subSeq), goiMa, batDauAt: iso(from), hetHanAt: iso(to), trangThai: to > now ? "HIEU_LUC" : "HET_HAN", version: 0 });
+    db.billing = {
+      plans, tx, reminded: {},
+      subs: {
+        "2": sub("PRO", start, addCycle(start, "THANG")),
+        "3": sub("PREMIUM", start, addCycle(start, "NAM")),
+        "7": sub("PREMIUM", now - 28 * DAY + 3 * 3600000, now + 2 * DAY + 3 * 3600000),
+        "8": sub("PRO", now - 29 * DAY, now + DAY),
+        "12": sub("PRO", now - 5 * DAY, addCycle(now - 5 * DAY, "NAM")),
+        "10": sub("PRO", now - 33 * DAY, now - 3 * DAY),
+        "6": sub("PREMIUM", now - 70 * DAY, now - 40 * DAY)
+      },
+      subSeq
+    };
+    return db.billing;
+  }
+  function planView(p) {
+    const q = (loai) => { const row = quotaStore().find((x) => x.goiMa === p.ma && x.loai === loai); return row ? row.soLuotNgay : null; };
+    return { ma: p.ma, ten: p.ten, giaThang: p.giaThang, giaNam: p.giaNam, gioiHanThe: p.gioiHanThe, phatAm: p.phatAm, boMauCaoCap: p.boMauCaoCap, hanMucAi: q("AI"), hanMucAnh: q("ANH"), hanMucPhatAm: q("PHAT_AM") };
+  }
+  function expireOrders(now, userId) {
+    let n = 0;
+    billing().tx.forEach((t) => {
+      if (t.trangThai !== "CHO_THANH_TOAN" || (userId && t.userId !== userId) || now - Date.parse(t.taoAt) < ORDER_TTL) return;
+      t.trangThai = "HET_HAN"; t.hoanTatAt = iso(now); n++;
+    });
+    return n;
+  }
+  function activatePlan(userId, goiMa, chuKy, now) {
+    const bl = billing(); const s = bl.subs[userId];
+    if (s && s.trangThai === "HIEU_LUC" && Date.parse(s.hetHanAt) > now && s.goiMa === goiMa) { s.hetHanAt = iso(addCycle(Date.parse(s.hetHanAt), chuKy)); s.version++; return; }
+    bl.subs[userId] = { id: String(++bl.subSeq), goiMa, batDauAt: iso(now), hetHanAt: iso(addCycle(now, chuKy)), trangThai: "HIEU_LUC", version: 0 };
+  }
+  function settleOrders(userId, now) {
+    billing().tx.filter((t) => t.userId === userId && t.trangThai === "CHO_THANH_TOAN" && t.ketQuaDemo).forEach((t) => {
+      const age = now - Date.parse(t.taoAt);
+      if (age >= ORDER_TTL) return;
+      if (age < (t.ketQuaDemo === "CHO_IPN" ? 8000 : 1500)) return;
+      t.hoanTatAt = iso(now);
+      if (t.ketQuaDemo === "THAT_BAI") { t.trangThai = "THAT_BAI"; t.maPhanHoi = "24"; return; }
+      t.trangThai = "THANH_CONG"; t.maPhanHoi = "00";
+      activatePlan(userId, t.goiMa, t.chuKy, now);
+    });
+    expireOrders(now, userId);
+  }
+  const liveSub = (s, now) => s && s.trangThai === "HIEU_LUC" && Date.parse(s.hetHanAt) > now;
+  const daysLeft = (s, now) => Math.round((vnStart(vnDay(Date.parse(s.hetHanAt))) - vnStart(vnDay(now))) / DAY);
+  function subscriptionView(u) {
+    const now = Date.now(); settleOrders(u.id, now);
+    const s = billing().subs[u.id];
+    if (!s) return { goiMa: null, tenGoi: null, trangThai: "CHUA_CO_GOI", batDauAt: null, hetHanAt: null, soNgayConLai: null };
+    const live = liveSub(s, now);
+    return { goiMa: s.goiMa, tenGoi: planName(s.goiMa), trangThai: live ? "HIEU_LUC" : "HET_HAN", batDauAt: s.batDauAt, hetHanAt: s.hetHanAt, soNgayConLai: live ? daysLeft(s, now) : null };
+  }
+  function ownOrder(u, maDon) {
+    const t = billing().tx.find((x) => x.maDon === maDon && x.userId === u.id);
+    if (!t) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy đơn thanh toán");
+    return t;
+  }
+  const txView = (t) => ({ maDon: t.maDon, goiMa: t.goiMa, tenGoi: planName(t.goiMa), chuKy: t.chuKy, soTien: t.soTien, cong: t.cong, trangThai: t.trangThai, maPhanHoi: t.maPhanHoi, taoAt: t.taoAt, hoanTatAt: t.hoanTatAt });
+  const userById = (id) => db.users.find((x) => x.id === id);
+  const adminPaymentView = (t) => { const u = userById(t.userId); return { maDon: t.maDon, nguoiDungId: t.userId, email: u ? u.email : null, goiMa: t.goiMa, tenGoi: planName(t.goiMa), chuKy: t.chuKy, soTien: t.soTien, cong: t.cong, trangThai: t.trangThai, maGiaoDichCong: t.maGiaoDichCong || null, maPhanHoi: t.maPhanHoi, taoAt: t.taoAt, hoanTatAt: t.hoanTatAt }; };
+  function adminSubView(userId, s, now) {
+    const u = userById(userId);
+    return { id: s.id, nguoiDungId: userId, email: u ? u.email : null, tenHienThi: u ? u.tenHienThi : null, goiMa: s.goiMa, tenGoi: planName(s.goiMa), batDauAt: s.batDauAt, hetHanAt: s.hetHanAt, trangThai: s.trangThai, soNgayConLai: liveSub(s, now) ? daysLeft(s, now) : null, version: s.version };
+  }
+  const adminPlanView = (p, now) => ({ ma: p.ma, ten: p.ten, giaThang: p.giaThang, giaNam: p.giaNam, gioiHanThe: p.gioiHanThe, phatAm: p.phatAm, boMauCaoCap: p.boMauCaoCap, hoatDong: p.hoatDong, soDangKyHieuLuc: Object.values(billing().subs).filter((s) => s.goiMa === p.ma && liveSub(s, now)).length, version: p.version });
+  function pageParams(q, errors) {
+    const p = q.page === undefined || q.page === "" ? 0 : Number(q.page), size = q.size === undefined || q.size === "" ? 20 : Number(q.size);
+    if (!Number.isInteger(p) || p < 0) errors.push(fe("page", "page phải không âm"));
+    if (!Number.isInteger(size) || size < 1) errors.push(fe("size", "size tối thiểu là 1"));
+    else if (size > 100) errors.push(fe("size", "size tối đa là 100"));
+    return [p, size];
+  }
+  const slicePage = (list, p, size, map) => ({ items: list.slice(p * size, p * size + size).map(map), page: p, size, totalElements: list.length, totalPages: Math.ceil(list.length / size) });
+  const demoToolsOff = () => { if (!flags.billingDemoTools) throw new ApiError(404, "NOT_FOUND", "Công cụ demo đang tắt"); };
+  function reasonOf(b, errors) {
+    const lyDo = b.lyDo == null ? null : String(b.lyDo).replace(/\s+/g, " ").trim();
+    if (lyDo == null || lyDo.length < 10 || lyDo.length > 500) errors.push(fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự"));
+    return lyDo;
+  }
+  function receiptHtml(t, u) {
+    const h = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const rows = [["Mã đơn", t.maDon], ["Khách hàng", u.tenHienThi + " · " + u.email], ["Gói", planName(t.goiMa) + " · " + (t.chuKy === "NAM" ? "12 tháng" : "1 tháng")], ["Số tiền", t.soTien.toLocaleString("vi-VN") + " đ"], ["Cổng thanh toán", t.cong === "VNPAY" ? "VNPay" : "Mô phỏng"], ["Thanh toán lúc", VN_TIME.format(new Date(t.hoanTatAt))]];
+    return "<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><title>Biên nhận " + h(t.maDon) + "</title><style>body{font-family:system-ui,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#1d2340}h1{font-size:22px}table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px solid #d9d6cc}td:first-child{color:#5a5f73;width:40%}p{font-size:13px;color:#5a5f73}</style></head><body><h1>Biên nhận thanh toán VocabLearning</h1><table>" + rows.map(([k, v]) => "<tr><td>" + h(k) + "</td><td>" + h(v) + "</td></tr>").join("") + "</table><p>Biên nhận xác nhận đã thanh toán, không phải hóa đơn giá trị gia tăng.</p></body></html>";
+  }
   const tzOf = (u) => (u && u.muiGio) || "Asia/Ho_Chi_Minh";
   const cardById = (id) => db.cards.find((x) => x.id === id);
   const deckName = (id) => { const d = db.decks.find((x) => x.id === id); return d ? d.name : ""; };
@@ -2202,6 +2341,245 @@
           };
         })
       };
+    }],
+    ["GET", /^\/billing\/plans$/, () => billing().plans.filter((p) => p.hoatDong).sort((a, c) => a.giaThang - c.giaThang).map(planView)],
+    ["GET", /^\/me\/subscription$/, () => subscriptionView(requireMe())],
+    ["POST", /^\/billing\/checkouts$/, (m, b) => {
+      const u = requireMe(); const bl = billing(); const errors = [];
+      const goiMa = String(b.goiMa || "").trim();
+      if (!goiMa) errors.push(fe("goiMa", "không được để trống"));
+      else if (goiMa.length > 20) errors.push(fe("goiMa", "kích thước phải nằm trong khoảng 0 đến 20"));
+      if (!["THANG", "NAM"].includes(b.chuKy)) errors.push(fe("chuKy", "Giá trị không hợp lệ"));
+      if (errors.length) bad(errors);
+      const plan = bl.plans.find((p) => p.ma === goiMa && p.hoatDong);
+      if (!plan) throw new ApiError(422, "BUSINESS_RULE", "Gói không tồn tại hoặc đã ngừng bán", [fe("goiMa", "Gói không tồn tại hoặc đã ngừng bán")]);
+      const now = Date.now(); settleOrders(u.id, now); const sub = bl.subs[u.id];
+      if (liveSub(sub, now) && sub.goiMa !== goiMa) {
+        const msg = "Bạn đang dùng gói " + planName(sub.goiMa) + " đến " + VN_TIME.format(new Date(sub.hetHanAt)) + ". Hệ thống không đổi gói giữa kỳ, bạn có thể mua gói khác sau khi gói hiện tại hết hạn";
+        throw new ApiError(422, "BUSINESS_RULE", msg, [fe("goiMa", msg)]);
+      }
+      if (bl.tx.some((t) => t.userId === u.id && t.trangThai === "CHO_THANH_TOAN" && t.goiMa !== goiMa)) {
+        throw new ApiError(409, "CONFLICT", "Bạn đang có đơn thanh toán gói khác chưa hoàn tất. Hãy hoàn tất đơn đó hoặc thử lại sau 15 phút");
+      }
+      const t = { maDon: orderCode(now), userId: u.id, goiMa, chuKy: b.chuKy, soTien: b.chuKy === "NAM" ? plan.giaNam : plan.giaThang, cong: "MO_PHONG", trangThai: "CHO_THANH_TOAN", maGiaoDichCong: null, maPhanHoi: null, taoAt: iso(now), hoanTatAt: null, ketQuaDemo: flags.vnpay || "THANH_CONG" };
+      bl.tx.unshift(t);
+      return { status: 201, body: { maDon: t.maDon, paymentUrl: "thanh-toan-ket-qua.html?maDon=" + t.maDon, soTien: t.soTien, hanThanhToanAt: iso(now + ORDER_TTL), moPhong: true } };
+    }],
+    ["GET", /^\/billing\/transactions$/, (m, b, q) => {
+      const u = requireMe(); const errors = [];
+      const [p, size] = pageParams(q, errors);
+      if (q.trangThai && !["CHO_THANH_TOAN", "THANH_CONG", "THAT_BAI", "HET_HAN"].includes(q.trangThai)) errors.push(fe("trangThai", "Giá trị không hợp lệ"));
+      if (errors.length) bad(errors);
+      settleOrders(u.id, Date.now());
+      const list = billing().tx.filter((t) => t.userId === u.id && (!q.trangThai || t.trangThai === q.trangThai)).sort((a, c) => c.taoAt.localeCompare(a.taoAt));
+      return slicePage(list, p, size, txView);
+    }],
+    ["GET", /^\/billing\/transactions\/(\w+)\/receipt$/, (m) => {
+      const u = requireMe(); const t = ownOrder(u, m[1]);
+      if (t.trangThai !== "THANH_CONG") throw new ApiError(422, "BUSINESS_RULE", "Chỉ giao dịch thành công mới có biên nhận");
+      return { status: 200, body: receiptHtml(t, u) };
+    }],
+    ["GET", /^\/billing\/transactions\/(\w+)$/, (m) => {
+      const u = requireMe(); settleOrders(u.id, Date.now());
+      return txView(ownOrder(u, m[1]));
+    }],
+    ["GET", /^\/admin\/payments$/, (m, b, q) => {
+      requireAdmin(); const errors = [];
+      const [p, size] = pageParams(q, errors);
+      const STATUS = ["CHO_THANH_TOAN", "THANH_CONG", "THAT_BAI", "HET_HAN"];
+      if (q.trangThai && !STATUS.includes(q.trangThai)) errors.push(fe("trangThai", "Giá trị không hợp lệ"));
+      if (q.goiMa && q.goiMa.trim().length > 20) errors.push(fe("goiMa", "Mã gói tối đa 20 ký tự"));
+      if (q.email && q.email.trim().length > 255) errors.push(fe("email", "Email tối đa 255 ký tự"));
+      ["tuNgay", "denNgay"].forEach((k) => { if (q[k] && !validDay(q[k])) errors.push(fe(k, "Ngày không hợp lệ")); });
+      if (q.tuNgay && q.denNgay && validDay(q.tuNgay) && validDay(q.denNgay) && q.tuNgay > q.denNgay) errors.push(fe("rangeValid", "Từ ngày phải trước hoặc bằng đến ngày"));
+      if (errors.length) bad(errors);
+      const now = Date.now(); expireOrders(now);
+      const email = (q.email || "").trim().toLowerCase(), goiMa = (q.goiMa || "").trim();
+      const tu = q.tuNgay ? vnStart(q.tuNgay) : null, den = q.denNgay ? vnStart(q.denNgay) + DAY : null;
+      const list = billing().tx.filter((t) => {
+        const u = userById(t.userId), at = Date.parse(t.taoAt);
+        return (!q.trangThai || t.trangThai === q.trangThai) && (!goiMa || t.goiMa === goiMa) && (tu == null || at >= tu) && (den == null || at < den) && (!email || (u && u.email.includes(email)));
+      }).sort((a, c) => c.taoAt.localeCompare(a.taoAt));
+      return slicePage(list, p, size, adminPaymentView);
+    }],
+    ["GET", /^\/admin\/payments\/(\w+)$/, (m) => {
+      requireAdmin();
+      const t = billing().tx.find((x) => x.maDon === m[1]);
+      if (!t) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy đơn thanh toán");
+      const duLieuCong = !t.hoanTatAt || t.trangThai === "HET_HAN" && !t.maPhanHoi ? null : {
+        vnp_Amount: String(t.soTien * 100), vnp_BankCode: t.trangThai === "THANH_CONG" ? "NCB" : "VNPAY", vnp_OrderInfo: "Thanh toan don " + t.maDon,
+        vnp_PayDate: vnDay(Date.parse(t.hoanTatAt)).replace(/-/g, "") + new Date(Date.parse(t.hoanTatAt) + VN_OFFSET).toISOString().slice(11, 19).replace(/:/g, ""),
+        vnp_ResponseCode: t.maPhanHoi || "", vnp_TmnCode: t.cong === "VNPAY" ? "DEMOTMN1" : "MOPHONG", vnp_TransactionNo: t.maGiaoDichCong || "0",
+        vnp_TransactionStatus: t.trangThai === "THANH_CONG" ? "00" : "02", vnp_TxnRef: t.maDon
+      };
+      return { giaoDich: adminPaymentView(t), duLieuCong };
+    }],
+    ["GET", /^\/admin\/subscriptions$/, (m, b, q) => {
+      requireAdmin(); const errors = [];
+      const [p, size] = pageParams(q, errors);
+      if (q.trangThai && !["HIEU_LUC", "HET_HAN"].includes(q.trangThai)) errors.push(fe("trangThai", "Giá trị không hợp lệ"));
+      const soon = q.sapHetHan === undefined || q.sapHetHan === "" ? null : Number(q.sapHetHan);
+      if (soon !== null && (!Number.isInteger(soon) || soon < 1 || soon > 365)) errors.push(fe("sapHetHan", "sapHetHan từ 1 đến 365 ngày"));
+      if (q.goiMa && q.goiMa.trim().length > 20) errors.push(fe("goiMa", "Mã gói tối đa 20 ký tự"));
+      if (q.email && q.email.trim().length > 255) errors.push(fe("email", "Email tối đa 255 ký tự"));
+      if (errors.length) bad(errors);
+      const now = Date.now(), email = (q.email || "").trim().toLowerCase(), goiMa = (q.goiMa || "").trim();
+      const trangThai = soon !== null ? "HIEU_LUC" : q.trangThai;
+      const list = Object.entries(billing().subs).filter(([id, s]) => {
+        const u = userById(id), end = Date.parse(s.hetHanAt);
+        return (!trangThai || s.trangThai === trangThai) && (!goiMa || s.goiMa === goiMa) && (!email || (u && u.email.includes(email))) && (soon === null || (end > now && end <= now + soon * DAY));
+      }).sort((a, c) => soon !== null ? a[1].hetHanAt.localeCompare(c[1].hetHanAt) : c[1].hetHanAt.localeCompare(a[1].hetHanAt));
+      return slicePage(list, p, size, ([id, s]) => adminSubView(id, s, now));
+    }],
+    ["PATCH", /^\/admin\/subscriptions\/(\w+)\/expiry$/, (m, b) => {
+      const admin = requireAdmin(); demoToolsOff(); const errors = [];
+      const at = b.hetHanAt == null ? NaN : Date.parse(b.hetHanAt);
+      if (b.hetHanAt == null) errors.push(fe("hetHanAt", "Chọn thời điểm hết hạn"));
+      else if (isNaN(at)) errors.push(fe("hetHanAt", "Thời điểm không hợp lệ"));
+      const lyDo = reasonOf(b, errors);
+      if (b.version == null) errors.push(fe("version", "Thiếu phiên bản, vui lòng tải lại"));
+      else if (!Number.isInteger(b.version) || b.version < 0) errors.push(fe("version", "Phiên bản không hợp lệ"));
+      if (errors.length) bad(errors);
+      const entry = Object.entries(billing().subs).find(([, s]) => s.id === m[1]);
+      if (!entry) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy đăng ký gói");
+      const [userId, s] = entry;
+      if (s.trangThai !== "HIEU_LUC") throw new ApiError(422, "BUSINESS_RULE", "Chỉ sửa được ngày hết hạn của gói đang hiệu lực");
+      if (s.version !== b.version) throw new ApiError(409, "VERSION_CONFLICT", "Đăng ký đã thay đổi, vui lòng tải lại");
+      if (at <= Date.parse(s.batDauAt)) throw new ApiError(400, "VALIDATION_FAILED", "Ngày hết hạn phải sau ngày bắt đầu gói", [fe("hetHanAt", "Ngày hết hạn phải sau ngày bắt đầu gói")]);
+      const cu = s.hetHanAt; s.hetHanAt = iso(at); s.version++;
+      const u = userById(userId);
+      audit(admin, "SUA_HAN_GOI", { loai: "DANG_KY_GOI", id: s.id, ten: (u ? u.email : userId) + " — " + s.goiMa }, lyDo, { hetHanAt: cu }, { hetHanAt: s.hetHanAt });
+      return adminSubView(userId, s, Date.now());
+    }],
+    ["POST", /^\/admin\/subscriptions\/expiry-check$/, (m, b) => {
+      const admin = requireAdmin(); demoToolsOff(); const errors = [];
+      const lyDo = reasonOf(b, errors);
+      if (errors.length) bad(errors);
+      const bl = billing(), now = Date.now(), today = vnDay(now);
+      let soNhacSapHetHan = 0, soChuyenHetHan = 0;
+      Object.entries(bl.subs).forEach(([userId, s]) => {
+        if (s.trangThai !== "HIEU_LUC") return;
+        const end = Date.parse(s.hetHanAt);
+        if (end <= now) {
+          s.trangThai = "HET_HAN"; s.version++; soChuyenHetHan++;
+          (userById(userId) ? inboxOf(userById(userId)) : []).unshift({ id: "b" + nextId(), loai: "GOI_DA_HET_HAN", tieuDe: "Gói " + planName(s.goiMa) + " đã hết hạn", noiDung: "Gia hạn để tiếp tục học. Dữ liệu học của bạn vẫn được giữ.", lienKet: "/thanh-toan-goi", ngayDiaPhuong: today, hienThi: true, daDocAt: null, createdAt: iso(now) });
+          return;
+        }
+        const left = daysLeft(s, now), key = s.id + ":" + s.hetHanAt + ":" + today;
+        if (left <= 7 && !bl.reminded[key] && now >= vnStart(today) + 8 * 3600000) {
+          bl.reminded[key] = true; soNhacSapHetHan++;
+          (userById(userId) ? inboxOf(userById(userId)) : []).unshift({ id: "b" + nextId(), loai: "GOI_SAP_HET_HAN", tieuDe: "Gói " + planName(s.goiMa) + " sắp hết hạn", noiDung: left <= 0 ? "Gói hết hạn hôm nay lúc " + VN_TIME.format(new Date(end)).slice(0, 5) : "Gói còn " + left + " ngày.", lienKet: "/thanh-toan-goi", ngayDiaPhuong: today, hienThi: true, daDocAt: null, createdAt: iso(now) });
+        }
+      });
+      const soDonHetHan = expireOrders(now);
+      const result = { soNhacSapHetHan, soChuyenHetHan, soDonHetHan };
+      audit(admin, "CHAY_KIEM_TRA_HET_HAN", { loai: "DANG_KY_GOI", id: "0", ten: "SubscriptionExpiryJob" }, lyDo, null, result);
+      return result;
+    }],
+    ["GET", /^\/admin\/plans$/, () => { requireAdmin(); const now = Date.now(); return billing().plans.slice().sort((a, c) => a.giaThang - c.giaThang).map((p) => adminPlanView(p, now)); }],
+    ["PUT", /^\/admin\/plans\/(\w+)$/, (m, b) => {
+      const admin = requireAdmin(); const errors = [];
+      const ten = b.ten == null ? "" : String(b.ten).trim();
+      if (!ten) errors.push(fe("ten", "Nhập tên gói")); else if (ten.length > 50) errors.push(fe("ten", "Tên gói tối đa 50 ký tự"));
+      const money = (k, label, max, maxText) => {
+        if (b[k] == null || b[k] === "") errors.push(fe(k, "Nhập " + label));
+        else if (!Number.isInteger(b[k])) errors.push(fe(k, "Giá trị không hợp lệ"));
+        else if (b[k] < 1000) errors.push(fe(k, label[0].toUpperCase() + label.slice(1) + " tối thiểu 1.000 ₫"));
+        else if (b[k] > max) errors.push(fe(k, label[0].toUpperCase() + label.slice(1) + " tối đa " + maxText + " ₫"));
+      };
+      money("giaThang", "giá tháng", 100000000, "100.000.000");
+      money("giaNam", "giá năm", 1000000000, "1.000.000.000");
+      if (b.gioiHanThe != null && (!Number.isInteger(b.gioiHanThe) || b.gioiHanThe <= 0)) errors.push(fe("gioiHanThe", "Giới hạn thẻ phải lớn hơn 0, để trống nếu không giới hạn"));
+      [["phatAm", "Chọn có đánh giá phát âm hay không"], ["boMauCaoCap", "Chọn có bộ mẫu cao cấp hay không"], ["hoatDong", "Chọn trạng thái bán"]].forEach(([k, msg]) => { if (typeof b[k] !== "boolean") errors.push(fe(k, msg)); });
+      const lyDo = b.lyDo == null || String(b.lyDo).trim() === "" ? null : String(b.lyDo).replace(/\s+/g, " ").trim();
+      if (lyDo != null && (lyDo.length < 10 || lyDo.length > 500)) errors.push(fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự"));
+      if (b.version == null) errors.push(fe("version", "Thiếu phiên bản, vui lòng tải lại"));
+      else if (!Number.isInteger(b.version) || b.version < 0) errors.push(fe("version", "Phiên bản không hợp lệ"));
+      if (errors.length) bad(errors);
+      const bl = billing(); const p = bl.plans.find((x) => x.ma === m[1]);
+      if (!p) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy gói dịch vụ");
+      if (p.version !== b.version) throw new ApiError(409, "VERSION_CONFLICT", "Gói đã được sửa ở nơi khác, vui lòng tải lại");
+      if (!b.hoatDong && p.hoatDong && !bl.plans.some((x) => x.ma !== p.ma && x.hoatDong)) throw new ApiError(422, "BUSINESS_RULE", "Cần ít nhất một gói đang bán", [fe("hoatDong", "Cần ít nhất một gói đang bán")]);
+      const keys = ["ten", "giaThang", "giaNam", "gioiHanThe", "phatAm", "boMauCaoCap", "hoatDong"];
+      const next = { ten, giaThang: b.giaThang, giaNam: b.giaNam, gioiHanThe: b.gioiHanThe == null ? null : b.gioiHanThe, phatAm: b.phatAm, boMauCaoCap: b.boMauCaoCap, hoatDong: b.hoatDong };
+      const truoc = {}, sau = {};
+      keys.forEach((k) => { if (p[k] !== next[k]) { truoc[k] = p[k]; sau[k] = next[k]; } });
+      if (Object.keys(truoc).length) {
+        Object.assign(p, next); p.version++;
+        audit(admin, "SUA_GOI_DICH_VU", { loai: "GOI_DICH_VU", id: p.ma, ten: p.ma }, lyDo, truoc, sau);
+      }
+      return adminPlanView(p, Date.now());
+    }],
+    ["GET", /^\/admin\/revenue$/, (m, b, q) => {
+      requireAdmin(); const errors = [];
+      const ky = q.ky;
+      if (!["THANG", "QUY", "NAM"].includes(ky)) errors.push(fe("ky", "Chọn kỳ THANG, QUY hoặc NAM"));
+      const yr = (k) => { if (q[k] === undefined || q[k] === "") return null; const v = Number(q[k]); if (!Number.isInteger(v) || v < 2000 || v > 2100) { errors.push(fe(k, "Năm từ 2000 đến 2100")); return null; } return v; };
+      let nam = yr("nam"), tuNam = yr("tuNam"), denNam = yr("denNam");
+      if (tuNam != null && denNam != null && (tuNam > denNam || denNam - tuNam >= 20)) errors.push(fe("yearRangeValid", "Khoảng năm không hợp lệ: từ năm phải trước hoặc bằng đến năm, tối đa 20 năm"));
+      if (errors.length) bad(errors);
+      const now = Date.now(), namNay = Number(vnDay(now).slice(0, 4));
+      const moc = [], nhan = [];
+      let kyTruocTu;
+      const d = (y, mo) => `${y}-${String(mo).padStart(2, "0")}-01`;
+      if (ky === "NAM") {
+        denNam = denNam != null ? denNam : tuNam != null ? Math.max(tuNam, namNay) : namNay;
+        tuNam = tuNam != null ? tuNam : denNam - 4;
+        nam = null;
+        for (let y = tuNam; y <= denNam; y++) { moc.push(d(y, 1)); nhan.push(String(y)); }
+        moc.push(d(denNam + 1, 1));
+        kyTruocTu = d(tuNam - (denNam - tuNam + 1), 1);
+      } else {
+        nam = nam != null ? nam : namNay; tuNam = null; denNam = null;
+        const step = ky === "THANG" ? 1 : 3;
+        for (let mo = 1; mo <= 12; mo += step) { moc.push(d(nam, mo)); nhan.push(ky === "THANG" ? "Tháng " + mo : "Quý " + ((mo - 1) / 3 + 1)); }
+        moc.push(d(nam + 1, 1));
+        kyTruocTu = d(nam - 1, 1);
+      }
+      const bl = billing(); expireOrders(now);
+      const codes = bl.plans.slice().sort((a, c) => a.giaThang - c.giaThang).map((p) => p.ma);
+      const starts = moc.map(vnStart);
+      const cacKy = nhan.map((n, i) => ({ nhan: n, tuNgay: moc[i], denNgay: vnDay(starts[i + 1] - DAY), doanhThu: 0, soGiaoDich: 0, theoGoi: Object.fromEntries(codes.map((c) => [c, 0])) }));
+      let tong = 0, soGd = 0, kyTruoc = 0;
+      const status = {};
+      bl.tx.forEach((t) => {
+        const created = Date.parse(t.taoAt);
+        if (created >= starts[0] && created < starts[starts.length - 1]) status[t.trangThai] = (status[t.trangThai] || 0) + 1;
+        if (t.trangThai !== "THANH_CONG") return;
+        const at = Date.parse(t.hoanTatAt);
+        if (at >= vnStart(kyTruocTu) && at < starts[0]) kyTruoc += t.soTien;
+        if (at < starts[0] || at >= starts[starts.length - 1]) return;
+        let i = starts.length - 2; while (i > 0 && at < starts[i]) i--;
+        const k = cacKy[i]; k.doanhThu += t.soTien; k.soGiaoDich++; k.theoGoi[t.goiMa] = (k.theoGoi[t.goiMa] || 0) + t.soTien;
+        tong += t.soTien; soGd++;
+      });
+      const pct = (a, c) => Math.round(a * 1000 / c) / 10;
+      const ok = status.THANH_CONG || 0, done = ok + (status.THAT_BAI || 0) + (status.HET_HAN || 0);
+      const subs = Object.values(bl.subs).filter((s) => liveSub(s, now));
+      return {
+        ky, nam, tuNam, denNam, tongDoanhThu: tong, soGiaoDich: soGd, soVoiKyTruocPhanTram: kyTruoc === 0 ? null : pct(tong - kyTruoc, kyTruoc), cacKy,
+        tongQuan: { soGoiHieuLuc: subs.length, soSapHetHan7Ngay: subs.filter((s) => Date.parse(s.hetHanAt) <= now + 7 * DAY).length, tyLeThanhCong: done === 0 ? null : pct(ok, done) }
+      };
+    }],
+    ["POST", /^\/me\/deletion-requests$/, (m, b) => {
+      const u = requireMe();
+      const xacNhan = String(b.xacNhan || "").trim();
+      const errors = [];
+      if (!xacNhan) errors.push(fe("xacNhan", "Nhập email của tài khoản để xác nhận"));
+      else if (xacNhan.length > 255) errors.push(fe("xacNhan", "Email tối đa 255 ký tự"));
+      if (b.matKhau && String(b.matKhau).length > 100) errors.push(fe("matKhau", "Mật khẩu tối đa 100 ký tự"));
+      if (errors.length) bad(errors);
+      const one = (field, message) => { throw new ApiError(400, "VALIDATION_FAILED", message, [fe(field, message)]); };
+      if (xacNhan.toLowerCase() !== u.email.toLowerCase()) one("xacNhan", "Email xác nhận không khớp với email của tài khoản");
+      if (u.password && b.matKhau !== u.password) one("matKhau", "Mật khẩu không đúng");
+      const admins = db.users.filter((x) => x.vaiTro.includes("ADMIN") && x.trangThai === "HOAT_DONG");
+      if (u.vaiTro.includes("ADMIN") && u.trangThai === "HOAT_DONG" && admins.length <= 1) {
+        throw new ApiError(422, "BUSINESS_RULE", "Không thể xóa tài khoản quản trị viên cuối cùng. Hãy cấp quyền cho người khác trước");
+      }
+      u.trangThai = "DANG_XOA";
+      db.deletionSeq = (db.deletionSeq || 0) + 1;
+      session.clear();
+      return { status: 202, body: { id: String(db.deletionSeq), phamVi: "TAI_KHOAN", trangThai: "CHO_XU_LY", yeuCauAt: iso(Date.now()) } };
     }],
     ["GET", /^\/admin\/users$/, (m, b, q) => {
       requireAdmin();

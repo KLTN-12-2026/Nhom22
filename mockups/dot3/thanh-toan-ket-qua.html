@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kết quả thanh toán – VocabLearning</title>
+<link rel="icon" href="../shared/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css?v=8eea39e030ee">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=8ee697af7273">
+<link rel="stylesheet" href="../shared/effects.css?v=7fb6a75d9e3b">
+<link rel="stylesheet" href="ui.css?v=e89639845dbd">
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
+<link rel="stylesheet" href="../shared/flow.css?v=f364056298e1">
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<style>
+.pay-result { display: grid; gap: var(--sp-5); max-width: 640px; }
+.pay-result h2 { margin: 0; font-size: var(--fs-h3, 1.25rem); }
+.pay-result .kv { padding: var(--sp-4) var(--sp-5); background: var(--sunk); border-radius: var(--radius-field, 10px); }
+.pay-amount { font-variant-numeric: tabular-nums; font-weight: 700; }
+.pay-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.pay-actions .btn { min-height: 48px; }
+@media (max-width: 479px) { .pay-actions .btn { flex: 1 1 100%; justify-content: center; } }
+</style>
+</head>
+<body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="thanh-toan-ket-qua" data-nav="thanh-toan-goi">
+<div class="app">
+<header class="app-header"></header>
+<div class="app-body">
+<nav class="sidebar" aria-label="Điều hướng chính"></nav>
+<main class="app-main" id="main">
+<div class="page d3-page">
+<div class="d3-demo"><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><a href="../index.html#dot3">Danh mục mockup</a></div>
+<article class="sheet" aria-labelledby="page-title">
+<div class="form-head">
+  <div class="form-code"><span>Tài khoản</span></div>
+  <h1 id="page-title">Kết quả thanh toán</h1>
+  <p>Trạng thái đơn do máy chủ xác nhận với VNPay, không dựa vào trang chuyển về.</p>
+</div>
+<div id="result" class="pay-result" aria-live="polite"></div>
+
+<footer class="d3-footer">
+  <details>
+    <summary>Trạng thái mô phỏng</summary>
+    <div class="d3-demo">
+      <label for="d3-state">Xem trạng thái
+        <select class="select" id="d3-state">
+          <option value="ready">Có dữ liệu</option>
+          <option value="loading">Đang tải</option>
+          <option value="error">Lỗi</option>
+          <option value="sign">Sai chữ ký</option>
+          <option value="missing">Không tìm thấy đơn</option>
+        </select>
+      </label>
+    </div>
+  </details>
+  <a href="../index.html#dot3">Danh sách giao diện</a>
+</footer>
+</article>
+</div>
+</main>
+</div>
+<nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
+</div>
+
+<noscript><p class="notice">Bật JavaScript để xem và tương tác với dữ liệu mô phỏng.</p></noscript>
+<script src="../shared/demo.js?v=1619269d5741"></script>
+<script src="../shared/app.js?v=52375bbdf38a"></script>
+<script src="../shared/flow.js?v=b94b7801197e"></script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
+<script>
+(() => {
+  const box = document.getElementById('result');
+  const state = document.getElementById('d3-state');
+  const esc = VL.esc;
+  const money = (n) => Number(n).toLocaleString('vi-VN') + ' đ';
+  const CYCLE = { THANG: '1 tháng', NAM: '12 tháng' };
+  const GATE = { VNPAY: 'VNPay', MO_PHONG: 'Mô phỏng' };
+  const REASON = { '24': 'Bạn đã hủy giao dịch trên trang thanh toán.', '11': 'Đơn hết thời gian chờ thanh toán.', '51': 'Tài khoản không đủ số dư.', '65': 'Tài khoản vượt hạn mức giao dịch trong ngày.' };
+  const MAX_POLL = 30;
+  let timer = null, polls = 0;
+
+  const notice = (type, title, body) => `<div class="notice notice-${type}">${VL.icon('alert')}<div><p class="notice-title">${esc(title)}</p>${body || ''}</div></div>`;
+  const back = (label) => `<a class="btn btn-primary" href="thanh-toan-goi.html">${esc(label)}</a>`;
+  const history = '<a class="btn btn-quiet" href="thanh-toan-lich-su.html">Lịch sử thanh toán</a>';
+
+  function details(t) {
+    return `<dl class="kv">
+      <dt>Mã đơn</dt><dd>${esc(t.maDon)}</dd>
+      <dt>Gói</dt><dd>${esc(t.tenGoi)} · ${esc(CYCLE[t.chuKy] || t.chuKy)}</dd>
+      <dt>Số tiền</dt><dd class="pay-amount">${money(t.soTien)}</dd>
+      <dt>Cổng</dt><dd>${esc(GATE[t.cong] || t.cong)}${t.cong === 'MO_PHONG' ? ' <span class="stamp stamp-warning">Thanh toán mô phỏng</span>' : ''}</dd>
+      <dt>Tạo lúc</dt><dd>${esc(VL.fmtDateTime(t.taoAt))}</dd>
+      ${t.hoanTatAt ? `<dt>Xử lý lúc</dt><dd>${esc(VL.fmtDateTime(t.hoanTatAt))}</dd>` : ''}
+    </dl>`;
+  }
+
+  async function success(t) {
+    let sub = null;
+    try { sub = await VL.api('GET', '/me/subscription'); } catch (e) {}
+    const until = sub && sub.trangThai === 'HIEU_LUC' ? `<p>Gói ${esc(sub.tenGoi)} dùng đến <strong>${esc(VL.fmtDateTime(sub.hetHanAt))}</strong>.</p>` : '';
+    box.innerHTML = `<h2 tabindex="-1">Thanh toán thành công <span class="stamp stamp-success">Thành công</span></h2>
+      ${notice('success', 'Gói đã được kích hoạt', until + '<p>Các tính năng học đã mở lại.</p>')}
+      ${details(t)}
+      <div class="pay-actions"><a class="btn btn-primary" href="../dot2/hom-nay.html">Học hôm nay</a>${history}</div>`;
+    box.querySelector('h2').focus();
+    VL.toast('Đã kích hoạt gói ' + t.tenGoi, 'success');
+  }
+
+  function render(t) {
+    clearTimeout(timer);
+    if (t.trangThai === 'THANH_CONG') return success(t);
+    if (t.trangThai === 'CHO_THANH_TOAN') {
+      if (polls >= MAX_POLL) {
+        box.innerHTML = `<h2>Chưa nhận được kết quả <span class="stamp stamp-warning">Chờ thanh toán</span></h2>
+          ${notice('warning', 'VNPay chưa báo kết quả cho đơn này', '<p>Nếu tài khoản đã bị trừ tiền, gói sẽ tự kích hoạt khi máy chủ nhận được xác nhận. Không thanh toán lại cùng lúc.</p>')}
+          ${details(t)}
+          <div class="pay-actions"><button class="btn btn-primary" type="button" data-action="poll">Kiểm tra lại</button>${history}</div>`;
+        return;
+      }
+      box.innerHTML = `<h2>Đang chờ xác nhận <span class="stamp stamp-warning">Chờ thanh toán</span></h2>
+        <p role="status">Đang chờ VNPay xác nhận, tự kiểm tra lại mỗi 2 giây (lần ${polls + 1}/${MAX_POLL}).</p>
+        ${details(t)}`;
+      polls += 1;
+      timer = setTimeout(fetchOrder, 2000);
+      return;
+    }
+    const failed = t.trangThai === 'THAT_BAI';
+    const reason = failed ? (REASON[t.maPhanHoi] || 'VNPay từ chối giao dịch' + (t.maPhanHoi ? ' (mã ' + t.maPhanHoi + ')' : '') + '.') : 'Đơn không được thanh toán trong 15 phút nên đã hết hạn.';
+    box.innerHTML = `<h2 tabindex="-1">${failed ? 'Thanh toán không thành công' : 'Đơn đã hết hạn'} <span class="stamp stamp-danger">${failed ? 'Thất bại' : 'Hết hạn'}</span></h2>
+      ${notice('danger', reason, failed ? '<p>Đơn này không được tính phí. Tạo đơn mới để thử lại.</p>' : '<p>Nếu tài khoản đã bị trừ tiền, hãy liên hệ hỗ trợ kèm mã đơn. Tạo đơn mới để thử lại.</p>')}
+      ${details(t)}
+      <div class="pay-actions">${back('Thử lại')}${history}</div>`;
+    box.querySelector('h2').focus();
+  }
+
+  async function fetchOrder() {
+    const maDon = VL.params().maDon;
+    try {
+      render(await VL.api('GET', '/billing/transactions/' + encodeURIComponent(maDon || '')));
+    } catch (err) {
+      if (err.status === 404) {
+        box.innerHTML = `<h2>Không tìm thấy đơn</h2>${notice('danger', err.message || 'Không tìm thấy đơn thanh toán', `<p class="request-id">Mã yêu cầu: ${esc(err.requestId || '—')}</p>`)}<div class="pay-actions">${back('Về trang gói dịch vụ')}${history}</div>`;
+        return;
+      }
+      box.innerHTML = notice('danger', err.message || 'Không tải được kết quả thanh toán', `<p class="request-id">Mã yêu cầu: ${esc(err.requestId || '—')}</p><div><button type="button" class="btn btn-secondary btn-sm" data-action="poll">Thử lại</button></div>`);
+    }
+  }
+
+  function load() {
+    clearTimeout(timer); polls = 0;
+    const p = VL.params(), forced = state.value;
+    if (forced === 'loading') { box.innerHTML = '<p class="muted" role="status">Đang tải kết quả thanh toán…</p>'; return; }
+    if (forced === 'error') { box.innerHTML = notice('danger', 'Không tải được kết quả thanh toán', '<p class="request-id">Mã yêu cầu: req-demo-500</p><div><button type="button" class="btn btn-secondary btn-sm" data-action="poll">Thử lại</button></div>'); return; }
+    if (forced === 'sign' || p.loi === 'SAI_CHU_KY') {
+      box.innerHTML = `<h2>Không xác minh được kết quả</h2>${notice('danger', 'Dữ liệu trả về từ cổng thanh toán không hợp lệ', '<p>Trạng thái đơn không đổi. Mở lịch sử thanh toán để xem đơn, hoặc tạo đơn mới.</p>')}<div class="pay-actions">${back('Về trang gói dịch vụ')}${history}</div>`;
+      return;
+    }
+    if (forced === 'missing') { box.innerHTML = `<h2>Không tìm thấy đơn</h2>${notice('danger', 'Không tìm thấy đơn thanh toán', '<p class="request-id">Mã yêu cầu: req-demo-404</p>')}<div class="pay-actions">${back('Về trang gói dịch vụ')}${history}</div>`; return; }
+    if (!p.maDon) { box.innerHTML = `<h2>Không có mã đơn</h2>${notice('warning', 'Trang này mở sau khi thanh toán', '<p>Chọn gói để tạo đơn thanh toán.</p>')}<div class="pay-actions">${back('Về trang gói dịch vụ')}${history}</div>`; return; }
+    box.innerHTML = '<p class="muted" role="status">Đang tải kết quả thanh toán…</p>';
+    fetchOrder();
+  }
+
+  box.addEventListener('click', (e) => { if (e.target.closest('[data-action="poll"]')) { state.value = 'ready'; polls = 0; fetchOrder(); } });
+  state.addEventListener('change', load);
+  window.addEventListener('pagehide', () => clearTimeout(timer));
+  load();
+})();
+</script>
+<script src="../shared/fx.js?v=09ccfad84284"></script>
+</body>
+</html>

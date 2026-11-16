@@ -173,36 +173,11 @@
 }
 
 /* Toast notification */
-.toast-stack {
-  position: fixed;
-  bottom: calc(var(--sp-6) + env(safe-area-inset-bottom, 0px));
-  right: var(--sp-5);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  pointer-events: none;
-}
-.toast {
-  background: var(--ink);
-  color: var(--sheet);
-  font-size: var(--fs-small);
-  padding: var(--sp-3) var(--sp-5);
-  border-radius: 10px;
-  box-shadow: 0 4px 18px rgba(10,15,40,.2);
-  animation: toastIn .25s ease;
-  pointer-events: auto;
-  max-width: 280px;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 .tx-desc small { color: var(--ink-2); }
 .tx-note { font-size: var(--fs-small); color: var(--ink-2); margin-top: var(--sp-4); }
+.tx-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.tx-toolbar .section-heading { margin: 0; }
+.tx-filter { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); }
 </style>
 </head>
 <body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="thanh-toan-lich-su" data-nav="thanh-toan-lich-su">
@@ -224,60 +199,24 @@
 
 <div id="d3-content" class="d3-section">
 
-  <div class="sub-overview" aria-label="Gói đang hiệu lực">
-    <div class="sub-overview-info">
-      <p class="sub-plan-name">
-        Gói Premium
-        <span class="plan-badge-sm">Đang hiệu lực</span>
-      </p>
-      <p class="sub-expires">Hiệu lực từ 01/11/2026 14:05 đến <strong>01/12/2026 14:05</strong> · còn 16 ngày</p>
-      <p class="sub-renew">Gói không tự gia hạn. Gia hạn cùng gói trước ngày hết hạn sẽ cộng dồn thêm thời gian.</p>
-    </div>
-    <div class="sub-overview-actions">
-      <a href="thanh-toan-goi.html" class="btn btn-quiet btn-sm">Gia hạn gói</a>
-    </div>
-  </div>
+  <div id="sub-region" aria-live="polite"></div>
 
-  <p class="section-heading">Lịch sử giao dịch</p>
-  <div class="tx-list" role="table" aria-label="Danh sách giao dịch">
-    <div class="tx-header" role="row" aria-hidden="true">
-      <span>Thời gian</span>
-      <span>Đơn hàng</span>
-      <span style="text-align:right">Số tiền</span>
-      <span>Trạng thái</span>
-      <span></span>
-    </div>
-    <div class="tx-item" role="row">
-      <span class="tx-date" role="cell">01/11/2026 14:05</span>
-      <span class="tx-desc" role="cell">Gói Premium · 1 tháng<br><small>DH-20261101-0007</small></span>
-      <span class="tx-amount" role="cell">999.000 đ</span>
-      <span class="tx-status ok" role="cell"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 5l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Thành công</span>
-      <span class="tx-action" role="cell"><button class="btn btn-quiet btn-sm" type="button" onclick="openReceipt('DH-20261101-0007')" aria-label="Xem biên nhận đơn DH-20261101-0007"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v8M3.5 6.5l3 3 3-3M2 11h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Biên nhận</button></span>
-    </div>
-    <div class="tx-item" role="row">
-      <span class="tx-date" role="cell">01/11/2026 14:02</span>
-      <span class="tx-desc" role="cell">Gói Premium · 1 tháng<br><small>DH-20261101-0006</small></span>
-      <span class="tx-amount" role="cell">999.000 đ</span>
-      <span class="tx-status fail" role="cell"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Thất bại</span>
-      <span class="tx-action" role="cell"><span class="no-action" aria-label="Không có biên nhận">–</span></span>
-    </div>
-    <div class="tx-item" role="row">
-      <span class="tx-date" role="cell">01/10/2026 09:30</span>
-      <span class="tx-desc" role="cell">Gói Pro · 1 tháng<br><small>DH-20261001-0003</small></span>
-      <span class="tx-amount" role="cell">299.000 đ</span>
-      <span class="tx-status ok" role="cell"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 5l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Thành công</span>
-      <span class="tx-action" role="cell"><button class="btn btn-quiet btn-sm" type="button" onclick="openReceipt('DH-20261001-0003')" aria-label="Xem biên nhận đơn DH-20261001-0003"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v8M3.5 6.5l3 3 3-3M2 11h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Biên nhận</button></span>
-    </div>
-    <div class="tx-item" role="row">
-      <span class="tx-date" role="cell">30/09/2026 21:12</span>
-      <span class="tx-desc" role="cell">Gói Pro · 1 tháng<br><small>DH-20260930-0002</small></span>
-      <span class="tx-amount" role="cell">299.000 đ</span>
-      <span class="tx-status wait" role="cell">Hết hạn</span>
-      <span class="tx-action" role="cell"><span class="no-action" aria-label="Không có biên nhận">–</span></span>
-    </div>
+  <div class="tx-toolbar">
+    <p class="section-heading">Lịch sử giao dịch</p>
+    <label class="tx-filter" for="tx-filter">Trạng thái
+      <select class="select" id="tx-filter">
+        <option value="">Tất cả</option>
+        <option value="THANH_CONG">Thành công</option>
+        <option value="CHO_THANH_TOAN">Chờ thanh toán</option>
+        <option value="THAT_BAI">Thất bại</option>
+        <option value="HET_HAN">Hết hạn</option>
+      </select>
+    </label>
   </div>
+  <div id="tx-region" aria-live="polite"></div>
+  <div class="pager-wrap"><nav class="pager" id="pager" aria-label="Phân trang"></nav></div>
 
-  <p class="tx-note">"Hết hạn" là đơn không được thanh toán trong 15 phút. Thanh toán qua VNPay. Biên nhận là chứng từ xác nhận đã thanh toán, không phải hóa đơn giá trị gia tăng.</p>
+  <p class="tx-note">"Hết hạn" là đơn không được thanh toán trong 15 phút. Biên nhận là chứng từ xác nhận đã thanh toán, không phải hóa đơn giá trị gia tăng.</p>
 
 </div><!-- /d3-content -->
 
@@ -293,7 +232,7 @@
           <option value="error">Lỗi</option>
         </select>
       </label>
-      <button class="btn btn-quiet" type="button" id="d3-reset">Đặt lại mẫu đợt 3</button>
+      <button class="btn btn-quiet" type="button" id="d3-reset">Đặt lại mẫu thanh toán</button>
     </div>
   </details>
   <a href="../index.html#dot3">Danh sách giao diện</a>
@@ -305,27 +244,114 @@
 <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
 </div>
 
-<!-- Toast stack -->
-<div class="toast-stack" id="toast-stack" aria-live="assertive" aria-atomic="true"></div>
-
 <noscript><p class="notice">Bật JavaScript để xem và tương tác với dữ liệu mô phỏng.</p></noscript>
 <script src="../shared/demo.js?v=1619269d5741"></script>
 <script src="../shared/app.js?v=52375bbdf38a"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script src="../shared/mascot.js?v=f38c732c1a4f"></script>
 <script>
-function showToast(msg, type, duration) {
-  const stack = document.getElementById('toast-stack');
-  const toast = document.createElement('div');
-  toast.className = 'toast' + (type ? ' ' + type : '');
-  toast.textContent = msg;
-  stack.appendChild(toast);
-  setTimeout(() => toast.remove(), duration || 3000);
-}
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = VL.esc;
+  const money = (n) => Number(n).toLocaleString('vi-VN') + ' đ';
+  const CYCLE = { THANG: '1 tháng', NAM: '12 tháng' };
+  const STATUS = { THANH_CONG: ['ok', 'Thành công'], THAT_BAI: ['fail', 'Thất bại'], HET_HAN: ['wait', 'Hết hạn'], CHO_THANH_TOAN: ['wait', 'Chờ thanh toán'] };
+  const SIZE = 20;
+  let pageNo = 0;
+  const notice = (type, title, body) => `<div class="notice notice-${type}">${VL.icon('alert')}<div><p class="notice-title">${esc(title)}</p>${body || ''}</div></div>`;
+  const reqId = (err) => `<p class="request-id">Mã yêu cầu: ${esc(err.requestId || '—')}</p>`;
+  const retry = '<div><button type="button" class="btn btn-secondary btn-sm" data-action="retry">Thử lại</button></div>';
 
-function openReceipt(maDon) {
-  showToast('Bản thật mở biên nhận đơn ' + maDon + ' trong thẻ mới để in.', 'info', 3500);
-}
+  function renderSub(sub) {
+    if (sub.trangThai === 'CHUA_CO_GOI') {
+      $('sub-region').innerHTML = `<div class="sub-overview" aria-label="Gói dịch vụ"><div class="sub-overview-info"><p class="sub-plan-name">Chưa có gói</p><p class="sub-expires">Mua Pro hoặc Premium để dùng các tính năng học.</p></div><div class="sub-overview-actions"><a href="thanh-toan-goi.html" class="btn btn-primary btn-sm">Chọn gói</a></div></div>`;
+      return;
+    }
+    const live = sub.trangThai === 'HIEU_LUC';
+    const days = live ? (sub.soNgayConLai <= 0 ? ' · hết hạn trong hôm nay' : ` · còn ${sub.soNgayConLai} ngày`) : '';
+    $('sub-region').innerHTML = `<div class="sub-overview" aria-label="${live ? 'Gói đang hiệu lực' : 'Gói đã hết hạn'}">
+      <div class="sub-overview-info">
+        <p class="sub-plan-name">Gói ${esc(sub.tenGoi)} <span class="stamp ${live ? 'stamp-success' : 'stamp-danger'}">${live ? 'Đang hiệu lực' : 'Đã hết hạn'}</span></p>
+        <p class="sub-expires">Hiệu lực từ ${esc(VL.fmtDateTime(sub.batDauAt))} đến <strong>${esc(VL.fmtDateTime(sub.hetHanAt))}</strong>${days}</p>
+        <p class="sub-renew">${live ? 'Gói không tự gia hạn. Gia hạn cùng gói trước ngày hết hạn sẽ cộng dồn thêm thời gian.' : 'Mua gói mới để học tiếp. Dữ liệu học của bạn vẫn được giữ.'}</p>
+      </div>
+      <div class="sub-overview-actions"><a href="thanh-toan-goi.html" class="btn ${live ? 'btn-quiet' : 'btn-primary'} btn-sm">${live ? 'Gia hạn gói' : 'Mua gói'}</a></div>
+    </div>`;
+  }
+
+  function row(t) {
+    const [cls, label] = STATUS[t.trangThai] || ['wait', t.trangThai];
+    const action = t.trangThai === 'THANH_CONG'
+      ? `<button class="btn btn-quiet btn-sm" type="button" data-receipt="${esc(t.maDon)}" aria-label="Xem biên nhận đơn ${esc(t.maDon)}">Biên nhận</button>`
+      : t.trangThai === 'CHO_THANH_TOAN'
+        ? `<a class="btn btn-quiet btn-sm" href="thanh-toan-ket-qua.html?maDon=${encodeURIComponent(t.maDon)}" aria-label="Xem kết quả đơn ${esc(t.maDon)}">Xem kết quả</a>`
+        : '<span class="no-action" aria-label="Không có biên nhận">–</span>';
+    return `<div class="tx-item" role="row">
+      <span class="tx-date" role="cell">${esc(VL.fmtDateTime(t.taoAt))}</span>
+      <span class="tx-desc" role="cell">Gói ${esc(t.tenGoi)} · ${esc(CYCLE[t.chuKy] || t.chuKy)}${t.cong === 'MO_PHONG' ? ' · mô phỏng' : ''}<br><small>${esc(t.maDon)}</small></span>
+      <span class="tx-amount" role="cell">${money(t.soTien)}</span>
+      <span class="tx-status ${cls}" role="cell">${esc(label)}</span>
+      <span class="tx-action" role="cell">${action}</span>
+    </div>`;
+  }
+
+  async function loadList() {
+    const filter = $('tx-filter').value;
+    $('tx-region').innerHTML = '<p class="muted" role="status">Đang tải giao dịch…</p>';
+    $('pager').innerHTML = '';
+    try {
+      const d = await VL.api('GET', `/billing/transactions?page=${pageNo}&size=${SIZE}${filter ? '&trangThai=' + filter : ''}`);
+      if (!d.items.length || $('d3-state').value === 'empty') {
+        $('tx-region').innerHTML = filter
+          ? notice('warning', 'Không có giao dịch với trạng thái này', '<p>Chọn "Tất cả" để xem mọi giao dịch.</p>')
+          : notice('warning', 'Bạn chưa có giao dịch nào', '<p><a href="thanh-toan-goi.html">Chọn gói dịch vụ</a> để bắt đầu.</p>');
+        return;
+      }
+      $('tx-region').innerHTML = `<div class="tx-list" role="table" aria-label="Danh sách giao dịch">
+        <div class="tx-header" role="row"><span role="columnheader">Thời gian</span><span role="columnheader">Đơn hàng</span><span role="columnheader" style="text-align:right">Số tiền</span><span role="columnheader">Trạng thái</span><span role="columnheader"><span class="sr-only">Thao tác</span></span></div>
+        ${d.items.map(row).join('')}
+      </div>`;
+      $('pager').innerHTML = VL.pagination(d.page, d.totalPages);
+    } catch (err) {
+      $('tx-region').innerHTML = notice('danger', err.message || 'Không tải được lịch sử giao dịch', reqId(err) + retry);
+    }
+  }
+
+  async function load() {
+    const forced = $('d3-state').value;
+    if (forced === 'loading') { $('sub-region').innerHTML = ''; $('tx-region').innerHTML = '<p class="muted" role="status">Đang tải giao dịch…</p>'; $('pager').innerHTML = ''; return; }
+    if (forced === 'error') { $('sub-region').innerHTML = ''; $('pager').innerHTML = ''; $('tx-region').innerHTML = notice('danger', 'Không tải được lịch sử giao dịch', '<p class="request-id">Mã yêu cầu: req-demo-500</p>' + retry); return; }
+    try { renderSub(await VL.api('GET', '/me/subscription')); } catch (err) { $('sub-region').innerHTML = notice('danger', err.message || 'Không tải được gói hiện tại', reqId(err)); }
+    loadList();
+  }
+
+  async function openReceipt(btn) {
+    const tab = window.open('', '_blank');
+    await VL.busy(btn, async () => {
+      try {
+        const html = await VL.api('GET', `/billing/transactions/${encodeURIComponent(btn.dataset.receipt)}/receipt`);
+        const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+        if (tab) tab.location = url; else window.location.assign(url);
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (err) {
+        if (tab) tab.close();
+        VL.toast((err.message || 'Không mở được biên nhận') + ' · Mã ' + (err.requestId || '—'), 'error');
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    const r = e.target.closest('[data-receipt]');
+    if (r) openReceipt(r);
+    const pg = e.target.closest('#pager [data-page]');
+    if (pg && !pg.disabled) { pageNo = Number(pg.dataset.page); loadList(); }
+    if (e.target.closest('[data-action="retry"]')) { $('d3-state').value = 'ready'; load(); }
+  });
+  $('tx-filter').addEventListener('change', () => { pageNo = 0; loadList(); });
+  $('d3-state').addEventListener('change', load);
+  $('d3-reset').addEventListener('click', () => { delete VLDemo.db.billing; VLDemo.persist(); $('d3-state').value = 'ready'; $('tx-filter').value = ''; pageNo = 0; load(); VL.toast('Đã đặt lại dữ liệu thanh toán mẫu.'); });
+  load();
+})();
 </script>
 <script src="../shared/fx.js?v=09ccfad84284"></script>
 </body>
