@@ -1,6 +1,6 @@
 spring:
   flyway:
-    locations: classpath:db/migration,classpath:db/seed
+    locations: classpath:db/migration,classpath:db/seed,classpath:db/dev
   datasource:
     username: ${DB_USER:vocab}
     password: ${DB_PASSWORD:123456}

@@ -1,8 +1,46 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Node / Next.js
 node_modules/
 .next/
-.DS_Store
-
-.idea/
-.env.local
 frontend/.next-*/
-backend/k28/test.log
+frontend/out/
+frontend/lint-result.json
+*.tsbuildinfo
+next-env.d.ts
+
+# Java / Maven
+backend/k28/target/
+backend/k28/HELP.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# AI tooling (local only)
+CLAUDE.md
+AGENTS.md
+PRODUCT.md
+DESIGN.md
+.codex/
+.graphifyignore

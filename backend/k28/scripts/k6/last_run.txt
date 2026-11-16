@@ -1,0 +1,49 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: -
+        output: -
+     scenarios: (100.00%) 1 scenario, 50 max VUs, 2m55s max duration (incl. graceful stop):
+              * learners: Up to 50 looping VUs for 2m45s over 3 stages (gracefulRampDown: 10s, gracefulStop: 30s)
+  █ THRESHOLDS 
+    app_errors
+    ✓ 'rate<0.01' rate=0.00%
+    http_req_duration{endpoint:decks}
+    ✓ 'p(95)<800' p(95)=69.02ms
+    http_req_duration{endpoint:library}
+    ✓ 'p(95)<800' p(95)=80.71ms
+    http_req_duration{endpoint:stats}
+    ✓ 'p(95)<800' p(95)=88.97ms
+    http_req_duration{endpoint:today}
+    ✓ 'p(95)<800' p(95)=105.67ms
+  █ TOTAL RESULTS 
+    checks_total.......: 6902    41.329449/s
+    checks_succeeded...: 100.00% 6902 out of 6902
+    checks_failed......: 0.00%   0 out of 6902
+    ✓ login 200
+    ✓ today 200
+    ✓ decks 200
+    ✓ library 200
+    ✓ stats 200
+    CUSTOM
+    app_errors.....................: 0.00%  0 out of 6852
+    HTTP
+    http_req_duration..............: avg=49.15ms med=42.07ms p(90)=69.51ms p(95)=100.62ms max=630.82ms
+      { endpoint:decks }...........: avg=39.61ms med=35.05ms p(90)=53.99ms p(95)=69.02ms  max=304.1ms 
+      { endpoint:library }.........: avg=44.45ms med=38.84ms p(90)=62.08ms p(95)=80.71ms  max=270.4ms 
+      { endpoint:stats }...........: avg=49.09ms med=43.46ms p(90)=66.5ms  p(95)=88.97ms  max=298.77ms
+      { endpoint:today }...........: avg=58.13ms med=51.7ms  p(90)=76.96ms p(95)=105.67ms max=273.19ms
+      { expected_response:true }...: avg=49.15ms med=42.07ms p(90)=69.51ms p(95)=100.62ms max=630.82ms
+    http_req_failed................: 0.00%  0 out of 7152
+    http_reqs......................: 7152   42.826459/s
+    EXECUTION
+    iteration_duration.............: avg=4.2s    med=4.18s   p(90)=4.29s   p(95)=4.36s    max=5.24s   
+    iterations.....................: 1713   10.257512/s
+    vus............................: 1      min=1         max=50
+    vus_max........................: 50     min=50        max=50
+    NETWORK
+    data_received..................: 22 MB  130 kB/s
+    data_sent......................: 1.6 MB 9.6 kB/s

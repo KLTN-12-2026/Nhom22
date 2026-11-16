@@ -1,0 +1,28 @@
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+
+app:
+  cookie-secure: true
+  billing:
+    demo-tools: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:ecs}
+    ecs:
+      service:
+        name: vocab-api
+        environment: prod
+
+management:
+  endpoint:
+    health:
+      show-details: never

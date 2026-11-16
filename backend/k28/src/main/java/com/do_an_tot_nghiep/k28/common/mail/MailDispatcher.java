@@ -35,7 +35,7 @@ public class MailDispatcher {
             helper.setText(event.html(), true);
             mailSender.send(message);
         } catch (MessagingException | MailException e) {
-            log.warn("Send mail failed: {} ({})", event, e.getMessage());
+            log.warn("Send mail failed: subject \"{}\" ({})", event.subject(), e.getClass().getSimpleName());
         }
     }
 }
