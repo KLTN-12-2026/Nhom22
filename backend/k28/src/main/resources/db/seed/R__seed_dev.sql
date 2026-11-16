@@ -26,3 +26,9 @@ FROM nguoi_dung WHERE email IN ('admin@vocab.local', 'an@vocab.local', 'binh@voc
 
 INSERT IGNORE INTO cai_dat_thong_bao (nguoi_dung_id, gio_nhac)
 SELECT id, '20:00:00' FROM nguoi_dung WHERE email IN ('admin@vocab.local', 'an@vocab.local', 'binh@vocab.local', 'chi@vocab.local');
+
+INSERT IGNORE INTO dang_ky_goi (nguoi_dung_id, goi_ma, bat_dau_at, het_han_at, trang_thai)
+SELECT u.id, CASE u.email WHEN 'binh@vocab.local' THEN 'PREMIUM' ELSE 'PRO' END, @now, DATE_ADD(@now, INTERVAL 1 YEAR), 'HIEU_LUC'
+FROM nguoi_dung u
+WHERE u.email IN ('an@vocab.local', 'binh@vocab.local', 'chi@vocab.local')
+  AND NOT EXISTS (SELECT 1 FROM dang_ky_goi d WHERE d.nguoi_dung_id = u.id AND d.trang_thai = 'HIEU_LUC' AND d.het_han_at > @now);

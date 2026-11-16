@@ -76,6 +76,13 @@ public class TepTin extends BaseEntity {
         return file;
     }
 
+    public static TepTin generatedImage(Long chuSoHuuId, String objectKey, String mimeType, long kichThuoc,
+                                        String checksum, Instant now) {
+        TepTin file = pending(chuSoHuuId, objectKey, mimeType, kichThuoc, checksum, LoaiTep.ANH);
+        file.hoanTatAt = now;
+        return file;
+    }
+
     public static TepTin copyOf(TepTin source, Long chuSoHuuId, String objectKey, Instant now) {
         TepTin file = pending(chuSoHuuId, objectKey, source.mimeType, source.kichThuoc, source.checksum, source.loai);
         file.hoanTatAt = now;

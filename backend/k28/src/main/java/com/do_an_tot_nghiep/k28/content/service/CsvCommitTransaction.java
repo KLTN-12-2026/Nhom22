@@ -25,6 +25,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CsvCommitTransaction {
     private final CsvImportRequestRepository requests;
+    private final CardLimitService limits;
     private final BoTheRepository decks;
     private final TheTuVungRepository cards;
     private final CardLinkRepository links;
@@ -72,6 +73,7 @@ public class CsvCommitTransaction {
             throw new ApiException(ErrorCode.CONFLICT, "nhanIds",
                     "Nhãn đã thay đổi, hãy tạo bản xem trước mới");
         }
+        limits.requireCapacity(userId, checked.size());
         List<Long> inserted = new ArrayList<>();
         for (Row row : checked) {
             var data = mapper.toRequest(row.data());

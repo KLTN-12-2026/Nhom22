@@ -55,7 +55,7 @@ public class LibraryMediaService {
             }
 
             cards.findByIdAndXoaAtIsNull(cardId)
-                    .filter(card -> deckId.equals(card.getBoTheId()))
+                    .filter(card -> deckId.equals(card.getBoTheId()) && !card.isAnKiemDuyet())
                     .orElseThrow(this::notFound);
 
             Long fileId = links.findFiles(List.of(cardId)).stream()

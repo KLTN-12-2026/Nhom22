@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.service;
 
+import com.do_an_tot_nghiep.k28.account.dto.NotificationContact;
 import com.do_an_tot_nghiep.k28.account.dto.ReminderTarget;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
@@ -94,5 +95,14 @@ public class AccountService {
     @Transactional(readOnly = true)
     public List<ReminderTarget> reminderTargets() {
         return notificationSettings.reminderTargets(TrangThaiNguoiDung.HOAT_DONG);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, NotificationContact> contacts(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return notificationSettings.contacts(ids).stream()
+                .collect(Collectors.toMap(NotificationContact::id, contact -> contact));
     }
 }

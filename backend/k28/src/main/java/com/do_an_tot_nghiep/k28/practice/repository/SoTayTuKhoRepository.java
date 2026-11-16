@@ -140,6 +140,7 @@ public interface SoTayTuKhoRepository extends JpaRepository<SoTayTuKho, Long> {
                 join tien_do_the t on t.id = h.tien_do_id
                 where h.nguoi_dung_id = :userId
                   and h.created_at >= :cuTu
+                  and h.created_at < :den
                 union all
                 select c.the_id,
                        a.nop_at,
@@ -150,6 +151,7 @@ public interface SoTayTuKhoRepository extends JpaRepository<SoTayTuKho, Long> {
                 where a.nguoi_dung_id = :userId
                   and c.the_id is not null
                   and a.nop_at >= :cuTu
+                  and a.nop_at < :den
             ) x
             group by x.the_id
             having soSaiCu > 0 and soLuotMoi > 0
@@ -158,7 +160,8 @@ public interface SoTayTuKhoRepository extends JpaRepository<SoTayTuKho, Long> {
     List<ProgressStatRow> progressStats(
             @Param("userId") Long userId,
             @Param("cuTu") Instant cuTu,
-            @Param("moiTu") Instant moiTu
+            @Param("moiTu") Instant moiTu,
+            @Param("den") Instant den
     );
 
     @Query(value = """

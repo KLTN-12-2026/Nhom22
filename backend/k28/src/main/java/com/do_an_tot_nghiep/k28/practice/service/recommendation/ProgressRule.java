@@ -26,7 +26,7 @@ public class ProgressRule implements RecommendationRule {
     @Override
     public List<RecommendationCandidate> evaluate(Long userId, Instant now) {
         ProgressPolicy policy = new ProgressPolicy(properties.tienBo());
-        List<ProgressStatRow> rows = notebook.progressStats(userId, policy.oldFrom(now), policy.recentFrom(now))
+        List<ProgressStatRow> rows = notebook.progressStats(userId, policy.oldFrom(now), policy.recentFrom(now), now)
                 .stream()
                 .filter(row -> policy.matches(row.getSoLuotCu(), row.getSoSaiCu(), row.getSoLuotMoi(), row.getSoSaiMoi()))
                 .toList();

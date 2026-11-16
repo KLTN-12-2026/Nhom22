@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.storage.StorageService;
@@ -47,6 +48,8 @@ public class DeckCopyService {
     private final DeckMapper mapper;
     private final JsonMapper json;
     private final Clock clock;
+    private final CardLimitService limits;
+    private final EntitlementService entitlements;
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeckResponse copy(Long userId, Long sourceId, String key) {
@@ -81,7 +84,11 @@ public class DeckCopyService {
             return replay(userId, sourceId, reservation);
         }
 
+        if (source.isCaoCap()) {
+            entitlements.requirePremiumSamples(userId);
+        }
         List<TheTuVung> originals = cards.findAllForCopy(sourceId);
+        limits.requireCapacity(userId, originals.size());
         List<Long> originalIds = originals.stream().map(TheTuVung::getId).toList();
         var tagLinks = links.findTags(originalIds).stream()
                 .collect(Collectors.groupingBy(CardLinkRepository.TagLink::theId));

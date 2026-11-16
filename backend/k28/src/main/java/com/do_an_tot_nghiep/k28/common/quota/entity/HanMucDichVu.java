@@ -38,4 +38,8 @@ public class HanMucDichVu extends BaseEntity {
 
     @Version
     private Long version;
+
+    public void doiSoLuot(int soLuotNgay) {
+        this.soLuotNgay = soLuotNgay;
+    }
 }

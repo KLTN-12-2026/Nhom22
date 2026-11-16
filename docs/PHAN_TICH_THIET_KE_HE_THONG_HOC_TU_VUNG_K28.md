@@ -275,6 +275,8 @@ Nếu mất mạng, hiển thị kết quả chưa đồng bộ và cho gửi l�
 4. AI có thể gợi ý phân loại [Thiết kế]; Admin quyết định giữ hoặc ẩn kèm lý do (Đợt 3 gọn; trạng thái yêu cầu sửa/từ chối là hướng phát triển).
 5. Lưu người xử lý, lý do, trạng thái trước/sau vào nhật ký. Thông báo cho người liên quan: hướng phát triển (cắt 07/11/2026).
 
+Triển khai B3.8 (16/11/2026): chỉ báo cáo bộ/thẻ công khai của người khác hoặc đầu ra AI đã hoàn tất của chính mình; một quyết định áp cho mọi báo cáo đang chờ của cùng đối tượng; ẩn bộ = `DA_AN`, ẩn thẻ hoặc đầu ra AI = `an_kiem_duyet` (chủ bộ vẫn thấy thẻ; đầu ra AI không trả `ketQua`/`banNhap`). Chi tiết: `docs/luong-backend/B3.8-bao-cao-kiem-duyet.md`.
+
 ### 6.9. Gói dịch vụ bắt buộc và thanh toán [Thiết kế, bổ sung 07/11/2026; sửa 10/11/2026 theo góp ý GVHD]
 
 **Nguyên tắc (chốt 10/11/2026):** hệ thống **không có gói miễn phí và không có dùng thử**. User chỉ dùng được chức năng học khi có một `dang_ky_goi` ở trạng thái `HIEU_LUC` và `het_han_at > now`. Đăng ký, xác thực email, đăng nhập, thiết lập lần đầu (§6.1 bước 1–5) và xem thư viện công khai vẫn mở; sau thiết lập lần đầu người học được đưa tới UI55 để mua gói. Admin không cần gói.
@@ -295,7 +297,7 @@ Chu kỳ `THANG` cộng 1 tháng dương lịch, `NAM` cộng 1 năm dương l�
 - FE: bắt 402 → chuyển `/thanh-toan-goi?lyDo=CHUA_CO_GOI|HET_HAN`; menu học bị khóa, chỉ còn Gói & thanh toán, Thông báo, Cá nhân.
 
 **Luồng mua:**
-1. User chọn gói và chu kỳ ở UI55 → `POST /billing/checkouts {goi, chuKy}`. Máy chủ tạo đơn `CHO_THANH_TOAN` với số tiền lấy từ `goi_dich_vu` (không tin số tiền từ trình duyệt), ký URL thanh toán VNPay (HMAC-SHA512) và trả `paymentUrl`.
+1. User chọn gói và chu kỳ ở UI55 → `POST /billing/checkouts {goiMa, chuKy}`. Máy chủ tạo đơn `CHO_THANH_TOAN` với số tiền lấy từ `goi_dich_vu` (không tin số tiền từ trình duyệt), ký URL thanh toán VNPay (HMAC-SHA512) và trả `paymentUrl`.
 2. Trình duyệt chuyển sang trang VNPay; người học nhập thẻ nội địa/quốc tế hoặc quét VNPAY-QR **trên trang của cổng**. Hệ thống không nhận, không lưu số thẻ, CVV.
 3. VNPay gọi IPN `GET /billing/vnpay/ipn` (máy chủ ↔ máy chủ) và chuyển người học về `GET /billing/vnpay/return`. Cả hai đi qua một hàm xác nhận: kiểm chữ ký, mã đơn, số tiền, mã phản hồi; khóa hàng đơn rồi chuyển `THANH_CONG`/`THAT_BAI` **một lần** (gọi lặp trả kết quả cũ).
 4. Thành công → tạo/gia hạn `dang_ky_goi`: chưa có gói hoặc gói đã hết hạn thì bắt đầu ngay (`bat_dau_at = hoan_tat_at`); đang cùng gói còn hạn thì cộng dồn từ `het_han_at` cũ. Đang gói khác còn hạn → từ chối tạo đơn 422 (không đổi gói giữa kỳ).
@@ -309,9 +311,9 @@ Chu kỳ `THANG` cộng 1 tháng dương lịch, `NAM` cộng 1 năm dương l�
 - Khi `now ≥ het_han_at`: chuyển `HET_HAN` bằng UPDATE có điều kiện `trang_thai = 'HIEU_LUC'` (chạy lại không đổi gì) và tạo một thông báo `GOI_DA_HET_HAN` (khóa theo `dang_ky_goi.id`).
 - Kênh: trong ứng dụng luôn gửi (thông báo giao dịch, không phụ thuộc nút tắt nhắc học); email gửi khi `cai_dat_thong_bao.nhan_email = true`.
 - Gia hạn thành công thì `het_han_at` lùi ra xa nên tự hết nhắc.
-- Banner: `GET /me/subscription` trả `{goi, tenGoi, trangThai, batDauAt, hetHanAt, soNgayConLai}` tính tại thời điểm gọi; AppShell hiện banner vàng khi `soNgayConLai ≤ 7`, đỏ khi `≤ 1`, không phụ thuộc tác vụ nền.
+- Banner: `GET /me/subscription` trả `{goiMa, tenGoi, trangThai, batDauAt, hetHanAt, soNgayConLai}` (`trangThai` thêm `CHUA_CO_GOI` khi chưa từng mua; sửa 16/11/2026) tính tại thời điểm gọi; AppShell hiện banner vàng khi `soNgayConLai ≤ 7`, đỏ khi `≤ 1`, không phụ thuộc tác vụ nền.
 
-**Áp quyền lợi theo gói** (`EntitlementService`, đọc gói hiệu lực): `QuotaService` (B3.1) lấy hạn mức AI/ảnh theo gói; tạo thẻ, nhập CSV, sao chép bộ, commit thẻ AI kiểm giới hạn thẻ; đánh giá phát âm (B3.4b) kiểm cờ `phat_am`; sao chép bộ mẫu `cao_cap` kiểm cờ `bo_mau_cao_cap`. Vượt quyền lợi → 422 `BUSINESS_RULE` kèm `goiCanNangCap`; hết hạn mức ngày → 429 như §14.2. Thẻ đã có vượt giới hạn vẫn giữ và học được; chỉ chặn tạo thẻ mới.
+**Áp quyền lợi theo gói** (`EntitlementService`, đọc gói hiệu lực): `QuotaService` (B3.1) lấy hạn mức AI/ảnh theo gói; tạo thẻ, nhập CSV, sao chép bộ, commit thẻ AI kiểm giới hạn thẻ; đánh giá phát âm (B3.4b) kiểm cờ `phat_am`; sao chép bộ mẫu `cao_cap` kiểm cờ `bo_mau_cao_cap`. Vượt quyền lợi → 422 `BUSINESS_RULE` kèm `details {quyenLoi: GIOI_HAN_THE|PHAT_AM|BO_MAU_CAO_CAP, goiCanNangCap}` (giới hạn thẻ thêm `gioiHanThe`, `soTheHienCo`; sửa 16/11/2026); hết hạn mức ngày → 429 như §14.2. Thẻ đã có vượt giới hạn vẫn giữ và học được; chỉ chặn tạo thẻ mới.
 
 **Quản lý thanh toán (Admin, UI59 `/quan-tri/thanh-toan`):**
 - Giao dịch: `GET /admin/payments` (lọc trạng thái, gói, khoảng ngày, email; phân trang), `GET /admin/payments/{maDon}` (chi tiết, dữ liệu cổng trả về, không có trường thẻ).
@@ -323,7 +325,7 @@ Chu kỳ `THANG` cộng 1 tháng dương lịch, `NAM` cộng 1 năm dương l�
 **Thống kê doanh thu (Admin, UI58 `/quan-tri/doanh-thu`):**
 - `GET /admin/revenue?ky=THANG|QUY|NAM&nam=2026` (kỳ `NAM` dùng `tuNam`, `denNam`, mặc định 5 năm gần nhất).
 - Chỉ tính giao dịch `THANH_CONG`; gom theo `hoan_tat_at` đổi sang múi giờ kinh doanh `Asia/Ho_Chi_Minh` (`app.billing.business-zone`); kỳ không có giao dịch vẫn trả 0. Tiền là số nguyên VND, không dùng số thực.
-- Trả `{ky, nam, tongDoanhThu, soGiaoDich, soVoiKyTruocPhanTram, cacKy: [{nhan, tuNgay, denNgay, doanhThu, soGiaoDich, theoGoi: {PRO, PREMIUM}}], tongQuan: {soGoiHieuLuc, soSapHetHan7Ngay, tyLeThanhCong}}`. `tyLeThanhCong = THANH_CONG / (THANH_CONG + THAT_BAI + HET_HAN)` trong khoảng đang xem; đơn đang chờ không tính. `soVoiKyTruocPhanTram` = null khi kỳ trước bằng 0.
+- Trả `{ky, nam, tongDoanhThu, soGiaoDich, soVoiKyTruocPhanTram, cacKy: [{nhan, tuNgay, denNgay, doanhThu, soGiaoDich, theoGoi: {PRO, PREMIUM}}], tongQuan: {soGoiHieuLuc, soSapHetHan7Ngay, tyLeThanhCong}}`. `tyLeThanhCong` = phần trăm (0–100, 1 chữ số thập phân) của `THANH_CONG / (THANH_CONG + THAT_BAI + HET_HAN)` theo `tao_at` trong khoảng đang xem (chốt 16/11/2026); đơn đang chờ không tính. `soVoiKyTruocPhanTram` = null khi kỳ trước bằng 0.
 - Dữ liệu demo: seed giao dịch `THANH_CONG` có `ma_don` tiền tố `DEMO-` trải 2025–2026, chỉ nạp ở profile `demo`.
 
 **Kiểm soát:** khóa bí mật cổng ở biến môi trường; demo dùng sandbox; đơn quá 15 phút chưa xác nhận → `HET_HAN`; lưu dữ liệu cổng trả về (không có trường thẻ) để đối soát; tạo đơn tối đa 5 lần/10 phút/người. Chạy máy cục bộ thì IPN không tới được, nên `return` cũng xác nhận qua cùng hàm; khi triển khai mở IPN công khai.
@@ -487,6 +489,8 @@ Nghe mẫu, nghe bản ghi của mình, xem điểm được API hỗ trợ và 
 
 Hiển thị từ đã học, kỹ năng tiến bộ, ba từ khó và mục tiêu tuần sau. Văn bản tóm tắt có thể tạo từ mẫu; AI chỉ là tùy chọn diễn đạt, không tự tạo số liệu.
 
+Triển khai B3.9 (16/11/2026, đề xuất): `GET /statistics/weekly-summary?ngay=` — tuần Thứ Hai–Chủ Nhật theo múi giờ người học; số tổng dùng chung cách tính `/statistics/overview`; kỹ năng tiến bộ = tỷ lệ đúng bài luyện tuần này cao hơn tuần trước, cả hai tuần đủ 5 câu; từ khó = nhiều lượt Quên + câu sai nhất trong tuần; "từ đã vượt qua" (R-04) dùng quy tắc `TIEN_BO` với mốc cuối tuần; tóm tắt và mục tiêu tuần sau dựng từ mẫu, không gọi AI. Chi tiết: `docs/luong-backend/B3.9-tong-ket-tuan.md`.
+
 ### 9.8. Nguyên tắc giao diện
 
 - Tiếng Việt nhất quán; từ tiếng Anh và IPA hiển thị rõ.
@@ -594,7 +598,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `ho_so_hoc_tap` | trình độ tự đánh giá, mục tiêu, phút/ngày, từ mới/ngày, cờ hoàn tất khởi đầu; giờ nhắc lưu ở cai_dat_thong_bao |
 | `chu_de`, `nhan` | Danh mục chủ đề và nhãn |
 | `bo_the` | chu_so_huu_id, chu_de_id, ten, mo_ta, trinh_do, muc_tieu nullable, bo_mau, quyen_truy_cap, trang_thai_kiem_duyet, bo_nguon_id, xoa_at, version; muc_tieu/bo_mau theo V5 hiện có |
-| `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, version |
+| `the_tu_vung` | bo_the_id, tu, tu_loai, nghia_vi, phien_am, vi_du_en, dich_vi, do_kho, nguon, an_kiem_duyet (V25, B3.8: ẩn khỏi thư viện/bản sao mới, chủ vẫn thấy), version |
 | `the_nhan` | Gắn nhiều nhãn cho thẻ |
 | `tep_tin` | chu_so_huu_id (V19 B3.4a: nullable; `NULL` = tệp hệ thống TTS, người dùng không đọc/xóa được qua `/files/{id}` và không tính vào dung lượng của ai), object_key unique, mime_type (V18: `VARCHAR(100)` để chứa MIME `.docx`), kich_thuoc, checksum, loai (`ANH`/`AM_THANH`/`TAI_LIEU`; `TAI_LIEU` thêm ở V18 cho X-01, chỉ `.docx` ≤ 1 MB), trang_thai_xoa, hoan_tat_at, xoa_at, da_xoa_object_at (tombstone cho job dọn S3 và retry) |
 | `yeu_cau_luu_the_ai` | V18 B3.2: nguoi_dung_id, idempotency_key ascii_bin, yeu_cau_ai_id, bo_the_id nullable (bộ đích, có khi hoàn tất; bộ mới tạo trong cùng giao dịch), request_hash SHA-256, response_json, hoan_tat_at; unique (người dùng, key); kết quả cùng null hoặc cùng hoàn tất |
@@ -627,10 +631,10 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `so_diem_thuong` | nguoi_dung_id, loai_su_kien (`ON_THE`/`BAI_LUYEN`), su_kien_id VARCHAR(64) (`tienDoId:ngày` cho lượt ôn, `lanLamBaiId` cho bài luyện), diem_goc, so_diem (sau trần), ngay_dia_phuong; unique (nguoi_dung_id, loai_su_kien, su_kien_id). `su_dung_hoc_ngay.diem` là tổng điểm của ngày, dùng để áp trần và tái tạo được từ sổ (V16) |
 | `thong_bao` | nguoi_dung_id, loai (`NHAC_HOC`, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`), ngay_dia_phuong, tieu_de, noi_dung, lien_ket, hien_thi (false khi User tắt kênh trong ứng dụng, dòng vẫn giữ để chống trùng), gui_email, da_doc_at (V17, B3.7); unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
-| `bao_cao_noi_dung` | người báo cáo, loại/ID đối tượng, lý do, trạng thái, người xử lý (chưa có migration; B3.8) |
+| `bao_cao_noi_dung` | V25 (B3.8): nguoi_bao_cao_id, loai_doi_tuong (`BO_THE`/`THE_TU_VUNG`/`YEU_CAU_AI`), doi_tuong_id, ly_do (`SAI_NOI_DUNG`/`KHONG_PHU_HOP`/`KHAC`), mo_ta (10–500), noi_dung_json (bản chụp nội dung lúc báo cáo), trang_thai (`CHO_XU_LY`/`DA_GIU`/`DA_AN`), nguoi_xu_ly_id, ly_do_xu_ly, xu_ly_at; unique một báo cáo đang chờ cho mỗi (người, loại, đối tượng) qua cột sinh `khoa_cho_xu_ly`. Ẩn thẻ/đầu ra AI dùng cờ `an_kiem_duyet` trên `the_tu_vung`, `yeu_cau_ai` |
 | `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa. B3.12b thêm hành động `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN` và loại đối tượng `GOI_DICH_VU`, `DANG_KY_GOI` |
 | `tac_vu_nen` | V15 (B3.1): loai, payload_json, trang_thai (`CHO`/`DANG_CHAY`/`XONG`/`LOI`/`KHONG_XAC_DINH`), retry_count, max_retry, next_run_at, khoa_boi và khoa_den_at (lease), ma_loi; index (trang_thai, next_run_at, id) cho hàng đợi |
-| `yeu_cau_xoa_du_lieu` | nguoi_dung_id, trạng thái, thời điểm, phạm vi và kết quả |
+| `yeu_cau_xoa_du_lieu` | V24 (B3.10): nguoi_dung_id, pham_vi (`TAI_KHOAN`), trang_thai (`CHO_XU_LY`/`DANG_XU_LY`/`HOAN_TAT`/`LOI`), ket_qua_json (số lượng đã xóa/giữ), ma_loi, yeu_cau_at, hoan_tat_at; một yêu cầu đang mở mỗi người |
 | `thong_ke_ngay` | dữ liệu tổng hợp có thể tái tạo từ lịch sử hợp lệ |
 
 Đây là mô hình logic đề xuất, chưa phải DDL cuối cùng. Có thể gộp các bảng danh mục nhỏ khi triển khai, nhưng không gộp nội dung thẻ với tiến độ người học hoặc sổ thưởng với tổng điểm.
@@ -668,7 +672,7 @@ erDiagram
 - Index lịch sử `lich_su_on(nguoi_dung_id, created_at)` và báo cáo `(trang_thai, created_at)`.
 - Chuẩn hóa từ/từ loại để cảnh báo trùng; không unique toàn cục vì cùng từ có nhiều nghĩa và ngữ cảnh.
 - Xóa bộ đang có lịch sử: ẩn/xóa mềm trước, xử lý phụ thuộc theo chính sách; không dùng cascade thiếu kiểm soát làm mất minh chứng học.
-- Khi xóa tài khoản, xử lý dữ liệu riêng và tệp; nội dung chia sẻ phải có chính sách xóa hoặc ẩn danh đã thông báo, không mặc định giữ lại.
+- Khi xóa tài khoản, xử lý dữ liệu riêng và tệp; nội dung chia sẻ phải có chính sách xóa hoặc ẩn danh đã thông báo, không mặc định giữ lại. Chính sách (B3.10, 16/11/2026): bộ đang công khai giữ lại với tác giả "Người dùng đã xóa" (UI44 báo trước khi xác nhận); dữ liệu học, bộ riêng, tệp riêng xóa; giao dịch giữ để đối soát trên tài khoản đã ẩn danh.
 
 ## 13. Thiết kế API
 
@@ -686,7 +690,7 @@ erDiagram
 | Nhóm | Endpoint đề xuất |
 |---|---|
 | Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback`, `GET /auth/csrf` |
-| Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `GET/PUT/DELETE /me/avatar`, `POST /me/deletion-requests` (chưa triển khai) |
+| Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `GET/PUT/DELETE /me/avatar`, `POST /me/deletion-requests` (B3.10, 16/11/2026) |
 | Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
 | Bộ/thẻ | `GET/POST /decks` (`GET /decks?yeuThich=true`: bộ đã yêu thích gồm bộ của mình và bộ công khai `BINH_THUONG` chưa xóa của người khác, RS-056),  `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` (media thẻ của chủ bộ) |
 | Danh mục công khai (B1.7, B1.9) | `GET /public/topics`, `GET /public/tags`; quản trị: CRUD `/admin/topics`, `/admin/tags` |
@@ -699,7 +703,7 @@ erDiagram
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
-| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage`, `GET /admin/audit-logs`. Cắt 07/11/2026 (hướng phát triển): `GET /admin/statistics` (thống kê tổng hợp chung; doanh thu có riêng `GET /admin/revenue`, FR-15), `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
+| Quản trị | `GET /admin/users`, `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET/PUT /admin/service-quotas` (B3.11: sửa `han_muc_dich_vu` theo gói, có `version` và lý do, ghi nhật ký `SUA_HAN_MUC`), `GET /admin/service-usage` (B3.11: lượt dùng/đang giữ/số người theo loại; lỗi và không xác định chỉ cho `AI`, `ANH` từ `yeu_cau_ai`), `GET /admin/audit-logs`. Cắt 07/11/2026 (hướng phát triển): `GET /admin/statistics` (thống kê tổng hợp chung; doanh thu có riêng `GET /admin/revenue`, FR-15), `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
 Hợp đồng CSV hiện hành B1.12: [luồng CSV](luong-backend/B1.12-csv.md). Preview nhận multipart `file` và JSON part `mapping` trực tiếp target→header; tu/nghiaVi bắt buộc, 7 cột tùy chọn; UTF-8/BOM, comma/quoted multiline. Import≤1048576 byte/1000 bản ghi; rowNumber logic1-based sau header. Commit `rowNumbers`, owner-only, atomic selection, Idempotency-Key bắt buộc; replay trước Redis. Export owner-only, toàn bộ thẻ active, guard công thức; không xuất media/tiến độ/lịch sử/điểm. Đây là hợp đồng triển khai13/10, bằng chứng thực chạy nằm ở báo cáo bàn giao hiện có.
 

@@ -352,7 +352,7 @@
   function topicDto(t) { return { id: t.id, ten: t.name, moTa: t.description || null, version: t.version ?? 0 }; }
   function libraryDeck(d) {
     const owner = db.users.find((x) => x.id === d.ownerId);
-    return { id: d.id, ten: d.name, moTa: d.description || null, chuDeId: d.topicId || null, tenChuDe: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level || null, mucTieu: d.goal || null, nguon: d.kind === "MAU" ? "MAU" : "CHIA_SE", chuSoHuuId: d.ownerId, tenTacGia: d.kind === "MAU" ? null : (owner ? owner.tenHienThi : null), soThe: db.cards.filter((x) => x.deckId === d.id && !x.deleted).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt };
+    return { id: d.id, ten: d.name, moTa: d.description || null, chuDeId: d.topicId || null, tenChuDe: d.topicId ? topicName(d.topicId) : null, trinhDo: d.level || null, mucTieu: d.goal || null, nguon: d.kind === "MAU" ? "MAU" : "CHIA_SE", chuSoHuuId: d.ownerId, tenTacGia: d.kind === "MAU" ? null : (owner ? owner.tenHienThi : null), soThe: db.cards.filter((x) => x.deckId === d.id && !x.deleted && !x.anKiemDuyet).length, createdAt: d.createdAt || d.updatedAt, updatedAt: d.updatedAt };
   }
   function libraryCard(c) {
     return { id: c.id, boTheId: c.deckId, tu: c.word, tuLoai: c.pos || null, nghiaVi: c.meaningVi, phienAm: c.ipa || null, viDuEn: c.exampleEn || null, dichVi: c.exampleVi || null, doKho: c.difficulty || 1, nguon: c.source || null, nhanIds: c.tagIds || [], anhId: c.anhId || null, amTuId: c.amTuId || null, amCauId: c.amCauId || null };
@@ -1490,7 +1490,7 @@
     ["GET", /^\/library\/decks\/(\w+)$/, (m, b, q) => {
       const d = db.decks.find((x) => x.id === m[1] && x.visibility === "CONG_KHAI" && !x.deleted && x.trangThaiKiemDuyet !== "DA_AN");
       if (!d) notFound();
-      const cards = db.cards.filter((x) => x.deckId === d.id && !x.deleted).sort((a, b2) => Number(b2.id) - Number(a.id));
+      const cards = db.cards.filter((x) => x.deckId === d.id && !x.deleted && !x.anKiemDuyet).sort((a, b2) => Number(b2.id) - Number(a.id));
       return { boThe: libraryDeck(d), the: page(cards.map(libraryCard), Object.assign({ size: "20" }, q)) };
     }],
     ["POST", /^\/decks\/(\w+)\/copy$/, (m, b, q, h) => {
@@ -2020,6 +2020,189 @@
       return skillStats(u.id, q.boTheId || null);
     }],
 
+    ["POST", /^\/reports$/, (m, b) => {
+      const u = requireMe();
+      const errors = [];
+      if (!["BO_THE", "THE_TU_VUNG", "YEU_CAU_AI"].includes(b.loaiDoiTuong)) errors.push(fe("loaiDoiTuong", "Chọn loại nội dung"));
+      if (!/^[1-9][0-9]*$/.test(String(b.doiTuongId || ""))) errors.push(fe("doiTuongId", "ID nội dung phải là số nguyên dương"));
+      if (!REPORT_REASONS.includes(b.lyDo)) errors.push(fe("lyDo", "Chọn lý do báo cáo"));
+      const moTa = reason(b.moTa);
+      if (moTa.length < 10 || moTa.length > 500) errors.push(fe("moTa", "Mô tả từ 10 đến 500 ký tự"));
+      if (errors.length) bad(errors);
+      const id = String(b.doiTuongId);
+      let noiDung;
+      if (b.loaiDoiTuong === "BO_THE") {
+        const d = reportableDeck(u, id);
+        noiDung = { ten: d.name, moTa: d.description || null, boMau: d.kind === "MAU", chuSoHuuId: d.ownerId };
+      } else if (b.loaiDoiTuong === "THE_TU_VUNG") {
+        const c = db.cards.find((x) => x.id === id && !x.deleted && !x.anKiemDuyet);
+        if (!c) notFound();
+        reportableDeck(u, c.deckId);
+        noiDung = cardSnapshot(c);
+      } else {
+        const r = aiStore().aiRequests.find((x) => x.id === id && x.uid === u.id && !x.anKiemDuyet);
+        if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy yêu cầu AI");
+        aiAdvance(r);
+        if (r.trangThai !== "HOAN_TAT") throw new ApiError(422, "BUSINESS_RULE", "Chỉ báo cáo được đầu ra AI đã hoàn tất");
+        noiDung = { ten: r.loai + ": " + (r.doanVan || "").slice(0, 60), loai: r.loai, inputRef: (r.doanVan || "").slice(0, 100), nhaCungCap: r.nhaCungCap, model: r.model, phienBanPrompt: r.phienBanPrompt, ketQua: null, banNhap: r.banNhap || [] };
+      }
+      const list = reportStore();
+      if (list.some((x) => x.nguoiBaoCaoId === u.id && x.loaiDoiTuong === b.loaiDoiTuong && x.doiTuongId === id && x.trangThai === "CHO_XU_LY")) {
+        throw new ApiError(409, "CONFLICT", "Bạn đã báo cáo nội dung này và báo cáo đang chờ xử lý");
+      }
+      const r = { id: nextId(), nguoiBaoCaoId: u.id, loaiDoiTuong: b.loaiDoiTuong, doiTuongId: id, lyDo: b.lyDo, moTa, noiDung, trangThai: "CHO_XU_LY", nguoiXuLyId: null, lyDoXuLy: null, xuLyAt: null, createdAt: new Date().toISOString() };
+      list.push(r);
+      return { status: 201, body: reportView(r) };
+    }],
+    ["GET", /^\/admin\/reports$/, (m, b, q) => {
+      requireAdmin();
+      const errors = [];
+      if (q.trangThai && !["CHO_XU_LY", "DA_GIU", "DA_AN"].includes(q.trangThai)) errors.push(fe("trangThai", "Trạng thái không hợp lệ"));
+      if (q.loaiDoiTuong && !["BO_THE", "THE_TU_VUNG", "YEU_CAU_AI"].includes(q.loaiDoiTuong)) errors.push(fe("loaiDoiTuong", "Loại nội dung không hợp lệ"));
+      if (errors.length) bad(errors);
+      const asc = q.trangThai === "CHO_XU_LY";
+      const list = reportStore().filter((r) => (!q.trangThai || r.trangThai === q.trangThai) && (!q.loaiDoiTuong || r.loaiDoiTuong === q.loaiDoiTuong))
+        .sort((a, c2) => asc ? a.createdAt.localeCompare(c2.createdAt) : c2.createdAt.localeCompare(a.createdAt));
+      return page(list.map(adminReportView), Object.assign({ size: "20" }, q));
+    }],
+    ["POST", /^\/admin\/reports\/(\w+)\/resolve$/, (m, b) => {
+      const admin = requireAdmin();
+      const errors = [];
+      if (!["GIU", "AN"].includes(b.quyetDinh)) errors.push(fe("quyetDinh", "Chọn quyết định GIU hoặc AN"));
+      const lyDo = reason(b.lyDo);
+      if (lyDo.length < 10 || lyDo.length > 500) errors.push(fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự"));
+      if (errors.length) bad(errors);
+      const r = reportStore().find((x) => x.id === m[1]);
+      if (!r) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy báo cáo");
+      if (r.trangThai !== "CHO_XU_LY") throw new ApiError(409, "CONFLICT", "Báo cáo đã được xử lý");
+      const hide = b.quyetDinh === "AN";
+      let target = null;
+      if (r.loaiDoiTuong === "BO_THE") target = db.decks.find((x) => x.id === r.doiTuongId && !x.deleted);
+      if (r.loaiDoiTuong === "THE_TU_VUNG") target = db.cards.find((x) => x.id === r.doiTuongId && !x.deleted);
+      if (r.loaiDoiTuong === "YEU_CAU_AI") target = aiStore().aiRequests.find((x) => x.id === r.doiTuongId);
+      const anTruoc = target ? (r.loaiDoiTuong === "BO_THE" ? target.trangThaiKiemDuyet === "DA_AN" : !!target.anKiemDuyet) : null;
+      if (target && hide) {
+        if (r.loaiDoiTuong === "BO_THE") target.trangThaiKiemDuyet = "DA_AN";
+        else target.anKiemDuyet = true;
+      }
+      const now = new Date().toISOString();
+      const pending = reportStore().filter((x) => x.loaiDoiTuong === r.loaiDoiTuong && x.doiTuongId === r.doiTuongId && x.trangThai === "CHO_XU_LY");
+      pending.forEach((x) => Object.assign(x, { trangThai: hide ? "DA_AN" : "DA_GIU", nguoiXuLyId: admin.id, lyDoXuLy: lyDo, xuLyAt: now }));
+      audit(admin, hide ? "AN_NOI_DUNG" : "GIU_NOI_DUNG", { loai: r.loaiDoiTuong, id: r.doiTuongId, ten: r.noiDung.ten }, lyDo,
+        { trangThai: "CHO_XU_LY", anKiemDuyet: anTruoc }, { trangThai: r.trangThai, anKiemDuyet: anTruoc === null ? null : anTruoc || hide, baoCaoIds: pending.map((x) => x.id) });
+      return adminReportView(r);
+    }],
+    ["GET", /^\/statistics\/weekly-summary$/, (m, b, q) => {
+      const u = requireMe();
+      const tz = tzOf(u);
+      const today = localDate(Date.now(), tz);
+      if (q.ngay && !validDay(q.ngay)) bad([fe("ngay", "Ngày không tồn tại")]);
+      const tuNgay = weekStartOf(q.ngay || today);
+      const denNgay = shiftDate(tuNgay, 6);
+      if (tuNgay > today) bad([fe("ngay", "Không chọn tuần trong tương lai")]);
+      const tuanTruoc = shiftDate(tuNgay, -7);
+      const inWeek = (d) => d >= tuNgay && d <= denNgay;
+      const rsAll = db.reviews.filter((x) => x.uid === u.id).map((x) => Object.assign({ ngay: localDate(Date.parse(x.createdAt), tz) }, x));
+      const rs = rsAll.filter((x) => inWeek(x.ngay));
+      const as = db.attempts.filter((a) => a.uid === u.id).map((a) => Object.assign({ ngay: localDate(Date.parse(a.nopAt), tz) }, a)).filter((a) => inWeek(a.ngay));
+      const ans = db.answers.filter((a) => a.uid === u.id).map((a) => Object.assign({ ngay: localDate(Date.parse(a.createdAt), tz) }, a));
+      const firstSeen = {};
+      rsAll.forEach((x) => { if (!firstSeen[x.theId] || x.ngay < firstSeen[x.theId]) firstSeen[x.theId] = x.ngay; });
+      const rate = (list) => list.length ? Math.round(list.filter((a) => a.dung).length / list.length * 100) : null;
+      const kyNang = SKILLS.map((k) => {
+        const nay = ans.filter((a) => a.kyNang === k && inWeek(a.ngay));
+        const truoc = ans.filter((a) => a.kyNang === k && a.ngay >= tuanTruoc && a.ngay < tuNgay);
+        const du = nay.length >= 5 && truoc.length >= 5;
+        return { kyNang: k, soQuanSat: nay.length, tyLeDung: rate(nay), soQuanSatTuanTruoc: truoc.length, tyLeDungTuanTruoc: rate(truoc), duDuLieu: du, tienBo: du && rate(nay) > rate(truoc) };
+      });
+      const wrong = {};
+      const tally = (id, sai) => { const w = wrong[id] || (wrong[id] = { sai: 0, luot: 0 }); w.luot++; if (sai) w.sai++; };
+      rs.forEach((x) => tally(x.theId, x.danhGia === "QUEN"));
+      ans.filter((a) => inWeek(a.ngay) && a.theId).forEach((a) => tally(a.theId, !a.dung));
+      const tuKho = Object.entries(wrong).filter(([id, w]) => w.sai > 0 && cardById(id) && !cardById(id).deleted)
+        .sort((a, c2) => c2[1].sai - a[1].sai || c2[1].luot - a[1].luot).slice(0, 3)
+        .map(([id, w]) => { const c = cardById(id); const d = db.decks.find((x) => x.id === c.deckId) || {}; return { theId: id, tu: c.word, boTheId: c.deckId, tenBo: d.name, soLanSai: w.sai, soLuot: w.luot }; });
+      const tuanHienTai = denNgay >= today;
+      const tuDaVuotQua = tuanHienTai ? recommendations(u).filter((x) => x.reasonCode === "TIEN_BO") : [];
+      const soTuDaHoc = new Set(rs.map((x) => x.theId)).size;
+      const soTuMoi = Object.values(firstSeen).filter(inWeek).length;
+      const soCauLuyen = as.reduce((acc, a) => acc + a.tongSoCau, 0);
+      const l = db.learning[u.id] || { minutesPerDay: 10 };
+      const soNgayCoHoc = new Set(rs.map((x) => x.ngay).concat(as.map((a) => a.ngay))).size;
+      const soNgayHoc = Math.min(7, Math.max(3, soNgayCoHoc + 1));
+      const vanBan = "Học " + soNgayHoc + " ngày, mỗi ngày " + l.minutesPerDay + " phút" + (tuKho.length ? "; ôn lại " + tuKho.map((x) => "‘" + x.tu + "’").join(", ") + " trước khi thêm từ mới" : "") + ".";
+      const ddmm = (d) => d.slice(8, 10) + "/" + d.slice(5, 7);
+      const tuan = "Tuần " + ddmm(tuNgay) + "–" + ddmm(denNgay);
+      const tenKyNang = { NHAN_NGHIA: "nhận nghĩa", VIET: "viết", NGHE: "nghe", NGU_CANH: "ngữ cảnh", CAP_NHAM: "phân biệt từ dễ nhầm" };
+      let tomTat = tuan + ": chưa có lượt học nào.";
+      if (rs.length || soCauLuyen) {
+        tomTat = tuan + ": bạn ôn " + soTuDaHoc + " từ (" + soTuMoi + " từ mới) qua " + rs.length + " lượt, làm " + soCauLuyen + " câu luyện, học " + soNgayCoHoc + "/7 ngày.";
+        const tb = kyNang.filter((k) => k.tienBo).map((k) => tenKyNang[k.kyNang]);
+        if (tb.length) tomTat += " Tiến bộ so với tuần trước: " + tb.join(", ") + ".";
+        if (tuDaVuotQua.length) tomTat += " Đã vượt qua " + tuDaVuotQua.length + " từ từng khó.";
+      }
+      const ms = rs.reduce((acc, x) => acc + x.thoiGianTraLoiMs, 0) + as.reduce((acc, a) => acc + a.thoiGian, 0);
+      return {
+        muiGio: tz, tuNgay, denNgay, tuanHienTai, soTuDaHoc, soTuMoi, soLuotOn: rs.length,
+        tyLeNho: rs.length ? Math.round(rs.filter((x) => x.danhGia !== "QUEN").length / rs.length * 100) : null,
+        soCauLuyen, tongPhut: minutesOf(ms), soNgayCoHoc, kyNang, tuKho, tuDaVuotQua,
+        mucTieuTuanSau: { soNgayHoc, phutMoiNgay: l.minutesPerDay, theIds: tuKho.map((x) => x.theId), vanBan }, tomTat
+      };
+    }],
+    ["GET", /^\/admin\/service-quotas$/, () => { requireAdmin(); return quotaStore().map((x) => Object.assign({}, x)); }],
+    ["PUT", /^\/admin\/service-quotas$/, (m, b) => {
+      const admin = requireAdmin();
+      const errors = [];
+      const items = Array.isArray(b.hanMuc) ? b.hanMuc : [];
+      if (!items.length || items.length > 20) errors.push(fe("hanMuc", "Chọn từ 1 đến 20 hạn mức"));
+      if (items.some((x) => !Number.isInteger(x.soLuotNgay) || x.soLuotNgay < 0 || x.soLuotNgay > 10000)) errors.push(fe("hanMuc", "Số lượt từ 0 đến 10000"));
+      const keys = items.map((x) => x.goiMa + ":" + x.loai);
+      if (new Set(keys).size !== keys.length) errors.push(fe("hanMuc", "Có hạn mức bị gửi trùng"));
+      const lyDo = reason(b.lyDo);
+      if (lyDo.length < 10 || lyDo.length > 500) errors.push(fe("lyDo", "Nhập lý do từ 10 đến 500 ký tự"));
+      if (errors.length) bad(errors);
+      const rows = items.map((x) => {
+        const row = quotaStore().find((y) => y.goiMa === x.goiMa && y.loai === x.loai);
+        if (!row) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy hạn mức " + x.loai + " của gói " + x.goiMa);
+        if (row.version !== x.version) throw new ApiError(409, "VERSION_CONFLICT", "Hạn mức " + x.loai + " của gói " + x.goiMa + " đã được người khác sửa, vui lòng tải lại");
+        return [row, x.soLuotNgay];
+      });
+      rows.forEach(([row, value]) => {
+        if (row.soLuotNgay === value) return;
+        audit(admin, "SUA_HAN_MUC", { loai: "HAN_MUC_DICH_VU", id: row.id, ten: row.goiMa + " · " + row.loai }, lyDo, { soLuotNgay: row.soLuotNgay }, { soLuotNgay: value });
+        row.soLuotNgay = value;
+        row.version++;
+      });
+      return quotaStore().map((x) => Object.assign({}, x));
+    }],
+    ["GET", /^\/admin\/service-usage$/, (m, b, q) => {
+      requireAdmin();
+      const zone = "Asia/Ho_Chi_Minh";
+      const today = localDate(Date.now(), zone);
+      if (q.tuNgay && !validDay(q.tuNgay)) bad([fe("tuNgay", "Ngày không hợp lệ")]);
+      if (q.denNgay && !validDay(q.denNgay)) bad([fe("denNgay", "Ngày không hợp lệ")]);
+      const denNgay = q.denNgay || today;
+      const tuNgay = q.tuNgay || shiftDate(denNgay, -6);
+      if (tuNgay > denNgay) bad([fe("denNgay", "Ngày kết thúc phải từ ngày bắt đầu trở đi")]);
+      if ((Date.parse(denNgay) - Date.parse(tuNgay)) / DAY >= 90) bad([fe("tuNgay", "Chọn khoảng tối đa 90 ngày")]);
+      const ai = aiStore().aiRequests.filter((r) => r.ngay >= tuNgay && r.ngay <= denNgay);
+      const base = { AI: [26, 1, 9, 2, 1], ANH: [8, 0, 4, 1, 0], PHAT_AM: [6, 0, 3, null, null], TTS: [14, 0, 6, null, null] };
+      return {
+        muiGio: zone, tuNgay, denNgay,
+        dichVu: ["AI", "ANH", "PHAT_AM", "TTS"].map((loai) => {
+          const [dung, giu, nguoi, loi, kxd] = base[loai];
+          const mine = loai === "AI" ? ai : [];
+          return {
+            loai,
+            soLuotDung: dung + mine.filter((r) => r.hanMucTrangThai === "DA_DUNG").length,
+            soDangGiu: giu + mine.filter((r) => r.hanMucTrangThai === "GIU_CHO").length,
+            soNguoiDung: nguoi + new Set(mine.map((r) => r.uid)).size,
+            soLoi: loi === null ? null : loi + mine.filter((r) => r.trangThai === "LOI").length,
+            soKhongXacDinh: kxd === null ? null : kxd + mine.filter((r) => r.trangThai === "KHONG_XAC_DINH").length
+          };
+        })
+      };
+    }],
     ["GET", /^\/admin\/users$/, (m, b, q) => {
       requireAdmin();
       let list = db.users.slice();
@@ -2200,6 +2383,44 @@
       return page(list, Object.assign({ size: "10" }, q));
     }]
   ];
+
+  const REPORT_REASONS = ["SAI_NOI_DUNG", "KHONG_PHU_HOP", "KHAC"];
+  function cardSnapshot(c) {
+    const d = db.decks.find((x) => x.id === c.deckId) || {};
+    return { ten: c.word + " (" + d.name + ")", tu: c.word, tuLoai: c.pos || null, nghiaVi: c.meaningVi, phienAm: c.ipa || null, viDuEn: c.exampleEn || null, dichVi: c.exampleVi || null, boTheId: c.deckId, chuSoHuuId: d.ownerId };
+  }
+  function reportStore() {
+    if (!db.reports) {
+      const deck = db.decks.find((d) => d.id === "11");
+      const card = db.cards.find((x) => x.deckId === "11" && !x.deleted);
+      db.reports = [];
+      if (deck) db.reports.push({ id: nextId(), nguoiBaoCaoId: "3", loaiDoiTuong: "BO_THE", doiTuongId: deck.id, lyDo: "KHONG_PHU_HOP", moTa: "Mô tả bộ nhắc tới tài liệu luyện thi có bản quyền, cần kiểm tra nguồn.", noiDung: { ten: deck.name, moTa: deck.description || null, boMau: deck.kind === "MAU", chuSoHuuId: deck.ownerId }, trangThai: "CHO_XU_LY", nguoiXuLyId: null, lyDoXuLy: null, xuLyAt: null, createdAt: new Date(Date.now() - 2 * DAY).toISOString() });
+      if (card) db.reports.push({ id: nextId(), nguoiBaoCaoId: "5", loaiDoiTuong: "THE_TU_VUNG", doiTuongId: card.id, lyDo: "SAI_NOI_DUNG", moTa: "Nghĩa tiếng Việt chưa khớp với câu ví dụ trong ngữ cảnh công sở.", noiDung: cardSnapshot(card), trangThai: "DA_GIU", nguoiXuLyId: "1", lyDoXuLy: "Đã đối chiếu từ điển, nghĩa đúng với ví dụ.", xuLyAt: new Date(Date.now() - DAY).toISOString(), createdAt: new Date(Date.now() - 3 * DAY).toISOString() });
+    }
+    return db.reports;
+  }
+  function reportableDeck(u, deckId) {
+    const d = db.decks.find((x) => x.id === deckId && !x.deleted);
+    if (!d) notFound();
+    if (d.ownerId === u.id) throw new ApiError(422, "BUSINESS_RULE", "Không thể báo cáo nội dung của chính bạn");
+    if (d.visibility !== "CONG_KHAI" || d.trangThaiKiemDuyet === "DA_AN") notFound();
+    return d;
+  }
+  function reportView(r) {
+    return { id: r.id, loaiDoiTuong: r.loaiDoiTuong, doiTuongId: r.doiTuongId, lyDo: r.lyDo, moTa: r.moTa, trangThai: r.trangThai, createdAt: r.createdAt };
+  }
+  function adminReportView(r) {
+    const name = (id) => { const x = db.users.find((y) => y.id === id); return x ? x.tenHienThi : null; };
+    return Object.assign(reportView(r), { noiDung: r.noiDung, nguoiBaoCao: { id: r.nguoiBaoCaoId, tenHienThi: name(r.nguoiBaoCaoId) }, nguoiXuLy: r.nguoiXuLyId ? { id: r.nguoiXuLyId, tenHienThi: name(r.nguoiXuLyId) } : null, lyDoXuLy: r.lyDoXuLy, xuLyAt: r.xuLyAt });
+  }
+  function quotaStore() {
+    if (!db.serviceQuotas) {
+      const rows = [["PREMIUM", "AI", 100], ["PREMIUM", "ANH", 30], ["PREMIUM", "PHAT_AM", 100], ["PREMIUM", "TTS", 300], ["PRO", "AI", 20], ["PRO", "ANH", 10], ["PRO", "PHAT_AM", 30], ["PRO", "TTS", 100]];
+      db.serviceQuotas = rows.map(([goiMa, loai, soLuotNgay], i) => ({ id: String(i + 1), goiMa, loai, soLuotNgay, version: 0 }));
+    }
+    return db.serviceQuotas;
+  }
+  const validDay = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + "T00:00:00Z")) && new Date(d + "T00:00:00Z").toISOString().slice(0, 10) === d;
 
   function requireAdmin() { const u = requireMe(); if (!u.vaiTro.includes("ADMIN")) throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền truy cập"); return u; }
 

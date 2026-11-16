@@ -130,6 +130,12 @@ public class FileService {
                 verifier.sha256(content), clock.instant())).getId();
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Long createGeneratedImage(Long userId, String objectKey, String mimeType, byte[] content) {
+        return files.saveAndFlush(TepTin.generatedImage(userId, objectKey, mimeType, content.length,
+                verifier.sha256(content), clock.instant())).getId();
+    }
+
     public Optional<FileResponse> ownedFile(Long userId, Long fileId) {
         return files.findByIdAndChuSoHuuId(fileId, userId)
                 .filter(file -> file.getTrangThaiXoa() != TrangThaiXoaTep.DA_XOA && file.getHoanTatAt() != null)

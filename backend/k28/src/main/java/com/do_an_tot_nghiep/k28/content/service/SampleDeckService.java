@@ -81,7 +81,7 @@ public class SampleDeckService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public SampleDeckResponse create(CreateDeckRequest request) {
+    public SampleDeckResponse create(CreateDeckRequest request, boolean caoCap) {
         BoThe deck = BoThe.createSample(
                 accounts.systemUserId(),
                 validatedTopicId(request.chuDeId()),
@@ -90,11 +90,13 @@ public class SampleDeckService {
                 request.trinhDo(),
                 request.mucTieu()
         );
+        deck.markPremium(caoCap);
         return view(decks.saveAndFlush(deck));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public SampleDeckResponse update(Long id, UpdateDeckRequest request, TrangThaiKiemDuyet trangThaiKiemDuyet) {
+    public SampleDeckResponse update(Long id, UpdateDeckRequest request, TrangThaiKiemDuyet trangThaiKiemDuyet,
+                                     Boolean caoCap) {
         BoThe deck = locked(id);
         checkVersion(deck, request.version());
         boolean wasPublished = deck.isPublished();
@@ -117,6 +119,9 @@ public class SampleDeckService {
         }
         if (trangThaiKiemDuyet != null) {
             deck.moderate(trangThaiKiemDuyet);
+        }
+        if (caoCap != null) {
+            deck.markPremium(caoCap);
         }
         if (deck.isPublished() && !wasPublished && activeCards(deck.getId()) == 0) {
             throw new ApiException(ErrorCode.BUSINESS_RULE, "Bộ chưa có thẻ nào. Thêm thẻ trước khi xuất bản");

@@ -81,11 +81,19 @@ public class YeuCauAi extends BaseEntity {
     @Column(nullable = false, length = 10)
     private TrangThaiHanMuc hanMucTrangThai;
 
+    @Column(nullable = false)
+    private boolean anKiemDuyet;
+
     public static YeuCauAi taoThe(Long nguoiDungId, String inputRef, String phienBanPrompt,
                                   String nhaCungCap, GiuCho giuCho) {
+        return moi(nguoiDungId, LoaiYeuCauAi.TAO_THE, inputRef, phienBanPrompt, nhaCungCap, giuCho);
+    }
+
+    public static YeuCauAi moi(Long nguoiDungId, LoaiYeuCauAi loai, String inputRef, String phienBanPrompt,
+                               String nhaCungCap, GiuCho giuCho) {
         YeuCauAi request = new YeuCauAi();
         request.nguoiDungId = nguoiDungId;
-        request.loai = LoaiYeuCauAi.TAO_THE;
+        request.loai = loai;
         request.trangThai = TrangThaiYeuCauAi.CHO;
         request.inputRef = inputRef;
         request.phienBanPrompt = phienBanPrompt;
@@ -133,6 +141,10 @@ public class YeuCauAi extends BaseEntity {
         }
         hanMucTrangThai = ketQua;
         return true;
+    }
+
+    public void hideByModeration() {
+        this.anKiemDuyet = true;
     }
 
     public GiuCho giuCho() {

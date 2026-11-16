@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.speaking.service;
 
+import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.quota.GiuCho;
@@ -48,6 +49,7 @@ public class PronunciationService {
     private final FileService files;
     private final StorageService storage;
     private final QuotaService quota;
+    private final EntitlementService entitlements;
     private final KetQuaPhatAmRepository results;
     private final SpeechClient client;
     private final SpeechProperties props;
@@ -55,6 +57,7 @@ public class PronunciationService {
     private final PlatformTransactionManager txManager;
 
     public PronunciationResponse assess(Long userId, Long cardId, MultipartFile file) {
+        entitlements.requirePronunciation(userId);
         byte[] wav = read(file);
         String text = CardText.term(cards.audioSource(userId, cardId).tu());
         if (text == null || text.isEmpty() || text.length() > props.maxKyTu()) {

@@ -51,6 +51,9 @@ public class TheTuVung extends BaseEntity {
 
     private Instant xoaAt;
 
+    @Column(nullable = false)
+    private boolean anKiemDuyet;
+
     @Version
     private Long version;
 
@@ -93,6 +96,10 @@ public class TheTuVung extends BaseEntity {
         this.dichVi = dichVi;
         this.doKho = doKho;
         this.nguon = nguon;
+    }
+
+    public void hideByModeration() {
+        this.anKiemDuyet = true;
     }
 
     public void markDeleted(Instant deletedAt) {

@@ -26,7 +26,9 @@ public record CreateSampleDeckRequest(
         TrinhDo trinhDo,
 
         @NotNull(message = "Chọn mục tiêu")
-        MucTieu mucTieu
+        MucTieu mucTieu,
+
+        Boolean caoCap
 ) {
 
     public CreateDeckRequest toDeckRequest() {

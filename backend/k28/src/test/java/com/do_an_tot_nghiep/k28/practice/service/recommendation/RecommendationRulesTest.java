@@ -100,7 +100,7 @@ class RecommendationRulesTest {
     void progressFiltersByPolicyAndBuildsEvidence() {
         ProgressStatRow passed = progress(6L, 5, 3, 5, 0);
         ProgressStatRow fewRecent = progress(7L, 5, 3, 4, 0);
-        when(notebook.progressStats(USER, NOW.minus(Duration.ofDays(30)), NOW.minus(Duration.ofDays(7))))
+        when(notebook.progressStats(USER, NOW.minus(Duration.ofDays(30)), NOW.minus(Duration.ofDays(7)), NOW))
                 .thenReturn(List.of(passed, fewRecent));
         usable(6L, 7L);
 

@@ -83,6 +83,9 @@ app:
       max-the: 50
       max-tep-bytes: 1048576
       max-tu-moi-the: 6
+    image:
+      provider: ${IMAGE_PROVIDER:fake}
+      max-bytes: 2097152
   tts:
     provider: ${TTS_PROVIDER:fake}
     model: ${TTS_MODEL:gpt-4o-mini-tts}
@@ -110,6 +113,20 @@ app:
     fake:
       che-do: ${SPEECH_FAKE_MODE:THANH_CONG}
       do-tre: 0s
+  billing:
+    provider: ${PAYMENT_PROVIDER:fake}
+    enforce: ${BILLING_ENFORCE:true}
+    business-zone: Asia/Ho_Chi_Minh
+    order-ttl: 15m
+    demo-tools: ${BILLING_DEMO_TOOLS:false}
+    vnpay:
+      tmn-code: ${VNPAY_TMN_CODE:}
+      hash-secret: ${VNPAY_HASH_SECRET:}
+      pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      return-url: ${VNPAY_RETURN_URL:http://localhost:8080/api/v1/billing/vnpay/return}
+    fake:
+      ket-qua: ${PAYMENT_FAKE_RESULT:THANH_CONG}
+      hash-secret: ${PAYMENT_FAKE_SECRET:}
   cookie-secure: ${COOKIE_SECURE:true}
   mail:
     from: ${MAIL_FROM:VocabLearning <no-reply@vocab.local>}
