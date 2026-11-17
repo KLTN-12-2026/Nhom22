@@ -8,6 +8,9 @@ public record SubscriptionResponse(
         String trangThai,
         Instant batDauAt,
         Instant hetHanAt,
-        Long soNgayConLai
+        Long soNgayConLai,
+        String id,
+        Long version,
+        Instant huyAt
 ) {
 }

@@ -1,5 +1,6 @@
 'use client';
 import { MobileNavigation } from './MobileNavigation';
+import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { SoundToggle } from '@/components/ui/SoundToggle';
 import { useAvatar } from '@/hooks/useAvatar';
@@ -61,6 +62,7 @@ const ADMIN_NAV_ONLY = [
     { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
     { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
+    { key: "admin-revenue", label: "Thống kê doanh thu", icon: "chart", href: "/quan-tri/doanh-thu" },
     { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
   ] }
 ];
@@ -101,6 +103,7 @@ export function AppShell({ children, user, isAdmin = false }) {
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
         <div className="header-actions"><SoundToggle /><ThemeToggle />
+          {user && <NotificationBell key={user.id} userId={user.id} />}
           {user && (
             <Link href="/ca-nhan" className="user-chip" aria-label={`Hồ sơ của ${user.tenHienThi || 'User'}`}>
               <span className="avatar">
@@ -162,7 +165,7 @@ export function AppShell({ children, user, isAdmin = false }) {
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
-        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-payments':'Thanh toán','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
+        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-payments':'Thanh toán','admin-revenue':'Doanh thu','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
           const cur = it.key==='today' ? ['/hom-nay','/hoc','/bo-the','/thong-ke'].some(route=>isActive(route)) : isActive(it.href);
           return (
             <Link key={it.key} href={it.href} aria-current={cur ? 'page' : undefined}>

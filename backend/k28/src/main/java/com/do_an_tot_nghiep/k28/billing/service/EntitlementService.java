@@ -99,7 +99,8 @@ public class EntitlementService {
 
     @Transactional(readOnly = true)
     public Optional<DangKyGoi> latest(Long nguoiDungId) {
-        return dangKyGoi.findFirstByNguoiDungIdOrderByHetHanAtDesc(nguoiDungId);
+        return current(nguoiDungId)
+                .or(() -> dangKyGoi.findFirstByNguoiDungIdOrderByIdDesc(nguoiDungId));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

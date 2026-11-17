@@ -1,138 +1,23 @@
 'use client';
-
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { Icon } from '@/components/ui';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { dateTime } from '@/lib/remote-contract.mjs';
+import { RemoteState, EmptyData } from '@/components/remote/Remote';
+import { PronunciationResult } from '@/components/remote/PronunciationResult';
+import { Pagination, Modal, useToast } from '@/components/ui';
 import styles from './page.module.css';
-
-const RECORDS = [
-  { id: 1, word: 'receipt', score: 86, clarity: 'Khá rõ', rhythm: 'Ổn định', date: 'Hôm nay, 10:30', duration: '00:04' },
-  { id: 2, word: 'receipt', score: 72, clarity: 'Đang cải thiện', rhythm: 'Chưa đều', date: 'Hôm qua, 16:42', duration: '00:05' },
-  { id: 3, word: 'schedule', score: 91, clarity: 'Rõ', rhythm: 'Tốt', date: 'Hôm qua, 09:18', duration: '00:03' },
-  { id: 4, word: 'appointment', score: 68, clarity: 'Cần luyện thêm', rhythm: 'Chưa đều', date: '31/10/2026, 14:25', duration: '00:06' },
-  { id: 5, word: 'receipt', score: 64, clarity: 'Cần luyện thêm', rhythm: 'Chưa đều', date: '30/10/2026, 20:10', duration: '00:04' },
-];
-
-const wordLabels = { all: 'Tất cả', receipt: 'receipt', schedule: 'schedule', appointment: 'appointment' };
-
-function speak(text) {
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  }
-}
-
 export default function PronunciationHistoryPage() {
-  const [wordFilter, setWordFilter] = useState('all');
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [comparison, setComparison] = useState(null);
-  const records = useMemo(() => RECORDS.filter(record => wordFilter === 'all' || record.word === wordFilter), [wordFilter]);
-  const canCompare = selectedIds.length === 2;
-
-  const toggleSelection = (id) => {
-    setComparison(null);
-    setSelectedIds(current => current.includes(id)
-      ? current.filter(selectedId => selectedId !== id)
-      : current.length < 2 ? [...current, id] : [current[1], id]);
-  };
-
-  const compare = () => {
-    if (!canCompare) return;
-    const selected = RECORDS.filter(record => selectedIds.includes(record.id));
-    setComparison(selected.sort((a, b) => a.date.localeCompare(b.date)));
-  };
-
-  const resetFilter = (event) => {
-    setWordFilter(event.target.value);
-    setSelectedIds([]);
-    setComparison(null);
-  };
-
-  return (
-    <div className={`page ${styles.page}`}>
-      <div className={styles.demoBar}>
-        <span>Bản trải nghiệm · Dữ liệu mô phỏng</span>
-        <Link href="/phat-am">Góc phát âm</Link>
-      </div>
-      <article className="sheet" aria-labelledby="page-title">
-        <nav className={styles.breadcrumb} aria-label="Đường dẫn">
-          <Link href="/hom-nay">Hôm nay</Link><span aria-hidden="true">/</span><span>Lịch sử phát âm</span>
-        </nav>
-        <div className="form-head">
-          <div className="form-code"><span>Học và mở rộng</span><span>UI34 · Đợt 3</span></div>
-          <h1 id="page-title">Lịch sử phát âm</h1>
-          <p>So sánh các lượt của cùng một từ bằng chỉ số có sẵn.</p>
-        </div>
-
-        <section className={styles.historySection} aria-labelledby="records-title">
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2 id="records-title">Các lượt đã ghi</h2>
-              <p className="small muted">Chọn hai lượt của cùng một từ để xem sự thay đổi.</p>
-            </div>
-            <Link className="btn btn-primary" href="/phat-am">Ghi lượt mới</Link>
-          </div>
-          <div className={styles.filter}>
-            <div className="field">
-              <label className="field-label" htmlFor="record-filter">Từ cần xem</label>
-              <select className="select" id="record-filter" value={wordFilter} onChange={resetFilter}>
-                {Object.entries(wordLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </div>
-            <button className="btn btn-secondary" type="button" disabled={!canCompare} onClick={compare}>
-              So sánh 2 lượt đã chọn
-            </button>
-          </div>
-
-          <div className={styles.list}>
-            {records.map(record => {
-              const checked = selectedIds.includes(record.id);
-              return (
-                <article className={`${styles.record} ${checked ? styles.selected : ''}`} key={record.id}>
-                  <label className="choice">
-                    <input type="checkbox" checked={checked} onChange={() => toggleSelection(record.id)} />
-                    <span className="bubble" aria-hidden="true"></span>
-                    <span>Chọn lượt này</span>
-                  </label>
-                  <div className={styles.recordMain}>
-                    <div className={styles.recordTitle}>
-                      <h3 className="word" lang="en">{record.word}</h3>
-                      <span className={`stamp ${record.score >= 80 ? 'stamp-success' : 'stamp-warning'}`}>{record.score}/100</span>
-                    </div>
-                    <div className={styles.recordMeta}>
-                      <span>{record.date}</span><span>{record.duration}</span><span>{record.clarity}</span><span>{record.rhythm}</span>
-                    </div>
-                  </div>
-                  <div className={styles.actions}>
-                    <button className="btn btn-media btn-sm" type="button" onClick={() => speak(record.word)}><Icon name="volume" />Nghe mẫu</button>
-                    <button className="btn btn-secondary btn-sm" type="button" onClick={() => toggleSelection(record.id)}>{checked ? 'Bỏ chọn' : 'Chọn'}</button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-
-          {comparison && (
-            <section className={styles.comparison} aria-labelledby="comparison-title">
-              <div className={styles.sectionHeader}>
-                <div><h2 id="comparison-title">So sánh hai lượt</h2><p className="small muted">Chỉ số mô phỏng từ hai bản ghi đã chọn.</p></div>
-                <button className="btn btn-quiet btn-sm" type="button" onClick={() => setComparison(null)}><Icon name="x" />Đóng</button>
-              </div>
-              <div className={styles.compareGrid}>
-                {comparison.map(record => (
-                  <div className={styles.compareCard} key={record.id}>
-                    <div className={styles.recordTitle}><h3 className="word" lang="en">{record.word}</h3><span className="small muted">{record.date}</span></div>
-                    <strong className={styles.compareScore}>{record.score}<small>/100</small></strong>
-                    <p><span>Độ rõ</span><strong>{record.clarity}</strong></p>
-                    <p><span>Nhịp điệu</span><strong>{record.rhythm}</strong></p>
-                  </div>
-                ))}
-              </div>
-              <div className="notice notice-info"><Icon name="info" /><span>{comparison[1].score >= comparison[0].score ? 'Lượt gần đây có điểm tốt hơn. Hãy tiếp tục giữ cách luyện hiện tại.' : 'Lượt gần đây giảm điểm. Bạn nên nghe mẫu và ghi lại ở tốc độ chậm hơn.'}</span></div>
-            </section>
-          )}
-        </section>
-      </article>
-    </div>
-  );
+  const [page,setPage]=useState(1),[card,setCard]=useState(''),[ids,setIds]=useState([]),[compareIds,setCompareIds]=useState([]),[confirm,setConfirm]=useState(null),[deleting,setDeleting]=useState(false);
+  const {toast}=useToast();const client=useQueryClient();
+  const query=useQuery({queryKey:['pronunciation-history',page,card],queryFn:()=>apiFetch(`/api/v1/pronunciation/history?page=${page-1}&size=20${card ? `&theId=${encodeURIComponent(card)}` : ''}`)});
+  const details=useQuery({queryKey:['pronunciation-comparison',compareIds],enabled:compareIds.length===2,queryFn:()=>Promise.all(compareIds.map(id=>apiFetch(`/api/v1/pronunciation/assessments/${encodeURIComponent(id)}`)))});
+  const rows=query.data?.items||[];
+  const sameWord=ids.length===2 && rows.filter(r=>ids.includes(r.id)).length===2 && new Set(rows.filter(r=>ids.includes(r.id)).map(r=>r.theId)).size===1;
+  async function remove() {
+    setDeleting(true);
+    try{await apiFetch(`/api/v1/pronunciation/recordings/${encodeURIComponent(confirm.tepGhiAmId)}`,{method:'DELETE'});setConfirm(null);setCompareIds([]);await client.invalidateQueries({queryKey:['pronunciation-history']});toast('Đã xóa bản ghi âm.',{variant:'success'});}catch(e){toast(e.message,{variant:'error'});}finally{setDeleting(false);}
+  }
+  return <div className={`page ${styles.page}`}><article className="sheet"><div className="form-head"><h1>Lịch sử phát âm</h1><p>Chọn hai lượt của cùng một thẻ để xem chỉ số.</p></div><Link href="/phat-am" className="btn btn-primary">Ghi lượt mới</Link><label className="field">Lọc theo ID thẻ (không bắt buộc)<input className="input" inputMode="numeric" value={card} onChange={e=>{if(/^\d*$/.test(e.target.value)){setCard(e.target.value);setPage(1);setIds([]);setCompareIds([]);}}} /></label><RemoteState queries={[query]}>{!rows.length && <EmptyData>Chưa có lượt phát âm.</EmptyData>}<div className={styles.list}>{rows.map(r=><article className={styles.record} key={r.id}><label><input type="checkbox" checked={ids.includes(r.id)} onChange={()=>{setCompareIds([]);setIds(old=>old.includes(r.id)?old.filter(id=>id!==r.id):[...old.slice(-1),r.id]);}} /> Chọn lượt</label><div className={styles.recordMain}><h2>{r.vanBanMau}</h2><p>{dateTime(r.createdAt)} · {r.tongDiem == null ? 'Chưa có điểm' : `${r.tongDiem}/100`}{r.moPhong?' · Mô phỏng':''}</p></div>{r.tepGhiAmId && <button type="button" className="btn btn-danger" onClick={()=>setConfirm(r)}>Xóa bản ghi âm</button>}</article>)}</div><button type="button" className="btn btn-secondary" disabled={!sameWord} onClick={()=>setCompareIds([...ids])}>So sánh hai lượt cùng thẻ</button><Pagination page={page} totalPages={query.data?.totalPages||0} onPageChange={p=>{setPage(p);setIds([]);setCompareIds([]);}} /></RemoteState>{compareIds.length===2 && <RemoteState queries={[details]}>{details.data && <>{(details.data[0].nhaCungCap!==details.data[1].nhaCungCap || details.data[0].moPhong!==details.data[1].moPhong) && <p className="notice">Hai lượt khác nguồn đánh giá, không nên so sánh trực tiếp điểm.</p>}<div className={styles.compareGrid}>{[...details.data].sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt)).map(d=><PronunciationResult key={d.id} data={d} />)}</div></>}</RemoteState>}</article><Modal isOpen={!!confirm} onClose={()=>{if(!deleting)setConfirm(null);}} loading={deleting} title="Xóa bản ghi âm"><p>Bạn muốn xóa âm thanh của lượt {confirm?.vanBanMau}? Chỉ số đánh giá vẫn được giữ.</p><button type="button" className="btn btn-danger" disabled={deleting} onClick={remove}>{deleting?'Đang xóa…':'Xóa bản ghi'}</button></Modal></div>;
 }

@@ -39,6 +39,8 @@ public class DangKyGoi extends BaseEntity {
     @Column(nullable = false, length = 20)
     private TrangThaiDangKy trangThai;
 
+    private Instant huyAt;
+
     @Version
     private Long version;
 
@@ -66,5 +68,10 @@ public class DangKyGoi extends BaseEntity {
 
     public void hetHan() {
         this.trangThai = TrangThaiDangKy.HET_HAN;
+    }
+
+    public void huy(Instant now) {
+        this.trangThai = TrangThaiDangKy.DA_HUY;
+        this.huyAt = now;
     }
 }

@@ -3,11 +3,11 @@
 import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Icon, Modal, useToast } from '@/components/ui';
-import {
-  DEMO_CLOCK, STORAGE_KEY, PAYMENT_STATUSES, transactions, createDemo, readDemo,
-  planName, money, date, time, normalize, isExpired, isSoon, subscriptionStatus,
-  filterPayments, paymentsCsv, receiptHtml,
-} from '@/lib/payment-admin.mjs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { ErrorState } from '@/components/ui';
+import { billingKeys, loadAdminBilling, planPayload, mapPayment, mapPlan, money, date, time, normalize, isCancelled, isExpired, isActiveSubscription, isSoon, subscriptionStatus, statuses as PAYMENT_STATUSES, paymentsCsv } from '@/lib/billing-api';
+const planName = code => code === 'PRO' ? 'Pro' : code === 'PREMIUM' ? 'Premium' : code;
 import styles from './page.module.css';
 
 const PAYMENT_FILTERS = { query: '', status: '', plan: '', from: '', to: '' };
@@ -54,9 +54,11 @@ export default function PaymentAdminPage() {
 
 function PaymentAdmin() {
   const { toast } = useToast();
-  const [data, setData] = useState(() => {
-    try { return readDemo(window.sessionStorage); } catch { return createDemo(); }
-  });
+  const queryClient = useQueryClient();
+  const billing = useQuery({ queryKey: billingKeys.admin, queryFn: loadAdminBilling, refetchInterval: 30000 });
+  const data = billing.data || { transactions: [], plans: [], subscriptions: [] };
+  const transactions = data.transactions;
+  const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState('payments');
   const [filters, setFilters] = useState(PAYMENT_FILTERS);
   const [subFilters, setSubFilters] = useState(SUB_FILTERS);
@@ -65,24 +67,14 @@ function PaymentAdmin() {
   const [formError, setFormError] = useState('');
   const [conflict, setConflict] = useState(false);
 
-  const items = filterPayments(filters);
+  const items = transactions.filter(t => (!filters.query || normalize(`${t.id} ${t.email}`).includes(normalize(filters.query.trim()))) && (!filters.status || t.status === filters.status) && (!filters.plan || t.plan === filters.plan) && (!filters.from || new Date(t.created).toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }) >= filters.from) && (!filters.to || new Date(t.created).toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }) <= filters.to) && !(filters.from && filters.to && filters.from > filters.to));
   const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
   const currentPage = Math.min(page, pages);
   const offset = (currentPage - 1) * PAGE_SIZE;
   const paid = transactions.filter(t => t.status === 'THANH_CONG');
   const query = normalize(subFilters.query.trim());
   const subscriptions = data.subscriptions.filter(s => (!query || normalize(`${s.name} ${s.email}`).includes(query)) &&
-    (!subFilters.plan || s.plan === subFilters.plan) && (!subFilters.status || (subFilters.status === 'expired' ? isExpired(s) : subFilters.status === 'soon' ? isSoon(s) : !isExpired(s))));
-
-  function persist(next, message) {
-    setData(next);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      toast(message, { variant: 'success' });
-    } catch {
-      toast(`${message} Thay đổi chỉ được giữ đến khi tải lại trang.`);
-    }
-  }
+    (!subFilters.plan || s.plan === subFilters.plan) && (!subFilters.status || (subFilters.status === 'cancelled' ? isCancelled(s) : subFilters.status === 'expired' ? isExpired(s) : subFilters.status === 'soon' ? isSoon(s) : isActiveSubscription(s))));
 
   function openDialog(value) {
     setFormError('');
@@ -100,27 +92,51 @@ function PaymentAdmin() {
     setPage(1);
   }
 
-  function savePlan(event) {
+  async function savePlan(event) {
     event.preventDefault();
-    if (conflict) return;
+    if (conflict || saving) return;
     const fields = new FormData(event.currentTarget);
     const existing = data.plans.find(p => p.code === dialog.plan.code);
-    if (existing.version !== dialog.plan.version) {
+    if (!existing || existing.version !== dialog.plan.version) {
       setConflict(true);
       setFormError('Cấu hình đã thay đổi ở phiên khác. Tải lại cấu hình trước khi chỉnh sửa.');
       return;
     }
-    const updated = { ...existing, version: existing.version + 1 };
-    for (const key of ['month', 'year', 'cards', 'ai', 'images']) {
+    const updated = { ...existing };
+    for (const key of ['month', 'year', 'cards']) {
       updated[key] = key === 'cards' && fields.get(key) === '' ? null : Number(fields.get(key));
-      if (updated[key] !== null && (!Number.isSafeInteger(updated[key]) || updated[key] < (['month', 'year', 'cards'].includes(key) ? 1 : 0) || updated[key] > 1000000000)) {
-        setFormError('Nhập số nguyên trong giới hạn cho phép. Giá và số thẻ phải lớn hơn 0.');
+      if (updated[key] !== null && (!Number.isSafeInteger(updated[key]) || updated[key] < (key === 'cards' ? 1 : 1000) || updated[key] > (key === 'month' ? 100000000 : 1000000000))) {
+        setFormError('Nhập số nguyên trong giới hạn cho phép. Giá tối thiểu 1.000 đ; giá tháng tối đa 100 triệu, giá năm tối đa 1 tỷ.');
         return;
       }
     }
     for (const key of ['active', 'speech', 'premium']) updated[key] = fields.has(key);
-    persist({ ...data, plans: data.plans.map(p => p.code === updated.code ? updated : p), audit: [...data.audit, { action: 'SUA_GOI_DICH_VU', target: updated.code, at: DEMO_CLOCK }] }, `Đã lưu cấu hình gói ${planName(updated.code)} trong dữ liệu mẫu.`);
-    setDialog(null);
+    setSaving(true);
+    setFormError('');
+    try {
+      await apiFetch(`/api/v1/admin/plans/${encodeURIComponent(updated.code)}`, { method: 'PUT', body: JSON.stringify(planPayload(updated)) });
+      await queryClient.invalidateQueries({ queryKey: billingKeys.all });
+      toast('Đã lưu cấu hình gói.', { variant: 'success' });
+      setDialog(null);
+    } catch (error) {
+      setFormError(error.message);
+      if (error.status === 409) setConflict(true);
+    } finally { setSaving(false); }
+  }
+  async function showDetail(id) {
+    try {
+      const detail = await apiFetch(`/api/v1/admin/payments/${encodeURIComponent(id)}`);
+      openDialog({ type: 'detail', transaction: mapPayment(detail.giaoDich) });
+    } catch (error) { toast(error.message, { variant: 'error' }); }
+  }
+  async function reloadPlan() {
+    try {
+      const plans = await apiFetch('/api/v1/admin/plans');
+      const plan = plans.find(p => p.ma === dialog.plan.code);
+      if (!plan) throw new Error('Gói không còn tồn tại.');
+      openDialog({ type: 'plan', plan: mapPlan(plan) });
+      await queryClient.invalidateQueries({ queryKey: billingKeys.all });
+    } catch (error) { setFormError(error.message); }
   }
 
   function tabKeyDown(event) {
@@ -135,20 +151,23 @@ function PaymentAdmin() {
 
   const summary = [
     ['Tổng đã thanh toán', money(paid.reduce((sum, t) => sum + t.amount, 0)), `${paid.length} giao dịch thành công`],
-    ['Tổng giao dịch', transactions.length, 'Toàn bộ dữ liệu mẫu'],
-    ['Gói còn hiệu lực', data.subscriptions.filter(s => !isExpired(s)).length, 'Tính tại mốc dữ liệu mẫu'],
+    ['Tổng giao dịch', transactions.length, 'Toàn bộ giao dịch'],
+    ['Gói còn hiệu lực', data.subscriptions.filter(isActiveSubscription).length, 'Tính tại thời điểm hiện tại'],
     ['Sắp hết hạn', data.subscriptions.filter(isSoon).length, 'Trong 7 ngày tới'],
   ];
 
+  if (billing.isPending) return <div className="page sheet" role="status">Đang tải dữ liệu thanh toán…</div>;
+  if (billing.isError) return <div className="page sheet"><ErrorState description={billing.error.message} onRetry={() => billing.refetch()} /></div>;
   return <div className={`page ${styles.page}`}>
-    <div className={styles.demo}><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><span>Quản trị thanh toán</span></div>
+
+
     <article className="sheet" aria-labelledby="page-title">
       <nav className={styles.breadcrumb} aria-label="Đường dẫn"><Link href="/quan-tri/chu-de">Quản trị</Link><span aria-hidden="true">/</span><span aria-current="page">Quản lý thanh toán</span></nav>
       <div className={styles.heading}>
         <div className="form-head"><h1 id="page-title">Quản lý thanh toán</h1><p>Theo dõi giao dịch, quản lý thời hạn và quyền lợi gói dịch vụ.</p></div>
-        <span className={styles.environment}><span aria-hidden="true" /> VNPay Sandbox</span>
+        <button type="button" className="btn btn-secondary" onClick={() => billing.refetch()} disabled={billing.isFetching}>Làm mới</button>
       </div>
-      <div className={styles.summary} aria-label="Tổng quan dữ liệu mẫu">
+      <div className={styles.summary} aria-label="Tổng quan thanh toán">
         {summary.map(([label, value, note], index) => <article key={label}><p>{label}</p><strong className={index === 0 ? styles.positive : undefined}>{value}</strong><small>{note}</small></article>)}
       </div>
       <div className={styles.tabs} role="tablist" aria-label="Quản lý thanh toán" onKeyDown={tabKeyDown}>
@@ -157,11 +176,11 @@ function PaymentAdmin() {
 
       <section id="panel-payments" role="tabpanel" aria-labelledby="tab-payments" tabIndex={0} hidden={tab !== 'payments'}>
         <div className={styles.sectionHead}><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói qua VNPay.</p></div><button className="btn btn-export" type="button" disabled={!items.length} onClick={() => {
-          download(paymentsCsv(items), 'giao-dich-mau-2026-11.csv', 'text/csv;charset=utf-8');
+          download(paymentsCsv(items), 'giao-dich.csv', 'text/csv;charset=utf-8');
           toast(`Đã xuất ${items.length} giao dịch theo bộ lọc hiện tại.`);
         }}><Icon name="download" /> Xuất CSV</button></div>
         <form className={styles.filters} aria-label="Lọc giao dịch" onSubmit={event => event.preventDefault()} onReset={clearFilters}>
-          <label className={`field ${styles.search}`}>Tìm giao dịch<input className="input" type="search" placeholder="Mã đơn, tên hoặc email…" autoComplete="off" value={filters.query} onChange={event => updateFilter('query', event.target.value)} /></label>
+          <label className={`field ${styles.search}`}>Tìm giao dịch<input className="input" type="search" placeholder="Mã đơn hoặc email…" autoComplete="off" value={filters.query} onChange={event => updateFilter('query', event.target.value)} /></label>
           <label className="field">Trạng thái<select className="select" value={filters.status} onChange={event => updateFilter('status', event.target.value)}><option value="">Tất cả trạng thái</option>{Object.entries(PAYMENT_STATUSES).map(([key, [label]]) => <option key={key} value={key}>{label}</option>)}</select></label>
           <PlanSelect value={filters.plan} onChange={event => updateFilter('plan', event.target.value)} />
           <label className="field">Từ ngày<input className="input" type="date" value={filters.from} aria-describedby="payment-feedback" onChange={event => updateFilter('from', event.target.value)} /></label>
@@ -174,7 +193,7 @@ function PaymentAdmin() {
           <><strong>{t.name}</strong><small>{t.email}</small></>,
           <><span className={styles.planLabel}>{planName(t.plan)}</span><small>{t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</small></>,
           <span key="amount" className={styles.money}>{money(t.amount)}</span>, <StatusBadge key="status" status={PAYMENT_STATUSES[t.status]} />,
-          <button key="detail" type="button" className="btn btn-quiet" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => openDialog({ type: 'detail', transaction: t })}>Chi tiết ↗</button>,
+          <button key="detail" type="button" className="btn btn-quiet" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => showDetail(t.id)}>Chi tiết ↗</button>,
         ] }))} /> : <Empty title="Không có giao dịch" description="Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm kết quả."><button className="btn btn-secondary" type="button" onClick={clearFilters}>Xóa bộ lọc</button></Empty>}
         <div className={styles.tableFooter}><span role="status" aria-live="polite">{items.length ? `Hiển thị ${offset + 1}–${Math.min(offset + PAGE_SIZE, items.length)} / ${items.length} giao dịch` : '0 giao dịch'}</span><nav className="pager" aria-label="Phân trang giao dịch">
           <button type="button" disabled={currentPage === 1} aria-label="Trang trước" onClick={() => setPage(currentPage - 1)}><Icon name="chevron-left" /></button>
@@ -188,7 +207,7 @@ function PaymentAdmin() {
         <form className={styles.filters} aria-label="Lọc gói người dùng" onSubmit={event => event.preventDefault()} onReset={() => setSubFilters(SUB_FILTERS)}>
           <label className={`field ${styles.search}`}>Người dùng<input className="input" type="search" placeholder="Tên hoặc email…" value={subFilters.query} onChange={event => setSubFilters({ ...subFilters, query: event.target.value })} /></label>
           <PlanSelect value={subFilters.plan} onChange={event => setSubFilters({ ...subFilters, plan: event.target.value })} />
-          <label className="field">Hiệu lực<select className="select" value={subFilters.status} onChange={event => setSubFilters({ ...subFilters, status: event.target.value })}><option value="">Tất cả trạng thái</option><option value="active">Còn hiệu lực</option><option value="soon">Sắp hết hạn 7 ngày</option><option value="expired">Đã hết hạn</option></select></label>
+          <label className="field">Hiệu lực<select className="select" value={subFilters.status} onChange={event => setSubFilters({ ...subFilters, status: event.target.value })}><option value="">Tất cả trạng thái</option><option value="active">Còn hiệu lực</option><option value="soon">Sắp hết hạn 7 ngày</option><option value="expired">Đã hết hạn</option><option value="cancelled">Đã hủy</option></select></label>
           <button className="btn btn-quiet" type="reset">Xóa bộ lọc</button>
         </form>
         {subscriptions.length ? <DataTable headers={['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái']} caption="Gói dịch vụ của người dùng" rows={subscriptions.map(s => ({ id: s.id, cells: [
@@ -202,7 +221,7 @@ function PaymentAdmin() {
         <div className={styles.planGrid}>{data.plans.map(p => <article key={p.code} className={styles.planCard}>
           <div className={styles.sectionHead}><h3>{planName(p.code)}</h3><StatusBadge status={p.active ? ['Đang mở bán', 'success'] : ['Ngừng mở bán', 'expired']} /></div>
           <p className={styles.price}>{money(p.month)} <small>/ tháng</small></p><p className={styles.yearPrice}>{money(p.year)} / năm</p>
-          <ul className={styles.featureList}>{[['Số thẻ tối đa', p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')], ['AI văn bản / ngày', `${p.ai} lượt`], ['Ảnh AI / ngày', `${p.images} ảnh`], ['Đánh giá phát âm', p.speech ? 'Có' : 'Không'], ['Bộ mẫu cao cấp', p.premium ? 'Có' : 'Không']].map(([label, value]) => <li key={label}><span>{label}</span><strong>{value}</strong></li>)}</ul>
+          <ul className={styles.featureList}>{[['Số thẻ tối đa', p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')], ['Đánh giá phát âm', p.speech ? 'Có' : 'Không'], ['Bộ mẫu cao cấp', p.premium ? 'Có' : 'Không']].map(([label, value]) => <li key={label}><span>{label}</span><strong>{value}</strong></li>)}</ul>
           <button className="btn btn-secondary" type="button" aria-label={`Chỉnh sửa gói ${planName(p.code)}`} onClick={() => openDialog({ type: 'plan', plan: p })}><Icon name="edit" /> Chỉnh sửa gói</button><p className={styles.caption}>Phiên bản {p.version}</p>
         </article>)}</div>
         <p className={styles.info}>Giá mới chỉ áp dụng cho đơn tạo sau khi lưu. Đơn đã tạo giữ nguyên số tiền và gói người dùng đang dùng giữ nguyên thời hạn.</p>
@@ -210,24 +229,24 @@ function PaymentAdmin() {
 
     </article>
 
-    <Modal isOpen={!!dialog} onClose={() => setDialog(null)} title={dialog?.type === 'detail' ? 'Chi tiết giao dịch' : dialog?.type === 'plan' ? `Chỉnh sửa gói ${planName(dialog.plan.code)}` : ''} className={styles.dialog}>
+    <Modal isOpen={!!dialog} onClose={() => { if (!saving) setDialog(null); }} loading={saving} title={dialog?.type === 'detail' ? 'Chi tiết giao dịch' : dialog?.type === 'plan' ? `Chỉnh sửa gói ${planName(dialog.plan.code)}` : ''} className={styles.dialog}>
       {dialog?.type === 'detail' && <TransactionDetail transaction={dialog.transaction} onClose={() => setDialog(null)} />}
       {dialog?.type === 'plan' && <form key={`${dialog.plan.code}-${dialog.plan.version}-${conflict}`} onSubmit={savePlan}>
-        <p className={styles.dialogSubtitle}>Phiên bản {dialog.plan.version} · Thay đổi trên dữ liệu mẫu</p>
-        <div className={styles.editGrid}>{[['Giá tháng (VND)', 'month', 1], ['Giá năm (VND)', 'year', 1], ['Số thẻ tối đa (trống = không giới hạn)', 'cards', 1], ['AI văn bản / ngày', 'ai', 0], ['Ảnh AI / ngày', 'images', 0]].map(([label, name, min]) => <label className="field" key={name}>{label}<input className="input" name={name} type="number" min={min} max={1000000000} step={1} defaultValue={dialog.plan[name] ?? ''} placeholder={name === 'cards' ? 'Không giới hạn' : undefined} required={name !== 'cards'} disabled={conflict} /></label>)}
-          {[['active', 'Mở bán gói'], ['speech', 'Đánh giá phát âm'], ['premium', 'Bộ mẫu cao cấp']].map(([name, label]) => <label className={styles.check} key={name}><input name={name} type="checkbox" defaultChecked={dialog.plan[name]} disabled={conflict} /> {label}</label>)}
+        <p className={styles.dialogSubtitle}>Phiên bản {dialog.plan.version}</p>
+        <div className={styles.editGrid}>{[['Giá tháng (VND)', 'month', 1000], ['Giá năm (VND)', 'year', 1000], ['Số thẻ tối đa (trống = không giới hạn)', 'cards', 1]].map(([label, name, min]) => <label className="field" key={name}>{label}<input className="input" name={name} type="number" min={min} max={name === 'month' ? 100000000 : 1000000000} step={1} defaultValue={dialog.plan[name] ?? ''} placeholder={name === 'cards' ? 'Không giới hạn' : undefined} required={name !== 'cards'} disabled={conflict || saving} /></label>)}
+          {[['active', 'Mở bán gói'], ['speech', 'Đánh giá phát âm'], ['premium', 'Bộ mẫu cao cấp']].map(([name, label]) => <label className={styles.check} key={name}><input name={name} type="checkbox" defaultChecked={dialog.plan[name]} disabled={conflict || saving} /> {label}</label>)}
         </div>
         <p className={styles.formError} role="alert">{formError}</p>
-        <div className={styles.actions}><button className="btn btn-quiet" type="button" onClick={() => setDialog(null)}>Hủy</button>{conflict && <button className="btn btn-secondary" type="button" onClick={() => openDialog({ type: 'plan', plan: data.plans.find(p => p.code === dialog.plan.code) })}>Tải lại cấu hình</button>}<button className="btn btn-primary" type="submit" disabled={conflict}>Lưu thay đổi</button></div>
+        <div className={styles.actions}><button className="btn btn-quiet" type="button" onClick={() => setDialog(null)} disabled={saving}>Hủy</button>{conflict && <button className="btn btn-secondary" type="button" onClick={reloadPlan}>Tải lại cấu hình</button>}<button className="btn btn-primary" type="submit" disabled={conflict || saving}>Lưu thay đổi</button></div>
       </form>}
     </Modal>
   </div>;
 }
 
 function TransactionDetail({ transaction: t, onClose }) {
-  const details = [['Mã đơn', t.id], ['Người thanh toán', t.name], ['Email', t.email], ['Gói dịch vụ', `${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}`], ['Tạo lúc', `${time(t.created)} ${date(t.created)}`], ['Cổng thanh toán', 'VNPay Sandbox'], ['Mã giao dịch VNPay', t.gatewayId || 'Chưa có'], ['Mã phản hồi', t.response ? `${t.response} · ${t.response === '00' ? 'Thành công' : 'Người dùng hủy giao dịch'}` : 'Chưa nhận phản hồi']];
-  return <><p className={styles.dialogSubtitle}>Thông tin giao dịch mẫu · Giờ Việt Nam</p><div className={styles.detailTotal}><div><span className={styles.caption}>Số tiền thanh toán</span><strong>{money(t.amount)}</strong></div><StatusBadge status={PAYMENT_STATUSES[t.status]} /></div>
+  const details = [['Mã đơn', t.id], ['Người thanh toán', t.name], ['Email', t.email], ['Gói dịch vụ', `${planName(t.plan)} · ${t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}`], ['Tạo lúc', `${time(t.created)} ${date(t.created)}`], ['Cổng thanh toán', t.gateway === 'MO_PHONG' ? 'Mô phỏng' : 'VNPay'], ['Mã giao dịch VNPay', t.gatewayId || 'Chưa có'], ['Mã phản hồi', t.response ? `${t.response} · ${t.response === '00' ? 'Thành công' : 'Người dùng hủy giao dịch'}` : 'Chưa nhận phản hồi']];
+  return <><p className={styles.dialogSubtitle}>Thông tin giao dịch · Giờ Việt Nam</p><div className={styles.detailTotal}><div><span className={styles.caption}>Số tiền thanh toán</span><strong>{money(t.amount)}</strong></div><StatusBadge status={PAYMENT_STATUSES[t.status]} /></div>
     <dl className={styles.detailList}>{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-    <div className={styles.actions}><button className="btn btn-secondary" type="button" onClick={onClose}>Đóng</button>{t.status === 'THANH_CONG' && <button className="btn btn-primary" type="button" onClick={() => download(receiptHtml(t), `${t.id}-bien-nhan-mau.html`, 'text/html;charset=utf-8')}><Icon name="download" /> Tải biên nhận mẫu</button>}</div>
+    <div className={styles.actions}><button className="btn btn-secondary" type="button" onClick={onClose}>Đóng</button></div>
   </>;
 }
