@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.billing.config;
 
 import com.do_an_tot_nghiep.k28.billing.entity.DangKyGoi;
+import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiDangKy;
 import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -40,11 +41,14 @@ public class SubscriptionGuard implements HandlerInterceptor {
             return true;
         }
         Optional<DangKyGoi> ganNhat = entitlements.latest(user.id());
+        boolean daHuy = ganNhat.map(item -> item.getTrangThai() == TrangThaiDangKy.DA_HUY).orElse(false);
         Map<String, Object> details = new LinkedHashMap<>();
-        details.put("lyDo", ganNhat.isPresent() ? "HET_HAN" : "CHUA_CO_GOI");
+        details.put("lyDo", daHuy ? "DA_HUY" : ganNhat.isPresent() ? "HET_HAN" : "CHUA_CO_GOI");
         details.put("goiGanNhat", ganNhat.map(DangKyGoi::getGoiMa).orElse(null));
         details.put("hetHanAt", ganNhat.map(DangKyGoi::getHetHanAt).orElse(null));
-        throw new ApiException(ErrorCode.SUBSCRIPTION_REQUIRED, ganNhat.isPresent()
+        throw new ApiException(ErrorCode.SUBSCRIPTION_REQUIRED, daHuy
+                ? "Gói dịch vụ của bạn đã được hủy. Mua gói để tiếp tục học, dữ liệu của bạn vẫn được giữ nguyên"
+                : ganNhat.isPresent()
                 ? "Gói dịch vụ của bạn đã hết hạn. Gia hạn để tiếp tục học, dữ liệu của bạn vẫn được giữ nguyên"
                 : "Bạn cần mua gói dịch vụ để dùng chức năng này", details);
     }

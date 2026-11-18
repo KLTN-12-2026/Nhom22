@@ -2,9 +2,10 @@ FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -q dependency:go-offline
+RUN chmod +x ./mvnw
+RUN --mount=type=cache,target=/root/.m2 ./mvnw dependency:go-offline
 COPY src src
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -q -DskipTests package && cp target/*.jar app.jar
+RUN --mount=type=cache,target=/root/.m2 ./mvnw -DskipTests package && cp target/*.jar app.jar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

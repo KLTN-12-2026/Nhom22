@@ -21,7 +21,7 @@ public interface DangKyGoiRepository extends JpaRepository<DangKyGoi, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<DangKyGoi> findForUpdateByNguoiDungIdAndTrangThai(Long nguoiDungId, TrangThaiDangKy trangThai);
 
-    Optional<DangKyGoi> findFirstByNguoiDungIdOrderByHetHanAtDesc(Long nguoiDungId);
+    Optional<DangKyGoi> findFirstByNguoiDungIdOrderByIdDesc(Long nguoiDungId);
 
     List<DangKyGoi> findByTrangThaiAndHetHanAtBeforeOrderByIdAsc(TrangThaiDangKy trangThai, Instant hetHanAt);
 
