@@ -61,6 +61,7 @@ const ADMIN_NAV_ONLY = [
     { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
     { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
+    { key: "admin-announcements", label: "Thông báo hệ thống", icon: "bell", href: "/quan-tri/thong-bao" },
     { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
   ] }
 ];
