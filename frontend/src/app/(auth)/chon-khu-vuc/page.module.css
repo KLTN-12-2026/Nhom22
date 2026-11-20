@@ -1,0 +1,23 @@
+.choices { display: grid; gap: var(--sp-3); }
+.choice {
+  --tone: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: var(--rule) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--sheet);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color var(--dur-1), background var(--dur-1), transform var(--dur-1);
+}
+.choice[data-tone="learn"] { --tone: var(--warning); }
+.choice:hover { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 6%, var(--sheet)); transform: translateY(-1px); }
+.choice:focus-visible { outline: none; box-shadow: var(--focus); }
+.choice > :last-child { color: var(--ink-3); }
+.icon { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--tone) 14%, var(--sheet)); color: var(--tone); }
+.text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.text b { font-size: 1.05rem; }
+.text small { color: var(--ink-3); }
+@media (prefers-reduced-motion: reduce) { .choice { transition: none; } .choice:hover { transform: none; } }

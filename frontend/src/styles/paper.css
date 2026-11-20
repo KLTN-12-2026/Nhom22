@@ -1,0 +1,53 @@
+.app-main {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --paper-fold: 26px;
+  --paper-fold-back: color-mix(in srgb, var(--sheet) 88%, var(--ink));
+  --paper-edge: color-mix(in srgb, var(--line) 85%, var(--ink));
+}
+[data-theme="dark"] .app-main {
+  --paper-fold-back: color-mix(in srgb, var(--sheet) 80%, #ffffff);
+}
+
+.app-main .sheet:not(.sheet-plain) {
+  isolation: isolate;
+  border-top-right-radius: 0;
+  background-image:
+    radial-gradient(120% 90% at 50% 40%, transparent 70%, color-mix(in srgb, var(--ink) 4%, transparent) 100%),
+    var(--paper-grain);
+  background-size: auto, 160px 160px;
+  box-shadow:
+    0 1px 2px rgb(16 24 40 / .06),
+    0 5px 0 -3px var(--sheet),
+    0 5px 0 -2px var(--paper-edge),
+    0 10px 0 -6px var(--sheet),
+    0 10px 0 -5px var(--paper-edge),
+    0 18px 28px -18px rgb(16 24 40 / .28);
+}
+.app-main .sheet:not(.sheet-plain)::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: var(--paper-fold);
+  height: var(--paper-fold);
+  background: linear-gradient(225deg, var(--desk) 0 50%, var(--paper-fold-back) 50% 100%);
+  border-bottom-left-radius: 6px;
+  box-shadow: -2px 2px 4px rgb(16 24 40 / .12);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 1023px) {
+  .app-main { --paper-fold: 18px; }
+  .app-main .sheet:not(.sheet-plain) {
+    box-shadow:
+      0 1px 2px rgb(16 24 40 / .06),
+      0 4px 0 -2px var(--sheet),
+      0 4px 0 -1px var(--paper-edge);
+  }
+}
+
+@media print {
+  .app-main .sheet:not(.sheet-plain) { background-image: none; box-shadow: none; }
+  .app-main .sheet:not(.sheet-plain)::after { display: none; }
+}
