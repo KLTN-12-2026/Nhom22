@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hôm nay — demo bố cục 21/11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Gentium+Book+Plus:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/tokens.css?v=71060d3ebc70">
+<link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
+<link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=11e4aa845b2a">
+<link rel="stylesheet" href="../shared/effects.css?v=e560e1725f25">
+<style>
+  body { background: var(--desk); }
+  .demo-bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; justify-content: space-between; padding: var(--sp-2) var(--sp-4); background: var(--field); border-bottom: var(--rule) solid var(--line); font-size: var(--fs-small); color: var(--ink-2); }
+  .demo-main { max-width: 1240px; margin: 0 auto; padding: var(--sp-6) var(--sp-4) var(--sp-8); }
+
+  .bulletin { margin: var(--sp-4) 0 var(--sp-5); border: var(--rule) solid var(--line); border-left: 3px solid var(--primary); background: var(--field); }
+  .bulletin-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-bottom: var(--rule) dashed var(--line); font-size: var(--fs-caption); color: var(--ink-2); font-weight: 650; }
+  .bulletin ol { list-style: none; margin: 0; padding: 0; }
+  .bulletin li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: start; padding: var(--sp-3); }
+  .bulletin li + li { border-top: var(--rule) solid var(--line); }
+  .bulletin li.is-important { background: var(--warning-bg); }
+  .bulletin-body { display: grid; gap: 2px; min-width: 0; }
+  .bulletin-body strong { color: var(--ink); overflow-wrap: anywhere; }
+  .bulletin-body p { margin: 0; font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+  .bulletin-body a { justify-self: start; font-size: var(--fs-small); font-weight: 650; }
+  .bulletin .x { min-width: 44px; min-height: 44px; margin: -10px -10px -10px 0; }
+
+  .start-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--line-2); }
+
+  .community { grid-column: 1 / -1; }
+  .community-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .community-head h2 { margin: 0; font-size: var(--fs-h2); }
+  .community-head p { margin: 0; font-size: var(--fs-small); color: var(--ink-2); }
+  .community-grid { display: grid; gap: var(--sp-6); }
+  @media (min-width: 900px) { .community-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+  @media (max-width: 600px) { .meta-dot::before { display: none; } .demo-bar .btn { min-height: 36px; padding: 0 var(--sp-2); } }
+  .col-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+  .col-head h3 { margin: 0; font-size: var(--fs-h3); }
+  .seg { display: inline-flex; border: var(--rule) solid var(--line-2); }
+  .seg button { min-height: 36px; padding: 0 var(--sp-3); border: 0; background: transparent; color: var(--ink-2); font: inherit; font-size: var(--fs-small); font-weight: 650; white-space: nowrap; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--primary-fill); color: var(--on-primary); }
+  .seg button:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 2px; }
+
+  .rank .answer-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; }
+  .heart { display: inline-flex; align-items: center; gap: 4px; padding: 2px var(--sp-2); border: var(--rule) solid var(--favorite); background: var(--favorite-bg); color: var(--favorite); font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; font-variant-numeric: tabular-nums; font-size: var(--fs-small); white-space: nowrap; }
+  .heart svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+  .meta-dot::before { content: "·"; margin-right: var(--sp-3); color: var(--ink-3); }
+
+  .people { list-style: none; margin: 0; padding: 0; border-top: var(--rule) solid var(--primary); }
+  .people li { display: grid; grid-template-columns: 2.25rem auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); }
+  .people .avatar { width: 40px; height: 40px; font-size: 1rem; }
+  .people .who { display: grid; gap: 2px; min-width: 0; }
+  .people .who strong { overflow-wrap: anywhere; }
+  .people .who span { font-size: var(--fs-small); color: var(--ink-2); }
+  .people-empty { padding: var(--sp-4) 0; border-top: var(--rule) solid var(--primary); display: grid; gap: var(--sp-2); justify-items: start; }
+  .people-empty p { margin: 0; color: var(--ink-2); font-size: var(--fs-small); }
+  .rank-foot { margin-top: var(--sp-3); }
+  .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+</style>
+<script src="../shared/speech.js?v=b35997846e94"></script>
+<link rel="stylesheet" href="../shared/mascot.css?v=a0a60f61b067">
+<script src="../shared/theme.js?v=c94fd5ea622d"></script>
+</head>
+<body>
+<div class="demo-bar">
+  <span>Demo bố cục /hom-nay — chưa áp vào FE</span>
+  <span class="row" style="gap:var(--sp-2)">
+    <button class="btn btn-quiet btn-sm" type="button" id="theme">Đổi giao diện sáng/tối</button>
+    <button class="btn btn-quiet btn-sm" type="button" id="empty">Xem trạng thái chưa có đóng góp</button>
+  </span>
+</div>
+
+<main class="demo-main app-main">
+  <div class="page page-grid with-side today-page">
+    <section class="sheet" aria-labelledby="page-title">
+      <div class="form-head">
+        <div class="form-code"><span>Hôm nay</span><span>21/11/2026</span></div>
+        <h1 id="page-title">Hôm nay học gì?</h1>
+        <p>Có 16 thẻ cần ôn và 10 từ mới, cần khoảng 9 phút (ước tính).</p>
+      </div>
+
+      <section class="bulletin" aria-label="Thông báo hệ thống">
+        <div class="bulletin-head"><span>Bảng tin · 2 thông báo</span></div>
+        <ol>
+          <li class="is-important">
+            <span class="stamp stamp-warning">Quan trọng</span>
+            <div class="bulletin-body">
+              <strong>Bảo trì hệ thống tối 23/11</strong>
+              <p>Hệ thống tạm dừng từ 22:00 đến 23:00 để nâng cấp. Tiến độ học của bạn được giữ nguyên.</p>
+            </div>
+            <button class="btn btn-quiet btn-sm x" type="button" aria-label="Ẩn thông báo Bảo trì hệ thống tối 23/11"><svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </li>
+          <li>
+            <span class="stamp stamp-quiet">Thông tin</span>
+            <div class="bulletin-body">
+              <strong>Thư viện có thêm bộ TOEIC mới</strong>
+              <p>Các bộ TOEIC từ cơ bản đến nâng cao đã sẵn sàng trong thư viện.</p>
+              <a href="#">Xem chi tiết</a>
+            </div>
+            <button class="btn btn-quiet btn-sm x" type="button" aria-label="Ẩn thông báo Thư viện có thêm bộ TOEIC mới"><svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </li>
+        </ol>
+      </section>
+
+      <dl class="tally cols-2">
+        <div><dt>Quá hạn<small>trễ từ hôm trước</small></dt><dd><span class="tally-n">16</span>thẻ</dd></div>
+        <div><dt>Đến hạn hôm nay</dt><dd><span class="tally-n">0</span>thẻ</dd></div>
+        <div><dt>Từ mới còn lại<small>đã học 0/10 từ mới hôm nay</small></dt><dd><span class="tally-n">10</span>từ</dd></div>
+        <div><dt>Thời gian cần<small>ước tính 20 giây mỗi lượt</small></dt><dd><span class="tally-n">9</span>phút</dd></div>
+      </dl>
+
+      <div class="start-row">
+        <button class="btn btn-accent btn-lg" type="button">Bắt đầu phiên hôm nay</button>
+        <a class="btn btn-quiet" href="#">Tự chọn bộ và dạng bài</a>
+        <span class="small muted">Chọn số phút và chiều học giữ nguyên như hiện tại (lược bớt trong demo).</span>
+      </div>
+    </section>
+
+    <aside class="side-col">
+      <section class="panel">
+        <h2 class="panel-title">Chuỗi ngày học</h2>
+        <p style="display:flex;align-items:baseline;gap:var(--sp-2);margin:0"><span class="tally-n" style="font-size:2.5rem">0</span><span>ngày liên tiếp</span></p>
+        <p class="small muted">Hôm nay chưa được tính. Cần ít nhất 5 lượt ôn trong ngày.</p>
+      </section>
+      <section class="panel">
+        <h2 class="panel-title">Mục tiêu mỗi ngày</h2>
+        <p class="small muted" style="display:flex;justify-content:space-between;margin:0 0 var(--sp-2)"><span>Đã học 0 lượt hôm nay</span><span class="num">0/10 phút</span></p>
+        <div class="meter is-progress" role="img" aria-label="Đã học 0 trên 10 phút" style="--v:0"><span></span></div>
+      </section>
+      <section class="panel">
+        <h2 class="panel-title">Theo bộ thẻ</h2>
+        <ul style="list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-3)">
+          <li><strong>TOEIC nâng cao — Hợp đồng, rủi ro và chiến lược</strong><br><span class="small muted">10 thẻ cần ôn · 20 từ chưa học</span></li>
+          <li><strong>B110-1472f7b7ca48 Bộ từ vựng giao tiếp với tên dài và dấu tiếng Việt</strong><br><span class="small muted">3 thẻ cần ôn · 0 từ chưa học</span></li>
+          <li><strong>Khởi động — TOEIC nâng cao</strong><br><span class="small muted">3 thẻ cần ôn · 0 từ chưa học</span></li>
+        </ul>
+        <a class="btn btn-quiet" href="#" style="margin:var(--sp-2) 0 0 -12px">Xem tất cả 6 bộ</a>
+      </section>
+    </aside>
+
+    <section class="sheet community" aria-labelledby="community-title">
+      <div class="community-head">
+        <h2 id="community-title">Cộng đồng tuần này</h2>
+        <p>7 ngày qua, đến 00:12 hôm nay. Chỉ tính bộ công khai và lượt từ người khác.</p>
+      </div>
+      <div class="community-grid">
+        <div>
+          <div class="col-head">
+            <h3>Bộ được yêu thích</h3>
+            <div class="seg" role="group" aria-label="Khoảng thời gian">
+              <button type="button" aria-pressed="true" data-range="week">7 ngày qua</button>
+              <button type="button" aria-pressed="false" data-range="all">Mọi lúc</button>
+            </div>
+          </div>
+          <ol class="answer-list rank" id="decks"></ol>
+          <a class="btn btn-quiet rank-foot" href="#" style="margin-left:-12px">Mở thư viện</a>
+        </div>
+        <div>
+          <div class="col-head"><h3>Người đóng góp nổi bật</h3></div>
+          <div id="people"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.8a5.5 5.5 0 0 0-7.8 0L12 5.9l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.4a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
+  const DECKS = {
+    week: [
+      ['Có gì trong bệnh viện?', 'Y tế và sức khỏe', 'Admin', 124, 13],
+      ['TOEIC mới bắt đầu — Văn phòng và đi lại', 'TOEIC', 'VocabLearning', 30, 13],
+      ['GIAO TIẾP CƠ BẢN', 'Giao tiếp', 'Admin', 0, 13],
+      ['Trọn vẹn 90 phút: Tiếng Anh sân cỏ', 'Thể thao', 'Admin', 50, 11],
+      ['Giao tiếp mới bắt đầu — Chào hỏi và sinh hoạt hằng ngày với một tên bộ rất dài để kiểm tra cắt dòng', 'Giao tiếp', 'VocabLearning', 30, 10]
+    ],
+    all: [
+      ['Có gì trong bệnh viện?', 'Y tế và sức khỏe', 'Admin', 124, 15],
+      ['TOEIC mới bắt đầu — Văn phòng và đi lại', 'TOEIC', 'VocabLearning', 30, 14],
+      ['GIAO TIẾP CƠ BẢN', 'Giao tiếp', 'Admin', 0, 13],
+      ['Trọn vẹn 90 phút: Tiếng Anh sân cỏ', 'Thể thao', 'Admin', 50, 11],
+      ['TOEIC cơ bản — Mua bán, giao hàng và đặt chỗ', 'TOEIC', 'VocabLearning', 30, 9]
+    ]
+  };
+  const PEOPLE = [
+    ['Admin', 5, 2, 37],
+    ['Trần Thị Bình', 2, 1, 6],
+    ['Lê Minh Chi', 1, 0, 3]
+  ];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function renderDecks(range) {
+    document.getElementById('decks').innerHTML = DECKS[range].map(([ten, chuDe, tacGia, soThe, n], i) => `
+      <li class="answer-row">
+        <span class="answer-no">${i + 1}</span>
+        <div class="answer-main">
+          <a class="answer-title clamp-2" href="#">${esc(ten)}</a>
+          <span class="answer-meta"><span>${esc(chuDe)}</span><span class="meta-dot">${soThe} thẻ</span><span class="meta-dot">${esc(tacGia)}</span></span>
+        </div>
+        <div class="answer-side"><span class="heart" aria-label="${n} lượt yêu thích">${HEART}${n}</span></div>
+      </li>`).join('');
+  }
+  let emptyPeople = false;
+  function renderPeople() {
+    const el = document.getElementById('people');
+    if (emptyPeople) {
+      el.innerHTML = `<div class="people-empty"><p>Chưa có ai được yêu thích hay sao chép bộ trong 7 ngày qua.</p><a class="btn btn-secondary btn-sm" href="#">Chia sẻ bộ của bạn</a></div>`;
+      return;
+    }
+    el.innerHTML = `<ol class="people">${PEOPLE.map(([ten, bo, sc, n], i) => `
+      <li>
+        <span class="answer-no">${i + 1}</span>
+        <span class="avatar" aria-hidden="true">${esc(ten.trim().split(/\s+/).pop()[0])}</span>
+        <span class="who"><strong>${esc(ten)}</strong><span>${bo} bộ công khai · ${sc} lượt sao chép</span></span>
+        <span class="heart" aria-label="${n} lượt yêu thích mới">${HEART}${n}</span>
+      </li>`).join('')}</ol>`;
+  }
+  document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    renderDecks(b.dataset.range);
+  }));
+  document.getElementById('theme').addEventListener('click', () => {
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+  document.getElementById('empty').addEventListener('click', (e) => {
+    emptyPeople = !emptyPeople;
+    e.target.textContent = emptyPeople ? 'Xem trạng thái có đóng góp' : 'Xem trạng thái chưa có đóng góp';
+    renderPeople();
+  });
+  renderDecks('week');
+  renderPeople();
+</script>
+<script src="../shared/mascot.js?v=f38c732c1a4f"></script>
+<script src="../shared/fx.js?v=e79749d07a95"></script>
+</body>
+</html>

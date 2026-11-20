@@ -259,7 +259,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI49 | Quản trị — bộ/thẻ mẫu | `/quan-tri/bo-mau` | A | S6 |
 | UI50 | Quản trị — hàng đợi báo cáo | `/quan-tri/bao-cao` | A | S9 |
 | UI51 | Quản trị — hạn mức & sử dụng dịch vụ | `/quan-tri/dich-vu` | A | S9 |
-| UI52 | Quản trị — thông báo hệ thống | `/quan-tri/thong-bao` | A | **Cắt** |
+| UI52 | Quản trị — thông báo hệ thống | `/quan-tri/thong-bao` | A | Khôi phục gọn 20/11/2026 (B3.13) |
 | UI53 | Quản trị — nhật ký (tab "Tác vụ nền": **Cắt**) | `/quan-tri/nhat-ky` | A | S6 |
 | UI54 | Quản trị — huy hiệu & thử thách | `/quan-tri/dong-luc` | A | **Cắt** |
 | UI55 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026) | `/thanh-toan-goi` | L | S8 |

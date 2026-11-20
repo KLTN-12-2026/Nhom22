@@ -60,6 +60,7 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 - [B3.9 — Tổng kết tuần](B3.9-tong-ket-tuan.md) (mã Mermaid, chưa sinh SVG)
 - [B3.10 — Xóa tài khoản và dữ liệu cá nhân](B3.10-xoa-tai-khoan.md) (mã Mermaid, chưa sinh SVG)
 - [B3.12c — Quản lý thanh toán và thống kê doanh thu](B3.12c-quan-ly-thanh-toan-doanh-thu.md) (mã Mermaid, chưa sinh SVG)
+- [B3.13 — Điểm nổi bật bảng điều khiển và thông báo hệ thống](B3.13-diem-noi-bat-thong-bao-he-thong.md) (mã Mermaid, chưa sinh SVG)
 - [B3.5 — Gợi ý có lý do](B3.5-goi-y-co-ly-do.md) (mã Mermaid, chưa sinh SVG)
 - [B3.6 — Điểm thưởng, chuỗi ngày, huy hiệu, thử thách](B3.6-diem-chuoi-huy-hieu.md) (mã Mermaid, chưa sinh SVG)
 - [B3.7 — Thông báo và nhắc học](B3.7-thong-bao-nhac-hoc.md) (mã Mermaid, chưa sinh SVG)

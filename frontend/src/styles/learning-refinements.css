@@ -327,3 +327,27 @@ h1 { font-weight: 800; letter-spacing: -0.025em; }
 .muc-bubble, .muc-panel { border-color: var(--line); border-radius: var(--radius-control); }
 [data-view="ready"] > .side-col[data-when~="ready"] { display: grid; gap: var(--sp-5); }
 .side-col { gap: var(--sp-5); }
+
+.nav-link[href*="hom-nay"], .bottom-nav a[href*="hom-nay"], .nav-link[href*="thanh-tich"], .nav-link[href*="tong-ket"] { --hue: var(--warning); }
+.nav-link[href*="bo-the"], .bottom-nav a[href*="bo-the"] { --hue: var(--primary); }
+.nav-link[href*="thu-vien"], .bottom-nav a[href*="thu-vien"], .nav-link[href*="ai-"], .nav-link[href*="goi-y"], .nav-link[href*="phat-am"] { --hue: var(--media-ink); }
+.nav-link[href*="luyen-tap"], .bottom-nav a[href*="luyen-tap"] { --hue: var(--edit); }
+[data-theme="dark"] .nav-link[href*="luyen-tap"], [data-theme="dark"] .bottom-nav a[href*="luyen-tap"] { --hue: color-mix(in srgb, var(--edit) 70%, #ffffff); }
+.nav-link[href*="so-tay"], .bottom-nav a[href*="so-tay"] { --hue: var(--favorite); }
+.nav-link[href*="thong-ke"], .bottom-nav a[href*="thong-ke"] { --hue: var(--secondary); }
+.nav-link .icon, .bottom-nav a .icon { color: var(--hue, currentColor); }
+.nav-link[aria-current="page"] { background: color-mix(in srgb, var(--hue, var(--primary)) 14%, var(--sheet)); }
+.app-header { box-shadow: inset 0 -3px 0 var(--primary); }
+.form-code > span:first-child { color: var(--primary); font-weight: 700; }
+.tally > div { --tone: var(--primary); box-shadow: inset 0 3px 0 var(--tone); }
+.tally > div:nth-child(1) { --tone: var(--warning); }
+.tally > div:nth-child(3) { --tone: var(--secondary); }
+.tally > div:nth-child(4) { --tone: var(--media-ink); }
+.tally .tally-n, .today-page .tally .tally-n { color: var(--tone); }
+.side-col > .panel { --tone: var(--primary); --tone-text: var(--primary); }
+.side-col > .panel:nth-of-type(4n+1) { --tone: var(--warning); --tone-text: var(--warning-text); }
+.side-col > .panel:nth-of-type(4n+3) { --tone: var(--secondary); --tone-text: var(--secondary-text); }
+.side-col > .panel:nth-of-type(4n+4) { --tone: var(--media-ink); --tone-text: var(--media-ink); }
+.side-col > .panel .panel-title { color: var(--tone-text); }
+.answer-no { color: var(--primary); font-weight: 700; }
+.fieldset > legend::first-letter { color: var(--primary); }
