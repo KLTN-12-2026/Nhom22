@@ -195,7 +195,7 @@ function CardList({ cards, q, offset = 0, own = false }) {
           <span className="answer-no">{offset + i + 1}</span>
           <div className="answer-main">
             <p className={styles.word}>
-              <Link href={own ? `/bo-the/${card.boTheId}` : `/thu-vien/${card.boTheId}`}><Highlight text={card.tu} query={q} /></Link>
+              <Link href={own ? `/bo-the/${card.boTheId}?the=${card.id}` : `/thu-vien/${card.boTheId}?the=${card.id}`}><Highlight text={card.tu} query={q} /></Link>
               {card.phienAm && <span className={styles.ipa}>{card.phienAm}</span>}
               {card.tuLoai && <span className="stamp stamp-graphite">{card.tuLoai}</span>}
             </p>

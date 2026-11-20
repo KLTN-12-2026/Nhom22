@@ -94,6 +94,49 @@ class FR04LibrarySearchTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void fr04_detailOpensPageContainingSearchedCard() throws Exception {
+        Long author = user(UUID.randomUUID() + "@test.local", "Tác giả trang");
+        Long deckId = deck(author, "Bộ nhiều thẻ " + UUID.randomUUID(), QuyenTruyCap.CONG_KHAI);
+        List<Long> created = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            created.add(card(deckId, "word" + i, "nghĩa " + i));
+        }
+        Long target = created.get(0);
+
+        JsonNode body = body(mockMvc.perform(get("/api/v1/library/decks/{id}", deckId)
+                        .param("size", "2").param("theId", target.toString()))
+                .andExpect(status().isOk()).andReturn());
+        assertThat(body.get("the").get("page").asInt()).isEqualTo(2);
+        assertThat(ids(body.get("the").get("items"))).contains(target);
+
+        JsonNode ignored = body(mockMvc.perform(get("/api/v1/library/decks/{id}", deckId)
+                        .param("size", "2").param("page", "1").param("theId", "999999999"))
+                .andExpect(status().isOk()).andReturn());
+        assertThat(ignored.get("the").get("page").asInt()).isEqualTo(1);
+
+        mockMvc.perform(get("/api/v1/library/decks/{id}", deckId).param("theId", "abc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void fr04_ownDeckOpensPageContainingSearchedCard() throws Exception {
+        String email = UUID.randomUUID() + "@test.local";
+        Long owner = user(email, "Chủ bộ");
+        Long deckId = deck(owner, "Bộ riêng " + UUID.randomUUID(), QuyenTruyCap.RIENG_TU);
+        List<Long> created = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            created.add(card(deckId, "own" + i, "nghĩa " + i));
+        }
+
+        JsonNode body = body(mockMvc.perform(get("/api/v1/decks/{id}/cards", deckId)
+                        .param("size", "2").param("theId", created.get(0).toString())
+                        .cookie(login(email)))
+                .andExpect(status().isOk()).andReturn());
+        assertThat(body.get("page").asInt()).isEqualTo(2);
+        assertThat(ids(body.get("items"))).contains(created.get(0));
+    }
+
+    @Test
     void fr04_searchRejectsBlankQueryAndUnknownAuthor() throws Exception {
         mockMvc.perform(get("/api/v1/library/search").param("q", "  "))
                 .andExpect(status().isBadRequest());

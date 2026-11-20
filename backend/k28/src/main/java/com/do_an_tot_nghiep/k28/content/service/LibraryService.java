@@ -99,16 +99,32 @@ public class LibraryService {
                 "Không tìm thấy bộ thẻ"
         ));
 
+        int page = cardPage(deck.getId(), request);
+
         Page<TheTuVung> cardPage =
                 cards.findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
                         deck.getId(),
-                        PageRequest.of(request.page(), request.size())
+                        PageRequest.of(page, request.size())
                 );
 
         return new LibraryDeckDetailResponse(
                 detailMetadata(deck, cardPage.getTotalElements()),
                 cardResponses(cardPage)
         );
+    }
+
+    private int cardPage(Long deckId, LibraryCardQuery request) {
+        Long cardId = request.cardId();
+        if (cardId == null
+                || !cards.existsByIdAndBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalse(cardId, deckId)) {
+            return request.page();
+        }
+
+        long before = cards.countByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseAndIdGreaterThan(
+                deckId,
+                cardId
+        );
+        return (int) (before / request.size());
     }
 
     private LibraryDeckResponse detailMetadata(BoThe deck, long cardCount) {

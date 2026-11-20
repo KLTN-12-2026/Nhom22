@@ -12,6 +12,7 @@ import { CardMedia } from '@/components/content/CardMedia';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
+import { useFocusCard } from '@/hooks/useFocusCard';
 import { CopyBadge } from '@/components/content/CopyBadge';
 import styles from './page.module.css';
 
@@ -28,15 +29,18 @@ function LibraryDetail({ id }) {
   const client = useQueryClient();
   const [showImages, setShowImages] = useCardImages();
   const search = useSearchParams();
-  const page = libraryPage(search.get('page'));
+  const requestedPage = libraryPage(search.get('page'));
+  const focusId = /^[1-9][0-9]{0,18}$/.test(search.get('the') || '') ? search.get('the') : null;
   const [copyMessage, setCopyMessage] = useState('');
   const attempt = useRef(null);
   const busy = useRef(false);
   const { data: me, isLoading: loadingUser, error: userError } = useMe();
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['library-deck', id, page],
-    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${page}&size=20`),
+    queryKey: ['library-deck', id, requestedPage, focusId],
+    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${requestedPage}&size=20${focusId ? `&theId=${focusId}` : ''}`),
   });
+  const page = data?.the?.page ?? requestedPage;
+  useFocusCard(focusId, Boolean(data));
   const copy = useMutation({
     mutationFn: key => copyDeck(apiFetch, id, key), retry: false,
     onSuccess: response => {
@@ -103,7 +107,7 @@ function LibraryDetail({ id }) {
       </div>
       <div className="library-card-toolbar"><div className="library-card-summary"><h2 className={styles.listTitle}>Thẻ mẫu</h2><p className="muted small">Hiển thị {the.items.length}/{boThe.soThe} thẻ</p></div><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
       {the.items.length === 0 ? <div className="empty"><h2>Bộ thẻ này chưa có thẻ ở trang này</h2><p>Chọn trang trước hoặc quay lại thư viện.</p></div> : <ol className="answer-list">
-        {the.items.map((card, index) => <li key={card.id} className="answer-row library-card">
+        {the.items.map((card, index) => <li key={card.id} id={`card-${card.id}`} tabIndex={card.id === focusId ? -1 : undefined} aria-current={card.id === focusId ? 'true' : undefined} className={`answer-row library-card${card.id === focusId ? ' card-focus' : ''}`}>
           <span className="answer-no">{page * 20 + index + 1}</span>
           <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa" lang="en">{card.phienAm}</span>}{card.tuLoai && <span className="pos" lang="en">{card.tuLoai}</span>}</div>
             <p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}

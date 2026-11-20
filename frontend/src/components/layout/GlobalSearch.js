@@ -22,13 +22,13 @@ function buildGroups(data, term, pages) {
   if (data?.cuaToi) {
     const items = [
       ...data.cuaToi.boThe.items.map(deck => ({ key: `my-deck-${deck.id}`, href: `/bo-the/${deck.id}`, icon: 'decks', title: deck.ten, meta: `${deck.soThe} thẻ` })),
-      ...data.cuaToi.tuVung.items.map(card => ({ key: `my-card-${card.id}`, href: `/bo-the/${card.boTheId}`, icon: 'notebook', title: card.tu, word: true, meta: `${card.nghiaVi} · ${card.tenBoThe}` })),
+      ...data.cuaToi.tuVung.items.map(card => ({ key: `my-card-${card.id}`, href: `/bo-the/${card.boTheId}?the=${card.id}`, icon: 'notebook', title: card.tu, word: true, meta: `${card.nghiaVi} · ${card.tenBoThe}` })),
     ].slice(0, 5);
     if (items.length) groups.push({ id: 'mine', label: 'Của tôi', items });
   }
   if (data?.tuVung?.items.length) {
     groups.push({ id: 'words', label: 'Từ vựng', tab: 'tu-vung', total: data.tuVung.totalElements, items: data.tuVung.items.map(card => ({
-      key: `card-${card.id}`, href: `/thu-vien/${card.boTheId}`, title: card.tu, word: true,
+      key: `card-${card.id}`, href: `/thu-vien/${card.boTheId}?the=${card.id}`, title: card.tu, word: true,
       sub: card.phienAm, meta: `${card.nghiaVi} · trong ${card.tenBoThe}`,
     })) });
   }

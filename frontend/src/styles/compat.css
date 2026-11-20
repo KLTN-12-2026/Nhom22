@@ -188,3 +188,6 @@ fieldset:disabled { opacity:.75; }
 
 .search-mark { padding: 0; border-radius: 2px; background: var(--accent-bg); color: inherit; font-weight: 700; }
 @media (max-width: 419px) { .app-header .brand > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } .app-header .app-menu-button { flex-shrink: 0; } }
+.card-focus { background: var(--accent-bg); box-shadow: inset 4px 0 0 var(--accent); scroll-margin-top: calc(var(--header-h) + var(--sp-4)); }
+.card-focus:focus { outline: none; }
+.card-focus:focus-visible { box-shadow: inset 4px 0 0 var(--accent), var(--focus); }
