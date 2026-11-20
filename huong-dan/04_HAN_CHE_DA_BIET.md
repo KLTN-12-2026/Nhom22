@@ -4,12 +4,12 @@ Cập nhật 16/11/2026. Nguồn: [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DO
 
 ## 1. Chờ khóa dịch vụ thật
 
-Code đã xong và chạy bằng bản mô phỏng (`fake`). Mỗi mục cần đúng một lượt gọi thật để tick. Cách lấy và gắn khóa: [05_KHOA_DICH_VU.md](05_KHOA_DICH_VU.md).
+Code đã xong và chạy bằng bản mô phỏng (`fake`). Mỗi mục cần đúng một lượt gọi thật để tick.
 
 | Bước | Dịch vụ | Biến cần | Hiện tại |
 |---|---|---|---|
 | B3.2, B3.3 | OpenAI (tạo thẻ, sửa câu, giải thích ngữ cảnh) | `OPENAI_API_KEY`, `AI_PROVIDER=openai` | `FakeAiClient`, kết quả gắn `moPhong=true` |
-| B3.3 (ảnh) | Google Imagen (Gemini API) | `GOOGLE_AI_API_KEY`, `IMAGE_PROVIDER=imagen` | `FakeImageClient` vẽ ảnh hình học; `ImagenImageClient` đã có, chưa gọi thật |
+| B3.3 (ảnh) | Google Imagen | khóa Google, `IMAGE_PROVIDER` | Chỉ có `FakeImageClient` (vẽ ảnh hình học); **chưa viết client Imagen thật**, có khóa vẫn phải code thêm |
 | B3.4a | OpenAI TTS | `OPENAI_API_KEY`, `TTS_PROVIDER=openai` | Âm thanh mô phỏng |
 | B3.4b | Azure Speech | `AZURE_SPEECH_KEY`, `SPEECH_PROVIDER=azure` | Điểm phát âm mô phỏng |
 | B3.12a | VNPay sandbox | `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, URL IPN công khai, `PAYMENT_PROVIDER=vnpay` | Cổng mô phỏng, giao diện ghi "Mô phỏng" |

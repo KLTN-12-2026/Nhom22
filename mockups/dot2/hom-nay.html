@@ -8,36 +8,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
-<link rel="stylesheet" href="../shared/tokens.css?v=71060d3ebc70">
+<link rel="stylesheet" href="../shared/tokens.css?v=8eea39e030ee">
 <link rel="stylesheet" href="../shared/base.css?v=b44e370961e8">
 <link rel="stylesheet" href="../shared/components.css?v=9c23856cf154">
-<link rel="stylesheet" href="../shared/learning-refinements.css?v=11e4aa845b2a">
-<link rel="stylesheet" href="../shared/effects.css?v=e560e1725f25">
+<link rel="stylesheet" href="../shared/learning-refinements.css?v=8ee697af7273">
+<link rel="stylesheet" href="../shared/effects.css?v=7fb6a75d9e3b">
 <style>
 .start { display: grid; gap: var(--sp-5); margin-top: var(--sp-5); }
 .start-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding-top: var(--sp-4); border-top: var(--rule) dashed var(--line-2); }
 .done { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
 .rescue { display: grid; gap: var(--sp-4); }
-.split { display: grid; gap: var(--sp-3); }
-.equation { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--sp-2); margin: 0; }
-.term { display: grid; align-content: center; gap: 2px; min-width: 6.5rem; padding: var(--sp-2) var(--sp-3); border: var(--rule) solid var(--line-2); background: var(--field); }
-.term b { font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: 1.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
-.term small { font-size: var(--fs-caption); color: var(--ink-2); }
-.result { border-color: var(--primary); background: var(--primary-tint); }
-.result b { color: var(--primary); }
-.op { align-self: center; font-family: var(--font-form); font-size: 1.5rem; font-weight: 700; color: var(--ink-3); }
-.bar { display: flex; flex-wrap: wrap; gap: 3px; min-height: 64px; }
-.seg { flex-basis: 0; min-width: 4.5rem; display: grid; align-content: space-between; gap: var(--sp-1); padding: var(--sp-2); border: var(--rule) solid var(--primary-line); background: var(--primary-tint); color: var(--ink); font: inherit; text-align: left; cursor: default; transition: opacity var(--dur-2) var(--ease-out); }
-.seg[data-day="1"] { background: var(--field); }
-.seg[data-active] { border-color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); }
-.seg:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.bar:has(.seg[data-active]) .seg:not([data-active]) { opacity: .55; }
-.segRest { border-style: dashed; background: transparent; color: var(--ink-2); }
-.segDay { font-size: var(--fs-caption); font-weight: 650; color: var(--ink-2); }
-.segN { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; font-variant-numeric: tabular-nums; }
-.split[aria-busy="true"] .bar { opacity: .6; }
-.plan-list .answer-row[data-active] { background: var(--primary-tint); }
-@media (prefers-reduced-motion: reduce) { .seg { transition: none; } }
+.rescue-lead { font-size: var(--fs-lead); max-width: 52ch; }
+.rescue-lead strong { font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: 1.375rem; }
 .plan-list .answer-row { grid-template-columns: 2.25rem minmax(0, 1fr) auto; align-items: center; padding: var(--sp-3) var(--sp-2) var(--sp-3) 0; }
 .plan-list .answer-title::after { display: none; }
 .plan-list .when { font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 700; }
@@ -50,6 +32,8 @@
 .deck-mini .name { font-weight: 650; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .deck-mini .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
 .goal-line { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); margin-bottom: var(--sp-2); }
+.links { display: grid; gap: var(--sp-1); }
+.links a { justify-content: flex-start; margin-left: -12px; }
 .resume { display: grid; gap: var(--sp-3); padding-bottom: var(--sp-5); margin-bottom: var(--sp-5); border-bottom: var(--rule) solid var(--primary-line); }
 .resumeHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-1) var(--sp-3); }
 .resume h2, .week h2 { font-size: var(--fs-h3); margin: 0; }
@@ -244,8 +228,8 @@
   <nav class="bottom-nav"></nav>
 </div>
 
-<script src="../shared/demo.js?v=ef89c7b26e42"></script>
-<script src="../shared/app.js?v=4dd4385f81b4"></script>
+<script src="../shared/demo.js?v=1619269d5741"></script>
+<script src="../shared/app.js?v=52375bbdf38a"></script>
 <script src="../shared/flow.js?v=b94b7801197e"></script>
 <script>
 (function () {
@@ -453,6 +437,6 @@
 })();
 </script>
 <script src="../shared/mascot.js?v=f38c732c1a4f"></script>
-<script src="../shared/fx.js?v=e79749d07a95"></script>
+<script src="../shared/fx.js?v=09ccfad84284"></script>
 </body>
 </html>
