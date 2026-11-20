@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.billing.service;
 
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.billing.config.BillingProperties;
+import com.do_an_tot_nghiep.k28.billing.dto.CancelSubscriptionRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.PlanResponse;
@@ -13,9 +14,11 @@ import com.do_an_tot_nghiep.k28.billing.entity.GiaoDichThanhToan;
 import com.do_an_tot_nghiep.k28.billing.entity.GoiDichVu;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.CongThanhToan;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiGiaoDich;
+import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiDangKy;
 import com.do_an_tot_nghiep.k28.billing.gateway.PaymentGateway;
 import com.do_an_tot_nghiep.k28.billing.mapper.BillingMapper;
 import com.do_an_tot_nghiep.k28.billing.repository.GiaoDichThanhToanRepository;
+import com.do_an_tot_nghiep.k28.billing.repository.DangKyGoiRepository;
 import com.do_an_tot_nghiep.k28.billing.repository.GoiDichVuRepository;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -30,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +52,7 @@ public class BillingService {
 
     private final GoiDichVuRepository goiDichVu;
     private final GiaoDichThanhToanRepository giaoDich;
+    private final DangKyGoiRepository dangKyGoi;
     private final EntitlementService entitlements;
     private final PaymentGateway gateway;
     private final QuotaService quota;
@@ -72,13 +77,30 @@ public class BillingService {
     public SubscriptionResponse subscription(Long nguoiDungId) {
         Instant now = clock.instant();
         return entitlements.latest(nguoiDungId)
-                .map(dangKy -> {
-                    boolean hieuLuc = dangKy.hieuLucLuc(now);
-                    Long soNgay = hieuLuc ? soNgayConLai(dangKy, accounts.zoneOf(nguoiDungId), now) : null;
-                    return new SubscriptionResponse(dangKy.getGoiMa(), tenGoi(dangKy.getGoiMa()),
-                            hieuLuc ? "HIEU_LUC" : "HET_HAN", dangKy.getBatDauAt(), dangKy.getHetHanAt(), soNgay);
-                })
-                .orElseGet(() -> new SubscriptionResponse(null, null, "CHUA_CO_GOI", null, null, null));
+                .map(dangKy -> subscriptionResponse(dangKy, now))
+                .orElseGet(() -> new SubscriptionResponse(null, null, "CHUA_CO_GOI", null, null, null,
+                        null, null, null));
+    }
+
+    @Transactional
+    public SubscriptionResponse cancelSubscription(Long nguoiDungId, CancelSubscriptionRequest request) {
+        DangKyGoi dangKy = dangKyGoi.findForUpdate(request.id())
+                .filter(item -> item.getNguoiDungId().equals(nguoiDungId))
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy đăng ký gói"));
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MILLIS);
+        // Retrying this specific cancellation must never cancel a newly purchased subscription.
+        if (dangKy.getTrangThai() == TrangThaiDangKy.DA_HUY) {
+            return subscriptionResponse(dangKy, now);
+        }
+        if (!Objects.equals(dangKy.getVersion(), request.version())) {
+            throw new ApiException(ErrorCode.VERSION_CONFLICT, "Gói đã thay đổi, vui lòng tải lại trước khi hủy");
+        }
+        if (!dangKy.hieuLucLuc(now)) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Chỉ hủy được gói đang còn hiệu lực");
+        }
+        dangKy.huy(now);
+        dangKyGoi.saveAndFlush(dangKy);
+        return subscriptionResponse(dangKy, now);
     }
 
     @Transactional
@@ -150,6 +172,16 @@ public class BillingService {
 
     private String tenGoi(String goiMa) {
         return goiDichVu.findByMa(goiMa).map(GoiDichVu::getTen).orElse(goiMa);
+    }
+
+    private SubscriptionResponse subscriptionResponse(DangKyGoi dangKy, Instant now) {
+        boolean hieuLuc = dangKy.hieuLucLuc(now);
+        String trangThai = dangKy.getTrangThai() == TrangThaiDangKy.DA_HUY ? "DA_HUY"
+                : hieuLuc ? "HIEU_LUC" : "HET_HAN";
+        Long soNgay = hieuLuc ? soNgayConLai(dangKy, accounts.zoneOf(dangKy.getNguoiDungId()), now) : null;
+        return new SubscriptionResponse(dangKy.getGoiMa(), tenGoi(dangKy.getGoiMa()), trangThai,
+                dangKy.getBatDauAt(), dangKy.getHetHanAt(), soNgay, dangKy.getId().toString(),
+                dangKy.getVersion(), dangKy.getHuyAt());
     }
 
     private static Long soNgayConLai(DangKyGoi dangKy, ZoneId zone, Instant now) {

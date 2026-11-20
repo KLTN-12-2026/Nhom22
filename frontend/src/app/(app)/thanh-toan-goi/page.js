@@ -2,35 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { ErrorState } from '@/components/ui';
+import { CancelSubscriptionButton } from '@/components/billing/CancelSubscriptionButton';
 import styles from './page.module.css';
-
-const PLANS = {
-  PRO: {
-    name: 'Pro',
-    THANG: 299000,
-    NAM: 2990000,
-    recommended: true,
-    features: [
-      [true, 'Tối đa ', '5.000 thẻ', ''],
-      [true, '', '20', ' yêu cầu AI văn bản/ngày'],
-      [true, '', '10', ' ảnh AI/ngày'],
-      [true, 'Đánh giá phát âm', '', ''],
-      [false, 'Không có bộ mẫu cao cấp', '', ''],
-    ],
-  },
-  PREMIUM: {
-    name: 'Premium',
-    THANG: 999000,
-    NAM: 9990000,
-    features: [
-      [true, '', 'Không giới hạn', ' thẻ'],
-      [true, '', '100', ' yêu cầu AI văn bản/ngày'],
-      [true, '', '30', ' ảnh AI/ngày'],
-      [true, 'Đánh giá phát âm', '', ''],
-      [true, 'Bộ mẫu cao cấp', '', ''],
-    ],
-  },
-};
 
 const CYCLES = [
   ['THANG', 'Hàng tháng', 'tháng'],
@@ -43,7 +19,12 @@ export default function ThanhToanGoiPage() {
   const [selected, setSelected] = useState(null);
   const [cycle, setCycle] = useState('THANG');
   const [pending, setPending] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const plansQuery = useQuery({ queryKey: ['billing', 'plans'], queryFn: () => apiFetch('/api/v1/billing/plans') });
+  const subQuery = useQuery({ queryKey: ['billing', 'subscription'], queryFn: () => apiFetch('/api/v1/me/subscription') });
+  const PLANS = Object.fromEntries((plansQuery.data || []).map(p => [p.ma, { name: p.ten, THANG: p.giaThang, NAM: p.giaNam, features: [[true, 'Số thẻ: ', p.gioiHanThe == null ? 'Không giới hạn' : String(p.gioiHanThe), ''], [true, 'AI văn bản/ngày: ', String(p.hanMucAi ?? 0), ''], [true, 'Ảnh AI/ngày: ', String(p.hanMucAnh ?? 0), ''], [p.phatAm, 'Đánh giá phát âm', '', ''], [p.boMauCaoCap, 'Bộ mẫu cao cấp', '', '']] }]));
+  const subscription = subQuery.data;
+
 
   const plan = selected ? PLANS[selected] : null;
   const total = plan ? plan[cycle] : 0;
@@ -54,15 +35,19 @@ export default function ThanhToanGoiPage() {
     setCycle('THANG');
   };
 
-  const confirmPayment = () => {
+  const confirmPayment = async () => {
     if (!plan || pending) return;
-    setPending(true);
-    window.setTimeout(() => {
-      setPending(false);
-      setSuccess(true);
-    }, 900);
+    setPending(true); setError('');
+    try {
+      const result = await apiFetch('/api/v1/billing/checkouts', { method: 'POST', body: JSON.stringify({ goiMa: selected, chuKy: cycle }) });
+      if (!result.paymentUrl) throw new Error('Máy chủ chưa trả về địa chỉ thanh toán.');
+      const url = new URL(result.paymentUrl, window.location.origin);
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Địa chỉ thanh toán không hợp lệ.');
+      window.location.assign(url.href);
+    } catch (error) { setError(error.message); setPending(false); }
   };
-
+  if (plansQuery.isPending || subQuery.isPending) return <div className="page sheet" role="status">Đang tải gói dịch vụ…</div>;
+  if (plansQuery.isError || subQuery.isError) return <div className="page sheet"><ErrorState description={(plansQuery.error || subQuery.error).message} onRetry={() => { plansQuery.refetch(); subQuery.refetch(); }} /></div>;
   return (
     <div className="page">
       <article className={`sheet ${styles.pageSheet}`} aria-labelledby="page-title">
@@ -74,13 +59,14 @@ export default function ThanhToanGoiPage() {
 
         <div className={styles.currentBanner}>
           <div className={styles.planInfo}>
-            <strong>Bạn chưa có gói đang hiệu lực</strong>
-            <span>Chọn Pro hoặc Premium để học tiếp. Bộ thẻ, tiến độ và sổ tay của bạn vẫn được giữ nguyên.</span>
+            <strong>{subscription?.trangThai === 'HIEU_LUC' ? `Đang dùng gói ${subscription.tenGoi}` : subscription?.trangThai === 'DA_HUY' ? `Bạn đã hủy gói ${subscription.tenGoi}` : 'Bạn chưa có gói đang hiệu lực'}</strong>
+            <span>Gói không tự gia hạn. Gia hạn cùng gói còn hiệu lực sẽ cộng dồn thời gian.</span>
           </div>
           <Link href="/thanh-toan-lich-su" className="btn btn-quiet btn-sm">Lịch sử thanh toán</Link>
+          <CancelSubscriptionButton subscription={subscription} />
         </div>
 
-        <h2 className={styles.sectionHeading}>Chọn gói</h2>
+        <h2 className={styles.sectionHeading}>Chọn gói</h2>{error && <p className="notice" role="alert">{error}</p>}{!plansQuery.data?.length && <p>Hiện chưa có gói đang mở bán.</p>}
         <div className={styles.planGrid} role="list">
           {Object.entries(PLANS).map(([key, item]) => (
             <PlanCard key={key} plan={item} onSelect={() => selectPlan(key)} />
@@ -137,16 +123,7 @@ export default function ThanhToanGoiPage() {
         )}
       </article>
 
-      {success && (
-        <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="success-title">
-          <div className={styles.successCard}>
-            <div className={styles.successIcon} aria-hidden="true">✓</div>
-            <h2 id="success-title">Thanh toán mô phỏng thành công</h2>
-            <p>Gói <strong>{plan?.name}</strong> đã được kích hoạt. Bản thật sẽ chuyển sang trang VNPay rồi về trang kết quả.</p>
-            <Link href="/hom-nay" className="btn btn-primary">Học hôm nay</Link>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

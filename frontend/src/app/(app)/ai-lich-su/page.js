@@ -1,143 +1,17 @@
 'use client';
-
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { Icon } from '@/components/ui';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { AI_STATUS, AI_TYPE, aiPending, dateTime } from '@/lib/remote-contract.mjs';
+import { RemoteState, EmptyData } from '@/components/remote/Remote';
+import { AiResult } from '@/components/remote/AiResult';
+import { Pagination, Modal } from '@/components/ui';
 import styles from './page.module.css';
-
-const REQUESTS = [
-  { title: 'Tạo thẻ từ đoạn văn', type: 'draft', state: 'Xong', detail: '3 bản nháp · 2 được chọn', time: 'Hôm nay, 10:24' },
-  { title: 'Viết câu với receipt', type: 'sentence', state: 'Xong', detail: 'Phản hồi tiếng Việt', time: 'Hôm qua, 16:40' },
-  { title: 'Giải thích ngữ cảnh', type: 'context', state: 'Lỗi', detail: 'Có thể thử lại thủ công', time: 'Hôm qua, 13:15' },
-  { title: 'Tạo bài luyện', type: 'exercise', state: 'Chờ', detail: 'Chưa có kết quả', time: 'Hôm qua, 11:05' },
-  { title: 'Tạo thẻ từ đoạn văn', type: 'draft', state: 'Chưa xác định', detail: 'Cần kiểm tra trạng thái', time: 'Hôm qua, 09:12' },
-  { title: 'Viết câu với appointment', type: 'sentence', state: 'Xong', detail: 'Đã xem phản hồi', time: '31/10/2026, 16:40' },
-];
-
-const TYPE_LABELS = {
-  all: 'Tất cả',
-  draft: 'Tạo thẻ',
-  sentence: 'Viết câu',
-  context: 'Ngữ cảnh',
-  exercise: 'Bài luyện',
-};
-
-const STATE_CLASS = {
-  Xong: 'stamp-success',
-  Lỗi: 'stamp-danger',
-  Chờ: 'stamp-warning',
-  'Chưa xác định': 'stamp-warning',
-};
-
 export default function AiHistoryPage() {
-  const [type, setType] = useState('all');
-  const [page, setPage] = useState(0);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const filteredRequests = useMemo(
-    () => REQUESTS.filter(request => type === 'all' || request.type === type),
-    [type],
-  );
-  const pageSize = 3;
-  const totalPages = Math.ceil(filteredRequests.length / pageSize);
-  const visibleRequests = filteredRequests.slice(page * pageSize, page * pageSize + pageSize);
-
-  const changeType = (event) => {
-    setType(event.target.value);
-    setPage(0);
-    setSelectedRequest(null);
-  };
-
-  return (
-    <div className={`page ${styles.page}`}>
-      <div className={styles.demoBar}>
-        <span>Bản trải nghiệm · Dữ liệu mô phỏng</span>
-        <Link href="/ai-xuong-the">Xưởng thẻ AI</Link>
-      </div>
-
-      <article className="sheet" aria-labelledby="page-title">
-        <nav className={styles.breadcrumb} aria-label="Đường dẫn">
-          <Link href="/hom-nay">Hôm nay</Link>
-          <span aria-hidden="true">/</span>
-          <span>Lịch sử AI và hạn mức</span>
-        </nav>
-
-        <div className="form-head">
-          <div className="form-code">
-            <span>Học và mở rộng</span>
-            <span>UI32 · Đợt 3</span>
-          </div>
-          <h1 id="page-title">Lịch sử AI và hạn mức</h1>
-          <p>Theo dõi yêu cầu, kết quả và lượt sử dụng còn lại.</p>
-        </div>
-
-        <div className="d3-metrics">
-          <div className="d3-metric"><strong>2 / 10</strong><span>Lượt AI mẫu hôm nay</span></div>
-          <div className="d3-metric"><strong>8 lượt</strong><span>Còn lại · làm mới lúc 00:00</span></div>
-          <div className="d3-metric"><strong>6</strong><span>Yêu cầu trong lịch sử</span></div>
-          <div className="d3-metric"><strong>3</strong><span>Yêu cầu đã hoàn tất</span></div>
-        </div>
-
-        <section className={styles.historySection} aria-labelledby="history-title">
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2 id="history-title">Lịch sử yêu cầu AI mẫu</h2>
-              <p className="small muted">Kết quả AI chỉ là gợi ý; hãy kiểm tra trước khi đưa vào bộ thẻ.</p>
-            </div>
-            <Link className="btn btn-primary" href="/ai-viet-cau">Viết câu mới</Link>
-          </div>
-
-          <form className={styles.filter} onSubmit={event => event.preventDefault()}>
-            <div className="field">
-              <label className="field-label" htmlFor="history-type">Loại yêu cầu</label>
-              <select className="select" id="history-type" value={type} onChange={changeType}>
-                {Object.entries(TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </div>
-            <button className="btn btn-secondary" type="submit"><Icon name="filter" />Lọc</button>
-          </form>
-
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <caption className="sr-only">Danh sách các yêu cầu AI</caption>
-              <thead>
-                <tr><th scope="col">Yêu cầu</th><th scope="col">Trạng thái</th><th scope="col">Kết quả</th><th scope="col">Thời gian</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr>
-              </thead>
-              <tbody>
-                {visibleRequests.map(request => (
-                  <tr key={`${request.title}-${request.time}`}>
-                    <td data-label="Yêu cầu"><strong>{request.title}</strong><span className="small muted">{TYPE_LABELS[request.type]}</span></td>
-                    <td data-label="Trạng thái"><span className={`stamp ${STATE_CLASS[request.state] || 'stamp-quiet'}`}>{request.state}</span></td>
-                    <td data-label="Kết quả">{request.detail}</td>
-                    <td data-label="Thời gian"><span className="small muted">{request.time}</span></td>
-                    <td data-label=""><button className="btn btn-secondary btn-sm" type="button" onClick={() => setSelectedRequest(request)}>Chi tiết</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {selectedRequest && (
-            <div className={styles.detail} role="status">
-              <div>
-                <strong>{selectedRequest.title}</strong>
-                <p className="small muted">{selectedRequest.detail} · {selectedRequest.time}</p>
-              </div>
-              <button className="btn btn-quiet btn-sm" type="button" onClick={() => setSelectedRequest(null)} aria-label="Đóng chi tiết"><Icon name="x" /></button>
-            </div>
-          )}
-
-          <div className={styles.pager} aria-label="Phân trang lịch sử">
-            <button className="btn btn-secondary btn-sm" type="button" disabled={page === 0} onClick={() => setPage(current => current - 1)}><Icon name="chevron-left" />Trước</button>
-            <span className="small muted">Trang {page + 1} / {totalPages || 1}</span>
-            <button className="btn btn-secondary btn-sm" type="button" disabled={page >= totalPages - 1} onClick={() => setPage(current => current + 1)}>Sau<Icon name="chevron-right" /></button>
-          </div>
-        </section>
-
-        <footer className={styles.footer}>
-          <Link className="btn btn-primary" href="/ai-xuong-the">Tạo bản nháp mới</Link>
-          <Link className="btn btn-quiet" href="/bo-the">Về bộ thẻ</Link>
-        </footer>
-      </article>
-    </div>
-  );
+  const [type,setType]=useState(''); const [page,setPage]=useState(1); const [id,setId]=useState(null);
+  const history=useQuery({queryKey:['ai-history',type,page],queryFn:()=>apiFetch(`/api/v1/ai/history?page=${page-1}&size=20${type ? `&loai=${type}` : ''}`),refetchInterval:15000});
+  const quota=useQuery({queryKey:['service-quota'],queryFn:()=>apiFetch('/api/v1/me/service-quota'),refetchInterval:30000});
+  const detail=useQuery({queryKey:['ai-request',id],enabled:!!id,queryFn:()=>apiFetch(`/api/v1/ai/requests/${encodeURIComponent(id)}`),refetchInterval:q=>aiPending(q.state.data?.trangThai)?1500:false});
+  return <div className={`page ${styles.page}`}><article className="sheet"><div className="form-head"><h1>Lịch sử AI và hạn mức</h1><p>Theo dõi yêu cầu và kết quả của bạn.</p></div><RemoteState queries={[quota]}><div className="d3-metrics">{quota.data?.hanMuc.map(h=><div className="d3-metric" key={h.loai}><strong>{h.conLai}/{h.gioiHan}</strong><span>{h.loai} · đã dùng {h.soDung}, đang giữ {h.soGiu}</span></div>)}</div><p>Đặt lại lúc {dateTime(quota.data?.datLaiAt)}</p></RemoteState><div className={styles.sectionHeader}><label className="field">Loại yêu cầu<select className="select" value={type} onChange={e=>{setType(e.target.value);setPage(1);}}><option value="">Tất cả</option>{Object.entries(AI_TYPE).map(([k,l])=><option key={k} value={k}>{l}</option>)}</select></label><Link className="btn btn-primary" href="/ai-xuong-the">Tạo thẻ mới</Link></div><RemoteState queries={[history]}>{!history.data?.items.length && <EmptyData>Chưa có yêu cầu AI.</EmptyData>}<div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Yêu cầu</th><th>Trạng thái</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>{history.data?.items.map(r=><tr key={r.id}><td>{AI_TYPE[r.loai]}{r.moPhong && <small> · Mô phỏng</small>}</td><td>{AI_STATUS[r.trangThai]}{r.maLoi && ` · ${r.maLoi}`}</td><td>{dateTime(r.createdAt)}</td><td><button type="button" className="btn btn-secondary" onClick={()=>setId(r.id)}>Chi tiết</button>{r.loai==='TAO_THE' && <Link className="btn btn-quiet" href={`/ai-xuong-the?requestId=${encodeURIComponent(r.id)}`}>Mở bản nháp</Link>}</td></tr>)}</tbody></table></div><Pagination page={page} totalPages={history.data?.totalPages||0} onPageChange={setPage} /></RemoteState></article><Modal isOpen={!!id} onClose={()=>setId(null)} title="Chi tiết yêu cầu AI"><RemoteState queries={[detail]}><AiResult data={detail.data} /></RemoteState></Modal></div>;
 }

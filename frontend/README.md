@@ -104,7 +104,7 @@ Dùng cùng `NEXT_DIST_DIR` khi build/start. Với OAuth/email, backend đặt `
 
 ## Trang chờ backend
 
-Trang **Quản lý thanh toán** dành cho ADMIN tại `/quan-tri/thanh-toan` (cũng có thể mở `/quan-ly-thanh-toan`) dựng theo `mockups/dot3/quan-ly-thanh-toan.html`. Ba tab giao dịch, gói người dùng và cấu hình gói hỗ trợ tìm kiếm/lọc, phân trang, xuất CSV, xem chi tiết và tải biên nhận HTML mẫu. Cho phép sửa giá và quyền lợi gói; không hiển thị công cụ demo, bộ chọn trạng thái mô phỏng hoặc nhãn UI59/Đợt 3 trên giao diện. Dữ liệu lưu riêng trong sessionStorage `vocab:payment-admin:v1`, mốc tính hạn 10:00 ngày 12/11/2026 giờ Việt Nam. Trang chỉ mô phỏng giao diện, chưa gọi API thanh toán hay gửi thông báo thật.
+Các trang `/thanh-toan-goi`, `/thanh-toan-ket-qua`, `/thanh-toan-lich-su` và `/quan-tri/thanh-toan` đã nối API billing. Mua gói tạo đơn qua backend và chuyển tới `paymentUrl`; trang kết quả đọc trạng thái máy chủ, kiểm tra lại mỗi 3 giây khi chờ xác nhận. Lịch sử có phân trang và mở biên nhận HTML từ API. Quản trị đọc toàn bộ các trang giao dịch/gói người dùng, lọc và xuất CSV trên dữ liệu nhận được; lưu cấu hình kèm `version`, gặp 409 phải tải lại. Quản trị và lịch sử làm mới mỗi 30 giây và khi quay lại cửa sổ; quản trị có nút Làm mới. Hạn mức AI/ảnh không thuộc API sửa gói nên không xuất hiện trong biểu mẫu này. Không dùng fixture hoặc sessionStorage thanh toán. Backend và cấu hình cổng thanh toán phải chạy đúng; kiểm tra sandbox trước khi sử dụng thực tế.
 
 Các trang đã có mã nhưng gọi endpoint backend chưa tồn tại (phiên học, luyện tập, sổ tay, thống kê, `/decks/{id}/progress`, quản trị tài khoản/bộ mẫu/nhật ký; thuộc B2.3–B2.11) được che bởi `FeatureGate` (danh sách `FUTURE` trong `src/components/layout/FeatureGate.js`) và ẩn khỏi điều hướng `AppShell`. Khi backend xong bước tương ứng, gỡ route khỏi `FUTURE`. Trang `/hoc` và `/hoc-phien` dùng `trangThai` `CHUA_TRA_LOI`/`DA_TRA_LOI` và chưa gửi `cheDo` (thuộc B2.6).
 
@@ -128,3 +128,7 @@ Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và
 - Đếm ngược 429 (`useCooldown`) dùng header `Retry-After` của BE (giây); thiếu header thì mặc định 60 giây.
 - Onboarding (`/bat-dau`) gọi tuần tự 3 PUT/PATCH, không nằm trong một giao dịch; bước đã xong được ghi nhớ nên bấm gửi lại chỉ lặp phần còn lỗi (thiết lập học ghi sau cùng).
 - `tests/contract-server.mjs` là fixture thủ công, không script nào gọi; không có `test:contract` hay Playwright.
+
+## Kết nối API đợt 3 (17/11/2026)
+
+Đã thay fixture của 9 trang AI/phát âm/gợi ý/bản đồ kỹ năng/tổng kết tuần/thành tích bằng API backend. [Bảng rà soát và giới hạn](../docs/frontend/API_AUDIT_2026-11-17.md). Tác vụ AI được theo dõi theo requestId; lưu thẻ có Idempotency-Key khi retry; phát âm gửi WAV PCM mono 16 kHz/16 bit. Không tự tạo điểm hoặc phản hồi mẫu ở frontend. Nếu backend dùng provider fake, giao diện vẫn ghi rõ nguồn mô phỏng theo phản hồi máy chủ.

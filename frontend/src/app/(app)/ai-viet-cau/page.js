@@ -2,29 +2,19 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useAiRequest } from '@/hooks/useAiRequest';
+import { AI_STATUS } from '@/lib/remote-contract.mjs';
 import { Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 export default function AiSentencePage() {
-  const [word, setWord] = useState('receipt');
-  const [sentence, setSentence] = useState('I have keep the receipt yesterday.');
-  const [feedback, setFeedback] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setFeedback(null);
-    setIsChecking(true);
-    window.setTimeout(() => {
-      setIsChecking(false);
-      setFeedback({
-        corrected: 'I kept the receipt yesterday.',
-        explanation: 'Dùng thì quá khứ đơn “kept” vì câu có mốc thời gian “yesterday”.',
-        note: '“Keep” là động từ bất quy tắc: keep → kept → kept.',
-      });
-    }, 650);
-  };
-
+  const [word, setWord] = useState('');
+  const [sentence, setSentence] = useState('');
+  const request = useAiRequest();
+  const isChecking = request.busy;
+  const result = request.data?.trangThai === 'HOAN_TAT' ? request.data.ketQua : null;
+  const feedback = result ? { corrected: result.cauSua, explanation: result.nhanXet, note: result.cachDungTu } : null;
+  const handleSubmit = event => { event.preventDefault(); request.start('/api/v1/ai/sentence-feedback', { tu: word.trim(), cau: sentence.trim() }); };
   const speak = () => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -35,7 +25,7 @@ export default function AiSentencePage() {
   return (
     <div className={`page ${styles.page}`}>
       <div className={styles.demoBar}>
-        <span>Bản trải nghiệm · Dữ liệu mô phỏng</span>
+        <span>Phản hồi từ dịch vụ AI</span>
         <Link href="/ai-lich-su">Lịch sử AI</Link>
       </div>
 
@@ -49,12 +39,14 @@ export default function AiSentencePage() {
         <div className="form-head">
           <div className="form-code">
             <span>Học và mở rộng</span>
-            <span>UI31 · Đợt 3</span>
+            <span>AI</span>
           </div>
           <h1 id="page-title">Viết câu dùng thử</h1>
           <p>Dùng từ mới trong một câu của chính bạn.</p>
         </div>
 
+        {request.error && <p role="alert" className="notice">{request.error}{request.id && <button type="button" className="btn btn-quiet" onClick={() => request.refetch()}>Kiểm tra lại</button>}</p>}
+        {request.data && <p role="status">{AI_STATUS[request.data.trangThai]}{request.data.moPhong ? ' · Nhà cung cấp mô phỏng' : ''}</p>}
         <div className={styles.workspace}>
           <form className={styles.form} onSubmit={handleSubmit}>
             <div className="field">
@@ -77,7 +69,7 @@ export default function AiSentencePage() {
                 id="sentence"
                 value={sentence}
                 onChange={event => setSentence(event.target.value)}
-                maxLength={1000}
+                maxLength={500}
                 rows={6}
                 required
               />
@@ -98,7 +90,7 @@ export default function AiSentencePage() {
             ) : (
               <>
                 <div className={styles.feedbackHeader}>
-                  <span className="caption">Phản hồi mẫu</span>
+                  <span className="caption">Phản hồi</span>
                   <span className="stamp stamp-success">Đã nhận xét</span>
                 </div>
                 <div className={styles.corrected}>

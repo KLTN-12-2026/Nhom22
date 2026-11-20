@@ -1,22 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useToast, Icon } from '@/components/ui';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
+import { date, time } from '@/lib/billing-api';
+import { ErrorState, Pagination, Icon } from '@/components/ui';
+import { CancelSubscriptionButton } from '@/components/billing/CancelSubscriptionButton';
 import styles from './page.module.css';
-
-const SUBSCRIPTION = {
-  tenGoi: 'Premium',
-  batDauAt: '01/11/2026 14:05',
-  hetHanAt: '01/12/2026 14:05',
-  soNgayConLai: 16,
-};
-
-const TRANSACTIONS = [
-  { maDon: 'DH-20261101-0007', thoiGian: '01/11/2026 14:05', moTa: 'Gói Premium · 1 tháng', soTien: 999000, trangThai: 'THANH_CONG' },
-  { maDon: 'DH-20261101-0006', thoiGian: '01/11/2026 14:02', moTa: 'Gói Premium · 1 tháng', soTien: 999000, trangThai: 'THAT_BAI' },
-  { maDon: 'DH-20261001-0003', thoiGian: '01/10/2026 09:30', moTa: 'Gói Pro · 1 tháng', soTien: 299000, trangThai: 'THANH_CONG' },
-  { maDon: 'DH-20260930-0002', thoiGian: '30/09/2026 21:12', moTa: 'Gói Pro · 1 tháng', soTien: 299000, trangThai: 'HET_HAN' },
-];
 
 const STATUS = {
   THANH_CONG: ['Thành công', 'txStatusOk', '✓'],
@@ -28,12 +19,13 @@ const STATUS = {
 const formatPrice = value => `${value.toLocaleString('vi-VN')} đ`;
 
 export default function ThanhToanLichSuPage() {
-  const { toast } = useToast();
-
-  const openReceipt = maDon => {
-    toast(`Bản thật mở biên nhận đơn ${maDon} trong thẻ mới để in.`, { variant: 'default', duration: 3500 });
-  };
-
+  const [page, setPage] = useState(1);
+  const sub = useQuery({ queryKey: ['billing', 'subscription'], queryFn: () => apiFetch('/api/v1/me/subscription'), refetchInterval: 30000 });
+  const history = useQuery({ queryKey: ['billing', 'history', page], queryFn: () => apiFetch(`/api/v1/billing/transactions?page=${page - 1}&size=20`), refetchInterval: 30000 });
+  if (sub.isPending || history.isPending) return <div className="page sheet" role="status">Đang tải lịch sử thanh toán…</div>;
+  if (sub.isError || history.isError) return <div className="page sheet"><ErrorState description={(sub.error || history.error).message} onRetry={() => { sub.refetch(); history.refetch(); }} /></div>;
+  const SUBSCRIPTION = sub.data;
+  const TRANSACTIONS = history.data.items.map(t => ({ ...t, thoiGian: `${date(t.taoAt)} ${time(t.taoAt)}`, moTa: `${t.tenGoi} · ${t.chuKy === 'NAM' ? '12 tháng' : '1 tháng'}` }));
   return (
     <div className="page">
       <article className={`sheet ${styles.pageSheet}`} aria-labelledby="page-title">
@@ -46,15 +38,16 @@ export default function ThanhToanLichSuPage() {
         <section className={styles.subOverview} aria-label="Gói đang hiệu lực">
           <div className={styles.subOverviewInfo}>
             <p className={styles.subPlanName}>
-              Gói {SUBSCRIPTION.tenGoi}
-              <span className={styles.planBadgeSm}>Đang hiệu lực</span>
+              {SUBSCRIPTION.tenGoi ? `Gói ${SUBSCRIPTION.tenGoi}` : 'Chưa có gói'}
+              <span className={styles.planBadgeSm}>{SUBSCRIPTION.trangThai === 'HIEU_LUC' ? 'Đang hiệu lực' : SUBSCRIPTION.trangThai === 'DA_HUY' ? 'Đã hủy' : 'Chưa có gói hiệu lực'}</span>
             </p>
             <p className={styles.subExpires}>
-              Hiệu lực từ {SUBSCRIPTION.batDauAt} đến <strong>{SUBSCRIPTION.hetHanAt}</strong> · còn {SUBSCRIPTION.soNgayConLai} ngày
+              {SUBSCRIPTION.trangThai === 'DA_HUY' ? <>Đã hủy ngày <strong>{date(SUBSCRIPTION.huyAt)}</strong>. Dữ liệu học và lịch sử thanh toán được giữ nguyên.</> : <>Hiệu lực từ {date(SUBSCRIPTION.batDauAt)} đến <strong>{date(SUBSCRIPTION.hetHanAt)}</strong> · còn {SUBSCRIPTION.soNgayConLai ?? 0} ngày</>}
             </p>
             <p className={styles.subRenew}>Gói không tự gia hạn. Gia hạn cùng gói trước ngày hết hạn sẽ cộng dồn thêm thời gian.</p>
           </div>
-          <Link href="/thanh-toan-goi" className="btn btn-quiet btn-sm">Gia hạn gói</Link>
+          <Link href="/thanh-toan-goi" className="btn btn-quiet btn-sm">{SUBSCRIPTION.trangThai === 'HIEU_LUC' ? 'Gia hạn gói' : 'Mua gói mới'}</Link>
+          <CancelSubscriptionButton subscription={SUBSCRIPTION} />
         </section>
 
         <h2 className={styles.sectionHeading}>Lịch sử giao dịch</h2>
@@ -87,10 +80,7 @@ export default function ThanhToanLichSuPage() {
                   </span>
                   <span className={styles.txAction} role="cell">
                     {tx.trangThai === 'THANH_CONG' ? (
-                      <button type="button" className={styles.invoiceBtn} onClick={() => openReceipt(tx.maDon)} aria-label={`Xem biên nhận đơn ${tx.maDon}`}>
-                        <Icon name="download" />
-                        Biên nhận
-                      </button>
+                      <a className={styles.invoiceBtn} href={`/api/v1/billing/transactions/${encodeURIComponent(tx.maDon)}/receipt`} target="_blank" rel="noopener noreferrer" aria-label={`Xem biên nhận đơn ${tx.maDon}`}><Icon name="download" />Biên nhận</a>
                     ) : (
                       <span className={styles.noAction} aria-label="Không có biên nhận">–</span>
                     )}
@@ -100,7 +90,7 @@ export default function ThanhToanLichSuPage() {
             })}
           </div>
         )}
-        <p className={styles.txNote}>&quot;Hết hạn&quot; là đơn không được thanh toán trong 15 phút. Biên nhận là chứng từ xác nhận đã thanh toán, không phải hóa đơn giá trị gia tăng.</p>
+        <Pagination page={page} totalPages={history.data.totalPages} onPageChange={setPage} /><p className={styles.txNote}>&quot;Hết hạn&quot; là đơn không được thanh toán trong 15 phút. Biên nhận là chứng từ xác nhận đã thanh toán, không phải hóa đơn giá trị gia tăng.</p>
       </article>
     </div>
   );

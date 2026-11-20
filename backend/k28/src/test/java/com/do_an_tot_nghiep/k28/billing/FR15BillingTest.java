@@ -4,6 +4,8 @@ import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
 import com.do_an_tot_nghiep.k28.billing.gateway.VnpaySigner;
+import com.do_an_tot_nghiep.k28.billing.dto.CancelSubscriptionRequest;
+import com.do_an_tot_nghiep.k28.billing.service.BillingService;
 import com.do_an_tot_nghiep.k28.common.quota.GoiDichVuResolver;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -16,6 +18,8 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -45,6 +49,7 @@ class FR15BillingTest extends AbstractIntegrationTest {
     @Autowired PasswordEncoder passwords;
     @Autowired GoiDichVuResolver plans;
     @Autowired Clock clock;
+    @Autowired BillingService billing;
 
     @Test
     void tc22_noPlanBlocksLearningButKeepsAllowedRoutes() throws Exception {
@@ -274,6 +279,141 @@ class FR15BillingTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(Map.of("goiMa", "FREE", "chuKy", "THANG"))))
                 .andExpect(status().isUnprocessableContent());
+    }
+
+    @Test
+    void cancellationRevokesAccessImmediatelyAndPreservesDataAndReceipts() throws Exception {
+        Learner learner = learner();
+        JsonNode paid = checkout(learner, "PRO", "THANG");
+        pay(learner, paid);
+        mockMvc.perform(post("/api/v1/decks").cookie(learner.session).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(Map.of("ten", "Bộ thẻ cần giữ", "trinhDo", "CO_BAN"))))
+                .andExpect(status().isCreated());
+        JsonNode before = subscription(learner);
+
+        JsonNode cancelled = jsonMapper.readTree(cancel(learner, before)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trangThai").value("DA_HUY"))
+                .andExpect(jsonPath("$.huyAt").isNotEmpty())
+                .andExpect(jsonPath("$.soNgayConLai").isEmpty())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(cancelled.get("hetHanAt")).isEqualTo(before.get("hetHanAt"));
+        assertThat(cancelled.get("version").asLong()).isEqualTo(before.get("version").asLong() + 1);
+        assertThat(plans.goiMa(learner.id)).isNull();
+        mockMvc.perform(get("/api/v1/decks").cookie(learner.session))
+                .andExpect(status().isPaymentRequired())
+                .andExpect(jsonPath("$.details.lyDo").value("DA_HUY"));
+        mockMvc.perform(get("/api/v1/me").cookie(learner.session)).andExpect(status().isOk());
+        assertThat(subscription(learner).get("trangThai").asString()).isEqualTo("DA_HUY");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM bo_the WHERE chu_so_huu_id = ? AND xoa_at IS NULL",
+                Integer.class, learner.id)).isEqualTo(1);
+        assertThat(orderStatus(paid.get("maDon").asString())).isEqualTo("THANH_CONG");
+        mockMvc.perform(get("/api/v1/billing/transactions/" + paid.get("maDon").asString() + "/receipt")
+                        .cookie(learner.session))
+                .andExpect(status().isOk());
+        cancel(learner, before).andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(cancelled.get("version").asLong()))
+                .andExpect(jsonPath("$.huyAt").value(cancelled.get("huyAt").asString()));
+        assertThat(subscriptionRows(learner.id)).isEqualTo(1);
+    }
+
+    @Test
+    void cancellationRequiresOwnershipSessionCsrfAndValidSnapshot() throws Exception {
+        Learner owner = learner();
+        Learner other = learner();
+        pay(owner, checkout(owner, "PRO", "THANG"));
+        JsonNode current = subscription(owner);
+        String payload = toJson(Map.of("id", current.get("id").asString(), "version", current.get("version").asLong()));
+        cancel(other, current).andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/v1/me/subscription/cancel").with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/me/subscription/cancel").cookie(owner.session)
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isForbidden());
+        for (Map<String, ?> invalid : java.util.List.of(Map.of("id", current.get("id").asString()),
+                Map.of("id", -1, "version", 0), Map.of("id", current.get("id").asString(), "version", -1))) {
+            mockMvc.perform(post("/api/v1/me/subscription/cancel").cookie(owner.session).with(xsrf())
+                            .contentType(MediaType.APPLICATION_JSON).content(toJson(invalid)))
+                    .andExpect(status().isBadRequest());
+        }
+        mockMvc.perform(post("/api/v1/me/subscription/cancel").cookie(other.session).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(toJson(Map.of("id", Long.MAX_VALUE, "version", 0))))
+                .andExpect(status().isNotFound());
+        assertThat(subscription(owner).get("trangThai").asString()).isEqualTo("HIEU_LUC");
+    }
+
+    @Test
+    void cancellationRejectsStaleRenewalAndExpiredSubscription() throws Exception {
+        Learner learner = learner();
+        pay(learner, checkout(learner, "PRO", "THANG"));
+        JsonNode before = subscription(learner);
+        pay(learner, checkout(learner, "PRO", "THANG"));
+        cancel(learner, before).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
+        assertThat(subscription(learner).get("trangThai").asString()).isEqualTo("HIEU_LUC");
+        JsonNode renewed = subscription(learner);
+        jdbc.update("""
+                UPDATE dang_ky_goi SET bat_dau_at = UTC_TIMESTAMP(3) - INTERVAL 2 HOUR,
+                    het_han_at = UTC_TIMESTAMP(3) - INTERVAL 1 MINUTE WHERE id = ?
+                """, renewed.get("id").asLong());
+        cancel(learner, renewed).andExpect(status().isUnprocessableContent());
+        assertThat(subscription(learner).get("trangThai").asString()).isEqualTo("HET_HAN");
+        assertThat(jdbc.queryForObject("SELECT huy_at IS NULL FROM dang_ky_goi WHERE id = ?",
+                Boolean.class, renewed.get("id").asLong())).isTrue();
+    }
+
+    @Test
+    void rebuyAfterCancellationUsesNewPlanAndOldRequestsCannotCancelIt() throws Exception {
+        Learner learner = learner();
+        JsonNode annual = checkout(learner, "PREMIUM", "NAM");
+        pay(learner, annual);
+        JsonNode original = subscription(learner);
+        cancel(learner, original).andExpect(status().isOk());
+        pay(learner, checkout(learner, "PRO", "THANG"));
+        JsonNode current = subscription(learner);
+        assertThat(current.get("id")).isNotEqualTo(original.get("id"));
+        assertThat(current.get("trangThai").asString()).isEqualTo("HIEU_LUC");
+        assertThat(current.get("goiMa").asString()).isEqualTo("PRO");
+        assertThat(Instant.parse(current.get("hetHanAt").asString()))
+                .isBefore(Instant.parse(original.get("hetHanAt").asString()));
+        cancel(learner, original).andExpect(status().isOk())
+                .andExpect(jsonPath("$.trangThai").value("DA_HUY"));
+        follow(annual.get("paymentUrl").asString()).andExpect(status().isFound());
+        assertThat(subscription(learner).get("id")).isEqualTo(current.get("id"));
+        assertThat(plans.goiMa(learner.id)).isEqualTo("PRO");
+        assertThat(subscriptionRows(learner.id)).isEqualTo(2);
+        mockMvc.perform(get("/api/v1/decks").cookie(learner.session)).andExpect(status().isOk());
+    }
+
+    @Test
+    void concurrentCancellationsChangeTheRegistrationOnlyOnce() throws Exception {
+        Learner learner = learner();
+        pay(learner, checkout(learner, "PRO", "THANG"));
+        JsonNode current = subscription(learner);
+        CancelSubscriptionRequest request = new CancelSubscriptionRequest(current.get("id").asLong(),
+                current.get("version").asLong());
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> billing.cancelSubscription(learner.id, request));
+            var second = executor.submit(() -> billing.cancelSubscription(learner.id, request));
+            var a = first.get(15, TimeUnit.SECONDS);
+            var b = second.get(15, TimeUnit.SECONDS);
+            assertThat(a).isEqualTo(b);
+            assertThat(a.trangThai()).isEqualTo("DA_HUY");
+            assertThat(a.version()).isEqualTo(request.version() + 1);
+        }
+    }
+
+    private JsonNode subscription(Learner learner) throws Exception {
+        return jsonMapper.readTree(mockMvc.perform(get("/api/v1/me/subscription").cookie(learner.session))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions cancel(Learner learner, JsonNode subscription) throws Exception {
+        return mockMvc.perform(post("/api/v1/me/subscription/cancel").cookie(learner.session).with(xsrf())
+                .contentType(MediaType.APPLICATION_JSON).content(toJson(Map.of(
+                        "id", subscription.get("id").asString(), "version", subscription.get("version").asLong()))));
     }
 
     private void pay(Learner learner, JsonNode checkout) throws Exception {
