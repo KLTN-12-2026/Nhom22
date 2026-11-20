@@ -97,6 +97,7 @@ public class AccountDataEraser {
         update("DELETE FROM the_tep WHERE the_id IN (:ids)", cards);
         ketQua.put("theDaXoa", update("DELETE FROM the_tu_vung WHERE id IN (:ids)", cards));
 
+        update("DELETE FROM yeu_cau_cong_khai WHERE bo_the_id IN (:ids) OR bo_nguon_id IN (:ids)", decks);
         update("UPDATE bo_the SET bo_nguon_id = NULL WHERE bo_nguon_id IN (:ids)", decks);
         update("DELETE FROM yeu_cau_sao_chep_bo WHERE bo_nguon_id IN (:ids) OR bo_ket_qua_id IN (:ids)", decks);
         update("DELETE FROM bo_yeu_thich WHERE bo_the_id IN (:ids)", decks);

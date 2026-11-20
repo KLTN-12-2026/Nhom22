@@ -46,6 +46,7 @@ public class DeckCopyService {
     private final StorageService storage;
     private final DeckCopyRequestRepository requests;
     private final DeckMapper mapper;
+    private final CopyInfoService copyInfo;
     private final JsonMapper json;
     private final Clock clock;
     private final CardLimitService limits;
@@ -66,7 +67,7 @@ public class DeckCopyService {
             return replay(userId, sourceId, previous.get());
         }
 
-        BoThe source = decks.findByIdAndXoaAtIsNull(sourceId).orElse(null);
+        BoThe source = decks.findForUpdate(sourceId).filter(found -> found.getXoaAt() == null).orElse(null);
         if (source == null || source.getQuyenTruyCap() != QuyenTruyCap.CONG_KHAI
                 || source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
             var completedMeanwhile = requests.find(userId, key);
@@ -84,6 +85,14 @@ public class DeckCopyService {
             return replay(userId, sourceId, reservation);
         }
 
+        if (source.getBoNguonId() != null) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Đây là bản sao, hãy sao chép bộ gốc",
+                    Map.of("lyDo", "LA_BAN_SAO", "boGocId", source.getBoNguonId().toString()));
+        }
+        decks.findFirstByChuSoHuuIdAndBoNguonIdAndXoaAtIsNullOrderByIdDesc(userId, sourceId).ifPresent(existing -> {
+            throw new ApiException(ErrorCode.CONFLICT, "Bạn đã có bản sao của bộ này",
+                    Map.of("boTheId", existing.getId().toString()));
+        });
         if (source.isCaoCap()) {
             entitlements.requirePremiumSamples(userId);
         }
@@ -110,7 +119,8 @@ public class DeckCopyService {
                     .toList(), now);
         }
 
-        DeckResponse response = mapper.toResponse(result, false, originals.size());
+        DeckResponse response = mapper.toResponse(result, false, originals.size(),
+                copyInfo.origins(List.of(result)).get(result.getId()), null);
         requests.complete(reservation.id(), result.getId(), json.writeValueAsString(response), clock.instant());
         return response;
     }

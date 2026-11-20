@@ -39,6 +39,7 @@
 | B3.11 Quản trị vận hành (gọn mạnh, FR-13) | 🟡 3 API; `V26__service_ops.sql`; `FR13ServiceOpsTest` 2/2, toàn bộ 544/544 (16/11); HTTP thật trên dev pass, Postman (16/11); ✅ xong | F3.11 UI51 | Nối API thật (mục 5.15); hạn mức theo từng gói |
 | B3.12b Lịch sử giao dịch, hết hạn gói, quyền lợi | 🟡 Code xong 16/11 (test pass); HTTP thật lịch sử + biên nhận pass 16/11; Postman đồng bộ 16/11; mockup UI56 đúng DTO 16/11; chưa chạy job hết hạn trên dev | F3.12 UI56, banner `AppShell`, UI44, UI49 | Nối API thật (mục 5.10); bắt 422 `details.quyenLoi` |
 | B3.12c Quản lý thanh toán, doanh thu | 🟡 Code xong 16/11 (test pass); HTTP thật 6/8 API pass 16/11, 2 công cụ demo chưa (server tắt `BILLING_DEMO_TOOLS`); Postman đồng bộ 16/11; mockup UI58–UI59 đúng DTO 16/11 | F3.13 UI58–UI59 | Nối API thật (mục 5.11) |
+| B3.14 Giới hạn sao chép & duyệt công khai bản sao (FR-04, TC-25, 21/11/2026) | 🟡 6 API mới + đổi `POST /decks/{id}/copy` (409/422 mới) và `PATCH /decks/{id}` (422 khi công khai bản sao); `V29__publish_requests.sql`; `DeckResponse`/`LibraryDeckResponse` thêm `banSao`, `DeckResponse` thêm `yeuCauCongKhai`; `FR04PublishRequestTest` 8/8 + hồi quy pass (21/11); chưa HTTP thật, Postman, mockup | F3.14 UI14, UI03, UI60, UI61 | Nối API thật (mục 5.16); huy hiệu "Bản sao" + link bộ gốc; nút "Xin công khai" thay ô công khai trên bản sao |
 
 **Chưa có:** không còn API Đợt 3 chưa code. Phần FE chưa nối API thật vẫn có thể dùng MSW với response ở mục 5. Tab "Tác vụ nền" UI53, UI46, UI52, UI54 đã cắt khỏi Đợt 3 ([KE_HOACH_CAT_DOT3](../docs/KE_HOACH_CAT_DOT3.md)).
 
@@ -488,6 +489,23 @@ Lỗi thật: `version` cũ → 409 `{"code":"VERSION_CONFLICT","message":"Hạn
 
 Lỗi: 400 `fieldErrors` (`hanMuc`, `lyDo`, `tuNgay`, `denNgay`; mục trùng gói+loại), 404 gói/loại không có, 409 `VERSION_CONFLICT`, 403 không phải Admin. Mọi lần sửa ghi nhật ký `SUA_HAN_MUC` (xem ở `/admin/audit-logs?loai=HAN_MUC_DICH_VU`).
 
+### 5.16 B3.14 — Giới hạn sao chép và duyệt công khai bản sao (UI14, UI03, UI60, UI61)
+
+Hợp đồng theo mã nguồn và `FR04PublishRequestTest` (21/11/2026); chưa HTTP thật. Luồng: [B3.14](../docs/luong-backend/B3.14-gioi-han-sao-chep-duyet-cong-khai.md). Luật: TK §6.2a.
+
+| Method / path | Request | Response | FE |
+|---|---|---|---|
+| `POST /api/v1/decks/{id}/copy` | như B1.11 | 201 `DeckResponse` + `banSao`; **409** `details.boTheId` khi đã có bản sao chưa xóa; **422** `details {lyDo: "LA_BAN_SAO", boGocId}` | 409 → báo "Bạn đã có bản sao" và mở `/bo-the/{boTheId}`; 422 → nút "Xem bộ gốc" |
+| `PATCH /api/v1/decks/{id}` | như B1.8 | **422** `details.lyDo = "CAN_DUYET_CONG_KHAI"` khi bản sao riêng tư đổi sang `CONG_KHAI` | Với bộ có `banSao`: không cho chọn "Công khai" trực tiếp, hiện nút "Xin công khai" |
+| `POST /api/v1/decks/{id}/publish-requests` | `{loiNhan?}` ≤ 500 | 201 `{id, nguoiDuyet, trangThai, loiNhan, lyDo, hetHanAt, xuLyAt, guiLaiSauAt, createdAt, version}` | 409 đang chờ; 422 `details.lyDo`: `KHONG_PHAI_BAN_SAO`, `DA_CONG_KHAI`, `DA_AN`, `BO_CAO_CAP`, `CHO_GUI_LAI` (+ `guiLaiSauAt`) |
+| `DELETE /api/v1/publish-requests/{id}` | — | 200 như trên, `trangThai = DA_RUT` | Nút "Rút yêu cầu" khi `CHO_DUYET` |
+| `GET /api/v1/me/publish-requests` | `?trangThai&page&size` | `PageResponse<{id, boTheId, tenBoThe, boNguonId, tenBoNguon, nguoiGuiId, tenNguoiGui, nguoiDuyet, trangThai, loiNhan, lyDo, hetHanAt, xuLyAt, createdAt, version}>` | UI60 `/yeu-cau-cong-khai`, xem bản sao qua `/thu-vien/{boTheId}` chỉ khi đã công khai |
+| `POST /api/v1/publish-requests/{id}/decision` | `{quyetDinh: DUYET\|TU_CHOI\|THU_HOI, lyDo?, version}`; `lyDo` 10–500 bắt buộc khi từ chối/thu hồi | 200 phần tử như trên | 409 → tải lại; 404 khi yêu cầu đã chuyển cho Admin |
+| `GET /api/v1/publish-requests/{id}/cards`, `GET /api/v1/admin/publish-requests/{id}/cards` | `?page&size` | `PageResponse<LibraryCardResponse>` | Xem nội dung bản sao trong hộp duyệt; chỉ hiện chữ (bản sao riêng tư, không tải media) |
+| `GET /api/v1/admin/publish-requests`, `POST /api/v1/admin/publish-requests/{id}/decision` | như trên | như trên | UI61 `/quan-tri/duyet-cong-khai` |
+
+`DeckResponse` thêm `banSao` (`null` hoặc `{boGocId, boGocTen, tacGiaGoc, boGocXemDuoc}`) và `yeuCauCongKhai` (yêu cầu gần nhất hoặc `null`); `LibraryDeckResponse` (danh sách, chi tiết, điểm nổi bật) thêm `banSao`. `boGocXemDuoc = false` → hiện "Bộ gốc không còn công khai", không có link. Thông báo mới: `YEU_CAU_CONG_KHAI` (`lienKet` `/yeu-cau-cong-khai`), `KET_QUA_CONG_KHAI` (`lienKet` `/bo-the/{id}`), `ngayDiaPhuong = null`.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
@@ -562,6 +580,7 @@ Trạng thái BE đến 16/11/2026: mọi F-step Đợt 3 đã có API (mục 5.
 - [ ] F3.11 UI51: hạn mức theo gói × loại, gửi `version`, 409 → tải lại; lỗi `null` hiện "Không ghi nhận"
 - [ ] F3.12 UI55, UI56, UI57 nối `billing`, bắt 402 `SUBSCRIPTION_REQUIRED` chuyển `/thanh-toan-goi`
 - [ ] F3.13 UI58, UI59 quản lý thanh toán Admin
+- [x] F3.14 (FE đã làm 21/11/2026, xem roadmap FE) huy hiệu "Bản sao" + link bộ gốc (UI14, UI03, thư viện, tìm kiếm); 409/422 khi sao chép; nút "Xin công khai", trạng thái yêu cầu, rút yêu cầu; UI60 tác giả duyệt và UI61 Admin duyệt kèm lý do, 409 tải lại
 
 ## 9. Sắp có ở Đợt 4 — hợp đồng dự kiến
 

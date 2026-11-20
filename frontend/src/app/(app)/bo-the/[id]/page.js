@@ -9,6 +9,8 @@ import { SpeakButton } from '@/components/content/SpeakButton';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
 import { CardEditDialog } from '@/components/content/CardEditDialog';
+import { CopyBadge } from '@/components/content/CopyBadge';
+import { PublishRequestPanel } from '@/components/content/PublishRequestPanel';
 import styles from './page.module.css';
 import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
@@ -50,7 +52,7 @@ export default function DeckDetailPage() {
     <article className="sheet" aria-labelledby="deck-title">
       <Link className="btn btn-quiet" href="/bo-the"><Icon name="arrow-left" />Bộ của tôi</Link>
       <div className="form-head">
-        <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span></div>
+        <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span><CopyBadge banSao={deck.banSao} /></div>
         <h1 id="deck-title" className="deck-title">{deck.ten}</h1>
         {deck.moTa && <p>{deck.moTa}</p>}
         <div className="row">
@@ -66,7 +68,6 @@ export default function DeckDetailPage() {
       {(favorite.error || remove.error) && <ErrorState description={(favorite.error || remove.error).message} onRetry={refetch} />}
       {download.error && <ErrorState description={download.error.message} onRetry={() => download.mutate()} />}
       {params.get('imported') && <p className="notice notice-success" role="status">Đã nhập {params.get('imported')} thẻ từ CSV.</p>}
-      {deck.boNguonId && <p className="muted">Bản sao độc lập từ <Link href={`/thu-vien/${deck.boNguonId}`}>bộ nguồn</Link>. Bộ nguồn có thể không còn công khai.</p>}
       {params.get('saved') && <p className="notice notice-success" role="status">Đã lưu thẻ{params.get('duplicate') ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
       <div className={styles.listBar}><h2>Thẻ trong bộ <span className="muted num">{cards.data?.totalElements ?? ''}</span></h2><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
       {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
@@ -88,6 +89,6 @@ export default function DeckDetailPage() {
       <h2 className="panel-title">Thông tin bộ thẻ</h2>
       <dl className="kv"><dt>Chủ đề</dt><dd>{topics.find(t => t.id === deck.chuDeId)?.ten || 'Chưa chọn'}</dd>
       <dt>Trình độ</dt><dd>{LEVEL[deck.trinhDo]}</dd><dt>Mục tiêu</dt><dd>{deck.mucTieu === 'TOEIC' ? 'TOEIC' : deck.mucTieu === 'GIAO_TIEP' ? 'Giao tiếp' : 'Chưa chọn'}</dd><dt>Cập nhật</dt><dd>{new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</dd></dl>
-    </section></aside>
+    </section>{deck.banSao && <PublishRequestPanel deck={deck} />}</aside>
   </div>;
 }

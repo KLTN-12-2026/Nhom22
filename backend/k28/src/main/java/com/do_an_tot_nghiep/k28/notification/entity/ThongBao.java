@@ -34,7 +34,6 @@ public class ThongBao extends BaseEntity {
     @Column(nullable = false)
     private LoaiThongBao loai;
 
-    @Column(nullable = false)
     private LocalDate ngayDiaPhuong;
 
     @Column(nullable = false)

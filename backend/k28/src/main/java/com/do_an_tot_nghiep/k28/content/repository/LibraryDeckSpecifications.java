@@ -42,7 +42,8 @@ public final class LibraryDeckSpecifications {
             Long chuDeId,
             TrinhDo trinhDo,
             MucTieu mucTieu,
-            NguonBo nguon
+            NguonBo nguon,
+            Long chuSoHuuId
     ) {
         String pattern = searchPattern(q);
 
@@ -79,6 +80,12 @@ public final class LibraryDeckSpecifications {
             if (mucTieu != null) {
                 predicates.add(cb.equal(
                         root.get("mucTieu"), mucTieu
+                ));
+            }
+
+            if (chuSoHuuId != null) {
+                predicates.add(cb.equal(
+                        root.get("chuSoHuuId"), chuSoHuuId
                 ));
             }
 
@@ -147,7 +154,34 @@ public final class LibraryDeckSpecifications {
         };
     }
 
-    private static String searchPattern(String value) {
+    public static Specification<BoThe> ownedMatching(Long ownerId, String q) {
+        String pattern = searchPattern(q);
+
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isNull(root.get("xoaAt")));
+            predicates.add(cb.equal(root.get("chuSoHuuId"), ownerId));
+
+            if (pattern != null) {
+                predicates.add(cb.or(
+                        cb.like(
+                                cb.lower(root.<String>get("ten")),
+                                cb.lower(cb.literal(pattern)),
+                                '!'
+                        ),
+                        cb.like(
+                                cb.lower(root.<String>get("moTa")),
+                                cb.lower(cb.literal(pattern)),
+                                '!'
+                        )
+                ));
+            }
+
+            return cb.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
+    public static String escapeLike(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -157,11 +191,14 @@ public final class LibraryDeckSpecifications {
                 Normalizer.Form.NFC
         );
 
-        String escaped = normalized
+        return normalized
                 .replace("!", "!!")
                 .replace("%", "!%")
                 .replace("_", "!_");
+    }
 
-        return "%" + escaped + "%";
+    private static String searchPattern(String value) {
+        String escaped = escapeLike(value);
+        return escaped == null ? null : "%" + escaped + "%";
     }
 }

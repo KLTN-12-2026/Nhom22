@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.mapper;
 
+import com.do_an_tot_nghiep.k28.content.dto.BanSaoResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckResponse;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
 import com.do_an_tot_nghiep.k28.content.entity.enums.NguonBo;
@@ -14,7 +15,8 @@ public interface LibraryDeckMapper {
             BoThe deck,
             String tenChuDe,
             String tenTacGia,
-            long soThe
+            long soThe,
+            BanSaoResponse banSao
     );
 
     default NguonBo toSource(boolean boMau) {

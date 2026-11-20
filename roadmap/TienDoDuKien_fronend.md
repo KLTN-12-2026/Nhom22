@@ -250,6 +250,12 @@ frontend/
 - Thêm 2 mục vào menu quản trị.
 - **Giữ** (S9).
 - **Cuối Đợt 3:** demo TK §20.2 (10 bước + 9b mua gói bắt buộc + 9c hết hạn và doanh thu); nhận `ban-giao-cho fe/SPRINT_3_BAO_CAO_BE_BAN_GIAO_CHO_FE.md`.
+### [x] F3.14 Bản sao & duyệt công khai — UI14, UI03, UI60, UI61 ← B3.14 (yêu cầu 21/11/2026)
+- **Đã làm 21/11/2026:** `src/lib/publish-requests.mjs` (+ `tests/publish-requests.test.mjs`), `CopyBadge`, `PublishRequestPanel`, `PublishRequestReview`; trang `/yeu-cau-cong-khai`, `/quan-tri/duyet-cong-khai`; sửa `/thu-vien/[id]` (409/422, ẩn sao chép với bản sao, "Xem bộ gốc"), `/bo-the`, `/bo-the/[id]`, `/bo-the/tao` (khóa "Công khai" với bản sao riêng tư), `LibraryDeckList`, menu `AppShell`. Kiểm chứng: `npm test` 69/69, `npm run build` pass, eslint 0 lỗi; trình duyệt thật với BE 8080 (xem luồng B3.14). Chưa có mockup UI60/UI61.
+- Nút "Sao chép": 409 → thông báo "Bạn đã có bản sao" + mở `details.boTheId`; bộ là bản sao → nút "Xem bộ gốc" thay cho sao chép.
+- Huy hiệu "Bản sao" nổi bật + dòng "Gốc: <tên>" có link (hoặc "Bộ gốc không còn công khai") trên `/bo-cua-toi`, chi tiết bộ, thẻ thư viện và kết quả tìm kiếm; đọc `banSao`.
+- Bản sao: ô quyền truy cập không cho chọn công khai trực tiếp; nút "Xin công khai" (lời nhắn tùy chọn), trạng thái `yeuCauCongKhai` (chờ, đã duyệt, bị từ chối kèm lý do và thời điểm gửi lại, hết hạn), nút rút yêu cầu.
+- UI60 `/yeu-cau-cong-khai` cho tác giả, UI61 `/quan-tri/duyet-cong-khai` cho Admin: danh sách lọc trạng thái, xem bản sao, duyệt/từ chối/thu hồi kèm lý do, 409 tải lại. Thông báo `YEU_CAU_CONG_KHAI`/`KET_QUA_CONG_KHAI` mở đúng trang.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 

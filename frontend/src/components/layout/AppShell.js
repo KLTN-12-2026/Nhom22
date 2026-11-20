@@ -1,6 +1,7 @@
 'use client';
 import { MobileNavigation } from './MobileNavigation';
 import { NotificationBell } from './NotificationBell';
+import { GlobalSearch } from './GlobalSearch';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { SoundToggle } from '@/components/ui/SoundToggle';
 import { useAvatar } from '@/hooks/useAvatar';
@@ -19,6 +20,7 @@ const NAV = [
     { key: "today", label: "Hôm nay", icon: "today", href: "/hom-nay" },
     { key: "decks", label: "Bộ của tôi", icon: "decks", href: "/bo-the" },
     { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
+    { key: "publish-requests", label: "Yêu cầu công khai", icon: "copy", href: "/yeu-cau-cong-khai" },
     { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
     { key: "stats", label: "Thống kê", icon: "chart", href: "/thong-ke" }
@@ -61,6 +63,7 @@ const ADMIN_NAV_ONLY = [
     { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
     { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
+    { key: "admin-publish", label: "Duyệt công khai", icon: "copy", href: "/quan-tri/duyet-cong-khai" },
     { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
     { key: "admin-announcements", label: "Thông báo hệ thống", icon: "bell", href: "/quan-tri/thong-bao" },
     { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
@@ -88,6 +91,8 @@ export function AppShell({ children, user, isAdmin = false }) {
   const bottomItems = BOTTOM.filter(it => !isPendingRoute(it.href));
   const adminBottomItems = visible(ADMIN_NAV_ONLY).flatMap(group => group.items);
 
+  const searchPages = navList.flatMap(group => group.items).filter(item => item.href);
+
   const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
   if (pathname === '/bat-dau' || pathname === '/hoc-phien') {
@@ -102,6 +107,7 @@ export function AppShell({ children, user, isAdmin = false }) {
           <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
+        <GlobalSearch pages={searchPages} />
         <div className="header-actions"><SoundToggle /><ThemeToggle />
           {user && <NotificationBell key={user.id} userId={user.id} />}
           {user && (

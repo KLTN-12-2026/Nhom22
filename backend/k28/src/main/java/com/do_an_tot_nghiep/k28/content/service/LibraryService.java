@@ -8,6 +8,7 @@ import com.do_an_tot_nghiep.k28.content.dto.LibraryCardQuery;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckDetailResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckQuery;
+import com.do_an_tot_nghiep.k28.content.dto.BanSaoResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryHighlightsResponse;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
@@ -49,6 +50,7 @@ public class LibraryService {
     private static final int HIGHLIGHT_LIMIT = 5;
 
     private final BoTheRepository decks;
+    private final CopyInfoService copyInfo;
     private final TheTuVungRepository cards;
     private final ChuDeRepository topics;
     private final AccountService accounts;
@@ -67,7 +69,8 @@ public class LibraryService {
                         request.topicId(),
                         request.trinhDo(),
                         request.mucTieu(),
-                        request.nguon()
+                        request.nguon(),
+                        request.ownerId()
                 ).and(
                         LibraryDeckSpecifications.ordered(request.sort())
                 );
@@ -119,10 +122,11 @@ public class LibraryService {
                 List.of(deck.getChuSoHuuId())
         ).get(deck.getChuSoHuuId());
 
-        return mapper.toResponse(deck, topicName, authorName, cardCount);
+        return mapper.toResponse(deck, topicName, authorName, cardCount,
+                copyInfo.origins(List.of(deck)).get(deck.getId()));
     }
 
-    private PageResponse<LibraryCardResponse> cardResponses(
+    PageResponse<LibraryCardResponse> cardResponses(
             Page<TheTuVung> result
     ) {
         List<Long> cardIds = result.getContent().stream()
@@ -225,6 +229,10 @@ public class LibraryService {
                 .toList();
     }
 
+    public PageResponse<LibraryDeckResponse> summaries(Page<BoThe> result) {
+        return responses(result);
+    }
+
     private PageResponse<LibraryDeckResponse> responses(
             Page<BoThe> result
     ) {
@@ -266,6 +274,7 @@ public class LibraryService {
 
         Map<Long, String> authorNames =
                 accounts.publicDisplayNames(ownerIds);
+        Map<Long, BanSaoResponse> origins = copyInfo.origins(content);
 
         return deck -> mapper.toResponse(
                 deck,
@@ -273,7 +282,8 @@ public class LibraryService {
                         ? null
                         : topicNames.get(deck.getChuDeId()),
                 authorNames.get(deck.getChuSoHuuId()),
-                cardCounts.getOrDefault(deck.getId(), 0L)
+                cardCounts.getOrDefault(deck.getId(), 0L),
+                origins.get(deck.getId())
         );
     }
 }

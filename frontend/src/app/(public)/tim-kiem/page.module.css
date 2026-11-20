@@ -1,0 +1,154 @@
+.form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: var(--sp-4);
+}
+
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected="false"] {
+  color: var(--ink-2);
+}
+
+.count {
+  min-width: 1.5rem;
+  padding: 0 var(--sp-2);
+  border-radius: 999px;
+  background: var(--primary-tint);
+  color: var(--primary-strong);
+  font-size: var(--fs-caption);
+  text-align: center;
+}
+
+.panel {
+  min-width: 0;
+}
+
+.sections {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.section {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.sectionHead h2 {
+  margin: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: var(--rule) solid var(--line-2);
+  border-radius: var(--radius-control);
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.chip:hover {
+  border-color: var(--primary);
+  background: var(--primary-tint);
+}
+
+.cardRow .answer-main,
+.authorRow .answer-main {
+  min-width: 0;
+}
+
+.word {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.word a {
+  color: var(--ink);
+  font-family: var(--font-word);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.word a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.ipa {
+  color: var(--ink-3);
+  font-size: var(--fs-small);
+}
+
+.meaning {
+  margin: var(--sp-1) 0;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.authorRow {
+  align-items: center;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font-form);
+  font-weight: 700;
+}
+
+@media (max-width: 479px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+}

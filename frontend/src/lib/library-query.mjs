@@ -1,6 +1,6 @@
 export function libraryQuery(params = {}) {
   const query = new URLSearchParams();
-  for (const key of ['q', 'chuDeId', 'trinhDo', 'mucTieu', 'nguon', 'sort', 'page', 'size']) {
+  for (const key of ['q', 'chuDeId', 'chuSoHuuId', 'trinhDo', 'mucTieu', 'nguon', 'sort', 'page', 'size']) {
     const value = params[key];
     if (value !== undefined && value !== null && String(value).trim() !== '') {
       query.set(key, String(value).trim());

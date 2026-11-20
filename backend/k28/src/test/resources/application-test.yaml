@@ -24,6 +24,9 @@ app:
     provider: fake
   reminders:
     enabled: false
+  publish-requests:
+    expiry-job:
+      enabled: false
   billing:
     provider: fake
     enforce: false
