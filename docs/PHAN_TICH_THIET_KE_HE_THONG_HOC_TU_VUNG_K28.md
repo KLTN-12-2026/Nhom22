@@ -157,7 +157,7 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xử lý báo cáo đầu ra AI sai, đánh dấu để cải thiện cấu hình.
 - Quản lý hạn mức AI/phát âm và cấu hình dịch vụ qua thông tin không chứa khóa bí mật.
 - Theo dõi lượt sử dụng và tỷ lệ lỗi dịch vụ (Đợt 3 gọn; thời gian phản hồi và chi phí là hướng phát triển, cắt 07/11/2026).
-- Theo dõi nhắc học (hệ thống gửi theo cài đặt người dùng). Thông báo hệ thống do Admin soạn (tiêu đề, nội dung, mức độ, khoảng hiệu lực; hiện ở đầu trang Hôm nay, không gửi email) được khôi phục dạng gọn ngày 20/11/2026 (B3.13); quản lý huy hiệu/thử thách vẫn là hướng phát triển (cắt 07/11/2026); Đợt 3 dùng huy hiệu và thử thách tuần cố định bằng migration.
+- Theo dõi nhắc học (hệ thống gửi theo cài đặt người dùng). Thông báo hệ thống do Admin soạn và quản lý huy hiệu/thử thách là hướng phát triển (cắt 07/11/2026); Đợt 3 dùng huy hiệu và thử thách tuần cố định bằng migration.
 - Xem số liệu tài khoản, nội dung, học tập qua các màn quản trị hiện có; trang thống kê tổng hợp của Admin là hướng phát triển (cắt 07/11/2026). Riêng thống kê doanh thu theo tháng/quý/năm **có làm** (UI58, góp ý GVHD 10/11/2026, FR-15).
 - Xem nhật ký thao tác quản trị và lượt dùng/lỗi dịch vụ; màn tác vụ nền và theo dõi yêu cầu xóa dữ liệu là hướng phát triển (cắt 07/11/2026, theo dõi qua nhật ký).
 - Theo dõi sao lưu, kết quả phục hồi thử nghiệm và tiến độ xóa dữ liệu.
@@ -523,7 +523,7 @@ Triển khai B3.9 (16/11/2026, đề xuất): `GET /statistics/weekly-summary?ng
 | Động lực | Huy hiệu, thử thách, điểm, lịch sử thưởng |
 | Cá nhân | Hồ sơ, mục tiêu, bảo mật, thông báo, dữ liệu và xóa tài khoản |
 | Gói & thanh toán (FR-15) | UI55 chọn gói, chu kỳ, chuyển sang cổng; UI56 lịch sử giao dịch, biên nhận; UI57 kết quả thanh toán |
-| Quản trị | Tài khoản, chủ đề, nội dung mẫu, báo cáo, dịch vụ/hạn mức, quản lý thanh toán (UI59), doanh thu tháng/quý/năm (UI58), nhật ký. thông báo hệ thống (UI52, khôi phục dạng gọn 20/11/2026). Cắt khỏi Đợt 3 (07/11/2026): tổng quan (UI46), tab tác vụ nền (UI53), huy hiệu/thử thách (UI54) |
+| Quản trị | Tài khoản, chủ đề, nội dung mẫu, báo cáo, dịch vụ/hạn mức, quản lý thanh toán (UI59), doanh thu tháng/quý/năm (UI58), nhật ký. Cắt khỏi Đợt 3 (07/11/2026): tổng quan (UI46), thông báo hệ thống (UI52), tab tác vụ nền (UI53), huy hiệu/thử thách (UI54) |
 
 ## 11. Kiến trúc hệ thống
 
@@ -691,7 +691,7 @@ erDiagram
 |---|---|
 | Xác thực | `POST /auth/register`, `/auth/verify-email`, `/auth/resend-verification`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password`; `GET /auth/google/start`, `/auth/google/callback`, `GET /auth/csrf` |
 | Hồ sơ | `GET/PATCH /me`, `PUT /me/password`, `GET/PUT /me/learning-settings`, `GET/PUT /me/notification-settings`, `GET/PUT/DELETE /me/avatar`, `POST /me/deletion-requests` (B3.10, 16/11/2026) |
-| Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai. B3.13 (20/11/2026): `GET /library/highlights` (guest) — top 5 bộ công khai theo lượt yêu thích 7 ngày và mọi lúc, top 5 người đóng góp 7 ngày |
+| Thư viện — B1.10 đã triển khai | `GET /library/decks`, `GET /library/decks/{id}`, `GET /library/decks/{id}/cards/{cardId}/files/{role}`; cả ba cho guest, media chỉ cho thẻ/tệp hợp lệ của bộ công khai |
 | Bộ/thẻ | `GET/POST /decks` (`GET /decks?yeuThich=true`: bộ đã yêu thích gồm bộ của mình và bộ công khai `BINH_THUONG` chưa xóa của người khác, RS-056),  `GET/PATCH/DELETE /decks/{id}`, `POST /decks/{id}/copy`, `PUT/DELETE /decks/{id}/favorite`, `GET/POST /decks/{id}/cards`, `PATCH/DELETE /cards/{id}`, `GET /decks/{id}/cards/{cardId}/files/{role}` (media thẻ của chủ bộ) |
 | Danh mục công khai (B1.7, B1.9) | `GET /public/topics`, `GET /public/tags`; quản trị: CRUD `/admin/topics`, `/admin/tags` |
 | CSV/tệp | `POST /decks/{id}/imports/preview`, `POST /imports/{id}/commit`, `GET /decks/{id}/export`, `POST /files/upload-requests`, `POST /files/{id}/complete`, `GET/DELETE /files/{id}` |

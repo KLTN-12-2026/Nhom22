@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon, ErrorState } from '@/components/ui';
-import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/DashboardHighlights';
 import styles from './page.module.css';
 
 const MINUTE_OPTIONS = [5, 10, 20];
@@ -130,62 +129,15 @@ function ResumeBlock({ session, onFinish, finishing, finishError }) {
   );
 }
 
-const dayLabel = (i, ngay) => (i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : fmtDay(ngay));
-
-function RescueSplit({ rescue, active, setActive, refreshing }) {
-  const total = rescue.soTheCanOn || 0;
-  const shown = rescue.keHoach.reduce((a, d) => a + d.soThe, 0);
-  const rest = Math.max(0, total - shown);
-  const restDays = Math.max(0, rescue.soNgay - rescue.keHoach.length);
-  return (
-    <div className={styles.split} aria-busy={refreshing}>
-      <p className={styles.equation} aria-label={`${total} thẻ cần ôn, mỗi ngày khoảng ${rescue.luotMoiNgay} thẻ trong ${rescue.phutMoiNgay} phút, chia thành ${rescue.soNgay} ngày`}>
-        <span className={styles.term}><b>{total}</b><small>thẻ cần ôn</small></span>
-        <span className={styles.op} aria-hidden="true">÷</span>
-        <span className={styles.term}><b>{rescue.luotMoiNgay}</b><small>thẻ mỗi ngày · {rescue.phutMoiNgay} phút</small></span>
-        <span className={styles.op} aria-hidden="true">=</span>
-        <span className={`${styles.term} ${styles.result}`}><b>{rescue.soNgay}</b><small>ngày là xong</small></span>
-      </p>
-      <div className={styles.bar} role="list" aria-label="Chia thẻ theo ngày">
-        {rescue.keHoach.map((d, i) => (
-          <button
-            key={d.ngay}
-            type="button"
-            role="listitem"
-            className={styles.seg}
-            data-day={i % 2}
-            data-active={active === i ? '' : undefined}
-            style={{ flexGrow: d.soThe }}
-            onMouseEnter={() => setActive(i)}
-            onMouseLeave={() => setActive(null)}
-            onFocus={() => setActive(i)}
-            onBlur={() => setActive(null)}
-            aria-label={`${dayLabel(i, d.ngay)}: ${d.soThe} thẻ, khoảng ${d.phut} phút`}
-          >
-            <span className={styles.segDay}>{dayLabel(i, d.ngay)}</span>
-            <span className={styles.segN}>{d.soThe} thẻ</span>
-          </button>
-        ))}
-        {rest > 0 && (
-          <span role="listitem" className={`${styles.seg} ${styles.segRest}`} style={{ flexGrow: rest }}>
-            <span className={styles.segDay}>{restDays} ngày sau</span>
-            <span className={styles.segN}>{rest} thẻ</span>
-          </span>
-        )}
-      </div>
-      <p className="small muted">Mỗi ngày ôn một đoạn. Đổi số phút bên dưới để xem kế hoạch dài hay ngắn lại; {rescue.soQuaHan} thẻ đang quá hạn được ôn trước.</p>
-    </div>
-  );
-}
-
 function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pauseNew, setPauseNew, onStart, starting, startError, refreshing }) {
   const [dir, setDir] = useState('EN_VI');
-  const [active, setActive] = useState(null);
   const current = rescueMinutes ?? rescue.phutMoiNgay;
   return (
     <section className={styles.rescue} aria-labelledby="rescue-title">
       <h2 id="rescue-title" style={{ fontSize: 'var(--fs-h3)' }}>Kế hoạch học lại sau thời gian nghỉ</h2>
-      <RescueSplit rescue={rescue} active={active} setActive={setActive} refreshing={refreshing} />
+      <p className={styles.rescueLead}>
+        Có <strong>{rescue.soTheCanOn}</strong> thẻ cần ôn ({rescue.soQuaHan} quá hạn); hôm nay bạn có <strong>{rescue.phutMoiNgay}</strong> phút. Chia thành {rescue.soNgay} ngày là vừa sức.
+      </p>
       <form className="stack" onSubmit={(e) => e.preventDefault()}>
         <fieldset className="fieldset">
           <legend>Mỗi ngày bạn dành được bao nhiêu phút?</legend>
@@ -226,10 +178,10 @@ function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pau
       <div aria-live="polite" aria-busy={refreshing}>
         <ol className={`answer-list ${styles.planList}`} role="list">
           {rescue.keHoach.map((d, i) => (
-            <li key={d.ngay} className="answer-row" data-active={active === i ? '' : undefined} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(null)}>
+            <li key={d.ngay} className="answer-row">
               <span className="answer-no">{i + 1}</span>
               <div className="answer-main">
-                <span className="answer-title">{dayLabel(i, d.ngay)}</span>
+                <span className="answer-title">{i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : fmtDay(d.ngay)}</span>
                 <span className="answer-meta"><span>{d.ngay.split('-').reverse().join('/')}</span></span>
               </div>
               <span className={styles.when}>{d.soThe} thẻ, khoảng {d.phut} phút</span>
@@ -330,13 +282,11 @@ export default function TodayPage() {
       )}
 
       {!isLoading && plan?.tongSoThe === 0 && (
-        <>
         <section className="sheet" data-when="empty" aria-labelledby="empty-title">
           <div className="form-head">
             <div className="form-code"><span>Hôm nay</span><span>{todayStr}</span></div>
             <h1 id="empty-title">Hôm nay học gì?</h1>
           </div>
-          <AnnouncementBanner />
           <div className="empty">
             <div className="empty-sheet" aria-hidden="true">
               <span data-n="1"><i></i><i></i><i></i><i></i></span>
@@ -351,8 +301,6 @@ export default function TodayPage() {
             </div>
           </div>
         </section>
-        <CommunitySection />
-        </>
       )}
 
       {!isLoading && plan?.tongSoThe > 0 && (
@@ -369,8 +317,6 @@ export default function TodayPage() {
                     : `Có ${(plan.soQuaHan || 0) + (plan.soDenHan || 0)} thẻ cần ôn và ${plan.soMoiConLai || 0} từ mới, cần khoảng ${plan.uocTinhPhut || 0} phút (ước tính).`}
               </p>
             </div>
-
-            <AnnouncementBanner />
 
             <ResumeBlock
               session={plan.phienDangDo}
@@ -526,7 +472,7 @@ export default function TodayPage() {
               <section className="panel" aria-labelledby="decks-title">
                 <h2 className="panel-title" id="decks-title">Theo bộ thẻ</h2>
                 <ul className={styles.deckMini} role="list">
-                  {plan.boThe.slice(0, 3).map((b) => (
+                  {plan.boThe.map((b) => (
                     <li key={b.boTheId}>
                       <span className={styles.name}>{b.ten}</span>
                       <span className={styles.meta}>
@@ -540,15 +486,14 @@ export default function TodayPage() {
                     </li>
                   ))}
                 </ul>
-                {plan.boThe.length > 3 && (
-                  <Link className="btn btn-quiet" href="/bo-the" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem tất cả {plan.boThe.length} bộ</Link>
-                )}
               </section>
             )}
 
+            <nav className={`panel ${styles.links}`} aria-label="Liên kết nhanh">
+              <Link className="btn btn-quiet" href="/thong-ke">Xem thống kê học tập</Link>
+              <Link className="btn btn-quiet" href="/bo-the">Bộ của tôi</Link>
+            </nav>
           </aside>
-
-          <CommunitySection />
         </>
       )}
     </div>
