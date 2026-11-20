@@ -609,6 +609,27 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Bổ sung 21/11/2026 (khi làm FE):** `GET /publish-requests/{id}/cards` và `GET /admin/publish-requests/{id}/cards` cho người duyệt xem thẻ của bản sao riêng tư. Toàn bộ `mvnw test` 566/566 pass trước bổ sung; sau bổ sung `FR04PublishRequestTest` + `FR04LibraryTest` 27/27 pass. Trình duyệt thật (BE 8080 dev + FE 3000): sao chép, 409, huy hiệu, khóa công khai trong form, gửi yêu cầu, Admin xem thẻ/duyệt/thu hồi đều chạy (chi tiết ở luồng).
 - **Còn lại để tick:** Postman (connector chưa xác thực), mockup UI60/UI61. Luồng: [B3.14](../docs/luong-backend/B3.14-gioi-han-sao-chep-duyet-cong-khai.md). FE: F3.14.
 
+### [ ] B3.15 Bảng điều khiển quản trị — FR-13, UI46 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
+- API: `GET /api/v1/admin/dashboard?soNgay=7|30|90` (mặc định 7, khác → 400; người học → 403). Chỉ đọc, không migration. Múi giờ nghiệp vụ = `QuotaService.zone()` (Asia/Ho_Chi_Minh); kỳ trước cùng độ dài để so sánh.
+- Nguồn: `nguoi_dung` (+ vai trò ADMIN), `su_dung_hoc_ngay` (người học, lượt ôn hợp lệ theo ngày), `lich_su_on` (tỷ lệ nhớ = NHO+DE / tổng; bộ mẫu học nhiều gộp bản sao theo `bo_nguon_id`), `giao_dich_thanh_toan` `THANH_CONG` theo `hoan_tat_at` (12 tháng), `dang_ky_goi` `HIEU_LUC` còn hạn, hàng đợi (`yeu_cau_cong_khai` CHO_DUYET người duyệt ADMIN, `bao_cao_noi_dung` CHO_XU_LY, thuê bao hết hạn ≤ 7 ngày, giao dịch chờ > 15 phút, chưa xác thực > 48 giờ, `tac_vu_nen` lỗi 24 giờ); tái dùng `AdminServiceOpsService.usage` (hôm nay) và `AuditService.page` (6 dòng); Redis `PING`.
+- **Đã làm 21/11/2026:** `AdminDashboardController`, `AdminDashboardService`, `AdminDashboardRepository` (SQL tổng hợp chỉ đọc qua `NamedParameterJdbcTemplate` trong module admin), `AdminDashboardResponse`.
+- **Kiểm chứng 21/11/2026:** `FR13DashboardTest` 2/2 (403/400; cộng 1 người dùng, 9 lượt ôn, 299.000 đ doanh thu, 1 giao dịch treo đúng chênh lệch). HTTP thật trên BE dev 8081 với `admin@vocab.local`: 200 trong ~0,23 s, số liệu khớp seed. FE: F3.15 (B).
+- **Còn lại để tick:** Postman.
+
+### [ ] B3.16 Hồ sơ người dùng cho quản trị — FR-13 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
+- API: `GET /api/v1/admin/users/{id}` (ADMIN; người học → 403; không có hoặc là tài khoản hệ thống thư viện → 404). Chỉ đọc, không migration. Thêm bộ lọc `doiTuongId` cho `GET /admin/audit-logs` để xem nhật ký của một đối tượng.
+- Nội dung: thông tin tài khoản (+ `muiGio`, `emailXacThucAt`), học tập 30 ngày theo múi giờ người dùng (thẻ đã học, đến hạn, tạm ngưng, lượt ôn, tỷ lệ nhớ, số ngày học, chuỗi ngày qua `StreakService`, ngày học gần nhất, 30 điểm theo ngày), gói hiện tại + 10 gói gần nhất, thanh toán (tổng đã chi, thành công/thất bại, 10 giao dịch), dịch vụ AI/ảnh 30 ngày, 5 bộ thẻ cập nhật gần nhất, báo cáo đã gửi/bị báo cáo/chờ xử lý.
+- **Đã làm 21/11/2026:** `AdminUserController.detail`, `AdminUserDetailService`, `AdminUserDetailRepository` (SQL chỉ đọc), `AdminUserDetailResponse`; `AuditLogQuery.doiTuongId` + `NhatKyQuanTriRepository.search`.
+- **Kiểm chứng 21/11/2026:** `FR13UserDetailTest` 2/2 (403/404; 30 ngày, 2 ngày học, chuỗi 2, gói PRO, 299.000 đ, 1 thất bại; nhật ký lọc theo `doiTuongId` đúng 1 dòng khóa), `FR13AdminTest` 9/9 và `FR13DashboardTest` 2/2 vẫn đạt. HTTP thật trên BE dev 8081: 100/100 tài khoản trả 200, id lạ 404. FE: F3.15 (D).
+- **Còn lại để tick:** Postman.
+
+### [ ] B3.17 Lịch hoạt động năm (kiểu GitHub) — FR-11, UI35 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
+- Phạm vi (người dùng chốt 21/11/2026): lưới 53 tuần trên `/thong-ke`, chỉ số mặc định lượt ôn, tự chọn luyện tập / phút học / đóng góp công khai. Không đổi giới hạn 90 ngày của `/statistics/overview`.
+- API: `GET /statistics/activity?denNgay=` (mặc định hôm nay theo múi giờ người học; ngày tương lai hoặc sai dạng → 400 `denNgay`). `tuNgay` = Thứ Hai của tuần cách `denNgay` 52 tuần. Trả `{muiGio, tuNgay, denNgay, theoNgay[{ngay, soLuotOn, soCauLuyen, soPhut, soCongKhai}]}`; `soCongKhai` = yêu cầu công khai của người dùng được duyệt (`DA_DUYET`) theo ngày `xu_ly_at`; `soPhut` dùng chung `StudyTimeService` với `/overview`. Không có migration.
+- **Đã làm 21/11/2026:** `ActivityQuery`, `ActivityResponse`, `ActivityDayResponse`, `ActivityService`; `StatisticsRepository.reviewTimes`, `approvedPublishTimes`; `StatisticsController` thêm `/activity`.
+- **Kiểm chứng 21/11/2026:** `FR11StatisticsTest` 6/6 (thêm `activityHeatmapCoversFiftyThreeWeeksFromMondayInLocalDays`: 365 ngày từ Thứ Hai 20/10/2025, ranh giới ngày Asia/Ho_Chi_Minh, chỉ đếm yêu cầu `DA_DUYET` của chính người dùng, 400 ngày tương lai/sai dạng, 401 chưa đăng nhập). FE: F3.17.
+- **Còn lại để tick:** Postman.
+
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
 
 ### [x] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24

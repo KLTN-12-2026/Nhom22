@@ -220,6 +220,7 @@ frontend/
 ### [ ] F3.8 Báo cáo & kiểm duyệt — UI45, UI50 ← B3.8
 - Hộp báo cáo (lý do + mô tả) trên bộ/thẻ/đầu ra AI; hàng đợi xử lý: giữ/ẩn kèm lý do.
 - **Gọn** (S9).
+- **Đã làm UI50 (21/11/2026, F3.15 E):** `/quan-tri/bao-cao`: tab Chờ xử lý/Đã giữ/Đã ẩn/Tất cả (lọc qua URL), lọc loại nội dung, bảng + phân trang, ngăn chi tiết (bản chụp `noiDung`, mô tả, link nội dung hiện tại), form giữ/ẩn + lý do 10–500, 409 → tải lại; số chờ xử lý trên menu. Kiểm với BE 8080 thật: 4 báo cáo, mở ngăn, kiểm lỗi nhập (không gửi quyết định). **Còn:** UI45 hộp báo cáo phía người học, nên chưa tick.
 
 ### [ ] F3.9 Tổng kết tuần & bản đồ làm chủ — UI36, UI37 ← B3.9, B2.10
 - Màu không phải dấu hiệu duy nhất; không tô xanh khi mới đúng một lần.
@@ -230,9 +231,10 @@ frontend/
 - Xác nhận hai bước, hiển thị trạng thái xử lý.
 - **Gọn** (S9).
 
-### [ ] F3.11 Quản trị vận hành — UI51 ← B3.11
+### [x] F3.11 Quản trị vận hành — UI51 ← B3.11
 - Hạn mức và lượt dùng/lỗi theo dịch vụ.
-- **Gọn mạnh** (S9). **Cắt:** UI46 tổng quan, chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu.
+- **Gọn mạnh** (S9). **Cắt:** chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu. (UI46 khôi phục 21/11/2026 ở F3.15.)
+- **Đã làm 21/11/2026 (F3.15 E):** `/quan-tri/dich-vu`: bảng lượt dùng (hôm nay/7/30/90 ngày; đang giữ, người dùng, lỗi, chưa rõ, tỷ lệ lỗi; TTS/phát âm "Không ghi nhận"), bảng hạn mức gói × dịch vụ sửa tại chỗ (0–10.000, đánh dấu ô đổi, Hoàn tác), lý do bắt buộc, gửi chỉ ô đổi kèm `version`, 409 → tải lại; link lịch sử `nhat-ky?loai=HAN_MUC_DICH_VU`. `src/lib/admin-ops.mjs` + `tests/admin-ops.test.mjs` (9 test). Kiểm với BE 8080 thật: số liệu khớp, kiểm lỗi ô/lý do, 375px không tràn; không bấm lưu để giữ dữ liệu dev.
 
 ### [ ] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
 - Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng. **15/11/2026:** đã bỏ khỏi mockup và FE mọi mục ở dòng "Bỏ khỏi giao diện" dưới đây, cùng "Hủy gói", "Đổi gói" và tạo hóa đơn ở trình duyệt; giá/quyền lợi theo TK §6.9; nút "Thanh toán qua VNPay" còn mô phỏng; UI56 có "Gia hạn gói" và trạng thái `THANH_CONG`/`THAT_BAI`/`HET_HAN`. Kiểm chứng: lint hai trang sạch, `npm run build` pass, `npm test` 53/53, xem trên trình duyệt 1280/390 px cả theme sáng và tối. Chưa nối API (chờ B3.12a/B3.12b).
@@ -256,6 +258,18 @@ frontend/
 - Huy hiệu "Bản sao" nổi bật + dòng "Gốc: <tên>" có link (hoặc "Bộ gốc không còn công khai") trên `/bo-cua-toi`, chi tiết bộ, thẻ thư viện và kết quả tìm kiếm; đọc `banSao`.
 - Bản sao: ô quyền truy cập không cho chọn công khai trực tiếp; nút "Xin công khai" (lời nhắn tùy chọn), trạng thái `yeuCauCongKhai` (chờ, đã duyệt, bị từ chối kèm lý do và thời điểm gửi lại, hết hạn), nút rút yêu cầu.
 - UI60 `/yeu-cau-cong-khai` cho tác giả, UI61 `/quan-tri/duyet-cong-khai` cho Admin: danh sách lọc trạng thái, xem bản sao, duyệt/từ chối/thu hồi kèm lý do, 409 tải lại. Thông báo `YEU_CAU_CONG_KHAI`/`KET_QUA_CONG_KHAI` mở đúng trang.
+
+### [ ] F3.15 Admin Console — khung riêng, bảng điều khiển, bảng dữ liệu chung (yêu cầu 21/11/2026; demo duyệt `mockups/_previews/quan-tri-2026-11-21.html`)
+- Thứ tự: A khung → B bảng điều khiển `/quan-tri` (cần BE `GET /admin/dashboard`, khôi phục UI46) → E trang UI50 `/quan-tri/bao-cao`, UI51 `/quan-tri/dich-vu` → C bảng dữ liệu dùng chung → D ngăn chi tiết người dùng (cần BE `GET /admin/users/{id}`).
+- **Đã làm D (21/11/2026):** ngăn hồ sơ người dùng `src/components/admin/UserDetailDrawer.js` mở khi bấm một dòng ở Tài khoản (URL `?nguoi={id}`, chia sẻ được): đầu ngăn có avatar, trạng thái, nút khóa/mở khóa/cấp/thu quyền (cùng hộp xác nhận có lý do); 4 tab Tổng quan (mục cần chú ý: bị khóa, chưa xác thực, báo cáo chờ xử lý, gói sắp hết hạn, giao dịch thất bại, lâu không học; 4 chỉ số; thông tin tài khoản và kiểm duyệt), Học tập (lưới nhiệt 30 ngày, thẻ đến hạn, 5 bộ thẻ gần nhất, dịch vụ AI), Thanh toán (giao dịch, lịch sử gói), Nhật ký (dòng thời gian theo `doiTuongId`, phân trang). `src/lib/admin-user-detail.mjs` + `tests/admin-user-detail.test.mjs` (5 test). API: B3.16. Kiểm chứng: `npm test` 97/97, eslint 0 lỗi; trình duyệt với API thật: 3 tài khoản (có học, có gói/thanh toán, đang xóa có nhật ký), 4 tab, nút Khóa mở hộp lý do rồi Hủy (không đổi dữ liệu), ngăn 548px không tràn ngang.
+- **Đã làm C (21/11/2026):** `src/components/admin/AdminTable.js` (cột khai báo, sắp xếp trong trang, chọn nhiều + thao tác hàng loạt, mở dòng xem chi tiết, bấm dòng, trạng thái tải/lỗi/trống, phân trang, xuất CSV toàn bộ kết quả lọc), `AdminConfirm.js` (hộp xác nhận có lý do 10–500, thay mọi `window.prompt/confirm/alert` trong khu quản trị — đóng FE-16 cho Admin), `AdminPageHead.js`; `src/lib/admin-table.mjs` + `tests/admin-table.test.mjs` (7 test). Viết lại theo bảng chung: Tài khoản (lọc qua URL, khóa/mở khóa hàng loạt, xuất CSV mọi trang), Nhật ký (đủ 27 hành động/8 loại đối tượng, mở dòng xem trước/sau, xuất CSV), Thông báo, Chủ đề & nhãn, Bộ mẫu (danh sách + thẻ, xuất CSV thẻ), Thanh toán (2 bảng), Báo cáo. Xóa `quan-tri/chu-de/page.module.css` không còn dùng. Duyệt công khai giữ `PublishRequestReview` dùng chung với trang người học (chỉ đổi theo token). Kiểm chứng: `npm test` 92/92, eslint 0 lỗi; trình duyệt với BE 8080: 8 trang tải đúng dữ liệu, chọn nhiều + hộp lý do (bấm Hủy, không đổi dữ liệu), sắp xếp, mở chi tiết nhật ký; 1440px và 375px không tràn ngang.
+- **Đã làm E (21/11/2026):** UI50 `/quan-tri/bao-cao` (xem F3.8) và UI51 `/quan-tri/dich-vu` (xem F3.11); menu thêm "Báo cáo vi phạm" (số chờ, màu đỏ) và "Dịch vụ & hạn mức"; hàng đợi bảng điều khiển trỏ tới trang báo cáo; lớp class dùng chung `adm-*` trong `admin.css` (thẻ, nút, bảng, nhãn, ô nhập, ngăn chi tiết). `npm test` 85/85, eslint 0 lỗi.
+- **Đã làm B (21/11/2026):** `/quan-tri` thành bảng điều khiển (thay chuyển hướng): 6 chỉ số có so sánh kỳ trước + sparkline, biểu đồ hoạt động học (người học + lượt ôn hai trục), hàng đợi cần xử lý có link, doanh thu 12 tháng, vòng cơ cấu gói, dịch vụ hôm nay, bộ mẫu học nhiều, nhật ký gần đây, người dùng mới, tình trạng hệ thống; chọn 7/30/90 ngày, tự làm mới 60 giây. `src/lib/admin-dashboard.mjs` + `tests/admin-dashboard.test.mjs` (7 test); menu thêm nhóm "Tổng quan". Kiểm chứng: `npm test` 76/76, eslint 0 lỗi; trình duyệt với dữ liệu thật lấy từ BE mới (8081) nạp vào trang vì BE 8080 đang chạy bản cũ; 1440px và 375px không tràn ngang, sáng/tối.
+- **Đã làm A (21/11/2026):** `AdminShell` tách khỏi `AppShell` (sidebar tối 5 nhóm, breadcrumb, nhãn môi trường, số yêu cầu chờ duyệt, ngăn menu di động); `src/styles/admin.css` đổi token trong phạm vi `.adm` (Inter + JetBrains Mono, slate/chàm, sáng/tối) nên 8 trang quản trị cũ đổi phong cách mà không sửa trang; `(app)/layout.js` chọn shell theo `/quan-tri`; `/quan-tri` chuyển sang `/quan-tri/tai-khoan`; thêm "Doanh thu" vào menu; ẩn linh vật trong khu quản trị. Kiểm chứng: eslint 0 lỗi, trình duyệt thật với BE 8080 (tài khoản, bộ mẫu, doanh thu, nhật ký; sáng/tối; 375px không tràn ngang).
+
+### [x] F3.17 Lịch hoạt động năm trên Thống kê — UI35 ← B3.17 (yêu cầu 21/11/2026)
+- **Đã làm 21/11/2026:** `src/lib/activity-heatmap.mjs` (+ `tests/activity-heatmap.test.mjs`), `components/stats/ActivityHeatmap.js` đặt đầu `/thong-ke`. Lưới 7 hàng (T2…CN) × 53 cột, nhãn tháng, 5 mức màu theo tứ phân vị giá trị khác 0 của chính người dùng, màu theo chỉ số (lượt ôn vàng, luyện tập xanh dương, phút học xanh lá, công khai tím — cùng màu icon sidebar), tooltip ngày, tổng năm, số ngày có hoạt động, chuỗi dài nhất/hiện tại (hôm nay chưa học không làm đứt chuỗi). Chỉ số chọn lưu `localStorage`. Màn hẹp cuộn ngang, nhãn thứ dính trái, tự cuộn tới tuần mới nhất.
+- **Kiểm chứng 21/11/2026:** `node --test tests/activity-heatmap.test.mjs` 4/4; trình duyệt thật `/thong-ke` (BE 8080) sáng/tối, tooltip, đổi chỉ số.
 
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 

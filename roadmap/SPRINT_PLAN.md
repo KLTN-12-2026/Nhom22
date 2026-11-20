@@ -159,6 +159,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B3.11 Quản trị vận hành (gọn mạnh) | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
 | B3.12b Lịch sử giao dịch, nhắc/hết hạn gói, áp quyền lợi | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`; job nhắc 7 ngày + hết hạn | F3.12 | UI56 `/thanh-toan-lich-su`, banner hết hạn trong `AppShell`, UI44 thông báo |
 | B3.14 Giới hạn sao chép & duyệt công khai bản sao (21/11) | `POST /decks/{id}/copy` (409/422 mới), `POST /decks/{id}/publish-requests`, `DELETE /publish-requests/{id}`, `GET /me/publish-requests`, `POST /publish-requests/{id}/decision`, `GET /admin/publish-requests`, `POST /admin/publish-requests/{id}/decision` | F3.14 | UI14, UI03, UI60 `/yeu-cau-cong-khai`, UI61 `/quan-tri/duyet-cong-khai` |
+| B3.17 Lịch hoạt động năm (21/11) | `GET /statistics/activity` | F3.17 | UI35 `/thong-ke` |
 | B3.12c Quản lý thanh toán & doanh thu (góp ý GVHD 10/11) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
 **Xong khi:** TC-14, TC-16, TC-17, TC-21…TC-24 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 + bước 9b (bắt buộc mua gói qua VNPay sandbox) + 9c (sửa hạn, nhắc hết hạn, khóa, doanh thu) trên dữ liệu minh họa.
@@ -254,7 +255,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI43 | Thông báo & giờ nhắc | `/ca-nhan/thong-bao` | L | S3 |
 | UI44 | Dữ liệu & xóa tài khoản | `/ca-nhan/du-lieu` | L | S9 |
 | UI45 | Báo cáo nội dung (hộp thoại) | trên UI03/UI15/UI29 | L | S9 |
-| UI46 | Quản trị — tổng quan | `/quan-tri` (giữ chuyển hướng sang `/quan-tri/chu-de`) | A | **Cắt** |
+| UI46 | Quản trị — bảng điều khiển (khôi phục 21/11/2026, B3.15) | `/quan-tri` | A | S9 |
 | UI47 | Quản trị — tài khoản & vai trò | `/quan-tri/tai-khoan` | A | S6 |
 | UI48 | Quản trị — chủ đề & nhãn | `/quan-tri/chu-de` | A | S4 |
 | UI49 | Quản trị — bộ/thẻ mẫu | `/quan-tri/bo-mau` | A | S6 |

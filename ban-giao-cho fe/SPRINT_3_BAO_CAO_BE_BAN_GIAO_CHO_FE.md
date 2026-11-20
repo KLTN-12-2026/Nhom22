@@ -40,6 +40,8 @@
 | B3.12b Lịch sử giao dịch, hết hạn gói, quyền lợi | 🟡 Code xong 16/11 (test pass); HTTP thật lịch sử + biên nhận pass 16/11; Postman đồng bộ 16/11; mockup UI56 đúng DTO 16/11; chưa chạy job hết hạn trên dev | F3.12 UI56, banner `AppShell`, UI44, UI49 | Nối API thật (mục 5.10); bắt 422 `details.quyenLoi` |
 | B3.12c Quản lý thanh toán, doanh thu | 🟡 Code xong 16/11 (test pass); HTTP thật 6/8 API pass 16/11, 2 công cụ demo chưa (server tắt `BILLING_DEMO_TOOLS`); Postman đồng bộ 16/11; mockup UI58–UI59 đúng DTO 16/11 | F3.13 UI58–UI59 | Nối API thật (mục 5.11) |
 | B3.14 Giới hạn sao chép & duyệt công khai bản sao (FR-04, TC-25, 21/11/2026) | 🟡 6 API mới + đổi `POST /decks/{id}/copy` (409/422 mới) và `PATCH /decks/{id}` (422 khi công khai bản sao); `V29__publish_requests.sql`; `DeckResponse`/`LibraryDeckResponse` thêm `banSao`, `DeckResponse` thêm `yeuCauCongKhai`; `FR04PublishRequestTest` 8/8 + hồi quy pass (21/11); chưa HTTP thật, Postman, mockup | F3.14 UI14, UI03, UI60, UI61 | Nối API thật (mục 5.16); huy hiệu "Bản sao" + link bộ gốc; nút "Xin công khai" thay ô công khai trên bản sao |
+| B3.15 Bảng điều khiển quản trị (FR-13, UI46, 21/11/2026) | 🟡 `GET /admin/dashboard?soNgay=7\|30\|90`, chỉ đọc, không migration; `FR13DashboardTest` 2/2; HTTP thật 200 trên BE dev; chưa Postman | F3.15 UI46 `/quan-tri` | FE đã nối (mục 5.17) |
+| B3.16 Hồ sơ người dùng cho quản trị (FR-13, 21/11/2026) | 🟡 `GET /admin/users/{id}`, `GET /admin/audit-logs?doiTuongId=`; chỉ đọc; `FR13UserDetailTest` 2/2; HTTP thật 200 trên BE dev; chưa Postman | F3.15 UI47 `/quan-tri/tai-khoan?nguoi={id}` | FE đã nối (mục 5.18) |
 
 **Chưa có:** không còn API Đợt 3 chưa code. Phần FE chưa nối API thật vẫn có thể dùng MSW với response ở mục 5. Tab "Tác vụ nền" UI53, UI46, UI52, UI54 đã cắt khỏi Đợt 3 ([KE_HOACH_CAT_DOT3](../docs/KE_HOACH_CAT_DOT3.md)).
 
@@ -505,6 +507,38 @@ Hợp đồng theo mã nguồn và `FR04PublishRequestTest` (21/11/2026); chưa 
 | `GET /api/v1/admin/publish-requests`, `POST /api/v1/admin/publish-requests/{id}/decision` | như trên | như trên | UI61 `/quan-tri/duyet-cong-khai` |
 
 `DeckResponse` thêm `banSao` (`null` hoặc `{boGocId, boGocTen, tacGiaGoc, boGocXemDuoc}`) và `yeuCauCongKhai` (yêu cầu gần nhất hoặc `null`); `LibraryDeckResponse` (danh sách, chi tiết, điểm nổi bật) thêm `banSao`. `boGocXemDuoc = false` → hiện "Bộ gốc không còn công khai", không có link. Thông báo mới: `YEU_CAU_CONG_KHAI` (`lienKet` `/yeu-cau-cong-khai`), `KET_QUA_CONG_KHAI` (`lienKet` `/bo-the/{id}`), `ngayDiaPhuong = null`.
+
+### 5.17 B3.15 — Bảng điều khiển quản trị (UI46)
+
+`GET /api/v1/admin/dashboard?soNgay=7|30|90` (ADMIN; khác 7/30/90 → 400 `VALIDATION_FAILED` field `soNgay`). Ngày theo `muiGio` (Asia/Ho_Chi_Minh), `theoNgay` đủ `soNgay` phần tử kể cả ngày trống, `doanhThuTheoThang` đủ 12 tháng (`thang` = `YYYY-MM`).
+
+| Khối | Trường |
+|---|---|
+| `chiSo` | `tongNguoiDung`, `dangHoatDong`, `biKhoa`, `chuaXacThuc`, `soQuanTri`, `nguoiDungMoi`/`nguoiDungMoiKyTruoc`, `hoatDongHomNay`/`hoatDongHomQua`, `nguoiHocTrongKy`, `luotOnTrongKy`/`luotOnKyTruoc`, `tyLeNho` (% hoặc null), `thueBaoHieuLuc`, `doanhThuThangNay`/`doanhThuThangTruoc` (VND) |
+| `theoNgay[]` | `ngay`, `dangKy`, `nguoiHoc`, `luotOn`, `tyLeNho` |
+| `doanhThuTheoThang[]` | `thang`, `doanhThu`, `soGiaoDich` |
+| `coCauGoi[]` | `goiMa`, `ten`, `soNguoi` (miễn phí = `dangHoatDong − thueBaoHieuLuc`, FE tự tính) |
+| `canXuLy` | `congKhaiChoDuyet`, `congKhaiCuNhatAt`, `baoCaoChoXuLy`, `thueBaoSapHetHan`, `giaoDichTreo`, `chuaXacThucQua48h`, `tacVuLoi24h` |
+| `boMauNoiBat[]` | `id`, `ten`, `soNguoiHoc`, `soLuotOn`, `tyLeNho` (gộp bản sao theo bộ gốc) |
+| `nguoiDungMoi[]` | `id`, `email`, `tenHienThi`, `trangThai`, `createdAt`, `goiMa` (null = miễn phí) |
+| `dichVuHomNay` | như `GET /admin/service-usage` cho hôm nay |
+| `nhatKyGanDay[]` | như phần tử `GET /admin/audit-logs` (6 dòng mới nhất) |
+| `heThong` | `csdl`, `redis` (`UP`/`DOWN`), `tacVuCho`, `tacVuLoi24h` |
+
+### 5.18 B3.16 — Hồ sơ người dùng (ngăn chi tiết ở UI47)
+
+`GET /api/v1/admin/users/{id}` (ADMIN; 404 `NOT_FOUND` khi không có). Nhật ký của người dùng: `GET /api/v1/admin/audit-logs?loai=NGUOI_DUNG&doiTuongId={id}` (phân trang như cũ).
+
+| Khối | Trường |
+|---|---|
+| gốc | `nguoiDung` (như phần tử `GET /admin/users`), `muiGio`, `emailXacThucAt` (null = chưa xác thực) |
+| `hocTap` | `soTheDaHoc`, `soTheDenHan`, `soTheTamNgung`, `luotOn` (30 ngày), `tyLeNho` (% hoặc null), `soNgayHoc`, `chuoiNgay`, `hocCuoiNgay`, `theoNgay[]` 30 phần tử `{ngay, luotOn, theMoi}` theo múi giờ người dùng |
+| `goiHienTai` | `{id, goiMa, tenGoi, trangThai, batDauAt, hetHanAt, huyAt}` hoặc null (miễn phí) |
+| `lichSuGoi[]` | như `goiHienTai`, 10 dòng mới nhất |
+| `thanhToan` | `tongDaChi` (VND), `soThanhCong`, `soThatBai`, `ganDay[]` 10 dòng `{id, maDon, goiMa, chuKy, soTien, trangThai, taoAt, hoanTatAt}` |
+| `dichVu[]` | `{loai: AI/ANH, soDung, chiPhi}` 30 ngày |
+| `boThe[]` | 5 bộ cập nhật gần nhất `{id, ten, quyenTruyCap, soThe, updatedAt}` |
+| `baoCao` | `daGui`, `biBaoCao`, `biBaoCaoChoXuLy` (báo cáo về bộ/thẻ của người này) |
 
 ## 6. Mã FE mẫu
 
