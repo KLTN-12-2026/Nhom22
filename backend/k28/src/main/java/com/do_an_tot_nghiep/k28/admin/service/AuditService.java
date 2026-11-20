@@ -68,7 +68,7 @@ public class AuditService {
         }
         Instant tu = tuNgay == null ? null : tuNgay.atStartOfDay(zone).toInstant();
         Instant den = denNgay == null ? null : denNgay.plusDays(1).atStartOfDay(zone).toInstant();
-        Page<NhatKyQuanTri> result = logs.search(query.hanhDong(), query.loai(), tu, den, likePattern(query.q()),
+        Page<NhatKyQuanTri> result = logs.search(query.hanhDong(), query.loai(), query.doiTuongId(), tu, den, likePattern(query.q()),
                 PageRequest.of(query.page(), query.size()));
         Map<Long, String> names = accounts.publicDisplayNames(
                 result.getContent().stream().map(NhatKyQuanTri::getNguoiThucHienId).distinct().toList());

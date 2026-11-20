@@ -1,30 +1,19 @@
 'use client';
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
-import { Button, ErrorState, Icon } from '@/components/ui';
+import { Button, ErrorState, Icon, useToast } from '@/components/ui';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminPageHead, Pill } from '@/components/admin/AdminPageHead';
+import { useAdminConfirm } from '@/components/admin/AdminConfirm';
+import { setParams } from '@/lib/admin-table.mjs';
 import { useMe } from '@/hooks/useMe';
 
 const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
-
-function DeckRules() {
-  return (
-    <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-      <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
-      <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-        <li>Bộ mới luôn ở trạng thái nháp, chỉ quản trị viên thấy.</li>
-        <li>Chỉ xuất bản được bộ có ít nhất một thẻ. Bộ đang xuất bản không xóa được thẻ cuối.</li>
-        <li>Chuyển về nháp, ẩn, hiện lại và xóa cần lý do, ghi vào nhật ký.</li>
-        <li>Ẩn bộ sẽ gỡ khỏi thư viện. Bản sao người học đã lưu vẫn giữ nguyên.</li>
-        <li>Nếu hai người cùng sửa một bộ, người lưu sau được báo tải lại để không ghi đè.</li>
-      </ul>
-    </section>
-  );
-}
 
 function DeckDialog({ deck, topics, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -172,338 +161,234 @@ function CardDialog({ card, deckId, onClose, onSave }) {
   );
 }
 
+function deckState(d) {
+  if (d.trangThaiKiemDuyet === 'DA_AN') return ['Đã ẩn', 'bad'];
+  return d.quyenTruyCap === 'CONG_KHAI' ? ['Đã xuất bản', 'ok'] : ['Bản nháp', 'mute'];
+}
+
+const DECK_TABS = [['', 'Tất cả'], ['BAN_NHAP', 'Bản nháp'], ['DA_XUAT_BAN', 'Đã xuất bản'], ['DA_AN', 'Đã ẩn']];
+const PAGE_SIZE = 20;
+
 function AdminDecksContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { confirm, dialog } = useAdminConfirm();
   const { data: me } = useMe();
 
   const id = searchParams.get('id');
-  const defaultQ = searchParams.get('q') || '';
-  const defaultStatus = searchParams.get('trangThai') || '';
-  const page = parseInt(searchParams.get('page') || '0', 10);
+  const q = searchParams.get('q') || '';
+  const trangThai = searchParams.get('trangThai') || '';
+  const page = Math.max(0, Number.parseInt(searchParams.get('page') || '0', 10) || 0);
+  const go = changes => router.replace(`${pathname}${setParams(searchParams, changes)}`, { scroll: false });
 
-  const [q, setQ] = useState(defaultQ);
-  const [trangThai, setTrangThai] = useState(defaultStatus);
+  const [search, setSearch] = useState(q);
   const [showDeckDialog, setShowDeckDialog] = useState(false);
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingCard, setEditingCard] = useState(null);
+  const [busy, setBusy] = useState(false);
 
-  const { data: topics } = useQuery({
-    queryKey: ['admin-topics'],
-    queryFn: () => fetchAllPages('/api/v1/admin/topics')
-  });
+  const { data: topics } = useQuery({ queryKey: ['admin-topics'], queryFn: () => fetchAllPages('/api/v1/admin/topics') });
 
-  const { data: listData, isLoading: listLoading, isError: listIsError, error: listError, refetch: refetchList } = useQuery({
-    queryKey: ['admin-decks', defaultQ, defaultStatus, page],
+  const list = useQuery({
+    queryKey: ['admin-decks', q, trangThai, page],
     queryFn: () => {
-      const params = new URLSearchParams();
-      if (defaultQ) params.set('q', defaultQ);
-      if (defaultStatus) params.set('trangThai', defaultStatus);
-      params.set('page', page.toString());
-      params.set('size', '20');
-      return apiFetch(`/api/v1/admin/decks?${params.toString()}`);
+      const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+      if (q) params.set('q', q);
+      if (trangThai) params.set('trangThai', trangThai);
+      return apiFetch(`/api/v1/admin/decks?${params}`);
     },
-    enabled: !id
+    enabled: !id,
+    placeholderData: previous => previous,
   });
+  const deck = useQuery({ queryKey: ['admin-deck', id], queryFn: () => apiFetch(`/api/v1/admin/decks/${id}`), enabled: !!id });
+  const cards = useQuery({ queryKey: ['admin-cards', id], queryFn: () => fetchAllPages(`/api/v1/admin/decks/${id}/cards`), enabled: !!id });
 
-  const { data: deckDetail, isLoading: deckLoading, isError: deckIsError, error: deckError, refetch: refetchDeck } = useQuery({
-    queryKey: ['admin-deck', id],
-    queryFn: () => apiFetch(`/api/v1/admin/decks/${id}`),
-    enabled: !!id
-  });
-
-  const { data: cards, isLoading: cardsLoading, isError: cardsIsError, error: cardsError, refetch: refetchCards } = useQuery({
-    queryKey: ['admin-cards', id],
-    queryFn: () => fetchAllPages(`/api/v1/admin/decks/${id}/cards`),
-    enabled: !!id
-  });
-
-  const actionMutation = useMutation({
-    mutationFn: ({ method, url, body }) => apiFetch(url, { method, body: body ? JSON.stringify(body) : undefined }),
-    onSuccess: (res, vars) => {
-      if (vars.url.includes('/admin/cards')) {
-        queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['admin-decks'] });
-        if (id) queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
-      }
-    },
-    onError: (err, vars) => {
-      if (err.status === 409 && vars.url.includes('/admin/cards')) queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
-      alert(err.message || 'Không thực hiện được thao tác. Hãy thử lại.');
-    }
-  });
-
-  const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
-    if (reason === undefined) return undefined;
-    if (reason.length < 10 || reason.length > 500) {
-      alert('Lý do cần từ 10 đến 500 ký tự.');
-      return undefined;
-    }
-    return reason;
-  };
-
-  const handleDeckAction = (act, d) => {
-    let method, url, body;
-    url = `/api/v1/admin/decks/${d.id}`;
-
-    if (act === 'publish') {
-      if (!window.confirm(`Xuất bản ${d.ten}?`)) return;
-      method = 'PATCH'; body = { quyenTruyCap: 'CONG_KHAI', version: d.version };
-    } else if (act === 'draft') {
-      if (!window.confirm(`Chuyển ${d.ten} về nháp?`)) return;
-      const lyDo = promptReason();
-      if (!lyDo) return;
-      method = 'PATCH'; body = { quyenTruyCap: 'RIENG_TU', lyDo, version: d.version };
-    } else if (act === 'hide') {
-      if (!window.confirm(`Ẩn ${d.ten} khỏi thư viện?`)) return;
-      const lyDo = promptReason();
-      if (!lyDo) return;
-      method = 'PATCH'; body = { trangThaiKiemDuyet: 'DA_AN', lyDo, version: d.version };
-    } else if (act === 'show') {
-      if (!window.confirm(`Hiện lại ${d.ten}?`)) return;
-      const lyDo = promptReason();
-      if (!lyDo) return;
-      method = 'PATCH'; body = { trangThaiKiemDuyet: 'BINH_THUONG', lyDo, version: d.version };
-    } else if (act === 'delete') {
-      if (!window.confirm(`Xóa ${d.ten}?`)) return;
-      const lyDo = promptReason();
-      if (!lyDo) return;
-      method = 'DELETE'; body = { lyDo, version: d.version };
-    }
-
-    if (method) {
-      actionMutation.mutate({ method, url, body }, {
-        onSuccess: () => {
-          if (act === 'delete') {
-            router.push('/quan-tri/bo-mau');
-          }
-        }
-      });
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-decks'] });
+    if (id) {
+      queryClient.invalidateQueries({ queryKey: ['admin-deck', id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-cards', id] });
     }
   };
 
-  const handleDeleteCard = (c) => {
-    if (!window.confirm(`Xóa thẻ ${c.tu}?`)) return;
-    actionMutation.mutate({ method: 'DELETE', url: `/api/v1/admin/cards/${c.id}?version=${c.version}` });
-  };
-
-  if (!me?.vaiTro?.includes('ADMIN')) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
-
-  const renderDeckMeta = (d) => {
-    let stText = d.quyenTruyCap === 'CONG_KHAI' ? 'Đã xuất bản' : 'Bản nháp';
-    let stClass = d.quyenTruyCap === 'CONG_KHAI' ? '' : 'var(--color-ink-3)';
-    if (d.trangThaiKiemDuyet === 'DA_AN') {
-      stText = 'Đã ẩn';
-      stClass = 'var(--color-warning-text)';
+  async function deckAction(act, d) {
+    const spec = {
+      publish: { title: 'Xuất bản bộ mẫu', message: `“${d.ten}” sẽ hiện trong thư viện cho mọi người học.`, confirmLabel: 'Xuất bản', reason: false, method: 'PATCH', body: { quyenTruyCap: 'CONG_KHAI' } },
+      draft: { title: 'Chuyển về nháp', message: `“${d.ten}” sẽ rời thư viện; bản sao người học đã lưu giữ nguyên.`, confirmLabel: 'Chuyển về nháp', reason: true, method: 'PATCH', body: { quyenTruyCap: 'RIENG_TU' } },
+      hide: { title: 'Ẩn khỏi thư viện', message: `“${d.ten}” bị gỡ khỏi thư viện do kiểm duyệt.`, confirmLabel: 'Ẩn bộ', tone: 'danger', reason: true, method: 'PATCH', body: { trangThaiKiemDuyet: 'DA_AN' } },
+      show: { title: 'Hiện lại bộ mẫu', message: `“${d.ten}” được hiện lại theo trạng thái xuất bản.`, confirmLabel: 'Hiện lại', reason: true, method: 'PATCH', body: { trangThaiKiemDuyet: 'BINH_THUONG' } },
+      remove: { title: 'Xóa bộ mẫu', message: `Xóa “${d.ten}” và toàn bộ thẻ mẫu. Không hoàn tác được.`, confirmLabel: 'Xóa bộ', tone: 'danger', reason: true, method: 'DELETE', body: {} },
+    }[act];
+    const answer = await confirm(spec);
+    if (!answer) return;
+    setBusy(true);
+    try {
+      await apiFetch(`/api/v1/admin/decks/${d.id}`, { method: spec.method, body: JSON.stringify({ ...spec.body, ...(spec.reason ? { lyDo: answer.lyDo } : {}), version: d.version }) });
+      toast(`${spec.confirmLabel}: ${d.ten}.`, { variant: 'success' });
+      refresh();
+      if (act === 'remove' && id) router.push('/quan-tri/bo-mau');
+    } catch (err) {
+      toast(err.message, { variant: 'error' });
+      if (err.status === 409) refresh();
+    } finally {
+      setBusy(false);
     }
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', alignItems: 'center' }}>
-        <span style={{ padding: '2px 8px', background: 'var(--color-border)', color: stClass || 'inherit', borderRadius: '4px', fontWeight: 'bold' }}>{stText}</span>
-        <span>{GOAL[d.mucTieu]}</span>
-        <span>{d.chuDeTen || 'Chưa có chủ đề'}</span>
-        <span>{LEVEL[d.trinhDo]}</span>
-        <span>{d.soThe} thẻ</span>
-        <span>{d.soBanSao} bản sao</span>
-        <span>Sửa {new Date(d.updatedAt).toLocaleDateString('vi-VN')}</span>
-      </div>
-    );
-  };
+  }
 
-  const renderDeckTools = (d, isList) => {
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: 'var(--space-3)' }}>
-        {isList && <Button variant="ghost" size="sm" onClick={() => router.push(`/quan-tri/bo-mau?id=${d.id}`)}>Quản lý thẻ</Button>}
-        <Button variant="edit" size="sm" onClick={() => { setEditingDeck(d); setShowDeckDialog(true); }}>Sửa thông tin</Button>
-        {d.trangThaiKiemDuyet !== 'DA_AN' && (
-          <Button variant="ghost" size="sm" onClick={() => handleDeckAction(d.quyenTruyCap === 'CONG_KHAI' ? 'draft' : 'publish', d)} disabled={actionMutation.isPending}>
-            {d.quyenTruyCap === 'CONG_KHAI' ? 'Chuyển về nháp' : 'Xuất bản'}
-          </Button>
-        )}
-        <Button variant="ghost" size="sm" onClick={() => handleDeckAction(d.trangThaiKiemDuyet === 'DA_AN' ? 'show' : 'hide', d)} disabled={actionMutation.isPending}>
-          {d.trangThaiKiemDuyet === 'DA_AN' ? 'Hiện lại' : 'Ẩn khỏi thư viện'}
-        </Button>
-        <Button variant="danger" size="sm" onClick={() => handleDeckAction('delete', d)} style={{ color: 'var(--color-danger)' }} disabled={actionMutation.isPending}>Xóa bộ</Button>
-      </div>
-    );
-  };
+  async function deleteCard(c) {
+    const ok = await confirm({ title: 'Xóa thẻ mẫu', message: `Xóa thẻ “${c.tu}” khỏi bộ?`, confirmLabel: 'Xóa thẻ', tone: 'danger' });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await apiFetch(`/api/v1/admin/cards/${c.id}?version=${c.version}`, { method: 'DELETE' });
+      toast(`Đã xóa thẻ ${c.tu}.`, { variant: 'success' });
+    } catch (err) {
+      toast(err.message, { variant: 'error' });
+    } finally {
+      setBusy(false);
+      refresh();
+    }
+  }
+
+  if (!me?.vaiTro?.includes('ADMIN')) return <div className="adm-empty">Không có quyền truy cập</div>;
+
+  const deckTools = (d, inList) => (
+    <div className="adm-row-actions" style={inList ? undefined : { justifyContent: 'flex-start' }}>
+      {inList && <Link className="adm-btn adm-btn-sm" href={`/quan-tri/bo-mau?id=${d.id}`}>Thẻ ({d.soThe})</Link>}
+      <button type="button" className="adm-btn adm-btn-sm" onClick={() => { setEditingDeck(d); setShowDeckDialog(true); }}><Icon name="edit" />Sửa</button>
+      {d.trangThaiKiemDuyet !== 'DA_AN' && (
+        <button type="button" className={`adm-btn adm-btn-sm ${d.quyenTruyCap === 'CONG_KHAI' ? '' : 'adm-btn-primary'}`} disabled={busy} onClick={() => deckAction(d.quyenTruyCap === 'CONG_KHAI' ? 'draft' : 'publish', d)}>
+          {d.quyenTruyCap === 'CONG_KHAI' ? 'Về nháp' : 'Xuất bản'}
+        </button>
+      )}
+      <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => deckAction(d.trangThaiKiemDuyet === 'DA_AN' ? 'show' : 'hide', d)}>{d.trangThaiKiemDuyet === 'DA_AN' ? 'Hiện lại' : 'Ẩn'}</button>
+      <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => deckAction('remove', d)} aria-label={`Xóa ${d.ten}`}><Icon name="trash" /></button>
+    </div>
+  );
+
+  const deckDialog = showDeckDialog && (
+    <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={saved => { const created = !editingDeck; setShowDeckDialog(false); setEditingDeck(null); refresh(); if (created && saved?.id) router.push(`/quan-tri/bo-mau?id=${saved.id}`); }} />
+  );
 
   if (id) {
-    if (deckLoading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>;
-    if (deckIsError) return <ErrorState title="Chưa tải được bộ mẫu" description={deckError?.message} onRetry={() => refetchDeck()} />;
+    const d = deck.data;
+    const cardColumns = [
+      { key: 'word', header: 'Từ', sortValue: c => c.tu, render: c => <span><b style={{ fontWeight: 600, fontFamily: 'var(--font-word)', fontSize: 15 }}>{c.tu}</b>{c.phienAm && <span className="adm-muted"> {c.phienAm}</span>}{c.tuLoai && <><br /><span className="adm-muted">{c.tuLoai}</span></>}</span> },
+      { key: 'meaning', header: 'Nghĩa', sortValue: c => c.nghiaVi, render: c => c.nghiaVi },
+      { key: 'example', header: 'Ví dụ', render: c => (c.viDuEn ? <span style={{ display: 'block', maxWidth: 380 }}>{c.viDuEn}{c.dichVi && <><br /><span className="adm-muted">{c.dichVi}</span></>}</span> : <span className="adm-muted">—</span>) },
+      { key: 'actions', header: 'Thao tác', srHeader: true, render: c => (
+        <div className="adm-row-actions">
+          <button type="button" className="adm-btn adm-btn-sm" onClick={() => setEditingCard(c)}><Icon name="edit" />Sửa</button>
+          <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => deleteCard(c)} aria-label={`Xóa thẻ ${c.tu}`}><Icon name="trash" /></button>
+        </div>
+      ) },
+    ];
     return (
-      <div className="page page-grid with-side">
-        <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <Button variant="ghost" onClick={() => router.push('/quan-tri/bo-mau')} style={{ marginLeft: '-12px', marginBottom: 'var(--space-4)' }}>
-            <Icon name="arrow-left" /> Tất cả bộ mẫu
-          </Button>
-
-          {deckDetail && (
-            <div style={{ marginBottom: 'var(--space-6)' }}>
-              <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>{deckDetail.ten}</h1>
-              {renderDeckMeta(deckDetail)}
-              {renderDeckTools(deckDetail, false)}
+      <div className="adm-page">
+        <div><Link href="/quan-tri/bo-mau" className="adm-btn adm-btn-sm"><Icon name="arrow-left" />Tất cả bộ mẫu</Link></div>
+        {deck.isLoading ? <div className="adm-card adm-empty" role="status">Đang tải bộ mẫu…</div> : deck.isError ? (
+          <div className="adm-card"><ErrorState title="Chưa tải được bộ mẫu" description={deck.error?.message} onRetry={() => deck.refetch()} /></div>
+        ) : d && (
+          <>
+            <AdminPageHead title={d.ten} description={d.moTa} actions={deckTools(d, false)} />
+            <div className="adm-card adm-card-body" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', fontSize: 13 }}>
+              <Pill tone={deckState(d)[1]}>{deckState(d)[0]}</Pill>
+              <span><span className="adm-muted">Mục tiêu</span> {GOAL[d.mucTieu] || '—'}</span>
+              <span><span className="adm-muted">Chủ đề</span> {d.chuDeTen || 'Chưa có'}</span>
+              <span><span className="adm-muted">Trình độ</span> {LEVEL[d.trinhDo] || d.trinhDo}</span>
+              <span><span className="adm-muted">Thẻ</span> {d.soThe}</span>
+              <span><span className="adm-muted">Bản sao</span> {d.soBanSao}</span>
+              <span><span className="adm-muted">Sửa lúc</span> {new Date(d.updatedAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+              <Link className="adm-a" style={{ marginLeft: 'auto' }} href={`/quan-tri/nhat-ky?loai=BO_THE&q=${encodeURIComponent(d.ten)}`}>Nhật ký bộ này</Link>
             </div>
-          )}
-
-          <div style={{ padding: 'var(--space-4)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-5)' }}>
-            <h2 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-3)' }}>Thêm thẻ nhanh</h2>
-            <Button variant="primary" onClick={() => setEditingCard({})} disabled={actionMutation.isPending}>Thêm thẻ mới</Button>
-          </div>
-
-          <h2 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-3)' }}>Danh sách thẻ</h2>
-          {cardsLoading ? (
-            <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>Đang tải thẻ...</div>
-          ) : cardsIsError ? (
-            <ErrorState title="Chưa tải được danh sách thẻ" description={cardsError?.message} onRetry={() => refetchCards()} />
-          ) : cards?.length > 0 ? (
-            <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-3)' }}>
-              {cards.map((c, i) => (
-                <li key={c.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                  <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{i + 1}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '1.125rem' }}>{c.tu}</strong>
-                      {c.phienAm && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{c.phienAm}</span>}
-                      {c.tuLoai && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{c.tuLoai}</span>}
-                    </div>
-                    <div>{c.nghiaVi}</div>
-                    {c.viDuEn && (
-                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px' }}>
-                        <div>{c.viDuEn}</div>
-                        {c.dichVi && <div>{c.dichVi}</div>}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: '8px', marginTop: 'var(--space-2)' }}>
-                      <Button variant="edit" size="sm" onClick={() => setEditingCard(c)}>Sửa thẻ</Button>
-                      <Button variant="danger" size="sm" onClick={() => handleDeleteCard(c)} style={{ color: 'var(--color-danger)' }}>Xóa thẻ</Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <div style={{ padding: 'var(--space-6)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-              <h3>Bộ chưa có thẻ</h3>
-              <p style={{ color: 'var(--color-ink-2)' }}>Thêm ít nhất một thẻ để xuất bản bộ.</p>
-            </div>
-          )}
-        </section>
-
-        <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-          <DeckRules />
-        </aside>
-
-        {editingCard !== null && (
-          <CardDialog
-            card={Object.keys(editingCard).length === 0 ? null : editingCard}
-            deckId={id}
-            onClose={() => setEditingCard(null)}
-            onSave={() => { setEditingCard(null); queryClient.invalidateQueries({ queryKey: ['admin-cards', id] }); queryClient.invalidateQueries({ queryKey: ['admin-deck', id] }); }}
+          </>
+        )}
+        <section className="adm-card">
+          <AdminTable
+            caption="Thẻ của bộ mẫu"
+            columns={cardColumns}
+            rows={cards.data || []}
+            loading={cards.isLoading}
+            error={cards.error}
+            onRetry={cards.refetch}
+            onRowClick={c => setEditingCard(c)}
+            rowLabel={c => `Sửa thẻ ${c.tu}`}
+            toolbar={<><b style={{ fontSize: 14 }}>Thẻ mẫu</b><span className="adm-muted">{cards.data ? `${cards.data.length} thẻ` : ''}</span><button type="button" className="adm-btn adm-btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setEditingCard({})}><Icon name="plus" />Thêm thẻ</button></>}
+            emptyTitle="Bộ chưa có thẻ"
+            emptyText="Thêm ít nhất một thẻ để xuất bản bộ."
+            exportCsv={{ filename: `the-mau-${id}.csv`, columns: [
+              { header: 'Từ', csv: c => c.tu }, { header: 'Phiên âm', csv: c => c.phienAm }, { header: 'Từ loại', csv: c => c.tuLoai },
+              { header: 'Nghĩa', csv: c => c.nghiaVi }, { header: 'Ví dụ', csv: c => c.viDuEn }, { header: 'Dịch ví dụ', csv: c => c.dichVi },
+            ] }}
           />
+        </section>
+        {editingCard !== null && (
+          <CardDialog card={Object.keys(editingCard).length === 0 ? null : editingCard} deckId={id} onClose={() => setEditingCard(null)} onSave={() => { setEditingCard(null); refresh(); }} />
         )}
-        {showDeckDialog && (
-          <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={() => { setShowDeckDialog(false); setEditingDeck(null); queryClient.invalidateQueries({ queryKey: ['admin-deck', id] }); }} />
-        )}
+        {deckDialog}
+        {dialog}
       </div>
     );
   }
 
-  const handleTabClick = (st) => {
-    setTrangThai(st);
-    const params = new URLSearchParams(searchParams);
-    if (st) params.set('trangThai', st); else params.delete('trangThai');
-    params.set('page', '0');
-    router.push(`/quan-tri/bo-mau?${params.toString()}`, { scroll: false });
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (q) params.set('q', q); else params.delete('q');
-    params.set('page', '0');
-    router.push(`/quan-tri/bo-mau?${params.toString()}`, { scroll: false });
-  };
+  const columns = [
+    { key: 'name', header: 'Bộ mẫu', sortValue: d => d.ten, render: d => <span style={{ display: 'block', maxWidth: 420 }}><Link className="adm-a" href={`/quan-tri/bo-mau?id=${d.id}`}>{d.ten}</Link>{d.moTa && <span className="adm-muted" style={{ display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{d.moTa}</span>}</span> },
+    { key: 'state', header: 'Trạng thái', sortValue: d => deckState(d)[0], render: d => <Pill tone={deckState(d)[1]}>{deckState(d)[0]}</Pill> },
+    { key: 'meta', header: 'Mục tiêu · Chủ đề', sortValue: d => d.chuDeTen, render: d => <span><span>{GOAL[d.mucTieu] || '—'}</span><br /><span className="adm-muted">{d.chuDeTen || 'Chưa có chủ đề'} · {LEVEL[d.trinhDo] || d.trinhDo}</span></span> },
+    { key: 'cards', header: 'Thẻ', align: 'right', sortValue: d => d.soThe, render: d => d.soThe },
+    { key: 'copies', header: 'Bản sao', align: 'right', sortValue: d => d.soBanSao, render: d => d.soBanSao },
+    { key: 'updated', header: 'Sửa lúc', nowrap: true, sortValue: d => Date.parse(d.updatedAt), render: d => new Date(d.updatedAt).toLocaleDateString('vi-VN') },
+    { key: 'actions', header: 'Thao tác', srHeader: true, render: d => deckTools(d, true) },
+  ];
+  const data = list.data;
 
   return (
-    <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
-            <span>Quản trị</span>
-            <span>{listData?.totalElements !== undefined ? `${listData.totalElements} bộ` : '—'}</span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Bộ và thẻ mẫu</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Bộ mẫu là nội dung của nhóm biên soạn, hiện trong thư viện khi đã xuất bản. Người học sao chép về để học.</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
-          {[
-            { id: '', label: 'Tất cả' },
-            { id: 'BAN_NHAP', label: 'Bản nháp' },
-            { id: 'DA_XUAT_BAN', label: 'Đã xuất bản' },
-            { id: 'DA_AN', label: 'Đã ẩn' }
-          ].map(t => (
-            <button key={t.id} onClick={() => handleTabClick(t.id)} style={{ padding: '6px 12px', border: trangThai === t.id ? 'none' : '1px solid var(--color-border)', background: trangThai === t.id ? 'var(--primary-fill)' : 'transparent', color: trangThai === t.id ? 'var(--on-primary)' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer' }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSearch} className="admin-search">
-          <div className="field">
-            <input className="input" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm theo tên bộ..." style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-          </div>
-          <Button type="submit" variant="secondary">Tìm</Button>
-          <Button type="button" variant="primary" onClick={() => { setEditingDeck(null); setShowDeckDialog(true); }}>Tạo bộ mẫu</Button>
-        </form>
-
-        {listLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
-        ) : listIsError ? (
-          <ErrorState title="Chưa tải được danh sách bộ mẫu" description={listError?.message} onRetry={() => refetchList()} />
-        ) : listData?.items?.length > 0 ? (
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-            {listData.items.map((d, i) => (
-              <li key={d.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * listData.size + i + 1}</div>
-                <div style={{ flex: 1 }}>
-                  <Link href={`/quan-tri/bo-mau?id=${d.id}`} style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'none' }}>{d.ten}</Link>
-                  {d.moTa && <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: '4px', marginBottom: '8px' }}>{d.moTa}</div>}
-                  <div style={{ marginTop: '8px' }}>{renderDeckMeta(d)}</div>
-                  {renderDeckTools(d, true)}
-                </div>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Chưa có bộ mẫu nào</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Tạo bộ ở trạng thái nháp, thêm thẻ rồi xuất bản.</p>
-          </div>
-        )}
+    <div className="adm-page">
+      <AdminPageHead
+        title="Bộ mẫu & thẻ"
+        meta={data ? data.totalElements : null}
+        description="Nội dung của nhóm biên soạn, hiện trong thư viện khi đã xuất bản. Bộ mới luôn là nháp; chuyển nháp, ẩn, hiện lại và xóa cần lý do."
+        actions={<>
+          <Link className="adm-btn" href="/quan-tri/nhat-ky?loai=BO_THE"><Icon name="clock" />Nhật ký</Link>
+          <button type="button" className="adm-btn adm-btn-primary" onClick={() => { setEditingDeck(null); setShowDeckDialog(true); }}><Icon name="plus" />Tạo bộ mẫu</button>
+        </>}
+      />
+      <section className="adm-card">
+        <AdminTable
+          caption="Danh sách bộ mẫu"
+          columns={columns}
+          rows={data?.items || []}
+          loading={list.isLoading}
+          error={list.error}
+          onRetry={list.refetch}
+          onRowClick={d => router.push(`/quan-tri/bo-mau?id=${d.id}`)}
+          rowLabel={d => `Mở ${d.ten}`}
+          toolbar={<>
+            <div className="adm-seg" role="tablist" aria-label="Trạng thái bộ">
+              {DECK_TABS.map(([value, label]) => <button key={value || 'all'} type="button" role="tab" aria-selected={trangThai === value} onClick={() => go({ trangThai: value })}>{label}</button>)}
+            </div>
+            <form role="search" onSubmit={event => { event.preventDefault(); go({ q: search.trim() }); }} style={{ display: 'contents' }}>
+              <label className="sr-only" htmlFor="deck-q">Tìm theo tên bộ</label>
+              <input id="deck-q" className="adm-input" type="search" placeholder="Tìm theo tên bộ, Enter" value={search} onChange={event => setSearch(event.target.value)} />
+            </form>
+          </>}
+          emptyTitle="Chưa có bộ mẫu phù hợp"
+          emptyText="Tạo bộ ở trạng thái nháp, thêm thẻ rồi xuất bản."
+          pagination={data ? { page, size: PAGE_SIZE, totalElements: data.totalElements, totalPages: data.totalPages, onPageChange: value => go({ page: value || null }) } : null}
+        />
       </section>
-
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <DeckRules />
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Nhật ký</h2>
-          <Button variant="ghost" onClick={() => router.push('/quan-tri/nhat-ky?loai=BO_THE')} style={{ marginLeft: '-12px' }}>Mở nhật ký bộ mẫu</Button>
-        </section>
-      </aside>
-
-      {showDeckDialog && (
-        <DeckDialog deck={editingDeck} topics={topics} onClose={() => { setShowDeckDialog(false); setEditingDeck(null); }} onSave={(d) => { setShowDeckDialog(false); setEditingDeck(null); if (!editingDeck) { router.push(`/quan-tri/bo-mau?id=${d.id}`); } else { queryClient.invalidateQueries({ queryKey: ['admin-decks'] }); } }} />
-      )}
+      {deckDialog}
+      {dialog}
     </div>
   );
 }
 
 export default function AdminDecksPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div className="adm-empty" role="status">Đang tải…</div>}>
       <AdminDecksContent />
     </Suspense>
   );

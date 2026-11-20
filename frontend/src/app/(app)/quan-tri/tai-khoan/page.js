@@ -1,285 +1,209 @@
 'use client';
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Suspense, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Icon, useToast } from '@/components/ui';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminPageHead, Pill, Who } from '@/components/admin/AdminPageHead';
+import { useAdminConfirm } from '@/components/admin/AdminConfirm';
+import { UserDetailDrawer } from '@/components/admin/UserDetailDrawer';
 import { apiFetch } from '@/lib/api-client';
-import { Button, ErrorState, Pagination } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
+import { relativeTime } from '@/lib/admin-dashboard.mjs';
+import { fetchAllPages, runSequential, setParams } from '@/lib/admin-table.mjs';
 
 const STATUS = {
-  HOAT_DONG: { label: 'Đang hoạt động', className: '' },
-  BI_KHOA: { label: 'Bị khóa', className: 'var(--color-danger-bg)' },
-  CHUA_XAC_THUC: { label: 'Chưa xác thực', className: 'var(--color-warning-bg)' },
-  DANG_XOA: { label: 'Đang xóa', className: 'var(--field)' }
+  HOAT_DONG: ['Hoạt động', 'ok'],
+  BI_KHOA: ['Bị khóa', 'bad'],
+  CHUA_XAC_THUC: ['Chưa xác thực', 'warn'],
+  DANG_XOA: ['Đang xóa', 'mute'],
 };
+const PAGE_SIZE = 20;
+const fullTime = iso => (iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '');
+const isAdmin = user => (user.vaiTro || []).includes('ADMIN');
 
-const STATUS_TEXT_COLOR = {
-  HOAT_DONG: 'var(--color-ink)',
-  BI_KHOA: 'var(--color-danger-text)',
-  CHUA_XAC_THUC: 'var(--color-warning-text)',
-  DANG_XOA: 'var(--ink-2)'
-};
+function usersUrl({ q, trangThai, vaiTro, page, size }) {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (q) params.set('q', q);
+  if (trangThai) params.set('trangThai', trangThai);
+  if (vaiTro) params.set('vaiTro', vaiTro);
+  return `/api/v1/admin/users?${params}`;
+}
 
-function AdminUsersContent() {
+function UsersContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const client = useQueryClient();
+  const { toast } = useToast();
   const { data: me } = useMe();
-  const [actionError, setActionError] = useState(null);
+  const { confirm, dialog } = useAdminConfirm();
+  const [busy, setBusy] = useState(false);
 
-  const defaultQ = searchParams.get('q') || '';
-  const defaultStatus = searchParams.get('trangThai') || '';
-  const defaultRole = searchParams.get('vaiTro') || '';
-  const page = parseInt(searchParams.get('page') || '0', 10);
+  const q = params.get('q') || '';
+  const trangThai = params.get('trangThai') || '';
+  const vaiTro = params.get('vaiTro') || '';
+  const page = Math.max(0, Number.parseInt(params.get('page') || '0', 10) || 0);
+  const openId = params.get('nguoi') || null;
+  const [search, setSearch] = useState(q);
+  const go = (changes, resetPage = true) => router.replace(`${pathname}${setParams(params, changes, { resetPage })}`, { scroll: false });
 
-  const [q, setQ] = useState(defaultQ);
-  const [trangThai, setTrangThai] = useState(defaultStatus);
-  const [vaiTro, setVaiTro] = useState(defaultRole);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['admin-users', defaultQ, defaultStatus, defaultRole, page],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (defaultQ) params.set('q', defaultQ);
-      if (defaultStatus) params.set('trangThai', defaultStatus);
-      if (defaultRole) params.set('vaiTro', defaultRole);
-      params.set('page', page.toString());
-      params.set('size', '20');
-      return apiFetch(`/api/v1/admin/users?${params.toString()}`);
-    }
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ['admin-users', q, trangThai, vaiTro, page],
+    queryFn: () => apiFetch(usersUrl({ q, trangThai, vaiTro, page, size: PAGE_SIZE })),
+    placeholderData: previous => previous,
   });
+  const rows = data?.items || [];
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
-    onMutate: () => setActionError(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
-    onError: setActionError
-  });
+  const setStatus = (user, next, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/status`, { method: 'PATCH', body: JSON.stringify({ trangThai: next, lyDo }) });
+  const setRoles = (user, roles, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/roles`, { method: 'PUT', body: JSON.stringify({ vaiTro: roles, lyDo }) });
 
-  const roleMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(body) }),
-    onMutate: () => setActionError(null),
-    onError: setActionError,
-    onSuccess: (res, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      if (vars.isSelfRevoke) {
-        window.location.href = '/hom-nay';
-      }
+  async function act(kind, user) {
+    const self = user.id === me?.id;
+    const options = {
+      lock: { title: 'Khóa tài khoản', message: `${user.tenHienThi} sẽ bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho tới khi mở khóa.`, confirmLabel: 'Khóa tài khoản', tone: 'danger' },
+      unlock: { title: 'Mở khóa tài khoản', message: `${user.tenHienThi} sẽ đăng nhập lại được.`, confirmLabel: 'Mở khóa' },
+      grant: { title: 'Cấp quyền quản trị', message: `${user.tenHienThi} sẽ vào được toàn bộ trang quản trị.`, confirmLabel: 'Cấp quyền' },
+      revoke: { title: 'Thu quyền quản trị', message: self ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ rời trang quản trị.' : `${user.tenHienThi} sẽ không vào được trang quản trị nữa.`, confirmLabel: 'Thu quyền', tone: 'danger' },
+    }[kind];
+    const answer = await confirm({ ...options, reason: true });
+    if (!answer) return;
+    setBusy(true);
+    try {
+      if (kind === 'lock') await setStatus(user, 'BI_KHOA', answer.lyDo);
+      if (kind === 'unlock') await setStatus(user, 'HOAT_DONG', answer.lyDo);
+      if (kind === 'grant') await setRoles(user, ['USER', 'ADMIN'], answer.lyDo);
+      if (kind === 'revoke') await setRoles(user, ['USER'], answer.lyDo);
+      if (kind === 'revoke' && self) { window.location.href = '/hom-nay'; return; }
+      toast(`${options.confirmLabel}: ${user.tenHienThi}.`, { variant: 'success' });
+      client.invalidateQueries({ queryKey: ['admin-users'] });
+      client.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      client.invalidateQueries({ queryKey: ['admin-user-detail', user.id] });
+      client.invalidateQueries({ queryKey: ['admin-user-audit', user.id] });
+    } catch (err) {
+      toast(err.message, { variant: 'error' });
+    } finally {
+      setBusy(false);
     }
-  });
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (q) params.set('q', q); else params.delete('q');
-    if (trangThai) params.set('trangThai', trangThai); else params.delete('trangThai');
-    if (vaiTro) params.set('vaiTro', vaiTro); else params.delete('vaiTro');
-    params.set('page', '0');
-    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
-  };
-
-  const handleClear = () => {
-    setQ('');
-    setTrangThai('');
-    setVaiTro('');
-    router.push('/quan-tri/tai-khoan', { scroll: false });
-  };
-
-  const handlePageChange = (newPage) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', newPage.toString());
-    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
-  };
-
-  const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
-    if (reason === undefined) return undefined;
-    if (reason.length < 10 || reason.length > 500) {
-      alert('Lý do cần từ 10 đến 500 ký tự.');
-      return undefined;
-    }
-    return reason;
-  };
-
-  const handleLock = (user) => {
-    if (user.id === me?.id) return alert('Không tự khóa tài khoản của mình');
-    if (!window.confirm(`Khóa tài khoản ${user.tenHienThi}? Người này sẽ bị đăng xuất khỏi mọi thiết bị.`)) return;
-    const lyDo = promptReason();
-    if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'BI_KHOA', lyDo } });
-  };
-
-  const handleUnlock = (user) => {
-    if (!window.confirm(`Mở khóa tài khoản ${user.tenHienThi}?`)) return;
-    const lyDo = promptReason();
-    if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'HOAT_DONG', lyDo } });
-  };
-
-  const handleGrant = (user) => {
-    if (!window.confirm(`Cấp quyền quản trị cho ${user.tenHienThi}?`)) return;
-    const lyDo = promptReason();
-    if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER', 'ADMIN'], lyDo } });
-  };
-
-  const handleRevoke = (user) => {
-    const isSelf = user.id === me?.id;
-    const msg = isSelf
-      ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được trang quản trị nữa. Tiếp tục?'
-      : `Thu quyền quản trị của ${user.tenHienThi}?`;
-    if (!window.confirm(msg)) return;
-    const lyDo = promptReason();
-    if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER'], lyDo }, isSelfRevoke: isSelf });
-  };
-
-  if (!me?.vaiTro?.includes('ADMIN')) {
-    return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
   }
 
+  async function bulk(kind, selected, clear) {
+    const targets = selected.filter(user => (kind === 'lock' ? user.trangThai === 'HOAT_DONG' && user.id !== me?.id : user.trangThai === 'BI_KHOA'));
+    if (!targets.length) {
+      toast(kind === 'lock' ? 'Không có tài khoản đang hoạt động nào để khóa (không tự khóa chính mình).' : 'Không có tài khoản bị khóa nào trong các dòng đã chọn.', { variant: 'error' });
+      return;
+    }
+    const answer = await confirm({
+      title: kind === 'lock' ? `Khóa ${targets.length} tài khoản` : `Mở khóa ${targets.length} tài khoản`,
+      message: kind === 'lock' ? 'Các tài khoản sẽ bị đăng xuất khỏi mọi thiết bị. Dùng cùng một lý do cho tất cả.' : 'Dùng cùng một lý do cho tất cả.',
+      items: targets.map(user => `${user.tenHienThi} · ${user.email}`),
+      confirmLabel: kind === 'lock' ? 'Khóa tất cả' : 'Mở khóa tất cả',
+      tone: kind === 'lock' ? 'danger' : undefined,
+      reason: true,
+    });
+    if (!answer) return;
+    setBusy(true);
+    const result = await runSequential(targets, user => setStatus(user, kind === 'lock' ? 'BI_KHOA' : 'HOAT_DONG', answer.lyDo));
+    setBusy(false);
+    clear();
+    client.invalidateQueries({ queryKey: ['admin-users'] });
+    client.invalidateQueries({ queryKey: ['admin-dashboard'] });
+    if (result.failed.length) {
+      toast(`Xong ${result.ok.length}/${targets.length}. Lỗi: ${result.failed.map(f => `${f.item.tenHienThi} (${f.error.message})`).join('; ')}`, { variant: 'error' });
+    } else {
+      toast(`Đã ${kind === 'lock' ? 'khóa' : 'mở khóa'} ${result.ok.length} tài khoản.`, { variant: 'success' });
+    }
+  }
+
+  const columns = [
+    { key: 'user', header: 'Người dùng', sortValue: u => u.tenHienThi, csv: u => u.tenHienThi, render: u => <Who name={<>{u.tenHienThi}{u.id === me?.id && <span className="adm-muted"> (bạn)</span>}</>} sub={u.email} initials={(u.tenHienThi || u.email).trim().split(/\s+/).slice(-2).map(w => w[0]).join('').toUpperCase()} /> },
+    { key: 'email', header: 'Email', csv: u => u.email, render: null, hidden: true },
+    { key: 'role', header: 'Vai trò', sortValue: u => (isAdmin(u) ? 0 : 1), csv: u => (isAdmin(u) ? 'ADMIN' : 'USER'), render: u => (isAdmin(u) ? <Pill tone="acc">Quản trị</Pill> : <Pill>Người học</Pill>) },
+    { key: 'status', header: 'Trạng thái', sortValue: u => STATUS[u.trangThai]?.[0], csv: u => STATUS[u.trangThai]?.[0] || u.trangThai, render: u => { const [label, tone] = STATUS[u.trangThai] || [u.trangThai, 'mute']; return <Pill tone={tone}>{label}</Pill>; } },
+    { key: 'decks', header: 'Bộ thẻ', align: 'right', sortValue: u => u.soBoThe, csv: u => u.soBoThe, render: u => u.soBoThe.toLocaleString('vi-VN') },
+    { key: 'login', header: 'Đăng nhập cuối', nowrap: true, sortValue: u => (u.dangNhapCuoiAt ? Date.parse(u.dangNhapCuoiAt) : null), csv: u => fullTime(u.dangNhapCuoiAt), render: u => (u.dangNhapCuoiAt ? <span title={fullTime(u.dangNhapCuoiAt)}>{relativeTime(u.dangNhapCuoiAt)}</span> : <span className="adm-muted">Chưa đăng nhập</span>) },
+    { key: 'created', header: 'Tạo lúc', nowrap: true, sortValue: u => Date.parse(u.createdAt), csv: u => fullTime(u.createdAt), render: u => <span title={fullTime(u.createdAt)}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</span> },
+    { key: 'actions', header: 'Thao tác', srHeader: true, render: u => (
+      <div className="adm-row-actions">
+        {u.trangThai === 'HOAT_DONG' && u.id !== me?.id && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('lock', u)}><Icon name="lock" />Khóa</button>}
+        {u.trangThai === 'BI_KHOA' && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('unlock', u)}>Mở khóa</button>}
+        {isAdmin(u) ? <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('revoke', u)}>Thu quyền</button>
+          : u.trangThai === 'HOAT_DONG' && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('grant', u)}><Icon name="shield" />Cấp quyền</button>}
+        <Link className="adm-btn adm-btn-sm" href={`/quan-tri/nhat-ky?loai=NGUOI_DUNG&q=${encodeURIComponent(u.email)}`} title="Nhật ký của tài khoản" aria-label={`Nhật ký của ${u.tenHienThi}`}><Icon name="clock" /></Link>
+      </div>
+    ) },
+  ];
+  const visible = columns.filter(column => !column.hidden);
+
+  const toolbar = (
+    <>
+      <form role="search" onSubmit={event => { event.preventDefault(); go({ q: search.trim() }); }} style={{ display: 'contents' }}>
+        <label className="sr-only" htmlFor="user-q">Tìm theo email hoặc tên</label>
+        <input id="user-q" className="adm-input" type="search" placeholder="Tìm email hoặc tên, Enter để tìm" value={search} onChange={event => setSearch(event.target.value)} />
+      </form>
+      <label className="sr-only" htmlFor="user-status">Trạng thái</label>
+      <select id="user-status" className="adm-select" value={trangThai} onChange={event => go({ trangThai: event.target.value })}>
+        <option value="">Mọi trạng thái</option>
+        {Object.entries(STATUS).map(([value, [label]]) => <option key={value} value={value}>{label}</option>)}
+      </select>
+      <label className="sr-only" htmlFor="user-role">Vai trò</label>
+      <select id="user-role" className="adm-select" value={vaiTro} onChange={event => go({ vaiTro: event.target.value })}>
+        <option value="">Mọi vai trò</option>
+        <option value="ADMIN">Quản trị viên</option>
+        <option value="USER">Người học</option>
+      </select>
+      {(q || trangThai || vaiTro) && <button type="button" className="adm-btn" onClick={() => { setSearch(''); router.replace(pathname, { scroll: false }); }}>Xóa lọc</button>}
+    </>
+  );
+
   return (
-    <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
-            <span>Quản trị</span>
-            <span>{data?.totalElements !== undefined ? `${data.totalElements} tài khoản` : '—'}</span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Tài khoản và vai trò</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Tìm người dùng, khóa hoặc mở khóa tài khoản, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi vào nhật ký.</p>
-        </div>
-
-        <form onSubmit={handleSearch} style={{ display: 'grid', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', paddingBottom: 'var(--space-5)', borderBottom: '1px solid var(--color-border)' }}>
-          <div className="filter-grid">
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Tìm theo email hoặc tên</label>
-              <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Ví dụ: an@vocab.local" style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Trạng thái</label>
-              <select value={trangThai} onChange={e => setTrangThai(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả</option>
-                <option value="HOAT_DONG">Đang hoạt động</option>
-                <option value="BI_KHOA">Bị khóa</option>
-                <option value="CHUA_XAC_THUC">Chưa xác thực</option>
-                <option value="DANG_XOA">Đang xóa</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Vai trò</label>
-              <select value={vaiTro} onChange={e => setVaiTro(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả</option>
-                <option value="ADMIN">Quản trị viên</option>
-                <option value="USER">Người học</option>
-              </select>
-            </div>
-            <Button type="submit" variant="primary">Tìm</Button>
-          </div>
-        </form>
-
-        {actionError && (
-          <p className="notice notice-danger" role="alert" style={{ marginBottom: 'var(--space-4)' }}>{actionError.message}</p>
-        )}
-
-        {isLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
-        ) : isError ? (
-          <ErrorState title="Chưa tải được danh sách tài khoản" description={error?.message} onRetry={() => refetch()} />
-        ) : data?.items?.length > 0 ? (
-          <>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-              {data.totalElements} tài khoản khớp bộ lọc, mới tạo trước
-            </p>
-            <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-              {data.items.map((u, i) => {
-                const st = STATUS[u.trangThai] || { label: u.trangThai, className: '' };
-                const isAdmin = (u.vaiTro || []).includes('ADMIN');
-                return (
-                  <li key={u.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                    <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--color-primary-strong)' }}>
-                          {(u.tenHienThi || u.email || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                            {u.tenHienThi} {u.id === me?.id && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', fontWeight: 'normal' }}>(bạn)</span>}
-                          </div>
-                          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{u.email}</div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', fontSize: 'var(--font-size-xs)', marginBottom: 'var(--space-3)', alignItems: 'center' }}>
-                        <span style={{ padding: '2px 8px', background: st.className || 'var(--color-border)', color: STATUS_TEXT_COLOR[u.trangThai] || 'var(--color-ink)', borderRadius: '4px', fontWeight: 'bold' }}>
-                          {st.label}
-                        </span>
-                        {isAdmin ? <strong style={{ color: 'var(--color-primary-strong)' }}>Quản trị viên</strong> : <span>Người học</span>}
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>{u.soBoThe} bộ thẻ</span>
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>Tạo {new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>{u.dangNhapCuoiAt ? `Đăng nhập ${new Date(u.dangNhapCuoiAt).toLocaleString('vi-VN')}` : 'Chưa đăng nhập'}</span>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {u.trangThai === 'HOAT_DONG' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleLock(u)} disabled={u.id === me?.id} style={u.id !== me?.id ? { color: 'var(--color-danger)' } : {}}>
-                            Khóa tài khoản
-                          </Button>
-                        )}
-                        {u.trangThai === 'BI_KHOA' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleUnlock(u)}>Mở khóa</Button>
-                        )}
-                        {isAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => handleRevoke(u)}>Thu quyền quản trị</Button>
-                        )}
-                        {!isAdmin && u.trangThai === 'HOAT_DONG' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleGrant(u)}>Cấp quyền quản trị</Button>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-            <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={value => handlePageChange(value - 1)} />
-          </>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Không tìm thấy tài khoản</h2>
-            <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Thử bỏ bớt bộ lọc hoặc tìm bằng một phần email.</p>
-            <Button variant="secondary" onClick={handleClear}>Xóa bộ lọc</Button>
-          </div>
-        )}
+    <div className="adm-page">
+      <AdminPageHead
+        title="Tài khoản & vai trò"
+        meta={data ? data.totalElements.toLocaleString('vi-VN') : null}
+        description="Khóa, mở khóa, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi nhật ký. Không thể tự khóa mình, và luôn phải còn ít nhất một quản trị viên hoạt động."
+        actions={<button type="button" className="adm-btn" onClick={() => refetch()} disabled={isFetching}><Icon name="refresh" />{isFetching ? 'Đang tải…' : 'Làm mới'}</button>}
+      />
+      <section className="adm-card">
+        <AdminTable
+          caption="Danh sách tài khoản"
+          columns={visible}
+          rows={rows}
+          loading={isLoading}
+          error={error}
+          onRetry={refetch}
+          toolbar={toolbar}
+          selectable
+          isSelectable={u => u.id !== me?.id}
+          rowLabel={u => u.tenHienThi}
+          onRowClick={u => go({ nguoi: u.id }, false)}
+          bulkActions={(selected, clear) => (
+            <>
+              <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => bulk('lock', selected, clear)}><Icon name="lock" />Khóa</button>
+              <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => bulk('unlock', selected, clear)}>Mở khóa</button>
+            </>
+          )}
+          emptyTitle="Không tìm thấy tài khoản"
+          emptyText="Thử bỏ bớt bộ lọc hoặc tìm bằng một phần email."
+          pagination={data ? { page, size: PAGE_SIZE, totalElements: data.totalElements, totalPages: data.totalPages, onPageChange: value => go({ page: value || null }) } : null}
+          exportCsv={{
+            filename: 'tai-khoan.csv',
+            columns,
+            fetchAll: () => fetchAllPages((p, size) => apiFetch(usersUrl({ q, trangThai, vaiTro, page: p, size }))),
+          }}
+        />
       </section>
-
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
-          <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-            <li>Khóa tài khoản sẽ hủy mọi phiên đăng nhập của người đó ngay lập tức.</li>
-            <li>Không tự khóa tài khoản của mình.</li>
-            <li>Luôn còn ít nhất một quản trị viên đang hoạt động: không khóa và không thu quyền người cuối cùng.</li>
-            <li>Tài khoản chưa xác thực email phải tự xác thực qua thư, quản trị không mở thay.</li>
-            <li>Trang này chỉ hiện thông tin cần để quản lý tài khoản, không hiện nội dung học riêng tư.</li>
-          </ul>
-        </section>
-
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Nhật ký</h2>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>Xem ai đã khóa, mở khóa hay đổi vai trò, lúc nào và vì sao.</p>
-          <Button variant="ghost" onClick={() => router.push('/quan-tri/nhat-ky?loai=NGUOI_DUNG')} style={{ marginLeft: '-12px' }}>
-            Mở nhật ký tài khoản
-          </Button>
-        </section>
-      </aside>
+      <UserDetailDrawer userId={openId} me={me} busy={busy} onAction={act} onClose={() => go({ nguoi: null }, false)} />
+      {dialog}
     </div>
   );
 }
 
 export default function AdminUsersPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
-      <AdminUsersContent />
+    <Suspense fallback={<div className="adm-empty" role="status">Đang tải…</div>}>
+      <UsersContent />
     </Suspense>
   );
 }

@@ -9,11 +9,14 @@ import { ErrorState } from '@/components/ui';
 import { billingKeys, loadAdminBilling, planPayload, mapPayment, mapPlan, money, date, time, normalize, isCancelled, isExpired, isActiveSubscription, isSoon, subscriptionStatus, statuses as PAYMENT_STATUSES, paymentsCsv } from '@/lib/billing-api';
 const planName = code => code === 'PRO' ? 'Pro' : code === 'PREMIUM' ? 'Premium' : code;
 import styles from './page.module.css';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminPageHead, Pill, Who } from '@/components/admin/AdminPageHead';
 
 const PAYMENT_FILTERS = { query: '', status: '', plan: '', from: '', to: '' };
 const SUB_FILTERS = { query: '', status: '', plan: '' };
 const TABS = [['payments', 'Giao dịch'], ['subscriptions', 'Gói người dùng'], ['plans', 'Cấu hình gói']];
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 20;
+const TONE = { success: 'ok', pending: 'warn', failed: 'bad', expired: 'mute' };
 const subscribe = () => () => {};
 
 function download(content, filename, type) {
@@ -28,19 +31,7 @@ function download(content, filename, type) {
 }
 
 function StatusBadge({ status }) {
-  return <span className={`${styles.badge} ${styles[status[1]]}`}>{status[0]}</span>;
-}
-
-function DataTable({ headers, rows, caption }) {
-  return <div className={styles.tableWrap}><table className={styles.table}>
-    <caption className="sr-only">{caption}</caption>
-    <thead><tr>{headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead>
-    <tbody>{rows.map(row => <tr key={row.id}>{row.cells.map((cell, i) => <td key={headers[i]} data-label={headers[i]}><div>{cell}</div></td>)}</tr>)}</tbody>
-  </table></div>;
-}
-
-function Empty({ title, description, children }) {
-  return <div className={styles.empty}><Icon name="file" className="icon-lg" /><h3>{title}</h3><p>{description}</p>{children}</div>;
+  return <Pill tone={TONE[status[1]] || 'mute'}>{status[0]}</Pill>;
 }
 
 function PlanSelect({ value, onChange }) {
@@ -156,17 +147,12 @@ function PaymentAdmin() {
     ['Sắp hết hạn', data.subscriptions.filter(isSoon).length, 'Trong 7 ngày tới'],
   ];
 
-  if (billing.isPending) return <div className="page sheet" role="status">Đang tải dữ liệu thanh toán…</div>;
-  if (billing.isError) return <div className="page sheet"><ErrorState description={billing.error.message} onRetry={() => billing.refetch()} /></div>;
-  return <div className={`page ${styles.page}`}>
-
-
-    <article className="sheet" aria-labelledby="page-title">
-      <nav className={styles.breadcrumb} aria-label="Đường dẫn"><Link href="/quan-tri/chu-de">Quản trị</Link><span aria-hidden="true">/</span><span aria-current="page">Quản lý thanh toán</span></nav>
-      <div className={styles.heading}>
-        <div className="form-head"><h1 id="page-title">Quản lý thanh toán</h1><p>Theo dõi giao dịch, quản lý thời hạn và quyền lợi gói dịch vụ.</p></div>
-        <button type="button" className="btn btn-secondary" onClick={() => billing.refetch()} disabled={billing.isFetching}>Làm mới</button>
-      </div>
+  const head = <AdminPageHead title="Thanh toán & gói" description="Theo dõi giao dịch VNPay, thời hạn gói của người dùng và cấu hình giá, quyền lợi từng gói." actions={<><Link href="/quan-tri/doanh-thu" className="adm-btn"><Icon name="chart" />Doanh thu</Link><button type="button" className="adm-btn" onClick={() => billing.refetch()} disabled={billing.isFetching}><Icon name="refresh" />{billing.isFetching ? 'Đang tải…' : 'Làm mới'}</button></>} />;
+  if (billing.isPending) return <div className="adm-page">{head}<div className="adm-card adm-empty" role="status">Đang tải dữ liệu thanh toán…</div></div>;
+  if (billing.isError) return <div className="adm-page">{head}<div className="adm-card"><ErrorState description={billing.error.message} onRetry={() => billing.refetch()} /></div></div>;
+  return <div className={`adm-page ${styles.page}`}>
+    {head}
+    <article className="adm-card" style={{ padding: 16 }} aria-label="Quản lý thanh toán">
       <div className={styles.summary} aria-label="Tổng quan thanh toán">
         {summary.map(([label, value, note], index) => <article key={label}><p>{label}</p><strong className={index === 0 ? styles.positive : undefined}>{value}</strong><small>{note}</small></article>)}
       </div>
@@ -188,18 +174,24 @@ function PaymentAdmin() {
           <button className="btn btn-quiet" type="reset">Xóa bộ lọc</button>
         </form>
         <p className={styles.feedback} id="payment-feedback" role="status" aria-live="polite">{filters.from && filters.to && filters.from > filters.to ? 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.' : ''}</p>
-        {items.length ? <DataTable headers={['Mã đơn / Thời gian', 'Người dùng', 'Gói dịch vụ', 'Số tiền', 'Trạng thái', 'Thao tác']} caption="Các giao dịch thanh toán qua VNPay" rows={items.slice(offset, offset + PAGE_SIZE).map(t => ({ id: t.id, cells: [
-          <><strong>{t.id}</strong><small>{date(t.created)} · {time(t.created)}</small></>,
-          <><strong>{t.name}</strong><small>{t.email}</small></>,
-          <><span className={styles.planLabel}>{planName(t.plan)}</span><small>{t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</small></>,
-          <span key="amount" className={styles.money}>{money(t.amount)}</span>, <StatusBadge key="status" status={PAYMENT_STATUSES[t.status]} />,
-          <button key="detail" type="button" className="btn btn-quiet" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => showDetail(t.id)}>Chi tiết ↗</button>,
-        ] }))} /> : <Empty title="Không có giao dịch" description="Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm kết quả."><button className="btn btn-secondary" type="button" onClick={clearFilters}>Xóa bộ lọc</button></Empty>}
-        <div className={styles.tableFooter}><span role="status" aria-live="polite">{items.length ? `Hiển thị ${offset + 1}–${Math.min(offset + PAGE_SIZE, items.length)} / ${items.length} giao dịch` : '0 giao dịch'}</span><nav className="pager" aria-label="Phân trang giao dịch">
-          <button type="button" disabled={currentPage === 1} aria-label="Trang trước" onClick={() => setPage(currentPage - 1)}><Icon name="chevron-left" /></button>
-          {Array.from({ length: pages }, (_, index) => <button key={index} type="button" aria-label={`Trang ${index + 1}`} aria-current={currentPage === index + 1 ? 'page' : undefined} onClick={() => setPage(index + 1)}>{index + 1}</button>)}
-          <button type="button" disabled={currentPage === pages} aria-label="Trang sau" onClick={() => setPage(currentPage + 1)}><Icon name="chevron-right" /></button>
-        </nav></div>
+        <div className="adm-card" style={{ boxShadow: 'none' }}><AdminTable
+          caption="Các giao dịch thanh toán qua VNPay"
+          rows={items.slice(offset, offset + PAGE_SIZE)}
+          onRowClick={t => showDetail(t.id)}
+          rowLabel={t => `Chi tiết đơn ${t.id}`}
+          columns={[
+            { key: 'id', header: 'Mã đơn', sortValue: t => Date.parse(t.created), render: t => <span><b style={{ fontFamily: 'var(--font-admin-mono)', fontWeight: 600 }}>{t.id}</b><br /><span className="adm-muted">{date(t.created)} · {time(t.created)}</span></span> },
+            { key: 'user', header: 'Người dùng', sortValue: t => t.name, render: t => <Who name={t.name} sub={t.email} /> },
+            { key: 'plan', header: 'Gói', sortValue: t => t.plan, render: t => <span><Pill tone="acc">{planName(t.plan)}</Pill><br /><span className="adm-muted">{t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</span></span> },
+            { key: 'amount', header: 'Số tiền', align: 'right', sortValue: t => t.amount, render: t => money(t.amount) },
+            { key: 'status', header: 'Trạng thái', sortValue: t => t.status, render: t => <StatusBadge status={PAYMENT_STATUSES[t.status]} /> },
+            { key: 'detail', header: 'Thao tác', srHeader: true, render: t => <div className="adm-row-actions"><button type="button" className="adm-btn adm-btn-sm" aria-label={`Xem chi tiết đơn ${t.id}`} onClick={() => showDetail(t.id)}>Chi tiết</button></div> },
+          ]}
+          emptyTitle="Không có giao dịch"
+          emptyText="Thử thay đổi từ khóa hoặc xóa bộ lọc."
+          emptyAction={<button className="adm-btn" type="button" onClick={clearFilters}>Xóa bộ lọc</button>}
+          pagination={{ page: currentPage - 1, size: PAGE_SIZE, totalElements: items.length, totalPages: pages, onPageChange: value => setPage(value + 1) }}
+        /></div>
       </section>
 
       <section id="panel-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" tabIndex={0} hidden={tab !== 'subscriptions'}>
@@ -210,10 +202,19 @@ function PaymentAdmin() {
           <label className="field">Hiệu lực<select className="select" value={subFilters.status} onChange={event => setSubFilters({ ...subFilters, status: event.target.value })}><option value="">Tất cả trạng thái</option><option value="active">Còn hiệu lực</option><option value="soon">Sắp hết hạn 7 ngày</option><option value="expired">Đã hết hạn</option><option value="cancelled">Đã hủy</option></select></label>
           <button className="btn btn-quiet" type="reset">Xóa bộ lọc</button>
         </form>
-        {subscriptions.length ? <DataTable headers={['Người dùng', 'Gói dịch vụ', 'Bắt đầu', 'Hết hạn', 'Trạng thái']} caption="Gói dịch vụ của người dùng" rows={subscriptions.map(s => ({ id: s.id, cells: [
-          <><strong>{s.name}</strong><small>{s.email}</small></>, <span key="plan" className={styles.planLabel}>{planName(s.plan)}</span>, date(s.start),
-          <><strong>{date(s.expiry)}</strong><small>{time(s.expiry)} · Giờ Việt Nam</small></>, <StatusBadge key="status" status={subscriptionStatus(s)} />,
-        ] }))} /> : <Empty title="Không có gói phù hợp" description="Thử thay đổi tên, email hoặc điều kiện lọc." />}
+        <div className="adm-card" style={{ boxShadow: 'none' }}><AdminTable
+          caption="Gói dịch vụ của người dùng"
+          rows={subscriptions}
+          columns={[
+            { key: 'user', header: 'Người dùng', sortValue: x => x.name, render: x => <Who name={x.name} sub={x.email} /> },
+            { key: 'plan', header: 'Gói', sortValue: x => x.plan, render: x => <Pill tone="acc">{planName(x.plan)}</Pill> },
+            { key: 'start', header: 'Bắt đầu', nowrap: true, sortValue: x => Date.parse(x.start), render: x => date(x.start) },
+            { key: 'expiry', header: 'Hết hạn', nowrap: true, sortValue: x => Date.parse(x.expiry), render: x => <span><b style={{ fontWeight: 500 }}>{date(x.expiry)}</b><br /><span className="adm-muted">{time(x.expiry)} · giờ Việt Nam</span></span> },
+            { key: 'status', header: 'Trạng thái', render: x => <StatusBadge status={subscriptionStatus(x)} /> },
+          ]}
+          emptyTitle="Không có gói phù hợp"
+          emptyText="Thử thay đổi tên, email hoặc điều kiện lọc."
+        /></div>
       </section>
 
       <section id="panel-plans" role="tabpanel" aria-labelledby="tab-plans" tabIndex={0} hidden={tab !== 'plans'}>
