@@ -623,11 +623,18 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Kiểm chứng 21/11/2026:** `FR13UserDetailTest` 2/2 (403/404; 30 ngày, 2 ngày học, chuỗi 2, gói PRO, 299.000 đ, 1 thất bại; nhật ký lọc theo `doiTuongId` đúng 1 dòng khóa), `FR13AdminTest` 9/9 và `FR13DashboardTest` 2/2 vẫn đạt. HTTP thật trên BE dev 8081: 100/100 tài khoản trả 200, id lạ 404. FE: F3.15 (D).
 - **Còn lại để tick:** Postman.
 
-### [ ] B3.17 Lịch hoạt động năm (kiểu GitHub) — FR-11, UI35 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
-- Phạm vi (người dùng chốt 21/11/2026): lưới 53 tuần trên `/thong-ke`, chỉ số mặc định lượt ôn, tự chọn luyện tập / phút học / đóng góp công khai. Không đổi giới hạn 90 ngày của `/statistics/overview`.
+### [ ] B3.17 Lịch hoạt động năm (kiểu GitHub) — FR-11, UI40 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
+- Phạm vi (người dùng chốt 21/11/2026): lưới 53 tuần trên `/ca-nhan` (ban đầu `/thong-ke`), chỉ số mặc định lượt ôn, tự chọn luyện tập / phút học / đóng góp công khai. Không đổi giới hạn 90 ngày của `/statistics/overview`.
 - API: `GET /statistics/activity?denNgay=` (mặc định hôm nay theo múi giờ người học; ngày tương lai hoặc sai dạng → 400 `denNgay`). `tuNgay` = Thứ Hai của tuần cách `denNgay` 52 tuần. Trả `{muiGio, tuNgay, denNgay, theoNgay[{ngay, soLuotOn, soCauLuyen, soPhut, soCongKhai}]}`; `soCongKhai` = yêu cầu công khai của người dùng được duyệt (`DA_DUYET`) theo ngày `xu_ly_at`; `soPhut` dùng chung `StudyTimeService` với `/overview`. Không có migration.
 - **Đã làm 21/11/2026:** `ActivityQuery`, `ActivityResponse`, `ActivityDayResponse`, `ActivityService`; `StatisticsRepository.reviewTimes`, `approvedPublishTimes`; `StatisticsController` thêm `/activity`.
 - **Kiểm chứng 21/11/2026:** `FR11StatisticsTest` 6/6 (thêm `activityHeatmapCoversFiftyThreeWeeksFromMondayInLocalDays`: 365 ngày từ Thứ Hai 20/10/2025, ranh giới ngày Asia/Ho_Chi_Minh, chỉ đếm yêu cầu `DA_DUYET` của chính người dùng, 400 ngày tương lai/sai dạng, 401 chưa đăng nhập). FE: F3.17.
+- **Còn lại để tick:** Postman.
+
+### [ ] B3.18 Hồ sơ công khai tác giả — FR-04 (yêu cầu 21/11/2026; code + test xong, chờ Postman)
+- Phạm vi: mở tác giả từ thanh tìm kiếm thấy hồ sơ kiểu GitHub chỉ với thông tin công khai; không lộ email, múi giờ, lịch hoạt động học.
+- API: `GET /library/authors/{id}` (không cần đăng nhập) giữ `{id, tenHienThi, soBoThe, soThe}` và thêm `thamGiaAt` (`nguoi_dung.created_at`), `anhDaiDienUrl` (URL ký tạm, null khi không có ảnh hoặc ảnh đã xóa/chưa xong), `huyHieu[{ma, ten, moTa, nhanAt}]` (chỉ huy hiệu đã nhận). 404 giữ như cũ.
+- **Đã làm 21/11/2026:** `AuthorProfileResponse`, `PublicBadgeResponse`; `LibrarySearchRepository.joinedAt`; `FileService.publicAvatar`; `LibrarySearchService.author` chạy ngoài giao dịch (vì `FileService` là `Propagation.NEVER`) và gọi `EngagementService.badges`.
+- **Kiểm chứng 21/11/2026:** `FR04LibrarySearchTest` 4/4 (hồ sơ có `thamGiaAt`, `anhDaiDienUrl` null, 1 huy hiệu, không có `email`). FE: F3.18.
 - **Còn lại để tick:** Postman.
 
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)

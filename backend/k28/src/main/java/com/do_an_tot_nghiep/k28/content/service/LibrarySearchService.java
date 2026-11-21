@@ -3,7 +3,12 @@ package com.do_an_tot_nghiep.k28.content.service;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.AuthorProfileResponse;
+import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryAuthorResponse;
+import com.do_an_tot_nghiep.k28.content.dto.PublicBadgeResponse;
+import com.do_an_tot_nghiep.k28.engagement.dto.BadgeResponse;
+import com.do_an_tot_nghiep.k28.engagement.service.EngagementService;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibrarySearchCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibrarySearchQuery;
@@ -18,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -35,6 +41,8 @@ public class LibrarySearchService {
     private final LibrarySearchRepository search;
     private final BoTheRepository decks;
     private final LibraryService library;
+    private final FileService fileService;
+    private final EngagementService engagementService;
 
     public LibrarySuggestResponse suggest(LibrarySuggestQuery request, Long viewerId) {
         String escaped = escaped(request.q());
@@ -87,7 +95,8 @@ public class LibrarySearchService {
         );
     }
 
-    public LibraryAuthorResponse author(Long id) {
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public AuthorProfileResponse author(Long id) {
         if (id == null || id <= 0) {
             throw new ApiException(
                     ErrorCode.VALIDATION_FAILED,
@@ -96,10 +105,24 @@ public class LibrarySearchService {
             );
         }
 
-        return search.author(id).orElseThrow(() -> new ApiException(
+        LibraryAuthorResponse author = search.author(id).orElseThrow(() -> new ApiException(
                 ErrorCode.NOT_FOUND,
                 "Không tìm thấy tác giả"
         ));
+        FileResponse avatar = fileService.publicAvatar(id);
+        List<PublicBadgeResponse> huyHieu = engagementService.badges(id).stream()
+                .filter(BadgeResponse::daNhan)
+                .map(badge -> new PublicBadgeResponse(badge.ma(), badge.ten(), badge.moTa(), badge.nhanAt()))
+                .toList();
+        return new AuthorProfileResponse(
+                author.id(),
+                author.tenHienThi(),
+                author.soBoThe(),
+                author.soThe(),
+                search.joinedAt(id).orElse(null),
+                avatar == null ? null : avatar.downloadUrl(),
+                huyHieu
+        );
     }
 
     private PageResponse<LibraryDeckResponse> publicDecks(String q, int limit) {

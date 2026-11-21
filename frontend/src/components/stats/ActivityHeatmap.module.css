@@ -2,7 +2,6 @@
   --cell: 12px;
   --gap: 3px;
   --empty: color-mix(in srgb, var(--ink) 6%, var(--sheet));
-  margin-block: var(--sp-5);
   padding: var(--sp-4);
   border: var(--rule) solid var(--line);
   border-radius: var(--radius-card);

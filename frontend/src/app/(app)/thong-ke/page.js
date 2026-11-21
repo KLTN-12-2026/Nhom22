@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { SKILL, SKILL_PRACTICE, label } from '@/lib/practice-labels.mjs';
-import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
 import styles from './page.module.css';
 
 const MAX_DAYS = 90;
@@ -194,8 +193,6 @@ function StatsContent() {
           <h1 id="page-title">Thống kê học tập</h1>
           <p>Số liệu tính từ lượt ôn và bài luyện đã ghi nhận. Mỗi lượt chỉ tính một lần, ngày tính theo múi giờ của bạn.</p>
         </div>
-
-        <ActivityHeatmap />
 
         <form className={styles.filters} id="filters" noValidate onSubmit={handleApply}>
           <fieldset className="fieldset">

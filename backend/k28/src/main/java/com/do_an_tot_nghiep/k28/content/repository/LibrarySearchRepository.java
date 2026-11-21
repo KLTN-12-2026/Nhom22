@@ -9,6 +9,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -145,6 +148,13 @@ public class LibrarySearchRepository {
                         """.formatted(DECK_CARD_COUNT, AUTHORS),
                 new MapSqlParameterSource("id", id),
                 AUTHOR
+        ).stream().findFirst();
+    }
+
+    public Optional<Instant> joinedAt(Long id) {
+        return jdbc.query("SELECT created_at FROM nguoi_dung WHERE id = :id",
+                new MapSqlParameterSource("id", id),
+                (rs, i) -> rs.getObject("created_at", LocalDateTime.class).toInstant(ZoneOffset.UTC)
         ).stream().findFirst();
     }
 

@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.content.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.AuthorProfileResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryAuthorResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibrarySearchCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibrarySearchQuery;
@@ -40,7 +41,7 @@ public class LibrarySearchController {
     }
 
     @GetMapping("/authors/{id}")
-    public LibraryAuthorResponse author(@PathVariable("id") Long id) {
+    public AuthorProfileResponse author(@PathVariable("id") Long id) {
         return service.author(id);
     }
 }

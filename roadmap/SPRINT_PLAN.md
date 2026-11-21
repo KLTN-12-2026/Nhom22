@@ -159,7 +159,8 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B3.11 Quản trị vận hành (gọn mạnh) | `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` | F3.11 | UI51 `/quan-tri/dich-vu` |
 | B3.12b Lịch sử giao dịch, nhắc/hết hạn gói, áp quyền lợi | `GET /billing/transactions`, `GET /billing/transactions/{maDon}/receipt`; job nhắc 7 ngày + hết hạn | F3.12 | UI56 `/thanh-toan-lich-su`, banner hết hạn trong `AppShell`, UI44 thông báo |
 | B3.14 Giới hạn sao chép & duyệt công khai bản sao (21/11) | `POST /decks/{id}/copy` (409/422 mới), `POST /decks/{id}/publish-requests`, `DELETE /publish-requests/{id}`, `GET /me/publish-requests`, `POST /publish-requests/{id}/decision`, `GET /admin/publish-requests`, `POST /admin/publish-requests/{id}/decision` | F3.14 | UI14, UI03, UI60 `/yeu-cau-cong-khai`, UI61 `/quan-tri/duyet-cong-khai` |
-| B3.17 Lịch hoạt động năm (21/11) | `GET /statistics/activity` | F3.17 | UI35 `/thong-ke` |
+| B3.17 Lịch hoạt động năm (21/11) | `GET /statistics/activity` | F3.17 | UI40 `/ca-nhan` |
+| B3.18 Hồ sơ công khai tác giả (21/11) | `GET /library/authors/{id}` (thêm ảnh, ngày tham gia, huy hiệu) | F3.18 | UI40 `/ca-nhan`, `/tac-gia/{id}` |
 | B3.12c Quản lý thanh toán & doanh thu (góp ý GVHD 10/11) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
 **Xong khi:** TC-14, TC-16, TC-17, TC-21…TC-24 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 + bước 9b (bắt buộc mua gói qua VNPay sandbox) + 9c (sửa hạn, nhắc hết hạn, khóa, doanh thu) trên dữ liệu minh họa.

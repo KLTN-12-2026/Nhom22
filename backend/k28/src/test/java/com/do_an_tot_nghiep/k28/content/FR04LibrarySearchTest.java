@@ -84,9 +84,17 @@ class FR04LibrarySearchTest extends AbstractIntegrationTest {
         assertThat(ids(page.get("items"))).containsExactly(longer);
         assertThat(page.get("totalPages").asInt()).isEqualTo(2);
 
+        jdbc.update("INSERT INTO nguoi_dung_huy_hieu (nguoi_dung_id, huy_hieu_id, nhan_at, created_at, updated_at) "
+                + "SELECT ?, MIN(id), UTC_TIMESTAMP(3), UTC_TIMESTAMP(3), UTC_TIMESTAMP(3) FROM huy_hieu WHERE hoat_dong = TRUE",
+                author);
         JsonNode profile = body(mockMvc.perform(get("/api/v1/library/authors/{id}", author))
                 .andExpect(status().isOk()).andReturn());
         assertThat(profile.get("tenHienThi").asString()).isEqualTo("Tác giả " + token);
+        assertThat(profile.get("thamGiaAt").isNull()).isFalse();
+        assertThat(profile.get("anhDaiDienUrl").isNull()).isTrue();
+        assertThat(profile.get("huyHieu")).hasSize(1);
+        assertThat(profile.get("huyHieu").get(0).get("ten").asString()).isNotBlank();
+        assertThat(profile.has("email")).isFalse();
 
         JsonNode authorDecks = body(mockMvc.perform(get("/api/v1/library/decks").param("chuSoHuuId", author.toString()))
                 .andExpect(status().isOk()).andReturn());
