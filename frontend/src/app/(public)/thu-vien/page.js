@@ -10,6 +10,7 @@ import styles from './page.module.css';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { DeckCover } from '@/components/ui/DeckCover';
+import { AuthorTag } from '@/components/content/AuthorTag';
 
 const VIEW_TABS = [
   { value: 'trending', label: 'Thịnh hành' },
@@ -216,6 +217,7 @@ function LibraryContent() {
                           <Icon name="check" />Đã sao chép
                         </Link>
                       )}
+                      <AuthorTag id={deck.chuSoHuuId} name={deck.tenTacGia} prefix="" />
                       <span>{deck.tenChuDe || 'Chưa phân chủ đề'}</span>
                       <span className="muted">Cập nhật {new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</span>
                     </div>

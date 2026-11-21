@@ -9,6 +9,7 @@ import { clearDeckCopyKey, copyDeck, deckCopyKey } from '@/lib/deck-copy.mjs';
 import { useMe } from '@/hooks/useMe';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { CardEntry } from '@/components/content/CardEntry';
+import { AuthorTag } from '@/components/content/AuthorTag';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
@@ -89,6 +90,7 @@ function LibraryDetail({ id }) {
       <div className="form-head">
         <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span><CopyBadge banSao={boThe.banSao} /></div>
         <h1 id="deck-title" className={styles.title}>{boThe.ten}</h1>
+        <AuthorTag id={boThe.chuSoHuuId} name={boThe.tenTacGia} prefix={boThe.banSao ? 'Người sao chép' : 'Tác giả'} />
         {boThe.moTa && <p>{boThe.moTa}</p>}
         <div className={styles.actions}>
           {boThe.banSao

@@ -6,3 +6,4 @@
 
 .listBar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-6); margin-bottom: var(--sp-3); padding-bottom: var(--sp-2); border-bottom: var(--rule-strong, 2px) solid var(--primary); }
 .listBar h2 { margin: 0; font-family: var(--font-form); font-stretch: var(--stretch-form); font-size: 1.125rem; font-weight: 700; }
+.authors { display: flex; flex-wrap: wrap; gap: var(--sp-1, 4px) var(--sp-4); margin-bottom: var(--sp-2); }

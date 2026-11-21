@@ -5,6 +5,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon, ErrorState, Pagination, ConfirmDialog } from '@/components/ui';
 import { CardEntry } from '@/components/content/CardEntry';
+import { AuthorTag } from '@/components/content/AuthorTag';
+import { useMe } from '@/hooks/useMe';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
@@ -26,6 +28,7 @@ export default function DeckDetailPage() {
   const client = useQueryClient();
   const [showImages, setShowImages] = useCardImages();
   const { data: deck, isLoading, error, refetch } = useDeck(id);
+  const { data: me } = useMe();
   const { data: topics = [] } = useTopics();
   const [page, setPage] = useState(0);
   const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
@@ -64,6 +67,10 @@ export default function DeckDetailPage() {
       <div className="form-head">
         <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span><CopyBadge banSao={deck.banSao} /></div>
         <h1 id="deck-title" className="deck-title">{deck.ten}</h1>
+        <div className={styles.authors}>
+          <AuthorTag id={me?.id} name={me?.tenHienThi} prefix={deck.banSao ? 'Bản sao của' : 'Tác giả'} you />
+          {deck.banSao && <AuthorTag name={deck.banSao.tacGiaGoc || 'Không rõ'} prefix="Tác giả gốc" />}
+        </div>
         {deck.moTa && <p>{deck.moTa}</p>}
         <div className={styles.actions}>
           <div className={styles.mainActions}>
