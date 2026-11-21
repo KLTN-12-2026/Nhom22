@@ -54,6 +54,29 @@ const EMBLEM = {
     </g>
   ),
   star: <polygon points={STAR} className={styles.solid} />,
+  trophy: (
+    <g>
+      <path d="M39 30h22v9c0 8-5 13-11 13s-11-5-11-13Z" className={styles.solid} />
+      <path d="M39 33h-5c0 6 3 9 6 9M61 33h5c0 6-3 9-6 9" />
+      <path d="M50 52v6M42 62h16" />
+      <path d="M45 37l3 3 6-6" className={styles.cut} />
+    </g>
+  ),
+  podium: (
+    <g>
+      <rect x="44" y="40" width="12" height="22" rx="1" className={styles.solid} />
+      <rect x="32" y="48" width="12" height="14" rx="1" className={styles.soft} />
+      <rect x="56" y="52" width="12" height="10" rx="1" className={styles.soft} />
+      <path d="M50 27l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7Z" className={styles.solid} />
+    </g>
+  ),
+  medal: (
+    <g>
+      <path d="M41 28l6 12M59 28l-6 12" />
+      <circle cx="50" cy="50" r="11" className={styles.solid} />
+      <circle cx="50" cy="50" r="6" className={styles.cut} />
+    </g>
+  ),
   shield: (
     <g>
       <path d="M50 29l14 6v11c0 9-6 15-14 19-8-4-14-10-14-19V35Z" className={styles.solid} />
@@ -68,14 +91,18 @@ const BY_CODE = {
   CHUOI_7: ['calendar', 'favorite'],
   ON_100: ['cards', 'primary'],
   LUYEN_10: ['pencil', 'secondary'],
-  DIEM_500: ['star', 'accent']
+  DIEM_500: ['star', 'accent'],
+  TOP_10_TUAN: ['medal', 'primary'],
+  TOP_3_TUAN: ['podium', 'accent'],
+  QUAN_QUAN_TUAN: ['trophy', 'accent']
 };
 
 const BY_KIND = {
   TONG_LUOT_ON: ['cards', 'primary'],
   CHUOI_NGAY: ['flame', 'favorite'],
   TONG_BAI_LUYEN: ['pencil', 'secondary'],
-  TONG_DIEM: ['star', 'accent']
+  TONG_DIEM: ['star', 'accent'],
+  XEP_HANG_TUAN: ['trophy', 'accent']
 };
 
 export function badgeLook(badge) {

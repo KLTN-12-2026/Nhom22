@@ -1,12 +1,16 @@
 package com.do_an_tot_nghiep.k28.stats.service;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
+import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
+import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
 import com.do_an_tot_nghiep.k28.stats.dto.ActivityDayResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.ActivityQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.ActivityResponse;
+import com.do_an_tot_nghiep.k28.stats.dto.PublicActivityResponse;
 import com.do_an_tot_nghiep.k28.stats.repository.AttemptStatRow;
 import com.do_an_tot_nghiep.k28.stats.repository.StatisticsRepository;
 import java.time.Clock;
@@ -34,6 +38,24 @@ public class ActivityService {
     private final AccountService accountService;
     private final StudyTimeService studyTimeService;
     private final StatisticsRepository statistics;
+    private final SettingsService settingsService;
+    private final NguoiDungRepository users;
+
+    @Transactional(readOnly = true)
+    public PublicActivityResponse publicActivity(Long userId) {
+        if (userId == null || userId <= 0 || users.findById(userId)
+                .filter(user -> user.getTrangThai() == TrangThaiNguoiDung.HOAT_DONG).isEmpty()) {
+            throw new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy người dùng");
+        }
+        if (!settingsService.publicActivity(userId)) {
+            return new PublicActivityResponse(false, null, null, null, List.of());
+        }
+        ActivityResponse full = activity(userId, new ActivityQuery(null));
+        List<ActivityDayResponse> days = full.theoNgay().stream()
+                .map(day -> new ActivityDayResponse(day.ngay(), day.soLuotOn(), 0, 0, day.soCongKhai()))
+                .toList();
+        return new PublicActivityResponse(true, full.muiGio(), full.tuNgay(), full.denNgay(), days);
+    }
 
     @Transactional(readOnly = true)
     public ActivityResponse activity(Long userId, ActivityQuery query) {

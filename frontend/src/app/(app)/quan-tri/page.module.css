@@ -75,6 +75,17 @@
 .journal span { min-width: 0; overflow-wrap: anywhere; }
 .journal q { display: block; margin-top: 2px; color: var(--ink-2); font-family: var(--font-word); font-style: italic; }
 
+.today { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); margin: 0; }
+.today > div { min-width: 0; padding-left: var(--sp-3); border-left: var(--rule) solid var(--line); }
+.today > div:first-child { padding-left: 0; border-left: 0; }
+.today dt { color: var(--ink-3); font-size: var(--fs-caption); font-weight: 650; }
+.today dd { margin: 2px 0 0; }
+.today dd b { display: block; font-size: var(--fs-h2); font-weight: 750; line-height: 1.1; }
+.today dd small { display: block; font-size: var(--fs-caption); }
+.today dd small:not([class]) { color: var(--ink-3); }
+.services { margin: var(--sp-4) 0 0; padding-top: var(--sp-3); border-top: var(--rule) solid var(--line); font-size: var(--fs-small); color: var(--ink-2); }
+.services > span:first-child { color: var(--ink-3); font-weight: 650; }
+
 .loading { display: grid; gap: var(--sp-5); }
 .skeleton { height: 220px; margin: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-3); border-radius: 4px; background: var(--primary-tint); animation: pulse var(--dur-pending) ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .45; } }

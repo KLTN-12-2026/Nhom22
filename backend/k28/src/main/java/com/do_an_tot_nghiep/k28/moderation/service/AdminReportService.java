@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.moderation.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.HanhDongQuanTri;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.LoaiDoiTuong;
@@ -43,6 +45,7 @@ public class AdminReportService {
     private final AccountService accounts;
     private final JsonMapper json;
     private final Clock clock;
+    private final RealtimeService realtime;
 
     @Transactional(readOnly = true)
     public PageResponse<AdminReportResponse> list(TrangThaiBaoCao trangThai, LoaiDoiTuongBaoCao loai,
@@ -79,6 +82,7 @@ public class AdminReportService {
         List<BaoCaoNoiDung> pending = reports.findPendingForUpdate(report.getLoaiDoiTuong(), report.getDoiTuongId());
         pending.forEach(item -> item.resolve(request.quyetDinh(), adminId, lyDo, now));
         reports.flush();
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
 
         Map<String, Object> truoc = new LinkedHashMap<>();
         truoc.put("trangThai", TrangThaiBaoCao.CHO_XU_LY);

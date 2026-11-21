@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon, ErrorState } from '@/components/ui';
 import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/DashboardHighlights';
+import { LeaderboardMini } from '@/components/engagement/LeaderboardMini';
 import styles from './page.module.css';
 
 const MINUTE_OPTIONS = [5, 10, 20];
@@ -252,6 +253,30 @@ function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pau
   );
 }
 
+function ChallengePanel() {
+  const { data } = useQuery({ queryKey: ['challenges'], queryFn: () => apiFetch('/api/v1/challenges'), retry: false, staleTime: 60000 });
+  if (!Array.isArray(data) || !data.length) return null;
+  const open = data.filter((c) => !c.hoanThanhAt);
+  const pick = (open.length ? open : data).reduce((a, c) => (c.giaTri / (c.mucTieu || 1) > a.giaTri / (a.mucTieu || 1) ? c : a));
+  const done = !!pick.hoanThanhAt;
+  const left = Math.max(0, pick.mucTieu - pick.giaTri);
+  return (
+    <section className="panel" aria-labelledby="challenge-title">
+      <h2 className="panel-title" id="challenge-title">Thử thách tuần</h2>
+      <p className={styles.goalLine}>
+        <span>{pick.ten}</span>
+        <span className="num">{Math.min(pick.giaTri, pick.mucTieu)}/{pick.mucTieu}</span>
+      </p>
+      <div className="meter is-progress" role="img" aria-label={`${pick.ten}: ${pick.giaTri} trên ${pick.mucTieu}`} style={{ '--v': Math.min(1, pick.giaTri / (pick.mucTieu || 1)) }}><span></span></div>
+      <p className="small muted" style={{ marginTop: 'var(--sp-2)' }}>
+        {done ? 'Đã hoàn thành tuần này.' : `Còn ${left} nữa, hạn ${fmtDay(pick.tuanKetThuc)}.`}
+        {open.length > 1 && ` Còn ${open.length - 1} thử thách khác.`}
+      </p>
+      <Link className="btn btn-quiet" href="/thanh-tich" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem thành tích</Link>
+    </section>
+  );
+}
+
 const errorText = (err, fallback) => {
   if (!err) return '';
   const fields = Array.isArray(err.data?.fieldErrors) ? err.data.fieldErrors.map((f) => f.message).filter(Boolean) : [];
@@ -486,20 +511,19 @@ export default function TodayPage() {
           </section>
 
           <aside className="side-col" data-when="ready">
-            <section className="panel" aria-labelledby="streak-title">
-              <h2 className="panel-title" id="streak-title">Chuỗi ngày học</h2>
+            <LeaderboardMini />
+
+            <section className="panel" aria-labelledby="goal-title">
+              <h2 className="panel-title" id="goal-title">Chuỗi ngày và mục tiêu</h2>
               <p className={styles.streak}>
                 <span className="tally-n">{plan.chuoiNgay || 0}</span>
                 <span>ngày liên tiếp</span>
               </p>
-              <p className="small muted">
-                {plan.homNayDaTinhChuoi ? 'Hôm nay đã được tính. ' : 'Hôm nay chưa được tính. '}
-                Một ngày được tính khi bạn có ít nhất {plan.luotToiThieuChuoi || 5} lượt ôn trong ngày, không cần kết thúc phiên.
+              <p className="small muted" style={{ marginBottom: 'var(--sp-4)' }}>
+                {plan.homNayDaTinhChuoi
+                  ? 'Hôm nay đã được tính vào chuỗi.'
+                  : `Hôm nay chưa được tính: cần ít nhất ${plan.luotToiThieuChuoi || 5} lượt ôn, không cần kết thúc phiên.`}
               </p>
-            </section>
-
-            <section className="panel" aria-labelledby="goal-title">
-              <h2 className="panel-title" id="goal-title">Mục tiêu mỗi ngày</h2>
               <p className={styles.goalLine}>
                 <span>Đã học {plan.daHocHomNay?.soLuot || 0} lượt hôm nay</span>
                 <span className="num">{plan.daHocHomNay?.soPhut || 0}/{plan.phutMoiNgay || 10} phút</span>
@@ -521,6 +545,8 @@ export default function TodayPage() {
                 Đổi thiết lập học
               </Link>
             </section>
+
+            <ChallengePanel />
 
             {plan.boThe && plan.boThe.length > 0 && (
               <section className="panel" aria-labelledby="decks-title">

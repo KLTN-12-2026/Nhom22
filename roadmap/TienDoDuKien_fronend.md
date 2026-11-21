@@ -276,6 +276,11 @@ frontend/
 - **Đã làm 21/11/2026:** `/ca-nhan` thành hai cột: `components/profile/ProfileCard.js` (ảnh lớn, tên, email, nút "Chỉnh sửa hồ sơ" sửa tại chỗ tên/múi giờ/ảnh, múi giờ, xác thực, vai trò, huy hiệu) và bên phải tab có icon (Tổng quan, Thiết lập học, Bảo mật, Thông báo). Tab Tổng quan: 4 số liệu, "Bộ thẻ nổi bật" (6 bộ, yêu thích trước), lịch hoạt động năm (chuyển từ `/thong-ke`). `/tac-gia/[id]` cùng bố cục với thông tin công khai (ảnh, tên, số bộ/thẻ, ngày tham gia, huy hiệu) + danh sách bộ công khai; xem chính mình có nút "Chỉnh sửa hồ sơ".
 - **Kiểm chứng 21/11/2026:** eslint 0 lỗi, `npm test` 101/101.
 
+### [x] F3.19 Cập nhật thời gian thực — chuông, gói, thanh toán, AI, menu quản trị ← B3.19 (yêu cầu 22/11/2026)
+- **Đã làm 22/11/2026:** `src/lib/realtime.mjs` (sự kiện → query key), `src/hooks/useEventStream.js` (EventSource, toast thông báo mới, khóa tài khoản → xóa cache và về `/dang-nhap`), gắn ở `AppShell` và `AdminShell`; menu quản trị lấy số đếm từ `GET /admin/dashboard/queue`, thêm số giao dịch treo; giãn polling dự phòng (chuông, sổ trực ban 5 phút; AI 5 giây; thanh toán 10 giây; lịch sử AI 2 phút).
+- **Kiểm chứng 22/11/2026:** eslint 0 lỗi, `tests/realtime.test.mjs` 3/3, `next build` thành công. `npm test` còn 2 lỗi có sẵn từ trước ở `api-client.test.mjs` (mascot), không liên quan.
+- **Trình duyệt thật 22/11/2026:** `next start` 3002 + BE 8081, đăng nhập `an@vocab.local`: `/events/stream` 200, banner thông báo hệ thống hiện/biến mất ngay khi Admin tạo/xóa. Proxy Next không giữ đệm luồng.
+
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 
 ### [ ] F4.1 E2E Playwright cho kịch bản demo TK §20.2

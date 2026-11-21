@@ -637,6 +637,13 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Kiểm chứng 21/11/2026:** `FR04LibrarySearchTest` 4/4 (hồ sơ có `thamGiaAt`, `anhDaiDienUrl` null, 1 huy hiệu, không có `email`). FE: F3.18.
 - **Còn lại để tick:** Postman.
 
+### [x] B3.19 Cập nhật thời gian thực bằng SSE, giai đoạn 1 — FR-12, FR-13, FR-15, TC-26 (yêu cầu 22/11/2026; xong 22/11/2026)
+- Phạm vi (người dùng chốt 22/11/2026): thông báo mới, thông báo hệ thống, khóa tài khoản, đổi gói, kết quả thanh toán, yêu cầu AI xong, hàng chờ quản trị (+ số đếm menu). Không đẩy realtime cho thống kê, bảng xếp hạng, kế hoạch hôm nay.
+- API: `GET /api/v1/events/stream` (SSE, cookie phiên, ngoài `SubscriptionGuard`), `GET /api/v1/admin/dashboard/queue` (ADMIN). Không migration.
+- **Đã làm 22/11/2026:** `common/realtime/` gồm `LoaiSuKien`, `SuKienRealtime`, `RealtimeService` (`toUser`, `toAdmins`, `toEveryone`), `RealtimeRelay` (AFTER_COMMIT + `@Async` → Redis `vl:realtime`), `RealtimeHub` (SseEmitter 15 phút, ping 25 giây, đóng luồng khi khóa tài khoản), `RealtimeConfig`, `EventStreamController`. `SecurityConfig` cho phép `DispatcherType.ASYNC`; `BillingConfig` loại `/api/v1/events/**` khỏi kiểm tra gói. Điểm phát: `NotificationService.create`, `AnnouncementService`, `AdminUserService.changeStatus`, `EntitlementService.activate`, `BillingService.cancelSubscription`, `AdminBillingService.updateExpiry`, `SubscriptionExpiryService`, `PaymentConfirmationService.confirm`, `AiRequestFinisher.finish`, `PublishRequestService`, `ReportService.create`, `AdminReportService.resolve`. `AdminDashboardService.queue` + `AdminDashboardController /queue`.
+- **Kiểm chứng 22/11/2026:** `FR12RealtimeTest` 4/4 (TC-26, gồm rollback không phát), `FR15BillingTest` 13/13 (người chưa có gói mở được luồng); hồi quy FR12/FR13/FR15/FR04PublishRequest/FR08/FR09 112/112.
+- **HTTP thật 22/11/2026:** BE dev 8081 + FE `next start` 3002 (proxy Next): luồng 200 `text/event-stream`, nhận `SAN_SANG`, `:ping` và `THONG_BAO_HE_THONG` khi Admin tạo/xóa thông báo; không cookie → 401; `/admin/dashboard/queue` Admin 200, học viên 403. Trình duyệt thật (`an@vocab.local`): trang Hôm nay mở luồng, banner thông báo mới hiện và biến mất không cần tải lại trang. Postman: 2 request (thư mục engagement, admin). Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md). FE: F3.19.
+
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
 
 ### [x] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24

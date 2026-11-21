@@ -8,6 +8,7 @@ import '@/styles/deck-illustrations.css';
 import '@/styles/learning-refinements.css';
 import '@/styles/effects.css';
 import '@/styles/paper.css';
+import '@/styles/tier.css';
 import { Providers } from './providers';
 import { MucCompanion } from '@/components/mascot/MucCompanion';
 

@@ -12,7 +12,8 @@ const CONDITION = {
   TONG_LUOT_ON: n => `${n} lượt ôn hợp lệ`,
   CHUOI_NGAY: n => `Chuỗi ${n} ngày học`,
   TONG_BAI_LUYEN: n => `${n} bài luyện đã nộp`,
-  TONG_DIEM: n => `${n} điểm thưởng`
+  TONG_DIEM: n => `${n} điểm thưởng`,
+  XEP_HANG_TUAN: n => (n === 1 ? 'Hạng nhất bảng xếp hạng tuần' : `Top ${n} bảng xếp hạng tuần`)
 };
 
 const fmtDay = day => {

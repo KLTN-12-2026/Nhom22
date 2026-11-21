@@ -21,20 +21,27 @@ function readMetric() {
   }
 }
 
-export function ActivityHeatmap() {
-  const [metricKey, setMetricKey] = useState(readMetric);
+const OWN = { url: '/api/v1/statistics/activity', queryKey: ['stats-activity'], metrics: null };
+
+export function ActivityHeatmap({ source = OWN, title = 'Hoạt động trong năm' }) {
+  const allowed = source.metrics ? ACTIVITY_METRICS.filter(m => source.metrics.includes(m.key)) : ACTIVITY_METRICS;
+  const [metricKey, setMetricKey] = useState(() => {
+    const saved = readMetric();
+    return allowed.some(m => m.key === saved) ? saved : allowed[0].key;
+  });
   const [tip, setTip] = useState(null);
   const scrollRef = useRef(null);
   const wrapRef = useRef(null);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['stats-activity'],
-    queryFn: () => apiFetch('/api/v1/statistics/activity'),
+    queryKey: source.queryKey,
+    queryFn: () => apiFetch(source.url),
     staleTime: 5 * 60 * 1000,
   });
 
   const metric = metricOf(metricKey);
-  const days = data?.theoNgay;
+  const hidden = data?.congKhai === false;
+  const days = hidden ? null : data?.theoNgay;
   const weeks = useMemo(() => buildWeeks(days), [days]);
   const months = useMemo(() => monthLabels(weeks), [weeks]);
   const limits = useMemo(() => thresholds((days || []).map(d => d[metric.key] || 0)), [days, metric.key]);
@@ -63,7 +70,7 @@ export function ActivityHeatmap() {
       <header className={styles.head}>
         <div>
           <h2 id="activity-title" className={styles.title}>
-            {isLoading || !days ? 'Hoạt động trong năm' : <><b>{number(summary.total)}</b> {metric.unit} trong năm qua</>}
+            {isLoading || !days ? title : <><b>{number(summary.total)}</b> {metric.unit} trong năm qua</>}
           </h2>
           {days && (
             <p className={styles.meta}>
@@ -74,7 +81,7 @@ export function ActivityHeatmap() {
           )}
         </div>
         <div className={styles.metrics} role="radiogroup" aria-label="Chỉ số hiển thị">
-          {ACTIVITY_METRICS.map(m => (
+          {!hidden && allowed.length > 1 && allowed.map(m => (
             <button key={m.key} type="button" role="radio" aria-checked={m.key === metric.key} className={styles.metric} style={{ '--hue': m.hue }} onClick={() => choose(m.key)}>
               <span className={styles.dot} aria-hidden="true" />{m.label}
             </button>
@@ -82,7 +89,9 @@ export function ActivityHeatmap() {
         </div>
       </header>
 
-      {error ? (
+      {hidden ? (
+        <p className={styles.state}>Người dùng này đã ẩn hoạt động học.</p>
+      ) : error ? (
         <p className={styles.state}>Không tải được lịch hoạt động. <button type="button" className="btn btn-quiet" onClick={() => refetch()}>Thử lại</button></p>
       ) : isLoading || !days ? (
         <div className={`${styles.skeleton} sk`} aria-hidden="true" />

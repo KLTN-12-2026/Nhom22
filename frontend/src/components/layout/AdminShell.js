@@ -7,9 +7,8 @@ import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Icon, useToast } from '@/components/ui';
 import { useAvatar } from '@/hooks/useAvatar';
+import { useEventStream } from '@/hooks/useEventStream';
 import { apiFetch, logout } from '@/lib/api-client';
-import { listPublishRequests } from '@/lib/publish-requests.mjs';
-import { listReports } from '@/lib/admin-ops.mjs';
 import '@/styles/admin.css';
 
 export const ADMIN_NAV = [
@@ -24,7 +23,7 @@ export const ADMIN_NAV = [
     { key: 'topics', label: 'Chủ đề và nhãn', href: '/quan-tri/chu-de' },
   ] },
   { group: 'Sổ sách', items: [
-    { key: 'payments', label: 'Thanh toán và gói', href: '/quan-tri/thanh-toan' },
+    { key: 'payments', label: 'Thanh toán và gói', href: '/quan-tri/thanh-toan', badge: 'payments', tone: 'red' },
     { key: 'revenue', label: 'Doanh thu', href: '/quan-tri/doanh-thu' },
     { key: 'services', label: 'Dịch vụ và hạn mức', href: '/quan-tri/dich-vu' },
     { key: 'announcements', label: 'Thông báo hệ thống', href: '/quan-tri/thong-bao' },
@@ -36,22 +35,18 @@ const ENV = process.env.NEXT_PUBLIC_APP_ENV || (process.env.NODE_ENV === 'produc
 const isActive = (pathname, href, exact) => pathname === href || (!exact && pathname.startsWith(href + '/'));
 const initials = name => (name || 'A').trim().split(/\s+/).slice(-2).map(word => word[0]).join('').toUpperCase();
 
-function usePendingPublishCount() {
+function useAdminQueue() {
   const { data } = useQuery({
-    queryKey: ['publish-requests', 'admin', 'CHO_DUYET', 'badge'],
-    queryFn: () => listPublishRequests(apiFetch, { admin: true, trangThai: 'CHO_DUYET', page: 0, size: 1 }),
-    staleTime: 60_000,
-  });
-  return data?.totalElements || 0;
-}
-
-function usePendingReportCount() {
-  const { data } = useQuery({
-    queryKey: ['admin-reports', 'CHO_XU_LY', '', 'count'],
-    queryFn: () => listReports(apiFetch, { trangThai: 'CHO_XU_LY', size: 1 }),
+    queryKey: ['admin-queue'],
+    queryFn: () => apiFetch('/api/v1/admin/dashboard/queue'),
     staleTime: 30_000,
+    refetchInterval: 300_000,
   });
-  return data?.totalElements || 0;
+  return {
+    publish: data?.congKhaiChoDuyet || 0,
+    reports: data?.baoCaoChoXuLy || 0,
+    payments: data?.giaoDichTreo || 0,
+  };
 }
 
 function SideNav({ pathname, badges }) {
@@ -84,8 +79,9 @@ export function AdminShell({ children, user }) {
   const [openAt, setOpenAt] = useState(null);
   const open = openAt === pathname;
   const setOpen = value => setOpenAt(value ? pathname : null);
-  const publish = usePendingPublishCount();
-  const reports = usePendingReportCount();
+  const badges = useAdminQueue();
+  const { publish } = badges;
+  useEventStream(user?.id);
   const handleLogout = () => logout(queryClient).catch(error => toast(error.message, { variant: 'error' }));
 
   useEffect(() => {
@@ -106,7 +102,7 @@ export function AdminShell({ children, user }) {
           <span>Phòng quản trị<small>VocabLearning</small></span>
         </Link>
         {ENV && <p className="adm-env"><span>Môi trường chạy</span><b>{ENV}</b></p>}
-        <SideNav pathname={pathname} badges={{ publish, reports }} />
+        <SideNav pathname={pathname} badges={badges} />
         <div className="adm-side-foot">
           <Link href="/hom-nay" className="adm-link adm-back"><Icon name="arrow-left" /><span>Về trang học</span></Link>
           <div className="adm-me">

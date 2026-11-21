@@ -4,5 +4,6 @@ public enum LoaiDieuKienHuyHieu {
     TONG_LUOT_ON,
     CHUOI_NGAY,
     TONG_BAI_LUYEN,
-    TONG_DIEM
+    TONG_DIEM,
+    XEP_HANG_TUAN
 }

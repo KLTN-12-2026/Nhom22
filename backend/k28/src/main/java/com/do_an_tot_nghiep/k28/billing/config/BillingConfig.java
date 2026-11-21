@@ -26,6 +26,7 @@ public class BillingConfig implements WebMvcConfigurer {
                         "/api/v1/me/**",
                         "/api/v1/billing/**",
                         "/api/v1/notifications/**",
+                        "/api/v1/events/**",
                         "/api/v1/reports",
                         "/api/v1/files/**",
                         "/api/v1/decks/*/export",

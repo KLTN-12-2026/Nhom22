@@ -87,6 +87,31 @@ class FR15EntitlementTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void currentPlanShowsTierAndAdminIsPremiumWithoutPurchase() throws Exception {
+        Actor pro = actor(false, "PRO");
+        send(pro, get("/api/v1/me/plan"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.goiMa").value("PRO"))
+                .andExpect(jsonPath("$.tenGoi").value("Pro"))
+                .andExpect(jsonPath("$.quanTri").value(false))
+                .andExpect(jsonPath("$.hetHanAt").isNotEmpty())
+                .andExpect(jsonPath("$.soNgayConLai").value(30));
+
+        Actor admin = actor(true, null);
+        send(admin, get("/api/v1/me/plan"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.goiMa").value("PREMIUM"))
+                .andExpect(jsonPath("$.tenGoi").value("Premium"))
+                .andExpect(jsonPath("$.quanTri").value(true))
+                .andExpect(jsonPath("$.hetHanAt").isEmpty());
+        send(admin, post("/api/v1/billing/checkouts"), Map.of("goiMa", "PRO", "chuKy", "THANG"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value("Tài khoản quản trị đã có đầy đủ quyền lợi Premium, không cần mua gói"));
+
+        mockMvc.perform(get("/api/v1/me/plan")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void tc22_premiumSampleDeckOnlyCopiesWithPremium() throws Exception {
         Actor admin = actor(true, null);
         String id = body(send(admin, post("/api/v1/admin/decks"), Map.of(
@@ -137,6 +162,10 @@ class FR15EntitlementTest extends AbstractIntegrationTest {
     private Integer cards(String deckId) {
         return jdbc.queryForObject("SELECT COUNT(*) FROM the_tu_vung WHERE bo_the_id = ? AND xoa_at IS NULL",
                 Integer.class, Long.valueOf(deckId));
+    }
+
+    private ResultActions send(Actor actor, MockHttpServletRequestBuilder request) throws Exception {
+        return mockMvc.perform(request.cookie(actor.session()).with(xsrf()));
     }
 
     private ResultActions send(Actor actor, MockHttpServletRequestBuilder request, Object body) throws Exception {

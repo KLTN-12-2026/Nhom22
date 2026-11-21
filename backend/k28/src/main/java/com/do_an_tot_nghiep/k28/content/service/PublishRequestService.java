@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.HanhDongQuanTri;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.LoaiDoiTuong;
@@ -62,6 +64,7 @@ public class PublishRequestService {
     private final NotificationService notifications;
     private final AuditService audit;
     private final Clock clock;
+    private final RealtimeService realtime;
 
     public DeckPublishStatusResponse submit(Long userId, Long deckId, String loiNhan) {
         Instant now = clock.instant();
@@ -112,6 +115,7 @@ public class PublishRequestService {
                     "Bản sao \"" + copy.getTen() + "\" của bộ \"" + source.getTen() + "\" đang chờ bạn duyệt.",
                     REVIEW_LINK, true, false);
         }
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         return copyInfo.status(request);
     }
 
@@ -127,6 +131,7 @@ public class PublishRequestService {
             throw new ApiException(ErrorCode.CONFLICT, "Yêu cầu đã được xử lý");
         }
         request.resolve(TrangThaiYeuCauCongKhai.DA_RUT, userId, null, now);
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         requests.flush();
         return copyInfo.status(request);
     }
@@ -204,6 +209,7 @@ public class PublishRequestService {
             audit.record(actorId, auditAction(decision), LoaiDoiTuong.BO_THE, copy.getId(), copy.getTen(),
                     body.lyDo(), Map.of("trangThai", before.name()), after);
         }
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         return responses(List.of(request)).getFirst();
     }
 
@@ -223,6 +229,7 @@ public class PublishRequestService {
 
     private void expire(YeuCauCongKhai request, Instant now) {
         request.resolve(TrangThaiYeuCauCongKhai.HET_HAN, null, null, now);
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         requests.flush();
         decks.findById(request.getBoTheId()).ifPresent(copy -> notifyResult(request, copy));
     }

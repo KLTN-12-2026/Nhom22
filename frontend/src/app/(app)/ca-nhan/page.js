@@ -6,6 +6,7 @@ import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { Icon } from '@/components/ui';
 import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
 import { CopyBadge } from '@/components/content/CopyBadge';
+import { MembershipPanel } from '@/components/tier/MembershipPanel';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -19,6 +20,7 @@ const pinned = decks => [...decks]
 export default function ProfileOverviewPage() {
   const { data: decks = [], isLoading } = useQuery({ queryKey: ['all-my-decks'], queryFn: () => fetchAllPages('/api/v1/decks') });
   const { data: badges = [] } = useQuery({ queryKey: ['badges'], queryFn: () => apiFetch('/api/v1/badges') });
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiFetch('/api/v1/me') });
   const totalCards = decks.reduce((sum, d) => sum + (d.soThe || 0), 0);
   const publicDecks = decks.filter(d => d.quyenTruyCap === 'CONG_KHAI').length;
   const stats = [
@@ -31,6 +33,8 @@ export default function ProfileOverviewPage() {
   return (
     <>
       <h1 id="page-title" className="sr-only">Tổng quan hồ sơ</h1>
+
+      <MembershipPanel name={me?.tenHienThi} />
 
       <ul className={styles.stats} role="list">
         {stats.map(s => (

@@ -1,10 +1,13 @@
 package com.do_an_tot_nghiep.k28.billing.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.billing.config.BillingProperties;
 import com.do_an_tot_nghiep.k28.billing.dto.CancelSubscriptionRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutResponse;
+import com.do_an_tot_nghiep.k28.billing.dto.CurrentPlanResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.PlanResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.SubscriptionResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.TransactionQuery;
@@ -45,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BillingService {
 
+    static final String GOI_MIEN_PHI = "FREE";
     private static final String KY_TU_MA = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final DateTimeFormatter NGAY_MA = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -61,6 +65,7 @@ public class BillingService {
     private final ReceiptRenderer receipts;
     private final BillingProperties props;
     private final Clock clock;
+    private final RealtimeService realtime;
 
     @Transactional(readOnly = true)
     public List<PlanResponse> plans() {
@@ -82,6 +87,22 @@ public class BillingService {
                         null, null, null));
     }
 
+    @Transactional(readOnly = true)
+    public CurrentPlanResponse currentPlan(Long nguoiDungId) {
+        Instant now = clock.instant();
+        boolean quanTri = entitlements.admin(nguoiDungId);
+        if (quanTri) {
+            return new CurrentPlanResponse(EntitlementService.GOI_QUAN_TRI, tenGoi(EntitlementService.GOI_QUAN_TRI),
+                    true, null, null, null);
+        }
+        return entitlements.current(nguoiDungId)
+                .map(dangKy -> new CurrentPlanResponse(dangKy.getGoiMa(), tenGoi(dangKy.getGoiMa()), false,
+                        dangKy.getBatDauAt(), dangKy.getHetHanAt(), soNgayConLai(dangKy, accounts.zoneOf(nguoiDungId), now)))
+                .orElseGet(() -> entitlements.planCode(nguoiDungId)
+                        .map(goiMa -> new CurrentPlanResponse(goiMa, tenGoi(goiMa), false, null, null, null))
+                        .orElseGet(() -> new CurrentPlanResponse(GOI_MIEN_PHI, "Free", false, null, null, null)));
+    }
+
     @Transactional
     public SubscriptionResponse cancelSubscription(Long nguoiDungId, CancelSubscriptionRequest request) {
         DangKyGoi dangKy = dangKyGoi.findForUpdate(request.id())
@@ -100,6 +121,7 @@ public class BillingService {
         }
         dangKy.huy(now);
         dangKyGoi.saveAndFlush(dangKy);
+        realtime.toUser(nguoiDungId, LoaiSuKien.GOI_THAY_DOI, null);
         return subscriptionResponse(dangKy, now);
     }
 
@@ -108,6 +130,10 @@ public class BillingService {
         GoiDichVu goi = goiDichVu.findByMaAndHoatDongTrue(request.goiMa())
                 .orElseThrow(() -> new ApiException(ErrorCode.BUSINESS_RULE, "goiMa",
                         "Gói không tồn tại hoặc đã ngừng bán"));
+        if (entitlements.admin(nguoiDungId)) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "goiMa",
+                    "Tài khoản quản trị đã có đầy đủ quyền lợi Premium, không cần mua gói");
+        }
         Instant now = clock.instant();
         entitlements.current(nguoiDungId)
                 .filter(dangKy -> !dangKy.getGoiMa().equals(goi.getMa()))

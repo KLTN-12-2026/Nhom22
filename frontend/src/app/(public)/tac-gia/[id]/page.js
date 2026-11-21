@@ -9,6 +9,9 @@ import { useLibraryAuthor } from '@/hooks/useSearch';
 import { useMe } from '@/hooks/useMe';
 import { libraryPage } from '@/lib/library-query.mjs';
 import { BadgeArt } from '@/components/engagement/BadgeArt';
+import { MembershipCard } from '@/components/tier/MembershipCard';
+import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
+import { tierFromCode } from '@/lib/tier.mjs';
 import styles from './page.module.css';
 
 const SIZE = 20;
@@ -93,6 +96,11 @@ function AuthorContent() {
       </aside>
 
       <section className={styles.main} aria-labelledby="decks-title">
+        {profile?.goiMa && <section className="sheet tier-panel" aria-label={`Thẻ thành viên của ${profile.tenHienThi}`}>
+          <MembershipCard tier={tierFromCode(profile.goiMa)} name={profile.tenHienThi} since={profile.thamGiaAt} />
+          <p className="tier-hint">Bấm vào thẻ để lật xem quyền lợi</p>
+        </section>}
+        {profile && <ActivityHeatmap title="Hoạt động học trong năm" source={{ url: `/api/v1/library/authors/${id}/activity`, queryKey: ['author-activity', String(id)], metrics: ['soLuotOn', 'soCongKhai'] }} />}
         <nav className={styles.tabs} aria-label="Hồ sơ tác giả">
           <span className={styles.tab} aria-current="page">
             <Icon name="library" />Bộ thẻ công khai{decks.data && <span className={styles.count}>{decks.data.totalElements}</span>}

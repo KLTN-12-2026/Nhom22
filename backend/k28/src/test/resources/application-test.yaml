@@ -24,6 +24,9 @@ app:
     provider: fake
   reminders:
     enabled: false
+  leaderboard:
+    honor-job:
+      enabled: false
   dictionary:
     import-on-startup: false
     anh-viet: classpath:dictionary-test/anh-viet.jsonl

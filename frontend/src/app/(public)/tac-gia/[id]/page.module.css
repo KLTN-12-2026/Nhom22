@@ -18,7 +18,7 @@
 .empty { margin: 0; color: var(--ink-3); font-size: var(--fs-caption); }
 .back { margin: 0; }
 .back a { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--tap); color: var(--primary); font-weight: 600; }
-.main { min-width: 0; display: grid; gap: var(--sp-3); align-content: start; }
+.main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); align-content: start; }
 .tabs { display: flex; border-bottom: var(--rule) solid var(--line); }
 .tab { display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; margin-bottom: -1px; border-bottom: 2px solid var(--primary); color: var(--ink); font-weight: 600; }
 .tab :global(.icon) { width: 16px; height: 16px; color: var(--primary); }

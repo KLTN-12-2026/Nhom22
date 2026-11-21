@@ -10,6 +10,7 @@ public record AuthorProfileResponse(
         long soThe,
         Instant thamGiaAt,
         String anhDaiDienUrl,
-        List<PublicBadgeResponse> huyHieu
+        List<PublicBadgeResponse> huyHieu,
+        String goiMa
 ) {
 }
