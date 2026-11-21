@@ -56,3 +56,5 @@
 .muc-companion[data-positioned="true"][data-edge="left"] .muc-bubble { left:0; right:auto; }
 .muc-companion[data-positioned="true"][data-panel-side="below"] .muc-panel,
 .muc-companion[data-positioned="true"][data-panel-side="below"] .muc-bubble { bottom:auto; top:calc(100% + 8px); }
+
+body.focus-mode .muc-companion { display: none !important; }

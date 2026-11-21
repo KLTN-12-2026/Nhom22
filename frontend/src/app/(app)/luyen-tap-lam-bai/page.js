@@ -3,7 +3,10 @@ import { useState, Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { Button, ConfirmDialog, Icon } from '@/components/ui';
+import { SoundToggle } from '@/components/ui/SoundToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import styles from './page.module.css';
 import { fx } from '@/lib/fx';
 import { PRACTICE_TYPE, label, splitBlank } from '@/lib/practice-labels.mjs';
 
@@ -33,14 +36,14 @@ const now = () => Date.now();
 function BlankSentence({ sentence, mark = '' }) {
   const [before, after] = splitBlank(sentence);
   if (after === null) return before;
-  return <>{before}<span style={{ display: 'inline-block', minWidth: '50px', borderBottom: '2px solid var(--color-ink)', margin: '0 4px', textAlign: 'center' }}>{mark}</span>{after}</>;
+  return <>{before}<span className={styles.blank}>{mark}</span>{after}</>;
 }
 
 function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
   const [error, setError] = useState('');
   const [loadingAudio, setLoadingAudio] = useState(false);
   const cached = useRef(null);
-  if (!hasAudio) return <p className="notice notice-warning" style={{ marginBottom: 'var(--space-3)' }}>Câu này chưa có âm thanh.</p>;
+  if (!hasAudio) return <p className="notice notice-warning">Câu này chưa có âm thanh.</p>;
   const audioUrl = async () => {
     const c = cached.current;
     if (c && (!c.expiresAt || new Date(c.expiresAt).getTime() - 30000 > now())) return c.downloadUrl;
@@ -62,17 +65,55 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
     }
   };
   return (
-    <div style={{ marginBottom: 'var(--space-3)' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <Button type="button" variant="secondary" onClick={() => listen(1)} disabled={loadingAudio}><Icon name="volume" /> Nghe</Button>
-        <Button type="button" variant="ghost" onClick={() => listen(0.6)} disabled={loadingAudio}>Nghe chậm</Button>
+    <div className={styles.listen}>
+      <div className={styles.listenBtns}>
+        <button type="button" className="btn btn-primary" onClick={() => listen(1)} disabled={loadingAudio} aria-busy={loadingAudio}><Icon name="volume" />Nghe</button>
+        <button type="button" className="btn btn-secondary" onClick={() => listen(0.6)} disabled={loadingAudio}>Nghe chậm</button>
       </div>
-      <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginTop: 'var(--space-2)' }}>
-        {tuLoai && <>Từ loại <span style={{ color: 'var(--color-primary)' }}>[{tuLoai}]</span>, </>}nghe bao nhiêu lần cũng được
+      <p className={styles.hint}>
+        {tuLoai && <>Từ loại <span className="pos">{tuLoai}</span> · </>}nghe bao nhiêu lần cũng được
       </p>
       {error && <p className="field-error" role="alert">{error}</p>}
     </div>
   );
+}
+
+function useFocusMode(setFull) {
+  useEffect(() => {
+    const body = document.body;
+    body.dataset.focusCount = String(Number(body.dataset.focusCount || 0) + 1);
+    body.classList.add('focus-mode');
+    const sync = () => setFull(!!document.fullscreenElement);
+    sync();
+    document.addEventListener('fullscreenchange', sync);
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      const left = Number(body.dataset.focusCount || 1) - 1;
+      body.dataset.focusCount = String(left);
+      if (left > 0) return;
+      body.classList.remove('focus-mode');
+      setTimeout(() => {
+        if (!body.classList.contains('focus-mode') && document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+      }, 0);
+    };
+  }, [setFull]);
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  else document.documentElement.requestFullscreen?.().catch(() => {});
+}
+
+function FullscreenIcon({ on }) {
+  return <svg className="icon" viewBox="0 0 24 24" aria-hidden="true">{on
+    ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+    : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}</svg>;
+}
+
+function FocusShell({ children }) {
+  const [, setFull] = useState(false);
+  useFocusMode(setFull);
+  return <div className="session"><main className="session-main" id="main"><div className="sheet">{children}</div></main></div>;
 }
 
 function PracticeSessionContent() {
@@ -93,6 +134,10 @@ function PracticeSessionContent() {
   const [answers, setAnswers] = useState({});
   const [timer, setTimer] = useState(0);
   const [submitError, setSubmitError] = useState('');
+  const [confirm, setConfirm] = useState(null);
+  const [full, setFull] = useState(false);
+  const leaving = useRef(false);
+  useFocusMode(setFull);
 
   useEffect(() => {
     startRef.current = now();
@@ -109,6 +154,7 @@ function PracticeSessionContent() {
   const submitMutation = useMutation({
     mutationFn: (body) => apiFetch(`/api/v1/practice/sessions/${id}/submissions`, { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => {
+      leaving.current = true;
       router.push(`/luyen-tap-ket-qua?id=${id}`);
     },
     onError: (err) => {
@@ -134,10 +180,19 @@ function PracticeSessionContent() {
     }
     lastAnswered.current = answeredNow;
   }, [answeredNow]);
+  useEffect(() => {
+    const warn = e => {
+      if (leaving.current || lastAnswered.current === 0) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
 
-  if (!id) return <div>Invalid Session</div>;
-  if (error) return <div className="notice notice-danger" role="alert" style={{ margin: 'var(--space-6)' }}>{error.message || 'Chưa tải được bài luyện.'}</div>;
-  if (isLoading || !session) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải bài...</div>;
+  if (!id) return <FocusShell><p className="notice notice-danger" role="alert">Thiếu mã bài luyện.</p></FocusShell>;
+  if (error) return <FocusShell><p className="notice notice-danger" role="alert">{error.message || 'Chưa tải được bài luyện.'}</p></FocusShell>;
+  if (isLoading || !session) return <FocusShell><div className="skeleton" role="status" aria-label="Đang tải bài"><div className="sk sk-title" /><div className="sk sk-row" /><div className="sk sk-row" /></div></FocusShell>;
 
   const handleInputChange = (questionId, value, subId = null) => {
     setAnswers(prev => {
@@ -151,27 +206,12 @@ function PracticeSessionContent() {
     });
   };
 
-  const calculateAnswered = () => {
-    return session.cauHoi.filter(q => {
-      const ans = answers[q.id];
-      if (q.loaiCau === 'GHEP_TU') {
-        if (!ans) return false;
-        return q.deBai.cotTrai.every(l => !!ans[l.id]);
-      }
-      if (q.phuongAn) return !!ans;
-      return !!ans && String(ans).trim() !== '';
-    }).length;
-  };
+  const answeredCount = answeredNow;
+  const total = session.cauHoi.length;
+  const elapsed = `${Math.floor(timer / 60)}:${String(timer % 60).padStart(2, '0')}`;
 
-  const answeredCount = calculateAnswered();
-  const progressPercent = session.cauHoi.length ? (answeredCount / session.cauHoi.length) * 100 : 0;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (answeredCount < session.cauHoi.length) {
-      if (!window.confirm(`Còn ${session.cauHoi.length - answeredCount} câu trống. Bạn có chắc chắn muốn nộp?`)) return;
-    }
-
+  const doSubmit = () => {
+    setConfirm(null);
     const traLoi = session.cauHoi.map(q => {
       if (q.loaiCau === 'GHEP_TU') {
         const cap = q.deBai.cotTrai.map(l => ({ traiId: l.id, phaiId: answers[q.id]?.[l.id] || null })).filter(c => c.phaiId);
@@ -192,142 +232,174 @@ function PracticeSessionContent() {
     });
   };
 
-  const renderQuestion = (q, index) => {
-    const renderContent = () => {
-      if (q.phuongAn && Array.isArray(q.phuongAn)) {
-        return (
-          <div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 'bold', fontFamily: 'var(--font-word)', marginBottom: '4px' }}>
-              {q.deBai?.tu || q.deBai?.nghiaVi || (q.deBai?.cau ? <BlankSentence sentence={q.deBai.cau} /> : null)}
-            </div>
-            <div style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
-              {q.deBai?.phienAm && <span style={{ marginRight: '8px' }}>{q.deBai.phienAm}</span>}
-              {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
-              {q.deBai?.goiY && <span style={{ marginLeft: '8px' }}>Gợi ý: {q.deBai.goiY}</span>}
-            </div>
-            <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
-              {q.phuongAn.map((opt, i) => (
-                <label key={opt.id} style={{ padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', gap: 'var(--space-3)', cursor: 'pointer', background: answers[q.id] === opt.id ? 'var(--color-primary-tint)' : 'transparent' }}>
-                  <input type="radio" name={q.id} value={opt.id} checked={answers[q.id] === opt.id} onChange={(e) => handleInputChange(q.id, e.target.value)} />
-                  <span style={{ fontWeight: 'bold', width: '20px' }}>{String.fromCharCode(65 + i)}</span>
-                  <span>{opt.noiDung}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        );
-      }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (answeredCount < total) setConfirm('submit');
+    else doSubmit();
+  };
 
-      if (q.loaiCau === 'GHEP_TU' && q.deBai?.cotTrai) {
-        return (
-          <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
-            {q.deBai.cotTrai.map(left => (
-              <div key={left.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 150px) minmax(0, 1fr)', gap: 'var(--space-3)', alignItems: 'center' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{left.noiDung}</div>
-                <select
-                  style={{ width: '100%', minWidth: 0, padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
-                  value={answers[q.id]?.[left.id] || ''}
-                  onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
-                >
-                  <option value="">Chọn nghĩa...</option>
-                  {q.deBai.cotPhai?.map(right => (
-                    <option key={right.id} value={right.id}>{right.noiDung}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-        );
-      }
+  const exit = () => {
+    if (answeredCount > 0) setConfirm('exit');
+    else { leaving.current = true; router.push('/luyen-tap'); }
+  };
 
-      const listening = q.loaiCau === 'NGHE_VIET';
+  const isAnswered = q => {
+    const ans = answers[q.id];
+    if (q.loaiCau === 'GHEP_TU') return !!ans && q.deBai.cotTrai.every(l => !!ans[l.id]);
+    if (q.phuongAn) return !!ans;
+    return !!ans && String(ans).trim() !== '';
+  };
+
+  const renderContent = (q) => {
+    if (q.phuongAn && Array.isArray(q.phuongAn)) {
+      return <>
+        <div className={q.deBai?.cau ? styles.sentence : styles.prompt} lang={q.deBai?.tu ? 'en' : undefined}>
+          {q.deBai?.tu || q.deBai?.nghiaVi || (q.deBai?.cau ? <BlankSentence sentence={q.deBai.cau} /> : null)}
+        </div>
+        <p className={styles.hint}>
+          {q.deBai?.phienAm && <span className="entry-ipa">{q.deBai.phienAm}</span>}
+          {q.deBai?.tuLoai && <span className="pos">{q.deBai.tuLoai}</span>}
+          {q.deBai?.goiY && <span>Gợi ý: {q.deBai.goiY}</span>}
+        </p>
+        <div className={styles.options} role="radiogroup" aria-label={`Câu ${q.thuTu || ''}`}>
+          {q.phuongAn.map((opt, i) => (
+            <label key={opt.id} className={`${styles.option}${answers[q.id] === opt.id ? ` ${styles.picked}` : ''}`}>
+              <input type="radio" name={q.id} value={opt.id} checked={answers[q.id] === opt.id} onChange={(e) => handleInputChange(q.id, e.target.value)} />
+              <span className={styles.key}>{String.fromCharCode(65 + i)}</span>
+              <span lang={q.deBai?.tu ? undefined : 'en'}>{opt.noiDung}</span>
+            </label>
+          ))}
+        </div>
+      </>;
+    }
+
+    if (q.loaiCau === 'GHEP_TU' && q.deBai?.cotTrai) {
       return (
-        <div>
-          {listening ? (
-            <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts)} tuLoai={q.deBai?.tuLoai} />
-          ) : q.deBai?.cau ? (
-            <div style={{ fontSize: '1.25rem', marginBottom: 'var(--space-2)' }}><BlankSentence sentence={q.deBai.cau} /></div>
-          ) : (
-            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
-          )}
-          {!listening && (
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-              Gợi ý: {q.deBai?.goiY || 'Gõ từ tiếng Anh chuẩn xác'} {q.deBai?.phienAm && <span>({q.deBai.phienAm})</span>} {q.deBai?.tuLoai && <span style={{ color: 'var(--color-primary)' }}>[{q.deBai.tuLoai}]</span>}
-              {q.deBai?.viDuVi && <div style={{ marginTop: '4px' }}>Ví dụ: {q.deBai.viDuVi}</div>}
+        <div className={styles.match}>
+          {q.deBai.cotTrai.map(left => (
+            <div key={left.id} className={styles.matchRow}>
+              <label className={styles.matchWord} htmlFor={`${q.id}-${left.id}`} lang="en">{left.noiDung}</label>
+              <select
+                id={`${q.id}-${left.id}`}
+                className={`select${answers[q.id]?.[left.id] ? ` ${styles.selected}` : ''}`}
+                value={answers[q.id]?.[left.id] || ''}
+                onChange={(e) => handleInputChange(q.id, e.target.value, left.id)}
+              >
+                <option value="">Chọn nghĩa…</option>
+                {q.deBai.cotPhai?.map(right => (
+                  <option key={right.id} value={right.id}>{right.noiDung}</option>
+                ))}
+              </select>
             </div>
-          )}
-          <input
-            type="text"
-            placeholder={listening ? 'Từ bạn nghe được' : 'Nhập từ tiếng Anh...'}
-            value={answers[q.id] || ''}
-            onChange={(e) => handleInputChange(q.id, e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '1.1rem' }}
-          />
+          ))}
         </div>
       );
-    };
+    }
 
-    return (
-      <section key={q.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-6)', borderBottom: '1px dashed var(--color-border)', marginBottom: 'var(--space-6)' }}>
-        <div style={{ width: '40px', height: '40px', background: 'var(--color-field)', border: '2px solid var(--color-primary-tint)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, color: 'var(--color-primary-strong)' }}>
-          {index + 1}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'bold', color: 'var(--color-primary)', marginBottom: 'var(--space-3)', textTransform: 'uppercase' }}>
-            {label(PRACTICE_TYPE, q.loaiCau)}
-          </div>
-          {renderContent()}
-        </div>
-      </section>
-    );
+    const listening = q.loaiCau === 'NGHE_VIET';
+    return <>
+      {listening ? (
+        <ListenPrompt practiceId={id} questionId={q.id} hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts)} tuLoai={q.deBai?.tuLoai} />
+      ) : q.deBai?.cau ? (
+        <div className={styles.sentence} lang="en"><BlankSentence sentence={q.deBai.cau} /></div>
+      ) : (
+        <div className={styles.prompt}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
+      )}
+      {!listening && (
+        <p className={styles.hint}>
+          <span>Gợi ý: {q.deBai?.goiY || 'gõ từ tiếng Anh chính xác'}</span>
+          {q.deBai?.phienAm && <span className="entry-ipa">{q.deBai.phienAm}</span>}
+          {q.deBai?.tuLoai && <span className="pos">{q.deBai.tuLoai}</span>}
+          {q.deBai?.viDuVi && <span className={styles.full}>Ví dụ: {q.deBai.viDuVi}</span>}
+        </p>
+      )}
+      <input
+        className={`input ${styles.answer}`}
+        type="text"
+        lang="en"
+        autoComplete="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        aria-label={`Câu trả lời câu ${q.thuTu || ''}`}
+        placeholder={listening ? 'Từ bạn nghe được' : 'Nhập từ tiếng Anh…'}
+        value={answers[q.id] || ''}
+        onChange={(e) => handleInputChange(q.id, e.target.value)}
+      />
+    </>;
   };
 
   return (
-    <div style={{ background: 'var(--color-bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ background: 'var(--color-field)', display: 'flex', alignItems: 'center', padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 10 }}>
-        <Button variant="ghost" onClick={() => router.push('/luyen-tap')} style={{ padding: '8px' }}><Icon name="x" /></Button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Bài luyện: {label(PRACTICE_TYPE, session.loaiBai)}</div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{session.boTheTen}</div>
+    <div className="session">
+      <header className="session-bar">
+        <button type="button" className="btn btn-quiet btn-icon" aria-label="Thoát bài luyện" title="Thoát bài luyện" onClick={exit}><Icon name="x" /></button>
+        <div className="grow">
+          <p className="bar-title">Bài luyện · {label(PRACTICE_TYPE, session.loaiBai)}</p>
+          <p className="bar-sub">{session.boTheTen && <span>{session.boTheTen}</span>}<span ref={counterRef}>{answeredCount} / {total} câu đã trả lời</span></p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', fontWeight: 'bold' }}>
-          <Icon name="clock" /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-        </div>
+        <span className={`stamp ${styles.timer}`} role="timer" aria-label={`Thời gian ${elapsed}`}><Icon name="clock" />{elapsed}</span>
+        <SoundToggle />
+        <ThemeToggle className="theme-session" />
+        <button type="button" className="btn btn-quiet btn-icon" aria-pressed={full} aria-label={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} title={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} onClick={toggleFullscreen}><FullscreenIcon on={full} /></button>
       </header>
-      <div style={{ height: '4px', background: 'var(--color-border)' }}>
-        <div style={{ height: '100%', background: 'var(--color-primary)', width: `${progressPercent}%`, transition: 'width 0.3s ease' }} />
+      <div className="meter is-progress session-meter" role="progressbar" aria-label="Số câu đã trả lời" aria-valuemin={0} aria-valuemax={total} aria-valuenow={answeredCount}>
+        <span style={{ '--v': total ? answeredCount / total : 0 }} />
       </div>
 
-      <main style={{ flex: 1, padding: 'var(--space-5)', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: '100%', maxWidth: '720px' }}>
-          <form onSubmit={handleSubmit} style={{ background: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-            <div style={{ marginBottom: 'var(--space-6)', borderBottom: '1px solid var(--color-border)', paddingBottom: 'var(--space-4)' }}>
-              <h1 style={{ fontSize: 'var(--font-size-2xl)' }}>Bài luyện</h1>
-              <p style={{ color: 'var(--color-ink-2)' }}>Trả lời theo thứ tự nào cũng được. Không phân biệt chữ hoa, chữ thường.</p>
-            </div>
+      <main className={`session-main ${styles.main}`} id="main">
+        <nav className={styles.dots} aria-label="Chuyển nhanh tới câu">
+          {session.cauHoi.map((q, i) => (
+            <a key={q.id} href={`#q-${q.id}`} className={isAnswered(q) ? styles.done : undefined} aria-label={`Câu ${i + 1}${isAnswered(q) ? ', đã trả lời' : ''}`}>{i + 1}</a>
+          ))}
+        </nav>
 
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          <p className={styles.intro}>Trả lời theo thứ tự nào cũng được. Không phân biệt chữ hoa, chữ thường. Làm xong bấm <strong>Nộp bài</strong>.</p>
+
+          {session.cauHoi.map((q, index) => (
+            <section key={q.id} id={`q-${q.id}`} className={`sheet ${styles.question}${isAnswered(q) ? ` ${styles.answered}` : ''}`} aria-labelledby={`q-${q.id}-title`}>
+              <div className={styles.qHead}>
+                <span className={styles.qNo}>{index + 1}</span>
+                <span id={`q-${q.id}-title`} className={styles.qType}>{label(PRACTICE_TYPE, q.loaiCau)}</span>
+                {isAnswered(q) && <span className={styles.qDone}><Icon name="check" />Đã trả lời</span>}
+              </div>
+              {renderContent(q)}
+            </section>
+          ))}
+
+          {submitError && <p className="notice notice-danger" role="alert">{submitError}</p>}
+
+          <div className={styles.footer}>
             <div>
-              {session.cauHoi.map((q, index) => renderQuestion(q, index))}
+              <strong>{answeredCount}/{total}</strong> câu đã trả lời
+              {answeredCount < total && <span className="small muted"> · còn {total - answeredCount} câu trống</span>}
             </div>
-
-            {submitError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-4)' }}>{submitError}</p>}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-6)', position: 'sticky', bottom: 'var(--space-4)', background: 'var(--color-field)', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
-              <div ref={counterRef} style={{ fontWeight: 'bold', display: 'inline-block' }}>Đã trả lời {answeredCount}/{session.cauHoi.length}</div>
-              <Button type="submit" variant="primary" size="lg" disabled={submitMutation.isPending}>
-                {submitMutation.isPending ? 'Đang nộp...' : 'Nộp bài'}
-              </Button>
-            </div>
-          </form>
-        </div>
+            <Button type="submit" variant="primary" size="lg" disabled={submitMutation.isPending}>
+              {submitMutation.isPending ? 'Đang nộp…' : 'Nộp bài'}
+            </Button>
+          </div>
+        </form>
       </main>
+
+      <ConfirmDialog
+        isOpen={!!confirm}
+        title={confirm === 'exit' ? 'Thoát bài luyện?' : 'Nộp bài khi còn câu trống?'}
+        description={confirm === 'exit'
+          ? `Bạn đã trả lời ${answeredCount}/${total} câu. Thoát bây giờ thì câu trả lời chưa nộp sẽ mất.`
+          : `Còn ${total - answeredCount} câu trống sẽ được tính là sai.`}
+        confirmLabel={confirm === 'exit' ? 'Thoát' : 'Nộp bài'}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          if (confirm === 'exit') { leaving.current = true; setConfirm(null); router.push('/luyen-tap'); }
+          else doSubmit();
+        }}
+      />
     </div>
   );
 }
 
 export default function PracticeSessionPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<FocusShell><div className="skeleton" role="status" aria-label="Đang tải"><div className="sk sk-title" /></div></FocusShell>}>
       <PracticeSessionContent />
     </Suspense>
   );

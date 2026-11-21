@@ -78,7 +78,7 @@ export function AppShell({ children, user, isAdmin = false }) {
 
   const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
-  if (pathname === '/bat-dau' || pathname === '/hoc-phien') {
+  if (pathname === '/bat-dau' || pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai') {
     return <>{children}</>;
   }
 
