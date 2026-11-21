@@ -69,6 +69,8 @@ public interface YeuCauCongKhaiRepository extends JpaRepository<YeuCauCongKhai, 
                    or s.quyenTruyCap <> com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap.CONG_KHAI
                    or s.trangThaiKiemDuyet <> com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet.BINH_THUONG
                    or u.trangThai <> com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung.HOAT_DONG)
+              and not (y.trangThai = com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiYeuCauCongKhai.DA_DUYET
+                       and y.nguoiXuLyId = y.nguoiGuiId)
               and (:trangThai is null or y.trangThai = :trangThai)
             order by y.createdAt desc, y.id desc
             """)

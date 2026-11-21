@@ -5,6 +5,7 @@ import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.storage.StorageService;
 import com.do_an_tot_nghiep.k28.content.dto.DeckResponse;
+import com.do_an_tot_nghiep.k28.content.dto.OwnCopyResponse;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
 import com.do_an_tot_nghiep.k28.content.entity.TepTin;
 import com.do_an_tot_nghiep.k28.content.entity.TheTuVung;
@@ -51,6 +52,16 @@ public class DeckCopyService {
     private final Clock clock;
     private final CardLimitService limits;
     private final EntitlementService entitlements;
+
+    @Transactional(readOnly = true)
+    public List<OwnCopyResponse> ownCopies(Long userId, List<Long> sourceIds) {
+        return decks.findOwnCopies(userId, sourceIds.stream().distinct().toList()).stream()
+                .map(link -> new OwnCopyResponse(
+                        link.getBoNguonId().toString(),
+                        link.getBoTheId().toString()
+                ))
+                .toList();
+    }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeckResponse copy(Long userId, Long sourceId, String key) {

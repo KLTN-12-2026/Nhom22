@@ -94,6 +94,17 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
+    public Set<Long> adminIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return users.findAllById(ids).stream()
+                .filter(user -> user.hasRole("ADMIN"))
+                .map(NguoiDung::getId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    @Transactional(readOnly = true)
     public Set<Long> activeIds(Collection<Long> ids) {
         if (ids.isEmpty()) {
             return Set.of();
