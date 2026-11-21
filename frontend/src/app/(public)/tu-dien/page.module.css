@@ -1,0 +1,26 @@
+.search { display: flex; gap: var(--sp-2); margin: var(--sp-4) 0; }
+.box { position: relative; flex: 1; min-width: 0; }
+.searchIcon { position: absolute; left: 12px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--ink-3); pointer-events: none; }
+.input { width: 100%; min-height: 52px; padding-left: 42px; font-family: var(--font-word); font-size: 1.25rem; }
+
+.suggest { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px 0; list-style: none; border: var(--rule) solid var(--primary-line); background: var(--sheet); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14); max-height: 360px; overflow-y: auto; }
+.suggest li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--sp-2); padding: 8px 14px; cursor: pointer; }
+.suggest li:hover, .activeOption { background: var(--primary-tint); }
+.optWord { font-family: var(--font-word); font-weight: 700; color: var(--ink); }
+.optSum { flex-basis: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-small); color: var(--ink-2); }
+
+.welcome, .empty { display: grid; gap: var(--sp-3); justify-items: start; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.chip { padding: 4px 14px; border: var(--rule) solid var(--line); border-radius: 99px; background: var(--field); font-family: var(--font-word); color: var(--ink); text-decoration: none; }
+.chip:hover { border-color: var(--primary); color: var(--primary-strong); }
+
+.results { display: grid; gap: var(--sp-6); }
+
+.near { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--sp-2); }
+.near li { display: grid; gap: 2px; }
+.near a { font-family: var(--font-word); font-weight: 700; }
+.near span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+@media (max-width: 520px) {
+  .search { flex-direction: column; }
+}

@@ -9,6 +9,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
 import { fx, RATE_SOUND, nextReviewText } from '@/lib/fx';
+import { mucReview } from '@/lib/mascot.mjs';
 
 const ALWAYS_DUE = ['MOI', 'ON_TAP'];
 const currentTime = () => Date.now();
@@ -137,6 +138,7 @@ function FlashcardSessionContent() {
         expectedVersion: item.tienDo?.version ?? 0,
         thoiGianTraLoiMs
       });
+      mucReview(rate !== 'QUEN');
       const rateIndex = ratings.findIndex(([value]) => value === rate);
       fx.play(RATE_SOUND[rate]);
       fx.floatText(rateButtons.current[rateIndex], res.laiTrongPhien ? 'Gặp lại trong phiên này' : nextReviewText(res.tienDo?.hanOnAt), RATE_SOUND[rate]);

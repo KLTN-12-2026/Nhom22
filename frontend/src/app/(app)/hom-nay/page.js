@@ -534,7 +534,7 @@ export default function TodayPage() {
                         <span>{b.soMoi} từ chưa học</span>
                       </span>
                       <span className="row" style={{ gap: 'var(--sp-2)' }}>
-                        <Link className="btn btn-secondary btn-sm" href={`/luyen-tap?loaiBai=FLASHCARD&boTheId=${b.boTheId}`}>Học bộ này</Link>
+                        <Link className="btn btn-secondary btn-sm" href={`/hoc?boTheId=${encodeURIComponent(b.boTheId)}`}>Học bộ này</Link>
                         <Link className="btn btn-quiet btn-sm" href={`/bo-the/${b.boTheId}/tien-do`}>Tiến độ</Link>
                       </span>
                     </li>

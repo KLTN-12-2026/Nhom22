@@ -1,0 +1,40 @@
+.entry { display: grid; gap: var(--sp-4); }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2) var(--sp-3); padding-bottom: var(--sp-3); border-bottom: var(--rule) solid var(--line); }
+.word { margin: 0; font-size: 2rem; }
+.compact .word { font-size: 1.375rem; }
+.compact .head { padding-bottom: var(--sp-2); }
+
+.group { display: grid; gap: var(--sp-2); }
+.pos { margin: 0; font-size: 1rem; font-weight: 600; }
+.meanings { margin: 0; padding-left: 1.5rem; display: grid; gap: var(--sp-3); }
+.meanings > li::marker { font-family: var(--font-form); font-weight: 800; color: var(--primary); }
+.meaning { padding-left: var(--sp-1); }
+.meaningHead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+.sense { color: var(--ink); line-height: 1.5; }
+.pick { flex: none; }
+.note { margin: var(--sp-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
+
+.terms { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: var(--sp-2); vertical-align: middle; }
+.term { padding: 0 8px; border: var(--rule) solid var(--primary-line); border-radius: 99px; font-size: var(--fs-caption); line-height: 1.6; text-decoration: none; color: var(--primary-strong); background: var(--primary-tint); }
+.term:hover { border-color: var(--primary); }
+
+.examples { margin: var(--sp-2) 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.examples li { display: grid; gap: 2px; padding-left: var(--sp-3); border-left: 3px solid var(--primary-line); }
+.exampleText { font-family: var(--font-word); font-style: italic; color: var(--ink); }
+.exampleTrans { font-size: var(--fs-small); color: var(--ink-2); }
+
+.more { margin-top: 6px; font-size: var(--fs-small); }
+.moreGroup { justify-self: start; margin-left: 1rem; }
+
+.idioms { margin-top: var(--sp-2); padding: var(--sp-3); border: var(--rule) dashed var(--line); background: var(--field); }
+.idiomTitle { margin: 0 0 var(--sp-2); font-family: var(--font-form); font-size: var(--fs-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+.idioms dl { margin: 0; display: grid; gap: var(--sp-2); }
+.idiom dt { font-family: var(--font-word); font-weight: 700; color: var(--ink); }
+.idiom dd { margin: 2px 0 0 var(--sp-3); color: var(--ink-2); }
+.idiomExample { display: block; font-size: var(--fs-small); }
+.idiomExample > span { font-style: italic; }
+
+@media (max-width: 520px) {
+  .word { font-size: 1.625rem; }
+  .meaningHead { flex-direction: column; }
+}

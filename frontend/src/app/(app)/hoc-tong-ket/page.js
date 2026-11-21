@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui';
 import { fx } from '@/lib/fx';
+import { mucActivity, mucCelebrate, mucSay } from '@/lib/mascot.mjs';
 
 const RATING = { QUEN: 'Quên', KHO: 'Khó', NHO: 'Nhớ', DE: 'Dễ' };
 const SRS_STATE = { MOI: 'Mới', DANG_HOC: 'Đang học', ON_TAP: 'Ôn tập', HOC_LAI: 'Học lại', TAM_NGUNG: 'Tạm ngưng' };
@@ -59,6 +60,12 @@ function SummaryContent() {
     celebrated.current = true;
     sheetRef.current.querySelectorAll('[data-count]').forEach(el => fx.countUp(el, el.dataset.count));
     if (summary.soLuot > 0) fx.celebrate(sheetRef.current, { stamp: 'Hoàn thành' });
+    const hard = summary.tuCanLuyen?.[0];
+    if (summary.soLuot > 0) {
+      if (hard) mucSay(`“${hard.tu}” còn làm bạn vấp. {ten} sẽ nhắc lại từ này sớm nhé.`, 'wave', 7000);
+      else mucCelebrate(`Xong ${summary.soLuot} lượt mà không vấp thẻ nào! 🎉`, 6000);
+    }
+    mucActivity('session');
   }, [summary]);
 
   useEffect(() => {

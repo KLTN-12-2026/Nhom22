@@ -9,6 +9,10 @@ import { ErrorState, Icon } from '@/components/ui';
 import { FileUpload } from './FileUpload';
 import { CardMedia } from './CardMedia';
 import { SpeakButton } from './SpeakButton';
+import { WordCombobox } from '@/components/dictionary/WordCombobox';
+import { SensePicker } from '@/components/dictionary/SensePicker';
+import { useDictionaryPick } from '@/components/dictionary/useDictionaryPick';
+import { mergeDictionary } from '@/components/dictionary/QuickAddCardDialog';
 import styles from './CardEditor.module.css';
 
 const IPA = ['ə', 'ɪ', 'iː', 'æ', 'ʌ', 'ɑː', 'ɒ', 'ɔː', 'ʊ', 'uː', 'ɜː', 'eɪ', 'aɪ', 'ɔɪ', 'aʊ', 'oʊ', 'θ', 'ð', 'ʃ', 'ʒ', 'tʃ', 'dʒ', 'ŋ', 'ˈ', 'ˌ', 'ː'];
@@ -34,6 +38,7 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
   const pending = save.isPending || busy > 0;
   useEffect(() => { onPending?.(pending); }, [pending, onPending]);
   const change = (key, value) => { setValues(current => ({ ...current, [key]: value })); setFieldErrors(current => ({ ...current, [key]: '' })); };
+  const dict = useDictionaryPick(filled => { setValues(current => mergeDictionary(current, filled)); setFieldErrors({}); });
   const errorFor = key => fieldErrors[key] || save.error?.fieldErrors?.find(item => item.field === key)?.message;
   const duplicate = existing.data?.find(card => card.id !== initial?.id && normalizeTerm(card.tu) === normalizeTerm(values.tu) && normalizeTerm(card.tuLoai || '') === normalizeTerm(values.tuLoai));
   const submit = event => {
@@ -43,7 +48,7 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
     try { body = cardPayload(values, initial); }
     catch (error) { setFieldErrors(Object.fromEntries(error.issues.map(issue => [issue.path[0], issue.message]))); return; }
     const more = event.nativeEvent.submitter?.value === 'more';
-    save.mutate(body, { onSuccess: card => { if (more) { setValues({ ...EMPTY }); setFieldErrors({}); } else onSaved(card); } });
+    save.mutate(body, { onSuccess: card => { if (more) { setValues({ ...EMPTY }); setFieldErrors({}); dict.clear(); } else onSaved(card); } });
   };
   const insertIpa = char => {
     const start = ipa.current.selectionStart, end = ipa.current.selectionEnd;
@@ -60,7 +65,8 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
     <form className={`${styles.form} ${modal ? '' : 'sheet'}`} onSubmit={submit}>
       {heading}
       <fieldset disabled={pending} className={styles.fields}>
-        <div className={styles.two}>{field('tu', 'Từ hoặc cụm từ tiếng Anh', 100, false, true, true)}<div className="field"><label className="field-label" htmlFor="card-tuLoai">Từ loại</label><select id="card-tuLoai" className="select" value={values.tuLoai} onChange={event => change('tuLoai', event.target.value)}><option value="">Không ghi</option>{['n.', 'v.', 'adj.', 'adv.', 'phr. v.', 'phr.', 'prep.', 'conj.'].map(pos => <option key={pos} value={pos}>{pos}</option>)}{values.tuLoai && !['n.', 'v.', 'adj.', 'adv.', 'phr. v.', 'phr.', 'prep.', 'conj.'].includes(values.tuLoai) && <option>{values.tuLoai}</option>}</select></div></div>
+        <div className={styles.two}><div className="field"><label className="field-label" htmlFor="card-tu">Từ hoặc cụm từ tiếng Anh</label><WordCombobox id="card-tu" value={values.tu} onChange={value => change('tu', value)} onPick={dict.pick} invalid={!!errorFor('tu')} describedBy={errorFor('tu') ? 'tu-error' : 'tu-help'} /><p id="tu-help" className="field-hint">Gõ tiếng Anh hoặc tiếng Việt rồi chọn gợi ý để tự điền.</p>{errorFor('tu') && <p id="tu-error" className="field-error" role="alert">{errorFor('tu')}</p>}</div><div className="field"><label className="field-label" htmlFor="card-tuLoai">Từ loại</label><select id="card-tuLoai" className="select" value={values.tuLoai} onChange={event => change('tuLoai', event.target.value)}><option value="">Không ghi</option>{['n.', 'v.', 'adj.', 'adv.', 'phr. v.', 'phr.', 'prep.', 'conj.'].map(pos => <option key={pos} value={pos}>{pos}</option>)}{values.tuLoai && !['n.', 'v.', 'adj.', 'adv.', 'phr. v.', 'phr.', 'prep.', 'conj.'].includes(values.tuLoai) && <option>{values.tuLoai}</option>}</select></div></div>
+        {dict.picked && <SensePicker picked={dict.picked} onChoose={dict.choose} onClose={dict.clear} />}
         {duplicate && values.tu.trim() && <p className="notice notice-warning" role="status">Bộ này đã có “{duplicate.tu}”. Bạn vẫn lưu được nếu đây là nghĩa khác.</p>}
         <div className="field"><label className="field-label" htmlFor="card-phienAm">Phiên âm IPA</label><input ref={ipa} id="card-phienAm" className="input en" maxLength={100} value={values.phienAm} onChange={event => change('phienAm', event.target.value)} /><div className={styles.ipaKeys} aria-label="Chèn ký hiệu IPA">{IPA.map(char => <button type="button" key={char} aria-label={`Chèn ${char}`} onClick={() => insertIpa(char)}>{char}</button>)}</div>{errorFor('phienAm') && <p className="field-error">{errorFor('phienAm')}</p>}</div>
         {field('nghiaVi', 'Nghĩa tiếng Việt', 500, true, true)}

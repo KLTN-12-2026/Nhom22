@@ -7,6 +7,8 @@ import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { PracticeHowTo, PracticeSample } from '@/components/practice/PracticeGuide';
 import { Icon } from '@/components/ui';
+import { useMucTip } from '@/components/mascot/useMucTip';
+import { SKILL, SKILL_PRACTICE } from '@/lib/practice-labels.mjs';
 import styles from './page.module.css';
 
 const TYPES = [
@@ -43,6 +45,15 @@ function PracticeForm() {
     queryKey: ['practice-history'],
     queryFn: () => apiFetch('/api/v1/practice/history?size=3')
   });
+
+  const { data: skills } = useQuery({
+    queryKey: ['skills', null],
+    queryFn: () => apiFetch('/api/v1/statistics/skills'),
+    staleTime: 300000
+  });
+  const weakest = (skills || []).filter(item => item.duDuLieu && item.mucLamChu != null).sort((a, b) => a.mucLamChu - b.mucLamChu)[0];
+  const weakType = weakest && TYPES.find(t => t.id === SKILL_PRACTICE[weakest.kyNang]);
+  useMucTip(weakest && weakType && weakest.mucLamChu < 80 ? `Kỹ năng “${SKILL[weakest.kyNang]}” đang yếu nhất (${weakest.mucLamChu}%). Thử dạng “${weakType.name}” nhé.` : null);
 
   const sessionMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),

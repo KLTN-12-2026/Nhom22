@@ -11,6 +11,8 @@ import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
 import { CardEditDialog } from '@/components/content/CardEditDialog';
+import { QuickAddCardDialog } from '@/components/dictionary/QuickAddCardDialog';
+import { useMucTip } from '@/components/mascot/useMucTip';
 import { CopyBadge } from '@/components/content/CopyBadge';
 import { PublishRequestPanel } from '@/components/content/PublishRequestPanel';
 import styles from './page.module.css';
@@ -33,6 +35,7 @@ export default function DeckDetailPage() {
   const [page, setPage] = useState(0);
   const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
   const [editing, setEditing] = useState(null);
+  const [adding, setAdding] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const download = useMutation({ mutationFn: () => apiFetch(`/api/v1/decks/${id}/export`, { responseType: 'blob' }), onSuccess: blob => saveDownload(blob, `deck-${id}.csv`) });
   const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
@@ -45,6 +48,7 @@ export default function DeckDetailPage() {
       return result;
     },
   });
+  useMucTip(cards.data?.totalElements === 0 ? 'Bộ còn trống. Bấm Thêm thẻ rồi gõ từ, tiếng Việt cũng được đó!' : null);
   useFocusCard(focusId, Boolean(cards.data) && !locating);
   const deleteCard = useMutation({
     mutationFn: card => apiFetch(`/api/v1/cards/${card.id}?version=${card.version}`, { method: 'DELETE' }),
@@ -75,7 +79,7 @@ export default function DeckDetailPage() {
         <div className={styles.actions}>
           <div className={styles.mainActions}>
             <Link className="btn btn-primary" href={`/hoc?boTheId=${encodeURIComponent(id)}`}><Icon name="play" />Học bộ này</Link>
-            <Link className="btn btn-secondary" href={`/bo-the/${id}/the-tao`}><Icon name="plus" />Thêm thẻ</Link>
+            <button type="button" className="btn btn-secondary" onClick={() => setAdding(true)}><Icon name="plus" />Thêm thẻ</button>
             <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}><Icon name="chart" />Tiến độ</Link>
             <button className={`btn btn-secondary ${styles.fav}`} type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Đã yêu thích' : 'Yêu thích'}</button>
           </div>
@@ -95,7 +99,7 @@ export default function DeckDetailPage() {
       {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
       {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
       {deleteCard.error && <ErrorState description={deleteCard.error.message} onRetry={() => deleteCard.reset()} />}
-      {cards.data?.items.length === 0 && <div className="empty"><h2>Chưa có thẻ ở trang này</h2><p>Thêm thẻ mới hoặc chọn trang trước.</p></div>}
+      {cards.data?.items.length === 0 && <div className="empty"><h2>Chưa có thẻ ở trang này</h2><p>Gõ một từ tiếng Anh hoặc tiếng Việt, từ điển sẽ điền sẵn nghĩa và ví dụ.</p><button type="button" className="btn btn-primary" onClick={() => setAdding(true)}><Icon name="plus" />Thêm thẻ đầu tiên</button></div>}
       <ol className="answer-list">{cards.data?.items.map((card, index) => <CardEntry
         key={card.id}
         card={card}
@@ -110,6 +114,7 @@ export default function DeckDetailPage() {
         </>}
       />)}</ol>
       {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => { setFocusId(null); setPage(value - 1); }} />}
+      {adding && <QuickAddCardDialog deckId={id} deckName={deck.ten} onClose={() => setAdding(false)} />}
       {editing && <CardEditDialog key={editing.id} card={editing} deckId={id} onClose={() => setEditing(null)} />}
       <ConfirmDialog isOpen={!!confirmation} title={confirmation?.type === 'deck' ? 'Xóa bộ thẻ' : 'Xóa thẻ'} description={`Xóa “${confirmation?.card?.tu || deck.ten}”? Nội dung sẽ được gỡ khỏi danh sách của bạn.`} confirmLabel={confirmation?.type === 'deck' ? 'Xóa bộ' : 'Xóa thẻ'} loading={remove.isPending || deleteCard.isPending} onClose={() => setConfirmation(null)} onConfirm={() => confirmation.type === 'deck' ? remove.mutate(undefined, { onError: () => setConfirmation(null) }) : deleteCard.mutate(confirmation.card, { onError: () => setConfirmation(null) })} />
     </article>

@@ -103,6 +103,42 @@ class StreakCalculatorTest {
         assertThat(StreakCalculator.weekStart(MONDAY)).isEqualTo(MONDAY);
     }
 
+    @Test
+    void restoredDaysBridgeTheGapWithoutAddingToTheCount() {
+        List<LocalDate> days = range("2026-10-05", "2026-10-15");
+        assertThat(StreakCalculator.calculate(days, MONDAY).chuoiNgay()).isZero();
+        StreakCalculator.Result bridged = StreakCalculator.calculate(days, List.of(day("2026-10-16"), day("2026-10-17")), MONDAY);
+        assertThat(bridged.chuoiNgay()).isEqualTo(11);
+        assertThat(bridged.ngayNghi()).contains(day("2026-10-18"));
+    }
+
+    @Test
+    void restorePlanPicksTheFewestDaysThatReconnectTheStreak() {
+        StreakCalculator.RestorePlan plan = StreakCalculator.restorePlan(range("2026-10-05", "2026-10-15"), List.of(), MONDAY);
+        assertThat(plan.coThe()).isTrue();
+        assertThat(plan.chuoiHienTai()).isZero();
+        assertThat(plan.chuoiSauKhoiPhuc()).isEqualTo(11);
+        assertThat(plan.ngayCanBu()).containsExactly(day("2026-10-17"), day("2026-10-18"));
+    }
+
+    @Test
+    void restorePlanIsEmptyWhileTheStreakIsIntact() {
+        StreakCalculator.RestorePlan plan = StreakCalculator.restorePlan(range("2026-10-10", "2026-10-18"), List.of(), MONDAY);
+        assertThat(plan.coThe()).isFalse();
+        assertThat(plan.ngayCanBu()).isEmpty();
+    }
+
+    @Test
+    void restorePlanCannotReachAGapOlderThanTheWindow() {
+        StreakCalculator.RestorePlan plan = StreakCalculator.restorePlan(range("2026-09-28", "2026-10-05"), List.of(), MONDAY);
+        assertThat(plan.coThe()).isFalse();
+    }
+
+    private static List<LocalDate> range(String from, String to) {
+        LocalDate start = day(from);
+        return day(to).datesUntil(start.minusDays(1), java.time.Period.ofDays(-1)).toList();
+    }
+
     private static StreakCalculator.Result calc(LocalDate today, String... values) {
         List<LocalDate> days = Arrays.stream(values).map(LocalDate::parse).toList();
         return StreakCalculator.calculate(days, today);
