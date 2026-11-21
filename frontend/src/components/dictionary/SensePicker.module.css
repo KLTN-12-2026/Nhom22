@@ -1,0 +1,21 @@
+.panel { display: grid; gap: var(--sp-2); padding: var(--sp-3); border: var(--rule) solid var(--primary-line); background: color-mix(in srgb, var(--primary-tint) 45%, var(--sheet)); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.title { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: var(--fs-small); color: var(--ink-2); }
+.title :global(.icon) { width: 16px; height: 16px; align-self: center; color: var(--primary); }
+.title strong { font-family: var(--font-word); font-size: 1.05rem; color: var(--ink); }
+.status { margin: 0; font-size: var(--fs-small); color: var(--ink-2); }
+.list { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
+.sense { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: var(--sp-2); align-items: start; width: 100%; padding: 8px 10px; border: var(--rule) solid var(--line); background: var(--sheet); color: var(--ink); text-align: left; font: inherit; cursor: pointer; transition: border-color var(--dur-2, 160ms), background var(--dur-2, 160ms); }
+.sense:hover { border-color: var(--primary); }
+.sense:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.on { border-color: var(--primary); background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--primary); }
+.mark { display: grid; place-items: center; width: 20px; height: 20px; margin-top: 2px; border: var(--rule) solid var(--line); border-radius: 50%; color: var(--on-primary); }
+.mark :global(.icon) { width: 13px; height: 13px; }
+.on .mark { background: var(--primary-fill); border-color: var(--primary-fill); }
+.body { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+.meaning { line-height: 1.45; }
+.example { flex-basis: 100%; font-family: var(--font-word); font-style: italic; font-size: var(--fs-small); color: var(--ink-2); }
+.example span { font-family: var(--font-body, inherit); font-style: normal; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); font-size: var(--fs-small); }
+.more { margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .sense { transition: none; } }

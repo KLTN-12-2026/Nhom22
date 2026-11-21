@@ -151,6 +151,11 @@ app:
     enabled: ${REMINDERS_ENABLED:true}
     interval-ms: ${REMINDERS_INTERVAL_MS:900000}
     initial-delay-ms: ${REMINDERS_INITIAL_DELAY_MS:60000}
+  dictionary:
+    import-on-startup: ${DICTIONARY_IMPORT:true}
+    batch-size: 500
+    anh-viet: classpath:dictionary/anh-viet.jsonl.gz
+    viet-anh: classpath:dictionary/viet-anh.jsonl.gz
   statistics:
     so-luot-toi-da: 20
     so-quan-sat-toi-thieu: 5

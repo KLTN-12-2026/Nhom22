@@ -47,13 +47,11 @@ export async function apiFetch(path, options = {}) {
       throw new ApiError(res.status, data, Number.parseInt(res.headers.get('Retry-After'), 10));
     }
     if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();
-    if (res.status === 204) { if (writing) mascotFeedback('success'); return null; }
+    if (res.status === 204) return null;
     if (options.responseType === 'blob') return res.blob();
     const body = await res.text();
-    const result = body ? JSON.parse(body) : null;
-    if (writing) { let input;try { input=typeof options.body==='string'?JSON.parse(options.body):null; } catch {} mascotFeedback(input?.danhGia==='QUEN'||result?.dung===false?'error':'success'); }
-    return result;
-  } catch (error) { if (writing) mascotFeedback('error'); throw error; }
+    return body ? JSON.parse(body) : null;
+  }
   finally { if (writing) mascotFeedback('end'); }
 }
 export function applyServerErrors(setError, errors) {

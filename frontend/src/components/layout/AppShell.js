@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon, useToast } from '@/components/ui';
 import { isPendingRoute } from './FeatureGate';
+import { StreakChip } from '@/components/engagement/StreakChip';
 
 const HOME = '/hom-nay';
 const visible = (groups) => groups.map(g => ({ ...g, items: g.items.filter(it => !isPendingRoute(it.href)) })).filter(g => g.items.length);
@@ -20,6 +21,7 @@ const NAV = [
     { key: "today", label: "Hôm nay", icon: "today", href: "/hom-nay" },
     { key: "decks", label: "Bộ của tôi", icon: "decks", href: "/bo-the" },
     { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
+    { key: "dictionary", label: "Từ điển", icon: "book", href: "/tu-dien" },
     { key: "publish-requests", label: "Yêu cầu công khai", icon: "copy", href: "/yeu-cau-cong-khai" },
     { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
@@ -92,6 +94,7 @@ export function AppShell({ children, user, isAdmin = false }) {
         </Link>
         <GlobalSearch pages={searchPages} />
         <div className="header-actions"><SoundToggle /><ThemeToggle />
+          {user && <StreakChip key={`streak-${user.id}`} userId={user.id} />}
           {user && <NotificationBell key={user.id} userId={user.id} />}
           {user && (
             <Link href="/ca-nhan" className="user-chip" aria-label={`Hồ sơ của ${user.tenHienThi || 'User'}`}>

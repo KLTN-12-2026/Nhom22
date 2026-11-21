@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
 import { fx } from '@/lib/fx';
+import { mucActivity, mucCelebrate, mucSay } from '@/lib/mascot.mjs';
 import { ERROR_GROUP, PRACTICE_TYPE, SKILL, label, splitBlank } from '@/lib/practice-labels.mjs';
 
 function BlankSentence({ sentence }) {
@@ -76,6 +77,11 @@ function PracticeResultContent() {
     if (ratio >= 0.8) fx.celebrate(sheetRef.current, { stamp: 'Xuất sắc' });
     else if (ratio >= 0.5) { fx.play('complete'); fx.stamp(sheetRef.current, 'Hoàn thành'); }
     else fx.stamp(sheetRef.current, 'Đã nộp', { tone: 'primary' });
+    const score = `${result.soCauDung}/${result.tongSoCau}`;
+    if (ratio >= 0.8) mucCelebrate(`Đúng ${score} câu, xuất sắc! 🎉`);
+    else if (ratio >= 0.5) mucSay(`Đúng ${score} câu. Làm lại câu sai để nhớ chắc hơn nhé.`);
+    else mucSay('Câu sai đã vào sổ tay rồi. Mình luyện lại từng từ nhé, {ten} ở đây.', 'error');
+    mucActivity('practice');
   }, [result]);
 
   const retryMutation = useMutation({

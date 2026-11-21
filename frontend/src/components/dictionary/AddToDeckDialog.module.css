@@ -1,0 +1,6 @@
+.form { display: grid; gap: var(--sp-4); }
+.preview { display: grid; gap: var(--sp-3); padding: var(--sp-3); border: var(--rule) solid var(--line); background: var(--field); }
+.word { margin: 0; font-family: var(--font-word); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+.word :global(.entry-ipa), .word :global(.pos) { font-size: 1rem; font-weight: 400; }
+.two { display: grid; gap: var(--sp-3); }
+@media (min-width: 640px) { .two { grid-template-columns: 1fr 1fr; } }

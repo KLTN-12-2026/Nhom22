@@ -359,6 +359,6 @@ h1 { font-weight: 800; letter-spacing: -0.025em; }
   .sidebar .nav-link[aria-current="page"] { color: color-mix(in srgb, var(--hue, var(--primary)) 85%, var(--ink)); font-weight: 600; }
   .sidebar .nav-link:focus-visible { outline: none; box-shadow: var(--focus); }
 }
-.muc-companion:not([data-muc-state="success"]):not([data-muc-state="error"]):not([data-muc-state="speaking"]):not([data-muc-state="thinking"]) .muc-bubble { display: none; }
+.muc-companion:not([data-bubble="on"]) .muc-bubble { display: none; }
 .side-col > .panel, aside > .panel { border-color: transparent; box-shadow: none; }
 ::selection { background: var(--primary-tint-2); color: var(--ink); }

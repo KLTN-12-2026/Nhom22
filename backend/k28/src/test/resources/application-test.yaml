@@ -24,6 +24,10 @@ app:
     provider: fake
   reminders:
     enabled: false
+  dictionary:
+    import-on-startup: false
+    anh-viet: classpath:dictionary-test/anh-viet.jsonl
+    viet-anh: classpath:dictionary-test/viet-anh.jsonl
   publish-requests:
     expiry-job:
       enabled: false
