@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { PracticeHowTo, PracticeSample } from '@/components/practice/PracticeGuide';
+import { Icon } from '@/components/ui';
 import styles from './page.module.css';
 
 const TYPES = [
@@ -26,9 +28,11 @@ function PracticeForm() {
   const defaultSource = searchParams.get('nguon');
 
   const [loaiBai, setLoaiBai] = useState(TYPES.find(t => t.id === defaultType) ? defaultType : 'CHON_NGHIA');
+  const current = TYPES.find(t => t.id === loaiBai) || TYPES[0];
   const [soCau, setSoCau] = useState(10);
   const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
   const [errorMsg, setErrorMsg] = useState('');
+  const [focusFull, setFocusFull] = useState(true);
 
   const { data: myDecks = [] } = useQuery({
     queryKey: ['my-decks', 'all'],
@@ -45,7 +49,10 @@ function PracticeForm() {
     onSuccess: (res) => {
       router.push(`/luyen-tap-lam-bai?id=${res.id}`);
     },
-    onError: (err) => setErrorMsg(err.message || 'Lỗi khi tạo phiên luyện tập')
+    onError: (err) => {
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+      setErrorMsg(err.message || 'Lỗi khi tạo phiên luyện tập');
+    }
   });
 
   const handleSubmit = (e) => {
@@ -53,6 +60,7 @@ function PracticeForm() {
     setErrorMsg('');
     const boTheId = source.startsWith('deck:') ? source.slice(5) : null;
     const nguon = source === 'SO_TAY' ? 'SO_TAY' : 'BO_THE';
+    if (focusFull && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
     sessionMutation.mutate({ loaiBai, soCau: Number(soCau), boTheId, nguon });
   };
 
@@ -73,17 +81,19 @@ function PracticeForm() {
             <legend>Dạng bài</legend>
             <div className={styles.typeGrid} id="types">
               {TYPES.map(t => (
-                <label key={t.id} className="choice choice-card">
+                <label key={t.id} className={`choice choice-card ${styles.typeCard}`}>
                   <input type="radio" name="loaiBai" value={t.id} checked={loaiBai === t.id} onChange={() => setLoaiBai(t.id)} />
                   <span className="bubble" aria-hidden="true"></span>
                   <span className="choice-body">
                     <span className="choice-title">{t.name}</span>
                     <span className="choice-desc">{t.desc}</span>
                     <span className={styles.typeSkill}>{t.skill}</span>
+                    <PracticeSample type={t.id} mini />
                   </span>
                 </label>
               ))}
             </div>
+            <PracticeHowTo type={loaiBai} name={current.name} skill={current.skill} />
             <p className="field-error"></p>
           </fieldset>
 
@@ -118,6 +128,15 @@ function PracticeForm() {
             <p className="field-hint">Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
             <p className="field-error"></p>
           </fieldset>
+
+          <label className="choice choice-card">
+            <input type="checkbox" checked={focusFull} onChange={e => setFocusFull(e.target.checked)} />
+            <span className="bubble box" aria-hidden="true"><Icon name="check" /></span>
+            <span className="choice-body">
+              <span className="choice-title">Làm bài toàn màn hình</span>
+              <span className="choice-desc">Ẩn mọi thứ khác để tập trung. Nhấn Esc hoặc nút trên thanh làm bài để thoát.</span>
+            </span>
+          </label>
 
           <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
