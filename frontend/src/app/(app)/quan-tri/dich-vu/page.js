@@ -145,7 +145,7 @@ function QuotaCard() {
                             <input id={`q-${key}`} className="adm-input" type="number" inputMode="numeric" min={0} max={QUOTA_MAX} step={1} value={value}
                               aria-invalid={!!err} aria-describedby={err ? `q-${key}-err` : undefined}
                               onChange={event => setDraft(current => ({ ...current, [key]: event.target.value }))}
-                              style={{ width: 110, textAlign: 'right', fontFamily: 'var(--font-admin-mono)', ...(changed ? { borderColor: 'var(--primary)', background: 'var(--primary-tint)' } : {}) }} />
+                              style={{ width: 110, textAlign: 'right', ...(changed ? { borderColor: 'var(--primary)', background: 'var(--primary-tint)' } : {}) }} />
                             {changed && !err && <div className="adm-muted">trước: {num(item.soLuotNgay)}</div>}
                             {err && <div id={`q-${key}-err`} className="adm-error">{err}</div>}
                           </td>

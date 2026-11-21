@@ -13,26 +13,22 @@ import { listReports } from '@/lib/admin-ops.mjs';
 import '@/styles/admin.css';
 
 export const ADMIN_NAV = [
-  { group: 'Tổng quan', items: [
-    { key: 'dashboard', label: 'Bảng điều khiển', icon: 'target', href: '/quan-tri', exact: true },
+  { group: 'Hằng ngày', items: [
+    { key: 'dashboard', label: 'Sổ trực ban', href: '/quan-tri', exact: true },
+    { key: 'publish', label: 'Duyệt công khai', href: '/quan-tri/duyet-cong-khai', badge: 'publish' },
+    { key: 'reports', label: 'Báo cáo vi phạm', href: '/quan-tri/bao-cao', badge: 'reports', tone: 'red' },
   ] },
-  { group: 'Người dùng', items: [
-    { key: 'users', label: 'Tài khoản & vai trò', icon: 'user', href: '/quan-tri/tai-khoan' },
+  { group: 'Hồ sơ', items: [
+    { key: 'users', label: 'Tài khoản và vai trò', href: '/quan-tri/tai-khoan' },
+    { key: 'decks', label: 'Bộ mẫu và thẻ', href: '/quan-tri/bo-mau' },
+    { key: 'topics', label: 'Chủ đề và nhãn', href: '/quan-tri/chu-de' },
   ] },
-  { group: 'Nội dung', items: [
-    { key: 'decks', label: 'Bộ mẫu & thẻ', icon: 'decks', href: '/quan-tri/bo-mau' },
-    { key: 'topics', label: 'Chủ đề & nhãn', icon: 'tag', href: '/quan-tri/chu-de' },
-    { key: 'publish', label: 'Duyệt công khai', icon: 'check', href: '/quan-tri/duyet-cong-khai', badge: 'publish' },
-    { key: 'reports', label: 'Báo cáo vi phạm', icon: 'alert', href: '/quan-tri/bao-cao', badge: 'reports', tone: 'red' },
-  ] },
-  { group: 'Kinh doanh', items: [
-    { key: 'payments', label: 'Thanh toán & gói', icon: 'file', href: '/quan-tri/thanh-toan' },
-    { key: 'revenue', label: 'Doanh thu', icon: 'chart', href: '/quan-tri/doanh-thu' },
-  ] },
-  { group: 'Hệ thống', items: [
-    { key: 'services', label: 'Dịch vụ & hạn mức', icon: 'settings', href: '/quan-tri/dich-vu' },
-    { key: 'announcements', label: 'Thông báo hệ thống', icon: 'bell', href: '/quan-tri/thong-bao' },
-    { key: 'audit', label: 'Nhật ký thao tác', icon: 'clock', href: '/quan-tri/nhat-ky' },
+  { group: 'Sổ sách', items: [
+    { key: 'payments', label: 'Thanh toán và gói', href: '/quan-tri/thanh-toan' },
+    { key: 'revenue', label: 'Doanh thu', href: '/quan-tri/doanh-thu' },
+    { key: 'services', label: 'Dịch vụ và hạn mức', href: '/quan-tri/dich-vu' },
+    { key: 'announcements', label: 'Thông báo hệ thống', href: '/quan-tri/thong-bao' },
+    { key: 'audit', label: 'Nhật ký thao tác', href: '/quan-tri/nhat-ky' },
   ] },
 ];
 
@@ -68,7 +64,7 @@ function SideNav({ pathname, badges }) {
             const count = item.badge ? badges[item.badge] : 0;
             return (
               <Link key={item.key} href={item.href} className="adm-link" aria-current={isActive(pathname, item.href, item.exact) ? 'page' : undefined}>
-                <Icon name={item.icon} />
+                <span className="adm-bub" aria-hidden="true" />
                 <span>{item.label}</span>
                 {count > 0 && <span className={`adm-badge${item.tone === 'red' ? ' adm-badge-red' : ''}`} aria-label={`${count} đang chờ`}>{count > 99 ? '99+' : count}</span>}
               </Link>
@@ -107,9 +103,9 @@ export function AdminShell({ children, user }) {
       <aside className="adm-side" id="adm-side">
         <Link href="/quan-tri" className="adm-brand">
           <span className="adm-brand-mark" aria-hidden="true">VL</span>
-          <span>VocabLearning<small>Admin Console</small></span>
+          <span>Phòng quản trị<small>VocabLearning</small></span>
         </Link>
-        {ENV && <p className="adm-env"><span>Môi trường</span><b>{ENV}</b></p>}
+        {ENV && <p className="adm-env"><span>Môi trường chạy</span><b>{ENV}</b></p>}
         <SideNav pathname={pathname} badges={{ publish, reports }} />
         <div className="adm-side-foot">
           <Link href="/hom-nay" className="adm-link adm-back"><Icon name="arrow-left" /><span>Về trang học</span></Link>
@@ -126,8 +122,8 @@ export function AdminShell({ children, user }) {
         <header className="adm-top">
           <button type="button" className="adm-icon-btn adm-menu" aria-label="Mở điều hướng" aria-controls="adm-side" aria-expanded={open} onClick={() => setOpen(true)}><Icon name="menu" /></button>
           <nav className="adm-crumb" aria-label="Đường dẫn">
-            <span>Quản trị</span>
-            {current && <><span aria-hidden="true">/</span><span>{current.group}</span><span aria-hidden="true">/</span><b aria-current="page">{current.label}</b></>}
+            <span>Phòng quản trị</span>
+            {current && <><span aria-hidden="true">/</span><b aria-current="page">{current.label}</b></>}
           </nav>
           <div className="adm-top-actions">
             {publish > 0 && (

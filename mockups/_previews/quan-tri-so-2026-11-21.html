@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sổ quản trị — demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../shared/tokens.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--desk); color: var(--ink);
+    font: var(--fs-body)/var(--lh-body) var(--font-body);
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: var(--primary); text-underline-offset: 3px; }
+  :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
+
+  .index {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    background: var(--sheet); border-right: var(--rule) solid var(--line-2);
+    padding: var(--sp-5) 0 var(--sp-4);
+    display: flex; flex-direction: column;
+  }
+  .index-brand { display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-5) var(--sp-5); }
+  .index-brand b { display: block; font-size: var(--fs-lead); font-weight: 750; line-height: 1.2; }
+  .index-brand span { font-size: var(--fs-caption); color: var(--ink-3); }
+  .seal {
+    flex: none; width: 40px; height: 40px; border-radius: 50%;
+    border: 1.5px solid var(--primary); display: grid; place-items: center;
+    color: var(--primary); font-weight: 750; font-size: var(--fs-small);
+    box-shadow: inset 0 0 0 3px var(--sheet), inset 0 0 0 4px var(--primary-line);
+  }
+  .index nav { flex: 1; }
+  .index h2 { margin: var(--sp-4) var(--sp-5) var(--sp-1); font-size: var(--fs-caption); font-weight: 600; color: var(--ink-3); }
+  .index ol { list-style: none; margin: 0; padding: 0; }
+  .index a {
+    display: grid; grid-template-columns: var(--bubble) 1fr auto; align-items: center; gap: var(--sp-3);
+    min-height: var(--tap); padding: 0 var(--sp-5);
+    color: var(--ink-2); text-decoration: none; font-size: var(--fs-small); font-weight: 550;
+    border-top: var(--rule) solid transparent;
+  }
+  .index li + li a { border-top-color: var(--line); }
+  .index a:hover { color: var(--ink); background: var(--sunk); }
+  .bub {
+    width: calc(var(--bubble) - 4px); height: calc(var(--bubble) - 4px); border-radius: 50%;
+    border: 1.5px solid var(--graphite-soft); position: relative;
+  }
+  .index a[aria-current="page"] { color: var(--ink); font-weight: 700; }
+  .index a[aria-current="page"] .bub { border-color: var(--graphite); background:
+    repeating-linear-gradient(-45deg, var(--graphite) 0 1.5px, transparent 1.5px 3px), var(--graphite-soft); }
+  .tally { font-size: var(--fs-caption); font-weight: 700; color: var(--danger); }
+  .index-foot { padding: var(--sp-4) var(--sp-5) 0; border-top: var(--rule) solid var(--line); font-size: var(--fs-small); color: var(--ink-2); }
+  .index-foot a { display: inline; padding: 0; min-height: 0; border: 0; color: var(--primary); }
+
+  .top {
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; gap: var(--sp-4);
+    min-height: 60px; padding: 0 var(--sp-6);
+    background: color-mix(in srgb, var(--desk) 92%, transparent);
+    border-bottom: var(--rule) solid var(--line-2);
+  }
+  .crumb { font-size: var(--fs-small); color: var(--ink-3); margin-right: auto; }
+  .crumb b { color: var(--ink); font-weight: 650; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    min-height: 40px; padding: 0 var(--sp-4); border-radius: var(--radius-btn);
+    border: 1.5px solid var(--line-2); background: var(--field); color: var(--ink);
+    font: 700 var(--fs-small) var(--font-body); cursor: pointer; text-decoration: none;
+  }
+  .btn:hover { border-color: var(--control-line); }
+  .btn-main { background: var(--primary-fill); border-color: var(--primary-fill); color: var(--on-primary); }
+  .btn-main:hover { background: var(--primary-fill-hover); border-color: var(--primary-fill-hover); }
+  .btn-danger { background: var(--danger-fill); border-color: var(--danger-fill); color: var(--on-danger); }
+  .btn-sm { min-height: 32px; padding: 0 var(--sp-3); font-size: var(--fs-caption); }
+
+  main { padding: var(--sp-6) var(--sp-6) var(--sp-8); max-width: 1240px; }
+
+  .head { display: flex; align-items: flex-start; gap: var(--sp-5); margin-bottom: var(--sp-5); }
+  .head h1 { margin: 0; font-size: var(--fs-h1); font-weight: 750; line-height: var(--lh-tight); letter-spacing: -0.01em; }
+  .head p { margin: var(--sp-2) 0 0; color: var(--ink-2); max-width: 56ch; }
+  .datestamp {
+    margin-left: auto; flex: none; transform: rotate(-4deg);
+    border: 2px solid var(--primary); border-radius: 4px; padding: 6px 12px 5px;
+    color: var(--primary); text-align: center; line-height: 1.15;
+    box-shadow: inset 0 0 0 2px var(--sheet), inset 0 0 0 3px var(--primary);
+    background: color-mix(in srgb, var(--primary) 5%, transparent);
+  }
+  .datestamp b { display: block; font-size: 1.625rem; font-weight: 800; font-stretch: 88%; }
+  .datestamp span { font-size: var(--fs-caption); font-weight: 650; }
+
+  .sheet {
+    position: relative; background: var(--sheet); border-radius: 12px;
+    box-shadow: var(--shadow-sheet); padding: var(--sp-5) var(--sp-5) var(--sp-5) calc(var(--sp-5) + 20px);
+    margin-bottom: var(--sp-5);
+  }
+  .sheet::before {
+    content: ""; position: absolute; left: 12px; top: 24px; bottom: 24px; width: 8px; opacity: .32;
+    background: repeating-linear-gradient(to bottom, var(--timing) 0 5px, transparent 5px 22px);
+  }
+  .sheet-head { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+  .sheet-head h2 { margin: 0; font-size: var(--fs-h3); font-weight: 700; }
+  .sheet-head .note { color: var(--ink-3); font-size: var(--fs-small); }
+  .sheet-head .end { margin-left: auto; }
+
+  .duty { list-style: none; margin: 0; padding: 0; counter-reset: duty; }
+  .duty li {
+    counter-increment: duty;
+    display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) 5.5rem auto; align-items: center; gap: var(--sp-3);
+    min-height: 56px; border-top: var(--rule) solid var(--line);
+  }
+  .duty li:last-child { border-bottom: var(--rule) solid var(--line); }
+  .duty li::before { content: counter(duty); color: var(--primary); font-weight: 700; font-size: var(--fs-small); }
+  .duty .what b { font-weight: 650; }
+  .duty .what small { display: block; color: var(--ink-3); font-size: var(--fs-caption); }
+  .duty .count { position: relative; justify-self: center; font-size: var(--fs-h2); font-weight: 750; }
+  .duty .zero { color: var(--ink-3); font-weight: 500; font-size: var(--fs-lead); }
+  .ring { position: absolute; inset: -9px -16px; width: calc(100% + 32px); height: calc(100% + 18px); overflow: visible; pointer-events: none; }
+  .ring path { fill: none; stroke: var(--danger); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 520ms var(--ease-out) forwards; }
+  .duty li:nth-child(2) .ring path { animation-delay: 140ms; }
+  .duty li:nth-child(4) .ring path { animation-delay: 280ms; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .duty .ok { color: var(--secondary-text); font-size: var(--fs-small); font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
+  .grid .sheet { margin-bottom: 0; }
+  .stack { display: grid; gap: var(--sp-5); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+  caption { text-align: left; }
+  th { text-align: left; font-weight: 600; color: var(--ink-3); padding: 0 var(--sp-3) var(--sp-2) 0; border-bottom: var(--rule-strong) solid var(--line-2); white-space: nowrap; }
+  td { padding: var(--sp-3) var(--sp-3) var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); vertical-align: middle; }
+  .num { text-align: right; }
+  tr:last-child td { border-bottom: 0; }
+
+  .ledger td:first-child { font-weight: 600; color: var(--ink); }
+  .ledger .now { font-size: var(--fs-lead); font-weight: 750; }
+  .ledger .prev { color: var(--ink-3); }
+  .bar { position: relative; height: 10px; min-width: 120px; background: var(--sunk); border-radius: 2px; box-shadow: inset 0 0 0 1px var(--line); }
+  .bar i { position: absolute; inset: 0 auto 0 0; background: var(--primary); border-radius: 2px; }
+  .bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-2); }
+  .diff { font-weight: 650; white-space: nowrap; }
+  .up { color: var(--secondary-text); }
+  .down { color: var(--danger); }
+  .flat { color: var(--ink-3); font-weight: 500; }
+
+  .graph { width: 100%; height: auto; display: block; }
+  .graph .paper { stroke: var(--line); stroke-width: 1; }
+  .graph .paper-5 { stroke: var(--line-2); }
+  .graph .axis { fill: var(--ink-3); font: 12px var(--font-body); }
+  .graph .learn { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; }
+  .graph .learn-dot { fill: var(--sheet); stroke: var(--primary); stroke-width: 2; }
+  .graph .sign { fill: var(--graphite-soft); opacity: .55; }
+  .legend { display: flex; gap: var(--sp-4); flex-wrap: wrap; font-size: var(--fs-caption); color: var(--ink-2); margin-top: var(--sp-2); }
+  .legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; margin-right: 6px; vertical-align: middle; background: var(--primary); }
+  .legend span.s::before { height: 8px; width: 8px; background: var(--graphite-soft); opacity: .55; }
+
+  .who { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+  .who b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+  .who small { display: block; color: var(--ink-3); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+  .initial { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--graphite-soft); font-size: var(--fs-caption); font-weight: 700; color: var(--ink-2); }
+
+  .stamp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--primary); border-radius: 2px; font-size: var(--fs-caption); font-weight: 650; color: var(--primary); white-space: nowrap; }
+  .stamp-ok { border-color: var(--secondary); background: var(--secondary-bg); color: var(--secondary-text); }
+  .stamp-bad { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); }
+  .stamp-warn { border-color: var(--warning); color: var(--warning-text); background: var(--field); }
+  .stamp-quiet { border-style: dashed; color: var(--ink-2); border-color: var(--primary-line); }
+
+  .journal { list-style: none; margin: 0; padding: 0; }
+  .journal li { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-top: var(--rule) solid var(--line); font-size: var(--fs-small); }
+  .journal time { color: var(--ink-3); }
+  .journal q { display: block; quotes: "“" "”"; color: var(--ink-2); font-family: var(--font-word); font-style: italic; margin-top: 2px; }
+
+  .tabs { display: flex; gap: var(--sp-5); border-bottom: var(--rule) solid var(--line-2); margin: var(--sp-6) 0 var(--sp-4); overflow-x: auto; }
+  .tabs a { padding: var(--sp-3) 0; color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: var(--fs-small); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs a[aria-current="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .tools { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .field { min-height: 40px; padding: 0 var(--sp-3); border: 1px solid var(--line-2); border-bottom-color: var(--control-line); border-radius: var(--radius-field); background: var(--field); color: var(--ink); font: var(--fs-small) var(--font-body); }
+  .field[type="search"] { flex: 1 1 240px; }
+
+  .accounts tbody tr { cursor: pointer; }
+  .accounts tbody tr:hover td { background: var(--primary-tint); }
+  .accounts td:first-child { padding-left: var(--sp-2); }
+  .accounts input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--graphite); }
+  .row-mark { color: var(--primary); font-weight: 700; width: 2.25rem; }
+
+  .card-file {
+    display: grid; grid-template-columns: 1fr; gap: 0;
+    border: var(--rule) solid var(--line-2); border-radius: 12px; background: var(--sheet); overflow: hidden;
+  }
+  .file-head { display: flex; gap: var(--sp-4); align-items: center; padding: var(--sp-5); border-bottom: var(--rule-strong) solid var(--line-2); }
+  .file-head .initial { width: 56px; height: 56px; font-size: var(--fs-lead); }
+  .file-head h3 { margin: 0; font-size: var(--fs-h3); }
+  .file-head p { margin: 2px 0 var(--sp-2); color: var(--ink-3); font-size: var(--fs-small); }
+  .file-body { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+  .attention { margin: 0 0 var(--sp-4); padding: 0 0 0 var(--sp-4); border-left: 2px solid var(--danger); font-size: var(--fs-small); color: var(--ink); }
+  .attention li { margin: 2px 0; }
+  .facts { display: grid; grid-template-columns: 9rem minmax(0, 1fr); margin: 0; font-size: var(--fs-small); }
+  .facts dt, .facts dd { padding: var(--sp-2) 0; border-top: var(--rule) solid var(--line); margin: 0; }
+  .facts dt { color: var(--ink-3); }
+  .heat { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 3px; margin: var(--sp-2) 0; }
+  .heat span { aspect-ratio: 1 / 2; border-radius: 2px; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--line); }
+  .heat [data-l="1"] { background: var(--primary-tint-2); box-shadow: none; }
+  .heat [data-l="2"] { background: color-mix(in srgb, var(--primary) 45%, var(--sheet)); box-shadow: none; }
+  .heat [data-l="3"] { background: var(--primary); box-shadow: none; }
+
+  .switch { display: inline-flex; border: 1px solid var(--line-2); border-radius: var(--radius-btn); overflow: hidden; }
+  .switch button { min-height: 36px; padding: 0 var(--sp-3); border: 0; background: var(--field); color: var(--ink-2); font: 600 var(--fs-caption) var(--font-body); cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+
+  @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 1023px) {
+    .app { grid-template-columns: 1fr; }
+    .index { position: static; height: auto; border-right: 0; border-bottom: var(--rule) solid var(--line-2); padding-top: var(--sp-4); }
+    .index nav, .index-foot { display: none; }
+    .index-brand { padding-bottom: 0; }
+    .top { padding: 0 var(--sp-4); }
+    main { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  }
+  @media (max-width: 640px) {
+    .head { flex-direction: column; }
+    .datestamp { margin-left: 0; }
+    .duty li { grid-template-columns: 1.75rem minmax(0, 1fr) 3.5rem; }
+    .duty li > .btn, .duty li > .ok { grid-column: 2 / -1; justify-self: start; margin-bottom: var(--sp-3); }
+    .sheet { padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 18px); }
+    .ledger .bar-col, .accounts .hide-sm { display: none; }
+    .facts { grid-template-columns: 7rem minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) { .ring path { animation: none; stroke-dashoffset: 0; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="index" aria-label="Mục lục quản trị">
+    <div class="index-brand">
+      <span class="seal" aria-hidden="true">VL</span>
+      <div><b>Phòng quản trị</b><span>VocabLearning</span></div>
+    </div>
+    <nav>
+      <h2>Hằng ngày</h2>
+      <ol>
+        <li><a href="#" aria-current="page"><span class="bub" aria-hidden="true"></span>Sổ trực ban</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Duyệt công khai<span class="tally">3</span></a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Báo cáo vi phạm<span class="tally">1</span></a></li>
+      </ol>
+      <h2>Hồ sơ</h2>
+      <ol>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Tài khoản</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Bộ mẫu</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Chủ đề và nhãn</a></li>
+      </ol>
+      <h2>Sổ sách</h2>
+      <ol>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Thanh toán</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Doanh thu</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Dịch vụ và hạn mức</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Thông báo</a></li>
+        <li><a href="#"><span class="bub" aria-hidden="true"></span>Nhật ký</a></li>
+      </ol>
+    </nav>
+    <div class="index-foot">Đang trực: <b>Admin</b><br /><a href="#">Về trang học</a></div>
+  </aside>
+
+  <div>
+    <header class="top">
+      <div class="crumb">Phòng quản trị / <b>Sổ trực ban</b></div>
+      <div class="switch" role="group" aria-label="Giao diện">
+        <button type="button" data-t="light" aria-pressed="true">Sáng</button>
+        <button type="button" data-t="dark" aria-pressed="false">Tối</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="head">
+        <div>
+          <h1>Sổ trực ban</h1>
+          <p>Việc cần làm hôm nay ở trên, số liệu so với 7 ngày trước ở dưới. Số được khoanh đỏ là việc đang chờ bạn.</p>
+        </div>
+        <div class="datestamp" aria-label="Hôm nay thứ Bảy, 21 tháng 11 năm 2026">
+          <span>Thứ Bảy</span><b>21.11.26</b><span>đã mở sổ 08:42</span>
+        </div>
+      </div>
+
+      <section class="sheet" aria-labelledby="duty-h">
+        <div class="sheet-head">
+          <h2 id="duty-h">Việc chờ xử lý</h2>
+          <span class="note">4 mục, cũ nhất từ 2 ngày trước</span>
+        </div>
+        <ol class="duty">
+          <li>
+            <div class="what"><b>Yêu cầu công khai bộ thẻ</b><small>Cũ nhất: “IELTS Writing Task 2” gửi 19/11</small></div>
+            <span class="count">3<svg class="ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M52 6 C80 4 97 16 95 32 C93 50 66 57 44 55 C20 53 4 44 6 28 C8 13 30 5 58 8" /></svg></span>
+            <a class="btn btn-main btn-sm" href="#">Duyệt</a>
+          </li>
+          <li>
+            <div class="what"><b>Báo cáo vi phạm nội dung</b><small>Thẻ “break a leg” — lý do: sai nghĩa</small></div>
+            <span class="count">1<svg class="ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M48 5 C76 5 96 18 94 33 C92 51 64 56 42 54 C18 52 5 42 7 27 C9 12 32 6 56 9" /></svg></span>
+            <a class="btn btn-sm" href="#">Xem báo cáo</a>
+          </li>
+          <li>
+            <div class="what"><b>Giao dịch treo quá 15 phút</b><small>Không có giao dịch nào đang treo</small></div>
+            <span class="count zero">0</span>
+            <span class="ok">Ổn</span>
+          </li>
+          <li>
+            <div class="what"><b>Gói sắp hết hạn trong 7 ngày</b><small>Người dùng nhận thư nhắc tự động; xem để chăm sóc</small></div>
+            <span class="count">5<svg class="ring" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="100" d="M50 7 C79 6 95 17 94 31 C93 49 67 56 45 55 C21 54 6 45 6 29 C6 14 29 6 57 9" /></svg></span>
+            <a class="btn btn-sm" href="#">Xem danh sách</a>
+          </li>
+        </ol>
+      </section>
+
+      <div class="grid">
+        <div class="stack">
+          <section class="sheet" aria-labelledby="ledger-h">
+            <div class="sheet-head">
+              <h2 id="ledger-h">Sổ số liệu</h2>
+              <span class="note">7 ngày, so với 7 ngày trước</span>
+              <div class="switch end" role="group" aria-label="Khoảng thời gian">
+                <button type="button" aria-pressed="true">7 ngày</button>
+                <button type="button" aria-pressed="false">30 ngày</button>
+                <button type="button" aria-pressed="false">90 ngày</button>
+              </div>
+            </div>
+            <table class="ledger">
+              <caption class="sr-only">Số liệu 7 ngày so với 7 ngày trước</caption>
+              <thead><tr><th scope="col">Chỉ số</th><th scope="col" class="num">Kỳ này</th><th scope="col" class="num">Kỳ trước</th><th scope="col" class="bar-col"><span class="sr-only">So sánh</span></th><th scope="col" class="num">Chênh</th></tr></thead>
+              <tbody>
+                <tr><td>Người dùng mới</td><td class="num now">12</td><td class="num prev">9</td><td class="bar-col"><div class="bar"><i style="width:80%"></i><u style="left:60%"></u></div></td><td class="num diff up">+33%</td></tr>
+                <tr><td>Người học hoạt động</td><td class="num now">46</td><td class="num prev">51</td><td class="bar-col"><div class="bar"><i style="width:72%"></i><u style="left:80%"></u></div></td><td class="num diff down">−10%</td></tr>
+                <tr><td>Lượt ôn hợp lệ</td><td class="num now">1.284</td><td class="num prev">1.102</td><td class="bar-col"><div class="bar"><i style="width:86%"></i><u style="left:74%"></u></div></td><td class="num diff up">+17%</td></tr>
+                <tr><td>Tỷ lệ nhớ</td><td class="num now">71%</td><td class="num prev">69%</td><td class="bar-col"><div class="bar"><i style="width:71%"></i><u style="left:69%"></u></div></td><td class="num diff up">+2 điểm</td></tr>
+                <tr><td>Doanh thu tháng này</td><td class="num now">2.392.000 ₫</td><td class="num prev">1.495.000 ₫</td><td class="bar-col"><div class="bar"><i style="width:90%"></i><u style="left:56%"></u></div></td><td class="num diff up">+60%</td></tr>
+                <tr><td>Thuê bao còn hạn</td><td class="num now">58</td><td class="num prev">58</td><td class="bar-col"><div class="bar"><i style="width:58%"></i><u style="left:58%"></u></div></td><td class="num diff flat">không đổi</td></tr>
+              </tbody>
+            </table>
+            <p class="legend"><span>Kỳ này</span>Vạch đứng: kỳ trước</p>
+          </section>
+
+          <section class="sheet" aria-labelledby="graph-h">
+            <div class="sheet-head"><h2 id="graph-h">Lượt ôn mỗi ngày</h2><span class="note">cột xám: tài khoản mới đăng ký</span></div>
+            <svg class="graph" viewBox="0 0 640 220" role="img" aria-label="Lượt ôn từ 15 đến 21 tháng 11, cao nhất 252 lượt ngày 20/11">
+              <g class="paper">
+                <line x1="40" x2="630" y1="20" y2="20" class="paper-5"/><line x1="40" x2="630" y1="60" y2="60"/><line x1="40" x2="630" y1="100" y2="100" class="paper-5"/><line x1="40" x2="630" y1="140" y2="140"/><line x1="40" x2="630" y1="180" y2="180" class="paper-5"/>
+              </g>
+              <g class="axis"><text x="32" y="24" text-anchor="end">300</text><text x="32" y="104" text-anchor="end">150</text><text x="32" y="184" text-anchor="end">0</text>
+                <text x="70" y="206" text-anchor="middle">15/11</text><text x="160" y="206" text-anchor="middle">16/11</text><text x="250" y="206" text-anchor="middle">17/11</text><text x="340" y="206" text-anchor="middle">18/11</text><text x="430" y="206" text-anchor="middle">19/11</text><text x="520" y="206" text-anchor="middle">20/11</text><text x="605" y="206" text-anchor="middle">21/11</text></g>
+              <g class="sign"><rect x="62" y="164" width="16" height="16"/><rect x="152" y="156" width="16" height="24"/><rect x="242" y="172" width="16" height="8"/><rect x="332" y="160" width="16" height="20"/><rect x="422" y="168" width="16" height="12"/><rect x="512" y="148" width="16" height="32"/><rect x="597" y="164" width="16" height="16"/></g>
+              <polyline class="learn" points="70,96 160,84 250,118 340,72 430,90 520,46 605,62"/>
+              <g><circle class="learn-dot" cx="70" cy="96" r="4"/><circle class="learn-dot" cx="160" cy="84" r="4"/><circle class="learn-dot" cx="250" cy="118" r="4"/><circle class="learn-dot" cx="340" cy="72" r="4"/><circle class="learn-dot" cx="430" cy="90" r="4"/><circle class="learn-dot" cx="520" cy="46" r="4"/><circle class="learn-dot" cx="605" cy="62" r="4"/></g>
+            </svg>
+            <p class="legend"><span>Lượt ôn</span><span class="s">Đăng ký mới</span></p>
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="sheet" aria-labelledby="new-h">
+            <div class="sheet-head"><h2 id="new-h">Mới vào sổ</h2><a class="end" href="#">Tất cả tài khoản</a></div>
+            <table>
+              <caption class="sr-only">Tài khoản mới nhất</caption>
+              <tbody>
+                <tr><td><div class="who"><span class="initial">NA</span><div><b>Nguyễn Văn An</b><small>an.nguyen@gmail.com</small></div></div></td><td class="num"><span class="stamp">Pro</span></td></tr>
+                <tr><td><div class="who"><span class="initial">TL</span><div><b>Trần Thị Lan Phương</b><small>lanphuong.tran@student.edu.vn</small></div></div></td><td class="num"><span class="stamp stamp-quiet">Miễn phí</span></td></tr>
+                <tr><td><div class="who"><span class="initial">HM</span><div><b>Hoàng Minh</b><small>hminh@vocab.local</small></div></div></td><td class="num"><span class="stamp stamp-warn">Chưa xác thực</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="sheet" aria-labelledby="log-h">
+            <div class="sheet-head"><h2 id="log-h">Nhật ký hôm nay</h2><a class="end" href="#">Mở nhật ký</a></div>
+            <ol class="journal">
+              <li><time datetime="2026-11-21T09:14">09:14</time><div><b>Admin</b> duyệt công khai “TOEIC Part 5 — Giới từ”</div></li>
+              <li><time datetime="2026-11-21T08:58">08:58</time><div><b>Admin</b> khóa tài khoản spam.bot@mail.ru<q>Đăng 40 bộ thẻ quảng cáo trong 10 phút</q></div></li>
+              <li><time datetime="2026-11-21T08:42">08:42</time><div><b>Admin</b> sửa hạn mức AI của gói Pro từ 20 lên 30</div></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Xem thêm trong demo">
+        <a href="#accounts" aria-current="true">Trang Tài khoản trong cùng phong cách</a>
+      </nav>
+
+      <section id="accounts" class="sheet" aria-labelledby="acc-h">
+        <div class="sheet-head"><h2 id="acc-h">Tài khoản</h2><span class="note">118 người</span><button class="btn btn-sm end" type="button">Xuất CSV</button></div>
+        <div class="tools">
+          <label class="sr-only" for="q">Tìm theo email hoặc tên</label>
+          <input id="q" class="field" type="search" placeholder="Tìm email hoặc tên" />
+          <label class="sr-only" for="st">Trạng thái</label>
+          <select id="st" class="field"><option>Mọi trạng thái</option></select>
+        </div>
+        <table class="accounts">
+          <caption class="sr-only">Danh sách tài khoản</caption>
+          <thead><tr><th scope="col"><span class="sr-only">Chọn</span></th><th scope="col">Người dùng</th><th scope="col">Trạng thái</th><th scope="col" class="num hide-sm">Bộ thẻ</th><th scope="col" class="hide-sm">Đăng nhập cuối</th></tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox" aria-label="Chọn Nguyễn Văn An" /></td><td><div class="who"><span class="initial">NA</span><div><b>Nguyễn Văn An</b><small>an.nguyen@gmail.com</small></div></div></td><td><span class="stamp stamp-ok">Hoạt động</span></td><td class="num hide-sm">4</td><td class="hide-sm">2 giờ trước</td></tr>
+            <tr><td><input type="checkbox" aria-label="Chọn tài khoản spam" /></td><td><div class="who"><span class="initial">SB</span><div><b>Spam Bot</b><small>spam.bot@mail.ru</small></div></div></td><td><span class="stamp stamp-bad">Bị khóa</span></td><td class="num hide-sm">40</td><td class="hide-sm">hôm nay</td></tr>
+            <tr><td><input type="checkbox" aria-label="Chọn Hoàng Minh" /></td><td><div class="who"><span class="initial">HM</span><div><b>Hoàng Minh</b><small>hminh@vocab.local</small></div></div></td><td><span class="stamp stamp-warn">Chưa xác thực</span></td><td class="num hide-sm">0</td><td class="hide-sm">chưa đăng nhập</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card-file" aria-labelledby="file-h">
+        <div class="file-head">
+          <span class="initial">NA</span>
+          <div><h3 id="file-h">Hồ sơ: Nguyễn Văn An</h3><p>an.nguyen@gmail.com · mã 141</p><span class="stamp stamp-ok">Hoạt động</span> <span class="stamp">Pro đến 16/12</span></div>
+        </div>
+        <div class="file-body">
+          <ol class="attention" aria-label="Cần chú ý">
+            <li>1 báo cáo về nội dung của người này đang chờ xử lý</li>
+            <li>Không học 9 ngày</li>
+          </ol>
+          <dl class="facts">
+            <dt>Chuỗi ngày</dt><dd>0 (dài nhất 12)</dd>
+            <dt>Lượt ôn 30 ngày</dt><dd>212, nhớ 68%</dd>
+            <dt>Đã chi</dt><dd>299.000 ₫, 1 giao dịch</dd>
+            <dt>Học 30 ngày</dt><dd><div class="heat" role="img" aria-label="Có học 11 trên 30 ngày">
+              <span data-l="1"></span><span></span><span data-l="2"></span><span data-l="3"></span><span></span><span></span><span data-l="1"></span><span data-l="2"></span><span></span><span data-l="2"></span><span data-l="3"></span><span data-l="1"></span><span></span><span></span><span data-l="2"></span><span data-l="1"></span><span></span><span data-l="3"></span><span data-l="2"></span><span data-l="1"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div></dd>
+          </dl>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('[data-t]').forEach(b => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.t;
+    document.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+</script>
+</body>
+</html>

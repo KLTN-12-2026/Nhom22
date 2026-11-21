@@ -180,7 +180,7 @@ function PaymentAdmin() {
           onRowClick={t => showDetail(t.id)}
           rowLabel={t => `Chi tiết đơn ${t.id}`}
           columns={[
-            { key: 'id', header: 'Mã đơn', sortValue: t => Date.parse(t.created), render: t => <span><b style={{ fontFamily: 'var(--font-admin-mono)', fontWeight: 600 }}>{t.id}</b><br /><span className="adm-muted">{date(t.created)} · {time(t.created)}</span></span> },
+            { key: 'id', header: 'Mã đơn', sortValue: t => Date.parse(t.created), render: t => <span><b style={{ fontWeight: 650 }}>{t.id}</b><br /><span className="adm-muted">{date(t.created)} · {time(t.created)}</span></span> },
             { key: 'user', header: 'Người dùng', sortValue: t => t.name, render: t => <Who name={t.name} sub={t.email} /> },
             { key: 'plan', header: 'Gói', sortValue: t => t.plan, render: t => <span><Pill tone="acc">{planName(t.plan)}</Pill><br /><span className="adm-muted">{t.cycle === 'NAM' ? '12 tháng' : '1 tháng'}</span></span> },
             { key: 'amount', header: 'Số tiền', align: 'right', sortValue: t => t.amount, render: t => money(t.amount) },
