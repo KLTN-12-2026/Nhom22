@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon, ErrorState, Pagination, ConfirmDialog } from '@/components/ui';
-import { CardMedia } from '@/components/content/CardMedia';
-import { SpeakButton } from '@/components/content/SpeakButton';
+import { CardEntry } from '@/components/content/CardEntry';
+import { AuthorTag } from '@/components/content/AuthorTag';
+import { useMe } from '@/hooks/useMe';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
@@ -27,6 +28,7 @@ export default function DeckDetailPage() {
   const client = useQueryClient();
   const [showImages, setShowImages] = useCardImages();
   const { data: deck, isLoading, error, refetch } = useDeck(id);
+  const { data: me } = useMe();
   const { data: topics = [] } = useTopics();
   const [page, setPage] = useState(0);
   const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
@@ -65,15 +67,24 @@ export default function DeckDetailPage() {
       <div className="form-head">
         <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span><CopyBadge banSao={deck.banSao} /></div>
         <h1 id="deck-title" className="deck-title">{deck.ten}</h1>
+        <div className={styles.authors}>
+          <AuthorTag id={me?.id} name={me?.tenHienThi} prefix={deck.banSao ? 'Bản sao của' : 'Tác giả'} you />
+          {deck.banSao && <AuthorTag name={deck.banSao.tacGiaGoc || 'Không rõ'} prefix="Tác giả gốc" />}
+        </div>
         {deck.moTa && <p>{deck.moTa}</p>}
-        <div className="row">
-          <Link className="btn btn-primary" href={`/bo-the/${id}/the-tao`}><Icon name="plus" />Thêm thẻ</Link>
-          <Link className="btn btn-edit" href={`/bo-the/tao?id=${id}`}><Icon name="edit" />Sửa bộ</Link>
-          <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}>Tiến độ</Link>
-          <Link className="btn btn-media" href={`/bo-the/${id}/nhap-csv`}><Icon name="upload" />Nhập CSV</Link>
-          <button className="btn btn-export" disabled={download.isPending} aria-busy={download.isPending} onClick={() => download.mutate()}><Icon name="download" />Xuất CSV</button>
-          <button className="btn btn-favorite" type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Gỡ yêu thích' : 'Yêu thích'}</button>
-          <button className="btn btn-danger" disabled={remove.isPending} onClick={() => setConfirmation({ type: 'deck' })}><Icon name="trash" />Xóa bộ</button>
+        <div className={styles.actions}>
+          <div className={styles.mainActions}>
+            <Link className="btn btn-primary" href={`/hoc?boTheId=${encodeURIComponent(id)}`}><Icon name="play" />Học bộ này</Link>
+            <Link className="btn btn-secondary" href={`/bo-the/${id}/the-tao`}><Icon name="plus" />Thêm thẻ</Link>
+            <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}><Icon name="chart" />Tiến độ</Link>
+            <button className={`btn btn-secondary ${styles.fav}`} type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Đã yêu thích' : 'Yêu thích'}</button>
+          </div>
+          <div className={styles.subActions} role="group" aria-label="Quản lý bộ thẻ">
+            <Link className="btn btn-edit btn-sm" href={`/bo-the/tao?id=${id}`}><Icon name="edit" />Sửa bộ</Link>
+            <Link className="btn btn-secondary btn-sm" href={`/bo-the/${id}/nhap-csv`}><Icon name="upload" />Nhập CSV</Link>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={download.isPending} aria-busy={download.isPending} onClick={() => download.mutate()}><Icon name="download" />Xuất CSV</button>
+            <button type="button" className="btn btn-danger btn-sm" disabled={remove.isPending} onClick={() => setConfirmation({ type: 'deck' })}><Icon name="trash" />Xóa bộ</button>
+          </div>
         </div>
       </div>
       {(favorite.error || remove.error) && <ErrorState description={(favorite.error || remove.error).message} onRetry={refetch} />}
@@ -85,13 +96,19 @@ export default function DeckDetailPage() {
       {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
       {deleteCard.error && <ErrorState description={deleteCard.error.message} onRetry={() => deleteCard.reset()} />}
       {cards.data?.items.length === 0 && <div className="empty"><h2>Chưa có thẻ ở trang này</h2><p>Thêm thẻ mới hoặc chọn trang trước.</p></div>}
-      <ol className="answer-list">{cards.data?.items.map((card, index) => <li id={`card-${card.id}`} tabIndex={card.id === focusId ? -1 : undefined} aria-current={card.id === focusId ? 'true' : undefined} className={`answer-row ${styles.cardRow}${card.id === focusId ? ' card-focus' : ''}`} key={card.id}>
-        <span className="answer-no">{page * 20 + index + 1}</span>
-        <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa">{card.phienAm}</span>}{card.tuLoai && <span className="pos">{card.tuLoai}</span>}</div><p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}{card.trung && <span className="stamp stamp-warning">Có thể trùng</span>}
-          <div className="answer-meta"><span className="stamp stamp-quiet">Độ khó {card.doKho}/5</span>{card.nhanIds?.map(tagId => <span className="stamp stamp-quiet" key={tagId}>{tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`}</span>)}</div><div className={styles.cardFlags}>{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia deckId={id} cardId={card.id} role="AM_CAU" />}</div>
-        </div>
-        <div className={styles.cardTools}><button className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button><button className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })}><Icon name="trash" />Xóa thẻ</button></div>
-      </li>)}</ol>
+      <ol className="answer-list">{cards.data?.items.map((card, index) => <CardEntry
+        key={card.id}
+        card={card}
+        number={page * 20 + index + 1}
+        deckId={id}
+        showImages={showImages}
+        focused={card.id === focusId}
+        tagNames={(card.nhanIds || []).map(tagId => tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`)}
+        tools={<>
+          <button type="button" className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button>
+          <button type="button" className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })} ><Icon name="trash" />Xóa thẻ</button>
+        </>}
+      />)}</ol>
       {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => { setFocusId(null); setPage(value - 1); }} />}
       {editing && <CardEditDialog key={editing.id} card={editing} deckId={id} onClose={() => setEditing(null)} />}
       <ConfirmDialog isOpen={!!confirmation} title={confirmation?.type === 'deck' ? 'Xóa bộ thẻ' : 'Xóa thẻ'} description={`Xóa “${confirmation?.card?.tu || deck.ten}”? Nội dung sẽ được gỡ khỏi danh sách của bạn.`} confirmLabel={confirmation?.type === 'deck' ? 'Xóa bộ' : 'Xóa thẻ'} loading={remove.isPending || deleteCard.isPending} onClose={() => setConfirmation(null)} onConfirm={() => confirmation.type === 'deck' ? remove.mutate(undefined, { onError: () => setConfirmation(null) }) : deleteCard.mutate(confirmation.card, { onError: () => setConfirmation(null) })} />

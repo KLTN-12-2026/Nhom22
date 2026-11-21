@@ -7,16 +7,12 @@ import { uploadAvatar } from '@/lib/upload-avatar';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useCooldown } from '@/hooks/useCooldown';
 import { Icon } from '@/components/ui';
+import { BadgeArt } from '@/components/engagement/BadgeArt';
+import { TimeZonePicker } from '@/components/ui/TimeZonePicker';
+import { describeZone } from '@/lib/time-zones.mjs';
 import styles from './ProfileCard.module.css';
 
-const ZONES = [
-  ['Asia/Ho_Chi_Minh', 'Việt Nam (GMT+7)'],
-  ['Asia/Bangkok', 'Bangkok (GMT+7)'],
-  ['Asia/Tokyo', 'Tokyo (GMT+9)'],
-  ['Europe/Berlin', 'Berlin (GMT+1)'],
-  ['America/New_York', 'New York (GMT−5)'],
-];
-const zoneLabel = zone => ZONES.find(([value]) => value === zone)?.[1] || zone;
+const zoneLabel = zone => describeZone(zone);
 const initial = name => (name ? name.trim().split(/\s+/).pop()[0].toUpperCase() : 'U');
 const joined = value => (value ? new Date(value).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) : null);
 
@@ -81,11 +77,7 @@ export function ProfileCard({ me }) {
           <label className="field-label" htmlFor="tenHienThi">Tên hiển thị</label>
           <input className="input" id="tenHienThi" maxLength={100} required autoComplete="nickname" value={form.tenHienThi}
             onChange={e => setDraft({ ...form, tenHienThi: e.target.value })} />
-          <label className="field-label" htmlFor="muiGio">Múi giờ</label>
-          <select className="select" id="muiGio" value={form.muiGio} onChange={e => setDraft({ ...form, muiGio: e.target.value })}>
-            {!ZONES.some(([value]) => value === form.muiGio) && <option value={form.muiGio}>{form.muiGio}</option>}
-            {ZONES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
+          <TimeZonePicker id="muiGio" value={form.muiGio} onChange={muiGio => setDraft({ ...form, muiGio })} />
           <p className="field-hint">Ảnh JPG, PNG, WEBP tối đa 2 MB. Múi giờ dùng để tính ngày học và giờ nhắc.</p>
           <div className={styles.formActions}>
             <button type="submit" className="btn btn-primary btn-sm" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}</button>
@@ -119,7 +111,7 @@ export function ProfileCard({ me }) {
         {earned.length ? (
           <ul className={styles.badgeList} role="list">
             {earned.slice(0, 12).map(b => (
-              <li key={b.id} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} aria-label={b.ten}>{b.ten.slice(0, 1)}</span></li>
+              <li key={b.id} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} role="img" aria-label={b.ten}><BadgeArt badge={b} size={44} number={null} /></span></li>
             ))}
           </ul>
         ) : <p className={styles.empty}>Chưa có huy hiệu. Học đều mỗi ngày để mở khóa.</p>}

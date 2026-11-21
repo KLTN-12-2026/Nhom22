@@ -1,0 +1,35 @@
+.back { margin: 0 0 var(--sp-3) -12px; }
+.title { overflow-wrap: anywhere; }
+
+.dist { display: grid; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.bar { display: flex; height: 12px; gap: 2px; overflow: hidden; border-radius: 99px; background: var(--sunk, var(--field)); }
+.bar span { flex-basis: 0; min-width: 6px; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-1, 4px) var(--sp-4); font-size: var(--fs-small); color: var(--ink-2); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; }
+.legend strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.segMOI { background: var(--primary-line); }
+.segDANG_HOC { background: var(--graphite); }
+.segDEN_HAN { background: var(--primary); }
+.segQUA_HAN { background: var(--warning); }
+.segTAM_NGUNG { background: repeating-linear-gradient(135deg, var(--ink-3) 0 3px, transparent 3px 6px); border: 1px solid var(--ink-3); }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: var(--sp-4) 0 var(--sp-3); }
+.toolbar :global(.input-with-icon) { flex: 1 1 220px; max-width: 320px; }
+
+.row { grid-template-columns: 2.25rem minmax(0, 1fr); align-items: start; }
+.row:hover { background: none; }
+.row.paused .main { opacity: 0.7; }
+.main { display: grid; gap: 6px; min-width: 0; }
+.mean { margin: 0; font-weight: 600; color: var(--ink); }
+
+.dirs { display: grid; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); margin-top: 2px; border-left: 3px solid var(--primary-line); background: var(--primary-tint); }
+.dir { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1, 4px) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+.dirName { min-width: 6.5rem; font-family: var(--font-form); font-stretch: var(--stretch-form); font-weight: 650; color: var(--primary); }
+.forgot { color: var(--warning-text); font-weight: 600; }
+
+.tools { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.hist { margin-top: var(--sp-2); }
+
+.study { width: 100%; justify-content: center; margin-top: var(--sp-4); }
+.notes { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }

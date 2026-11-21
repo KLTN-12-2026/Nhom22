@@ -1,38 +1,47 @@
 'use client';
 import { useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Button, Icon } from '@/components/ui';
+import { ConfirmDialog, ErrorState, Icon, Pagination } from '@/components/ui';
+import styles from './page.module.css';
 
 const GROUPS = [
-  { id: '', label: 'Tất cả' },
-  { id: 'MOI', label: 'Mới' },
-  { id: 'DANG_HOC', label: 'Đang học' },
-  { id: 'DEN_HAN', label: 'Đến hạn' },
-  { id: 'QUA_HAN', label: 'Quá hạn' },
-  { id: 'TAM_NGUNG', label: 'Tạm ngưng' }
+  ['', 'Tất cả'],
+  ['MOI', 'Mới'],
+  ['DANG_HOC', 'Đang học'],
+  ['DEN_HAN', 'Đến hạn'],
+  ['QUA_HAN', 'Quá hạn'],
+  ['TAM_NGUNG', 'Tạm ngưng']
 ];
-
-const STAMP = {
-  MOI: { class: 'var(--color-desk)', text: 'var(--color-ink-2)' },
-  DANG_HOC: { class: 'var(--color-border)', text: 'var(--color-ink)' },
-  DEN_HAN: { class: 'var(--primary-fill)', text: 'var(--on-primary)' },
-  QUA_HAN: { class: 'var(--color-warning-bg)', text: 'var(--color-warning-text)' },
-  TAM_NGUNG: { class: 'var(--field)', text: 'var(--ink-2)' }
-};
-
+const LABEL = Object.fromEntries(GROUPS);
+const STAMP = { MOI: 'stamp-quiet', DANG_HOC: 'stamp-graphite', DEN_HAN: 'stamp-solid', QUA_HAN: 'stamp-warning', TAM_NGUNG: 'stamp-quiet' };
 const DIR = { EN_VI: 'Anh → Việt', VI_EN: 'Việt → Anh' };
 const SRS_STATE = { MOI: 'Mới', DANG_HOC: 'Đang học', ON_TAP: 'Ôn tập', HOC_LAI: 'Học lại', TAM_NGUNG: 'Tạm ngưng' };
 const RATING = { QUEN: 'Quên', KHO: 'Khó', NHO: 'Nhớ', DE: 'Dễ' };
-const currentTime = () => Date.now();
+const RATING_STAMP = { QUEN: 'stamp-danger', KHO: 'stamp-warning', NHO: 'stamp-success', DE: 'stamp-success' };
 
-function until(iso) {
-  const mins = Math.round((Date.parse(iso) - currentTime()) / 60000);
-  if (mins <= 0) return 'ngay bây giờ';
-  if (mins < 60) return `sau ${mins} phút`;
-  if (mins < 1440) return `sau ${Math.round(mins / 60)} giờ`;
-  return `sau ${Math.round(mins / 1440)} ngày`;
+function when(c) {
+  if (c.nhom === 'MOI') return 'Chưa học';
+  if (c.nhom === 'TAM_NGUNG') return 'Không vào phiên học';
+  if (!c.hanOnAt) return 'Chưa có lịch ôn';
+  const due = new Date(c.hanOnAt);
+  if (c.nhom === 'QUA_HAN') return `Đến hạn từ ${due.toLocaleDateString('vi-VN')}, đang trễ`;
+  if (c.nhom === 'DEN_HAN') return `Đến hạn ${due.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} hôm nay`;
+  return `Ôn lại ngày ${due.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}`;
+}
+
+function Direction({ code, c }) {
+  return (
+    <div className={styles.dir}>
+      <span className={styles.dirName}>{DIR[code]}</span>
+      <span className={`stamp ${STAMP[c.nhom] || 'stamp-quiet'}`}>{LABEL[c.nhom] || c.nhom}</span>
+      {c.trangThai !== c.nhom && ['ON_TAP', 'HOC_LAI'].includes(c.trangThai) && <span>{SRS_STATE[c.trangThai]}</span>}
+      <span>{when(c)}</span>
+      {c.soLanQuen ? <span className={styles.forgot}>Quên {c.soLanQuen} lần</span> : null}
+    </div>
+  );
 }
 
 function HistoryLog({ theId }) {
@@ -40,34 +49,22 @@ function HistoryLog({ theId }) {
     queryKey: ['learning-history', theId],
     queryFn: () => apiFetch(`/api/v1/learning/history?theId=${theId}&size=10`)
   });
-
-  if (isLoading) return <div style={{ padding: 'var(--space-2)', fontSize: 'var(--font-size-sm)' }}>Đang tải lịch sử...</div>;
-  if (error) return <div style={{ padding: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-danger)' }}>Lỗi: {error.message}</div>;
-
-  if (!data?.items?.length) {
-    return <div style={{ padding: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>Thẻ này chưa có lượt ôn nào.</div>;
-  }
-
+  if (isLoading) return <div className="skeleton" role="status" aria-label="Đang tải lịch sử"><div className="sk sk-line"></div></div>;
+  if (error) return <p className="small" role="alert" style={{ color: 'var(--danger)' }}>{error.message}</p>;
+  if (!data?.items?.length) return <p className="small muted">Thẻ này chưa có lượt ôn nào.</p>;
   return (
-    <div style={{ marginTop: 'var(--space-2)' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-            <th style={{ padding: '4px' }}>Lúc</th>
-            <th style={{ padding: '4px' }}>Chiều</th>
-            <th style={{ padding: '4px' }}>Mức</th>
-            <th style={{ padding: '4px' }}>Trước</th>
-            <th style={{ padding: '4px' }}>Sau</th>
-          </tr>
-        </thead>
+    <div className="table-wrap">
+      <table className="data-table">
+        <caption className="sr-only">10 lượt ôn gần nhất</caption>
+        <thead><tr><th scope="col">Lúc</th><th scope="col">Chiều</th><th scope="col">Mức</th><th scope="col">Trước</th><th scope="col">Sau</th></tr></thead>
         <tbody>
           {data.items.map((r, i) => (
-            <tr key={i} style={{ borderBottom: '1px dashed var(--color-border)' }}>
-              <td style={{ padding: '4px' }}>{new Date(r.createdAt).toLocaleString('vi-VN')}</td>
-              <td style={{ padding: '4px' }}>{DIR[r.chieuHoc] || r.chieuHoc}</td>
-              <td style={{ padding: '4px' }}>{RATING[r.danhGia] || r.danhGia}</td>
-              <td style={{ padding: '4px' }}>{SRS_STATE[r.truoc?.trangThai] || r.truoc?.trangThai || '-'}</td>
-              <td style={{ padding: '4px' }}>{SRS_STATE[r.sau?.trangThai] || r.sau?.trangThai || '-'}</td>
+            <tr key={i}>
+              <td>{new Date(r.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+              <td>{DIR[r.chieuHoc] || r.chieuHoc}</td>
+              <td><span className={`stamp ${RATING_STAMP[r.danhGia] || 'stamp-quiet'}`}>{RATING[r.danhGia] || r.danhGia}</span></td>
+              <td>{SRS_STATE[r.truoc?.trangThai] || r.truoc?.trangThai || '—'}</td>
+              <td>{SRS_STATE[r.sau?.trangThai] || r.sau?.trangThai || '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -79,221 +76,172 @@ function HistoryLog({ theId }) {
 function ProgressContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const params = useParams();
+  const { id } = useParams();
   const queryClient = useQueryClient();
+  const nhom = searchParams.get('nhom') || '';
+  const page = Math.max(0, parseInt(searchParams.get('page') || '0', 10) || 0);
+  const [q, setQ] = useState(searchParams.get('q') || '');
+  const [open, setOpen] = useState({});
+  const [confirm, setConfirm] = useState(null);
 
-  const id = params.id;
-
-  const defaultNhom = searchParams.get('nhom') || '';
-  const defaultQ = searchParams.get('q') || '';
-  const page = parseInt(searchParams.get('page') || '0', 10);
-
-  const [nhom, setNhom] = useState(defaultNhom);
-  const [q, setQ] = useState(defaultQ);
-  const [openHistory, setOpenHistory] = useState({}); // { [theId]: boolean }
-
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['deck-progress', id, nhom, q, page],
     queryFn: () => {
-      const urlParams = new URLSearchParams();
-      if (nhom) urlParams.set('nhom', nhom);
-      if (q) urlParams.set('q', q);
-      urlParams.set('page', page.toString());
-      urlParams.set('size', '20');
-      return apiFetch(`/api/v1/decks/${encodeURIComponent(id)}/progress?${urlParams.toString()}`);
+      const p = new URLSearchParams({ page: String(page), size: '20' });
+      if (nhom) p.set('nhom', nhom);
+      if (q) p.set('q', q);
+      return apiFetch(`/api/v1/decks/${encodeURIComponent(id)}/progress?${p}`);
     }
   });
 
-  const actionMutation = useMutation({
-    mutationFn: ({ method, url, body }) => apiFetch(url, { method, body: body ? JSON.stringify(body) : undefined }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['deck-progress', id] })
+  const action = useMutation({
+    mutationFn: ({ method, url, body }) => apiFetch(url, { method, body: JSON.stringify(body) }),
+    onSuccess: () => { setConfirm(null); queryClient.invalidateQueries({ queryKey: ['deck-progress', id] }); },
+    onError: () => setConfirm(null)
   });
 
-  const handleTabClick = (groupId) => {
-    setNhom(groupId);
-    const urlParams = new URLSearchParams(searchParams);
-    if (groupId) urlParams.set('nhom', groupId); else urlParams.delete('nhom');
-    urlParams.set('page', '0');
-    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
+  const go = (changes) => {
+    const p = new URLSearchParams(searchParams);
+    Object.entries(changes).forEach(([k, v]) => (v ? p.set(k, v) : p.delete(k)));
+    router.replace(`/bo-the/${id}/tien-do?${p}`, { scroll: false });
   };
 
-  const handleSearch = (val) => {
-    setQ(val);
-    const urlParams = new URLSearchParams(searchParams);
-    if (val) urlParams.set('q', val); else urlParams.delete('q');
-    urlParams.set('page', '0');
-    router.push(`/bo-the/${id}/tien-do?${urlParams.toString()}`, { scroll: false });
-  };
-
-  const getWhenStr = (c) => {
-    if (c.nhom === 'MOI') return 'Chưa học';
-    if (c.nhom === 'TAM_NGUNG') return 'Không vào phiên học';
-    if (c.nhom === 'QUA_HAN') return `Đến hạn từ ${new Date(c.hanOnAt).toLocaleDateString('vi-VN')}, đang trễ`;
-    if (c.nhom === 'DEN_HAN') return `Đến hạn ${new Date(c.hanOnAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} hôm nay`;
-    return c.hanOnAt ? `Ôn lại ${until(c.hanOnAt)}` : 'Chưa có lịch ôn';
-  };
-
-  const renderDir = (dirCode, c) => {
-    const st = STAMP[c.nhom] || STAMP['MOI'];
-    return (
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 12px', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
-        <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', minWidth: '6.5rem' }}>{DIR[dirCode]}</span>
-        <span style={{ padding: '2px 8px', background: st.class, color: st.text, borderRadius: '4px', fontWeight: 'bold' }}>{GROUPS.find(g => g.id === c.nhom)?.label}</span>
-        {c.trangThai !== c.nhom && ['ON_TAP', 'HOC_LAI'].includes(c.trangThai) && <span>{SRS_STATE[c.trangThai]}</span>}
-        <span>{getWhenStr(c)}</span>
-        {c.soLanQuen ? <span>Quên {c.soLanQuen} lần</span> : null}
-      </div>
-    );
-  };
-
-  const handleSuspend = (theId, word, suspend) => {
-    if (!window.confirm(`${suspend ? 'Tạm ngưng' : 'Khôi phục'} thẻ "${word}"?`)) return;
-    actionMutation.mutate({
-      method: 'PUT',
-      url: `/api/v1/cards/${theId}/progress/suspend`,
-      body: { tamNgung: suspend }
-    });
-  };
-
-  const handleReset = (theId, word) => {
-    if (!window.confirm(`Đặt lại tiến độ thẻ "${word}"? Cả hai chiều sẽ quay về trạng thái Mới.`)) return;
-    actionMutation.mutate({
-      method: 'POST',
-      url: `/api/v1/cards/${theId}/progress/reset`,
-      body: { xacNhan: true }
-    });
-  };
-
-  const toggleHistory = (theId) => {
-    setOpenHistory(prev => ({ ...prev, [theId]: !prev[theId] }));
+  const t = data?.tongHop || {};
+  const total = GROUPS.slice(1).reduce((s, [g]) => s + (Number(t[g]) || 0), 0);
+  const runConfirm = () => {
+    const { kind, card } = confirm;
+    if (kind === 'reset') action.mutate({ method: 'POST', url: `/api/v1/cards/${card.theId}/progress/reset`, body: { xacNhan: true } });
+    else action.mutate({ method: 'PUT', url: `/api/v1/cards/${card.theId}/progress/suspend`, body: { tamNgung: kind === 'suspend' } });
   };
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <Button variant="ghost" onClick={() => router.push(`/bo-the/${id}`)} style={{ marginLeft: '-12px', marginBottom: 'var(--space-3)' }}>
-          <Icon name="arrow-left" /> Về bộ thẻ
-        </Button>
-
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
-            <span>Tiến độ bộ thẻ</span>
-            {data && <span>Múi giờ {data.muiGio}</span>}
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>{data?.ten || 'Tiến độ'}</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Mỗi thẻ có hai chiều học, mỗi chiều một lịch ôn riêng. Quá hạn nghĩa là trễ từ hôm trước trở đi.</p>
-          {actionMutation.isError && <p className="notice notice-danger" role="alert" style={{ marginTop: 'var(--space-3)' }}>{actionMutation.error.message}</p>}
+      <section className="sheet" aria-labelledby="page-title">
+        <Link className={`btn btn-quiet ${styles.back}`} href={`/bo-the/${id}`}><Icon name="arrow-left" />Về bộ thẻ</Link>
+        <div className="form-head">
+          <div className="form-code"><span>Tiến độ bộ thẻ</span>{data && <span>Múi giờ {data.muiGio}</span>}</div>
+          <h1 id="page-title" className={styles.title}>{data?.ten || 'Tiến độ'}</h1>
+          <p>Mỗi thẻ có hai chiều học, mỗi chiều một lịch ôn riêng. Quá hạn nghĩa là trễ từ hôm trước trở đi.</p>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-          {GROUPS.map(g => {
-            const count = data?.tongHop?.[g.id] || 0;
-            return (
-              <button
-                key={g.id}
-                onClick={() => handleTabClick(g.id)}
-                style={{ padding: '6px 12px', border: nhom === g.id ? 'none' : '1px solid var(--color-border)', background: nhom === g.id ? 'var(--primary-fill)' : 'transparent', color: nhom === g.id ? 'var(--on-primary)' : 'inherit', borderRadius: 'var(--radius-full)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center' }}
-              >
-                {g.label}
-                {g.id && count > 0 && <span style={{ background: nhom === g.id ? 'rgba(255,255,255,0.2)' : 'var(--color-border)', padding: '2px 6px', borderRadius: '10px', fontSize: '12px' }}>{count}</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        <div style={{ marginBottom: 'var(--space-4)' }}>
-          <div style={{ position: 'relative', maxWidth: '320px' }}>
-            <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-3)', pointerEvents: 'none' }}>
-              <Icon name="search" />
+        {total > 0 && (
+          <div className={styles.dist}>
+            <div className={styles.bar} role="img" aria-label={GROUPS.slice(1).map(([g, l]) => `${l} ${t[g] || 0}`).join(', ')}>
+              {GROUPS.slice(1).map(([g]) => (Number(t[g]) > 0 ? <span key={g} className={styles[`seg${g}`]} style={{ flexGrow: t[g] }} /> : null))}
             </div>
-            <input
-              type="search"
-              placeholder="Tìm từ hoặc nghĩa"
-              value={q}
-              onChange={e => handleSearch(e.target.value)}
-              style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
-            />
+            <ul className={styles.legend} role="list">
+              {GROUPS.slice(1).map(([g, l]) => (
+                <li key={g}><i className={styles[`seg${g}`]} aria-hidden="true" />{l} <strong>{t[g] || 0}</strong></li>
+              ))}
+            </ul>
           </div>
+        )}
+
+        <div className="tabs" role="tablist" aria-label="Lọc theo trạng thái">
+          {GROUPS.map(([g, l]) => (
+            <button key={g} type="button" className="tab" role="tab" aria-selected={nhom === g} onClick={() => go({ nhom: g, page: '' })}>
+              {l}{g && <span className="count">{t[g] ?? 0}</span>}
+            </button>
+          ))}
         </div>
 
-        {isLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải tiến độ...</div>
-        ) : error ? (
-          <p className="notice notice-danger" role="alert">{error.status === 404 ? 'Không tìm thấy bộ thẻ.' : error.message}</p>
-        ) : data?.items?.length > 0 ? (
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
+        <div className={styles.toolbar}>
+          <div className="input-with-icon">
+            <Icon name="search" />
+            <label className="sr-only" htmlFor="q">Tìm thẻ</label>
+            <input className="input" id="q" type="search" placeholder="Tìm từ hoặc nghĩa" autoComplete="off" value={q}
+              onChange={e => { setQ(e.target.value); go({ q: e.target.value, page: '' }); }} />
+          </div>
+          {data && <span className="small muted">{data.totalElements ?? data.items.length} thẻ</span>}
+        </div>
+
+        {action.isError && <p className="notice notice-danger" role="alert">{action.error.message}</p>}
+        {isLoading && <div className="skeleton" role="status" aria-label="Đang tải tiến độ"><div className="sk sk-row" /><div className="sk sk-row" /><div className="sk sk-row" /></div>}
+        {error && (error.status === 404
+          ? <p className="notice notice-danger" role="alert">Không tìm thấy bộ thẻ.</p>
+          : <ErrorState description={error.message} onRetry={refetch} />)}
+
+        {data && !data.items.length && (
+          <div className="empty">
+            <div className="empty-sheet" aria-hidden="true"><span data-n="1"><i></i><i></i><i></i><i></i></span><span data-n="2"><i></i><i></i><i></i><i></i></span></div>
+            <h2>Không có thẻ nào ở trạng thái này</h2>
+            <p>Chọn trạng thái khác hoặc xóa từ khóa tìm kiếm.</p>
+          </div>
+        )}
+
+        {data?.items?.length > 0 && <>
+          <ol className="answer-list" role="list">
             {data.items.map((it, i) => (
-              <li key={it.theId} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '4px' }}>
-                    <strong style={{ fontSize: '1.125rem' }}>{it.tu}</strong>
-                    {it.phienAm && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{it.phienAm}</span>}
-                    {it.tuLoai && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{it.tuLoai}</span>}
+              <li key={it.theId} className={`answer-row ${styles.row}${it.tamNgung ? ` ${styles.paused}` : ''}`}>
+                <span className="answer-no">{page * data.size + i + 1}</span>
+                <div className={styles.main}>
+                  <div className="entry-head">
+                    <span className="entry-word" lang="en">{it.tu}</span>
+                    {it.phienAm && <span className="entry-ipa" lang="en">{it.phienAm}</span>}
+                    {it.tuLoai && <span className="pos" lang="en">{it.tuLoai}</span>}
                   </div>
-                  <div style={{ marginBottom: '12px' }}>{it.nghiaVi}</div>
-
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {renderDir('EN_VI', it.chieu.EN_VI)}
-                    {renderDir('VI_EN', it.chieu.VI_EN)}
+                  <p className={styles.mean}>{it.nghiaVi}</p>
+                  <div className={styles.dirs}>
+                    <Direction code="EN_VI" c={it.chieu.EN_VI} />
+                    <Direction code="VI_EN" c={it.chieu.VI_EN} />
                   </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                    {it.tamNgung ? (
-                      <Button variant="secondary" size="sm" onClick={() => handleSuspend(it.theId, it.tu, false)}>Khôi phục</Button>
-                    ) : (
-                      <Button variant="secondary" size="sm" onClick={() => handleSuspend(it.theId, it.tu, true)}>Tạm ngưng</Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => handleReset(it.theId, it.tu)} style={{ color: 'var(--color-danger)' }}>Đặt lại</Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleHistory(it.theId)}>
-                      {openHistory[it.theId] ? 'Ẩn lịch sử' : 'Lịch sử ôn'}
-                    </Button>
+                  <div className={styles.tools}>
+                    {it.tamNgung
+                      ? <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirm({ kind: 'resume', card: it })}><Icon name="play" />Khôi phục</button>
+                      : <button type="button" className="btn btn-secondary btn-sm" onClick={() => setConfirm({ kind: 'suspend', card: it })}><Icon name="pause" />Tạm ngưng</button>}
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm({ kind: 'reset', card: it })}><Icon name="refresh" />Đặt lại</button>
+                    <button type="button" className="btn btn-quiet btn-sm" aria-expanded={!!open[it.theId]} aria-controls={`hist-${it.theId}`} onClick={() => setOpen(o => ({ ...o, [it.theId]: !o[it.theId] }))}>
+                      <Icon name="clock" />{open[it.theId] ? 'Ẩn lịch sử' : 'Lịch sử ôn'}
+                    </button>
                   </div>
-
-                  {openHistory[it.theId] && <HistoryLog theId={it.theId} />}
+                  {open[it.theId] && <div id={`hist-${it.theId}`} className={styles.hist}><HistoryLog theId={it.theId} /></div>}
                 </div>
               </li>
             ))}
           </ol>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Không có thẻ nào ở trạng thái này</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Chọn trạng thái khác hoặc xóa từ khóa tìm kiếm.</p>
-          </div>
-        )}
+          <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={v => go({ page: String(v - 1) })} />
+        </>}
       </section>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Tổng hợp, mỗi chiều tính riêng</h2>
-          {data?.tongHop && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-              {GROUPS.slice(1).map(g => (
-                <div key={g.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{g.label}</span>
-                  <div><strong style={{ fontSize: '1.375rem', marginRight: '4px' }}>{data.tongHop[g.id] ?? 0}</strong><span style={{ fontSize: 'var(--font-size-xs)' }}>thẻ</span></div>
-                </div>
-              ))}
-            </div>
-          )}
-          <Button variant="primary" onClick={() => router.push(`/luyen-tap?loaiBai=FLASHCARD&boTheId=${id}`)} style={{ width: '100%' }}>Học bộ này (Flashcard)</Button>
+      <aside className="side-col">
+        <section className="panel" aria-labelledby="sum-title">
+          <h2 className="panel-title" id="sum-title">Tổng hợp, mỗi chiều tính riêng</h2>
+          <dl className="tally">
+            {GROUPS.slice(1).map(([g, l]) => (
+              <div key={g}><dt>{l}</dt><dd><span className="tally-n" style={{ fontSize: '1.375rem' }}>{t[g] ?? 0}</span>thẻ</dd></div>
+            ))}
+          </dl>
+          <Link className={`btn btn-primary ${styles.study}`} href={`/hoc?boTheId=${encodeURIComponent(id)}`}><Icon name="play" />Học bộ này</Link>
         </section>
-
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Tạm ngưng và đặt lại</h2>
-          <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
+        <section className="panel" aria-labelledby="help-title">
+          <h2 className="panel-title" id="help-title">Tạm ngưng và đặt lại</h2>
+          <ul className={styles.notes}>
             <li><strong>Tạm ngưng</strong>: thẻ không vào phiên học nữa. Khôi phục thì thẻ giữ nguyên lịch cũ, kể cả khi đã trễ.</li>
             <li><strong>Đặt lại</strong>: cả hai chiều quay về trạng thái Mới. Lịch sử ôn cũ vẫn được giữ.</li>
           </ul>
         </section>
       </aside>
+
+      <ConfirmDialog
+        isOpen={!!confirm}
+        title={confirm?.kind === 'reset' ? 'Đặt lại tiến độ' : confirm?.kind === 'suspend' ? 'Tạm ngưng thẻ' : 'Khôi phục thẻ'}
+        description={confirm?.kind === 'reset'
+          ? `Đặt lại tiến độ thẻ “${confirm?.card.tu}”? Cả hai chiều sẽ quay về trạng thái Mới.`
+          : confirm?.kind === 'suspend'
+            ? `Tạm ngưng thẻ “${confirm?.card.tu}”? Thẻ sẽ không vào phiên học.`
+            : `Khôi phục thẻ “${confirm?.card.tu}”? Thẻ giữ nguyên lịch ôn cũ.`}
+        confirmLabel={confirm?.kind === 'reset' ? 'Đặt lại' : confirm?.kind === 'suspend' ? 'Tạm ngưng' : 'Khôi phục'}
+        loading={action.isPending}
+        onClose={() => setConfirm(null)}
+        onConfirm={runConfirm}
+      />
     </div>
   );
 }
 
 export default function DeckProgressPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense fallback={<div className="page sheet skeleton"><div className="sk sk-title" /><div className="sk sk-row" /></div>}>
       <ProgressContent />
     </Suspense>
   );

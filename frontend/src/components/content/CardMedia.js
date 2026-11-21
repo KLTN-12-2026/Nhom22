@@ -6,7 +6,41 @@ import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
 import styles from './CardMedia.module.css';
 
-export function CardMedia({ deckId, cardId, role, publicDeck = false, autoShow = false }) {
+export function CardMedia({ deckId, cardId, role, publicDeck = false, autoShow = false, compact = false }) {
+  if (compact && role !== 'ANH') return <CompactAudio deckId={deckId} cardId={cardId} role={role} publicDeck={publicDeck} />;
+  return <FullMedia deckId={deckId} cardId={cardId} role={role} publicDeck={publicDeck} autoShow={autoShow} />;
+}
+
+function CompactAudio({ deckId, cardId, role, publicDeck }) {
+  const [playing, setPlaying] = useState(false);
+  const [error, setError] = useState('');
+  const audio = useRef(null);
+  useEffect(() => () => audio.current?.pause(), []);
+  const label = role === 'AM_TU' ? 'Nghe từ' : 'Nghe câu ví dụ';
+  const play = async () => {
+    if (playing) { audio.current?.pause(); setPlaying(false); return; }
+    setError('');
+    try {
+      if (!audio.current) {
+        const file = await apiFetch(`/api/v1/${publicDeck ? 'library/' : ''}decks/${encodeURIComponent(deckId)}/cards/${encodeURIComponent(cardId)}/files/${role}`);
+        audio.current = new Audio(file.downloadUrl);
+        audio.current.onended = () => setPlaying(false);
+      }
+      setPlaying(true);
+      await audio.current.play();
+    } catch (e) {
+      audio.current = null;
+      setPlaying(false);
+      setError(e.message || 'Không phát được âm thanh');
+    }
+  };
+  return <span className="speak-compact">
+    <button type="button" className="btn btn-quiet btn-icon btn-sm" aria-pressed={playing} aria-label={label} title={label} onClick={play}><Icon name={playing ? 'pause' : 'volume'} /></button>
+    {error && <span className="field-error" role="alert">{error}</span>}
+  </span>;
+}
+
+function FullMedia({ deckId, cardId, role, publicDeck, autoShow }) {
   const [enabled, setEnabled] = useState(false);
   const [visible, setVisible] = useState(false);
   const container = useRef(null);
