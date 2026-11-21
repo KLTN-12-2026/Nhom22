@@ -1,4 +1,5 @@
 'use client';
+import { TimeZonePicker } from '@/components/ui/TimeZonePicker';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api-client';
@@ -214,16 +215,8 @@ export default function OnboardingPage() {
                   <input className="input" type="time" id="reminderTime" name="reminderTime" value={gioNhac} onChange={e => setGioNhac(e.target.value)} />
                   <p className="field-error"></p>
                 </div>
-                <div className="field">
-                  <label className="field-label" htmlFor="muiGio">Múi giờ</label>
-                  <select className="select" id="muiGio" name="muiGio" value={muiGio} onChange={e => setMuiGio(e.target.value)}>
-                    {!['Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'Asia/Tokyo', 'Europe/Berlin', 'America/New_York'].includes(muiGio) && <option value={muiGio}>{muiGio}</option>}
-                    <option value="Asia/Ho_Chi_Minh">Việt Nam (GMT+7)</option>
-                    <option value="Asia/Bangkok">Bangkok (GMT+7)</option>
-                    <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
-                    <option value="Europe/Berlin">Berlin (GMT+1)</option>
-                    <option value="America/New_York">New York (GMT−5)</option>
-                  </select>
+                <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <TimeZonePicker id="muiGio" value={muiGio} onChange={setMuiGio} />
                 </div>
               </div>
             </div>

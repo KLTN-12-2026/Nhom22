@@ -1,4 +1,5 @@
 'use client';
+import { describeZone } from '@/lib/time-zones.mjs';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
@@ -124,7 +125,7 @@ export default function NotificationsPage() {
               value={formState.gioNhac || ''}
               onChange={e => setFormState({...formState, gioNhac: e.target.value})}
             />
-            <p className="field-hint" id="tz-hint">Theo múi giờ {me?.muiGio || "Asia/Ho_Chi_Minh"}</p>
+            <p className="field-hint" id="tz-hint">Theo múi giờ {describeZone(me?.muiGio || "Asia/Ho_Chi_Minh")}</p>
             <p className="field-error"></p>
           </div>
         </fieldset>
