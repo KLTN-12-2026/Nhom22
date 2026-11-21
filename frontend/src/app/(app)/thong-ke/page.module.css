@@ -20,6 +20,8 @@
 .legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--graphite); }
 .legend i.ok { background: var(--secondary); }
 .legend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
+.tally > .tallyMeter { flex-wrap: wrap; }
+.tallyMeter > :global(.meter) { flex: 1 0 100%; margin-top: var(--sp-1, 4px); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .skillCell { min-width: 9rem; }
 .skillCell .meter { margin-top: 6px; }
