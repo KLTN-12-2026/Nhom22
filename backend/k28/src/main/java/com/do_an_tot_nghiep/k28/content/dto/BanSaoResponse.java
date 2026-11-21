@@ -4,6 +4,7 @@ public record BanSaoResponse(
         String boGocId,
         String boGocTen,
         String tacGiaGoc,
-        boolean boGocXemDuoc
+        boolean boGocXemDuoc,
+        boolean tuCongKhai
 ) {
 }

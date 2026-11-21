@@ -5,6 +5,8 @@ import com.do_an_tot_nghiep.k28.content.dto.BanSaoResponse;
 import com.do_an_tot_nghiep.k28.content.dto.DeckPublishStatusResponse;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
 import com.do_an_tot_nghiep.k28.content.entity.YeuCauCongKhai;
+import com.do_an_tot_nghiep.k28.content.entity.enums.NguoiDuyetCongKhai;
+import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet;
 import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiYeuCauCongKhai;
 import com.do_an_tot_nghiep.k28.content.mapper.PublishRequestMapper;
 import com.do_an_tot_nghiep.k28.content.repository.BoTheRepository;
@@ -54,10 +56,31 @@ public class CopyInfoService {
                     copy.getBoNguonId().toString(),
                     visible ? source.getTen() : null,
                     visible ? authors.get(source.getChuSoHuuId()) : null,
-                    visible
+                    visible,
+                    source != null && selfPublishable(copy, source)
             ));
         }
         return result;
+    }
+
+    public NguoiDuyetCongKhai approver(BoThe source) {
+        boolean authorCase = !source.isBoMau()
+                && source.getXoaAt() == null
+                && source.isPublished()
+                && accounts.activeIds(List.of(source.getChuSoHuuId())).contains(source.getChuSoHuuId());
+        return authorCase ? NguoiDuyetCongKhai.TAC_GIA : NguoiDuyetCongKhai.ADMIN;
+    }
+
+    public boolean selfPublishable(BoThe copy, BoThe source) {
+        if (source.isCaoCap() || source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
+            return false;
+        }
+        Long owner = copy.getChuSoHuuId();
+        if (owner.equals(source.getChuSoHuuId())) {
+            return true;
+        }
+        return approver(source) == NguoiDuyetCongKhai.ADMIN
+                && accounts.adminIds(List.of(owner)).contains(owner);
     }
 
     public Map<Long, DeckPublishStatusResponse> statuses(Collection<BoThe> copies) {

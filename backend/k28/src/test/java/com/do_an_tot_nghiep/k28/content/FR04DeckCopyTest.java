@@ -190,6 +190,29 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc03_ownCopiesListsOnlyCallersLiveCopies() throws Exception {
+        String copyId = body(copy(learner, sourceId, "own").andExpect(status().isCreated()).andReturn())
+                .get("id").asText();
+        copy(author, sourceId, "author-own").andExpect(status().isCreated());
+
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", sourceId + "," + Long.MAX_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].boNguonId").value(sourceId.toString()))
+                .andExpect(jsonPath("$[0].boTheId").value(copyId));
+
+        jdbc.update("UPDATE bo_the SET xoa_at=CURRENT_TIMESTAMP(3) WHERE id=?", Long.valueOf(copyId));
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", sourceId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", "0"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/decks/copies").param("sourceIds", sourceId.toString()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void tc03_requiresAuthenticationAndCsrf() throws Exception {
         mockMvc.perform(post(copyPath(sourceId)).with(xsrf()).header("Idempotency-Key", "guest"))
                 .andExpect(status().isUnauthorized());

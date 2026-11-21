@@ -224,6 +224,41 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc25_adminPublishesSampleCopiesWithoutQueueing() throws Exception {
+        Actor admin = actor(true);
+        Long sampleId = sampleDeck(admin.id(), false);
+        Long copyId = copyId(admin, sampleId);
+        assertThat(json(send(admin, get("/api/v1/decks/" + copyId)).andExpect(status().isOk()))
+                .get("banSao").get("tuCongKhai").asBoolean()).isTrue();
+
+        JsonNode approved = json(submit(admin, copyId).andExpect(status().isCreated()));
+        assertThat(approved.get("trangThai").asText()).isEqualTo("DA_DUYET");
+        assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
+        JsonNode queue = json(send(admin, get("/api/v1/admin/publish-requests")).andExpect(status().isOk()));
+        assertThat(queue.get("items").findValuesAsString("id")).doesNotContain(approved.get("id").asText());
+
+        Long otherCopy = copyId(admin, sourceId);
+        assertThat(json(submit(admin, otherCopy).andExpect(status().isCreated()))
+                .get("trangThai").asText()).isEqualTo("CHO_DUYET");
+    }
+
+    @Test
+    void tc25_ownerPublishesCopyOfOwnDeckEvenWhenSourceIsPrivate() throws Exception {
+        Long copyId = copyId(author, sourceId);
+        jdbc.update("UPDATE bo_the SET quyen_truy_cap = 'RIENG_TU' WHERE id = ?", sourceId);
+        assertThat(json(send(author, get("/api/v1/decks/" + copyId)).andExpect(status().isOk()))
+                .get("banSao").get("tuCongKhai").asBoolean()).isTrue();
+
+        JsonNode approved = json(submit(author, copyId).andExpect(status().isCreated()));
+        assertThat(approved.get("trangThai").asText()).isEqualTo("DA_DUYET");
+        assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
+
+        Long learnerCopy = copyId(learner, publicDeck(author.id(), "Bộ khác"));
+        assertThat(json(send(learner, get("/api/v1/decks/" + learnerCopy)).andExpect(status().isOk()))
+                .get("banSao").get("tuCongKhai").asBoolean()).isFalse();
+    }
+
+    @Test
     void tc25_lockedAuthorAndExpiredRequestsMoveOn() throws Exception {
         Actor admin = actor(true);
         Long copyId = copyId(learner, sourceId);

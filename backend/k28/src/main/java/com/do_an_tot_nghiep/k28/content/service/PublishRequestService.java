@@ -96,7 +96,7 @@ public class PublishRequestService {
 
         NguoiDuyetCongKhai approver = approver(source);
         YeuCauCongKhai request = YeuCauCongKhai.create(copy, userId, approver, loiNhan, now.plus(PENDING_TTL));
-        boolean selfApproved = approver == NguoiDuyetCongKhai.TAC_GIA && userId.equals(source.getChuSoHuuId());
+        boolean selfApproved = copyInfo.selfPublishable(copy, source);
         if (selfApproved) {
             request.resolve(TrangThaiYeuCauCongKhai.DA_DUYET, userId, null, now);
             setVisibility(copy, QuyenTruyCap.CONG_KHAI);
@@ -238,11 +238,7 @@ public class PublishRequestService {
     }
 
     private NguoiDuyetCongKhai approver(BoThe source) {
-        boolean authorCase = !source.isBoMau()
-                && source.getXoaAt() == null
-                && source.isPublished()
-                && accounts.activeIds(List.of(source.getChuSoHuuId())).contains(source.getChuSoHuuId());
-        return authorCase ? NguoiDuyetCongKhai.TAC_GIA : NguoiDuyetCongKhai.ADMIN;
+        return copyInfo.approver(source);
     }
 
     private void setVisibility(BoThe copy, QuyenTruyCap quyenTruyCap) {

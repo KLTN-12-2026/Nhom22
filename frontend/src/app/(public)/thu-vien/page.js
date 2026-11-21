@@ -2,6 +2,8 @@
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { libraryPage } from '@/lib/library-query.mjs';
 import styles from './page.module.css';
@@ -55,6 +57,17 @@ function LibraryContent() {
   
   const decks = decksData?.items || [];
   const total = decksData?.totalElements || 0;
+
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiFetch('/api/v1/me'), retry: false, staleTime: 60000 });
+  const deckIds = decks.map(deck => deck.id);
+  const { data: ownCopies = [] } = useQuery({
+    queryKey: ['own-copies', deckIds],
+    queryFn: () => apiFetch(`/api/v1/decks/copies?sourceIds=${deckIds.join(',')}`),
+    enabled: !!me && deckIds.length > 0,
+    staleTime: 60000,
+    retry: false
+  });
+  const copyOf = new Map(ownCopies.map(link => [link.boNguonId, link.boTheId]));
 
   const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 
@@ -184,7 +197,7 @@ function LibraryContent() {
             </div>
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
-                <li key={deck.id} className="answer-row deck-row">
+                <li key={deck.id} className={`answer-row deck-row${copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
                   <span className="answer-no">{page * size + i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
@@ -197,6 +210,11 @@ function LibraryContent() {
                         <span className="stamp stamp-solid">Bộ mẫu</span>
                       ) : (
                         <span className="stamp stamp-graphite">Người học chia sẻ</span>
+                      )}
+                      {copyOf.has(deck.id) && (
+                        <Link className={`stamp stamp-success ${styles.copiedStamp}`} href={`/bo-the/${copyOf.get(deck.id)}`} title="Mở bản sao của bạn">
+                          <Icon name="check" />Đã sao chép
+                        </Link>
                       )}
                       <span>{deck.tenChuDe || 'Chưa phân chủ đề'}</span>
                       <span className="muted">Cập nhật {new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</span>

@@ -96,6 +96,26 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
             """)
     List<DeckCount> countByOwners(@Param("ownerIds") Collection<Long> ownerIds);
 
+    @Query("""
+            select d.boNguonId as boNguonId, max(d.id) as boTheId
+            from BoThe d
+            where d.chuSoHuuId = :ownerId
+              and d.boNguonId in :sourceIds
+              and d.xoaAt is null
+            group by d.boNguonId
+            """)
+    List<CopyLink> findOwnCopies(
+            @Param("ownerId") Long ownerId,
+            @Param("sourceIds") Collection<Long> sourceIds
+    );
+
+    interface CopyLink {
+
+        Long getBoNguonId();
+
+        Long getBoTheId();
+    }
+
     interface DeckCount {
 
         Long getId();

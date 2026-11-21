@@ -11,6 +11,11 @@
 .tabHint { margin: 0 0 var(--sp-3); color: var(--ink-2); }
 @media (max-width: 600px) { .tabs { flex-wrap: nowrap; overflow-x: auto; } .tabs button { padding: 0 var(--sp-3); } }
 
+.copied { background: var(--secondary-bg); box-shadow: inset 4px 0 0 var(--secondary); }
+.copiedStamp { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+.copiedStamp svg { width: 14px; height: 14px; }
+.copiedStamp:hover { text-decoration: underline; }
+
 .resultBar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .resultControls { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .resultControl { display: flex; align-items: center; gap: var(--sp-2); }
