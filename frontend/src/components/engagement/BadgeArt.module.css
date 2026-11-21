@@ -1,0 +1,28 @@
+.art { display: block; flex: none; overflow: visible; --b: var(--primary); --b-bg: var(--primary-tint); }
+.primary { --b: var(--primary); --b-bg: var(--primary-tint); }
+.secondary { --b: var(--secondary); --b-bg: var(--secondary-bg); }
+.warning { --b: var(--warning); --b-bg: var(--warning-bg); }
+.accent { --b: var(--accent); --b-bg: var(--accent-bg); }
+.favorite { --b: var(--favorite); --b-bg: var(--favorite-bg); }
+
+.ribbon { fill: color-mix(in srgb, var(--b) 78%, var(--ink)); }
+.rosette { fill: var(--b); }
+.face { fill: var(--b-bg); }
+.ring { fill: none; stroke: var(--b); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.emblem { fill: none; stroke: color-mix(in srgb, var(--b) 70%, var(--ink)); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.emblem .solid { fill: var(--b); }
+.emblem .soft { fill: color-mix(in srgb, var(--b) 35%, var(--b-bg)); }
+.emblem .cut { stroke: var(--b-bg); }
+.band { fill: color-mix(in srgb, var(--b) 70%, var(--ink)); }
+.num { fill: var(--sheet); font-family: var(--font-form); font-weight: 800; font-size: 11px; letter-spacing: 0.02em; }
+
+.locked .rosette { fill: color-mix(in srgb, var(--ink-3) 30%, var(--sheet)); }
+.locked .ribbon, .locked .band { fill: color-mix(in srgb, var(--ink-3) 45%, var(--sheet)); }
+.locked .face { fill: var(--sunk, var(--field)); }
+.locked .ring { stroke: color-mix(in srgb, var(--ink-3) 45%, var(--sheet)); }
+.locked .emblem { stroke: var(--ink-3); opacity: 0.55; }
+.locked .emblem .solid, .locked .emblem .soft { fill: color-mix(in srgb, var(--ink-3) 40%, var(--sheet)); }
+.locked .num { fill: var(--sheet); }
+.lock circle { fill: var(--sheet); stroke: var(--graphite-soft); stroke-width: 1.5; }
+.lockBody { fill: var(--ink-3); }
+.lockShackle { fill: none; stroke: var(--ink-3); stroke-width: 2; }

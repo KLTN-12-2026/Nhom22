@@ -7,6 +7,7 @@ import { uploadAvatar } from '@/lib/upload-avatar';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useCooldown } from '@/hooks/useCooldown';
 import { Icon } from '@/components/ui';
+import { BadgeArt } from '@/components/engagement/BadgeArt';
 import styles from './ProfileCard.module.css';
 
 const ZONES = [
@@ -119,7 +120,7 @@ export function ProfileCard({ me }) {
         {earned.length ? (
           <ul className={styles.badgeList} role="list">
             {earned.slice(0, 12).map(b => (
-              <li key={b.id} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} aria-label={b.ten}>{b.ten.slice(0, 1)}</span></li>
+              <li key={b.id} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} role="img" aria-label={b.ten}><BadgeArt badge={b} size={44} number={null} /></span></li>
             ))}
           </ul>
         ) : <p className={styles.empty}>Chưa có huy hiệu. Học đều mỗi ngày để mở khóa.</p>}

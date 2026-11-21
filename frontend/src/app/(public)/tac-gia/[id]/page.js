@@ -8,6 +8,7 @@ import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { useLibraryAuthor } from '@/hooks/useSearch';
 import { useMe } from '@/hooks/useMe';
 import { libraryPage } from '@/lib/library-query.mjs';
+import { BadgeArt } from '@/components/engagement/BadgeArt';
 import styles from './page.module.css';
 
 const SIZE = 20;
@@ -83,7 +84,7 @@ function AuthorContent() {
             <h2 id="badges-title" className={styles.sectionTitle}>Huy hiệu <span className={styles.count}>{badges.length}</span></h2>
             {badges.length ? (
               <ul className={styles.badgeList} role="list">
-                {badges.map(b => <li key={b.ma} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} aria-label={b.ten}>{b.ten.slice(0, 1)}</span></li>)}
+                {badges.map(b => <li key={b.ma} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} role="img" aria-label={b.ten}><BadgeArt badge={b} size={44} number={null} /></span></li>)}
               </ul>
             ) : <p className={styles.empty}>Chưa có huy hiệu.</p>}
           </section>
