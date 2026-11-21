@@ -5,16 +5,20 @@ import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
+import com.do_an_tot_nghiep.k28.content.entity.BoYeuThich;
 import com.do_an_tot_nghiep.k28.content.entity.TheTuVung;
 import com.do_an_tot_nghiep.k28.content.entity.enums.NguonBo;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
 import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.text.Normalizer;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +46,8 @@ public final class LibraryDeckSpecifications {
             Long chuDeId,
             TrinhDo trinhDo,
             MucTieu mucTieu,
-            NguonBo nguon
+            NguonBo nguon,
+            Long chuSoHuuId
     ) {
         String pattern = searchPattern(q);
 
@@ -82,6 +87,12 @@ public final class LibraryDeckSpecifications {
                 ));
             }
 
+            if (chuSoHuuId != null) {
+                predicates.add(cb.equal(
+                        root.get("chuSoHuuId"), chuSoHuuId
+                ));
+            }
+
             if (nguon != null) {
                 predicates.add(cb.equal(
                         root.get("boMau"),
@@ -99,7 +110,7 @@ public final class LibraryDeckSpecifications {
         );
     }
 
-    public static Specification<BoThe> ordered(String sort) {
+    public static Specification<BoThe> ordered(String sort, Instant trendingSince) {
         return (root, query, cb) -> {
             if (query == null || Long.class.equals(query.getResultType())) {
                 return cb.conjunction();
@@ -107,6 +118,27 @@ public final class LibraryDeckSpecifications {
 
             switch (sort) {
                 case "updated" -> query.orderBy(
+                        cb.desc(root.get("updatedAt")),
+                        cb.desc(root.get("id"))
+                );
+
+                case "newest" -> query.orderBy(
+                        cb.desc(root.get("createdAt")),
+                        cb.desc(root.get("id"))
+                );
+
+                case "favorites" -> query.orderBy(
+                        cb.desc(favoriteCount(root, query, cb, null)),
+                        cb.desc(root.get("updatedAt")),
+                        cb.desc(root.get("id"))
+                );
+
+                case "trending" -> query.orderBy(
+                        cb.desc(cb.sum(
+                                favoriteCount(root, query, cb, trendingSince),
+                                copyCount(root, query, cb, trendingSince)
+                        )),
+                        cb.desc(favoriteCount(root, query, cb, null)),
                         cb.desc(root.get("updatedAt")),
                         cb.desc(root.get("id"))
                 );
@@ -139,7 +171,7 @@ public final class LibraryDeckSpecifications {
                 default -> throw new ApiException(
                         ErrorCode.VALIDATION_FAILED,
                         "sort",
-                        "Sắp xếp phải là updated, name hoặc size"
+                        "Sắp xếp phải là updated, name, size, trending, favorites hoặc newest"
                 );
             }
 
@@ -147,7 +179,66 @@ public final class LibraryDeckSpecifications {
         };
     }
 
-    private static String searchPattern(String value) {
+    private static Subquery<Long> favoriteCount(
+            Root<BoThe> root,
+            CriteriaQuery<?> query,
+            CriteriaBuilder cb,
+            Instant since
+    ) {
+        Subquery<Long> count = query.subquery(Long.class);
+        Root<BoYeuThich> favorite = count.from(BoYeuThich.class);
+        List<Predicate> where = new ArrayList<>();
+        where.add(cb.equal(favorite.get("boTheId"), root.get("id")));
+        where.add(cb.notEqual(favorite.get("nguoiDungId"), root.get("chuSoHuuId")));
+        if (since != null) {
+            where.add(cb.greaterThanOrEqualTo(favorite.<Instant>get("createdAt"), since));
+        }
+        return count.select(cb.count(favorite)).where(where.toArray(Predicate[]::new));
+    }
+
+    private static Subquery<Long> copyCount(
+            Root<BoThe> root,
+            CriteriaQuery<?> query,
+            CriteriaBuilder cb,
+            Instant since
+    ) {
+        Subquery<Long> count = query.subquery(Long.class);
+        Root<BoThe> copy = count.from(BoThe.class);
+        return count.select(cb.count(copy)).where(
+                cb.equal(copy.get("boNguonId"), root.get("id")),
+                cb.notEqual(copy.get("chuSoHuuId"), root.get("chuSoHuuId")),
+                cb.greaterThanOrEqualTo(copy.<Instant>get("createdAt"), since)
+        );
+    }
+
+    public static Specification<BoThe> ownedMatching(Long ownerId, String q) {
+        String pattern = searchPattern(q);
+
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isNull(root.get("xoaAt")));
+            predicates.add(cb.equal(root.get("chuSoHuuId"), ownerId));
+
+            if (pattern != null) {
+                predicates.add(cb.or(
+                        cb.like(
+                                cb.lower(root.<String>get("ten")),
+                                cb.lower(cb.literal(pattern)),
+                                '!'
+                        ),
+                        cb.like(
+                                cb.lower(root.<String>get("moTa")),
+                                cb.lower(cb.literal(pattern)),
+                                '!'
+                        )
+                ));
+            }
+
+            return cb.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
+    public static String escapeLike(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -157,11 +248,14 @@ public final class LibraryDeckSpecifications {
                 Normalizer.Form.NFC
         );
 
-        String escaped = normalized
+        return normalized
                 .replace("!", "!!")
                 .replace("%", "!%")
                 .replace("_", "!_");
+    }
 
-        return "%" + escaped + "%";
+    private static String searchPattern(String value) {
+        String escaped = escapeLike(value);
+        return escaped == null ? null : "%" + escaped + "%";
     }
 }

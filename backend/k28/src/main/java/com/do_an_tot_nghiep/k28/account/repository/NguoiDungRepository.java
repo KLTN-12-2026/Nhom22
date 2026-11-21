@@ -71,6 +71,10 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
             @Param("trangThai") TrangThaiNguoiDung trangThai
     );
 
+    @Query("select u.id from NguoiDung u where u.id in :ids and u.trangThai = :trangThai")
+    List<Long> findIdsByTrangThai(@Param("ids") Collection<Long> ids,
+                                  @Param("trangThai") TrangThaiNguoiDung trangThai);
+
     interface PublicDisplayName {
         Long getId();
 

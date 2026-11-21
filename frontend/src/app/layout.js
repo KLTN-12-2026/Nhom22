@@ -7,6 +7,7 @@ import '@/styles/mascot.css';
 import '@/styles/deck-illustrations.css';
 import '@/styles/learning-refinements.css';
 import '@/styles/effects.css';
+import '@/styles/paper.css';
 import { Providers } from './providers';
 
 export const metadata = {

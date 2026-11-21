@@ -28,6 +28,7 @@ function DeckForm({ deck }) {
   const [level, setLevel] = useState(deck?.trinhDo || 'MOI_BAT_DAU');
   const [visibility, setVisibility] = useState(deck?.quyenTruyCap || 'RIENG_TU');
   const [goal, setGoal] = useState(deck?.mucTieu || '');
+  const copyLocked = !!deck?.boNguonId && deck.quyenTruyCap !== 'CONG_KHAI';
 
   const createMutation = useMutation({
     mutationFn: (data) => apiFetch(deck ? `/api/v1/decks/${deck.id}` : '/api/v1/decks', { method: deck ? 'PATCH' : 'POST', body: JSON.stringify(data) }),
@@ -154,8 +155,8 @@ function DeckForm({ deck }) {
                   <span className="choice-desc">Chỉ bạn thấy. Không xuất hiện trong thư viện.</span>
                 </span>
               </label>
-              <label className="choice choice-card">
-                <input type="radio" name="visibility" value="CONG_KHAI" checked={visibility === 'CONG_KHAI'} onChange={() => setVisibility('CONG_KHAI')} />
+              <label className="choice choice-card" aria-disabled={copyLocked || undefined}>
+                <input type="radio" name="visibility" value="CONG_KHAI" checked={visibility === 'CONG_KHAI'} disabled={copyLocked} aria-describedby={copyLocked ? 'copy-lock-note' : undefined} onChange={() => setVisibility('CONG_KHAI')} />
                 <span className="bubble" aria-hidden="true">B</span>
                 <span className="choice-body">
                   <span className="choice-title">Công khai</span>
@@ -163,6 +164,7 @@ function DeckForm({ deck }) {
                 </span>
               </label>
             </div>
+            {copyLocked && <p className="notice notice-warning" id="copy-lock-note"><Icon name="info" /><span>Đây là bản sao. Muốn công khai, hãy gửi yêu cầu ở <Link href={`/bo-the/${deck.id}`}>trang bộ thẻ</Link> để tác giả bộ gốc duyệt.</span></p>}
           </fieldset>
 
           {errorMsg && <p role="alert" className="notice notice-error">{errorMsg}</p>}

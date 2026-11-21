@@ -17,6 +17,7 @@ public interface NhatKyQuanTriRepository extends JpaRepository<NhatKyQuanTri, Lo
             from NhatKyQuanTri a
             where (:hanhDong is null or a.hanhDong = :hanhDong)
               and (:loai is null or a.loaiDoiTuong = :loai)
+              and (:doiTuongId is null or a.doiTuongId = :doiTuongId)
               and (:tu is null or a.createdAt >= :tu)
               and (:den is null or a.createdAt < :den)
               and (:pattern is null
@@ -30,6 +31,7 @@ public interface NhatKyQuanTriRepository extends JpaRepository<NhatKyQuanTri, Lo
     Page<NhatKyQuanTri> search(
             @Param("hanhDong") HanhDongQuanTri hanhDong,
             @Param("loai") LoaiDoiTuong loai,
+            @Param("doiTuongId") Long doiTuongId,
             @Param("tu") Instant tu,
             @Param("den") Instant den,
             @Param("pattern") String pattern,

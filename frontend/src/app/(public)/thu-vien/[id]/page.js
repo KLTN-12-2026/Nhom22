@@ -12,6 +12,8 @@ import { CardMedia } from '@/components/content/CardMedia';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
+import { useFocusCard } from '@/hooks/useFocusCard';
+import { CopyBadge } from '@/components/content/CopyBadge';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -27,15 +29,18 @@ function LibraryDetail({ id }) {
   const client = useQueryClient();
   const [showImages, setShowImages] = useCardImages();
   const search = useSearchParams();
-  const page = libraryPage(search.get('page'));
+  const requestedPage = libraryPage(search.get('page'));
+  const focusId = /^[1-9][0-9]{0,18}$/.test(search.get('the') || '') ? search.get('the') : null;
   const [copyMessage, setCopyMessage] = useState('');
   const attempt = useRef(null);
   const busy = useRef(false);
   const { data: me, isLoading: loadingUser, error: userError } = useMe();
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['library-deck', id, page],
-    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${page}&size=20`),
+    queryKey: ['library-deck', id, requestedPage, focusId],
+    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${requestedPage}&size=20${focusId ? `&theId=${focusId}` : ''}`),
   });
+  const page = data?.the?.page ?? requestedPage;
+  useFocusCard(focusId, Boolean(data));
   const copy = useMutation({
     mutationFn: key => copyDeck(apiFetch, id, key), retry: false,
     onSuccess: response => {
@@ -61,7 +66,11 @@ function LibraryDetail({ id }) {
       await copy.mutateAsync(attempt.current.key);
       try { clearDeckCopyKey(window.sessionStorage, me.id, id); } catch {}
       attempt.current = null;
-    } catch {
+    } catch (err) {
+      if (err?.status === 409 || err?.status === 422) {
+        try { clearDeckCopyKey(window.sessionStorage, me.id, id); } catch {}
+        attempt.current = null;
+      }
     } finally { busy.current = false; }
   };
   const copyLink = async () => {
@@ -73,25 +82,32 @@ function LibraryDetail({ id }) {
   if (isLoading) return <div className="page sheet skeleton" role="status" aria-label="Đang tải bộ thẻ"><div className="sk sk-title" /><div className="sk sk-line" /><div className="sk sk-row" /></div>;
   if (error) return <div className="page sheet"><ErrorState title={error.status === 404 ? 'Bộ thẻ không còn công khai' : 'Không tải được bộ thẻ'} description={error.message} onRetry={refetch} /><Link href="/thu-vien" className="btn btn-secondary">Về thư viện</Link></div>;
   const { boThe, the } = data;
+  const existingCopyId = copy.error?.status === 409 ? copy.error.data?.details?.boTheId : null;
+  const originId = boThe.banSao?.boGocId || (copy.error?.data?.details?.lyDo === 'LA_BAN_SAO' ? copy.error.data.details.boGocId : null);
   return <div className="page page-grid with-side">
     <article className="sheet" aria-labelledby="deck-title">
       <Link href="/thu-vien" className="btn btn-quiet"><Icon name="arrow-left" />Thư viện</Link>
       <div className="form-head">
-        <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span></div>
+        <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span><CopyBadge banSao={boThe.banSao} /></div>
         <h1 id="deck-title" className={styles.title}>{boThe.ten}</h1>
         {boThe.moTa && <p>{boThe.moTa}</p>}
         <div className={styles.actions}>
-          <button type="button" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>
+          {boThe.banSao
+            ? (boThe.banSao.boGocXemDuoc && <Link className="btn btn-primary btn-lg" href={`/thu-vien/${boThe.banSao.boGocId}`}><Icon name="arrow-left" />Xem bộ gốc</Link>)
+            : <button type="button" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
           <button type="button" className="btn btn-quiet btn-lg" onClick={copyLink}><Icon name="link" />Sao chép liên kết</button>
         </div>
         {copyMessage && <p role="status">{copyMessage}</p>}
         {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
-        {copy.error && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
+        {boThe.banSao && <p className="muted small">Bộ này là bản sao nên không sao chép tiếp được. Hãy sao chép từ bộ gốc.</p>}
+        {existingCopyId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bạn đã có bản sao của bộ này</p><p className="small">Mỗi bộ chỉ sao chép được một lần. Xóa bản sao cũ nếu muốn sao chép lại.</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${existingCopyId}`}>Mở bản sao của bạn</Link></div></div>}
+        {!boThe.banSao && originId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bộ này là bản sao</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/thu-vien/${originId}`}>Xem bộ gốc</Link></div></div>}
+        {copy.error && !existingCopyId && !originId && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
         {userError && userError.status !== 401 && <ErrorState title="Không kiểm tra được đăng nhập" description={userError.message} onRetry={() => client.invalidateQueries({ queryKey: ['me'] })} />}
       </div>
       <div className="library-card-toolbar"><div className="library-card-summary"><h2 className={styles.listTitle}>Thẻ mẫu</h2><p className="muted small">Hiển thị {the.items.length}/{boThe.soThe} thẻ</p></div><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
       {the.items.length === 0 ? <div className="empty"><h2>Bộ thẻ này chưa có thẻ ở trang này</h2><p>Chọn trang trước hoặc quay lại thư viện.</p></div> : <ol className="answer-list">
-        {the.items.map((card, index) => <li key={card.id} className="answer-row library-card">
+        {the.items.map((card, index) => <li key={card.id} id={`card-${card.id}`} tabIndex={card.id === focusId ? -1 : undefined} aria-current={card.id === focusId ? 'true' : undefined} className={`answer-row library-card${card.id === focusId ? ' card-focus' : ''}`}>
           <span className="answer-no">{page * 20 + index + 1}</span>
           <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa" lang="en">{card.phienAm}</span>}{card.tuLoai && <span className="pos" lang="en">{card.tuLoai}</span>}</div>
             <p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}
@@ -102,11 +118,13 @@ function LibraryDetail({ id }) {
       <Pagination page={page + 1} totalPages={the.totalPages} onPageChange={value => router.replace(`/thu-vien/${encodeURIComponent(id)}?page=${value - 1}`, { scroll: false })} />
     </article>
     <aside className="side-col">
-      <section className="panel" aria-labelledby="info-title"><h2 id="info-title" className="panel-title">Thông tin bộ thẻ</h2><dl className="kv"><dt>Chủ đề</dt><dd>{boThe.tenChuDe || 'Chưa chọn'}</dd><dt>Trình độ</dt><dd>{LEVEL[boThe.trinhDo]}</dd><dt>Số thẻ</dt><dd>{boThe.soThe}</dd><dt>Người soạn</dt><dd>{boThe.tenTacGia}</dd><dt>Nguồn</dt><dd>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</dd><dt>Cập nhật</dt><dd>{new Date(boThe.updatedAt).toLocaleDateString('vi-VN')}</dd></dl></section>
+      <section className="panel" aria-labelledby="info-title"><h2 id="info-title" className="panel-title">Thông tin bộ thẻ</h2><dl className="kv"><dt>Chủ đề</dt><dd>{boThe.tenChuDe || 'Chưa chọn'}</dd><dt>Trình độ</dt><dd>{LEVEL[boThe.trinhDo]}</dd><dt>Số thẻ</dt><dd>{boThe.soThe}</dd><dt>Người soạn</dt><dd>{boThe.chuSoHuuId ? <Link href={`/tac-gia/${boThe.chuSoHuuId}`}>{boThe.tenTacGia}</Link> : boThe.tenTacGia}</dd><dt>Nguồn</dt><dd>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</dd><dt>Cập nhật</dt><dd>{new Date(boThe.updatedAt).toLocaleDateString('vi-VN')}</dd></dl></section>
       <section className="panel" aria-labelledby="copy-title"><h2 id="copy-title" className="panel-title">Khi bạn sao chép</h2><ul className={styles.facts}>
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Bản sao là bộ riêng tư của bạn, sửa, thêm, xóa thẻ thoải mái.</span></li>
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Tiến độ học bắt đầu từ đầu. Không mang theo lịch sử hay điểm của người soạn.</span></li>
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Bộ gốc cập nhật sau này không ghi đè bản sao của bạn.</span></li>
+        <li><span className="bubble is-filled" aria-hidden="true" /><span>Mỗi bộ chỉ sao chép được một lần. Bản sao không sao chép tiếp được.</span></li>
+        <li><span className="bubble is-filled" aria-hidden="true" /><span>Muốn công khai bản sao, bạn gửi yêu cầu để tác giả bộ gốc (bộ mẫu: quản trị viên) duyệt.</span></li>
       </ul></section>
     </aside>
   </div>;

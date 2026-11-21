@@ -34,10 +34,11 @@ public class CardController {
     public PageResponse<CardResponse> list(
             @PathVariable("id") Long id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(name = "theId", required = false) Long theId
     ) {
         return service.list(
-                currentUser.id(), checkedId(id, "bộ thẻ"), page, size
+                currentUser.id(), checkedId(id, "bộ thẻ"), page, size, theId
         );
     }
 

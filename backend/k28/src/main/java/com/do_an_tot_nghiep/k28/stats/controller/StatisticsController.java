@@ -1,10 +1,13 @@
 package com.do_an_tot_nghiep.k28.stats.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
+import com.do_an_tot_nghiep.k28.stats.dto.ActivityQuery;
+import com.do_an_tot_nghiep.k28.stats.dto.ActivityResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.OverviewQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.SkillStatResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.SkillsQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.StatisticsOverviewResponse;
+import com.do_an_tot_nghiep.k28.stats.service.ActivityService;
 import com.do_an_tot_nghiep.k28.stats.service.StatisticsService;
 import com.do_an_tot_nghiep.k28.stats.service.WeeklySummaryService;
 import com.do_an_tot_nghiep.k28.stats.dto.WeeklySummaryQuery;
@@ -23,12 +26,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class StatisticsController {
 
     private final StatisticsService statisticsService;
+    private final ActivityService activityService;
     private final WeeklySummaryService weeklySummaryService;
     private final CurrentUser currentUser;
 
     @GetMapping("/overview")
     public StatisticsOverviewResponse overview(@Valid @ModelAttribute OverviewQuery query) {
         return statisticsService.overview(currentUser.id(), query);
+    }
+
+    @GetMapping("/activity")
+    public ActivityResponse activity(@Valid @ModelAttribute ActivityQuery query) {
+        return activityService.activity(currentUser.id(), query);
     }
 
     @GetMapping("/skills")

@@ -1,6 +1,7 @@
 'use client';
 import { MobileNavigation } from './MobileNavigation';
 import { NotificationBell } from './NotificationBell';
+import { GlobalSearch } from './GlobalSearch';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { SoundToggle } from '@/components/ui/SoundToggle';
 import { useAvatar } from '@/hooks/useAvatar';
@@ -19,6 +20,7 @@ const NAV = [
     { key: "today", label: "Hôm nay", icon: "today", href: "/hom-nay" },
     { key: "decks", label: "Bộ của tôi", icon: "decks", href: "/bo-the" },
     { key: "library", label: "Thư viện", icon: "library", href: "/thu-vien" },
+    { key: "publish-requests", label: "Yêu cầu công khai", icon: "copy", href: "/yeu-cau-cong-khai" },
     { key: "practice", label: "Luyện tập", icon: "practice", href: "/luyen-tap" },
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "/so-tay" },
     { key: "stats", label: "Thống kê", icon: "chart", href: "/thong-ke" }
@@ -49,21 +51,7 @@ const NAV = [
 const ADMIN_NAV = [
   ...NAV,
   { group: "Quản trị", items: [
-    { key: "admin-dashboard", label: "Vào trang Quản trị", icon: "settings", href: "/quan-tri/chu-de" }
-  ] }
-];
-
-const ADMIN_NAV_ONLY = [
-  { group: "Ứng dụng", items: [
-    { key: "back", label: "Trở về ứng dụng", icon: "arrow-left", href: HOME }
-  ] },
-  { group: "Quản trị", items: [
-    { key: "admin-topics", label: "Chủ đề & nhãn", icon: "folder", href: "/quan-tri/chu-de" },
-    { key: "admin-users", label: "Tài khoản", icon: "user", href: "/quan-tri/tai-khoan" },
-    { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
-    { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
-    { key: "admin-revenue", label: "Thống kê doanh thu", icon: "chart", href: "/quan-tri/doanh-thu" },
-    { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
+    { key: "admin-dashboard", label: "Vào trang Quản trị", icon: "settings", href: "/quan-tri" }
   ] }
 ];
 
@@ -83,10 +71,10 @@ export function AppShell({ children, user, isAdmin = false }) {
   const { data: avatar } = useAvatar(user);
   const pathname = usePathname();
 
-  const inAdminArea = pathname.startsWith('/quan-tri');
-  const navList = visible((isAdmin && inAdminArea) ? ADMIN_NAV_ONLY : (isAdmin ? ADMIN_NAV : NAV));
+  const navList = visible(isAdmin ? ADMIN_NAV : NAV);
   const bottomItems = BOTTOM.filter(it => !isPendingRoute(it.href));
-  const adminBottomItems = visible(ADMIN_NAV_ONLY).flatMap(group => group.items);
+
+  const searchPages = navList.flatMap(group => group.items).filter(item => item.href);
 
   const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
@@ -102,6 +90,7 @@ export function AppShell({ children, user, isAdmin = false }) {
           <img className="brand-mark" src="/shared/assets/mascot-mark.svg" alt="" width="28" height="28" />
           <span>Vocab<span className="brand-accent">Learning</span></span>
         </Link>
+        <GlobalSearch pages={searchPages} />
         <div className="header-actions"><SoundToggle /><ThemeToggle />
           {user && <NotificationBell key={user.id} userId={user.id} />}
           {user && (
@@ -165,7 +154,7 @@ export function AppShell({ children, user, isAdmin = false }) {
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
-        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-payments':'Thanh toán','admin-revenue':'Doanh thu','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
+        {bottomItems.map(it => {
           const cur = it.key==='today' ? ['/hom-nay','/hoc','/bo-the','/thong-ke'].some(route=>isActive(route)) : isActive(it.href);
           return (
             <Link key={it.key} href={it.href} aria-current={cur ? 'page' : undefined}>

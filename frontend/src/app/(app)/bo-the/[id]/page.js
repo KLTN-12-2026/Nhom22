@@ -8,7 +8,10 @@ import { CardMedia } from '@/components/content/CardMedia';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
 import { useCardImages } from '@/hooks/useCardImages';
+import { useFocusCard } from '@/hooks/useFocusCard';
 import { CardEditDialog } from '@/components/content/CardEditDialog';
+import { CopyBadge } from '@/components/content/CopyBadge';
+import { PublishRequestPanel } from '@/components/content/PublishRequestPanel';
 import styles from './page.module.css';
 import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
@@ -26,11 +29,21 @@ export default function DeckDetailPage() {
   const { data: deck, isLoading, error, refetch } = useDeck(id);
   const { data: topics = [] } = useTopics();
   const [page, setPage] = useState(0);
+  const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
   const [editing, setEditing] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const download = useMutation({ mutationFn: () => apiFetch(`/api/v1/decks/${id}/export`, { responseType: 'blob' }), onSuccess: blob => saveDownload(blob, `deck-${id}.csv`) });
   const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
-  const cards = useQuery({ queryKey: ['deck-cards', id, page], queryFn: () => apiFetch(`/api/v1/decks/${id}/cards?page=${page}&size=20`) });
+  const [locating, setLocating] = useState(Boolean(focusId));
+  const cards = useQuery({
+    queryKey: ['deck-cards', id, locating ? `the-${focusId}` : page],
+    queryFn: async () => {
+      const result = await apiFetch(`/api/v1/decks/${id}/cards?page=${page}&size=20${locating && focusId ? `&theId=${focusId}` : ''}`);
+      if (locating) { setPage(result.page); setLocating(false); }
+      return result;
+    },
+  });
+  useFocusCard(focusId, Boolean(cards.data) && !locating);
   const deleteCard = useMutation({
     mutationFn: card => apiFetch(`/api/v1/cards/${card.id}?version=${card.version}`, { method: 'DELETE' }),
     onSuccess: () => { setConfirmation(null); client.invalidateQueries({ queryKey: ['deck-cards', id] }); client.invalidateQueries({ queryKey: ['my-decks'] }); },
@@ -50,7 +63,7 @@ export default function DeckDetailPage() {
     <article className="sheet" aria-labelledby="deck-title">
       <Link className="btn btn-quiet" href="/bo-the"><Icon name="arrow-left" />Bộ của tôi</Link>
       <div className="form-head">
-        <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span></div>
+        <div className="answer-meta"><span className="stamp stamp-quiet"><Icon name={deck.quyenTruyCap === 'RIENG_TU' ? 'lock' : 'globe'} />{deck.quyenTruyCap === 'RIENG_TU' ? 'Riêng tư' : 'Công khai'}</span><CopyBadge banSao={deck.banSao} /></div>
         <h1 id="deck-title" className="deck-title">{deck.ten}</h1>
         {deck.moTa && <p>{deck.moTa}</p>}
         <div className="row">
@@ -66,21 +79,20 @@ export default function DeckDetailPage() {
       {(favorite.error || remove.error) && <ErrorState description={(favorite.error || remove.error).message} onRetry={refetch} />}
       {download.error && <ErrorState description={download.error.message} onRetry={() => download.mutate()} />}
       {params.get('imported') && <p className="notice notice-success" role="status">Đã nhập {params.get('imported')} thẻ từ CSV.</p>}
-      {deck.boNguonId && <p className="muted">Bản sao độc lập từ <Link href={`/thu-vien/${deck.boNguonId}`}>bộ nguồn</Link>. Bộ nguồn có thể không còn công khai.</p>}
       {params.get('saved') && <p className="notice notice-success" role="status">Đã lưu thẻ{params.get('duplicate') ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
       <div className={styles.listBar}><h2>Thẻ trong bộ <span className="muted num">{cards.data?.totalElements ?? ''}</span></h2><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
       {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
       {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
       {deleteCard.error && <ErrorState description={deleteCard.error.message} onRetry={() => deleteCard.reset()} />}
       {cards.data?.items.length === 0 && <div className="empty"><h2>Chưa có thẻ ở trang này</h2><p>Thêm thẻ mới hoặc chọn trang trước.</p></div>}
-      <ol className="answer-list">{cards.data?.items.map((card, index) => <li className={`answer-row ${styles.cardRow}`} key={card.id}>
+      <ol className="answer-list">{cards.data?.items.map((card, index) => <li id={`card-${card.id}`} tabIndex={card.id === focusId ? -1 : undefined} aria-current={card.id === focusId ? 'true' : undefined} className={`answer-row ${styles.cardRow}${card.id === focusId ? ' card-focus' : ''}`} key={card.id}>
         <span className="answer-no">{page * 20 + index + 1}</span>
         <div className="entry"><div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa">{card.phienAm}</span>}{card.tuLoai && <span className="pos">{card.tuLoai}</span>}</div><p className="entry-mean">{card.nghiaVi}</p>{card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}{card.dichVi && <p className="muted small">{card.dichVi}</p>}{card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}{card.trung && <span className="stamp stamp-warning">Có thể trùng</span>}
           <div className="answer-meta"><span className="stamp stamp-quiet">Độ khó {card.doKho}/5</span>{card.nhanIds?.map(tagId => <span className="stamp stamp-quiet" key={tagId}>{tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`}</span>)}</div><div className={styles.cardFlags}>{card.anhId && <CardMedia key={`image-${card.id}-${showImages}`} autoShow={showImages} deckId={id} cardId={card.id} role="ANH" />}{!card.amTuId && <SpeakButton text={card.tu} />}{!card.amCauId && card.viDuEn && <SpeakButton sentence text={card.viDuEn} />}{card.amTuId && <CardMedia deckId={id} cardId={card.id} role="AM_TU" />}{card.amCauId && <CardMedia deckId={id} cardId={card.id} role="AM_CAU" />}</div>
         </div>
         <div className={styles.cardTools}><button className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button><button className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })}><Icon name="trash" />Xóa thẻ</button></div>
       </li>)}</ol>
-      {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => setPage(value - 1)} />}
+      {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => { setFocusId(null); setPage(value - 1); }} />}
       {editing && <CardEditDialog key={editing.id} card={editing} deckId={id} onClose={() => setEditing(null)} />}
       <ConfirmDialog isOpen={!!confirmation} title={confirmation?.type === 'deck' ? 'Xóa bộ thẻ' : 'Xóa thẻ'} description={`Xóa “${confirmation?.card?.tu || deck.ten}”? Nội dung sẽ được gỡ khỏi danh sách của bạn.`} confirmLabel={confirmation?.type === 'deck' ? 'Xóa bộ' : 'Xóa thẻ'} loading={remove.isPending || deleteCard.isPending} onClose={() => setConfirmation(null)} onConfirm={() => confirmation.type === 'deck' ? remove.mutate(undefined, { onError: () => setConfirmation(null) }) : deleteCard.mutate(confirmation.card, { onError: () => setConfirmation(null) })} />
     </article>
@@ -88,6 +100,6 @@ export default function DeckDetailPage() {
       <h2 className="panel-title">Thông tin bộ thẻ</h2>
       <dl className="kv"><dt>Chủ đề</dt><dd>{topics.find(t => t.id === deck.chuDeId)?.ten || 'Chưa chọn'}</dd>
       <dt>Trình độ</dt><dd>{LEVEL[deck.trinhDo]}</dd><dt>Mục tiêu</dt><dd>{deck.mucTieu === 'TOEIC' ? 'TOEIC' : deck.mucTieu === 'GIAO_TIEP' ? 'Giao tiếp' : 'Chưa chọn'}</dd><dt>Cập nhật</dt><dd>{new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</dd></dl>
-    </section></aside>
+    </section>{deck.banSao && <PublishRequestPanel deck={deck} />}</aside>
   </div>;
 }

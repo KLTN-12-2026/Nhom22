@@ -33,6 +33,14 @@ public interface TheTuVungRepository
 
     Optional<TheTuVung> findByIdAndXoaAtIsNull(Long id);
 
+    boolean existsByIdAndBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalse(Long id, Long boTheId);
+
+    long countByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseAndIdGreaterThan(Long boTheId, Long id);
+
+    boolean existsByIdAndBoTheIdAndXoaAtIsNull(Long id, Long boTheId);
+
+    long countByBoTheIdAndXoaAtIsNullAndIdGreaterThan(Long boTheId, Long id);
+
     Page<TheTuVung> findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
             Long boTheId,
             Pageable pageable

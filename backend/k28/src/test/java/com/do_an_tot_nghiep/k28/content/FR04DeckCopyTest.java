@@ -154,9 +154,10 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
     @Test
     void tc03_keysAreCaseSensitiveAndScopedToUser() throws Exception {
         String first = body(copy(learner, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
-        String second = body(copy(learner, sourceId, "case").andExpect(status().isCreated()).andReturn()).get("id").asText();
+        copy(learner, sourceId, "case").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details.boTheId").value(first));
         String third = body(copy(author, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
-        assertThat(List.of(first, second, third)).doesNotHaveDuplicates();
+        assertThat(List.of(first, third)).doesNotHaveDuplicates();
     }
 
     @ParameterizedTest

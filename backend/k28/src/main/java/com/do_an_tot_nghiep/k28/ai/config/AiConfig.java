@@ -32,4 +32,24 @@ public class AiConfig {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openai.apiKey())
                 .build();
     }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.ai.image.provider", havingValue = "imagen")
+    RestClient imagenRestClient(ImageProperties props) {
+        ImageProperties.Imagen imagen = props.imagen();
+        if (imagen == null || imagen.apiKey() == null || imagen.apiKey().isBlank()) {
+            throw new IllegalStateException("GOOGLE_AI_API_KEY is required when app.ai.image.provider=imagen");
+        }
+        HttpClient http = HttpClient.newBuilder()
+                .connectTimeout(imagen.connectTimeout())
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
+        factory.setReadTimeout(imagen.readTimeout());
+        return RestClient.builder()
+                .baseUrl(imagen.baseUrl())
+                .requestFactory(factory)
+                .defaultHeader("x-goog-api-key", imagen.apiKey())
+                .build();
+    }
 }

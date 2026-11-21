@@ -8,6 +8,7 @@ import { ErrorState, Pagination, Icon } from '@/components/ui';
 import styles from './page.module.css';
 import { useDecks } from '@/hooks/useDecks';
 import { useTopics } from '@/hooks/useTopics';
+import { CopyBadge } from '@/components/content/CopyBadge';
 
 export default function DecksPage() {
   const { data: plan } = useQuery({ queryKey: ['learning-settings'], queryFn: () => apiFetch('/api/v1/me/learning-settings') });
@@ -72,6 +73,8 @@ export default function DecksPage() {
                         ? <span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>
                         : <span className="stamp stamp-quiet"><Icon name="lock" />Riêng tư</span>
                       }
+                      <CopyBadge banSao={deck.banSao} compact />
+                      {deck.yeuCauCongKhai?.trangThai === 'CHO_DUYET' && <span className="stamp stamp-warning">Chờ duyệt công khai</span>}
                       <span>Sửa {deck.updatedAt ? new Date(deck.updatedAt).toLocaleDateString('vi-VN') : '—'}</span>
                     </div>
                   </div>
