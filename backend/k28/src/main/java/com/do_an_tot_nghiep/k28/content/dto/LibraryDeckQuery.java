@@ -38,8 +38,8 @@ public record LibraryDeckQuery(
         String chuSoHuuId,
 
         @Pattern(
-                regexp = "updated|name|size",
-                message = "Sắp xếp phải là updated, name hoặc size"
+                regexp = "updated|name|size|trending|favorites|newest",
+                message = "Sắp xếp phải là updated, name, size, trending, favorites hoặc newest"
         )
         String sort,
 

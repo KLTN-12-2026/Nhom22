@@ -30,10 +30,15 @@
 .heart svg { width: 14px; height: 14px; fill: currentColor; }
 
 .people { list-style: none; margin: 0; padding: 0; border-top: var(--rule) solid var(--primary); }
-.people li { display: grid; grid-template-columns: 2.25rem auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); }
+.people li { position: relative; display: grid; grid-template-columns: 2.25rem auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; padding: var(--sp-3) 0; border-bottom: var(--rule) solid var(--line); }
 .avatar { width: 40px; height: 40px; font-size: 1rem; }
 .who { display: grid; gap: 2px; min-width: 0; }
-.who strong { overflow-wrap: anywhere; }
+.whoLink { font-weight: 700; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.whoLink::after { content: ""; position: absolute; inset: 0; }
+.people li:hover { background: var(--field); }
+.people li:hover .whoLink { color: var(--primary); text-decoration: underline; }
+.whoLink:focus-visible { outline: none; }
+.people li:has(.whoLink:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
 .who span { font-size: var(--fs-small); color: var(--ink-2); }
 .empty { padding: var(--sp-4) 0; border-top: var(--rule) solid var(--primary); display: grid; gap: var(--sp-2); justify-items: start; }
 .empty p { margin: 0; color: var(--ink-2); font-size: var(--fs-small); }

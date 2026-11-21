@@ -156,7 +156,7 @@ export function CommunitySection() {
                   <span className="answer-no">{i + 1}</span>
                   <span className={`avatar ${styles.avatar}`} aria-hidden="true">{initial(c.tenTacGia)}</span>
                   <span className={styles.who}>
-                    <strong>{c.tenTacGia || 'Người học'}</strong>
+                    <Link className={styles.whoLink} href={`/tac-gia/${c.chuSoHuuId}`}>{c.tenTacGia || 'Người học'}</Link>
                     <span>{c.soBoCongKhai} bộ công khai · {c.soSaoChep} lượt sao chép</span>
                   </span>
                   <Heart n={c.soYeuThich} label={`${c.soYeuThich} lượt yêu thích mới`} />

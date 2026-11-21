@@ -72,7 +72,10 @@ public class LibraryService {
                         request.nguon(),
                         request.ownerId()
                 ).and(
-                        LibraryDeckSpecifications.ordered(request.sort())
+                        LibraryDeckSpecifications.ordered(
+                                request.sort(),
+                                clock.instant().minus(HIGHLIGHT_DAYS, ChronoUnit.DAYS)
+                        )
                 );
 
         Page<BoThe> result = decks.findAll(

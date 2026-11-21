@@ -3,6 +3,14 @@
 @media (min-width: 720px) { .filters { grid-template-columns: repeat(4, 1fr); } }
 @media (min-width: 1200px) { .filters { grid-template-columns: 2fr repeat(4, 1fr); } .filters .search { grid-column: auto; } }
 
+.tabs { display: flex; flex-wrap: wrap; border-bottom: var(--rule) solid var(--primary); margin-bottom: var(--sp-2); }
+.tabs button { min-height: var(--tap); padding: 0 var(--sp-4); border: 0; border-bottom: 3px solid transparent; margin-bottom: calc(-1 * var(--rule)); background: transparent; color: var(--ink-2); font: inherit; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.tabs button:hover { color: var(--ink); background: var(--primary-tint); }
+.tabs button[aria-pressed="true"] { color: var(--primary-strong); border-bottom-color: var(--primary); }
+.tabs button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.tabHint { margin: 0 0 var(--sp-3); color: var(--ink-2); }
+@media (max-width: 600px) { .tabs { flex-wrap: nowrap; overflow-x: auto; } .tabs button { padding: 0 var(--sp-3); } }
+
 .resultBar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .resultControls { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .resultControl { display: flex; align-items: center; gap: var(--sp-2); }

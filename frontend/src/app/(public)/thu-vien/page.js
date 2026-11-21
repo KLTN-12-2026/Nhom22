@@ -9,6 +9,18 @@ import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { DeckCover } from '@/components/ui/DeckCover';
 
+const VIEW_TABS = [
+  { value: 'trending', label: 'Thịnh hành' },
+  { value: 'favorites', label: 'Yêu thích nhất' },
+  { value: 'newest', label: 'Mới đăng' },
+  { value: 'updated', label: 'Mới cập nhật' }
+];
+
+const VIEW_HINT = {
+  trending: 'Xếp theo lượt yêu thích và sao chép từ người khác trong 7 ngày qua.',
+  favorites: 'Xếp theo tổng lượt yêu thích từ người khác.'
+};
+
 export default function LibraryPage() {
   return <Suspense fallback={<p className="page" role="status">Đang tải thư viện…</p>}><LibraryContent /></Suspense>;
 }
@@ -21,7 +33,7 @@ function LibraryContent() {
   const goal = search.get('mucTieu') || '';
   const level = search.get('trinhDo') || '';
   const source = search.get('nguon') || '';
-  const sort = search.get('sort') || 'updated';
+  const sort = search.get('sort') || 'trending';
   const page = libraryPage(search.get('page'));
   const requestedSize = Number(search.get('size') || 20);
   const size = Number.isInteger(requestedSize) && requestedSize >= 1 && requestedSize <= 100 ? requestedSize : 20;
@@ -116,6 +128,15 @@ function LibraryContent() {
           </div>
         </form>
 
+        <div className={styles.tabs} role="group" aria-label="Xem theo">
+          {VIEW_TABS.map(tab => (
+            <button key={tab.value} type="button" aria-pressed={sort === tab.value} onClick={() => setSort(tab.value)}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {VIEW_HINT[sort] && <p className={`caption ${styles.tabHint}`}>{VIEW_HINT[sort]}</p>}
+
         <div className={styles.resultBar}>
           <p id="result-count" className="muted" aria-live="polite">
             {total} bộ thẻ
@@ -130,6 +151,9 @@ function LibraryContent() {
             <div className={styles.resultControl}>
             <label htmlFor="sort" className="caption">Sắp xếp</label>
             <select className="select" id="sort" value={sort} onChange={e => setSort(e.target.value)}>
+              <option value="trending">Thịnh hành</option>
+              <option value="favorites">Yêu thích nhất</option>
+              <option value="newest">Mới đăng</option>
               <option value="updated">Mới cập nhật</option>
               <option value="name">Tên A–Z</option>
               <option value="size">Nhiều thẻ nhất</option>
