@@ -15,9 +15,9 @@ import com.do_an_tot_nghiep.k28.common.quota.entity.SuDungDichVu;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,7 +50,8 @@ public class QuotaService {
                         case TTS -> "giọng đọc mẫu";
                         case PHAT_AM -> "đánh giá phát âm";
                     } + " hôm nay, vui lòng thử lại vào ngày mai",
-                    Math.max(1, Duration.between(now, nuaDem).getSeconds()));
+                    Math.max(1, Duration.between(now, nuaDem).getSeconds()),
+                    Map.of("quyenLoi", "HAN_MUC", "loai", loai.name(), "gioiHan", gioiHan));
         }
         return new GiuCho(ngay, loai);
     }

@@ -125,7 +125,6 @@ function FlashcardSessionContent() {
 
   const handleFlip = () => {
     fx.play('flip');
-    fx.turn(faceRef.current);
     setFlippedKey(currentKey);
   };
 
@@ -170,9 +169,15 @@ function FlashcardSessionContent() {
         router.replace(`/hoc-tong-ket?id=${id}`);
       } else if (err.status === 404) {
         router.replace('/luyen-tap');
+      } else if ((err.data?.message || '').includes('suất từ mới')) {
+        const isNew = q => q.trangThai === 'CHUA_TRA_LOI' && (!q.tienDo || q.tienDo.trangThai === 'MOI');
+        const skipped = queue.filter(isNew).length;
+        setQueue(queue.map(q => (isNew(q) ? { ...q, trangThai: 'BO_QUA' } : q)));
+        setFlippedKey(null);
+        setNotice(`Hôm nay bạn đã học đủ số từ mới theo thiết lập. ${skipped} từ mới còn lại được để dành cho ngày mai, phiên tiếp tục với các thẻ ôn.`);
       } else if (err.status === 422) {
         setQueue(queue.map(q => (q === item ? { ...q, trangThai: 'BO_QUA' } : q)));
-        setNotice(err.message || 'Thẻ này không còn trong phiên, chuyển sang thẻ tiếp theo.');
+        setNotice(err.data?.message || 'Thẻ này không còn trong phiên, chuyển sang thẻ tiếp theo.');
       } else {
         setNotice(err.message || 'Lỗi khi lưu kết quả ôn');
       }
@@ -207,7 +212,7 @@ function FlashcardSessionContent() {
       <main className="session-main" id="main">
         <div className="sheet flash">
           {otherSession && <p className="notice notice-warning study-error" role="status">Bạn vừa mở một phiên học khác ở tab hoặc thiết bị khác. Phiên này vẫn lưu từng thẻ đã chấm, nhưng nên học tiếp ở một nơi để tránh chấm trùng.</p>}
-          {notice && <p className="notice notice-danger study-error" role="alert">{notice}</p>}
+          {notice && <p className={`notice ${notice.startsWith('Hôm nay bạn đã học đủ') ? '' : 'notice-danger'} study-error`} role="alert">{notice}</p>}
           {finishMutation.isError && (
             <p className="notice notice-danger study-error" role="alert">{finishMutation.error.message || 'Chưa kết thúc được phiên. Hãy thử lại.'}</p>
           )}
@@ -217,23 +222,33 @@ function FlashcardSessionContent() {
               <div className="form-head" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
                 <div className="form-code"><span>Thẻ {doneCount + 1}</span><span>{englishFront ? 'Anh → Việt' : 'Việt → Anh'}</span></div>
               </div>
-              <div className="face" ref={faceRef}>
-                <p className="face-label">{englishFront ? 'Mặt trước, nhớ lại nghĩa' : 'Mặt trước, nhớ lại từ tiếng Anh'}</p>
-                <div className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</div>
-                {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-                {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
-              </div>
-              {flipped && (
-                <div className="face back" role="region" aria-label="Mặt sau" aria-live="polite">
-                  <p className="face-label">Mặt sau</p>
-                  <div className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</div>
-                  {!englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
-                  {the.viDuEn && <p className="example en" lang="en">“{the.viDuEn}”</p>}
+              <div key={currentKey} className="flipcard" ref={faceRef} data-flipped={flipped || undefined}
+                onClick={event => { if (!flipped && !event.target.closest('button, a')) handleFlip(); }}>
+                <div className="flipcard-inner">
+                  <div className="flipcard-face flipcard-front" aria-hidden={flipped || undefined} inert={flipped || undefined}>
+                    <p className="face-label">{englishFront ? 'Mặt trước · nhớ lại nghĩa' : 'Mặt trước · nhớ lại từ tiếng Anh'}</p>
+                    <div className="flipcard-word">
+                      <span className={englishFront ? 'flash-word' : 'flash-mean'} lang={englishFront ? 'en' : 'vi'}>{englishFront ? the.tu : the.nghiaVi}</span>
+                      {englishFront && <SpeakButton text={the.tu} compact />}
+                    </div>
+                    {englishFront && the.phienAm && <p className="ipa">{the.phienAm}</p>}
+                    {the.tuLoai && <p className="pos">{the.tuLoai}</p>}
+                    <p className="flipcard-hint"><Icon name="refresh" />Chạm vào thẻ hoặc nhấn Space để lật</p>
+                  </div>
+                  <div className="flipcard-face flipcard-back" role="region" aria-label="Mặt sau" aria-hidden={!flipped || undefined} inert={!flipped || undefined}>
+                    <p className="face-label">Mặt sau</p>
+                    <div className="flipcard-word">
+                      <span className={englishFront ? 'flash-mean' : 'flash-word'} lang={englishFront ? 'vi' : 'en'}>{englishFront ? the.nghiaVi : the.tu}</span>
+                      {!englishFront && <SpeakButton text={the.tu} compact />}
+                    </div>
+                    {englishFront ? <p className="flipcard-sub" lang="en">{the.tu}</p> : the.phienAm && <p className="ipa">{the.phienAm}</p>}
+                    {the.viDuEn && (
+                      <div className="flipcard-example">
+                        <p className="example en" lang="en">“{the.viDuEn}”</p>
+                        <SpeakButton sentence text={the.viDuEn} compact />
+                      </div>
+                    )}                  </div>
                 </div>
-              )}
-              <div className="row">
-                {(englishFront || flipped) && <SpeakButton text={the.tu} />}
-                {flipped && the.viDuEn && <SpeakButton sentence text={the.viDuEn} />}
               </div>
               <div className="actions">
                 {!flipped ? (

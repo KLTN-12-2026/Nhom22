@@ -18,8 +18,8 @@ export const isSoon = subscription => !isExpired(subscription) && dayCount(subsc
 export const subscriptionStatus = subscription => isExpired(subscription) ? ['Đã hết hạn', 'expired'] : isSoon(subscription) ? [dayCount(subscription) === 0 ? 'Hết hạn hôm nay' : `Còn ${dayCount(subscription)} ngày`, 'pending'] : ['Còn hiệu lực', 'success'];
 
 export const seedPlans = [
-    { code: 'PRO', month: 299000, year: 2990000, cards: 5000, ai: 20, images: 10, speech: true, premium: false, active: true, version: 1 },
-    { code: 'PREMIUM', month: 999000, year: 9990000, cards: null, ai: 100, images: 30, speech: true, premium: true, active: true, version: 1 }
+    { code: 'PRO', month: 79000, year: 599000, cards: 5000, ai: 20, images: 3, speech: true, premium: false, active: true, version: 1 },
+    { code: 'PREMIUM', month: 129000, year: 999000, cards: null, ai: 60, images: 10, speech: true, premium: true, active: true, version: 1 }
   ];
   const users = [
     ['Nguyễn Hoài An', 'an@example.com'], ['Trần Minh Anh', 'minhanh@example.com'], ['Lê Quang Huy', 'quanghuy@example.com'],

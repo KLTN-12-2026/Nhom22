@@ -48,7 +48,7 @@ test('plan changes cannot change historical transaction amounts or subscriptions
   data.plans[0].active = false;
   assert.equal(transactions[0].amount, amount);
   assert.deepEqual(data.subscriptions, createDemo().subscriptions);
-  assert.equal(createDemo().plans[0].month, 299000);
+  assert.equal(createDemo().plans[0].month, 79000);
 });
 
 test('CSV exports the complete filtered result, quotes values and neutralizes formulas', () => {

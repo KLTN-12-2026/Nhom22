@@ -568,6 +568,33 @@ Cùng luồng `/api/v1/events/stream`, thêm 3 loại:
 
 `CSDL`/`REDIS` chỉ gửi khi trạng thái đổi, kiểm mỗi 30 giây ở từng instance. Đã làm ở FE: F3.20. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md#giai-đoạn-2-b320).
 
+### 5.21 B3.21 — Gói Free, dùng thử, khuyến mãi, ưu đãi HSSV, nâng cấp giữa kỳ (UI55, UI56, UI59, màn Admin mới)
+
+Yêu cầu người dùng 22/11/2026, TK §6.9, TC-27. Luồng: [B3.21](../docs/luong-backend/B3.21-goi-free-uu-dai.md).
+
+**Thay đổi phá hợp đồng cũ:**
+- Không còn 402 `SUBSCRIPTION_REQUIRED`. Người chưa có gói (chưa mua, hết hạn, hủy) dùng `FREE`; `GET /me/plan` trả `goiMa: "FREE"`. FE bỏ mọi chặn menu theo gói; hiển thị hộp nâng cấp khi API trả 422 có `details.goiCanNangCap` hoặc 429 hết lượt.
+- `GET /billing/plans` có 3 phần tử, `FREE` đứng đầu (giá 0, không có nút mua), thêm `hanMucTts`.
+- Giá mới: PRO 79.000 / 599.000, PREMIUM 129.000 / 999.000. FREE: 300 thẻ, AI 3, ảnh 0, TTS 20, phát âm 3 mỗi ngày.
+- Đổi gói giữa kỳ: nâng lên gói cao hơn được (trừ phần còn lại), hạ gói vẫn 422 `fieldErrors[goiMa]`.
+
+**API mới cho người học:**
+
+| Method | Path | Body / response chính |
+|---|---|---|
+| POST | `/api/v1/billing/quotes` | `{goiMa, chuKy, maKhuyenMai?}` → `{giaGoc, giamGia, khauTru, soTien, maKhuyenMai, tenKhuyenMai, uuDaiHssv, nangCap}`; lỗi mã 422 `fieldErrors[maKhuyenMai]` |
+| POST | `/api/v1/billing/checkouts` | thêm `maKhuyenMai?`; response thêm `giaGoc, giamGia, khauTru, maKhuyenMai` |
+| POST | `/api/v1/me/subscription/trial` | 201 `SubscriptionResponse` (`nguon: DUNG_THU`, PREMIUM 7 ngày); 422 nếu đã từng có gói |
+| GET | `/api/v1/me/student-offer` | `{hoatDong, goiMa, tenGoi, phanTramGiam, soNgay, tenMien[], xacMinh, coTheNhan}` |
+| POST | `/api/v1/me/student-verifications` | `{tepTheId?, tenTruong?}`; không gửi ảnh → dùng email tài khoản (tên miền trường), sai → 422 `fieldErrors[tepTheId]`; có ảnh (tải qua `/files`) → `CHO_DUYET`; 409 khi đang chờ hoặc đã xác minh |
+| POST | `/api/v1/me/student-offer/claim` | Nhận gói miễn phí khi `phanTramGiam = 100` và `coTheNhan = true` |
+
+`SubscriptionResponse`, `CurrentPlanResponse`, `AdminSubscriptionResponse` thêm `nguon` (`MUA`/`DUNG_THU`/`HSSV`); `TransactionResponse`, `AdminPaymentResponse` thêm `giaGoc, giamGia, khauTru, maKhuyenMai, uuDaiHssv, nangCap`. Biên nhận in thêm dòng giá gốc, giảm giá, khấu trừ khi có.
+
+**API mới cho Admin:** `GET/POST /admin/promotions`, `PUT /admin/promotions/{id}` (`version`), `GET /admin/offers`, `PUT /admin/offers/{DUNG_THU|HSSV}`, `GET /admin/student-verifications?trangThai=`, `POST /admin/student-verifications/{id}/decision {duyet, lyDo, version}`. `PUT /admin/plans/FREE` chỉ nhận giá 0 và `hoatDong = true`. Quyết định HSSV phát `MUC_DA_XU_LY` cho Admin khác; gửi ảnh thẻ phát `HANG_CHO_QUAN_TRI`.
+
+**FE cần làm (chưa làm):** bảng giá 3 gói + gói năm có giá gạch; ô mã khuyến mãi gọi `/billing/quotes`; nút "Dùng thử Premium 7 ngày" sau thiết lập lần đầu; trang ưu đãi HSSV; màn Admin khuyến mãi, ưu đãi, duyệt HSSV. Đã sửa: dữ liệu demo giá trong `frontend/src/lib/payment-admin.mjs` và `mockups/shared/demo.js`.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).

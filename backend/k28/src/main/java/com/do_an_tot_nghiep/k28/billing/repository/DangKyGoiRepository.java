@@ -23,6 +23,8 @@ public interface DangKyGoiRepository extends JpaRepository<DangKyGoi, Long> {
 
     Optional<DangKyGoi> findFirstByNguoiDungIdOrderByIdDesc(Long nguoiDungId);
 
+    boolean existsByNguoiDungId(Long nguoiDungId);
+
     List<DangKyGoi> findByTrangThaiAndHetHanAtBeforeOrderByIdAsc(TrangThaiDangKy trangThai, Instant hetHanAt);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

@@ -10,6 +10,7 @@ import '@/styles/effects.css';
 import '@/styles/paper.css';
 import '@/styles/tier.css';
 import '@/styles/shell.css';
+import '@/styles/marketing.css';
 import { Providers } from './providers';
 import { MucCompanion } from '@/components/mascot/MucCompanion';
 

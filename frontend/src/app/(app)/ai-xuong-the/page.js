@@ -10,6 +10,7 @@ import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { draftCommit, AI_STATUS } from '@/lib/remote-contract.mjs';
 import { RemoteState } from '@/components/remote/Remote';
 import { Icon } from '@/components/ui';
+import { GuardedAction, QuotaMeter } from '@/components/billing/PlanAccess';
 import styles from './page.module.css';
 
 export default function AiCardWorkshopPage() {
@@ -111,6 +112,7 @@ export default function AiCardWorkshopPage() {
           <h1 id="page-title">Xưởng thẻ AI</h1>
           <p>Từ một đoạn văn đến thẻ nháp bạn đã kiểm tra.</p>
         </div>
+        <QuotaMeter feature="AI" />
 
         <p className={styles.status} role="status" aria-live="polite">{status || request.error || (request.data ? `${AI_STATUS[request.data.trangThai]}${request.data.moPhong ? " · Nhà cung cấp mô phỏng" : ""}` : "")}</p>
 
@@ -138,9 +140,9 @@ export default function AiCardWorkshopPage() {
               </select>
             </div>
 
-            <button className="btn btn-primary" type="submit" disabled={isGenerating || !!attempt || saving}>
+            <GuardedAction feature="AI" className="btn btn-primary" type="submit" disabled={isGenerating || !!attempt || saving}>
               {isGenerating ? 'Đang tạo bản nháp…' : 'Tạo bản nháp'}
-            </button>
+            </GuardedAction>
             <p className="muted small">Nội dung gốc không bị thay đổi. Thẻ chưa được lưu tự động.</p>
             <Link className="btn btn-quiet" href="/ai-lich-su">Lịch sử và hạn mức</Link>
             {isSaved && <button type="button" className="btn btn-secondary" onClick={() => { request.resume(null); seeded.current=null; setAttempt(null); setIsSaved(false); setCards([]); setStatus(''); const url=new URL(window.location.href); url.searchParams.delete('requestId'); window.history.replaceState(null,'',url); }}>Tạo lượt mới</button>}

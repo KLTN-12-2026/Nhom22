@@ -420,8 +420,8 @@
     if (db.billing && db.billing.plans) return db.billing;
     const now = Date.now();
     const plans = [
-      { ma: "PRO", ten: "Pro", giaThang: 299000, giaNam: 2990000, gioiHanThe: 5000, phatAm: true, boMauCaoCap: false, hoatDong: true, version: 0 },
-      { ma: "PREMIUM", ten: "Premium", giaThang: 999000, giaNam: 9990000, gioiHanThe: null, phatAm: true, boMauCaoCap: true, hoatDong: true, version: 0 }
+      { ma: "PRO", ten: "Pro", giaThang: 79000, giaNam: 599000, gioiHanThe: 5000, phatAm: true, boMauCaoCap: false, hoatDong: true, version: 0 },
+      { ma: "PREMIUM", ten: "Premium", giaThang: 129000, giaNam: 999000, gioiHanThe: null, phatAm: true, boMauCaoCap: true, hoatDong: true, version: 0 }
     ];
     const price = (goiMa, chuKy) => { const p = plans.find((x) => x.ma === goiMa); return chuKy === "NAM" ? p.giaNam : p.giaThang; };
     const tx = [];

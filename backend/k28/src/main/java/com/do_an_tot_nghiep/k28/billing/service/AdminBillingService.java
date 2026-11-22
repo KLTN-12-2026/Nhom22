@@ -130,8 +130,23 @@ public class AdminBillingService {
         if (!Objects.equals(goi.getVersion(), request.version())) {
             throw new ApiException(ErrorCode.VERSION_CONFLICT, "Gói đã được sửa ở nơi khác, vui lòng tải lại");
         }
-        if (!request.hoatDong() && goi.isHoatDong() && goiDichVu.countByHoatDongTrueAndMaNot(ma) == 0) {
-            throw new ApiException(ErrorCode.BUSINESS_RULE, "hoatDong", "Cần ít nhất một gói đang bán");
+        boolean mienPhi = EntitlementService.GOI_MIEN_PHI.equals(goi.getMa());
+        if (mienPhi && (request.giaThang() != 0 || request.giaNam() != 0)) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "giaThang", "Gói Free luôn có giá 0 ₫");
+        }
+        if (mienPhi && !request.hoatDong()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "hoatDong",
+                    "Gói Free là gói mặc định của người chưa mua gói, không thể ngừng");
+        }
+        if (!mienPhi && request.giaThang() < 1000) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "giaThang", "Giá tháng tối thiểu 1.000 ₫");
+        }
+        if (!mienPhi && request.giaNam() < 1000) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "giaNam", "Giá năm tối thiểu 1.000 ₫");
+        }
+        if (!request.hoatDong() && goi.isHoatDong()
+                && goiDichVu.countByHoatDongTrueAndMaNotAndGiaThangGreaterThan(ma, 0) == 0) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "hoatDong", "Cần ít nhất một gói trả phí đang bán");
         }
         Map<String, Object> truoc = planFields(goi);
         goi.capNhat(request.ten(), request.giaThang(), request.giaNam(), request.gioiHanThe(), request.phatAm(),
@@ -193,7 +208,8 @@ public class AdminBillingService {
     private AdminPaymentResponse toPayment(GiaoDichThanhToan don, NotificationContact contact, Map<String, String> ten) {
         return new AdminPaymentResponse(don.getMaDon(), don.getNguoiDungId().toString(),
                 contact == null ? null : contact.email(), don.getGoiMa(),
-                ten.getOrDefault(don.getGoiMa(), don.getGoiMa()), don.getChuKy(), don.getSoTien(), don.getCong(),
+                ten.getOrDefault(don.getGoiMa(), don.getGoiMa()), don.getChuKy(), don.getSoTien(), don.getGiaGoc(),
+                don.getGiamGia(), don.getKhauTru(), don.getMaKhuyenMai(), don.isUuDaiHssv(), don.isNangCap(), don.getCong(),
                 don.getTrangThai(), don.getMaGiaoDichCong(), don.getMaPhanHoi(), don.getTaoAt(), don.getHoanTatAt());
     }
 
@@ -207,7 +223,7 @@ public class AdminBillingService {
         return new AdminSubscriptionResponse(dangKy.getId().toString(), dangKy.getNguoiDungId().toString(),
                 contact == null ? null : contact.email(), contact == null ? null : contact.tenHienThi(),
                 dangKy.getGoiMa(), ten.getOrDefault(dangKy.getGoiMa(), dangKy.getGoiMa()), dangKy.getBatDauAt(),
-                dangKy.getHetHanAt(), dangKy.getTrangThai(), soNgay, dangKy.getVersion());
+                dangKy.getHetHanAt(), dangKy.getTrangThai(), soNgay, dangKy.getVersion(), dangKy.getNguon());
     }
 
     private AdminPlanResponse toPlan(GoiDichVu goi, Instant now) {

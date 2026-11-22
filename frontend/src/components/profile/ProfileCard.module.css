@@ -1,4 +1,5 @@
-.card { display: grid; gap: var(--sp-4); align-content: start; padding: var(--sp-5); }
+.card { display: grid; gap: var(--sp-4); align-content: start; padding: var(--sp-5) var(--sp-5) var(--sp-5) calc(var(--sp-5) + 14px); }
+:global(.sheet).card::before { left: 12px; top: var(--sp-5); bottom: var(--sp-5); }
 .avatarTools { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
 .actions { display: grid; gap: var(--sp-1); }
 .actions :global(.btn) { justify-content: center; }
@@ -8,6 +9,7 @@
 .mobileOnly { display: grid; gap: var(--sp-2); }
 @media (min-width: 1024px) { .mobileOnly { display: none; } }
 @media (max-width: 1023px) {
-  .card { padding: var(--sp-4); }
+  .card { padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 14px); }
+  :global(.sheet).card::before { left: 8px; top: var(--sp-4); bottom: var(--sp-4); }
   .actions { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
 }

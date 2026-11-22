@@ -15,6 +15,8 @@ import { ContentReportButton } from '@/components/content/ContentReportButton';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
 import { CopyBadge } from '@/components/content/CopyBadge';
+import { PlanTag, requestUpgrade } from '@/components/billing/PlanAccess';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -37,6 +39,7 @@ function LibraryDetail({ id }) {
   const attempt = useRef(null);
   const busy = useRef(false);
   const { data: me, isLoading: loadingUser, error: userError } = useMe();
+  const planAccess = usePlanAccess(!!me);
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['library-deck', id, requestedPage, focusId],
     queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${requestedPage}&size=20${focusId ? `&theId=${focusId}` : ''}`),
@@ -100,6 +103,7 @@ function LibraryDetail({ id }) {
   </div></div>;
 
   const existingCopyId = copy.error?.status === 409 ? copy.error.data?.details?.boTheId : null;
+  const premiumLocked = !!(boThe.caoCap && me && planAccess.of('BO_MAU_CAO_CAP')?.locked);
   const originId = boThe.banSao?.boGocId || (copy.error?.data?.details?.lyDo === 'LA_BAN_SAO' ? copy.error.data.details.boGocId : null);
   return <div className="page page-grid with-side">
     <article className="sheet" aria-labelledby="deck-title">
@@ -107,11 +111,14 @@ function LibraryDetail({ id }) {
       <div className="form-head">
         <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span><CopyBadge banSao={boThe.banSao} /></div>
         <h1 id="deck-title" className={styles.title}>{boThe.ten}</h1>
+        {boThe.caoCap && <p className="small"><PlanTag code="PREMIUM" locked={premiumLocked} label="Bộ mẫu cao cấp · Premium" />{premiumLocked ? ' Xem trước được, sao chép cần gói Premium.' : ''}</p>}
         <AuthorTag id={boThe.chuSoHuuId} name={boThe.tenTacGia} prefix={boThe.banSao ? 'Người sao chép' : 'Tác giả'} />
         {boThe.moTa && <p>{boThe.moTa}</p>}
         <div className={styles.actions}>
           {boThe.banSao
             ? (boThe.banSao.boGocXemDuoc && <Link className="btn btn-primary btn-lg" href={`/thu-vien/${boThe.banSao.boGocId}`}><Icon name="arrow-left" />Xem bộ gốc</Link>)
+            : premiumLocked
+            ? <button type="button" className="btn btn-primary btn-lg" onClick={() => requestUpgrade('BO_MAU_CAO_CAP')}><Icon name="lock" />Sao chép (cần Premium)</button>
             : <button type="button" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
           <button type="button" className="btn btn-quiet btn-lg" onClick={copyLink}><Icon name="link" />Sao chép liên kết</button>
           <ContentReportButton key={boThe.id} deck={boThe} />

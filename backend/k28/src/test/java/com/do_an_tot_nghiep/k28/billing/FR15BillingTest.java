@@ -53,14 +53,14 @@ class FR15BillingTest extends AbstractIntegrationTest {
     @Autowired BillingService billing;
 
     @Test
-    void tc22_noPlanBlocksLearningButKeepsAllowedRoutes() throws Exception {
+    void tc22_noPlanFallsBackToFreePlan() throws Exception {
         Learner learner = learner();
 
-        mockMvc.perform(get("/api/v1/decks").cookie(learner.session))
-                .andExpect(status().isPaymentRequired())
-                .andExpect(jsonPath("$.code").value("SUBSCRIPTION_REQUIRED"))
-                .andExpect(jsonPath("$.details.lyDo").value("CHUA_CO_GOI"))
-                .andExpect(jsonPath("$.details.goiGanNhat").isEmpty());
+        mockMvc.perform(get("/api/v1/decks").cookie(learner.session)).andExpect(status().isOk());
+        assertThat(plans.goiMa(learner.id)).isEqualTo("FREE");
+        mockMvc.perform(get("/api/v1/me/plan").cookie(learner.session))
+                .andExpect(jsonPath("$.goiMa").value("FREE"))
+                .andExpect(jsonPath("$.tenGoi").value("Free"));
         mockMvc.perform(get("/api/v1/me").cookie(learner.session)).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/notifications").cookie(learner.session)).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/events/stream").cookie(learner.session))
@@ -70,24 +70,32 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.trangThai").value("CHUA_CO_GOI"));
         mockMvc.perform(get("/api/v1/billing/plans"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].ma").value("PRO"))
-                .andExpect(jsonPath("$[0].giaThang").value(299000))
-                .andExpect(jsonPath("$[0].giaNam").value(2990000))
-                .andExpect(jsonPath("$[0].gioiHanThe").value(5000))
-                .andExpect(jsonPath("$[0].hanMucAi").value(20))
-                .andExpect(jsonPath("$[0].boMauCaoCap").value(false))
-                .andExpect(jsonPath("$[1].ma").value("PREMIUM"))
-                .andExpect(jsonPath("$[1].giaNam").value(9990000))
-                .andExpect(jsonPath("$[1].gioiHanThe").isEmpty())
-                .andExpect(jsonPath("$[1].hanMucAnh").value(30));
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].ma").value("FREE"))
+                .andExpect(jsonPath("$[0].giaThang").value(0))
+                .andExpect(jsonPath("$[0].gioiHanThe").value(300))
+                .andExpect(jsonPath("$[0].hanMucAi").value(3))
+                .andExpect(jsonPath("$[0].hanMucAnh").value(0))
+                .andExpect(jsonPath("$[0].hanMucPhatAm").value(3))
+                .andExpect(jsonPath("$[1].ma").value("PRO"))
+                .andExpect(jsonPath("$[1].giaThang").value(79000))
+                .andExpect(jsonPath("$[1].giaNam").value(599000))
+                .andExpect(jsonPath("$[1].gioiHanThe").value(5000))
+                .andExpect(jsonPath("$[1].hanMucAi").value(20))
+                .andExpect(jsonPath("$[1].hanMucTts").value(150))
+                .andExpect(jsonPath("$[1].boMauCaoCap").value(false))
+                .andExpect(jsonPath("$[2].ma").value("PREMIUM"))
+                .andExpect(jsonPath("$[2].giaThang").value(129000))
+                .andExpect(jsonPath("$[2].giaNam").value(999000))
+                .andExpect(jsonPath("$[2].gioiHanThe").isEmpty())
+                .andExpect(jsonPath("$[2].hanMucAnh").value(10));
     }
 
     @Test
     void tc21_paymentActivatesOnceAndRenewalStacks() throws Exception {
         Learner learner = learner();
         JsonNode checkout = checkout(learner, "PRO", "THANG");
-        assertThat(checkout.get("soTien").asLong()).isEqualTo(299000);
+        assertThat(checkout.get("soTien").asLong()).isEqualTo(79000);
         assertThat(checkout.get("moPhong").asBoolean()).isTrue();
         String maDon = checkout.get("maDon").asString();
         String paymentUrl = checkout.get("paymentUrl").asString();
@@ -147,7 +155,7 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andExpect(header().string("Content-Type", "text/html;charset=UTF-8"))
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
-        assertThat(html).contains(maDon, "299.000 ₫", "Billing tester", "mô phỏng", "không phải hóa đơn giá trị gia tăng");
+        assertThat(html).contains(maDon, "79.000 ₫", "Billing tester", "mô phỏng", "không phải hóa đơn giá trị gia tăng");
         mockMvc.perform(get("/api/v1/billing/transactions/" + cho + "/receipt").cookie(learner.session))
                 .andExpect(status().isUnprocessableContent());
 
@@ -212,7 +220,7 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.trangThai").value("THAT_BAI"))
                 .andExpect(jsonPath("$.maPhanHoi").value("24"));
         assertThat(subscriptionRows(owner.id)).isZero();
-        mockMvc.perform(get("/api/v1/decks").cookie(owner.session)).andExpect(status().isPaymentRequired());
+        assertThat(plans.goiMa(owner.id)).isEqualTo("FREE");
     }
 
     @Test
@@ -235,12 +243,12 @@ class FR15BillingTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tc22_expiredPlanBlocksThenRebuyStartsNow() throws Exception {
+    void tc22_expiredPlanFallsBackToFreeThenRebuyStartsNow() throws Exception {
         Learner learner = learner();
-        pay(learner, checkout(learner, "PRO", "THANG"));
+        pay(learner, checkout(learner, "PREMIUM", "THANG"));
         mockMvc.perform(post("/api/v1/billing/checkouts").cookie(learner.session).with(xsrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toJson(Map.of("goiMa", "PREMIUM", "chuKy", "THANG"))))
+                        .content(toJson(Map.of("goiMa", "PRO", "chuKy", "THANG"))))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE"));
 
@@ -248,24 +256,21 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 UPDATE dang_ky_goi SET bat_dau_at = UTC_TIMESTAMP(3) - INTERVAL 2 HOUR,
                        het_han_at = UTC_TIMESTAMP(3) - INTERVAL 1 MINUTE
                 WHERE nguoi_dung_id = ?""", learner.id);
-        mockMvc.perform(get("/api/v1/decks").cookie(learner.session))
-                .andExpect(status().isPaymentRequired())
-                .andExpect(jsonPath("$.details.lyDo").value("HET_HAN"))
-                .andExpect(jsonPath("$.details.goiGanNhat").value("PRO"))
-                .andExpect(jsonPath("$.details.hetHanAt").isNotEmpty());
+        mockMvc.perform(get("/api/v1/decks").cookie(learner.session)).andExpect(status().isOk());
+        assertThat(plans.goiMa(learner.id)).isEqualTo("FREE");
         mockMvc.perform(get("/api/v1/me/subscription").cookie(learner.session))
                 .andExpect(jsonPath("$.trangThai").value("HET_HAN"));
 
-        pay(learner, checkout(learner, "PREMIUM", "THANG"));
+        pay(learner, checkout(learner, "PRO", "THANG"));
         assertThat(subscriptionRows(learner.id)).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dang_ky_goi WHERE nguoi_dung_id = ? AND trang_thai = 'HIEU_LUC'",
                 Integer.class, learner.id)).isEqualTo(1);
-        assertThat(plans.goiMa(learner.id)).isEqualTo("PREMIUM");
+        assertThat(plans.goiMa(learner.id)).isEqualTo("PRO");
         mockMvc.perform(get("/api/v1/decks").cookie(learner.session)).andExpect(status().isOk());
     }
 
     @Test
-    void tc22_adminSkipsGuardAndPendingOtherPlanConflicts() throws Exception {
+    void tc22_adminHasPremiumAndPendingOtherPlanConflicts() throws Exception {
         Learner admin = learner();
         jdbc.update("INSERT INTO nguoi_dung_vai_tro (nguoi_dung_id, vai_tro_id) SELECT ?, id FROM vai_tro WHERE ma = 'ADMIN'",
                 admin.id);
@@ -285,7 +290,7 @@ class FR15BillingTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void cancellationRevokesAccessImmediatelyAndPreservesDataAndReceipts() throws Exception {
+    void cancellationFallsBackToFreeAndPreservesDataAndReceipts() throws Exception {
         Learner learner = learner();
         JsonNode paid = checkout(learner, "PRO", "THANG");
         pay(learner, paid);
@@ -303,10 +308,8 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(cancelled.get("hetHanAt")).isEqualTo(before.get("hetHanAt"));
         assertThat(cancelled.get("version").asLong()).isEqualTo(before.get("version").asLong() + 1);
-        assertThat(plans.goiMa(learner.id)).isNull();
-        mockMvc.perform(get("/api/v1/decks").cookie(learner.session))
-                .andExpect(status().isPaymentRequired())
-                .andExpect(jsonPath("$.details.lyDo").value("DA_HUY"));
+        assertThat(plans.goiMa(learner.id)).isEqualTo("FREE");
+        mockMvc.perform(get("/api/v1/decks").cookie(learner.session)).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/me").cookie(learner.session)).andExpect(status().isOk());
         assertThat(subscription(learner).get("trangThai").asString()).isEqualTo("DA_HUY");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM bo_the WHERE chu_so_huu_id = ? AND xoa_at IS NULL",

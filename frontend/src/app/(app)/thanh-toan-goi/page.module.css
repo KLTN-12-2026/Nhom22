@@ -5,7 +5,7 @@
 .planInfo strong { font-size:var(--fs-small); }
 .planInfo span, .summaryRow span, .summaryNote { color:var(--ink-2); font-size:var(--fs-caption); }
 .sectionHeading { color:var(--ink-2); font-size:var(--fs-small); font-weight:700; margin:0 0 var(--sp-4); }
-.planGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4); margin-bottom:var(--sp-4); }
+.planGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:var(--sp-4); margin-bottom:var(--sp-4); }
 .planNote { color:var(--ink-2); font-size:var(--fs-small); line-height:1.5; margin:0 0 var(--sp-6); }
 .planCard { position:relative; display:flex; flex-direction:column; overflow:hidden; background:var(--sheet); border:2px solid var(--primary-line); border-radius:var(--radius-field); }
 .planCard.recommended { border-color:var(--primary); }
@@ -54,3 +54,17 @@
 .successIcon { display:flex; align-items:center; justify-content:center; width:64px; height:64px; margin:0 auto var(--sp-5); border-radius:50%; background:var(--secondary-bg); color:var(--secondary-text); font-size:2rem; }
 @media (max-width:800px) { .planGrid, .paymentGrid { grid-template-columns:1fr; } .summary { position:static; } }
 @media (max-width:520px) { .cycleToggle, .currentBanner { flex-direction:column; align-items:stretch; } .currentBanner > a { margin-left:0; } }
+.planTop h3 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.planTop h3 :global(.icon) { width:18px; height:18px; }
+.yearly { margin:var(--sp-1) 0 0; color:var(--ink-2); font-size:var(--fs-caption); }
+.yearly b { color:var(--secondary-text); }
+.featureIcon :global(.icon) { width:12px; height:12px; }
+.currentCard { border-color:var(--secondary); }
+.currentBadge { position:absolute; top:-1px; right:14px; padding:2px 10px; border-radius:0 0 8px 8px; background:var(--secondary); color:#fff; font-size:var(--fs-caption); font-weight:700; }
+.offers { display:grid; gap:var(--sp-3); margin-bottom:var(--sp-6); }
+.offer { display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; padding:var(--sp-3) var(--sp-4); border:1.5px dashed var(--accent); border-radius:var(--radius-field); background:var(--accent-bg); }
+.offer > :global(.icon) { width:22px; height:22px; color:var(--accent-text); flex:none; }
+.offer > div { display:flex; flex:1; flex-direction:column; gap:2px; min-width:200px; }
+.offer span { color:var(--ink-2); font-size:var(--fs-caption); }
+.promo { display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-bottom:var(--sp-4); }
+.promo :global(.input) { flex:1; min-width:160px; text-transform:uppercase; }

@@ -56,7 +56,7 @@ export function PublicLayout({ children }) {
             ))}
           </nav>
 
-          <GlobalSearch pages={[{ href: '/thu-vien', label: 'Thư viện', icon: 'library' }, { href: '/tu-dien', label: 'Từ điển Anh – Việt', icon: 'book' },{ href: '/huong-dan', label: 'Cách học', icon: 'info' }, { href: '/chinh-sach', label: 'Chính sách', icon: 'file' }, { href: '/dang-nhap', label: 'Đăng nhập', icon: 'user' }, { href: '/dang-ky', label: 'Tạo tài khoản', icon: 'user' }]} />
+          <GlobalSearch className="site-search" placeholder="Tra từ, tìm bộ thẻ…" pages={[{ href: '/thu-vien', label: 'Thư viện', icon: 'library' }, { href: '/tu-dien', label: 'Từ điển Anh – Việt', icon: 'book' },{ href: '/huong-dan', label: 'Cách học', icon: 'info' }, { href: '/chinh-sach', label: 'Chính sách', icon: 'file' }, { href: '/dang-nhap', label: 'Đăng nhập', icon: 'user' }, { href: '/dang-ky', label: 'Tạo tài khoản', icon: 'user' }]} />
 
           <div className="header-actions"><ThemeToggle />
             <Link href="/dang-nhap" className="btn btn-quiet">Đăng nhập</Link>

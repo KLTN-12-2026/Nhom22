@@ -7,6 +7,8 @@ import { apiFetch } from '@/lib/api-client';
 import { Button, Icon, ErrorState } from '@/components/ui';
 import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/DashboardHighlights';
 import { LeaderboardMini } from '@/components/engagement/LeaderboardMini';
+import { TodayRoadmap } from '@/components/dashboard/TodayRoadmap';
+import { ReviewSchedule } from '@/components/dashboard/ReviewSchedule';
 import styles from './page.module.css';
 
 const MINUTE_OPTIONS = [5, 10, 20];
@@ -286,6 +288,7 @@ const errorText = (err, fallback) => {
 export default function TodayPage() {
   const router = useRouter();
   const [chieuHoc, setChieuHoc] = useState('EN_VI');
+  const [deckId, setDeckId] = useState('');
   const [minutes, setMinutes] = useState(null);
   const [rescueMinutes, setRescueMinutes] = useState(null);
   const [pauseNew, setPauseNew] = useState(true);
@@ -322,7 +325,7 @@ export default function TodayPage() {
 
   const handleStart = (e) => {
     e.preventDefault();
-    sessionMutation.mutate({ boTheId: null, chieuHoc, quyThoiGian: Number(chosenMinutes) });
+    sessionMutation.mutate({ boTheId: deckId || null, chieuHoc, quyThoiGian: Number(chosenMinutes) });
   };
 
   const todayStr = plan?.ngay ? plan.ngay.split('-').reverse().join('/') : '';
@@ -424,37 +427,17 @@ export default function TodayPage() {
                   <p className="notice notice-danger study-error" role="alert" style={{ marginBottom: 'var(--space-4)' }}>{startError}</p>
                 )}
 
-                <dl className="tally cols-2" id="tally">
-                  <div>
-                    <dt>Quá hạn<small>trễ từ hôm trước</small></dt>
-                    <dd><span className="tally-n">{plan.soQuaHan || 0}</span>thẻ</dd>
-                  </div>
-                  <div>
-                    <dt>Đến hạn hôm nay</dt>
-                    <dd><span className="tally-n">{plan.soDenHan || 0}</span>thẻ</dd>
-                  </div>
-                  <div>
-                    <dt>Từ mới còn lại<small>đã học {plan.soTheMoiDaHoc || 0}/{plan.tuMoiMoiNgay || 0} từ mới hôm nay</small></dt>
-                    <dd><span className="tally-n">{plan.soMoiConLai || 0}</span>từ</dd>
-                  </div>
-                  <div>
-                    <dt>Thời gian cần<small>ước tính {plan.giayMoiLuot || 20} giây mỗi lượt</small></dt>
-                    <dd><span className="tally-n">{plan.uocTinhPhut || 0}</span>phút</dd>
-                  </div>
-                </dl>
+                <TodayRoadmap plan={plan} chieuHoc={chieuHoc} starting={sessionMutation.isPending} onStart={(body) => sessionMutation.mutate(body)} />
+                <ReviewSchedule decks={plan.boThe || []} />
 
                 {totalCardsToday === 0 ? (
                   <div className={`${styles.done} today-done`} style={{ marginTop: 'var(--space-6)' }}>
                     <p className="notice notice-success">
                       <Icon name="check" />
                       <span>
-                        <strong>Hôm nay đã ôn xong.</strong> Không còn thẻ đến hạn và đã đủ từ mới theo thiết lập. Thẻ chưa đến hạn sẽ được giữ cho những phiên học sau.
+                        <strong>Hôm nay đã ôn xong lịch bắt buộc.</strong> Muốn học thêm, chọn một mục trong “Học thêm ngay” ở trên.
                       </span>
                     </p>
-                    <div className="row" style={{ marginTop: 'var(--space-4)' }}>
-                      <Link className="btn btn-primary" href="/luyen-tap">Làm một bài luyện</Link>
-                      <Link className="btn btn-secondary" href="/so-tay">Xem sổ tay từ khó</Link>
-                    </div>
                   </div>
                 ) : (
                   <form className={`${styles.start} today-plan`} onSubmit={handleStart} noValidate style={{ marginTop: 'var(--space-6)' }}>
@@ -473,6 +456,18 @@ export default function TodayPage() {
                         ))}
                       </div>
                     </fieldset>
+
+                    {plan.boThe?.length > 1 && (
+                      <div className={`field ${styles.deckPick}`}>
+                        <label className="field-label" htmlFor="today-deck">Học bộ nào?</label>
+                        <select id="today-deck" className="input" value={deckId} onChange={(e) => setDeckId(e.target.value)}>
+                          <option value="">Tất cả bộ của tôi (khuyên dùng)</option>
+                          {plan.boThe.map((b) => (
+                            <option key={b.boTheId} value={b.boTheId}>{b.ten} · {b.soCanOn} cần ôn · {b.soMoi} chưa học</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     <fieldset className="fieldset">
                       <legend>Chiều học</legend>

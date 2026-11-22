@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAiRequest } from '@/hooks/useAiRequest';
 import { AI_STATUS } from '@/lib/remote-contract.mjs';
 import { Icon } from '@/components/ui';
+import { GuardedAction, QuotaMeter } from '@/components/billing/PlanAccess';
 import styles from './page.module.css';
 
 export default function AiSentencePage() {
@@ -44,6 +45,7 @@ export default function AiSentencePage() {
           <h1 id="page-title">Viết câu dùng thử</h1>
           <p>Dùng từ mới trong một câu của chính bạn.</p>
         </div>
+        <QuotaMeter feature="AI" />
 
         {request.error && <p role="alert" className="notice">{request.error}{request.id && <button type="button" className="btn btn-quiet" onClick={() => request.refetch()}>Kiểm tra lại</button>}</p>}
         {request.data && <p role="status">{AI_STATUS[request.data.trangThai]}{request.data.moPhong ? ' · Nhà cung cấp mô phỏng' : ''}</p>}
@@ -75,9 +77,9 @@ export default function AiSentencePage() {
               />
             </div>
 
-            <button className="btn btn-primary" type="submit" disabled={isChecking}>
+            <GuardedAction feature="AI" className="btn btn-primary" type="submit" disabled={isChecking}>
               {isChecking ? 'Đang nhận phản hồi…' : 'Nhận phản hồi'}
-            </button>
+            </GuardedAction>
             <p className="muted small">Giải thích bằng tiếng Việt. Phản hồi AI là gợi ý để tham khảo, không phải điểm kiểm tra cố định.</p>
           </form>
 
