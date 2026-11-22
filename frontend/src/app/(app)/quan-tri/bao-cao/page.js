@@ -84,7 +84,7 @@ function ReportDetail({ report, onDone }) {
         <dt>Thời điểm</dt><dd>{fullTime(report.createdAt)}</dd>
       </dl>
       <p className="adm-section-title">Mô tả của người báo cáo</p>
-      <p className="adm-quote">{report.moTa}</p>
+      {report.moTa ? <p className="adm-quote">{report.moTa}</p> : <p className="adm-muted">Người báo cáo không ghi thêm mô tả.</p>}
       <p className="adm-section-title">Nội dung lúc bị báo cáo</p>
       <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{report.noiDung?.ten || '—'}</p>
       {rows.length ? <dl className="adm-kv">{rows.map(([label, value]) => <div key={label} style={{ display: 'contents' }}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : <p className="adm-muted">Không có thêm trường nào.</p>}

@@ -13,7 +13,7 @@ export const REPORT_STATUS = {
 
 export const TARGET_TYPE = { BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', YEU_CAU_AI: 'Đầu ra AI' };
 
-export const REPORT_REASON = { SAI_NOI_DUNG: 'Sai nội dung', KHONG_PHU_HOP: 'Không phù hợp', KHAC: 'Lý do khác' };
+export const REPORT_REASON = { SAI_NOI_DUNG: 'Sai nghĩa / thông tin', SAI_CHINH_TA: 'Sai chính tả, phiên âm', KHONG_PHU_HOP: 'Không phù hợp', SPAM: 'Spam / quảng cáo', BAN_QUYEN: 'Vi phạm bản quyền', KHAC: 'Lý do khác' };
 
 export const SERVICE_TYPES = ['AI', 'ANH', 'TTS', 'PHAT_AM'];
 

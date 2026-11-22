@@ -16,6 +16,10 @@ import { useFocusCard } from '@/hooks/useFocusCard';
 import { CopyBadge } from '@/components/content/CopyBadge';
 import { PlanTag, requestUpgrade } from '@/components/billing/PlanAccess';
 import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { ShareDialog } from '@/components/content/ShareDialog';
+import { ReportDialog } from '@/components/content/ReportDialog';
+import { SnapDialog } from '@/components/content/SnapDialog';
+import { cardShare, deckShare } from '@/lib/share.mjs';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -33,7 +37,9 @@ function LibraryDetail({ id }) {
   const search = useSearchParams();
   const requestedPage = libraryPage(search.get('page'));
   const focusId = /^[1-9][0-9]{0,18}$/.test(search.get('the') || '') ? search.get('the') : null;
-  const [copyMessage, setCopyMessage] = useState('');
+  const [sharing, setSharing] = useState(null);
+  const [reporting, setReporting] = useState(null);
+  const [snapping, setSnapping] = useState(null);
   const attempt = useRef(null);
   const busy = useRef(false);
   const { data: me, isLoading: loadingUser, error: userError } = useMe();
@@ -76,17 +82,22 @@ function LibraryDetail({ id }) {
       }
     } finally { busy.current = false; }
   };
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/thu-vien/${encodeURIComponent(id)}`);
-      setCopyMessage('Đã sao chép liên kết');
-    } catch { setCopyMessage('Không sao chép được. Bạn có thể sao chép địa chỉ trên thanh trình duyệt.'); }
+  const openReport = target => {
+    if (!me) {
+      if (userError && userError.status !== 401) return;
+      router.push(`/dang-nhap?next=${encodeURIComponent(`/thu-vien/${id}`)}`);
+      return;
+    }
+    setReporting(target);
   };
   if (isLoading) return <div className="page sheet skeleton" role="status" aria-label="Đang tải bộ thẻ"><div className="sk sk-title" /><div className="sk sk-line" /><div className="sk sk-row" /></div>;
   if (error) return <div className="page sheet"><ErrorState title={error.status === 404 ? 'Bộ thẻ không còn công khai' : 'Không tải được bộ thẻ'} description={error.message} onRetry={refetch} /><Link href="/thu-vien" className="btn btn-secondary">Về thư viện</Link></div>;
   const { boThe, the } = data;
   const existingCopyId = copy.error?.status === 409 ? copy.error.data?.details?.boTheId : null;
   const premiumLocked = !!(boThe.caoCap && me && planAccess.of('BO_MAU_CAO_CAP')?.locked);
+  const ownDeck = !!me && boThe.chuSoHuuId === me.id;
+  const shareDeck = () => setSharing(deckShare(window.location.origin, id, boThe));
+  const shareCard = card => setSharing(cardShare(window.location.origin, id, card));
   const originId = boThe.banSao?.boGocId || (copy.error?.data?.details?.lyDo === 'LA_BAN_SAO' ? copy.error.data.details.boGocId : null);
   return <div className="page page-grid with-side">
     <article className="sheet" aria-labelledby="deck-title">
@@ -103,9 +114,9 @@ function LibraryDetail({ id }) {
             : premiumLocked
             ? <button type="button" className="btn btn-primary btn-lg" onClick={() => requestUpgrade('BO_MAU_CAO_CAP')}><Icon name="lock" />Sao chép (cần Premium)</button>
             : <button type="button" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
-          <button type="button" className="btn btn-quiet btn-lg" onClick={copyLink}><Icon name="link" />Sao chép liên kết</button>
+          <button type="button" className="btn btn-secondary btn-lg" onClick={shareDeck}><Icon name="share" />Chia sẻ</button>
+          {!ownDeck && <button type="button" className="btn btn-quiet btn-lg" onClick={() => openReport({ loaiDoiTuong: 'BO_THE', doiTuongId: id, name: boThe.ten })}><Icon name="flag" />Báo cáo</button>}
         </div>
-        {copyMessage && <p role="status">{copyMessage}</p>}
         {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
         {boThe.banSao && <p className="muted small">Bộ này là bản sao nên không sao chép tiếp được. Hãy sao chép từ bộ gốc.</p>}
         {existingCopyId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bạn đã có bản sao của bộ này</p><p className="small">Mỗi bộ chỉ sao chép được một lần. Xóa bản sao cũ nếu muốn sao chép lại.</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${existingCopyId}`}>Mở bản sao của bạn</Link></div></div>}
@@ -123,8 +134,16 @@ function LibraryDetail({ id }) {
           publicDeck
           showImages={showImages}
           focused={card.id === focusId}
+          tools={<>
+            <button type="button" className="btn btn-quiet btn-sm" onClick={() => setSnapping({ card, number: page * 20 + index + 1 })} aria-label={`Chụp thẻ ${card.tu}`}><Icon name="camera" />Chụp thẻ</button>
+            <button type="button" className="btn btn-quiet btn-sm" onClick={() => shareCard(card)} aria-label={`Chia sẻ thẻ ${card.tu}`}><Icon name="share" />Chia sẻ</button>
+            {!ownDeck && <button type="button" className="btn btn-quiet btn-sm" onClick={() => openReport({ loaiDoiTuong: 'THE_TU_VUNG', doiTuongId: card.id, name: card.tu })} aria-label={`Báo cáo thẻ ${card.tu}`}><Icon name="flag" />Báo cáo</button>}
+          </>}
         />)}
       </ol>}
+      {sharing && <ShareDialog onClose={() => setSharing(null)} {...sharing} />}
+      {snapping && <SnapDialog key={snapping.card.id} onClose={() => setSnapping(null)} card={snapping.card} number={snapping.number} deckId={id} deckName={boThe.ten} publicDeck />}
+      {reporting && <ReportDialog key={`${reporting.loaiDoiTuong}-${reporting.doiTuongId}`} onClose={() => setReporting(null)} {...reporting} />}
       <Pagination page={page + 1} totalPages={the.totalPages} onPageChange={value => router.replace(`/thu-vien/${encodeURIComponent(id)}?page=${value - 1}`, { scroll: false })} />
     </article>
     <aside className="side-col">

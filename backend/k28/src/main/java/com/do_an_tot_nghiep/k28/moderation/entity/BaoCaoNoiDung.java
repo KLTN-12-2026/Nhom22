@@ -46,7 +46,7 @@ public class BaoCaoNoiDung extends BaseEntity {
     @Column(nullable = false, updatable = false, length = 20)
     private LyDoBaoCao lyDo;
 
-    @Column(nullable = false, updatable = false, length = 500)
+    @Column(updatable = false, length = 500)
     private String moTa;
 
     @Column(nullable = false, updatable = false, columnDefinition = "json")
