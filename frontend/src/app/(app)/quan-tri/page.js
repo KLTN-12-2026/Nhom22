@@ -131,12 +131,10 @@ function Ledger({ data, soNgay, setSoNgay }) {
           </thead>
           <tbody>
             <LedgerRow label="Người dùng mới" now={k.nguoiDungMoi} prev={k.nguoiDungMoiKyTruoc} />
-            <LedgerRow label="Hoạt động hôm nay (so với hôm qua)" now={k.hoatDongHomNay} prev={k.hoatDongHomQua} />
             <LedgerRow label="Lượt ôn hợp lệ" now={k.luotOnTrongKy} prev={k.luotOnKyTruoc} />
             <LedgerRow label="Người học trong kỳ" now={k.nguoiHocTrongKy} prev={null} />
+            <LedgerRow label="Lượt ôn mỗi người học" now={k.nguoiHocTrongKy ? Math.round((k.luotOnTrongKy / k.nguoiHocTrongKy) * 10) / 10 : null} prev={null} />
             <LedgerRow label="Tỷ lệ nhớ" now={k.tyLeNho} prev={null} format={v => `${num(v)}%`} />
-            <LedgerRow label="Doanh thu tháng này" now={k.doanhThuThangNay} prev={k.doanhThuThangTruoc} format={money} />
-            <LedgerRow label="Thuê bao còn hạn" now={k.thueBaoHieuLuc} prev={null} />
           </tbody>
         </table>
       </div>
@@ -209,6 +207,43 @@ function RevenueChart({ months }) {
   );
 }
 
+function Today({ k, days, services }) {
+  const today = days.at(-1);
+  const change = delta(k.hoatDongHomNay, k.hoatDongHomQua);
+  const errors = services.reduce((s, x) => s + (x.soLoi || 0) + (x.soKhongXacDinh || 0), 0);
+  return (
+    <Card id="today-h" title="Hôm nay" note={today ? shortDay(today.ngay) : null}>
+      <dl className={styles.today}>
+        <div>
+          <dt>Người hoạt động</dt>
+          <dd><b>{num(k.hoatDongHomNay)}</b>{change && <small className={styles[change.tone]}>{change.noBase ? 'hôm qua 0' : `${change.text} so với hôm qua`}</small>}</dd>
+        </div>
+        <div>
+          <dt>Lượt ôn</dt>
+          <dd><b>{num(today?.luotOn)}</b><small>{num(today?.nguoiHoc)} người học</small></dd>
+        </div>
+        <div>
+          <dt>Đăng ký mới</dt>
+          <dd><b>{num(today?.dangKy)}</b></dd>
+        </div>
+      </dl>
+      <p className={styles.services}>
+        <span>Dịch vụ:</span>{' '}
+        {services.length ? services.map(s => `${SERVICE_LABEL[s.loai] || s.loai} ${num(s.soLuotDung)}`).join(' · ') : 'chưa có lượt dùng'}
+        {errors > 0 && <Link className={`adm-a ${styles.late}`} href="/quan-tri/dich-vu"> · {num(errors)} lỗi</Link>}
+      </p>
+    </Card>
+  );
+}
+
+function SystemAlert({ sys }) {
+  const down = [sys.csdl !== 'UP' && 'cơ sở dữ liệu', sys.redis !== 'UP' && 'Redis'].filter(Boolean);
+  if (!down.length) return null;
+  return (
+    <p className="adm-notice adm-notice-bad" role="alert"><Icon name="alert" />Hệ thống đang lỗi: {down.join(', ')}. Một số số liệu bên dưới có thể chưa đúng.</p>
+  );
+}
+
 function Loading() {
   return (
     <div className={styles.loading} aria-busy="true">
@@ -224,7 +259,7 @@ export default function AdminDashboardPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['admin-dashboard', soNgay],
     queryFn: () => apiFetch(`/api/v1/admin/dashboard?soNgay=${soNgay}`),
-    refetchInterval: 60_000,
+    refetchInterval: 300_000,
     placeholderData: previous => previous,
   });
 
@@ -248,12 +283,17 @@ export default function AdminDashboardPage() {
   const k = data.chiSo;
   const months = data.doanhThuTheoThang;
   const services = data.dichVuHomNay?.dichVu || [];
-  const aiErrors = services.reduce((s, x) => s + (x.soLoi || 0) + (x.soKhongXacDinh || 0), 0);
   const share = planShare(data);
+  const monthNow = months.at(-1);
+  const monthChange = delta(k.doanhThuThangNay, k.doanhThuThangTruoc);
+  const revenueNote = monthNow
+    ? `tháng này ${money(k.doanhThuThangNay)}${monthChange && !monthChange.noBase ? ` (${monthChange.text} so với tháng trước)` : ''}, 12 tháng ${money(months.reduce((s, m) => s + m.doanhThu, 0))}`
+    : null;
 
   return (
     <div className="adm-page">
       {head}
+      <SystemAlert sys={data.heThong} />
       <Duty queue={data.canXuLy} oldest={data.canXuLy.congKhaiCuNhatAt} />
 
       <div className={styles.grid}>
@@ -262,8 +302,8 @@ export default function AdminDashboardPage() {
           <Card id="act-h" title="Lượt ôn mỗi ngày" note={`${shortDay(data.tuNgay)} đến ${shortDay(data.denNgay)}, cột xám là tài khoản mới`}>
             <ActivityChart days={data.theoNgay} />
           </Card>
-          <Card id="rev-h" title="Doanh thu 12 tháng" note={`tổng ${money(months.reduce((s, m) => s + m.doanhThu, 0))}, ${num(months.reduce((s, m) => s + m.soGiaoDich, 0))} giao dịch`} action={<Link href="/quan-tri/doanh-thu" className="adm-a">Mở sổ doanh thu</Link>}>
-            <RevenueChart months={months} />
+          <Card id="rev-h" title="Doanh thu 12 tháng" note={revenueNote} action={<Link href="/quan-tri/doanh-thu" className="adm-a">Mở sổ doanh thu</Link>}>
+            {monthNow ? <RevenueChart months={months} /> : <p className="adm-muted">Chưa có giao dịch nào.</p>}
           </Card>
           <Card id="top-h" title="Bộ mẫu được học nhiều" note={`${soNgay} ngày, tính cả bản sao`} action={<Link href="/quan-tri/bo-mau" className="adm-a">Quản lý bộ mẫu</Link>}>
             {data.boMauNoiBat.length ? (
@@ -280,7 +320,10 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className={styles.stack}>
-          <Card id="new-h" title="Mới vào sổ" action={<Link href="/quan-tri/tai-khoan" className="adm-a">Tất cả tài khoản</Link>}>
+          <Today k={k} days={data.theoNgay} services={services} />
+
+          <Card id="new-h" title="Mới vào sổ" note={`${num(k.tongNguoiDung)} tài khoản, ${num(k.biKhoa)} bị khóa, ${num(k.chuaXacThuc)} chưa xác thực`} action={<Link href="/quan-tri/tai-khoan" className="adm-a">Tất cả tài khoản</Link>}>
+            {!data.nguoiDungMoi.length && <p className="adm-muted">Chưa có tài khoản mới.</p>}
             <ul className={styles.people}>
               {data.nguoiDungMoi.map(u => {
                 const [label, tone] = USER_STATUS[u.trangThai] || [u.trangThai, 'mute'];
@@ -310,7 +353,7 @@ export default function AdminDashboardPage() {
             ) : <p className="adm-muted">Chưa có thao tác quản trị nào.</p>}
           </Card>
 
-          <Card id="plan-h" title="Gói đang dùng" note={`${num(share.paidPct)}% người hoạt động trả phí`}>
+          <Card id="plan-h" title="Gói đang dùng" note={`${num(k.thueBaoHieuLuc)} thuê bao còn hạn, ${num(share.paidPct)}% người hoạt động trả phí`}>
             <ul className={styles.rows}>
               {share.rows.map(row => (
                 <li key={row.code}>
@@ -326,9 +369,8 @@ export default function AdminDashboardPage() {
             <dl className="adm-kv">
               <dt>Cơ sở dữ liệu</dt><dd><Pill tone={data.heThong.csdl === 'UP' ? 'ok' : 'bad'}>{data.heThong.csdl === 'UP' ? 'Chạy tốt' : 'Lỗi'}</Pill></dd>
               <dt>Redis</dt><dd><Pill tone={data.heThong.redis === 'UP' ? 'ok' : 'bad'}>{data.heThong.redis === 'UP' ? 'Chạy tốt' : 'Lỗi'}</Pill></dd>
-              <dt>Tác vụ nền</dt><dd>{num(data.heThong.tacVuCho)} đang chờ, {num(data.heThong.tacVuLoi24h)} lỗi trong 24 giờ</dd>
-              <dt>Dịch vụ hôm nay</dt><dd>{services.length ? services.map(s => `${SERVICE_LABEL[s.loai] || s.loai} ${num(s.soLuotDung)} lượt`).join(', ') : 'chưa dùng'}{aiErrors ? <span className={styles.late}> ({aiErrors} lỗi)</span> : ''}</dd>
-              <dt>Tài khoản</dt><dd>{num(k.tongNguoiDung)} người, {num(k.soQuanTri)} quản trị, {num(k.biKhoa)} bị khóa, {num(k.chuaXacThuc)} chưa xác thực</dd>
+              <dt>Tác vụ nền</dt><dd>{num(data.heThong.tacVuCho)} đang chờ</dd>
+              <dt>Quản trị viên</dt><dd>{num(k.soQuanTri)} người</dd>
             </dl>
           </Card>
         </div>

@@ -42,6 +42,11 @@ public class AdminDashboardService {
     private final Clock clock;
 
     @Transactional(readOnly = true)
+    public AdminDashboardResponse.CanXuLy queue() {
+        return repository.queue(clock.instant());
+    }
+
+    @Transactional(readOnly = true)
     public AdminDashboardResponse dashboard(Long adminId, Integer soNgayParam) {
         int soNgay = soNgayParam == null ? 7 : soNgayParam;
         if (!KHOANG_HOP_LE.contains(soNgay)) {

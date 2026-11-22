@@ -7,6 +7,8 @@ import { Drawer, Icon } from '@/components/ui';
 import { AdminTable } from '@/components/admin/AdminTable';
 import { apiFetch } from '@/lib/api-client';
 import { relativeTime } from '@/lib/admin-dashboard.mjs';
+import { handledId } from '@/lib/realtime.mjs';
+import { useRealtimeEvent } from '@/hooks/useEventStream';
 import {
   REASON_MAX, REPORT_REASON, REPORT_STATUS, REPORT_TABS, TARGET_TYPE, contentLink, listReports, reasonError,
   resolveReport, snapshotRows,
@@ -129,6 +131,14 @@ function ReportsContent() {
     staleTime: 30_000,
   });
   const items = data?.items || [];
+  const [takenOver, setTakenOver] = useState('');
+
+  useRealtimeEvent('MUC_DA_XU_LY', id => {
+    const reportId = handledId(id, 'BAO_CAO');
+    if (!reportId || !selected || String(selected.id) !== reportId || selected.trangThai !== 'CHO_XU_LY') return;
+    setSelected(null);
+    setTakenOver('Báo cáo bạn đang mở vừa được quản trị viên khác xử lý. Danh sách đã được tải lại.');
+  });
 
   const done = (result, message) => {
     setSelected(result);
@@ -149,6 +159,7 @@ function ReportsContent() {
       </div>
 
       {notice && <p className="adm-notice adm-notice-ok" role="status"><Icon name="check" />{notice}</p>}
+      {takenOver && <p className="adm-notice adm-notice-warn" role="alert"><Icon name="alert" />{takenOver}</p>}
 
       <section className="adm-card">
         <AdminTable
@@ -157,7 +168,7 @@ function ReportsContent() {
           loading={isLoading}
           error={isError ? error : null}
           onRetry={refetch}
-          onRowClick={report => { setNotice(''); setSelected(report); }}
+          onRowClick={report => { setNotice(''); setTakenOver(''); setSelected(report); }}
           rowLabel={report => `Báo cáo về ${report.noiDung?.ten || report.doiTuongId}`}
           toolbar={<>
             <div className="adm-seg" role="tablist" aria-label="Trạng thái báo cáo">
@@ -180,7 +191,7 @@ function ReportsContent() {
             { key: 'reporter', header: 'Người báo cáo', sortValue: r => r.nguoiBaoCao?.tenHienThi, render: r => r.nguoiBaoCao?.tenHienThi || '—' },
             { key: 'time', header: 'Gửi lúc', nowrap: true, sortValue: r => Date.parse(r.createdAt), render: r => <span title={fullTime(r.createdAt)}>{relativeTime(r.createdAt)}</span> },
             { key: 'status', header: 'Trạng thái', sortValue: r => r.trangThai, render: r => <StatusPill status={r.trangThai} /> },
-            { key: 'actions', header: 'Thao tác', srHeader: true, render: r => <div className="adm-row-actions"><button type="button" className={`adm-btn adm-btn-sm ${r.trangThai === 'CHO_XU_LY' ? 'adm-btn-primary' : ''}`} onClick={() => { setNotice(''); setSelected(r); }}>{r.trangThai === 'CHO_XU_LY' ? 'Xem & xử lý' : 'Xem'}</button></div> },
+            { key: 'actions', header: 'Thao tác', srHeader: true, render: r => <div className="adm-row-actions"><button type="button" className={`adm-btn adm-btn-sm ${r.trangThai === 'CHO_XU_LY' ? 'adm-btn-primary' : ''}`} onClick={() => { setNotice(''); setTakenOver(''); setSelected(r); }}>{r.trangThai === 'CHO_XU_LY' ? 'Xem & xử lý' : 'Xem'}</button></div> },
           ]}
           emptyTitle={trangThai === 'CHO_XU_LY' ? 'Không còn báo cáo nào chờ xử lý' : 'Không có báo cáo phù hợp'}
           emptyText={trangThai === 'CHO_XU_LY' ? 'Hàng đợi đã sạch.' : 'Thử đổi bộ lọc.'}

@@ -8,6 +8,8 @@ import {
   APPROVER, PUBLISH_REASON, PUBLISH_STAMP, PUBLISH_STATUS, decidePublishRequest, formatTime,
   listPublishRequests, reasonOf,
 } from '@/lib/publish-requests.mjs';
+import { handledId } from '@/lib/realtime.mjs';
+import { useRealtimeEvent } from '@/hooks/useEventStream';
 
 const FILTERS = [['CHO_DUYET', 'Chờ duyệt'], ['DA_DUYET', 'Đã duyệt'], ['TU_CHOI', 'Bị từ chối'], ['', 'Tất cả']];
 const ACTION = { DUYET: 'Duyệt công khai', TU_CHOI: 'Từ chối', THU_HOI: 'Thu hồi công khai' };
@@ -24,6 +26,13 @@ export function PublishRequestReview({ admin = false }) {
     queryFn: () => listPublishRequests(apiFetch, { admin, trangThai, page }),
   });
   const items = data?.items || [];
+  const [takenOver, setTakenOver] = useState('');
+  useRealtimeEvent('MUC_DA_XU_LY', id => {
+    const requestId = handledId(id, 'CONG_KHAI');
+    if (!admin || !requestId || !selected || String(selected.id) !== requestId) return;
+    setSelected(null);
+    setTakenOver('Yêu cầu bạn đang mở vừa được quản trị viên khác xử lý. Danh sách đã được tải lại.');
+  });
   const done = message => {
     setSelected(null);
     setNotice(message);
@@ -39,6 +48,7 @@ export function PublishRequestReview({ admin = false }) {
           ? 'Bản sao của bộ mẫu, và yêu cầu có bộ gốc không còn công khai hoặc tác giả không còn hoạt động.'
           : 'Người học đã sao chép bộ của bạn và muốn chia sẻ bản sao trong thư viện.'}</p>
         {notice && <p className="notice notice-success" role="status"><Icon name="check" />{notice}</p>}
+        {takenOver && <p className="notice notice-warning" role="alert"><Icon name="info" />{takenOver}</p>}
       </div>
       <div className="tabs" role="tablist" aria-label="Lọc theo trạng thái">
         {FILTERS.map(([value, label]) => <button key={value || 'all'} type="button" className="tab" role="tab"
@@ -65,7 +75,7 @@ export function PublishRequestReview({ admin = false }) {
               {item.lyDo && <p className="small muted" style={{ overflowWrap: 'anywhere' }}>Lý do: {item.lyDo}</p>}
             </div>
             <div className="table-actions">
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSelected(item)}><Icon name="eye" />Xem và xử lý</button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setTakenOver(''); setSelected(item); }}><Icon name="eye" />Xem và xử lý</button>
             </div>
           </li>)}</ol>
           <Pagination page={page + 1} totalPages={data?.totalPages || 0} onPageChange={value => setPage(value - 1)} />

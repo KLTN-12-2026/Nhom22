@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = "app.billing.enforce=true")
@@ -62,6 +63,8 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.details.goiGanNhat").isEmpty());
         mockMvc.perform(get("/api/v1/me").cookie(learner.session)).andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/notifications").cookie(learner.session)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/events/stream").cookie(learner.session))
+                .andExpect(request().asyncStarted());
         mockMvc.perform(get("/api/v1/me/subscription").cookie(learner.session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trangThai").value("CHUA_CO_GOI"));

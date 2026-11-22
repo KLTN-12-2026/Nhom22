@@ -95,6 +95,7 @@ class FR04LibrarySearchTest extends AbstractIntegrationTest {
         assertThat(profile.get("huyHieu")).hasSize(1);
         assertThat(profile.get("huyHieu").get(0).get("ten").asString()).isNotBlank();
         assertThat(profile.has("email")).isFalse();
+        assertThat(profile.get("goiMa").asString()).isIn("FREE", "PRO", "PREMIUM");
 
         JsonNode authorDecks = body(mockMvc.perform(get("/api/v1/library/decks").param("chuSoHuuId", author.toString()))
                 .andExpect(status().isOk()).andReturn());

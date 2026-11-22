@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.moderation.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.ai.service.AiModerationService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -28,6 +30,7 @@ public class ReportService {
     private final RateLimiter rateLimiter;
     private final ReportMapper mapper;
     private final JsonMapper json;
+    private final RealtimeService realtime;
 
     @Transactional
     public ReportResponse create(Long userId, CreateReportRequest request) {
@@ -50,6 +53,7 @@ public class ReportService {
                     .moTa(request.moTa().strip())
                     .noiDungJson(json.writeValueAsString(snapshot))
                     .build());
+            realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
             return mapper.toResponse(saved);
         } catch (DataIntegrityViolationException ex) {
             throw duplicate();

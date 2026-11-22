@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="vi" data-tier="free" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giao diện theo gói — demo 22/11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&family=Gentium+Book+Plus:wght@400;700&display=swap">
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--desk); color: var(--ink); font-family: var(--font-body); font-size: var(--fs-body); }
+  button { font: inherit; }
+
+  :root {
+    --tier: var(--ink-3);
+    --tier-soft: color-mix(in srgb, var(--ink-3) 10%, var(--sheet));
+    --tier-line: var(--line);
+    --tier-ring: conic-gradient(var(--line-2), var(--line-2));
+    --tier-metal: linear-gradient(135deg, #8b93a3, #eef1f6 35%, #a4abb8 55%, #ffffff 70%, #6b7280);
+    --tier-on-metal: #2b2f38;
+    --tier-glow: transparent;
+  }
+  [data-tier="pro"] {
+    --tier: #2f47c2;
+    --tier-soft: color-mix(in srgb, #3b5bff 9%, var(--sheet));
+    --tier-line: color-mix(in srgb, #3b5bff 45%, var(--line));
+    --tier-ring: conic-gradient(from var(--spin, 0deg), #1e2f8f, #8fb0ff, #2f47c2, #dce6ff, #1e2f8f);
+    --tier-metal: linear-gradient(135deg, #1b2a7d, #6d8dff 30%, #2b44bf 50%, #c9d7ff 68%, #1e2f8f);
+    --tier-on-metal: #ffffff;
+    --tier-glow: rgba(59, 91, 255, 0.35);
+  }
+  [data-tier="premium"], [data-tier="admin"] {
+    --tier: #a8770c;
+    --tier-soft: color-mix(in srgb, #d4a017 10%, var(--sheet));
+    --tier-line: color-mix(in srgb, #d4a017 55%, var(--line));
+    --tier-ring: conic-gradient(from var(--spin, 0deg), #7a520a, #ffe9a3, #c08a12, #fff6d4, #8f6410, #f3cf6a, #7a520a);
+    --tier-metal: linear-gradient(135deg, #6e4a07, #f6d779 28%, #b98410 48%, #fff3c4 64%, #8a6110 86%);
+    --tier-on-metal: #2a1c02;
+    --tier-glow: rgba(230, 170, 30, 0.45);
+  }
+  [data-theme="dark"][data-tier="pro"] { --tier: #9fb4ff; }
+  [data-theme="dark"][data-tier="premium"], [data-theme="dark"][data-tier="admin"] { --tier: #f1c75b; }
+
+  @property --spin { syntax: "<angle>"; inherits: true; initial-value: 0deg; }
+  @property --sheen { syntax: "<percentage>"; inherits: false; initial-value: -60%; }
+
+  .bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 10px 16px; background: #111318; color: #eef0f5; font-size: 14px; }
+  .bar .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .bar .group > span { color: #a9afbf; margin-right: 2px; }
+  .bar button { min-height: 34px; padding: 0 12px; border: 1px solid #3c4252; border-radius: 8px; background: #1d2027; color: #eef0f5; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: #4b5fd6; border-color: #4b5fd6; }
+  .bar button:focus-visible { outline: 2px solid #9fb0ff; outline-offset: 2px; }
+
+  .metal { display: inline-block; flex: none; vertical-align: middle; overflow: visible; }
+
+  .app { min-height: calc(100vh - 54px); display: grid; grid-template-rows: auto 1fr; }
+  .header { position: relative; display: flex; align-items: center; gap: 14px; padding: 10px 20px; min-height: 64px; background: var(--sheet); border-bottom: 1px solid var(--line); }
+  .header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: transparent; }
+  [data-tier="pro"] .header::after { background: linear-gradient(90deg, transparent, #3b5bff 20%, #9fb4ff 50%, #3b5bff 80%, transparent); }
+  [data-tier="premium"] .header::after, [data-tier="admin"] .header::after { background: linear-gradient(90deg, #8a6110, #f6d779, #b98410, #fff3c4, #8a6110) 0 0 / 200% 100%; animation: slide 5s linear infinite; }
+
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.05rem; color: var(--ink); text-decoration: none; }
+  .brand b { color: var(--primary); font-weight: 800; }
+  .brand small { display: none; margin-left: 2px; padding: 2px 7px; border-radius: 99px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--tier-on-metal); background: var(--tier-metal); }
+  [data-tier="premium"] .brand small, [data-tier="admin"] .brand small { display: inline-block; }
+  .search { flex: 1; max-width: 420px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); padding: 0 12px; color: var(--ink-3); display: flex; align-items: center; font-size: 14px; }
+  .actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .tier-badge { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 7px; border-radius: 99px; font: 800 12px/1 var(--font-form); letter-spacing: .08em; text-transform: uppercase; color: var(--tier-on-metal); background: var(--tier-metal); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,0,0,.25), 0 2px 10px var(--tier-glow); overflow: hidden; isolation: isolate; }
+  .tier-badge::after, .shine::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(105deg, transparent calc(var(--sheen) - 18%), rgba(255,255,255,.85) var(--sheen), transparent calc(var(--sheen) + 18%)); animation: sheen 3.2s ease-in-out infinite; pointer-events: none; }
+  [data-tier="free"] .tier-badge { background: color-mix(in srgb, var(--ink-3) 12%, var(--sheet)); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+  [data-tier="free"] .tier-badge::after { display: none; }
+
+  .cta { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px 0 10px; border: 0; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; overflow: hidden; isolation: isolate; }
+  .cta-buy { color: #2a1c02; background: linear-gradient(135deg, #ffcf4d, #f2a516); box-shadow: 0 4px 16px rgba(242, 165, 22, .45), inset 0 1px 0 rgba(255,255,255,.6); animation: breathe 2.6s ease-in-out infinite; }
+  .cta-up { color: var(--tier); background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #d4a017 70%, var(--line)); }
+  .cta-up:hover { background: color-mix(in srgb, #d4a017 10%, transparent); }
+  .cta[hidden] { display: none; }
+
+  .streak { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 12px 0 8px; border-radius: 99px; border: 1px solid var(--tier-line); background: var(--tier-soft); font-weight: 800; color: var(--ink); }
+
+  .avatar { position: relative; width: 40px; height: 40px; border-radius: 50%; padding: 2px; background: var(--tier-ring); animation: spin 6s linear infinite; }
+  [data-tier="free"] .avatar { animation: none; padding: 1px; }
+  .avatar span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: var(--primary-tint); color: var(--primary-strong); font-weight: 800; border: 2px solid var(--sheet); }
+  .avatar .corner { position: absolute; right: -6px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--sheet); box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  [data-tier="free"] .avatar .corner { display: none; }
+  .avatar .crown { position: absolute; left: 50%; top: -15px; transform: translateX(-50%) rotate(-8deg); display: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+  [data-tier="premium"] .avatar .crown, [data-tier="admin"] .avatar .crown { display: block; }
+  [data-tier="premium"] .avatar .corner, [data-tier="admin"] .avatar .corner { display: none; }
+
+  .body { display: grid; grid-template-columns: 240px 1fr; min-height: 0; }
+  .side { display: flex; flex-direction: column; gap: 2px; padding: 16px 12px; background: var(--sheet); border-right: 1px solid var(--line); }
+  .side p.title { margin: 6px 10px 6px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .nav { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px; border-radius: 10px; color: var(--ink-2); font-weight: 600; font-size: 15px; }
+  .nav svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .nav[aria-current] { color: var(--primary-strong); background: var(--primary-tint); font-weight: 800; }
+  [data-tier="pro"] .nav[aria-current] { color: var(--tier); background: color-mix(in srgb, #3b5bff 12%, var(--sheet)); box-shadow: inset 3px 0 0 #3b5bff; }
+  [data-tier="premium"] .nav[aria-current], [data-tier="admin"] .nav[aria-current] { color: var(--tier); background: linear-gradient(90deg, color-mix(in srgb, #d4a017 20%, var(--sheet)), var(--sheet)); box-shadow: inset 3px 0 0 #c08a12; }
+  .nav .lock { margin-left: auto; }
+  [data-tier="pro"] .nav .lock.pro, [data-tier="premium"] .nav .lock, [data-tier="admin"] .nav .lock { display: none; }
+  .side .spacer { flex: 1; }
+  .upsell { position: relative; display: grid; gap: 8px; margin-top: 12px; padding: 14px; border-radius: 14px; background: linear-gradient(160deg, color-mix(in srgb, #f2a516 14%, var(--sheet)), var(--sheet)); border: 1px solid color-mix(in srgb, #f2a516 45%, var(--line)); }
+  .upsell strong { font-size: 14px; }
+  .upsell p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .upsell .x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--ink-3); cursor: pointer; }
+  .member { display: none; align-items: center; gap: 10px; margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--tier-soft); border: 1px solid var(--tier-line); font-size: 13px; color: var(--ink-2); }
+  .member b { display: block; color: var(--tier); font-size: 14px; }
+  [data-tier="free"] .upsell { display: grid; }
+  [data-tier]:not([data-tier="free"]) .upsell { display: none; }
+  [data-tier]:not([data-tier="free"]) .member { display: flex; }
+
+  .main { min-width: 0; padding: 28px; display: grid; gap: 24px; align-content: start; max-width: 1100px; }
+  .grid > *, .main > * { min-width: 0; }
+  .main h1 { margin: 0; font-family: var(--font-word); font-size: var(--fs-h1); }
+  .main .lead { margin: 4px 0 0; color: var(--ink-2); }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .panel { padding: 20px; border-radius: 16px; background: var(--sheet); border: 1px solid var(--line); box-shadow: var(--shadow-sheet); }
+  .panel h2 { margin: 0 0 14px; font-size: 1.05rem; }
+
+  .stage { perspective: 900px; display: grid; place-items: center; padding: 8px 0 4px; }
+  .card { --rx: 0deg; --ry: 0deg; --gx: 50%; --gy: 50%; position: relative; width: min(380px, 100%); aspect-ratio: 1.586; border-radius: 18px; padding: 20px 22px; display: grid; grid-template-rows: auto 1fr auto; color: var(--ink); background: linear-gradient(150deg, #f4f4f1, #e3e3de); border: 1px solid var(--line-2); transform: rotateX(var(--rx)) rotateY(var(--ry)); transform-style: preserve-3d; transition: transform .25s ease-out; box-shadow: 0 18px 40px -18px rgba(0,0,0,.35); overflow: hidden; isolation: isolate; }
+  .card::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0; background: radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,.55), transparent 45%); transition: opacity .25s; }
+  .card:hover::before { opacity: 1; }
+  .card .row { display: flex; justify-content: space-between; align-items: center; }
+  .card .card-plan { font: 900 13px/1 var(--font-form); letter-spacing: .22em; text-transform: uppercase; }
+  .card .name { align-self: end; font-family: var(--font-word); font-size: 1.45rem; letter-spacing: .02em; }
+  .card .meta { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .06em; opacity: .85; }
+  .card .chip { width: 40px; height: 30px; border-radius: 6px; background: linear-gradient(135deg, #b8bcc4, #f2f3f5 45%, #9aa0aa); box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  [data-theme="dark"] .card { background: linear-gradient(150deg, #2c313b, #232830); }
+  [data-tier="pro"] .card { color: #eef3ff; border-color: #2a3f9e; background: repeating-linear-gradient(115deg, rgba(255,255,255,.04) 0 2px, transparent 2px 6px), linear-gradient(150deg, #1a2a7a, #2f47c2 55%, #12205e); }
+  [data-tier="pro"] .card .card-plan { color: #c9d7ff; }
+  [data-tier="premium"] .card, [data-tier="admin"] .card { color: #f6e3a6; border-color: #3a2c0c; background: repeating-linear-gradient(115deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px), radial-gradient(circle at 80% 0%, rgba(246,215,121,.18), transparent 50%), linear-gradient(150deg, #191714, #0c0b09 60%, #1d1a14); box-shadow: 0 22px 50px -18px rgba(0,0,0,.6), 0 0 0 1px rgba(246,215,121,.25) inset; }
+  [data-tier="premium"] .card .card-plan, [data-tier="admin"] .card .card-plan { background: linear-gradient(90deg, #b98410, #fff3c4, #c08a12, #f6d779) 0 0 / 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: slide 4s linear infinite; }
+  [data-tier="premium"] .card .chip, [data-tier="admin"] .card .chip { background: linear-gradient(135deg, #8a6110, #f6d779 45%, #b98410); }
+  .card-actions { display: flex; justify-content: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--sheet); color: var(--ink); font-weight: 700; cursor: pointer; }
+  .btn:hover { border-color: var(--primary); }
+  .btn-primary { background: var(--primary-fill); color: #fff; border-color: transparent; }
+
+  .features { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .feat { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--field); }
+  .feat .txt { flex: 1; }
+  .feat .txt b { display: block; font-size: 14px; }
+  .feat .txt span { font-size: 13px; color: var(--ink-3); }
+  .need { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 5px; border-radius: 99px; font: 800 11px/1 var(--font-form); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; border: 0; }
+  .need.pro { color: #fff; background: linear-gradient(135deg, #1b2a7d, #6d8dff 40%, #2b44bf); }
+  .need.premium { color: #2a1c02; background: linear-gradient(135deg, #8a6110, #f6d779 40%, #c08a12); }
+  .ok { display: none; color: var(--secondary); font-weight: 800; font-size: 13px; align-items: center; gap: 4px; }
+  .feat.unlocked .need { display: none; }
+  .feat.unlocked .ok { display: inline-flex; }
+  .feat.unlocked .lockicon { display: none; }
+
+  .mascot { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 14px; background: var(--tier-soft); border: 1px solid var(--tier-line); }
+  .mascot .m { position: relative; width: 76px; height: 76px; flex: none; }
+  .mascot .m img { width: 100%; height: 100%; }
+  .mascot .m .hat { position: absolute; left: 50%; top: -12px; transform: translateX(-50%) rotate(6deg); display: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+  [data-tier="pro"] .mascot .m .hat.pro, [data-tier="premium"] .mascot .m .hat.premium, [data-tier="admin"] .mascot .m .hat.premium { display: block; }
+  .mascot p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+  .mascot p b { color: var(--ink); }
+
+  .overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--overlay); animation: fade .2s ease-out; }
+  .overlay[hidden] { display: none; }
+  .dialog { width: min(560px, 100%); border-radius: 18px; background: var(--sheet); border: 1px solid var(--line); box-shadow: var(--shadow-pop); padding: 22px; display: grid; gap: 16px; animation: rise .3s var(--ease-out); }
+  .dialog h3 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+  .dialog p { margin: 0; color: var(--ink-2); line-height: 1.5; }
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .plan { position: relative; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--field); display: grid; gap: 6px; }
+  .plan.best { border-color: color-mix(in srgb, #d4a017 60%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, #d4a017 18%, transparent); }
+  .plan h4 { margin: 0; display: flex; align-items: center; gap: 8px; }
+  .plan .price { font-size: 1.3rem; font-weight: 900; }
+  .plan .price small { font-size: 13px; color: var(--ink-3); font-weight: 600; }
+  .plan ul { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  .dialog .close { justify-self: end; }
+
+  .celebrate { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, var(--cel-a), var(--cel-b) 70%); overflow: hidden; animation: fade .3s ease-out; }
+  .celebrate[hidden] { display: none; }
+  .celebrate .rays { position: absolute; left: 50%; top: 45%; width: 180vmax; height: 180vmax; transform: translate(-50%, -50%); background: repeating-conic-gradient(from 0deg, var(--cel-ray) 0 6deg, transparent 6deg 18deg); opacity: .35; animation: rotate 30s linear infinite; mask-image: radial-gradient(circle, #000 0, transparent 55%); }
+  .celebrate .inner { position: relative; display: grid; justify-items: center; gap: 14px; text-align: center; color: #fff; padding: 16px; }
+  .celebrate .inner .big { animation: pop .7s cubic-bezier(.2,1.4,.4,1) both; filter: drop-shadow(0 0 30px var(--cel-ray)); }
+  .celebrate .card { animation: flip 1s .25s cubic-bezier(.2,.9,.3,1.1) both; }
+  .celebrate h2 { margin: 0; font-family: var(--font-word); font-size: clamp(1.8rem, 5vw, 2.6rem); text-shadow: 0 2px 20px rgba(0,0,0,.4); }
+  .celebrate p { margin: 0; color: rgba(255,255,255,.85); }
+  .celebrate .btn { background: var(--tier-metal); color: var(--tier-on-metal); border: 0; height: 44px; padding: 0 22px; font-weight: 900; }
+  [data-tier="pro"] .celebrate { --cel-a: #2a3fb0; --cel-b: #070b24; --cel-ray: rgba(140, 170, 255, .9); }
+  [data-tier="premium"] .celebrate, [data-tier="admin"] .celebrate { --cel-a: #4a3405; --cel-b: #0a0702; --cel-ray: rgba(246, 215, 121, .9); }
+
+  @keyframes sheen { 0% { --sheen: -60%; } 55%, 100% { --sheen: 160%; } }
+  @keyframes slide { to { background-position: 200% 0; } }
+  @keyframes spin { to { --spin: 360deg; } }
+  @keyframes rotate { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes breathe { 50% { box-shadow: 0 4px 24px rgba(242, 165, 22, .7), inset 0 1px 0 rgba(255,255,255,.6); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+  @keyframes pop { from { opacity: 0; transform: scale(.3) rotate(-20deg); } }
+  @keyframes flip { from { opacity: 0; transform: rotateY(-100deg) scale(.7); } }
+
+  @media (max-width: 880px) {
+    .body { grid-template-columns: 1fr; }
+    .side { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .search { display: none; }
+    .main { padding: 16px; }
+    .header { padding: 10px 16px; gap: 8px; }
+    .cta span.long { display: none; }
+    .plans { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .brand { font-size: 0; gap: 0; }
+    .brand small { font-size: 9px; }
+    .tier-badge { padding: 0 7px; }
+    #badgeText { display: none; }
+    .cta-up { padding: 0 9px; font-size: 0; gap: 0; }
+    .actions { gap: 8px; }
+    .bar { gap: 6px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .metal animate { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="group" id="tiers"><span>Gói</span>
+    <button data-set="free" aria-pressed="true">Free</button>
+    <button data-set="pro" aria-pressed="false">Pro</button>
+    <button data-set="premium" aria-pressed="false">Premium</button>
+    <button data-set="admin" aria-pressed="false">Admin</button>
+  </div>
+  <div class="group" id="themes"><span>Nền</span>
+    <button data-set="light" aria-pressed="true">Sáng</button>
+    <button data-set="dark" aria-pressed="false">Tối</button>
+  </div>
+  <div class="group"><button id="play">Xem hiệu ứng lên hạng</button></div>
+</div>
+
+<div class="app">
+  <header class="header">
+    <a class="brand" href="#"><span data-icon="mark" data-size="26"></span>Vocab<b>Learning</b><small>Premium</small></a>
+    <div class="search">Tìm trang, bộ thẻ…</div>
+    <div class="actions">
+      <button class="cta cta-buy shine" id="buy"><span data-icon="spark" data-size="18" data-metal="gold-dark"></span>Mua gói<span class="long">&nbsp;ngay</span></button>
+      <button class="cta cta-up" id="up" hidden><span data-icon="crown" data-size="18" data-metal="gold"></span>Lên Premium</button>
+      <span class="tier-badge" id="badge"><span id="badgeIcon"></span><span id="badgeText">Free</span></span>
+      <span class="streak"><span id="flame"></span>12</span>
+      <span class="avatar"><span>P</span><i class="corner" id="corner"></i><i class="crown" data-icon="crown" data-size="22" data-metal="gold"></i></span>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="side">
+      <p class="title">Học tập</p>
+      <a class="nav" aria-current="page"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M9 3v4M15 3v4"/></svg>Hôm nay</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5zM9 9h6M9 13h6"/></svg>Bộ của tôi</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M4 19V5h4v14M10 19V5h4v14M16 19l2-14 3 .5-2 14"/></svg>Thư viện</a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Phát âm<span class="lock pro" data-icon="lock" data-size="16" data-metal="steel"></span></a>
+      <a class="nav"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>Bộ mẫu cao cấp<span class="lock" data-icon="lock" data-size="16" data-metal="gold"></span></a>
+      <div class="spacer"></div>
+      <div class="upsell" id="upsell">
+        <button class="x" aria-label="Ẩn 7 ngày">×</button>
+        <span data-icon="mic" data-size="30" data-metal="steel"></span>
+        <strong>Mở khóa chấm phát âm AI</strong>
+        <p>Nói từ vựng, nhận điểm từng âm và cách sửa ngay.</p>
+        <button class="btn btn-primary" data-open>Xem các gói</button>
+      </div>
+      <div class="member"><span id="memberIcon"></span><div><b id="memberName">Thành viên Pro</b>Từ 11/2026 · còn 28 ngày</div></div>
+    </nav>
+
+    <main class="main">
+      <div>
+        <h1>Hồ sơ của bạn</h1>
+        <p class="lead" id="lead">Bạn đang dùng gói Free.</p>
+      </div>
+      <div class="grid">
+        <section class="panel">
+          <h2>Thẻ thành viên</h2>
+          <div class="stage">
+            <div class="card" id="card">
+              <div class="row"><span class="card-plan" id="cardPlan">Free member</span><span id="cardIcon"></span></div>
+              <div class="row" style="align-self:center"><span class="chip"></span></div>
+              <div>
+                <div class="name">Huỳnh Gia Phố</div>
+                <div class="meta"><span id="cardSince">THÀNH VIÊN TỪ 09/2026</span><span id="cardExp">KHÔNG GIỚI HẠN</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions" id="cardActions"></div>
+        </section>
+        <section class="panel">
+          <h2>Quyền lợi</h2>
+          <ul class="features">
+            <li class="feat" data-need="pro"><span data-icon="cards" data-size="30" data-metal="auto"></span><div class="txt"><b>Số thẻ</b><span id="limitText">Tối đa 300 thẻ</span></div><button class="need pro" data-open><span data-icon="bolt" data-size="14" data-metal="white"></span>Pro</button><span class="ok">Đã mở</span></li>
+            <li class="feat" data-need="pro"><span class="lockicon" data-icon="lock" data-size="22" data-metal="steel"></span><span data-icon="mic" data-size="30" data-metal="auto"></span><div class="txt"><b>Chấm phát âm AI</b><span>Điểm từng âm, gợi ý sửa</span></div><button class="need pro" data-open><span data-icon="bolt" data-size="14" data-metal="white"></span>Pro</button><span class="ok">Đã mở</span></li>
+            <li class="feat" data-need="premium"><span class="lockicon" data-icon="lock" data-size="22" data-metal="gold"></span><span data-icon="star" data-size="30" data-metal="auto"></span><div class="txt"><b>Bộ mẫu cao cấp</b><span>IELTS, TOEIC, chuyên ngành</span></div><button class="need premium" data-open><span data-icon="crown" data-size="14" data-metal="gold-dark"></span>Premium</button><span class="ok">Đã mở</span></li>
+          </ul>
+          <div class="mascot" style="margin-top:16px">
+            <div class="m"><img src="../shared/mascot.svg" alt=""><i class="hat pro" data-icon="bolt" data-size="26" data-metal="steel"></i><i class="hat premium" data-icon="crown" data-size="34" data-metal="gold"></i></div>
+            <p id="mucLine"><b>Mực:</b> Lên Pro là mình chấm phát âm cho bạn được đó!</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="plansModal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="plansTitle">
+    <h3 id="plansTitle"><span data-icon="spark" data-size="26" data-metal="gold"></span>Mở khóa toàn bộ VocabLearning</h3>
+    <p id="plansReason">Gói Free tối đa 300 thẻ. Bạn đang có 300 thẻ.</p>
+    <div class="plans">
+      <div class="plan" id="planPro"><h4><span data-icon="bolt" data-size="22" data-metal="steel"></span>Pro</h4><div class="price">299.000đ <small>/ tháng</small></div><ul><li>5.000 thẻ</li><li>Chấm phát âm AI</li><li>Giao diện Pro</li></ul><button class="btn btn-primary">Chọn Pro</button></div>
+      <div class="plan best"><h4><span data-icon="crown" data-size="22" data-metal="gold"></span>Premium</h4><div class="price">999.000đ <small>/ tháng</small></div><ul><li>Không giới hạn thẻ</li><li>Bộ mẫu cao cấp</li><li>Thẻ thành viên vàng đen</li></ul><button class="btn cta-buy shine" style="border:0;position:relative;overflow:hidden;isolation:isolate">Chọn Premium</button></div>
+    </div>
+    <button class="btn close" data-close>Để sau</button>
+  </div>
+</div>
+
+<div class="celebrate" id="celebrate" hidden>
+  <div class="rays"></div>
+  <div class="inner">
+    <span class="big" id="celIcon"></span>
+    <h2 id="celTitle">Chào mừng thành viên Premium</h2>
+    <p id="celSub">Toàn bộ VocabLearning đã mở khóa cho bạn.</p>
+    <div class="stage"><div class="card" id="celCard"></div></div>
+    <button class="btn" data-close>Bắt đầu thôi</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const METALS = {
+    silver: ['#5b6270', '#eef1f6', '#9aa1ae', '#ffffff', '#4b5160'],
+    steel: ['#162466', '#8fb0ff', '#2b44bf', '#e3ebff', '#13205a'],
+    gold: ['#6e4a07', '#f6d779', '#b98410', '#fff3c4', '#7a560c'],
+    'gold-dark': ['#4a3204', '#c99a2e', '#7a560c', '#f6d779', '#3a2803'],
+    white: ['#d9e2ff', '#ffffff', '#c9d5ff', '#ffffff', '#b8c6ff'],
+    ember: ['#8a2c05', '#ffb347', '#e8590c', '#ffe7a3', '#a8360a']
+  };
+  const PATHS = {
+    crown: 'M3 8.5 7.5 12 12 4l4.5 8L21 8.5 19.2 18H4.8ZM4.8 19.5h14.4v2H4.8Z',
+    bolt: 'M13.5 2 4.5 13.5h6L9.5 22l10-12.5h-6.2Z',
+    leaf: 'M20 4C9 4 4 9.5 4 16.5c0 1.3.2 2.4.6 3.5C6.2 13.8 10 10 15 8 10.5 10.8 7.4 14.5 6.2 20.3 7 20.4 7.8 20.5 8.6 20.5 15.2 20.5 20 15 20 4Z',
+    shield: 'M12 2 20 5v6.5c0 5-3.4 9.1-8 10.5-4.6-1.4-8-5.5-8-10.5V5Z',
+    lock: 'M7 10V7.5a5 5 0 0 1 10 0V10h1.5A1.5 1.5 0 0 1 20 11.5v9A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5v-9A1.5 1.5 0 0 1 5.5 10Zm2.5 0h5V7.5a2.5 2.5 0 0 0-5 0Z',
+    spark: 'M12 1.5 14.2 9.8 22.5 12l-8.3 2.2L12 22.5l-2.2-8.3L1.5 12l8.3-2.2ZM19 2l.8 2.2L22 5l-2.2.8L19 8l-.8-2.2L16 5l2.2-.8Z',
+    mic: 'M12 2a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Zm-7 9.5h2A5 5 0 0 0 17 11.5h2a7 7 0 0 1-6 6.9V21h3v1.5H8V21h3v-2.6a7 7 0 0 1-6-6.9Z',
+    star: 'M12 2.2 14.9 8.6l6.9.7-5.2 4.6 1.5 6.8L12 17.2l-6.1 3.5 1.5-6.8-5.2-4.6 6.9-.7Z',
+    cards: 'M8 2h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-1V8a3 3 0 0 0-3-3H6V4a2 2 0 0 1 2-2ZM3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z',
+    flame: 'M12 2.5c.8 3.6 4.9 5.6 5.9 10.2 1.1 5-2.1 9-5.9 9.3-3.9.3-7.1-3-6.4-7.6.4-2.9 2.2-4.2 2.6-6.9 1.9 1.5 2.2 3.4 2.2 3.4S11.6 6.3 12 2.5Z',
+    mark: 'M4 3h10l6 6v12H4ZM14 3v6h6M8 13h8M8 17h5'
+  };
+  let uid = 0;
+  const TIER_METAL = { free: 'silver', pro: 'steel', premium: 'gold', admin: 'gold' };
+  const tier = () => document.documentElement.dataset.tier;
+
+  function metal(name, size, kind, delay) {
+    const c = METALS[kind] || METALS.silver;
+    const id = 'm' + (++uid);
+    const d = PATHS[name];
+    const dur = 3.2;
+    const begin = (delay ?? (uid % 7) * 0.35).toFixed(2);
+    return `<svg class="metal" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">
+<defs>
+<linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset=".3" stop-color="${c[1]}"/><stop offset=".52" stop-color="${c[2]}"/><stop offset=".7" stop-color="${c[3]}"/><stop offset="1" stop-color="${c[4]}"/></linearGradient>
+<linearGradient id="${id}s" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#fff" stop-opacity="0"><animate attributeName="offset" values="-.6;1.2;1.2" keyTimes="0;.55;1" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/></stop><stop offset="0" stop-color="#fff" stop-opacity=".95"><animate attributeName="offset" values="-.4;1.4;1.4" keyTimes="0;.55;1" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/></stop><stop offset="0" stop-color="#fff" stop-opacity="0"><animate attributeName="offset" values="-.2;1.6;1.6" keyTimes="0;.55;1" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/></stop></linearGradient>
+<linearGradient id="${id}e" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+</defs>
+<path d="${d}" fill="url(#${id}b)" fill-rule="evenodd" stroke="${c[4]}" stroke-width=".6" stroke-linejoin="round"/>
+<path d="${d}" fill="url(#${id}e)" fill-rule="evenodd" opacity=".55"/>
+<path d="${d}" fill="url(#${id}s)" fill-rule="evenodd"/>
+</svg>`;
+  }
+
+  function paint(root = document) {
+    root.querySelectorAll('[data-icon]').forEach(el => {
+      const kind = el.dataset.metal === 'auto' || !el.dataset.metal ? TIER_METAL[tier()] : el.dataset.metal;
+      el.innerHTML = metal(el.dataset.icon, +el.dataset.size || 20, kind);
+    });
+  }
+
+  const COPY = {
+    free: { badge: 'Free', icon: 'leaf', lead: 'Bạn đang dùng gói Free.', plan: 'Free member', exp: 'KHÔNG GIỚI HẠN', limit: 'Tối đa 300 thẻ', muc: '<b>Mực:</b> Lên Pro là mình chấm phát âm cho bạn được đó!', member: '' },
+    pro: { badge: 'Pro', icon: 'bolt', lead: 'Bạn đang dùng gói Pro, còn 28 ngày.', plan: 'Pro member', exp: 'HẾT HẠN 20/12/2026', limit: 'Tối đa 5.000 thẻ', muc: '<b>Mực:</b> Pro rồi! Hôm nay thử chấm phát âm 5 từ khó nhé.', member: 'Thành viên Pro' },
+    premium: { badge: 'Premium', icon: 'crown', lead: 'Bạn đang dùng gói Premium, còn 340 ngày.', plan: 'Premium member', exp: 'HẾT HẠN 28/10/2027', limit: 'Không giới hạn thẻ', muc: '<b>Mực:</b> Thưa thành viên Premium, bộ IELTS mới đã sẵn sàng cho bạn.', member: 'Thành viên Premium' },
+    admin: { badge: 'Admin', icon: 'shield', lead: 'Tài khoản quản trị: dùng toàn bộ quyền lợi Premium, không cần mua gói.', plan: 'Admin · Premium', exp: 'VĨNH VIỄN', limit: 'Không giới hạn thẻ', muc: '<b>Mực:</b> Chào sếp! Mọi tính năng đã mở sẵn.', member: 'Quản trị viên' }
+  };
+  const RANK = { free: 0, pro: 1, premium: 2, admin: 2 };
+
+  function apply(t) {
+    document.documentElement.dataset.tier = t;
+    const c = COPY[t];
+    const kind = TIER_METAL[t];
+    document.getElementById('badgeText').textContent = c.badge;
+    document.getElementById('badgeIcon').innerHTML = t === 'free' ? metal('leaf', 16, 'silver') : metal(c.icon, 16, t === 'pro' ? 'white' : 'gold-dark');
+    document.getElementById('lead').textContent = c.lead;
+    document.getElementById('cardPlan').textContent = c.plan;
+    document.getElementById('cardExp').textContent = c.exp;
+    document.getElementById('cardIcon').innerHTML = metal(c.icon, 34, kind);
+    document.getElementById('limitText').textContent = c.limit;
+    document.getElementById('mucLine').innerHTML = c.muc;
+    document.getElementById('memberName').textContent = c.member;
+    document.getElementById('memberIcon').innerHTML = metal(c.icon, 28, kind);
+    document.getElementById('corner').innerHTML = t === 'pro' ? metal('bolt', 14, 'steel') : '';
+    document.getElementById('flame').innerHTML = metal('flame', 20, t === 'free' ? 'ember' : t === 'pro' ? 'steel' : 'gold');
+    document.getElementById('buy').hidden = t !== 'free';
+    document.getElementById('up').hidden = t !== 'pro';
+    document.getElementById('planPro').style.display = t === 'pro' ? 'none' : '';
+    document.querySelectorAll('.feat').forEach(f => f.classList.toggle('unlocked', RANK[t] >= RANK[f.dataset.need]));
+    const actions = document.getElementById('cardActions');
+    actions.innerHTML = t === 'free' ? '<button class="cta cta-buy shine" data-open>Mua gói</button>'
+      : t === 'pro' ? '<button class="btn">Gia hạn</button><button class="cta cta-up" data-open>Lên Premium</button>'
+      : t === 'premium' ? '<button class="btn">Gia hạn</button><button class="btn">Lịch sử thanh toán</button>' : '';
+    paint();
+    document.querySelectorAll('#tiers button').forEach(b => b.setAttribute('aria-pressed', b.dataset.set === t));
+  }
+
+  function tilt(card) {
+    card.addEventListener('pointermove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      card.style.setProperty('--ry', ((x - .5) * 18).toFixed(1) + 'deg');
+      card.style.setProperty('--rx', ((.5 - y) * 14).toFixed(1) + 'deg');
+      card.style.setProperty('--gx', (x * 100).toFixed(0) + '%');
+      card.style.setProperty('--gy', (y * 100).toFixed(0) + '%');
+    });
+    card.addEventListener('pointerleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
+  }
+  tilt(document.getElementById('card'));
+
+  const modal = document.getElementById('plansModal');
+  const cel = document.getElementById('celebrate');
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-open]') || e.target.closest('#buy') || e.target.closest('#up')) {
+      document.getElementById('plansReason').textContent = tier() === 'pro'
+        ? 'Premium mở thêm bộ mẫu cao cấp, không giới hạn thẻ và thẻ thành viên vàng đen.'
+        : 'Gói Free tối đa 300 thẻ và chưa có chấm phát âm. Chọn gói để mở khóa.';
+      modal.hidden = false;
+    }
+    if (e.target.closest('[data-close]')) { modal.hidden = true; cel.hidden = true; }
+    if (e.target.closest('.plan .btn')) { modal.hidden = true; celebrate(e.target.closest('.plan').id === 'planPro' ? 'pro' : 'premium'); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { modal.hidden = true; cel.hidden = true; } });
+
+  function celebrate(t) {
+    apply(t);
+    const c = COPY[t];
+    document.getElementById('celIcon').innerHTML = metal(c.icon, 120, TIER_METAL[t], 0.4);
+    document.getElementById('celTitle').textContent = t === 'pro' ? 'Chào mừng thành viên Pro' : 'Chào mừng thành viên Premium';
+    document.getElementById('celSub').textContent = t === 'pro' ? 'Chấm phát âm và 5.000 thẻ đã mở khóa.' : 'Toàn bộ VocabLearning đã mở khóa cho bạn.';
+    const card = document.getElementById('celCard');
+    card.innerHTML = document.getElementById('card').innerHTML;
+    cel.hidden = false;
+    tilt(card);
+  }
+
+  document.getElementById('play').addEventListener('click', () => celebrate(tier() === 'free' || tier() === 'pro' ? (tier() === 'free' ? 'pro' : 'premium') : tier() === 'admin' ? 'premium' : 'premium'));
+  document.getElementById('tiers').addEventListener('click', e => { const b = e.target.closest('button'); if (b) apply(b.dataset.set); });
+  document.getElementById('themes').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.documentElement.dataset.theme = b.dataset.set;
+    document.querySelectorAll('#themes button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  });
+  document.querySelector('.upsell .x').addEventListener('click', () => { document.getElementById('upsell').style.display = 'none'; });
+  apply('free');
+})();
+</script>
+</body>
+</html>

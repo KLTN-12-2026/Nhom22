@@ -342,7 +342,7 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
         publishRequest(learner, sourceDeck, "TU_CHOI", "2026-10-19T02:00:00Z");
         publishRequest(stranger, Long.parseLong(stranger.deckId()), "DA_DUYET", "2026-10-19T01:00:00Z");
 
-        ActivityResponse activity = new ActivityService(fixedClock(), accountService, studyTime, statistics)
+        ActivityResponse activity = new ActivityService(fixedClock(), accountService, studyTime, statistics, null, null)
                 .activity(learner.id(), new ActivityQuery(null));
 
         assertThat(activity.muiGio()).isEqualTo(HCM);

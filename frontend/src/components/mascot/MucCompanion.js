@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTier } from '@/components/tier/useTier';
+import { MetalIcon } from '@/components/tier/MetalIcon';
 import { apiFetch } from '@/lib/api-client';
 import { useMe } from '@/hooks/useMe';
 import { cardFromSense } from '@/lib/dictionary.mjs';
@@ -60,6 +62,7 @@ function Muc({ pathname }) {
   const prevPlan = useRef(null);
   const nameRef = useRef(name);
 
+  const { tier } = useTier(!!user);
   const today = useQuery({ queryKey: ['learning-today'], queryFn: () => apiFetch('/api/v1/learning/today'), enabled: !!user, staleTime: 60000 });
   const notebook = useQuery({ queryKey: ['notebook', 'muc'], queryFn: () => apiFetch('/api/v1/notebook?size=50'), enabled: !!user && open, staleTime: 60000 });
   const challenges = useQuery({ queryKey: ['challenges'], queryFn: () => apiFetch('/api/v1/challenges'), enabled: !!user && open, staleTime: 60000 });
@@ -327,6 +330,8 @@ function Muc({ pathname }) {
       <div ref={bubbleRef} className="muc-bubble" role="status" aria-live="polite">{bubble}</div>
       <button ref={toggleRef} className="muc-toggle" type="button" aria-label={todo ? `Mở bảng việc của ${name}, còn ${todo} việc` : `Mở bảng của ${name}`} aria-expanded={open} aria-controls="muc-panel" title="Bấm để mở · kéo để di chuyển" onClick={toggle}>
         <span className="muc-svg" dangerouslySetInnerHTML={{ __html: svg }} />
+        {user && (tier === 'premium' || tier === 'admin') && <span className="muc-hat" aria-hidden="true"><MetalIcon name="crown" metal="gold" size={30} /></span>}
+        {user && tier === 'pro' && <span className="muc-hat muc-hat-pro" aria-hidden="true"><MetalIcon name="bolt" metal="steel" size={24} /></span>}
         {todo > 0 && <span className="muc-dot" aria-hidden="true">{todo > 99 ? '99+' : todo}</span>}
       </button>
     </aside>

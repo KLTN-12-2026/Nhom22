@@ -6,6 +6,8 @@ import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { Icon } from '@/components/ui';
 import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
 import { CopyBadge } from '@/components/content/CopyBadge';
+import { MembershipPanel } from '@/components/tier/MembershipPanel';
+import { ProfileLedger } from '@/components/profile/ProfileParts';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -19,28 +21,23 @@ const pinned = decks => [...decks]
 export default function ProfileOverviewPage() {
   const { data: decks = [], isLoading } = useQuery({ queryKey: ['all-my-decks'], queryFn: () => fetchAllPages('/api/v1/decks') });
   const { data: badges = [] } = useQuery({ queryKey: ['badges'], queryFn: () => apiFetch('/api/v1/badges') });
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiFetch('/api/v1/me') });
   const totalCards = decks.reduce((sum, d) => sum + (d.soThe || 0), 0);
   const publicDecks = decks.filter(d => d.quyenTruyCap === 'CONG_KHAI').length;
   const stats = [
-    { label: 'Bộ thẻ', value: decks.length, icon: 'decks' },
-    { label: 'Thẻ từ vựng', value: totalCards, icon: 'notebook' },
-    { label: 'Bộ công khai', value: publicDecks, icon: 'globe' },
-    { label: 'Huy hiệu', value: badges.filter(b => b.daNhan).length, icon: 'star' },
+    { label: 'Bộ thẻ', value: decks.length, tone: 'primary' },
+    { label: 'Thẻ từ vựng', value: totalCards, tone: 'secondary' },
+    { label: 'Bộ công khai', value: publicDecks, tone: 'media' },
+    { label: 'Huy hiệu', value: badges.filter(b => b.daNhan).length, tone: 'warning' },
   ];
 
   return (
     <>
       <h1 id="page-title" className="sr-only">Tổng quan hồ sơ</h1>
 
-      <ul className={styles.stats} role="list">
-        {stats.map(s => (
-          <li key={s.label} className={styles.stat}>
-            <Icon name={s.icon} />
-            <b>{isLoading ? '—' : s.value.toLocaleString('vi-VN')}</b>
-            <span>{s.label}</span>
-          </li>
-        ))}
-      </ul>
+      <MembershipPanel name={me?.tenHienThi}>
+        <ProfileLedger items={stats} loading={isLoading} label="Số liệu hồ sơ" cols={2} />
+      </MembershipPanel>
 
       <section aria-labelledby="pinned-title">
         <div className={styles.sectionHead}>

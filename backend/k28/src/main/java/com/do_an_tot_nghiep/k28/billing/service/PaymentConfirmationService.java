@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.billing.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.billing.config.BillingProperties;
 import com.do_an_tot_nghiep.k28.billing.entity.GiaoDichThanhToan;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiGiaoDich;
@@ -48,6 +50,7 @@ public class PaymentConfirmationService {
     private final BillingProperties props;
     private final JsonMapper jsonMapper;
     private final Clock clock;
+    private final RealtimeService realtime;
 
     @Transactional
     public XacNhan confirm(Map<String, String> thamSo) {
@@ -72,6 +75,7 @@ public class PaymentConfirmationService {
         if (!now.isBefore(don.getTaoAt().plus(props.orderTtl()))) {
             log.warn("Payment callback for expired order {} with response {}", don.getMaDon(), cong.maPhanHoi());
             don.ketThuc(TrangThaiGiaoDich.HET_HAN, cong.maGiaoDichCong(), cong.maPhanHoi(), duLieu, now);
+            realtime.toUser(don.getNguoiDungId(), LoaiSuKien.THANH_TOAN, don.getMaDon());
             return new XacNhan(KetQuaXacNhan.DA_GHI_NHAN, don.getMaDon());
         }
         if (cong.thanhCong()) {
@@ -80,6 +84,7 @@ public class PaymentConfirmationService {
         } else {
             don.ketThuc(TrangThaiGiaoDich.THAT_BAI, cong.maGiaoDichCong(), cong.maPhanHoi(), duLieu, now);
         }
+        realtime.toUser(don.getNguoiDungId(), LoaiSuKien.THANH_TOAN, don.getMaDon());
         return new XacNhan(KetQuaXacNhan.DA_GHI_NHAN, don.getMaDon());
     }
 }

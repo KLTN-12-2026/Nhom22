@@ -23,7 +23,7 @@ export function NotificationBell({ userId }) {
     enabled: userId != null,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    refetchInterval: 60_000,
+    refetchInterval: 300_000,
   });
 
   const openNotification = useMutation({

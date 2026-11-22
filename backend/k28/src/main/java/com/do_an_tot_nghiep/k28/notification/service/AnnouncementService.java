@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.notification.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.HanhDongQuanTri;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.LoaiDoiTuong;
 import com.do_an_tot_nghiep.k28.admin.service.AuditService;
@@ -35,6 +37,7 @@ public class AnnouncementService {
     private final AnnouncementMapper mapper;
     private final AuditService audit;
     private final Clock clock;
+    private final RealtimeService realtime;
 
     @Transactional(readOnly = true)
     public List<AnnouncementResponse> active() {
@@ -58,6 +61,7 @@ public class AnnouncementService {
                 request.batDauAt(), request.ketThucAt(), request.hienThi()));
         audit.record(actorId, HanhDongQuanTri.TAO_THONG_BAO, LoaiDoiTuong.THONG_BAO_HE_THONG, thongBao.getId(),
                 thongBao.getTieuDe(), null, null, fields(thongBao));
+        realtime.toEveryone(LoaiSuKien.THONG_BAO_HE_THONG);
         return mapper.toAdminResponse(thongBao);
     }
 
@@ -81,6 +85,7 @@ public class AnnouncementService {
             announcements.saveAndFlush(thongBao);
             audit.record(actorId, HanhDongQuanTri.SUA_THONG_BAO, LoaiDoiTuong.THONG_BAO_HE_THONG, thongBao.getId(),
                     thongBao.getTieuDe(), null, truoc, sau);
+            realtime.toEveryone(LoaiSuKien.THONG_BAO_HE_THONG);
         }
         return mapper.toAdminResponse(thongBao);
     }
@@ -92,6 +97,7 @@ public class AnnouncementService {
         announcements.delete(thongBao);
         audit.record(actorId, HanhDongQuanTri.XOA_THONG_BAO, LoaiDoiTuong.THONG_BAO_HE_THONG, id,
                 thongBao.getTieuDe(), null, truoc, null);
+        realtime.toEveryone(LoaiSuKien.THONG_BAO_HE_THONG);
     }
 
     private ThongBaoHeThong load(Long id) {

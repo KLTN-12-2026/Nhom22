@@ -7,13 +7,13 @@ import { uploadAvatar } from '@/lib/upload-avatar';
 import { useAvatar } from '@/hooks/useAvatar';
 import { useCooldown } from '@/hooks/useCooldown';
 import { Icon } from '@/components/ui';
-import { BadgeArt } from '@/components/engagement/BadgeArt';
+import { useTier } from '@/components/tier/useTier';
+import { ProfileAvatar, ProfileBadges, ProfileIdentity, ProfileMeta } from './ProfileParts';
 import { TimeZonePicker } from '@/components/ui/TimeZonePicker';
 import { describeZone } from '@/lib/time-zones.mjs';
 import styles from './ProfileCard.module.css';
 
 const zoneLabel = zone => describeZone(zone);
-const initial = name => (name ? name.trim().split(/\s+/).pop()[0].toUpperCase() : 'U');
 const joined = value => (value ? new Date(value).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) : null);
 
 export function ProfileCard({ me }) {
@@ -25,6 +25,7 @@ export function ProfileCard({ me }) {
   const { data: avatar } = useAvatar(me);
   const { data: badges = [] } = useQuery({ queryKey: ['badges'], queryFn: () => apiFetch('/api/v1/badges') });
   const earned = badges.filter(b => b.daNhan);
+  const { tier } = useTier(Boolean(me));
 
   const avatarMutation = useMutation({
     mutationFn: file => (file ? uploadAvatar(file) : apiFetch('/api/v1/me/avatar', { method: 'DELETE' })),
@@ -54,23 +55,28 @@ export function ProfileCard({ me }) {
   };
   const cancel = () => { setDraft(null); setEditing(false); setMessage({ ok: '', error: '' }); };
 
+  const avatarTools = editing && (
+    <div className={styles.avatarTools}>
+      <button type="button" className="btn btn-secondary btn-sm" disabled={avatarBusy} onClick={() => fileRef.current?.click()}>
+        <Icon name="upload" />{avatarCooldown > 0 ? `Thử lại sau ${avatarCooldown} giây` : 'Đổi ảnh'}
+      </button>
+      {avatar?.downloadUrl && <button type="button" className="btn btn-quiet btn-sm" disabled={avatarBusy} onClick={() => avatarMutation.mutate(null)}>Gỡ ảnh</button>}
+      <input ref={fileRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" aria-label="Chọn ảnh đại diện"
+        onChange={event => { const file = event.target.files[0]; if (file) avatarMutation.mutate(file); event.target.value = ''; }} />
+    </div>
+  );
+
   return (
-    <div className={styles.card}>
-      <div className={styles.avatarWrap}>
-        <span className={styles.avatar}>
-          {avatar?.downloadUrl ? <img src={avatar.downloadUrl} alt="" /> : initial(me?.tenHienThi)}
-        </span>
-        {editing && (
-          <div className={styles.avatarTools}>
-            <button type="button" className="btn btn-secondary btn-sm" disabled={avatarBusy} onClick={() => fileRef.current?.click()}>
-              <Icon name="upload" />{avatarCooldown > 0 ? `Thử lại sau ${avatarCooldown} giây` : 'Đổi ảnh'}
-            </button>
-            {avatar?.downloadUrl && <button type="button" className="btn btn-quiet btn-sm" disabled={avatarBusy} onClick={() => avatarMutation.mutate(null)}>Gỡ ảnh</button>}
-            <input ref={fileRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" aria-label="Chọn ảnh đại diện"
-              onChange={event => { const file = event.target.files[0]; if (file) avatarMutation.mutate(file); event.target.value = ''; }} />
-          </div>
-        )}
-      </div>
+    <div className={`sheet ${styles.card}`}>
+      <ProfileIdentity
+        avatar={<ProfileAvatar src={avatar?.downloadUrl} name={me?.tenHienThi || 'U'} tier={tier} />}
+        name={me?.tenHienThi || 'Người học'}
+        subtitle={me?.email}
+        tier={tier}
+        headingId="profile-name"
+      >
+        {avatarTools}
+      </ProfileIdentity>
 
       {editing ? (
         <form className={styles.form} onSubmit={submit}>
@@ -80,42 +86,28 @@ export function ProfileCard({ me }) {
           <TimeZonePicker id="muiGio" value={form.muiGio} onChange={muiGio => setDraft({ ...form, muiGio })} />
           <p className="field-hint">Ảnh JPG, PNG, WEBP tối đa 2 MB. Múi giờ dùng để tính ngày học và giờ nhắc.</p>
           <div className={styles.formActions}>
-            <button type="submit" className="btn btn-primary btn-sm" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}</button>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Đang lưu...' : 'Lưu hồ sơ'}</button>
             <button type="button" className="btn btn-quiet btn-sm" onClick={cancel}>Hủy</button>
           </div>
         </form>
       ) : (
-        <>
-          <div className={styles.names}>
-            <h2 className={styles.name} id="profile-name">{me?.tenHienThi || 'Người học'}</h2>
-            <p className={styles.handle}>{me?.email}</p>
-          </div>
-          <button type="button" className={`btn btn-secondary btn-block ${styles.edit}`} onClick={() => setEditing(true)}>Chỉnh sửa hồ sơ</button>
-        </>
+        <div className={styles.actions}>
+          <button type="button" className="btn btn-secondary" onClick={() => setEditing(true)}><Icon name="edit" />Chỉnh sửa hồ sơ</button>
+          {me?.id && <Link className="btn btn-quiet" href={`/tac-gia/${me.id}`}><Icon name="eye" />Xem hồ sơ công khai</Link>}
+        </div>
       )}
 
       {message.error && <p className="notice notice-error" role="alert">{message.error}</p>}
       {message.ok && <p className={styles.saved} aria-live="polite">{message.ok}</p>}
 
-      <ul className={styles.meta} role="list">
-        <li><Icon name="globe" /><span>{zoneLabel(me?.muiGio)}</span></li>
-        <li><Icon name="mail" /><span>{me?.trangThai === 'HOAT_DONG' ? 'Đã xác thực email' : 'Chưa xác thực email'}</span></li>
-        {joined(me?.emailXacThucAt) && <li><Icon name="calendar" /><span>Tham gia {joined(me.emailXacThucAt)}</span></li>}
-        <li><Icon name="shield" /><span>{isAdmin ? 'Quản trị viên' : 'Người học'}</span></li>
-      </ul>
+      <ProfileMeta items={[
+        { icon: 'globe', text: zoneLabel(me?.muiGio) },
+        { icon: 'mail', text: me?.trangThai === 'HOAT_DONG' ? 'Đã xác thực email' : 'Chưa xác thực email' },
+        joined(me?.emailXacThucAt) && { icon: 'calendar', text: `Tham gia ${joined(me.emailXacThucAt)}` },
+        { icon: 'shield', text: isAdmin ? 'Quản trị viên' : 'Người học' },
+      ]} />
 
-      <section className={styles.badges} aria-labelledby="badges-title">
-        <h2 id="badges-title" className={styles.sectionTitle}>
-          <Link href="/thanh-tich">Huy hiệu</Link><span className={styles.count}>{earned.length}/{badges.length}</span>
-        </h2>
-        {earned.length ? (
-          <ul className={styles.badgeList} role="list">
-            {earned.slice(0, 12).map(b => (
-              <li key={b.id} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} role="img" aria-label={b.ten}><BadgeArt badge={b} size={44} number={null} /></span></li>
-            ))}
-          </ul>
-        ) : <p className={styles.empty}>Chưa có huy hiệu. Học đều mỗi ngày để mở khóa.</p>}
-      </section>
+      <ProfileBadges badges={earned.slice(0, 12)} total={badges.length} href="/thanh-tich" empty="Chưa có huy hiệu. Học đều mỗi ngày để mở khóa." />
 
       <div className={styles.mobileOnly}>
         {isAdmin && <Link className="btn btn-secondary" href="/quan-tri">Vào trang quản trị</Link>}

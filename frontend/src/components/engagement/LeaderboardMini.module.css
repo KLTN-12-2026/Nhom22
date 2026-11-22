@@ -1,0 +1,9 @@
+.card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; background: linear-gradient(120deg, color-mix(in srgb, #f59f00 12%, var(--sheet)), var(--sheet) 70%); border: var(--rule) solid color-mix(in srgb, #f59f00 38%, var(--line)); color: var(--ink); text-decoration: none; transition: transform var(--dur-1), box-shadow var(--dur-1); }
+.card:hover { text-decoration: none; transform: translateY(-1px); box-shadow: 0 10px 24px -16px rgba(230, 119, 0, .6); }
+.card:focus-visible { outline: none; box-shadow: var(--focus); }
+.body { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.title { font-weight: 700; }
+.title b { color: color-mix(in srgb, #e67700 85%, var(--ink)); font-size: 1.1rem; }
+.line { font-size: var(--fs-small); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.more { flex: none; font-size: var(--fs-small); font-weight: 800; color: color-mix(in srgb, #e67700 85%, var(--ink)); }
+@media (max-width: 420px) { .more { display: none; } }

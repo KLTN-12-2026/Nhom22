@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.common.quota.GoiDichVuResolver;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -43,6 +45,7 @@ public class LibrarySearchService {
     private final LibraryService library;
     private final FileService fileService;
     private final EngagementService engagementService;
+    private final GoiDichVuResolver plans;
 
     public LibrarySuggestResponse suggest(LibrarySuggestQuery request, Long viewerId) {
         String escaped = escaped(request.q());
@@ -121,7 +124,8 @@ public class LibrarySearchService {
                 author.soThe(),
                 search.joinedAt(id).orElse(null),
                 avatar == null ? null : avatar.downloadUrl(),
-                huyHieu
+                huyHieu,
+                Optional.ofNullable(plans.goiMa(id)).orElse("FREE")
         );
     }
 

@@ -4,6 +4,8 @@ import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.service.CardService;
 import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
@@ -73,6 +75,7 @@ public class StudySessionService {
     private final CardService cardService;
     private final LichSuOnRepository history;
     private final JsonMapper jsonMapper;
+    private final RealtimeService realtime;
 
     @Transactional
     public StudySessionResponse create(Long userId, CreateSessionRequest request) {
@@ -132,6 +135,7 @@ public class StudySessionService {
                         ))
                         .toList()
         );
+        realtime.toUser(userId, LoaiSuKien.PHIEN_HOC_MOI, session.getId());
 
         return toResponse(userId, session, boTheTen, rows);
     }

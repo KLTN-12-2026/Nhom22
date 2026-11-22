@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.admin.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.dto.UserAdminView;
 import com.do_an_tot_nghiep.k28.account.entity.VaiTro;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
@@ -38,6 +40,7 @@ public class AdminUserService {
     private final SessionRevoker sessions;
     private final AdminMapper mapper;
     private final PlatformTransactionManager txManager;
+    private final RealtimeService realtime;
 
     public record RolesResult(AdminUserResponse user, boolean banThanMatQuyen) {
     }
@@ -91,6 +94,9 @@ public class AdminUserService {
             return after;
         });
         int revoked = next == TrangThaiNguoiDung.BI_KHOA ? sessions.revokeAll(id, null) : 0;
+        if (next == TrangThaiNguoiDung.BI_KHOA) {
+            realtime.toUser(id, LoaiSuKien.TAI_KHOAN_BI_KHOA, null);
+        }
         return mapper.toResponse(view, soBoThe(id), revoked, null);
     }
 

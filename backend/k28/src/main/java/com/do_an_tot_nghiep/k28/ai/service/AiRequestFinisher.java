@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.ai.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiHanMuc;
 import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiYeuCauAi;
 import com.do_an_tot_nghiep.k28.ai.repository.YeuCauAiRepository;
@@ -14,6 +16,7 @@ public class AiRequestFinisher {
 
     private final YeuCauAiRepository requests;
     private final QuotaService quota;
+    private final RealtimeService realtime;
 
     public void finish(Long yeuCauId, KetQuaTacVu ketQua) {
         requests.findForUpdate(yeuCauId).ifPresent(request -> {
@@ -39,6 +42,7 @@ public class AiRequestFinisher {
                 default -> {
                 }
             }
+            realtime.toUser(request.getNguoiDungId(), LoaiSuKien.YEU_CAU_AI, yeuCauId);
         });
     }
 }

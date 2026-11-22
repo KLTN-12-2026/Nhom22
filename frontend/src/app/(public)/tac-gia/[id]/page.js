@@ -8,11 +8,14 @@ import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { useLibraryAuthor } from '@/hooks/useSearch';
 import { useMe } from '@/hooks/useMe';
 import { libraryPage } from '@/lib/library-query.mjs';
-import { BadgeArt } from '@/components/engagement/BadgeArt';
+import { ProfileAvatar, ProfileBadges, ProfileIdentity, ProfileLedger, ProfileMeta } from '@/components/profile/ProfileParts';
+import { MembershipCard } from '@/components/tier/MembershipCard';
+import { TierShowcase } from '@/components/tier/MembershipPanel';
+import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
+import { tierFromCode } from '@/lib/tier.mjs';
 import styles from './page.module.css';
 
 const SIZE = 20;
-const initial = name => (name.trim().split(/\s+/).pop()?.[0] || '?').toUpperCase();
 const monthYear = value => (value ? new Date(value).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) : null);
 
 export default function AuthorPage() {
@@ -61,38 +64,38 @@ function AuthorContent() {
   const isMe = Boolean(me && profile && String(me.id) === String(profile.id));
   const joined = monthYear(profile?.thamGiaAt);
   const badges = profile?.huyHieu || [];
+  const tier = profile?.goiMa ? tierFromCode(profile.goiMa) : null;
+  const ledger = profile && <ProfileLedger label="Số liệu tác giả" cols={profile.goiMa ? 2 : 3} items={[
+    { label: 'Bộ công khai', value: profile.soBoThe, tone: 'primary' },
+    { label: 'Thẻ từ vựng', value: profile.soThe, tone: 'secondary' },
+    { label: 'Huy hiệu', value: badges.length, tone: 'warning' },
+  ]} />;
 
   return (
     <div className={`page ${styles.profile}`}>
-      <aside className={styles.side} aria-labelledby="page-title" aria-busy={author.isLoading}>
-        <span className={styles.avatar} aria-hidden="true">
-          {profile?.anhDaiDienUrl ? <img src={profile.anhDaiDienUrl} alt="" /> : profile ? initial(profile.tenHienThi) : ''}
-        </span>
-        <div className={styles.names}>
-          <h1 id="page-title" className={styles.name}>{profile ? profile.tenHienThi : 'Đang tải…'}</h1>
-          <p className={styles.role}>{isMe ? 'Hồ sơ công khai của bạn' : 'Tác giả bộ thẻ công khai'}</p>
-        </div>
-        {isMe && <Link className={`btn btn-secondary btn-block ${styles.edit}`} href="/ca-nhan">Chỉnh sửa hồ sơ</Link>}
-        {profile && (
-          <ul className={styles.meta} role="list">
-            <li><Icon name="decks" /><span><b>{profile.soBoThe}</b> bộ công khai · <b>{profile.soThe.toLocaleString('vi-VN')}</b> thẻ</span></li>
-            {joined && <li><Icon name="calendar" /><span>Tham gia {joined}</span></li>}
-          </ul>
-        )}
-        {profile && (
-          <section className={styles.badges} aria-labelledby="badges-title">
-            <h2 id="badges-title" className={styles.sectionTitle}>Huy hiệu <span className={styles.count}>{badges.length}</span></h2>
-            {badges.length ? (
-              <ul className={styles.badgeList} role="list">
-                {badges.map(b => <li key={b.ma} title={`${b.ten} — ${b.moTa}`}><span className={styles.badge} role="img" aria-label={b.ten}><BadgeArt badge={b} size={44} number={null} /></span></li>)}
-              </ul>
-            ) : <p className={styles.empty}>Chưa có huy hiệu.</p>}
-          </section>
-        )}
+      <aside className={`sheet ${styles.side}`} aria-labelledby="page-title" aria-busy={author.isLoading}>
+        <ProfileIdentity
+          avatar={<ProfileAvatar src={profile?.anhDaiDienUrl} name={profile?.tenHienThi} tier={tier} />}
+          name={profile ? profile.tenHienThi : 'Đang tải…'}
+          subtitle={isMe ? 'Hồ sơ công khai của bạn' : 'Tác giả bộ thẻ công khai'}
+          tier={tier}
+          headingId="page-title"
+          headingLevel="h1"
+        />
+        {isMe && <Link className={`btn btn-secondary ${styles.edit}`} href="/ca-nhan"><Icon name="edit" />Chỉnh sửa hồ sơ</Link>}
+        {profile && <ProfileMeta items={[
+          { icon: 'decks', text: `${profile.soBoThe} bộ công khai · ${profile.soThe.toLocaleString('vi-VN')} thẻ` },
+          joined && { icon: 'calendar', text: `Tham gia ${joined}` },
+        ]} />}
+        {profile && <ProfileBadges badges={badges} empty="Chưa có huy hiệu." />}
         <p className={styles.back}><Link href="/thu-vien"><Icon name="arrow-left" />Về thư viện</Link></p>
       </aside>
 
       <section className={styles.main} aria-labelledby="decks-title">
+        {profile && (profile.goiMa
+          ? <TierShowcase label={`Thẻ thành viên của ${profile.tenHienThi}`} card={<MembershipCard tier={tier} name={profile.tenHienThi} since={profile.thamGiaAt} />}>{ledger}</TierShowcase>
+          : ledger)}
+        {profile && <ActivityHeatmap title="Hoạt động học trong năm" source={{ url: `/api/v1/library/authors/${id}/activity`, queryKey: ['author-activity', String(id)], metrics: ['soLuotOn', 'soCongKhai'] }} />}
         <nav className={styles.tabs} aria-label="Hồ sơ tác giả">
           <span className={styles.tab} aria-current="page">
             <Icon name="library" />Bộ thẻ công khai{decks.data && <span className={styles.count}>{decks.data.totalElements}</span>}

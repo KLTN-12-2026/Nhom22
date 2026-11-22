@@ -540,6 +540,34 @@ Hợp đồng theo mã nguồn và `FR04PublishRequestTest` (21/11/2026); chưa 
 | `boThe[]` | 5 bộ cập nhật gần nhất `{id, ten, quyenTruyCap, soThe, updatedAt}` |
 | `baoCao` | `daGui`, `biBaoCao`, `biBaoCaoChoXuLy` (báo cáo về bộ/thẻ của người này) |
 
+### 5.19 B3.19 — Cập nhật thời gian thực bằng SSE
+
+`GET /api/v1/events/stream` (cần đăng nhập, không bị chặn khi chưa có gói). Mở bằng `new EventSource('/api/v1/events/stream', { withCredentials: true })`; nghe theo tên sự kiện. Dữ liệu mỗi sự kiện: `{loai, id}` (`id` rỗng khi không có). Sự kiện đầu `SAN_SANG`; comment `ping` mỗi 25 giây; luồng tự đóng sau 15 phút và trình duyệt tự nối lại.
+
+| `loai` | Nhận | FE nên làm |
+|---|---|---|
+| `THONG_BAO_MOI` | Người nhận | Tải lại `['notifications']`, toast |
+| `THONG_BAO_HE_THONG` | Tất cả | Tải lại `['announcements']` |
+| `TAI_KHOAN_BI_KHOA` | Người bị khóa | Xóa cache, về `/dang-nhap` (phiên đã bị thu hồi) |
+| `GOI_THAY_DOI` | Chủ gói | Tải lại `['billing']`, `['me-plan']`, `['service-quota']`, `['me']` |
+| `THANH_TOAN` | Chủ đơn (`id` = `maDon`) | Tải lại `['billing']` |
+| `YEU_CAU_AI` | Người gửi (`id` = yêu cầu) | Tải lại `['ai-request', id]`, `['ai-history']`, `['service-quota']` |
+| `HANG_CHO_QUAN_TRI` | ADMIN | Tải lại `['admin-queue']`, `['admin-dashboard']`, `['publish-requests']`, `['admin-reports']` |
+
+`GET /api/v1/admin/dashboard/queue` (ADMIN) trả khối `canXuLy` giống trong `/admin/dashboard`, dùng cho số đếm menu. Giữ polling chậm làm dự phòng khi mất luồng. Đã làm ở FE: F3.19. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md).
+
+### 5.20 B3.20 — Realtime giai đoạn 2
+
+Cùng luồng `/api/v1/events/stream`, thêm 3 loại:
+
+| `loai` | Nhận | `id` | FE nên làm |
+|---|---|---|---|
+| `MUC_DA_XU_LY` | ADMIN, trừ người vừa xử lý | `BAO_CAO:<id>` hoặc `CONG_KHAI:<id>` | Tải lại hàng chờ; nếu đang mở đúng mục thì đóng và báo "vừa được quản trị viên khác xử lý" |
+| `SU_CO_HE_THONG` | ADMIN | `CSDL:DOWN`, `CSDL:UP`, `REDIS:DOWN`, `REDIS:UP`, `TAC_VU:<id>` | Tải lại `['admin-dashboard']`, `['admin-queue']`, `['admin-service-usage']`; toast |
+| `PHIEN_HOC_MOI` | Chủ phiên | id phiên | Nếu khác phiên đang mở ở `/hoc-phien` thì báo phiên đã mở ở nơi khác |
+
+`CSDL`/`REDIS` chỉ gửi khi trạng thái đổi, kiểm mỗi 30 giây ở từng instance. Đã làm ở FE: F3.20. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md#giai-đoạn-2-b320).
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).

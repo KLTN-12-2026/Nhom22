@@ -12,7 +12,8 @@ const CONDITION = {
   TONG_LUOT_ON: n => `${n} lượt ôn hợp lệ`,
   CHUOI_NGAY: n => `Chuỗi ${n} ngày học`,
   TONG_BAI_LUYEN: n => `${n} bài luyện đã nộp`,
-  TONG_DIEM: n => `${n} điểm thưởng`
+  TONG_DIEM: n => `${n} điểm thưởng`,
+  XEP_HANG_TUAN: n => (n === 1 ? 'Hạng nhất bảng xếp hạng tuần' : `Top ${n} bảng xếp hạng tuần`)
 };
 
 const fmtDay = day => {
@@ -69,7 +70,7 @@ export default function AchievementsPage() {
         {!loading && !failed && <>
           <div className={styles.hero}>
             <div className={styles.heroArt}>
-              {latest ? <BadgeArt badge={latest} size={112} /> : <BadgeArt badge={all[0]} earned={false} size={112} />}
+              {latest ? <BadgeArt badge={latest} size={112} celebrate /> : <BadgeArt badge={all[0]} earned={false} size={112} />}
             </div>
             <div className={styles.heroBody}>
               <span className="caption">{latest ? `Huy hiệu mới nhất · ${fmtDate(latest.nhanAt)}` : 'Huy hiệu đầu tiên đang chờ bạn'}</span>
@@ -110,9 +111,9 @@ export default function AchievementsPage() {
             </div>
             {all.length ? (
               <ul className={styles.badges} role="list">
-                {all.map(b => (
+                {all.map((b, i) => (
                   <li key={b.id} className={b.daNhan ? styles.isEarned : styles.isLocked}>
-                    <BadgeArt badge={b} earned={b.daNhan} size={76} />
+                    <BadgeArt badge={b} earned={b.daNhan} size={76} delay={Math.min(i, 12) * 60} />
                     <div className={styles.badgeBody}>
                       <h3>{b.ten}</h3>
                       <p>{b.moTa}</p>

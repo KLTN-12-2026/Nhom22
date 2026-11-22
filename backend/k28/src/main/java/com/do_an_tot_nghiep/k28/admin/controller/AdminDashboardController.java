@@ -23,4 +23,9 @@ public class AdminDashboardController {
     public AdminDashboardResponse dashboard(@RequestParam(required = false) Integer soNgay) {
         return service.dashboard(currentUser.id(), soNgay);
     }
+
+    @GetMapping("/queue")
+    public AdminDashboardResponse.CanXuLy queue() {
+        return service.queue();
+    }
 }

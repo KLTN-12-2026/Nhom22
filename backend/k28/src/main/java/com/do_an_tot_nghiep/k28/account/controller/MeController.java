@@ -5,6 +5,8 @@ import com.do_an_tot_nghiep.k28.account.dto.LearningSettingsRequest;
 import com.do_an_tot_nghiep.k28.account.dto.LearningSettingsResponse;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationSettingsRequest;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationSettingsResponse;
+import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsRequest;
+import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsResponse;
 import com.do_an_tot_nghiep.k28.account.dto.UpdateProfileRequest;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
@@ -75,6 +77,16 @@ public class MeController {
     @PutMapping("/learning-settings")
     LearningSettingsResponse updateLearningSettings(@Valid @RequestBody LearningSettingsRequest request) {
         return settingsService.updateLearning(currentUser.id(), request);
+    }
+
+    @GetMapping("/privacy-settings")
+    PrivacySettingsResponse privacySettings() {
+        return settingsService.privacy(currentUser.id());
+    }
+
+    @PutMapping("/privacy-settings")
+    PrivacySettingsResponse updatePrivacySettings(@Valid @RequestBody PrivacySettingsRequest request) {
+        return settingsService.updatePrivacy(currentUser.id(), request);
     }
 
     @GetMapping("/notification-settings")

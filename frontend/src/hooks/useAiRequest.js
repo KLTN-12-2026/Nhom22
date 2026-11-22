@@ -8,7 +8,7 @@ export function useAiRequest() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const client = useQueryClient();
-  const query = useQuery({ queryKey: ['ai-request', id], enabled: !!id, queryFn: () => apiFetch(`/api/v1/ai/requests/${encodeURIComponent(id)}`), refetchInterval: q => aiPending(q.state.data?.trangThai) ? 1500 : false });
+  const query = useQuery({ queryKey: ['ai-request', id], enabled: !!id, queryFn: () => apiFetch(`/api/v1/ai/requests/${encodeURIComponent(id)}`), refetchInterval: q => aiPending(q.state.data?.trangThai) ? 5000 : false });
   async function start(path, body) {
     if (submitting || (id && (query.isPending || aiPending(query.data?.trangThai)))) return;
     setSubmitting(true); setError(''); setId(null);

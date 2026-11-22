@@ -11,6 +11,7 @@ const TABS = [
   { href: '/ca-nhan', label: 'Tổng quan', icon: 'user' },
   { href: '/ca-nhan/hoc-tap', label: 'Thiết lập học', icon: 'target' },
   { href: '/ca-nhan/bao-mat', label: 'Bảo mật', icon: 'shield' },
+  { href: '/ca-nhan/rieng-tu', label: 'Quyền riêng tư', icon: 'eye' },
   { href: '/ca-nhan/thong-bao', label: 'Thông báo', icon: 'bell' },
 ];
 

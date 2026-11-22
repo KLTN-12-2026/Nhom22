@@ -26,3 +26,27 @@
 .lock circle { fill: var(--sheet); stroke: var(--graphite-soft); stroke-width: 1.5; }
 .lockBody { fill: var(--ink-3); }
 .lockShackle { fill: none; stroke: var(--ink-3); stroke-width: 2; }
+
+.medal { transform-box: view-box; transform-origin: 50px 8px; transition: transform var(--dur-3) var(--ease-out); }
+.earned .medal { animation: badge-stamp var(--dur-3) var(--ease-out) var(--stamp-delay, 0ms) backwards; }
+.bevel { pointer-events: none; }
+.shine { pointer-events: none; }
+.shineBar { transform-box: view-box; animation: badge-shine 6.5s var(--ease) var(--shine-delay, 1s) infinite; }
+:hover > .earned .medal { transform: rotate(-5deg) scale(1.04); }
+:hover > .locked .lock { animation: badge-lock var(--dur-3) var(--ease); }
+.lock { transform-box: fill-box; transform-origin: 50% 0; }
+.locked .rosette, .locked .ribbon { opacity: .9; }
+.celebrate .medal { animation: badge-stamp var(--dur-3) var(--ease-out) both, badge-sway 4.8s ease-in-out 1s infinite; }
+.spark { fill: var(--accent); opacity: 0; transform-box: fill-box; transform-origin: center; animation: badge-spark 2.4s ease-in-out infinite; }
+
+@keyframes badge-stamp { from { opacity: 0; transform: scale(1.18) rotate(-4deg); } 60% { opacity: 1; transform: scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes badge-shine { 0% { transform: translateX(0); } 22%, 100% { transform: translateX(130px); } }
+@keyframes badge-sway { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes badge-spark { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+@keyframes badge-lock { 25% { transform: rotate(-12deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .medal, .earned .medal, .celebrate .medal, .shineBar, .spark, :hover > .locked .lock { animation: none; transition: none; }
+  :hover > .earned .medal { transform: none; }
+  .shine, .spark { display: none; }
+}
