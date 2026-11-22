@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Phiếu hỗ trợ – VocabLearning</title>
+  <meta name="description" content="Quản lý và theo dõi các yêu cầu hỗ trợ của học viên.">
+  <link rel="icon" href="../shared/assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="../shared/tokens.css?v=8eea39e030ee">
+  <link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+  <link rel="stylesheet" href="../shared/components.css?v=bdbdbd359bfc">
+  <link rel="stylesheet" href="../shared/learning-refinements.css?v=486627ff40a2">
+  <link rel="stylesheet" href="../shared/effects.css?v=7fb6a75d9e3b">
+  <link rel="stylesheet" href="../shared/flow.css?v=3cfb00d90735">
+  <link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+  <link rel="stylesheet" href="ui.css?v=1118572fe323">
+  <style>
+.tickets-heading { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-5); margin-bottom:var(--sp-6); }
+.tickets-heading h1 { margin:var(--sp-2) 0 var(--sp-3); }
+.tickets-heading > .btn { flex-shrink:0; min-height:var(--tap-primary); }
+.tickets-eyebrow { font-size:var(--fs-small); font-weight:650; color:var(--primary); }
+.tickets-workspace { display:grid; gap:var(--sp-4); }
+.tickets-toolbar { display:flex; gap:var(--sp-3); }
+.tickets-search { flex:1; min-width:0; }
+.tickets-toolbar > .btn { min-height:var(--tap-primary); }
+.tickets-filter-count { display:inline-grid; place-items:center; min-width:1.4rem; height:1.4rem; padding-inline:4px; border-radius:50%; background:var(--primary); color:var(--on-primary); font-size:var(--fs-caption); }
+.tickets-filters { display:grid; grid-template-columns:1fr 1fr auto; align-items:end; gap:var(--sp-4); padding:var(--sp-5); background:var(--sunk); border:1px solid var(--line); border-radius:var(--radius-card); }
+.tickets-filters > .btn { min-height:var(--tap-primary); }
+.tickets-tabs { margin-top:var(--sp-2); }
+.tickets-tabs .tab { white-space:nowrap; font-size:var(--fs-small); gap:var(--sp-2); }
+.tickets-tabs .count { padding:2px 7px; border-radius:6px; background:var(--sunk); }
+.tickets-tabs .tab[aria-selected="true"] .count { background:var(--primary-tint); color:var(--primary); }
+.tickets-chips { display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:center; }
+.tickets-chip { display:inline-flex; align-items:center; gap:var(--sp-2); min-height:36px; max-width:100%; padding:4px 10px; background:var(--primary-tint); color:var(--primary); border:1px solid var(--primary-line); border-radius:var(--radius-btn); font-size:var(--fs-small); }
+.tickets-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tickets-chip .icon { width:14px; height:14px; flex-shrink:0; }
+.tickets-chip:hover { border-color:var(--primary); }
+.tickets-list-heading { display:flex; justify-content:space-between; gap:var(--sp-3); color:var(--ink-3); font-size:var(--fs-small); }
+.tickets-list-heading p { font-weight:600; color:var(--ink-2); }
+.tickets-list { list-style:none; padding:0; margin:0; border:1px solid var(--line); border-radius:var(--radius-card); overflow:hidden; }
+.ticket-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--sp-4); padding:var(--sp-5); background:var(--field); }
+.ticket-row + .ticket-row { border-top:1px solid var(--line); }
+.ticket-row:hover { background:var(--sunk); }
+.ticket-row h2 { font-family:var(--font-body); font-size:var(--fs-body); line-height:1.5; font-weight:700; overflow-wrap:anywhere; }
+.ticket-description { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; overflow:hidden; color:var(--ink-2); font-size:var(--fs-small); margin-top:var(--sp-1); overflow-wrap:anywhere; }
+.ticket-meta { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3); margin-top:var(--sp-3); font-size:var(--fs-small); color:var(--ink-3); }
+.ticket-category { display:inline-flex; align-items:center; gap:6px; }
+.ticket-meta .icon { width:15px; height:15px; }
+.ticket-id { font-variant-numeric:tabular-nums; }
+.ticket-priority, .ticket-status { display:inline-flex; align-items:center; justify-content:center; gap:6px; width:fit-content; padding:3px 9px; border-radius:6px; font-size:var(--fs-small); font-weight:600; white-space:nowrap; }
+.ticket-priority[data-priority="low"] { background:var(--sunk); color:var(--ink-2); }
+.ticket-priority[data-priority="medium"] { background:var(--primary-tint); color:var(--primary); }
+.ticket-priority[data-priority="high"] { background:var(--warning-bg); color:var(--warning-text); }
+.ticket-priority[data-priority="critical"] { background:var(--danger-bg); color:var(--danger); }
+.ticket-status[data-state="open"] { background:var(--accent-bg); color:var(--accent-text); }
+.ticket-status[data-state="resolved"] { background:var(--secondary-bg); color:var(--secondary-text); }
+.ticket-status .icon { width:15px; height:15px; }
+.ticket-side { display:flex; flex-direction:column; align-items:end; justify-content:space-between; gap:var(--sp-3); }
+.ticket-side time { color:var(--ink-3); font-size:var(--fs-small); white-space:nowrap; }
+.tickets-pagination { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3); }
+.tickets-pagination > p { font-size:var(--fs-small); color:var(--ink-3); }
+.tickets-pagination .pager { flex-wrap:wrap; }
+.tickets-pagination .pager button { min-width:var(--tap); }
+.tickets-empty { display:grid; justify-items:center; gap:var(--sp-3); padding:var(--sp-7) var(--sp-4); text-align:center; border:1px dashed var(--line-2); border-radius:var(--radius-card); }
+.tickets-empty h2 { font-size:var(--fs-h3); }
+.tickets-empty p { color:var(--ink-2); }
+.tickets-empty-icon { display:grid; place-items:center; width:64px; height:64px; background:var(--primary-tint); border-radius:20px; color:var(--primary); margin-bottom:var(--sp-2); }
+.tickets-empty-icon .icon { width:28px; height:28px; }
+.tickets-footer { justify-content:start; flex-wrap:nowrap; color:var(--ink-3); font-size:var(--fs-small); }
+.tickets-footer > span { flex-shrink:0; }
+.tickets-dialog { width:min(94vw,620px); max-height:90dvh; overflow:auto; border:1px solid var(--line); border-radius:var(--radius-card); }
+.tickets-dialog .dialog-body { padding:var(--sp-6); gap:var(--sp-5); }
+.tickets-dialog h2 { font-size:var(--fs-h2); }
+.tickets-dialog .dialog-head { border-bottom:1px solid var(--line); padding-bottom:var(--sp-4); }
+.tickets-dialog .dialog-head p { margin-top:var(--sp-2); font-size:var(--fs-small); color:var(--ink-2); }
+.tickets-dialog .dialog-head .btn { flex-shrink:0; }
+.tickets-required { color:var(--ink-3); font-size:var(--fs-caption); font-weight:400; }
+.tickets-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4); }
+.tickets-dialog .dialog-actions { border-top:1px solid var(--line); padding-top:var(--sp-4); }
+.tickets-save-error { padding:var(--sp-3); border-radius:var(--radius-btn); background:var(--danger-bg); color:var(--danger); font-size:var(--fs-small); }
+.tickets-page [hidden], .tickets-dialog [hidden] { display:none !important; }
+@media (max-width:760px) {
+  .tickets-heading { align-items:start; flex-direction:column; gap:var(--sp-4); }
+  .tickets-filters { grid-template-columns:1fr 1fr; padding:var(--sp-4); }
+  .tickets-filters > .btn { grid-column:1 / -1; }
+  .ticket-row { padding:var(--sp-4); gap:var(--sp-3); }
+  .ticket-side { justify-content:start; }
+}
+@media (max-width:480px) {
+  .tickets-heading > .btn { width:100%; }
+  .tickets-toolbar { gap:var(--sp-2); }
+  .tickets-toolbar > .btn { padding-inline:var(--sp-3); }
+  .tickets-search input { font-size:var(--fs-small); }
+  .tickets-filters, .tickets-form-grid { grid-template-columns:1fr; }
+  .tickets-tabs .tab { padding-inline:var(--sp-2); }
+  .ticket-row { grid-template-columns:minmax(0,1fr); }
+  .ticket-description { -webkit-line-clamp:2; }
+  .ticket-side { flex-direction:row; align-items:center; justify-content:space-between; }
+  .tickets-dialog .dialog-body { padding:var(--sp-4); }
+  .tickets-dialog .dialog-actions > .btn { flex:1 1 auto; }
+  .tickets-pagination { justify-content:center; }
+}
+  </style>
+  <script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+  <script src="../shared/speech.js?v=9462ca4f1c89"></script>
+</head>
+<body data-root=".." data-auth="required" data-onboarding="skip" data-phase="dot3" data-screen="support-tickets" data-nav="support-tickets">
+  <div class="app">
+    <header class="app-header"></header>
+    <div class="app-body">
+      <nav class="sidebar" aria-label="Điều hướng chính"></nav>
+      <main class="app-main" id="main">
+        <div class="page d3-page tickets-page">
+          <div class="d3-demo"><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><a href="../index.html#dot3">Danh mục mockup</a></div>
+          <article class="sheet tickets-sheet" aria-labelledby="page-title">
+            <header class="tickets-heading">
+              <div>
+                <p class="tickets-eyebrow">Tài khoản / Hỗ trợ học viên</p>
+                <h1 id="page-title">Phiếu hỗ trợ</h1>
+                <p class="muted">Quản lý và theo dõi các yêu cầu hỗ trợ</p>
+              </div>
+              <button type="button" class="btn btn-primary" id="create-ticket"><span aria-hidden="true">+</span> Tạo phiếu hỗ trợ</button>
+            </header>
+            <section class="tickets-workspace" aria-label="Quản lý phiếu hỗ trợ">
+              <div class="tickets-toolbar">
+                <div class="input-with-icon tickets-search">
+                  <span data-icon="search"></span>
+                  <label class="sr-only" for="ticket-search">Tìm kiếm theo tiêu đề hoặc mô tả</label>
+                  <input class="input" id="ticket-search" type="search" placeholder="Tìm theo tiêu đề hoặc mô tả…" autocomplete="off">
+                </div>
+                <button type="button" class="btn btn-secondary" id="filter-toggle" aria-expanded="false" aria-controls="ticket-filters"><span data-icon="filter"></span> Lọc <span class="tickets-filter-count" id="filter-count" hidden>0</span></button>
+              </div>
+              <form id="ticket-filters" class="tickets-filters" hidden>
+                <div class="field"><label class="field-label" for="filter-category">Loại vấn đề</label><select class="select" id="filter-category"><option value="">Tất cả loại vấn đề</option><option value="technical">Kỹ thuật</option><option value="academic">Học vụ</option><option value="payment">Thanh toán</option><option value="other">Khác</option></select></div>
+                <div class="field"><label class="field-label" for="filter-priority">Độ ưu tiên</label><select class="select" id="filter-priority"><option value="">Tất cả độ ưu tiên</option><option value="low">Thấp</option><option value="medium">Trung bình</option><option value="high">Cao</option><option value="critical">Nghiêm trọng</option></select></div>
+                <button class="btn btn-primary" type="submit">Áp dụng</button>
+              </form>
+              <div class="tabs tickets-tabs" role="tablist" aria-label="Trạng thái phiếu hỗ trợ">
+                <button type="button" class="tab" id="tab-all" role="tab" data-status="" aria-selected="true" aria-controls="tickets-panel">Tất cả <span class="count" data-count="all"></span></button>
+                <button type="button" class="tab" id="tab-open" role="tab" data-status="open" aria-selected="false" aria-controls="tickets-panel" tabindex="-1">Đang mở <span class="count" data-count="open"></span></button>
+                <button type="button" class="tab" id="tab-resolved" role="tab" data-status="resolved" aria-selected="false" aria-controls="tickets-panel" tabindex="-1">Đã giải quyết <span class="count" data-count="resolved"></span></button>
+              </div>
+              <div class="tickets-chips" id="ticket-chips" aria-label="Bộ lọc đang áp dụng" hidden></div>
+              <div class="tickets-list-heading"><p id="result-count" role="status" aria-live="polite"></p><span>Mới nhất trước</span></div>
+              <div id="tickets-panel" role="tabpanel" aria-labelledby="tab-all" tabindex="0">
+                <ul class="tickets-list" id="ticket-list" aria-label="Danh sách phiếu hỗ trợ"></ul>
+                <div class="tickets-empty" id="ticket-empty" hidden>
+                  <span class="tickets-empty-icon" data-icon="search"></span>
+                  <h2>Không tìm thấy</h2><p>Thử thay đổi bộ lọc</p>
+                  <button type="button" class="btn btn-secondary" data-reset-filters>Đặt lại</button>
+                </div>
+              </div>
+              <div class="tickets-pagination" id="ticket-pagination"><p id="page-summary"></p><nav class="pager" id="ticket-pager" aria-label="Phân trang phiếu hỗ trợ"></nav></div>
+            </section>
+            <footer class="d3-footer tickets-footer"><span data-icon="info"></span><p>Bạn cần giúp đỡ? Tạo phiếu để đội ngũ hỗ trợ theo dõi và xử lý yêu cầu của bạn.</p></footer>
+          </article>
+        </div>
+      </main>
+    </div>
+    <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
+  </div>
+  <dialog class="dialog tickets-dialog" id="create-dialog" aria-labelledby="create-title" aria-describedby="create-description">
+    <form class="dialog-body" id="create-form" novalidate>
+      <div class="dialog-head"><div><h2 id="create-title">Tạo phiếu hỗ trợ</h2><p id="create-description">Chia sẻ vấn đề để chúng mình có thể giúp bạn.</p></div><button type="button" class="btn btn-quiet btn-icon" data-close-dialog aria-label="Đóng hộp thoại"><span data-icon="x"></span></button></div>
+      <div class="field"><label class="field-label" for="ticket-title">Tiêu đề <span class="tickets-required">Bắt buộc</span></label><input class="input" id="ticket-title" name="title" required maxlength="150" placeholder="Nhập tiêu đề yêu cầu hỗ trợ" aria-describedby="title-error title-counter" autofocus><p class="field-error" id="title-error" aria-live="polite"></p><p class="field-counter" id="title-counter">0/150 ký tự</p></div>
+      <div class="field"><label class="field-label" for="ticket-description">Mô tả <span class="tickets-required">Bắt buộc</span></label><textarea class="textarea" id="ticket-description" name="description" required rows="5" placeholder="Mô tả vấn đề bạn gặp phải và các bước đã thực hiện…" aria-describedby="description-error"></textarea><p class="field-error" id="description-error" aria-live="polite"></p></div>
+      <div class="tickets-form-grid">
+        <div class="field"><label class="field-label" for="ticket-category">Loại vấn đề</label><select class="select" id="ticket-category" name="category"><option value="technical">Kỹ thuật</option><option value="academic">Học vụ</option><option value="payment">Thanh toán</option><option value="other">Khác</option></select></div>
+        <div class="field"><label class="field-label" for="ticket-priority">Độ ưu tiên</label><select class="select" id="ticket-priority" name="priority"><option value="low">Thấp</option><option value="medium" selected>Trung bình</option><option value="high">Cao</option><option value="critical">Nghiêm trọng</option></select></div>
+      </div>
+      <p class="tickets-save-error" id="save-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button type="button" class="btn btn-quiet" data-close-dialog>Hủy</button><button type="submit" class="btn btn-primary" id="submit-ticket">Tạo phiếu hỗ trợ</button></div>
+    </form>
+  </dialog>
+  <noscript><p class="notice">Bật JavaScript để xem và tương tác với phiếu hỗ trợ mẫu.</p></noscript>
+  <script src="../shared/demo.js?v=ea349560a517"></script>
+  <script src="../shared/app.js?v=93122127d184"></script>
+  <script src="../shared/flow.js?v=05ab7c82c3ad"></script>
+  <script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+  <script>
+(() => {
+  'use strict';
+  if (!VL.ready || !VL.me()) return;
+  const $ = id => document.getElementById(id);
+  const esc = VL.esc;
+  const CATEGORY = { technical: 'Kỹ thuật', academic: 'Học vụ', payment: 'Thanh toán', other: 'Khác' };
+  const PRIORITY = { low: 'Thấp', medium: 'Trung bình', high: 'Cao', critical: 'Nghiêm trọng' };
+  const STATUS = { open: 'Đang mở', resolved: 'Đã giải quyết' };
+  const SIZE = 6;
+  const storageKey = 'vocab:support-tickets:v1:' + VL.me().id;
+  const fixtures = [
+    ['Không nghe được âm thanh khi luyện phát âm', 'Mình đã bật âm lượng nhưng không nghe được âm thanh mẫu trong bài luyện phát âm trên Chrome.', 'technical', 'high', 'open'],
+    ['Gói Pro chưa được kích hoạt sau thanh toán', 'Mình đã thanh toán thành công qua VNPay nhưng tài khoản vẫn chưa hiển thị gói Pro.', 'payment', 'critical', 'open'],
+    ['Cần hướng dẫn điều chỉnh mục tiêu học tập', 'Mình muốn chuyển mục tiêu từ giao tiếp sang TOEIC. Nhờ đội ngũ hướng dẫn cách cập nhật.', 'academic', 'medium', 'open'],
+    ['Không tải được ảnh minh họa cho bộ thẻ', 'Ảnh minh họa trong bộ thẻ TOEIC công sở không hiển thị khi mình mở trên điện thoại.', 'technical', 'medium', 'open'],
+    ['Đề xuất thêm chủ đề từ vựng du lịch', 'Mình mong có thêm bộ từ vựng về đặt phòng khách sạn và hỏi đường để luyện giao tiếp.', 'other', 'low', 'resolved'],
+    ['Cần kiểm tra lịch sử giao dịch tháng này', 'Mình muốn xem lại biên nhận và thời hạn của gói Premium vừa gia hạn.', 'payment', 'medium', 'resolved'],
+    ['Tiến độ học chưa cập nhật trên thiết bị mới', 'Sau khi đăng nhập trên máy tính, số thẻ đã học khác với tiến độ trên điện thoại.', 'technical', 'high', 'open'],
+    ['Thắc mắc về lịch ôn tập của bộ thẻ', 'Một số từ đã nhớ vẫn xuất hiện trong lịch ôn. Mình cần giải thích thêm cách tính lịch ôn.', 'academic', 'low', 'resolved'],
+    ['Không thể nhập bộ thẻ từ tệp CSV', 'Mình chọn tệp CSV đúng định dạng nhưng màn hình không hiển thị phần xem trước.', 'technical', 'medium', 'resolved'],
+    ['Nhờ hỗ trợ thay đổi thông tin cá nhân', 'Mình cần cập nhật tên hiển thị và múi giờ để nhận thông báo học đúng giờ.', 'other', 'low', 'resolved'],
+    ['Thông báo nhắc học không xuất hiện', 'Mình đã bật nhắc học hằng ngày trong cài đặt nhưng chưa nhận được thông báo.', 'technical', 'medium', 'open'],
+    ['Câu hỏi về nội dung bộ TOEIC nâng cao', 'Mình muốn biết trình độ phù hợp trước khi bắt đầu bộ từ vựng TOEIC nâng cao.', 'academic', 'medium', 'resolved']
+  ];
+  const seed = () => fixtures.map(([title, description, category, priority, status], index) => ({
+    id: 'HT-' + String(1042 - index), title, description, category, priority, status,
+    createdAt: new Date(Date.UTC(2026, 10, 22 - index, 2, 30)).toISOString()
+  }));
+  function readTickets() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey));
+      if (Array.isArray(saved) && saved.every(t => t && typeof t.id === 'string' && typeof t.title === 'string' && typeof t.description === 'string' && Object.hasOwn(CATEGORY, t.category) && Object.hasOwn(PRIORITY, t.priority) && Object.hasOwn(STATUS, t.status) && Number.isFinite(Date.parse(t.createdAt)))) return saved;
+    } catch { /* Use the sample list when storage is unavailable or corrupt. */ }
+    return seed();
+  }
+  let tickets = readTickets();
+  let state = { search: '', category: '', priority: '', status: '', page: 0 };
+  let searchTimer;
+  let submitting = false;
+  let attempted = false;
+  const tabs = [...document.querySelectorAll('[data-status]')];
+  const normalize = text => text.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+  document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = VL.icon(el.dataset.icon); });
+
+  function fromURL() {
+    const query = new URLSearchParams(location.search);
+    state.status = Object.hasOwn(STATUS, query.get('status')) ? query.get('status') : '';
+  }
+  function updateURL(replace = false) {
+    const url = new URL(location.href);
+    if (state.status) url.searchParams.set('status', state.status); else url.searchParams.delete('status');
+    if (url.href !== location.href) history[replace ? 'replaceState' : 'pushState']({}, '', url);
+  }
+  function filtered(includeStatus = true) {
+    const query = normalize(state.search);
+    return tickets.filter(t => (!query || normalize(t.title + ' ' + t.description).includes(query)) && (!state.category || t.category === state.category) && (!state.priority || t.priority === state.priority) && (!includeStatus || !state.status || t.status === state.status)).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  }
+  function render() {
+    const matches = filtered();
+    const totalPages = Math.ceil(matches.length / SIZE);
+    state.page = Math.max(0, Math.min(state.page, totalPages - 1));
+    const start = state.page * SIZE;
+    const counts = filtered(false);
+    document.querySelector('[data-count="all"]').textContent = counts.length;
+    for (const status of Object.keys(STATUS)) document.querySelector(`[data-count="${status}"]`).textContent = counts.filter(t => t.status === status).length;
+    tabs.forEach(tab => {
+      const active = tab.dataset.status === state.status;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      if (active) $('tickets-panel').setAttribute('aria-labelledby', tab.id);
+    });
+    const chips = [
+      ['search', state.search ? 'Tìm kiếm: ' + state.search : ''],
+      ['status', STATUS[state.status]],
+      ['category', CATEGORY[state.category]],
+      ['priority', PRIORITY[state.priority] ? 'Ưu tiên: ' + PRIORITY[state.priority] : '']
+    ].filter(([, label]) => label);
+    $('filter-count').textContent = chips.length;
+    $('filter-count').hidden = chips.length === 0;
+    $('filter-toggle').setAttribute('aria-label', chips.length ? `Lọc, ${chips.length} bộ lọc đang bật` : 'Lọc');
+    $('ticket-chips').hidden = chips.length === 0;
+    $('ticket-chips').innerHTML = chips.map(([key, label]) => `<button type="button" class="tickets-chip" data-remove-filter="${key}" aria-label="Gỡ bộ lọc ${esc(label)}"><span>${esc(label)}</span>${VL.icon('x')}</button>`).join('') + (chips.length ? '<button type="button" class="btn btn-quiet btn-sm" data-reset-filters>Đặt lại</button>' : '');
+    $('result-count').textContent = `${matches.length} phiếu hỗ trợ`;
+    $('ticket-list').hidden = matches.length === 0;
+    $('ticket-empty').hidden = matches.length !== 0;
+    $('ticket-list').innerHTML = matches.slice(start, start + SIZE).map(t => `<li class="ticket-row">
+      <div><h2>${esc(t.title)}</h2><p class="ticket-description">${esc(t.description)}</p>
+        <div class="ticket-meta"><span class="ticket-id">#${esc(t.id)}</span><span class="ticket-category">${VL.icon('tag')}${CATEGORY[t.category]}</span><span class="ticket-priority" data-priority="${t.priority}">${PRIORITY[t.priority]}</span></div>
+      </div><div class="ticket-side"><span class="ticket-status" data-state="${t.status}">${VL.icon(t.status === 'resolved' ? 'check' : 'clock')}${STATUS[t.status]}</span><time datetime="${esc(t.createdAt)}" title="${esc(VL.fmtDateTime(t.createdAt))}">${esc(new Date(t.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' }))}</time></div>
+    </li>`).join('');
+    $('ticket-pagination').hidden = matches.length === 0;
+    $('page-summary').textContent = `Hiển thị ${start + 1}–${Math.min(start + SIZE, matches.length)} trên ${matches.length} phiếu`;
+    $('ticket-pager').innerHTML = totalPages > 1 ? VL.pagination(state.page, totalPages) : '';
+  }
+  function resetFilters() {
+    clearTimeout(searchTimer);
+    state = { search: '', category: '', priority: '', status: '', page: 0 };
+    $('ticket-search').value = '';
+    $('filter-category').value = '';
+    $('filter-priority').value = '';
+    updateURL(); render();
+  }
+  $('ticket-search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { state.search = $('ticket-search').value.trim(); state.page = 0; render(); }, 300);
+  });
+  $('filter-toggle').addEventListener('click', () => {
+    const open = $('ticket-filters').hidden;
+    $('ticket-filters').hidden = !open;
+    $('filter-toggle').setAttribute('aria-expanded', String(open));
+    if (open) { $('filter-category').value = state.category; $('filter-priority').value = state.priority; $('filter-category').focus(); }
+  });
+  $('ticket-filters').addEventListener('submit', event => {
+    event.preventDefault();
+    state.category = $('filter-category').value; state.priority = $('filter-priority').value; state.page = 0;
+    $('ticket-filters').hidden = true; $('filter-toggle').setAttribute('aria-expanded', 'false');
+    render(); $('filter-toggle').focus();
+  });
+  function selectTab(tab) { state.status = tab.dataset.status; state.page = 0; updateURL(); render(); }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectTab(tab));
+    tab.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = tabs.length - 1;
+      if (next !== undefined) { event.preventDefault(); selectTab(tabs[next]); tabs[next].focus(); }
+    });
+  });
+  $('ticket-pager').addEventListener('click', event => {
+    const button = event.target.closest('[data-page]');
+    if (!button || button.disabled) return;
+    state.page = Number(button.dataset.page); render(); $('tickets-panel').focus();
+  });
+  document.addEventListener('click', event => {
+    const chip = event.target.closest('[data-remove-filter]');
+    if (chip) {
+      const key = chip.dataset.removeFilter;
+      state[key] = ''; state.page = 0;
+      if (key === 'search') { clearTimeout(searchTimer); $('ticket-search').value = ''; }
+      if (key === 'category' || key === 'priority') $('filter-' + key).value = '';
+      updateURL(); render(); $('filter-toggle').focus();
+    }
+    if (event.target.closest('[data-reset-filters]')) { resetFilters(); $('ticket-search').focus(); }
+    if (event.target.closest('[data-close-dialog]') && !submitting) $('create-dialog').close();
+  });
+  window.addEventListener('popstate', () => { fromURL(); state.page = 0; render(); });
+
+  const form = $('create-form');
+  function fieldError(name, message) {
+    const input = $('ticket-' + name);
+    input.closest('.field').toggleAttribute('data-invalid', Boolean(message));
+    input.setAttribute('aria-invalid', String(Boolean(message)));
+    $(name + '-error').textContent = message;
+    return !message;
+  }
+  function validate(name) {
+    const value = $('ticket-' + name).value.trim();
+    return fieldError(name, !value ? (name === 'title' ? 'Vui lòng nhập tiêu đề.' : 'Vui lòng nhập mô tả.') : name === 'title' && value.length > 150 ? 'Tiêu đề không được vượt quá 150 ký tự.' : '');
+  }
+  ['title', 'description'].forEach(name => {
+    $('ticket-' + name).addEventListener('blur', () => validate(name));
+    $('ticket-' + name).addEventListener('input', () => {
+      if (name === 'title') $('title-counter').textContent = `${$('ticket-title').value.length}/150 ký tự`;
+      if (attempted || $('ticket-' + name).getAttribute('aria-invalid') === 'true') validate(name);
+    });
+  });
+  $('create-ticket').addEventListener('click', () => {
+    form.reset(); attempted = false;
+    fieldError('title', ''); fieldError('description', '');
+    $('title-counter').textContent = '0/150 ký tự'; $('save-error').hidden = true;
+    $('create-dialog').showModal();
+  });
+  $('create-dialog').addEventListener('cancel', event => { if (submitting) event.preventDefault(); });
+  $('create-dialog').addEventListener('close', () => $('create-ticket').focus());
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (submitting) return;
+    attempted = true;
+    const validTitle = validate('title'); const validDescription = validate('description');
+    if (!validTitle || !validDescription) { form.querySelector('[aria-invalid="true"]').focus(); return; }
+    const nextId = Math.max(1042, ...tickets.map(t => Number(t.id.replace('HT-', '')) || 0)) + 1;
+    const ticket = { id: 'HT-' + nextId, title: $('ticket-title').value.trim(), description: $('ticket-description').value.trim(), category: $('ticket-category').value, priority: $('ticket-priority').value, status: 'open', createdAt: new Date().toISOString() };
+    submitting = true; $('save-error').hidden = true;
+    const controls = [...form.querySelectorAll('input, textarea, select, button')];
+    controls.forEach(control => { control.disabled = true; });
+    $('submit-ticket').setAttribute('aria-busy', 'true'); $('submit-ticket').textContent = 'Đang gửi…';
+    try {
+      await new Promise(resolve => setTimeout(resolve, 650));
+      const updated = [ticket, ...tickets];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+      tickets = updated;
+      resetFilters();
+      $('create-dialog').close();
+      VL.toast('Tạo phiếu hỗ trợ thành công.');
+    } catch {
+      $('save-error').textContent = 'Không lưu được phiếu hỗ trợ. Vui lòng cho phép lưu dữ liệu trong trình duyệt và thử lại.';
+      $('save-error').hidden = false;
+    } finally {
+      submitting = false;
+      controls.forEach(control => { control.disabled = false; });
+      $('submit-ticket').removeAttribute('aria-busy'); $('submit-ticket').textContent = 'Tạo phiếu hỗ trợ';
+    }
+  });
+  fromURL(); updateURL(true); render();
+})();
+  </script>
+  <script src="../shared/fx.js?v=6a06e4486546"></script>
+</body>
+</html>
