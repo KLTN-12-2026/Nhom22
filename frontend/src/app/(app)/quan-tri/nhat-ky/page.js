@@ -13,8 +13,9 @@ import { fetchAllPages, setParams } from '@/lib/admin-table.mjs';
 const KIND = {
   NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', GOI_DICH_VU: 'Gói dịch vụ', DANG_KY_GOI: 'Gói người dùng',
   YEU_CAU_AI: 'Đầu ra AI', HAN_MUC_DICH_VU: 'Hạn mức dịch vụ', THONG_BAO_HE_THONG: 'Thông báo hệ thống',
+  HUY_HIEU: 'Huy hiệu', THU_THACH: 'Thử thách',
 };
-const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ', soLuotNgay: 'Số lượt/ngày', hetHanAt: 'Hết hạn', giaThang: 'Giá tháng', giaNam: 'Giá năm', tieuDe: 'Tiêu đề', noiDung: 'Nội dung', hienThi: 'Hiển thị' };
+const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ', soLuotNgay: 'Số lượt/ngày', hetHanAt: 'Hết hạn', giaThang: 'Giá tháng', giaNam: 'Giá năm', tieuDe: 'Tiêu đề', noiDung: 'Nội dung', hienThi: 'Hiển thị', ma: 'Mã danh mục', loaiDieuKien: 'Loại điều kiện', nguong: 'Ngưỡng đạt', thuTu: 'Thứ tự hiển thị', hoatDong: 'Đang dùng', chuKy: 'Chu kỳ', version: 'Phiên bản' };
 const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Công khai', RIENG_TU: 'Riêng tư', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn', GIAO_TIEP: 'Giao tiếp', MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao', CHO_DUYET: 'Chờ duyệt', DA_DUYET: 'Đã duyệt', TU_CHOI: 'Từ chối', THU_HOI: 'Thu hồi' };
 const PAGE_SIZE = 20;
 const cap = text => (text ? text[0].toUpperCase() + text.slice(1) : text);
@@ -35,6 +36,7 @@ function targetLink(target) {
   if (target.loai === 'BO_THE' && target.id) return `/quan-tri/bo-mau?id=${target.id}`;
   if (target.loai === 'HAN_MUC_DICH_VU') return '/quan-tri/dich-vu';
   if (target.loai === 'THONG_BAO_HE_THONG') return '/quan-tri/thong-bao';
+  if (target.loai === 'HUY_HIEU' || target.loai === 'THU_THACH') return '/quan-tri/dong-luc';
   if (target.loai === 'GOI_DICH_VU' || target.loai === 'DANG_KY_GOI') return '/quan-tri/thanh-toan';
   return null;
 }

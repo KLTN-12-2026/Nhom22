@@ -19,6 +19,8 @@ export const ACTION_LABEL = {
   XOA_TAI_KHOAN: 'xóa tài khoản', GIU_NOI_DUNG: 'giữ nội dung bị báo cáo', AN_NOI_DUNG: 'ẩn nội dung bị báo cáo',
   SUA_HAN_MUC: 'sửa hạn mức', TAO_THONG_BAO: 'tạo thông báo', SUA_THONG_BAO: 'sửa thông báo', XOA_THONG_BAO: 'xóa thông báo',
   DUYET_CONG_KHAI: 'duyệt công khai', TU_CHOI_CONG_KHAI: 'từ chối công khai', THU_HOI_CONG_KHAI: 'thu hồi công khai',
+  TAO_HUY_HIEU: 'tạo huy hiệu', SUA_HUY_HIEU: 'sửa huy hiệu',
+  TAO_THU_THACH: 'tạo thử thách', SUA_THU_THACH: 'sửa thử thách',
 };
 
 export const ACTION_TONE = {

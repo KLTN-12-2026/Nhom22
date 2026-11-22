@@ -132,3 +132,9 @@ Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và
 ## Kết nối API đợt 3 (17/11/2026)
 
 Đã thay fixture của 9 trang AI/phát âm/gợi ý/bản đồ kỹ năng/tổng kết tuần/thành tích bằng API backend. [Bảng rà soát và giới hạn](../docs/frontend/API_AUDIT_2026-11-17.md). Tác vụ AI được theo dõi theo requestId; lưu thẻ có Idempotency-Key khi retry; phát âm gửi WAV PCM mono 16 kHz/16 bit. Không tự tạo điểm hoặc phản hồi mẫu ở frontend. Nếu backend dùng provider fake, giao diện vẫn ghi rõ nguồn mô phỏng theo phản hồi máy chủ.
+
+## Quản trị huy hiệu và thử thách (UI54)
+
+Trang `/quan-tri/dong-luc` bổ sung trở lại UI54 theo yêu cầu mới, có lối vào trong menu quản trị. Hai tab Huy hiệu/Thử thách đọc API quản trị thật, hỗ trợ tạo/sửa, xác nhận bật/tắt và phân trang. Ghi kèm `version`; lỗi xung đột yêu cầu tải lại danh mục. Thử thách đã có tiến độ không được đổi mục tiêu. Không có thao tác cộng điểm thủ công hoặc xóa thành tích.
+
+Cần backend có migration `V34__admin_motivation.sql`; khởi động lại backend sau khi cập nhật mã. [Hợp đồng API và quy tắc](../docs/luong-backend/B3.6a-quan-tri-dong-luc.md). Mockup HTML vẫn là bản demo độc lập, không phải nguồn dữ liệu frontend.

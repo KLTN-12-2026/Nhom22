@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,4 +48,23 @@ public class ThuThach extends BaseEntity {
     private int mucTieu;
 
     private boolean hoatDong;
+
+    @Version
+    private Long version;
+
+    public static ThuThach create(String ma, String ten, String moTa, LoaiDieuKienThuThach loaiDieuKien, ChuKyThuThach chuKy, int mucTieu, boolean hoatDong) {
+        ThuThach row = new ThuThach();
+        row.ma = ma;
+        row.update(ten, moTa, loaiDieuKien, chuKy, mucTieu, hoatDong);
+        return row;
+    }
+
+    public void update(String ten, String moTa, LoaiDieuKienThuThach loaiDieuKien, ChuKyThuThach chuKy, int mucTieu, boolean hoatDong) {
+        this.ten = ten;
+        this.moTa = moTa;
+        this.loaiDieuKien = loaiDieuKien;
+        this.chuKy = chuKy;
+        this.mucTieu = mucTieu;
+        this.hoatDong = hoatDong;
+    }
 }

@@ -77,7 +77,7 @@ public class RewardService {
 
     private void addChallengeProgress(Long userId, LocalDate ngay, Instant now) {
         LocalDate tuan = StreakCalculator.weekStart(ngay);
-        for (ThuThach challenge : challenges.findByHoatDongTrueOrderByIdAsc()) {
+        for (ThuThach challenge : challenges.findActiveForReward()) {
             if (challenge.getLoaiDieuKien() != LoaiDieuKienThuThach.LUOT_ON) {
                 continue;
             }

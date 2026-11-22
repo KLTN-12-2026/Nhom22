@@ -21,6 +21,7 @@ export const ADMIN_NAV = [
     { key: 'users', label: 'Tài khoản và vai trò', href: '/quan-tri/tai-khoan' },
     { key: 'decks', label: 'Bộ mẫu và thẻ', href: '/quan-tri/bo-mau' },
     { key: 'topics', label: 'Chủ đề và nhãn', href: '/quan-tri/chu-de' },
+    { key: 'motivation', label: 'Huy hiệu và thử thách', href: '/quan-tri/dong-luc' },
   ] },
   { group: 'Sổ sách', items: [
     { key: 'payments', label: 'Thanh toán và gói', href: '/quan-tri/thanh-toan', badge: 'payments', tone: 'red' },

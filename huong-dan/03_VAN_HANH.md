@@ -29,6 +29,22 @@
 
 Khôi phục vào DB đang chạy sẽ ghi đè bảng cùng tên: dừng `api` trước (`docker compose … stop api`), khôi phục, rồi chạy lại. Biên bản lần thử: [TC19](../docs/kiem-thu/TC19_BIEN_BAN_SAO_LUU_KHOI_PHUC.md).
 
+### Database nhánh FE đã chạy `V28__admin_motivation.sql`
+
+Sau khi merge `main`, V28 là `dashboard_highlights`, còn phần quản trị huy hiệu/thử thách nằm ở V34. Database đã chạy V28 cũ sẽ báo checksum mismatch và API có thể lặp restart.
+
+Trong `backend/k28`, `python3 scripts/repair_legacy_v28.py` chỉ kiểm tra, không sửa database. Script chỉ nhận đúng V28 cũ với checksum `-34270287`, kiểm tra các migration trước đó và từ chối database đã chuyển đổi hoặc có trạng thái khác.
+
+Trước khi áp dụng, dừng riêng API, sao lưu bằng `mysqldump`, kiểm tra bản sao và diễn tập trên database riêng khôi phục từ bản sao đó. Thư mục sao lưu cần có `mysql.sql.gz` và `manifest.json` ghi `sha256` của file nén. Sao lưu chứa dữ liệu thật, giữ quyền truy cập riêng và không đưa vào Git.
+
+```bash
+python3 scripts/repair_legacy_v28.py --database TEN_DB_THU --apply --backup-dir DUONG_DAN_SAO_LUU
+python3 scripts/repair_legacy_v28.py --apply --backup-dir DUONG_DAN_SAO_LUU
+docker compose --profile app up -d --build --no-deps api
+```
+
+Script áp dụng các thay đổi còn thiếu từ V28–V34, giữ các cột `version` đã có và các loại nhật ký của nhánh FE, rồi mới cập nhật lịch sử Flyway theo source hiện tại. Lịch sử cũ, SQL đã chạy và kết quả kiểm tra được lưu trong thư mục sao lưu. Script so sánh số dòng và SHA-256 dữ liệu cũ của từng bảng trước/sau; ba huy hiệu tuần mới từ V33 được bổ sung riêng. Cuối cùng kiểm tra Flyway, health API và các kiểu sắp xếp thư viện. Không dùng `flyway repair` đơn thuần để bỏ qua việc thiếu cấu trúc database.
+
 ## Kiểm tra tải
 
 Xem [TC20](../docs/kiem-thu/TC20_BIEN_BAN_HIEU_NANG.md). Tóm tắt: nạp `scripts/k6/seed_load_users.sql`, chạy `scripts/k6/tc20.js` bằng image `grafana/k6:1.3.0`.
