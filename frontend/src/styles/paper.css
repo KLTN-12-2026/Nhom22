@@ -1,3 +1,13 @@
+body {
+  background-color: var(--desk);
+  background-image:
+    radial-gradient(140% 70% at 50% -10%, color-mix(in srgb, var(--tier-soft, var(--sunk)) 70%, transparent) 0%, transparent 60%),
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--line-2) 70%, transparent) 1px, transparent 1.4px);
+  background-size: auto, 22px 22px;
+  background-attachment: fixed;
+}
+@media print { body { background-image: none; } }
+
 .app-main {
   --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --paper-fold: 26px;
@@ -13,8 +23,9 @@
   border-top-right-radius: 0;
   background-image:
     radial-gradient(120% 90% at 50% 40%, transparent 70%, color-mix(in srgb, var(--ink) 4%, transparent) 100%),
+    repeating-linear-gradient(to bottom, transparent 0 31px, color-mix(in srgb, var(--line) 45%, transparent) 31px 32px),
     var(--paper-grain);
-  background-size: auto, 160px 160px;
+  background-size: auto, auto, 160px 160px;
   box-shadow:
     0 1px 2px rgb(16 24 40 / .06),
     0 5px 0 -3px var(--sheet),
@@ -36,6 +47,8 @@
   pointer-events: none;
   z-index: 1;
 }
+
+.app-main .sheet:not(.sheet-plain)::before { opacity: .42; }
 
 @media (max-width: 1023px) {
   .app-main { --paper-fold: 18px; }

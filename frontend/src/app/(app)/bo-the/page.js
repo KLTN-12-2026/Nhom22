@@ -6,6 +6,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ErrorState, Pagination, Icon } from '@/components/ui';
 import styles from './page.module.css';
+import { CardUsageMeter } from '@/components/billing/PlanAccess';
+import { useCardUsage, usePlans } from '@/hooks/usePlanAccess';
+import { usePlan } from '@/components/tier/useTier';
 import { useDecks } from '@/hooks/useDecks';
 import { useTopics } from '@/hooks/useTopics';
 import { CopyBadge } from '@/components/content/CopyBadge';
@@ -15,6 +18,9 @@ import { useMe } from '@/hooks/useMe';
 export default function DecksPage() {
   const { data: me } = useMe();
   const { data: plan } = useQuery({ queryKey: ['learning-settings'], queryFn: () => apiFetch('/api/v1/me/learning-settings') });
+  const cardUsage = useCardUsage();
+  const plans = usePlans();
+  const { data: currentPlan } = usePlan();
   const [activeTab, setActiveTab] = useState('mine');
   const [search, setSearch] = useState('');
 
@@ -35,6 +41,7 @@ export default function DecksPage() {
             </Link>
           </div>
         </div>
+        {!currentPlan?.quanTri && <CardUsageMeter usage={cardUsage.data} plans={plans.data} planCode={currentPlan?.tenGoi || currentPlan?.goiMa} />}
 
         <div className={`row-between ${styles.filterRow}`}>
           <div className="tabs" role="tablist" aria-label="Loại bộ thẻ">

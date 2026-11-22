@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { ErrorState } from '@/components/ui';
+import { ErrorState, Icon } from '@/components/ui';
 import { CancelSubscriptionButton } from '@/components/billing/CancelSubscriptionButton';
+import { PlanTag } from '@/components/billing/PlanAccess';
+import { usePlans } from '@/hooks/usePlanAccess';
+import { usePlan } from '@/components/tier/useTier';
+import { FEATURES, formatLimit, planValue } from '@/lib/plan-access.mjs';
+import { planKey } from '@/lib/tier.mjs';
 import styles from './page.module.css';
 
 const CYCLES = [
@@ -13,75 +18,186 @@ const CYCLES = [
   ['NAM', 'Hàng năm', 'năm'],
 ];
 
-const formatPrice = value => `${value.toLocaleString('vi-VN')} đ`;
+const ROWS = ['GIOI_HAN_THE', 'AI', 'ANH', 'TTS', 'PHAT_AM', 'BO_MAU_CAO_CAP'];
+const SOURCE = { DUNG_THU: 'dùng thử', HSSV: 'ưu đãi học sinh, sinh viên', MUA: '' };
+
+const formatPrice = value => `${Number(value || 0).toLocaleString('vi-VN')} đ`;
+const saving = p => p.giaThang > 0 ? Math.round((1 - p.giaNam / (p.giaThang * 12)) * 100) : 0;
+
+function rowText(key, p) {
+  const value = planValue(p, key);
+  const f = FEATURES[key];
+  if (f.limit) return `${formatLimit(p.gioiHanThe)} thẻ`;
+  if (f.quota) return value > 0 ? `${formatLimit(value)}/ngày` : 'Không có';
+  return value > 0 ? 'Có' : 'Không có';
+}
 
 export default function ThanhToanGoiPage() {
+  const client = useQueryClient();
   const [selected, setSelected] = useState(null);
   const [cycle, setCycle] = useState('THANG');
+  const [code, setCode] = useState('');
+  const [appliedCode, setAppliedCode] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const plansQuery = useQuery({ queryKey: ['billing', 'plans'], queryFn: () => apiFetch('/api/v1/billing/plans') });
+  const [offerMessage, setOfferMessage] = useState('');
+  const plansQuery = usePlans();
+  const currentQuery = usePlan();
   const subQuery = useQuery({ queryKey: ['billing', 'subscription'], queryFn: () => apiFetch('/api/v1/me/subscription') });
-  const PLANS = Object.fromEntries((plansQuery.data || []).map(p => [p.ma, { name: p.ten, THANG: p.giaThang, NAM: p.giaNam, features: [[true, 'Số thẻ: ', p.gioiHanThe == null ? 'Không giới hạn' : String(p.gioiHanThe), ''], [true, 'AI văn bản/ngày: ', String(p.hanMucAi ?? 0), ''], [true, 'Ảnh AI/ngày: ', String(p.hanMucAnh ?? 0), ''], [p.phatAm, 'Đánh giá phát âm', '', ''], [p.boMauCaoCap, 'Bộ mẫu cao cấp', '', '']] }]));
+  const studentQuery = useQuery({ queryKey: ['billing', 'student-offer'], queryFn: () => apiFetch('/api/v1/me/student-offer') });
+  const quoteQuery = useQuery({
+    queryKey: ['billing', 'quote', selected, cycle, appliedCode],
+    enabled: !!selected,
+    retry: false,
+    queryFn: () => apiFetch('/api/v1/billing/quotes', { method: 'POST', body: JSON.stringify({ goiMa: selected, chuKy: cycle, maKhuyenMai: appliedCode || null }) }),
+  });
+
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('goi');
+    if (wanted && wanted !== 'FREE') setSelected(wanted);
+  }, []);
+
+  const plans = [...(plansQuery.data || [])].sort((a, b) => a.giaThang - b.giaThang);
+  const current = currentQuery.data;
+  const currentPlan = plans.find(p => p.ma === current?.goiMa);
   const subscription = subQuery.data;
-
-
-  const plan = selected ? PLANS[selected] : null;
-  const total = plan ? plan[cycle] : 0;
+  const plan = plans.find(p => p.ma === selected);
+  const quote = quoteQuery.data;
   const unit = cycle === 'NAM' ? 'năm' : 'tháng';
 
-  const selectPlan = key => {
-    setSelected(key);
-    setCycle('THANG');
+  const refresh = () => {
+    client.invalidateQueries({ queryKey: planKey });
+    client.invalidateQueries({ queryKey: ['billing'] });
+    client.invalidateQueries({ queryKey: ['service-quota'] });
+    client.invalidateQueries({ queryKey: ['card-usage'] });
+  };
+
+  const selectPlan = key => { setSelected(key); setCycle('THANG'); setError(''); };
+
+  const startTrial = async () => {
+    setOfferMessage('');
+    try { await apiFetch('/api/v1/me/subscription/trial', { method: 'POST' }); refresh(); setOfferMessage('Đã bật dùng thử Premium 7 ngày.'); }
+    catch (e) { setOfferMessage(e.message); }
+  };
+
+  const studentAction = async path => {
+    setOfferMessage('');
+    try { await apiFetch(path, { method: 'POST', body: path.endsWith('verifications') ? JSON.stringify({}) : undefined }); refresh(); }
+    catch (e) { setOfferMessage(e.message); }
   };
 
   const confirmPayment = async () => {
-    if (!plan || pending) return;
+    if (!plan || pending || !quote) return;
     setPending(true); setError('');
     try {
-      const result = await apiFetch('/api/v1/billing/checkouts', { method: 'POST', body: JSON.stringify({ goiMa: selected, chuKy: cycle }) });
+      const result = await apiFetch('/api/v1/billing/checkouts', { method: 'POST', body: JSON.stringify({ goiMa: selected, chuKy: cycle, maKhuyenMai: appliedCode || null }) });
       if (!result.paymentUrl) throw new Error('Máy chủ chưa trả về địa chỉ thanh toán.');
       const url = new URL(result.paymentUrl, window.location.origin);
       if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Địa chỉ thanh toán không hợp lệ.');
       window.location.assign(url.href);
-    } catch (error) { setError(error.message); setPending(false); }
+    } catch (e) { setError(e.message); setPending(false); }
   };
-  if (plansQuery.isPending || subQuery.isPending) return <div className="page sheet" role="status">Đang tải gói dịch vụ…</div>;
+
+  if (plansQuery.isPending || subQuery.isPending || currentQuery.isPending) return <div className="page sheet" role="status">Đang tải gói dịch vụ…</div>;
   if (plansQuery.isError || subQuery.isError) return <div className="page sheet"><ErrorState description={(plansQuery.error || subQuery.error).message} onRetry={() => { plansQuery.refetch(); subQuery.refetch(); }} /></div>;
+
+  const rank = p => plans.indexOf(p);
+  const currentRank = current?.quanTri ? plans.length : Math.max(0, rank(currentPlan));
+  const student = studentQuery.data;
+  const neverSubscribed = subscription?.trangThai === 'CHUA_CO_GOI' && !current?.quanTri;
+
   return (
     <div className="page">
       <article className={`sheet ${styles.pageSheet}`} aria-labelledby="page-title">
         <div className="form-head">
           <div className="form-code"><span>Tài khoản</span></div>
           <h1 id="page-title">Gói dịch vụ</h1>
-          <p>Chọn gói phù hợp để mở khóa toàn bộ tính năng học tập.</p>
+          <p>Gói Free dùng mãi. Nâng cấp để có nhiều thẻ, nhiều lượt AI và chấm phát âm hơn.</p>
         </div>
 
         <div className={styles.currentBanner}>
           <div className={styles.planInfo}>
-            <strong>{subscription?.trangThai === 'HIEU_LUC' ? `Đang dùng gói ${subscription.tenGoi}` : subscription?.trangThai === 'DA_HUY' ? `Bạn đã hủy gói ${subscription.tenGoi}` : 'Bạn chưa có gói đang hiệu lực'}</strong>
-            <span>Gói không tự gia hạn. Gia hạn cùng gói còn hiệu lực sẽ cộng dồn thời gian.</span>
+            <strong>
+              {current?.quanTri ? 'Tài khoản quản trị có toàn bộ quyền lợi Premium'
+                : `Đang dùng gói ${current?.tenGoi || 'Free'}${current?.nguon && SOURCE[current.nguon] ? ` (${SOURCE[current.nguon]})` : ''}`}
+            </strong>
+            <span>{current?.hetHanAt ? `Hết hạn ${new Date(current.hetHanAt).toLocaleString('vi-VN')} · còn ${current.soNgayConLai} ngày. Hết hạn sẽ về gói Free, dữ liệu giữ nguyên.` : 'Gói không tự gia hạn. Gia hạn cùng gói còn hiệu lực sẽ cộng dồn thời gian.'}</span>
           </div>
           <Link href="/thanh-toan-lich-su" className="btn btn-quiet btn-sm">Lịch sử thanh toán</Link>
           <CancelSubscriptionButton subscription={subscription} />
         </div>
 
-        <h2 className={styles.sectionHeading}>Chọn gói</h2>{error && <p className="notice" role="alert">{error}</p>}{!plansQuery.data?.length && <p>Hiện chưa có gói đang mở bán.</p>}
-        <div className={styles.planGrid} role="list">
-          {Object.entries(PLANS).map(([key, item]) => (
-            <PlanCard key={key} plan={item} onSelect={() => selectPlan(key)} />
-          ))}
-        </div>
-        <p className={styles.planNote}>Xuất dữ liệu CSV và yêu cầu xóa dữ liệu luôn dùng được, không phụ thuộc gói.</p>
+        {(neverSubscribed || (student?.hoatDong && !current?.quanTri)) && <div className={styles.offers}>
+          {neverSubscribed && <div className={styles.offer}>
+            <Icon name="star" />
+            <div><strong>Dùng thử Premium 7 ngày miễn phí</strong><span>Mở toàn bộ quyền lợi Premium, không cần thanh toán. Mỗi tài khoản một lần.</span></div>
+            <button type="button" className="btn btn-primary btn-sm" onClick={startTrial}>Dùng thử ngay</button>
+          </div>}
+          {student?.hoatDong && !current?.quanTri && <div className={styles.offer}>
+            <Icon name="user" />
+            <div>
+              <strong>Ưu đãi học sinh, sinh viên: {student.phanTramGiam >= 100 ? `${student.tenGoi} miễn phí ${student.soNgay} ngày` : `giảm ${student.phanTramGiam}% gói ${student.tenGoi}`}</strong>
+              <span>{student.xacMinh?.trangThai === 'DA_DUYET' ? (student.xacMinh.daNhanUuDaiAt ? 'Bạn đã nhận ưu đãi.' : 'Đã xác minh là học sinh, sinh viên.')
+                : student.xacMinh?.trangThai === 'CHO_DUYET' ? 'Ảnh thẻ đang chờ quản trị viên duyệt.'
+                : student.xacMinh?.trangThai === 'TU_CHOI' ? `Yêu cầu bị từ chối: ${student.xacMinh.lyDoTuChoi || ''}`
+                : `Xác minh tự động nếu email tài khoản thuộc tên miền ${student.tenMien.join(', ') || 'trường học'}.`}</span>
+            </div>
+            {student.coTheNhan
+              ? <button type="button" className="btn btn-primary btn-sm" onClick={() => studentAction('/api/v1/me/student-offer/claim')}>Nhận ưu đãi</button>
+              : !student.xacMinh || student.xacMinh.trangThai === 'TU_CHOI'
+                ? <button type="button" className="btn btn-secondary btn-sm" onClick={() => studentAction('/api/v1/me/student-verifications')}>Xác minh bằng email</button>
+                : null}
+          </div>}
+          {offerMessage && <p className="notice" role="status">{offerMessage}</p>}
+        </div>}
 
-        {plan && (
+        <h2 className={styles.sectionHeading}>So sánh gói</h2>
+        {error && <p className="notice" role="alert">{error}</p>}
+        <div className={styles.planGrid} role="list">
+          {plans.map(p => {
+            const owned = rank(p) <= currentRank;
+            const isCurrent = !current?.quanTri && p.ma === current?.goiMa;
+            return (
+              <div key={p.ma} className={`${styles.planCard} ${p.ma === 'PRO' ? styles.recommended : ''} ${isCurrent ? styles.currentCard : ''}`} role="listitem">
+                {isCurrent ? <div className={styles.currentBadge}>Gói của bạn</div> : p.ma === 'PRO' && <div className={styles.recommendedBadge}>Phổ biến nhất</div>}
+                <div className={styles.planTop}>
+                  <h3><Icon name={owned ? 'check' : 'lock'} /> {p.ten} {!owned && <PlanTag code={p.ma} label={owned ? 'Đã mở' : 'Chưa mở'} />}</h3>
+                  {p.giaThang > 0 ? <>
+                    <div className={styles.price}><strong>{formatPrice(p.giaThang)}</strong><span>/tháng</span></div>
+                    <p className={styles.yearly}>hoặc {formatPrice(p.giaNam)}/năm · ≈ {formatPrice(Math.round(p.giaNam / 12))}/tháng <b>−{saving(p)}%</b></p>
+                  </> : <div className={styles.price}><strong>0 đ</strong><span>mãi mãi</span></div>}
+                </div>
+                <div className={styles.divider} />
+                <ul className={styles.features}>
+                  {ROWS.map(key => {
+                    const has = planValue(p, key) > 0;
+                    return <li key={key}>
+                      <span className={`${styles.featureIcon} ${has ? styles.ok : styles.no}`} aria-hidden="true">{has ? <Icon name="check" /> : <Icon name="lock" />}</span>
+                      <span>{FEATURES[key].label}: <strong>{rowText(key, p)}</strong></span>
+                    </li>;
+                  })}
+                </ul>
+                <div className={styles.planFooter}>
+                  {p.giaThang <= 0 ? <button type="button" className="btn btn-secondary" disabled>{isCurrent ? 'Đang dùng' : 'Gói mặc định'}</button>
+                    : current?.quanTri ? <button type="button" className="btn btn-secondary" disabled>Đã có quyền lợi</button>
+                    : <button type="button" className="btn btn-primary" onClick={() => selectPlan(p.ma)}>
+                      {isCurrent ? `Gia hạn ${p.ten}` : rank(p) > currentRank ? `Nâng cấp lên ${p.ten}` : `Chọn ${p.ten}`}
+                    </button>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className={styles.planNote}>Ôn tập, luyện tập, xuất CSV và yêu cầu xóa dữ liệu luôn dùng được ở mọi gói. Lượt dùng AI, giọng đọc và chấm phát âm đặt lại lúc 00:00 mỗi ngày.</p>
+
+        {plan && plan.giaThang > 0 && (
           <section className={styles.paymentSection} aria-labelledby="payment-title">
             <div className={styles.divider} />
             <div className={styles.paymentGrid}>
               <div>
                 <h2 className={styles.paymentTitle}>
                   <button type="button" className={styles.backButton} onClick={() => setSelected(null)} aria-label="Quay lại chọn gói">‹</button>
-                  <span id="payment-title">Thanh toán gói {plan.name}</span>
+                  <span id="payment-title">Thanh toán gói {plan.ten}</span>
                 </h2>
 
                 <h3 className={styles.sectionHeading}>Chu kỳ thanh toán</h3>
@@ -90,11 +206,19 @@ export default function ThanhToanGoiPage() {
                     <label key={value} className={`${styles.cycleOption} ${cycle === value ? styles.selected : ''}`}>
                       <input type="radio" name="cycle" value={value} checked={cycle === value} onChange={() => setCycle(value)} />
                       <span>{label}</span>
-                      <strong>{formatPrice(plan[value])}</strong>
-                      {value === 'NAM' && <small>Tiết kiệm 2 tháng</small>}
+                      <strong>{formatPrice(value === 'NAM' ? plan.giaNam : plan.giaThang)}</strong>
+                      {value === 'NAM' && <small>Tiết kiệm {saving(plan)}%</small>}
                     </label>
                   ))}
                 </div>
+
+                <h3 className={styles.sectionHeading}>Mã khuyến mãi</h3>
+                <form className={styles.promo} onSubmit={event => { event.preventDefault(); setAppliedCode(code.trim().toUpperCase()); }}>
+                  <input className="input" value={code} onChange={event => setCode(event.target.value)} placeholder="Nhập mã nếu có" maxLength={30} aria-label="Mã khuyến mãi" />
+                  <button type="submit" className="btn btn-secondary">Áp dụng</button>
+                  {appliedCode && <button type="button" className="btn btn-quiet" onClick={() => { setAppliedCode(''); setCode(''); }}>Bỏ mã</button>}
+                </form>
+                {quoteQuery.isError && <p className="notice notice-danger" role="alert">{quoteQuery.error.message}</p>}
 
                 <h3 className={styles.sectionHeading}>Phương thức thanh toán</h3>
                 <div className={styles.vnpay}>
@@ -107,14 +231,16 @@ export default function ThanhToanGoiPage() {
               <aside className={styles.summary} aria-label="Tóm tắt đơn hàng">
                 <div className={styles.summaryHead}>Tóm tắt đơn hàng</div>
                 <div className={styles.summaryBody}>
-                  <SummaryRow label="Gói" value={plan.name} />
+                  <SummaryRow label="Gói" value={plan.ten} />
                   <SummaryRow label="Chu kỳ" value={cycle === 'NAM' ? 'Hàng năm' : 'Hàng tháng'} />
-                  <SummaryRow label="Đơn giá" value={`${formatPrice(total)}/${unit}`} />
+                  <SummaryRow label="Giá gốc" value={`${formatPrice(quote?.giaGoc ?? (cycle === 'NAM' ? plan.giaNam : plan.giaThang))}/${unit}`} />
+                  {quote?.giamGia > 0 && <SummaryRow label={quote.uuDaiHssv ? 'Ưu đãi HSSV' : quote.maKhuyenMai ? `Mã ${quote.maKhuyenMai}` : quote.tenKhuyenMai || 'Khuyến mãi'} value={`−${formatPrice(quote.giamGia)}`} />}
+                  {quote?.khauTru > 0 && <SummaryRow label="Trừ phần còn lại gói cũ" value={`−${formatPrice(quote.khauTru)}`} />}
                   <div className={styles.divider} />
-                  <div className={styles.total}><strong>Tổng thanh toán</strong><strong>{formatPrice(total)}</strong></div>
+                  <div className={styles.total}><strong>Tổng thanh toán</strong><strong>{quote ? formatPrice(quote.soTien) : '…'}</strong></div>
                 </div>
-                <p className={styles.summaryNote}>Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.</p>
-                <button type="button" className="btn btn-primary" onClick={confirmPayment} disabled={pending}>
+                <p className={styles.summaryNote}>{quote?.nangCap ? 'Nâng cấp có hiệu lực ngay sau khi thanh toán, gói cũ kết thúc và phần còn lại đã được trừ vào giá.' : 'Gói không tự gia hạn. Gia hạn cùng gói khi còn hạn sẽ cộng dồn thêm thời gian; không hoàn tiền.'}</p>
+                <button type="button" className="btn btn-primary" onClick={confirmPayment} disabled={pending || !quote}>
                   {pending ? 'Đang chuyển sang VNPay...' : 'Thanh toán qua VNPay'}
                 </button>
               </aside>
@@ -122,32 +248,6 @@ export default function ThanhToanGoiPage() {
           </section>
         )}
       </article>
-
-
-    </div>
-  );
-}
-
-function PlanCard({ plan, onSelect }) {
-  return (
-    <div className={`${styles.planCard} ${plan.recommended ? styles.recommended : ''}`} role="listitem">
-      {plan.recommended && <div className={styles.recommendedBadge}>Phổ biến nhất</div>}
-      <div className={styles.planTop}>
-        <h3>{plan.name}</h3>
-        <div className={styles.price}><strong>{formatPrice(plan.THANG)}</strong><span>/tháng</span></div>
-      </div>
-      <div className={styles.divider} />
-      <ul className={styles.features}>
-        {plan.features.map(([ok, before, strong, after]) => (
-          <li key={`${before}${strong}${after}`}>
-            <span className={`${styles.featureIcon} ${ok ? styles.ok : styles.no}`} aria-hidden="true">{ok ? '✓' : '–'}</span>
-            <span>{before}{strong && <strong>{strong}</strong>}{after}</span>
-          </li>
-        ))}
-      </ul>
-      <div className={styles.planFooter}>
-        <button type="button" className="btn btn-primary" onClick={onSelect}>Chọn gói {plan.name}</button>
-      </div>
     </div>
   );
 }

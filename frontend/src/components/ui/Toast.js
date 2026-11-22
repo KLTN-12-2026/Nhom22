@@ -1,18 +1,22 @@
 'use client';
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { Icon } from './Icon';
 
 const ToastCtx = createContext(null);
+const ICONS = { default: 'check', success: 'check', error: 'alert', warning: 'alert', info: 'info', upgrade: 'lock' };
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const next = useRef(0);
 
   const dismiss = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const toast = useCallback((message, { variant = 'default', title, duration = 4000 } = {}) => {
-    const id = Date.now().toString();
-    setToasts((prev) => [...prev, { id, message, title, variant }]);
+  const toast = useCallback((message, { variant = 'default', title, duration = 5000, action } = {}) => {
+    next.current += 1;
+    const id = `${Date.now()}-${next.current}`;
+    setToasts((prev) => [...prev.slice(-3), { id, message, title, variant, duration, action }]);
     if (duration > 0) setTimeout(() => dismiss(id), duration);
     return id;
   }, [dismiss]);
@@ -22,16 +26,15 @@ export function ToastProvider({ children }) {
       {children}
       <div className="toast-container" aria-live="polite" aria-atomic="false">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast--${t.variant}`} role="status">
+          <div key={t.id} className={`toast toast--${t.variant}`} role={t.variant === 'error' ? 'alert' : 'status'}>
+            <Icon name={ICONS[t.variant] || 'check'} />
             <div className="toast__content">
               {t.title && <p className="toast__title">{t.title}</p>}
               <p className="toast__message">{t.message}</p>
             </div>
-            <button className="toast__close" onClick={() => dismiss(t.id)} aria-label="Đóng thông báo">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
+            {t.action && <button type="button" className="btn btn-quiet btn-sm toast__action" onClick={() => { t.action.onClick(); dismiss(t.id); }}>{t.action.label}</button>}
+            <button type="button" className="toast__close" onClick={() => dismiss(t.id)} aria-label="Đóng thông báo"><Icon name="x" /></button>
+            {t.duration > 0 && <span className="toast__timer" style={{ animationDuration: `${t.duration}ms` }} aria-hidden="true" />}
           </div>
         ))}
       </div>

@@ -147,9 +147,25 @@
 .field__error, [data-form-error] { color:var(--danger); margin-block:var(--sp-2); }
 .input--error, .select--error { border-color:var(--danger); }
 .error-state { padding:var(--sp-6); display:grid; gap:var(--sp-3); justify-items:start; }
-.toast-container { position:fixed; bottom:calc(var(--bottom-nav-h) + var(--sp-4)); right:var(--sp-4); z-index:300; max-width:calc(100vw - var(--sp-6)); }
-.toast { color:var(--ink); display:flex; gap:var(--sp-3); background:var(--sheet); border:var(--rule) solid var(--graphite-soft); padding:var(--sp-4); box-shadow:var(--shadow-pop); }
-.toast__close { border:0; background:transparent; min-width:var(--tap); min-height:var(--tap); }
+.toast-container { position:fixed; bottom:calc(var(--bottom-nav-h) + var(--sp-4)); right:var(--sp-4); z-index:300; display:grid; gap:var(--sp-2); justify-items:end; width:min(400px, calc(100vw - var(--sp-6))); }
+@media (min-width: 1024px) { .toast-container { bottom:var(--sp-5); } }
+.toast--success, .toast--default { --tone: var(--secondary); }
+.toast--error { --tone: var(--danger); }
+.toast--warning { --tone: var(--warning); }
+.toast--info { --tone: var(--primary); }
+.toast--upgrade { --tone: var(--tier, var(--primary)); }
+.toast-container .toast { width:100%; }
+.toast__content { flex:1; min-width:0; }
+.toast__title { margin:0; font-weight:700; font-size:var(--fs-small); }
+.toast__message { margin:0; font-size:var(--fs-small); color:var(--ink-2); }
+.toast__title + .toast__message { font-size:var(--fs-caption); }
+.toast__title:empty + .toast__message, .toast__content > .toast__message:only-child { color:var(--ink); font-weight:600; }
+.toast__action { flex:none; }
+.toast__close { flex:none; display:grid; place-items:center; border:0; background:transparent; color:var(--ink-3); min-width:var(--tap); min-height:var(--tap); border-radius:var(--radius-btn); cursor:pointer; }
+.toast__close:hover { background:var(--sunk); color:var(--ink); }
+.toast__timer { position:absolute; left:0; right:0; bottom:0; height:3px; background:color-mix(in srgb, var(--tone) 35%, transparent); transform-origin:left; animation:toast-timer linear forwards; }
+@keyframes toast-timer { to { transform:scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast__timer { animation:none; opacity:0; } }
 .page, .sheet, .answer-main { min-width:0; }
 .answer-title, .deck-title { overflow-wrap:anywhere; }
 .pagination__btn { min-width:var(--tap); min-height:var(--tap); border:var(--rule) solid var(--graphite-soft); background:var(--sheet); }
