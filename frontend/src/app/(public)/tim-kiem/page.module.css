@@ -131,6 +131,7 @@
 }
 
 .authorRow {
+  grid-template-columns: 2.25rem auto minmax(0, 1fr);
   align-items: center;
 }
 

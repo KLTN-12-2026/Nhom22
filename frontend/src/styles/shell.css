@@ -2,23 +2,23 @@
 :root[data-theme="dark"] .nav-link { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav-link { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); } }
 
-.app-header { background: var(--sheet); border-bottom: var(--rule) solid var(--line); box-shadow: none; }
+.app-header { --chrome-hover: color-mix(in srgb, var(--ink) 6%, var(--desk)); background: var(--desk); border-bottom: var(--rule) solid var(--line); box-shadow: none; }
 .app-header .header-actions { gap: var(--sp-3); }
 .header-tools, .header-status { display: flex; align-items: center; gap: var(--sp-1); }
 .header-status { gap: var(--sp-2); padding-left: var(--sp-3); border-left: var(--rule) solid var(--line); }
 
 .app-header .btn-icon, .app-header .theme-toggle { width: var(--tap); min-width: var(--tap); height: var(--tap); min-height: var(--tap); padding: 0; justify-content: center; border: 0; border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); transition: background var(--dur-1), color var(--dur-1); }
-.app-header .btn-icon:hover, .app-header .theme-toggle:hover, .app-header .theme-picker[open] .theme-toggle { background: var(--sunk); color: var(--ink); }
+.app-header .btn-icon:hover, .app-header .theme-toggle:hover, .app-header .theme-picker[open] .theme-toggle { background: var(--chrome-hover); color: var(--ink); }
 .app-header .btn-icon:focus-visible, .app-header .theme-toggle:focus-visible { outline: none; box-shadow: var(--focus); }
 .app-header .theme-track { display: none; }
 .app-header .theme-toggle .icon { width: 20px; height: 20px; }
 [data-theme="dark"] .app-header .theme-toggle { justify-content: center; }
 
 .app-header .user-chip { min-height: 40px; padding: 3px var(--sp-3) 3px 3px; border: var(--rule) solid var(--line); border-radius: 99px; background: var(--sheet); color: var(--ink); transition: background var(--dur-1), border-color var(--dur-1); }
-.app-header .user-chip:hover { background: var(--sunk); border-color: var(--line-2); text-decoration: none; }
+.app-header .user-chip:hover { background: var(--chrome-hover); border-color: var(--line-2); text-decoration: none; }
 .app-header .user-chip .user-name { font-weight: 600; font-size: var(--fs-small); }
 
-.app-rail { display: none; --rail-w: 68px; --rail-open: 256px; }
+.app-rail { display: none; --chrome-hover: color-mix(in srgb, var(--ink) 6%, var(--desk)); --rail-w: 68px; --rail-open: 256px; }
 .rail-row { --nav-ic: var(--hue, var(--primary)); }
 :root[data-theme="dark"] .rail-row { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rail-row { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); } }
@@ -30,7 +30,7 @@
   .app-rail { display: block; position: sticky; z-index: 25; top: var(--header-h); align-self: flex-start; flex-shrink: 0; width: var(--rail-w); height: calc(100dvh - var(--header-h)); transition: width var(--dur-2) var(--ease); }
   .app-rail[data-pinned] { width: var(--rail-open); }
 
-  .rail { position: absolute; inset: 0 auto 0 0; width: var(--rail-w); display: flex; flex-direction: column; background: var(--sheet); border-right: var(--rule) solid var(--line); overflow: hidden; transition: width var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease); }
+  .rail { position: absolute; inset: 0 auto 0 0; width: var(--rail-w); display: flex; flex-direction: column; background: var(--desk); border-right: var(--rule) solid var(--line); overflow: hidden; transition: width var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease); }
   .rail[data-open] { width: var(--rail-open); }
   .app-rail:not([data-pinned]) .rail[data-open] { box-shadow: var(--shadow-pop); }
 
@@ -41,8 +41,8 @@
   .rail[data-open] .rail-group-title { height: 26px; line-height: 26px; opacity: 1; }
 
   .rail-row { position: relative; display: flex; align-items: center; border-radius: var(--radius-btn); transition: background var(--dur-1); }
-  .rail-row:hover { background: var(--sunk); }
-  .rail-row[aria-current="page"] { background: color-mix(in srgb, var(--nav-ic) 13%, var(--sheet)); }
+  .rail-row:hover { background: var(--chrome-hover); }
+  .rail-row[aria-current="page"] { background: color-mix(in srgb, var(--nav-ic) 14%, var(--desk)); }
   .rail-row[aria-current="page"]::before { content: ""; position: absolute; left: -10px; top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: var(--nav-ic); }
   .rail-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; height: 44px; padding: 0 13px; border-radius: var(--radius-btn); color: var(--ink-2); font-weight: 500; white-space: nowrap; }
   .rail-link:hover { color: var(--ink); text-decoration: none; }
@@ -55,20 +55,20 @@
   .rail[data-open] .rail-label, .rail[data-open] .rail-extra { opacity: 1; transition-delay: 60ms; }
   .rail-sub { display: none; width: 32px; height: 32px; margin-right: 6px; flex: none; place-items: center; border-radius: 8px; color: var(--ink-3); }
   .rail-sub .icon { width: 17px; height: 17px; }
-  .rail-sub:hover { background: var(--line); color: var(--ink); }
+  .rail-sub:hover { background: var(--line-2); color: var(--ink); }
   .rail-sub[aria-current="page"] { background: color-mix(in srgb, var(--nav-ic) 22%, var(--sheet)); color: var(--ink); }
   .rail[data-open] .rail-row:hover .rail-sub, .rail[data-open] .rail-row[aria-current="page"] .rail-sub, .rail[data-open] .rail-sub:focus-visible { display: grid; }
   .rail-link:focus-visible, .rail-sub:focus-visible, .rail-pin:focus-visible, .rail-settings:focus-visible { outline: none; box-shadow: var(--focus); }
 
   .rail-pin { position: absolute; z-index: 1; top: 8px; right: 8px; width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--ink-3); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity var(--dur-1); }
   .rail[data-open] .rail-pin { opacity: 1; pointer-events: auto; }
-  .rail-pin:hover { background: var(--sunk); color: var(--ink); }
+  .rail-pin:hover { background: var(--chrome-hover); color: var(--ink); }
   .rail-pin[aria-pressed="true"] { color: var(--primary); }
   .rail-pin .icon { width: 17px; height: 17px; }
 
   .rail-foot { padding: 10px; border-top: var(--rule) solid var(--line); }
   .rail-settings { width: 100%; display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); text-align: left; white-space: nowrap; cursor: pointer; transition: background var(--dur-1); }
-  .rail-settings:hover, .rail-settings[aria-expanded="true"] { background: var(--sunk); }
+  .rail-settings:hover, .rail-settings[aria-expanded="true"] { background: var(--chrome-hover); }
   .rail-settings-avatar { position: relative; flex: none; }
   .rail-gear { position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; display: grid; place-items: center; border: var(--rule) solid var(--line); border-radius: 50%; background: var(--sheet); color: var(--ink-2); }
   .rail-gear .icon { width: 12px; height: 12px; stroke-width: 2.2; }

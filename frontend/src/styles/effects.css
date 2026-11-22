@@ -82,3 +82,26 @@
   .fx-check path { stroke-dashoffset: 0; }
   .btn:active:not(:disabled), .rate:active:not(:disabled) { transform: none; }
 }
+
+.flipcard { perspective: 1600px; margin: var(--sp-3) 0 var(--sp-2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.flipcard[data-flipped] { cursor: default; }
+.flipcard-inner { display: grid; transform-style: preserve-3d; transition: transform 620ms cubic-bezier(.3, .7, .2, 1.05); }
+.flipcard[data-flipped] .flipcard-inner { transform: rotateY(180deg); }
+.flipcard-face { grid-area: 1 / 1; display: grid; justify-items: center; align-content: center; gap: var(--sp-2); min-height: 260px; padding: var(--sp-5) var(--sp-4) var(--sp-6); text-align: center; background: var(--field); border: var(--rule) solid var(--line); border-radius: var(--radius-card); box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 14px 24px -16px rgba(16, 24, 40, .3); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flipcard-back { transform: rotateY(180deg); border-top: 3px solid var(--primary); }
+.flipcard-front { border-top: 3px solid var(--accent); }
+.flipcard:not([data-flipped]):hover .flipcard-front { border-color: var(--line-2); border-top-color: var(--accent); }
+.flipcard .face-label { justify-self: start; margin: 0 0 var(--sp-2); }
+.flipcard-word { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--sp-2); max-width: 100%; }
+.flipcard-word .speak-compact .btn-icon, .flipcard-example .speak-compact .btn-icon { color: var(--primary); }
+.flipcard-sub { margin: 0; color: var(--ink-3); font-size: var(--fs-small); }
+.flipcard-example { display: inline-flex; align-items: center; gap: var(--sp-1); max-width: 56ch; }
+.flipcard-example .example { margin: var(--sp-2) 0 0; }
+.flipcard-hint { display: inline-flex; align-items: center; gap: 6px; margin: var(--sp-3) 0 0; color: var(--ink-3); font-size: var(--fs-caption); }
+.flipcard-hint .icon { width: 14px; height: 14px; }
+.flipcard .pos { margin: 0; color: var(--ink-3); font-size: var(--fs-small); }
+@media (max-width: 639px) { .flipcard-face { min-height: 210px; padding: var(--sp-4) var(--sp-3) var(--sp-5); } }
+@media (prefers-reduced-motion: reduce) {
+  .flipcard-inner { transition: none; }
+  .flipcard[data-flipped] .flipcard-front { visibility: hidden; }
+}

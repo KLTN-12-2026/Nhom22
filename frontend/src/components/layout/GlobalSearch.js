@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui';
 import { Highlight } from '@/components/ui/Highlight';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 import { useSearchSuggest } from '@/hooks/useSearch';
+import { dictionaryHref, hasVietnamese, ipa } from '@/lib/dictionary.mjs';
 import { clearRecent, matchPages, readRecent, saveRecent } from '@/lib/search-text.mjs';
 import styles from './GlobalSearch.module.css';
 
@@ -16,7 +19,9 @@ function initials(name = '') {
   return (name.trim().split(/\s+/).pop()?.[0] || '?').toUpperCase();
 }
 
-function buildGroups(data, term, pages) {
+const dictionaryDirection = term => hasVietnamese(term) ? 'VIET_ANH' : 'ANH_VIET';
+
+function buildGroups(data, term, pages, dictionary) {
   const groups = [];
   const pageHits = matchPages(pages, term);
   if (data?.cuaToi) {
@@ -25,6 +30,12 @@ function buildGroups(data, term, pages) {
       ...data.cuaToi.tuVung.items.map(card => ({ key: `my-card-${card.id}`, href: `/bo-the/${card.boTheId}?the=${card.id}`, icon: 'notebook', title: card.tu, word: true, meta: `${card.nghiaVi} · ${card.tenBoThe}` })),
     ].slice(0, 5);
     if (items.length) groups.push({ id: 'mine', label: 'Của tôi', items });
+  }
+  if (dictionary?.items.length) {
+    groups.push({ id: 'dictionary', label: dictionary.chieu === 'VIET_ANH' ? 'Từ điển Việt – Anh' : 'Từ điển Anh – Việt', more: { href: dictionaryHref(term, dictionary.chieu), label: 'Mở từ điển' }, items: dictionary.items.map(entry => ({
+      key: `dict-${entry.id}`, href: dictionaryHref(entry.tu, dictionary.chieu), icon: 'book', title: entry.tu, dict: true,
+      sub: entry.phienAm ? ipa(entry.phienAm) : undefined, meta: entry.tomTat,
+    })) });
   }
   if (data?.tuVung?.items.length) {
     groups.push({ id: 'words', label: 'Từ vựng', tab: 'tu-vung', total: data.tuVung.totalElements, items: data.tuVung.items.map(card => ({
@@ -57,7 +68,7 @@ function buildGroups(data, term, pages) {
   return groups;
 }
 
-export function GlobalSearch({ pages = [] }) {
+export function GlobalSearch({ pages = [], className = '', placeholder = 'Tra từ điển, tìm bộ thẻ, tác giả…' }) {
   const router = useRouter();
   const pathname = usePathname();
   const listId = useId();
@@ -102,8 +113,18 @@ export function GlobalSearch({ pages = [] }) {
     return () => document.removeEventListener('pointerdown', onPointer);
   }, [open]);
 
-  const { data, isFetching, error } = useSearchSuggest(term, { enabled: open });
-  const groups = useMemo(() => (term && data?.q === term ? buildGroups(data, term, pages) : []), [data, term, pages]);
+  const { data, isFetching: searchFetching, error } = useSearchSuggest(term, { enabled: open });
+  const chieu = dictionaryDirection(term);
+  const dict = useQuery({
+    queryKey: ['dictionary-suggest', chieu, term, 4],
+    queryFn: () => apiFetch(`/api/v1/dictionary/suggest?${new URLSearchParams({ q: term, chieu, limit: '4' })}`),
+    enabled: open && term.length > 0,
+    staleTime: 60000,
+    retry: false
+  });
+  const isFetching = searchFetching || dict.isFetching;
+  const dictionary = useMemo(() => (Array.isArray(dict.data) ? { chieu, items: dict.data } : null), [dict.data, chieu]);
+  const groups = useMemo(() => (term && data?.q === term ? buildGroups(data, term, pages, dictionary) : []), [data, term, pages, dictionary]);
   const flat = useMemo(() => groups.flatMap(group => group.items), [groups]);
   const typed = value.trim();
   const settled = typed === term;
@@ -141,7 +162,7 @@ export function GlobalSearch({ pages = [] }) {
   let position = -1;
 
   return (
-    <div ref={rootRef} className={styles.root} data-expanded={expanded || undefined}>
+    <div ref={rootRef} className={`${styles.root}${className ? ` ${className}` : ''}`} data-expanded={expanded || undefined}>
       <button type="button" className={`btn btn-quiet btn-icon ${styles.trigger}`} aria-label="Tìm kiếm" title="Tìm kiếm (Ctrl K)"
         onClick={() => { setExpanded(true); setOpen(true); setRecent(readRecent()); requestAnimationFrame(() => inputRef.current?.focus()); }}>
         <Icon name="search" />
@@ -158,12 +179,12 @@ export function GlobalSearch({ pages = [] }) {
             className={styles.input}
             type="search"
             role="combobox"
-            aria-label="Tìm từ vựng, bộ thẻ, tác giả"
+            aria-label="Tìm từ điển, từ vựng, bộ thẻ, tác giả"
             aria-expanded={showPanel}
             aria-controls={listId}
             aria-autocomplete="list"
             aria-activedescendant={activeKey ? optionId(activeKey) : undefined}
-            placeholder="Tìm từ vựng, bộ thẻ, tác giả…"
+            placeholder={placeholder}
             autoComplete="off"
             spellCheck={false}
             maxLength={150}
@@ -214,6 +235,11 @@ export function GlobalSearch({ pages = [] }) {
                       Xem {group.total}
                     </Link>
                   )}
+                  {group.more && (
+                    <Link className={styles.link} href={group.more.href} onClick={(event) => { event.preventDefault(); go(group.more.href); }}>
+                      {group.more.label}
+                    </Link>
+                  )}
                 </div>
                 {group.items.map(item => {
                   position += 1;
@@ -233,7 +259,7 @@ export function GlobalSearch({ pages = [] }) {
                         {item.avatar ? <span className={styles.avatar}>{item.avatar}</span> : item.word ? <span className={styles.wordMark}>Aa</span> : <Icon name={item.icon} />}
                       </span>
                       <span className={styles.text}>
-                        <span className={`${styles.title}${item.word ? ` ${styles.word}` : ''}`}>
+                        <span className={`${styles.title}${item.word || item.dict ? ` ${styles.word}` : ''}`}>
                           <Highlight text={item.title} query={term} />
                           {item.sub && <span className={styles.sub}> {item.sub}</span>}
                         </span>
