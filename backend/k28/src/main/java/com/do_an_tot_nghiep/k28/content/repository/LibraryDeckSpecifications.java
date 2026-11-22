@@ -1,6 +1,8 @@
 package com.do_an_tot_nghiep.k28.content.repository;
 
+import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
+import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -30,6 +32,7 @@ public final class LibraryDeckSpecifications {
     public static Specification<BoThe> publiclyVisible() {
         return (root, query, cb) -> cb.and(
                 cb.isNull(root.get("xoaAt")),
+                activeOwner(root, query, cb),
                 cb.equal(
                         root.get("quyenTruyCap"),
                         QuyenTruyCap.CONG_KHAI
@@ -39,6 +42,16 @@ public final class LibraryDeckSpecifications {
                         TrangThaiKiemDuyet.BINH_THUONG
                 )
         );
+    }
+
+    private static Predicate activeOwner(Root<BoThe> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        Subquery<Long> owner = query.subquery(Long.class);
+        Root<NguoiDung> user = owner.from(NguoiDung.class);
+        owner.select(user.get("id")).where(
+                cb.equal(user.get("id"), root.get("chuSoHuuId")),
+                cb.equal(user.get("trangThai"), TrangThaiNguoiDung.HOAT_DONG)
+        );
+        return cb.exists(owner);
     }
 
     public static Specification<BoThe> matching(

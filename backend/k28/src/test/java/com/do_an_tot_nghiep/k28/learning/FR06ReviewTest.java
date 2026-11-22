@@ -254,6 +254,36 @@ class FR06ReviewTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc09_deckSessionAfterQuotaIsUsedQueuesAndRecordsNewCards() throws Exception {
+        Learner learner = learner();
+        setNewPerDay(learner, 1);
+        long a = card(learner, "a");
+        long b = card(learner, "b");
+        long c = card(learner, "c");
+        review(learner, createSession(learner, "EN_VI"), "evt-" + uuid(), a, "EN_VI", "DE", 0)
+                .andExpect(status().isCreated());
+
+        MvcResult created = send(learner.session(), "/api/v1/learning/sessions",
+                Map.of("boTheId", learner.deckId(), "chieuHoc", "EN_VI", "quyThoiGian", 5))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.hangDoi.length()").value(3))
+                .andReturn();
+        String deckSession = idOf(created);
+
+        review(learner, deckSession, "evt-" + uuid(), b, "EN_VI", "DE", 0)
+                .andExpect(status().isCreated());
+        review(learner, deckSession, "evt-" + uuid(), c, "EN_VI", "NHO", 0)
+                .andExpect(status().isCreated());
+
+        assertThat(progressStatus(learner, b, "EN_VI")).isEqualTo("ON_TAP");
+        assertThat(progressStatus(learner, c, "EN_VI")).isEqualTo("DANG_HOC");
+        assertThat(count("lich_su_on", learner)).isEqualTo(3);
+        assertThat(usageSum(learner, "so_the_moi")).isEqualTo(3);
+        assertThat(jdbc.queryForObject("SELECT hoc_tu_do FROM phien_hoc WHERE id = ?",
+                Boolean.class, Long.valueOf(deckSession))).isTrue();
+    }
+
+    @Test
     void tc09_usageDayFollowsSessionTimeZone() throws Exception {
         Learner learner = learner();
         long card = card(learner, "word");

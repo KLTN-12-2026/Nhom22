@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -41,6 +42,7 @@ public class DeckCopyService {
 
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9._:-]{1,128}");
     private final BoTheRepository decks;
+    private final AccountService accountService;
     private final TheTuVungRepository cards;
     private final CardLinkRepository links;
     private final TepTinRepository files;
@@ -80,7 +82,8 @@ public class DeckCopyService {
 
         BoThe source = decks.findForUpdate(sourceId).filter(found -> found.getXoaAt() == null).orElse(null);
         if (source == null || source.getQuyenTruyCap() != QuyenTruyCap.CONG_KHAI
-                || source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
+                || source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG
+                || accountService.isUnavailable(source.getChuSoHuuId())) {
             var completedMeanwhile = requests.find(userId, key);
             if (completedMeanwhile.isPresent()) {
                 return replay(userId, sourceId, completedMeanwhile.get());
@@ -96,6 +99,10 @@ public class DeckCopyService {
             return replay(userId, sourceId, reservation);
         }
 
+        if (userId.equals(source.getChuSoHuuId())) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Đây là bộ của bạn, không cần sao chép",
+                    Map.of("lyDo", "BO_CUA_BAN", "boTheId", source.getId().toString()));
+        }
         if (source.getBoNguonId() != null) {
             throw new ApiException(ErrorCode.BUSINESS_RULE, "Đây là bản sao, hãy sao chép bộ gốc",
                     Map.of("lyDo", "LA_BAN_SAO", "boGocId", source.getBoNguonId().toString()));

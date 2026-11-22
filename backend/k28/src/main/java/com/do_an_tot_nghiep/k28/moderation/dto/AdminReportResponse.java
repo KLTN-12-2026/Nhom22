@@ -13,6 +13,7 @@ public record AdminReportResponse(
         LyDoBaoCao lyDo,
         String moTa,
         JsonNode noiDung,
+        String anhDaiDienUrl,
         TrangThaiBaoCao trangThai,
         NguoiDung nguoiBaoCao,
         NguoiDung nguoiXuLy,

@@ -46,7 +46,6 @@ public interface YeuCauCongKhaiRepository extends JpaRepository<YeuCauCongKhai, 
             where s.id = y.boNguonId
               and u.id = s.chuSoHuuId
               and s.chuSoHuuId = :userId
-              and s.boMau = false
               and s.xoaAt is null
               and s.quyenTruyCap = com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap.CONG_KHAI
               and s.trangThaiKiemDuyet = com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet.BINH_THUONG
@@ -64,8 +63,7 @@ public interface YeuCauCongKhaiRepository extends JpaRepository<YeuCauCongKhai, 
             from YeuCauCongKhai y, BoThe s, NguoiDung u
             where s.id = y.boNguonId
               and u.id = s.chuSoHuuId
-              and (s.boMau = true
-                   or s.xoaAt is not null
+              and (s.xoaAt is not null
                    or s.quyenTruyCap <> com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap.CONG_KHAI
                    or s.trangThaiKiemDuyet <> com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet.BINH_THUONG
                    or u.trangThai <> com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung.HOAT_DONG)

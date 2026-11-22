@@ -179,6 +179,7 @@
 .stamp-warning { border-color: var(--warning); color: var(--warning-text); background: var(--field); }
 .stamp-success { border-color: var(--secondary); background: var(--secondary-bg); color: var(--secondary-text); }
 .stamp-danger { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); }
+.deck-row.is-mine { background: var(--accent-bg); box-shadow: inset 4px 0 0 var(--accent); }
 .stamp-quiet { border-style: dashed; color: var(--ink-2); border-color: var(--primary-line); }
 
 .level { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }

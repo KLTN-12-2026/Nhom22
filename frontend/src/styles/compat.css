@@ -152,7 +152,7 @@
 .toast--success, .toast--default { --tone: var(--secondary); }
 .toast--error { --tone: var(--danger); }
 .toast--warning { --tone: var(--warning); }
-.toast--info { --tone: var(--primary); }
+.toast--info, .toast--notify { --tone: var(--primary); }
 .toast--upgrade { --tone: var(--tier, var(--primary)); }
 .toast-container .toast { width:100%; }
 .toast__content { flex:1; min-width:0; }

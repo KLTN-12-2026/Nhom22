@@ -156,7 +156,7 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
         String first = body(copy(learner, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
         copy(learner, sourceId, "case").andExpect(status().isConflict())
                 .andExpect(jsonPath("$.details.boTheId").value(first));
-        String third = body(copy(author, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
+        String third = body(copy(login(), sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
         assertThat(List.of(first, third)).doesNotHaveDuplicates();
     }
 
@@ -190,10 +190,18 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc25_authorCannotCopyOwnDeck() throws Exception {
+        copy(author, sourceId, "author-own").andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.details.lyDo").value("BO_CUA_BAN"))
+                .andExpect(jsonPath("$.details.boTheId").value(sourceId.toString()));
+        assertThat(countCopies()).isZero();
+    }
+
+    @Test
     void tc03_ownCopiesListsOnlyCallersLiveCopies() throws Exception {
         String copyId = body(copy(learner, sourceId, "own").andExpect(status().isCreated()).andReturn())
                 .get("id").asText();
-        copy(author, sourceId, "author-own").andExpect(status().isCreated());
+        copy(login(), sourceId, "other-own").andExpect(status().isCreated());
 
         send(learner, get("/api/v1/decks/copies").param("sourceIds", sourceId + "," + Long.MAX_VALUE))
                 .andExpect(status().isOk())

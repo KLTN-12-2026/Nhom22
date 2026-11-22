@@ -183,12 +183,19 @@ public class FileService {
     }
 
     public FileResponse avatar(Long userId) {
-        Long id = accountService.avatarId(userId);
+        Long id = accountService.visibleAvatarId(userId);
         return id == null ? null : get(userId, id);
     }
 
     public FileResponse publicAvatar(Long userId) {
-        Long id = accountService.avatarId(userId);
+        return ownedImage(userId, accountService.publicAvatarId(userId));
+    }
+
+    public FileResponse reportedAvatar(Long userId, Long fileId) {
+        return ownedImage(userId, fileId);
+    }
+
+    private FileResponse ownedImage(Long userId, Long id) {
         if (id == null) {
             return null;
         }

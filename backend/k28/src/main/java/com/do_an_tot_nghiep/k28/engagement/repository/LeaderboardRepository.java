@@ -1,7 +1,11 @@
 package com.do_an_tot_nghiep.k28.engagement.repository;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -37,6 +41,46 @@ public class LeaderboardRepository {
             """;
 
     private final NamedParameterJdbcTemplate jdbc;
+
+    public record Profile(long id, String tenHienThi, Instant thamGiaAt, long soNgayHoc, long soLuotOn,
+                          long soBaiLuyen, long soBoThe, long soBoCongKhai, long soThe, long soLanTop3) {
+    }
+
+    private static final String PROFILE = """
+            SELECT u.id, u.ten_hien_thi, u.created_at,
+                   (SELECT COUNT(*) FROM su_dung_hoc_ngay s WHERE s.nguoi_dung_id = u.id AND s.so_luot_hop_le > 0) AS so_ngay_hoc,
+                   (SELECT COALESCE(SUM(s.so_luot_hop_le), 0) FROM su_dung_hoc_ngay s WHERE s.nguoi_dung_id = u.id) AS so_luot_on,
+                   (SELECT COUNT(*) FROM bai_luyen p WHERE p.nguoi_dung_id = u.id) AS so_bai_luyen,
+                   (SELECT COUNT(*) FROM bo_the b WHERE b.chu_so_huu_id = u.id AND b.xoa_at IS NULL) AS so_bo_the,
+                   (SELECT COUNT(*) FROM bo_the b WHERE b.chu_so_huu_id = u.id AND b.xoa_at IS NULL
+                        AND b.quyen_truy_cap = 'CONG_KHAI' AND b.trang_thai_kiem_duyet = 'BINH_THUONG') AS so_bo_cong_khai,
+                   (SELECT COUNT(*) FROM the_tu_vung c JOIN bo_the b ON b.id = c.bo_the_id
+                    WHERE b.chu_so_huu_id = u.id AND b.xoa_at IS NULL AND c.xoa_at IS NULL) AS so_the,
+                   (SELECT COUNT(*) FROM vinh_danh_tuan v WHERE v.nguoi_dung_id = u.id) AS so_lan_top3
+            FROM nguoi_dung u
+            LEFT JOIN cai_dat_rieng_tu c ON c.nguoi_dung_id = u.id
+            WHERE u.id = :id
+              AND u.trang_thai = 'HOAT_DONG'
+              AND COALESCE(c.tham_gia_xep_hang, TRUE)
+              AND NOT EXISTS (
+                  SELECT 1 FROM nguoi_dung_vai_tro nv JOIN vai_tro v ON v.id = nv.vai_tro_id
+                  WHERE nv.nguoi_dung_id = u.id AND v.ma = 'ADMIN')
+            """;
+
+    public Optional<Profile> profile(Long id) {
+        return jdbc.query(PROFILE, new MapSqlParameterSource("id", id), (rs, i) -> new Profile(
+                rs.getLong("id"),
+                rs.getString("ten_hien_thi"),
+                rs.getObject("created_at", LocalDateTime.class).toInstant(ZoneOffset.UTC),
+                rs.getLong("so_ngay_hoc"),
+                rs.getLong("so_luot_on"),
+                rs.getLong("so_bai_luyen"),
+                rs.getLong("so_bo_the"),
+                rs.getLong("so_bo_cong_khai"),
+                rs.getLong("so_the"),
+                rs.getLong("so_lan_top3")
+        )).stream().findFirst();
+    }
 
     public record Row(int hang, long nguoiDungId, String tenHienThi, int soNgay, long soLuot) {
     }

@@ -46,7 +46,7 @@ public class BaoCaoNoiDung extends BaseEntity {
     @Column(nullable = false, updatable = false, length = 20)
     private LyDoBaoCao lyDo;
 
-    @Column(nullable = false, updatable = false, length = 500)
+    @Column(updatable = false, length = 500)
     private String moTa;
 
     @Column(nullable = false, updatable = false, columnDefinition = "json")
@@ -86,7 +86,11 @@ public class BaoCaoNoiDung extends BaseEntity {
     }
 
     public void resolve(QuyetDinhBaoCao quyetDinh, Long adminId, String lyDoXuLy, Instant now) {
-        this.trangThai = quyetDinh == QuyetDinhBaoCao.AN ? TrangThaiBaoCao.DA_AN : TrangThaiBaoCao.DA_GIU;
+        this.trangThai = switch (quyetDinh) {
+            case GIU -> TrangThaiBaoCao.DA_GIU;
+            case AN -> TrangThaiBaoCao.DA_AN;
+            case KHOA -> TrangThaiBaoCao.DA_KHOA;
+        };
         this.nguoiXuLyId = adminId;
         this.lyDoXuLy = lyDoXuLy;
         this.xuLyAt = now;

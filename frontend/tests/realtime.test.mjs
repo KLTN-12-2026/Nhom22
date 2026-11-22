@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { REALTIME_KEYS, handledId, incidentMessage, keysFor, parseEvent } from '../src/lib/realtime.mjs';
 
 test('every backend event type has a mapping', () => {
-  const types = ['THONG_BAO_MOI', 'THONG_BAO_HE_THONG', 'TAI_KHOAN_BI_KHOA', 'GOI_THAY_DOI', 'THANH_TOAN', 'YEU_CAU_AI', 'HANG_CHO_QUAN_TRI', 'MUC_DA_XU_LY', 'SU_CO_HE_THONG', 'PHIEN_HOC_MOI'];
+  const types = ['THONG_BAO_MOI', 'THONG_BAO_HE_THONG', 'TAI_KHOAN_BI_KHOA', 'GOI_THAY_DOI', 'THANH_TOAN', 'YEU_CAU_AI', 'HANG_CHO_QUAN_TRI', 'MUC_DA_XU_LY', 'SU_CO_HE_THONG', 'PHIEN_HOC_MOI', 'YEU_CAU_CONG_KHAI'];
   assert.deepEqual(Object.keys(REALTIME_KEYS).sort(), types.sort());
 });
 

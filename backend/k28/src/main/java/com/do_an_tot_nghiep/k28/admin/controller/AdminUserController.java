@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.admin.controller;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.admin.dto.AdminUserDetailResponse;
 import com.do_an_tot_nghiep.k28.admin.dto.AdminUserResponse;
+import com.do_an_tot_nghiep.k28.admin.dto.AvatarVisibilityRequest;
 import com.do_an_tot_nghiep.k28.admin.dto.UserRolesRequest;
 import com.do_an_tot_nghiep.k28.admin.dto.UserStatusRequest;
 import com.do_an_tot_nghiep.k28.admin.service.AdminUserDetailService;
@@ -56,6 +57,11 @@ public class AdminUserController {
     @PatchMapping("/{id}/status")
     public AdminUserResponse changeStatus(@PathVariable Long id, @Valid @RequestBody UserStatusRequest request) {
         return service.changeStatus(currentUser.id(), id, request);
+    }
+
+    @PatchMapping("/{id}/avatar")
+    public AdminUserResponse changeAvatar(@PathVariable Long id, @Valid @RequestBody AvatarVisibilityRequest request) {
+        return service.changeAvatar(currentUser.id(), id, request);
     }
 
     @PutMapping("/{id}/roles")

@@ -13,6 +13,7 @@ export const REALTIME_KEYS = {
   MUC_DA_XU_LY: () => [['admin-queue'], ['admin-dashboard'], ['publish-requests'], ['admin-reports']],
   SU_CO_HE_THONG: () => [['admin-dashboard'], ['admin-queue'], ['admin-service-usage']],
   PHIEN_HOC_MOI: () => [['learning-today']],
+  YEU_CAU_CONG_KHAI: id => [['publish-requests'], ['publish-request-cards'], ['my-decks'], id ? ['deck', id] : ['deck']],
 };
 
 export const REALTIME_EVENT = 'vl:realtime';

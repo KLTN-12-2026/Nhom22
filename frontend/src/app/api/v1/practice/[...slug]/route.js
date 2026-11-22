@@ -157,6 +157,7 @@ async function createSession(req, store) {
     const loaded = await loadPool(req, body, store);
     name = loaded.name;
     const pool = theIds.length ? loaded.pool.filter(card => theIds.includes(String(card.id))) : loaded.pool;
+    if (body.nguon === 'VUA_HOC') return jsonError(422, 'BUSINESS_RULE', 'Chưa có từ nào vừa học trong 7 ngày qua khớp mức đã chọn.');
     if (!pool.length) return jsonError(422, 'BUSINESS_RULE', body.nguon === 'SO_TAY' ? 'Sổ tay đang trống, chưa có từ nào để luyện.' : 'Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước.');
     const distract = [...loaded.pool, ...DEFAULT_CARDS.filter(card => !loaded.pool.some(item => normalize(item.tu) === normalize(card.tu)))];
     const order = shuffle(pool);
@@ -311,6 +312,10 @@ function history(req, store) {
 function mockGet(req, slug) {
   const store = mockStore(req);
   if (slug.length === 1 && slug[0] === 'history') return history(req, store);
+  if (slug.length === 1 && slug[0] === 'recent-cards') {
+    const danhGia = new URL(req.url).searchParams.getAll('danhGia');
+    return NextResponse.json({ soNgay: 7, tuNgay: new Date(Date.now() - 7 * 86400000).toISOString(), danhGia: danhGia.length ? danhGia : ['QUEN', 'KHO', 'DE'], theoDanhGia: { QUEN: 0, KHO: 0, NHO: 0, DE: 0 }, tongSo: 0, the: [] });
+  }
   if (slug.length === 2 && slug[0] === 'sessions') {
     const session = store.sessions.get(slug[1]);
     return session ? NextResponse.json(practiceView(store, session)) : jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài luyện');

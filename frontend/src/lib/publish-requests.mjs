@@ -26,6 +26,7 @@ export const PUBLISH_REASON = {
   CHO_GUI_LAI: 'Bạn cần chờ 24 giờ sau lần bị từ chối hoặc thu hồi.',
   CAN_DUYET_CONG_KHAI: 'Bản sao chỉ được công khai khi tác giả bộ gốc duyệt.',
   BAN_SAO_KHONG_HOP_LE: 'Bản sao đã bị xóa hoặc đang bị ẩn.',
+  KHONG_CO_THAY_DOI: 'Bản sao chưa khác bộ gốc. Hãy sửa tên, mô tả hoặc thêm, sửa thẻ rồi xin công khai.',
 };
 
 export const reasonOf = error => error?.data?.details?.lyDo;

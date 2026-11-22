@@ -10,6 +10,9 @@ import {
 } from '@/lib/publish-requests.mjs';
 import { handledId } from '@/lib/realtime.mjs';
 import { useRealtimeEvent } from '@/hooks/useEventStream';
+import { CopyChanges } from '@/components/content/CopyChanges';
+import { requestChanges, summarize } from '@/lib/copy-diff.mjs';
+import styles from './PublishRequestReview.module.css';
 
 const FILTERS = [['CHO_DUYET', 'Chờ duyệt'], ['DA_DUYET', 'Đã duyệt'], ['TU_CHOI', 'Bị từ chối'], ['', 'Tất cả']];
 const ACTION = { DUYET: 'Duyệt công khai', TU_CHOI: 'Từ chối', THU_HOI: 'Thu hồi công khai' };
@@ -45,8 +48,8 @@ export function PublishRequestReview({ admin = false }) {
         <div className="form-code"><span>{admin ? 'Quản trị' : 'Bộ của tôi'}</span><span>Yêu cầu công khai</span></div>
         <h1 id="page-title">{admin ? 'Duyệt công khai bản sao' : 'Yêu cầu công khai bản sao'}</h1>
         <p>{admin
-          ? 'Bản sao của bộ mẫu, và yêu cầu có bộ gốc không còn công khai hoặc tác giả không còn hoạt động.'
-          : 'Người học đã sao chép bộ của bạn và muốn chia sẻ bản sao trong thư viện.'}</p>
+          ? 'Chỉ các yêu cầu có bộ gốc đã bị xóa, ẩn, không còn công khai hoặc tác giả không còn hoạt động. Bộ của bạn (kể cả bộ mẫu) được duyệt ở mục Yêu cầu công khai như người học.'
+          : 'Người khác đã sao chép bộ của bạn và muốn chia sẻ bản sao trong thư viện. Bạn là người duyệt.'}</p>
         {notice && <p className="notice notice-success" role="status"><Icon name="check" />{notice}</p>}
         {takenOver && <p className="notice notice-warning" role="alert"><Icon name="info" />{takenOver}</p>}
       </div>
@@ -100,14 +103,20 @@ export function PublishRequestReview({ admin = false }) {
 
 function ReviewDialog({ item, admin, onClose, onDone, onStale }) {
   const dialogRef = useRef(null);
+  const [tab, setTab] = useState('changes');
   const [page, setPage] = useState(0);
   const [lyDo, setLyDo] = useState('');
   const [choice, setChoice] = useState(null);
   useEffect(() => { if (dialogRef.current && !dialogRef.current.open) dialogRef.current.showModal(); }, []);
   const base = admin ? '/api/v1/admin/publish-requests' : '/api/v1/publish-requests';
+  const changes = useQuery({
+    queryKey: ['publish-request-changes', admin, item.id],
+    queryFn: () => requestChanges(apiFetch, item.id, admin),
+  });
   const cards = useQuery({
     queryKey: ['publish-request-cards', admin, item.id, page],
     queryFn: () => apiFetch(`${base}/${encodeURIComponent(item.id)}/cards?page=${page}&size=20`),
+    enabled: tab === 'cards',
   });
   const decide = useMutation({
     mutationFn: quyetDinh => decidePublishRequest(apiFetch, item.id, { quyetDinh, lyDo, version: item.version }, admin),
@@ -125,43 +134,87 @@ function ReviewDialog({ item, admin, onClose, onDone, onStale }) {
   const fieldError = error?.fieldErrors?.find(field => field.field === 'lyDo')?.message;
   const reasonInvalid = (needsReason && !reasonValid) || !!fieldError;
   const decidable = item.trangThai === 'CHO_DUYET' || item.trangThai === 'DA_DUYET';
+  const summary = summarize(changes.data);
 
-  return <dialog ref={dialogRef} className="dialog" aria-labelledby="review-title" onCancel={onClose}>
-    <div className="dialog-body">
-      <div className="dialog-head"><h2 id="review-title" style={{ overflowWrap: 'anywhere' }}>{item.tenBoThe}</h2></div>
-      <p className="small muted">Bản sao của <Link href={`/thu-vien/${item.boNguonId}`}>{item.tenBoNguon}</Link> · gửi bởi {item.tenNguoiGui} · {APPROVER[item.nguoiDuyet]} duyệt</p>
-      {item.loiNhan && <p className="notice"><Icon name="mail" /><span style={{ overflowWrap: 'anywhere' }}>{item.loiNhan}</span></p>}
-      <h3 className="panel-title">Nội dung bản sao <span className="muted num">{cards.data?.totalElements ?? ''}</span></h3>
-      {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
-      {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
-      {cards.data?.items.length === 0 && <div className="empty"><h2>Bản sao chưa có thẻ</h2></div>}
-      <ol className="answer-list" style={{ maxHeight: '40vh', overflowY: 'auto' }}>{cards.data?.items.map((card, index) => <li key={card.id} className="answer-row">
-        <span className="answer-no">{page * 20 + index + 1}</span>
-        <div className="entry">
-          <div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa" lang="en">{card.phienAm}</span>}{card.tuLoai && <span className="pos" lang="en">{card.tuLoai}</span>}</div>
-          <p className="entry-mean">{card.nghiaVi}</p>
-          {card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}
-          {card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}
+  return <dialog ref={dialogRef} className={styles.dialog} aria-labelledby="review-title" onCancel={onClose}>
+    <header className={styles.head}>
+      <div className={styles.headText}>
+        <div className={styles.stamps}>
+          <span className={`stamp ${PUBLISH_STAMP[item.trangThai]}`}>{PUBLISH_STATUS[item.trangThai]}</span>
+          <span className="stamp stamp-accent"><Icon name="copy" />Bản sao</span>
         </div>
-      </li>)}</ol>
-      {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => setPage(value - 1)} />}
-      {decidable && <div className="field" data-invalid={reasonInvalid ? '' : undefined}>
-        <label className="field-label" htmlFor="review-reason">Lý do {item.trangThai === 'CHO_DUYET' ? '(bắt buộc khi từ chối)' : '(bắt buộc khi thu hồi)'}</label>
-        <textarea className="textarea" id="review-reason" rows={3} maxLength={500} value={lyDo} onChange={event => setLyDo(event.target.value)}
-          aria-invalid={reasonInvalid ? 'true' : undefined} aria-describedby={reasonInvalid ? 'review-reason-error' : undefined} />
-        {reasonInvalid && <p className="field-error" id="review-reason-error">{fieldError || 'Nhập lý do từ 10 đến 500 ký tự'}</p>}
-      </div>}
-      {error && !fieldError && (error.status === 409
-        ? <div className="notice notice-warning" role="alert"><Icon name="info" /><div className="stack-sm"><p>{error.message}</p><button type="button" className="btn btn-secondary btn-sm" onClick={onStale}>Tải lại danh sách</button></div></div>
-        : <p className="notice notice-danger" role="alert">{PUBLISH_REASON[reasonOf(error)] || error.message}</p>)}
-      <div className="dialog-actions">
-        <button type="button" className="btn btn-quiet" onClick={onClose}>Đóng</button>
-        {item.trangThai === 'CHO_DUYET' && <>
-          <button type="button" className="btn btn-danger" disabled={decide.isPending} aria-busy={decide.isPending && choice === 'TU_CHOI'} onClick={() => send('TU_CHOI')}>{decide.isPending && choice === 'TU_CHOI' ? 'Đang từ chối…' : ACTION.TU_CHOI}</button>
-          <button type="button" className="btn btn-primary" disabled={decide.isPending} aria-busy={decide.isPending && choice === 'DUYET'} onClick={() => send('DUYET')}>{decide.isPending && choice === 'DUYET' ? 'Đang duyệt…' : ACTION.DUYET}</button>
-        </>}
-        {item.trangThai === 'DA_DUYET' && <button type="button" className="btn btn-danger" disabled={decide.isPending} aria-busy={decide.isPending} onClick={() => send('THU_HOI')}>{decide.isPending ? 'Đang thu hồi…' : ACTION.THU_HOI}</button>}
+        <h2 id="review-title" className={styles.title}>{item.tenBoThe}</h2>
+        <p className={styles.sub}>Sao chép từ <Link href={`/thu-vien/${item.boNguonId}`}>{item.tenBoNguon}</Link></p>
       </div>
+      <button type="button" className={styles.close} onClick={onClose} aria-label="Đóng"><Icon name="x" /></button>
+    </header>
+
+    <div className={styles.body}>
+      <main className={styles.main}>
+        <div className={styles.tabs} role="tablist" aria-label="Nội dung xem">
+          <button type="button" role="tab" aria-selected={tab === 'changes'} onClick={() => setTab('changes')}>
+            Thay đổi so với bộ gốc{changes.data && <span>{changes.data.boThe.length + changes.data.the.length}</span>}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'cards'} onClick={() => setTab('cards')}>
+            Toàn bộ thẻ bản sao{changes.data && <span>{changes.data.soTheBanSao}</span>}
+          </button>
+        </div>
+
+        {tab === 'changes' && <div role="tabpanel" className={styles.panel}>
+          {changes.isLoading && <div className={styles.loading} role="status"><span className="sk sk-row" /><span className="sk sk-row" /><span className="sk sk-row" /></div>}
+          {changes.error && <ErrorState title="Không tải được thay đổi" description={changes.error.message} onRetry={changes.refetch} />}
+          {changes.data && <CopyChanges diff={changes.data} />}
+        </div>}
+
+        {tab === 'cards' && <div role="tabpanel" className={styles.panel}>
+          {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
+          {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
+          {cards.data?.items.length === 0 && <div className="empty"><h2>Bản sao chưa có thẻ</h2></div>}
+          <ol className="answer-list">{cards.data?.items.map((card, index) => <li key={card.id} className="answer-row">
+            <span className="answer-no">{page * 20 + index + 1}</span>
+            <div className="entry">
+              <div className="entry-head"><span className="entry-word" lang="en">{card.tu}</span>{card.phienAm && <span className="entry-ipa" lang="en">{card.phienAm}</span>}{card.tuLoai && <span className="pos" lang="en">{card.tuLoai}</span>}</div>
+              <p className="entry-mean">{card.nghiaVi}</p>
+              {card.viDuEn && <p className="entry-example" lang="en">{card.viDuEn}</p>}
+              {card.nguon && <p className="caption">Nguồn: {card.nguon}</p>}
+            </div>
+          </li>)}</ol>
+          {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => setPage(value - 1)} />}
+        </div>}
+      </main>
+
+      <aside className={styles.side}>
+        <dl className={styles.meta}>
+          <div><dt>Người gửi</dt><dd>{item.tenNguoiGui}</dd></div>
+          <div><dt>Gửi lúc</dt><dd>{formatTime(item.createdAt)}</dd></div>
+          {item.trangThai === 'CHO_DUYET' && <div><dt>Hết hạn</dt><dd>{formatTime(item.hetHanAt)}</dd></div>}
+          <div><dt>Người duyệt</dt><dd>{APPROVER[item.nguoiDuyet]}</dd></div>
+        </dl>
+        {summary.length > 0 && <p className={styles.summary}><Icon name="info" />Bản sao có {summary.join(', ')}.</p>}
+        {changes.data && !changes.data.coThayDoi && <p className={styles.warn}><Icon name="alert" />Bản sao hiện không khác bộ gốc.</p>}
+        {item.loiNhan && <blockquote className={styles.message}><span>Lời nhắn của người gửi</span>{item.loiNhan}</blockquote>}
+        {item.lyDo && <blockquote className={styles.message}><span>Lý do đã ghi</span>{item.lyDo}</blockquote>}
+
+        {decidable && <div className={styles.decision}>
+          <label className="field-label" htmlFor="review-reason">Lý do<span className="optional">{item.trangThai === 'CHO_DUYET' ? 'Bắt buộc khi từ chối' : 'Bắt buộc khi thu hồi'}</span></label>
+          <textarea className="textarea" id="review-reason" rows={4} maxLength={500} value={lyDo} onChange={event => setLyDo(event.target.value)}
+            placeholder="Ví dụ: Bản sao chỉ đổi tên, chưa bổ sung nội dung mới."
+            aria-invalid={reasonInvalid ? 'true' : undefined} aria-describedby={reasonInvalid ? 'review-reason-error' : undefined} />
+          {reasonInvalid && <p className="field-error" id="review-reason-error">{fieldError || 'Nhập lý do từ 10 đến 500 ký tự'}</p>}
+        </div>}
+        {error && !fieldError && (error.status === 409
+          ? <div className="notice notice-warning" role="alert"><Icon name="info" /><div className="stack-sm"><p>{error.message}</p><button type="button" className="btn btn-secondary btn-sm" onClick={onStale}>Tải lại danh sách</button></div></div>
+          : <p className="notice notice-danger" role="alert">{PUBLISH_REASON[reasonOf(error)] || error.message}</p>)}
+
+        <div className={styles.actions}>
+          {item.trangThai === 'CHO_DUYET' && <>
+            <button type="button" className="btn btn-primary btn-lg" disabled={decide.isPending} aria-busy={decide.isPending && choice === 'DUYET'} onClick={() => send('DUYET')}><Icon name="check" />{decide.isPending && choice === 'DUYET' ? 'Đang duyệt…' : ACTION.DUYET}</button>
+            <button type="button" className="btn btn-danger" disabled={decide.isPending} aria-busy={decide.isPending && choice === 'TU_CHOI'} onClick={() => send('TU_CHOI')}>{decide.isPending && choice === 'TU_CHOI' ? 'Đang từ chối…' : ACTION.TU_CHOI}</button>
+          </>}
+          {item.trangThai === 'DA_DUYET' && <button type="button" className="btn btn-danger" disabled={decide.isPending} aria-busy={decide.isPending} onClick={() => send('THU_HOI')}>{decide.isPending ? 'Đang thu hồi…' : ACTION.THU_HOI}</button>}
+          <button type="button" className="btn btn-quiet" onClick={onClose}>Đóng</button>
+        </div>
+      </aside>
     </div>
   </dialog>;
 }

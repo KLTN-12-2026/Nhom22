@@ -160,6 +160,40 @@ class FR12LeaderboardTest extends AbstractIntegrationTest {
         assertThat(WeeklyHonorService.lastFinishedWeek(LocalDate.of(2026, 11, 23))).isEqualTo(LocalDate.of(2026, 11, 16));
     }
 
+    @Test
+    void leaderboardProfileShowsPublicStatsOnlyForParticipants() throws Exception {
+        LocalDate today = LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
+        Learner viewer = learner(false);
+        Learner learner = learner(false);
+        Learner hidden = learner(false);
+        Learner admin = learner(true);
+        usage(learner, today.minusDays(1), 7);
+        usage(learner, today, 5);
+        jdbc.update("INSERT INTO bo_the (chu_so_huu_id, ten, trinh_do, quyen_truy_cap) VALUES (?, 'Bộ riêng', 'CO_BAN', 'RIENG_TU')",
+                learner.id());
+        Long deckId = jdbc.queryForObject("SELECT MAX(id) FROM bo_the WHERE chu_so_huu_id = ?", Long.class, learner.id());
+        jdbc.update("INSERT INTO the_tu_vung (bo_the_id, tu, nghia_vi, do_kho) VALUES (?, 'apple', 'quả táo', 1), (?, 'pear', 'quả lê', 2)",
+                deckId, deckId);
+        privacy(hidden, true, false, 0L).andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/leaderboard/users/" + learner.id()).cookie(viewer.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(learner.id().toString()))
+                .andExpect(jsonPath("$.soNgayHoc").value(2))
+                .andExpect(jsonPath("$.soLuotOn").value(12))
+                .andExpect(jsonPath("$.chuoiNgay").value(2))
+                .andExpect(jsonPath("$.soBoThe").value(1))
+                .andExpect(jsonPath("$.soBoCongKhai").value(0))
+                .andExpect(jsonPath("$.soThe").value(2))
+                .andExpect(jsonPath("$.soBaiLuyen").value(0))
+                .andExpect(jsonPath("$.huyHieu").isArray());
+        mockMvc.perform(get("/api/v1/leaderboard/users/" + hidden.id()).cookie(viewer.session()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/leaderboard/users/" + admin.id()).cookie(viewer.session()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/leaderboard/users/" + learner.id())).andExpect(status().isUnauthorized());
+    }
+
     private java.util.List<String> badges(Learner learner) {
         return jdbc.queryForList("""
                 SELECT h.ma FROM nguoi_dung_huy_hieu n JOIN huy_hieu h ON h.id = n.huy_hieu_id WHERE n.nguoi_dung_id = ?

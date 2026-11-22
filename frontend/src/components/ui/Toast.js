@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { Icon } from './Icon';
 
 const ToastCtx = createContext(null);
-const ICONS = { default: 'check', success: 'check', error: 'alert', warning: 'alert', info: 'info', upgrade: 'lock' };
+const ICONS = { default: 'check', success: 'check', error: 'alert', warning: 'alert', info: 'info', upgrade: 'lock', notify: 'bell' };
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);

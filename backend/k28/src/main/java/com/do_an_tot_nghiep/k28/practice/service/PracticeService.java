@@ -48,6 +48,7 @@ public class PracticeService {
     static final Set<Integer> SO_CAU = Set.of(5, 10, 20);
     static final String TAT_CA_BO = "Tất cả bộ của tôi";
     static final String SO_TAY_TEN = "Sổ tay từ khó";
+    static final String VUA_HOC_TEN = "Từ vừa học cần ôn";
 
     private final BaiLuyenRepository practices;
     private final CauHoiBaiLuyenRepository questions;
@@ -58,6 +59,7 @@ public class PracticeService {
     private final FileService fileService;
     private final TtsService ttsService;
     private final NotebookService notebookService;
+    private final RecentReviewService recentReviewService;
     private final JsonMapper json;
 
     @Transactional
@@ -72,11 +74,17 @@ public class PracticeService {
         if (nguon == NguonBaiLuyen.SO_TAY && boTheId != null) {
             throw new ApiException(ErrorCode.VALIDATION_FAILED, "boTheId", "Không chọn bộ thẻ khi luyện từ sổ tay");
         }
-        if (!picked.isEmpty() && (nguon == NguonBaiLuyen.SO_TAY || boTheId != null)) {
-            throw new ApiException(ErrorCode.VALIDATION_FAILED, "theIds", "Không gửi theIds cùng bộ thẻ hoặc sổ tay");
+        if (nguon == NguonBaiLuyen.VUA_HOC && boTheId != null) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "boTheId", "Không chọn bộ thẻ khi luyện từ vừa học");
+        }
+        if (!picked.isEmpty() && (nguon != NguonBaiLuyen.BO_THE || boTheId != null)) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "theIds", "Không gửi theIds cùng bộ thẻ, sổ tay hoặc từ vừa học");
+        }
+        if (nguon != NguonBaiLuyen.VUA_HOC && request.danhGia() != null && !request.danhGia().isEmpty()) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "danhGia", "Chỉ lọc mức chấm khi luyện từ vừa học");
         }
 
-        String boTheTen = nguon == NguonBaiLuyen.SO_TAY ? SO_TAY_TEN : TAT_CA_BO;
+        String boTheTen = PracticeResults.deckLabel(null, nguon);
         if (boTheId != null) {
             boTheTen = practices.ownedDeckName(userId, boTheId)
                     .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bộ thẻ"));
@@ -93,6 +101,8 @@ public class PracticeService {
             pool = pick(picked, cards);
         } else if (nguon == NguonBaiLuyen.SO_TAY) {
             pool = pick(notebookService.cardIds(userId), cards);
+        } else if (nguon == NguonBaiLuyen.VUA_HOC) {
+            pool = pick(recentReviewService.cardIds(userId, request.ratings()), cards);
         } else if (boTheId != null) {
             String deck = String.valueOf(boTheId);
             pool = distract.stream().filter(card -> card.boTheId().equals(deck)).toList();
@@ -104,6 +114,8 @@ public class PracticeService {
                     ? "Các thẻ đã chọn đang tạm ngưng, chưa thể luyện."
                     : nguon == NguonBaiLuyen.SO_TAY
                     ? "Sổ tay đang trống, chưa có từ nào để luyện."
+                    : nguon == NguonBaiLuyen.VUA_HOC
+                    ? "Chưa có từ nào vừa học trong " + RecentReviewService.SO_NGAY + " ngày qua khớp mức đã chọn."
                     : "Chưa có thẻ nào để luyện. Thêm thẻ vào bộ trước.");
         }
 

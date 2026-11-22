@@ -52,7 +52,10 @@ public class AdminUserDetailService {
         long soBoThe = decks.countByOwners(List.of(id)).getOrDefault(id, 0L);
         AdminUserResponse nguoiDung = new AdminUserResponse(String.valueOf(profile.id()), profile.email(),
                 profile.tenHienThi(), profile.trangThai(), repository.roles(id), profile.createdAt(),
-                profile.dangNhapCuoiAt(), Math.toIntExact(soBoThe), null, null);
+                profile.dangNhapCuoiAt(),
+                profile.anhDaiDienId() == null ? null : String.valueOf(profile.anhDaiDienId()),
+                profile.anhDaiDienId() != null && profile.anhDaiDienId().equals(profile.anhDaiDienAnId()),
+                Math.toIntExact(soBoThe), null, null);
 
         Cards cards = repository.cards(id, now);
         Reviews reviews = repository.reviews(id, tuNgay.atStartOfDay(zone).toInstant());

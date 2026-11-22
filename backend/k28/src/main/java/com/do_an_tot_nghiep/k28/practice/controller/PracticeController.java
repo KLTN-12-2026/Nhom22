@@ -8,11 +8,14 @@ import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryQuery;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeSessionResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.RecentCardsQuery;
+import com.do_an_tot_nghiep.k28.practice.dto.RecentCardsResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.RetryPracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.SubmitPracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.service.PracticeHistoryService;
 import com.do_an_tot_nghiep.k28.practice.service.PracticeService;
 import com.do_an_tot_nghiep.k28.practice.service.PracticeSubmissionService;
+import com.do_an_tot_nghiep.k28.practice.service.RecentReviewService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class PracticeController {
     private final PracticeService practiceService;
     private final PracticeSubmissionService submissionService;
     private final PracticeHistoryService historyService;
+    private final RecentReviewService recentReviewService;
     private final CurrentUser currentUser;
 
     @PostMapping("/sessions")
@@ -61,6 +65,11 @@ public class PracticeController {
         return ResponseEntity
                 .status(outcome.replayed() ? HttpStatus.OK : HttpStatus.CREATED)
                 .body(outcome.body());
+    }
+
+    @GetMapping("/recent-cards")
+    public RecentCardsResponse recentCards(@Valid @ModelAttribute RecentCardsQuery query) {
+        return recentReviewService.summary(currentUser.id(), query.ratings());
     }
 
     @GetMapping("/history")
