@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.common.quota.GoiDichVuResolver;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -42,6 +43,7 @@ public class LibrarySearchService {
 
     private final LibrarySearchRepository search;
     private final BoTheRepository decks;
+    private final AccountService accountService;
     private final LibraryService library;
     private final FileService fileService;
     private final EngagementService engagementService;
@@ -108,10 +110,9 @@ public class LibrarySearchService {
             );
         }
 
-        LibraryAuthorResponse author = search.author(id).orElseThrow(() -> new ApiException(
-                ErrorCode.NOT_FOUND,
-                "Không tìm thấy tác giả"
-        ));
+        LibraryAuthorResponse author = search.author(id).orElseThrow(() -> accountService.isUnavailable(id)
+                ? UnavailableUser.error()
+                : new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy tác giả"));
         FileResponse avatar = fileService.publicAvatar(id);
         List<PublicBadgeResponse> huyHieu = engagementService.badges(id).stream()
                 .filter(BadgeResponse::daNhan)

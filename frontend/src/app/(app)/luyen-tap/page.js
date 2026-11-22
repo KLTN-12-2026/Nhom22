@@ -9,6 +9,9 @@ import { PracticeHowTo, PracticeSample } from '@/components/practice/PracticeGui
 import { Icon } from '@/components/ui';
 import { useMucTip } from '@/components/mascot/useMucTip';
 import { SKILL, SKILL_PRACTICE } from '@/lib/practice-labels.mjs';
+import {
+  DEFAULT_RATINGS, RATINGS, RECENT_DAYS, RECENT_SOURCE, initialSource, matchedCount, practiceBody, recentPath, recentTotal, resolveSource, toggleRating
+} from '@/lib/practice-recent.mjs';
 import styles from './page.module.css';
 
 const TYPES = [
@@ -32,7 +35,9 @@ function PracticeForm() {
   const [loaiBai, setLoaiBai] = useState(TYPES.find(t => t.id === defaultType) ? defaultType : 'CHON_NGHIA');
   const current = TYPES.find(t => t.id === loaiBai) || TYPES[0];
   const [soCau, setSoCau] = useState(10);
-  const [source, setSource] = useState(defaultSource === 'SO_TAY' ? 'SO_TAY' : (defaultDeckId ? `deck:${defaultDeckId}` : ''));
+  const [picked, setPicked] = useState(initialSource({ nguon: defaultSource, boTheId: defaultDeckId }));
+  const [touched, setTouched] = useState(false);
+  const [ratings, setRatings] = useState(DEFAULT_RATINGS);
   const [errorMsg, setErrorMsg] = useState('');
   const [focusFull, setFocusFull] = useState(true);
 
@@ -40,6 +45,25 @@ function PracticeForm() {
     queryKey: ['my-decks', 'all'],
     queryFn: () => fetchAllPages('/api/v1/decks')
   });
+
+  const { data: recent, isLoading: isRecentLoading, isError: isRecentError, refetch: refetchRecent } = useQuery({
+    queryKey: ['practice-recent', ratings],
+    queryFn: () => apiFetch(recentPath(ratings)),
+    placeholderData: previous => previous
+  });
+  const source = isRecentError && !touched && picked === RECENT_SOURCE
+    ? ''
+    : resolveSource(picked, recent, { explicit: touched || defaultSource === RECENT_SOURCE });
+  const recentAll = recentTotal(recent);
+  const recentMatched = matchedCount(recent, ratings);
+  const recentReady = !isRecentLoading && !isRecentError;
+  const recentBlocked = source === RECENT_SOURCE && (isRecentLoading || recentMatched === 0);
+  const deckSource = source !== RECENT_SOURCE && source !== 'SO_TAY';
+  const pickSource = (value) => {
+    setPicked(value);
+    setTouched(true);
+    setErrorMsg('');
+  };
 
   const { data: history, isLoading: isHistoryLoading, isError: isHistoryError, refetch: refetchHistory } = useQuery({
     queryKey: ['practice-history'],
@@ -69,10 +93,12 @@ function PracticeForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMsg('');
-    const boTheId = source.startsWith('deck:') ? source.slice(5) : null;
-    const nguon = source === 'SO_TAY' ? 'SO_TAY' : 'BO_THE';
+    if (recentBlocked) {
+      setErrorMsg('Chưa có từ nào khớp mức chấm đã chọn. Chọn thêm mức hoặc đổi nguồn.');
+      return;
+    }
     if (focusFull && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
-    sessionMutation.mutate({ loaiBai, soCau: Number(soCau), boTheId, nguon });
+    sessionMutation.mutate(practiceBody({ loaiBai, soCau, source, ratings }));
   };
 
   return (
@@ -108,19 +134,109 @@ function PracticeForm() {
             <p className="field-error"></p>
           </fieldset>
 
-          <div className="field">
-            <label className="field-label" htmlFor="source">Lấy từ</label>
-            <select className="select" id="source" name="source" value={source} onChange={(e) => setSource(e.target.value)}>
-              <option value="">Tất cả bộ của tôi</option>
-              <option value="SO_TAY">Sổ tay từ khó</option>
-              {myDecks.map(deck => (
-                <option key={deck.id} value={`deck:${deck.id}`}>
-                  {deck.ten.length > 80 ? deck.ten.slice(0, 80) + '…' : deck.ten}
-                </option>
-              ))}
-            </select>
+          <fieldset className="fieldset field" data-field="nguon">
+            <legend>Lấy từ</legend>
+            <div className="choice-grid cols-3">
+              <label className="choice choice-card">
+                <input type="radio" name="nguon" value={RECENT_SOURCE} checked={source === RECENT_SOURCE} disabled={recentReady && recentAll === 0} onChange={() => pickSource(RECENT_SOURCE)} />
+                <span className="bubble" aria-hidden="true"></span>
+                <span className="choice-body">
+                  <span className={styles.sourceTitle}>
+                    <span className="choice-title">Từ vừa học cần ôn</span>
+                    <span className="stamp stamp-solid">Mặc định</span>
+                  </span>
+                  <span className="choice-desc">
+                    {isRecentLoading
+                      ? 'Đang đếm lượt chấm gần đây…'
+                      : recentAll > 0
+                        ? `${recentAll} từ bạn đã chấm trong ${RECENT_DAYS} ngày qua`
+                        : `Chưa có lượt chấm nào trong ${RECENT_DAYS} ngày qua`}
+                  </span>
+                </span>
+              </label>
+              <label className="choice choice-card">
+                <input type="radio" name="nguon" value="SO_TAY" checked={source === 'SO_TAY'} onChange={() => pickSource('SO_TAY')} />
+                <span className="bubble" aria-hidden="true"></span>
+                <span className="choice-body">
+                  <span className="choice-title">Sổ tay từ khó</span>
+                  <span className="choice-desc">Từ bạn hay sai hoặc tự đánh dấu</span>
+                </span>
+              </label>
+              <label className="choice choice-card">
+                <input type="radio" name="nguon" value="BO_THE" checked={deckSource} onChange={() => pickSource('')} />
+                <span className="bubble" aria-hidden="true"></span>
+                <span className="choice-body">
+                  <span className="choice-title">Bộ thẻ của tôi</span>
+                  <span className="choice-desc">Tất cả bộ hoặc một bộ cụ thể</span>
+                </span>
+              </label>
+            </div>
+
+            {source === RECENT_SOURCE && (
+              <div className={styles.sourceDetail}>
+                <fieldset className="fieldset" data-field="danhGia">
+                  <legend className="field-label">Mức đã chấm</legend>
+                  <div className={styles.ratingGrid}>
+                    {RATINGS.map(r => (
+                      <label key={r.id} className="choice choice-card">
+                        <input type="checkbox" checked={ratings.includes(r.id)} onChange={() => setRatings(list => toggleRating(list, r.id))} />
+                        <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
+                        <span className="choice-body">
+                          <span className="choice-title">{r.label}</span>
+                          <span className="choice-desc">{recent?.theoDanhGia?.[r.id] ?? 0} từ</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="field-hint">Mặc định gồm Quên, Khó và Dễ. Mỗi từ tính theo lượt chấm mới nhất.</p>
+                </fieldset>
+                <div data-view={isRecentLoading ? 'loading' : isRecentError ? 'error' : recentMatched > 0 ? 'ready' : 'empty'}>
+                  <div data-when="loading">
+                    <div className="skeleton"><div className="sk sk-line"></div><div className="sk sk-line"></div></div>
+                  </div>
+                  <div data-when="error">
+                    <p className="notice notice-danger" role="alert">Chưa tải được từ vừa học. <button type="button" className="link-btn" onClick={() => refetchRecent()}>Thử lại</button></p>
+                  </div>
+                  <div data-when="ready">
+                    <ol className={styles.recentWords} role="list" aria-label="Từ sẽ được luyện">
+                      {recent?.the?.slice(0, 8).map(item => (
+                        <li key={item.theId}>
+                          <span className={styles.word}>{item.tu}</span>
+                          <span className={styles.meaning}>{item.nghiaVi}</span>
+                          <span className="stamp stamp-quiet">{RATINGS.find(r => r.id === item.danhGia)?.label}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {recentMatched > 8 && <p className="field-hint">Và {recentMatched - 8} từ khác.</p>}
+                  </div>
+                  <div data-when="empty">
+                    <p className="notice">Không có từ nào khớp mức đã chọn. Chọn thêm mức chấm hoặc đổi nguồn.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {recentReady && recentAll === 0 && (
+              <p className={`notice ${styles.sourceEmpty}`}>
+                Bạn chưa chấm thẻ nào trong {RECENT_DAYS} ngày qua nên chưa có từ vừa học. Đã chọn bộ thẻ của bạn. <Link className="link-btn" href="/hom-nay">Học hôm nay</Link>
+              </p>
+            )}
+
+            {deckSource && (
+              <div className={`field ${styles.sourceDetail}`}>
+                <label className="field-label" htmlFor="source">Bộ thẻ</label>
+                <select className="select" id="source" name="source" value={source} onChange={(e) => pickSource(e.target.value)}>
+                  <option value="">Tất cả bộ của tôi</option>
+                  {myDecks.map(deck => (
+                    <option key={deck.id} value={`deck:${deck.id}`}>
+                      {deck.ten.length > 80 ? deck.ten.slice(0, 80) + '…' : deck.ten}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <p className="field-hint">Phân biệt cặp dễ nhầm chỉ dùng các cặp bạn từng chọn nhầm.</p>
-          </div>
+          </fieldset>
 
           <fieldset className="fieldset field" data-field="soCau">
             <legend>Số câu</legend>
@@ -142,7 +258,7 @@ function PracticeForm() {
 
           <label className="choice choice-card">
             <input type="checkbox" checked={focusFull} onChange={e => setFocusFull(e.target.checked)} />
-            <span className="bubble box" aria-hidden="true"><Icon name="check" /></span>
+            <span className="bubble box" aria-hidden="true"><Icon name="check" className="box-check" /></span>
             <span className="choice-body">
               <span className="choice-title">Làm bài toàn màn hình</span>
               <span className="choice-desc">Ẩn mọi thứ khác để tập trung. Nhấn Esc hoặc nút trên thanh làm bài để thoát.</span>
@@ -152,7 +268,7 @@ function PracticeForm() {
           <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
           <div className={styles.formFoot}>
-            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending}>
+            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending || recentBlocked}>
               {sessionMutation.isPending ? 'Đang tạo...' : 'Làm bài'}
             </button>
             <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>

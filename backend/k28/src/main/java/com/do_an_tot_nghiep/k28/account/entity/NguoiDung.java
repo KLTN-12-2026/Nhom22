@@ -30,6 +30,8 @@ public class NguoiDung extends BaseEntity {
 
     private Long anhDaiDienId;
 
+    private Long anhDaiDienAnId;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20)
@@ -112,6 +114,22 @@ public class NguoiDung extends BaseEntity {
 
     public void changeAvatar(Long fileId) {
         anhDaiDienId = fileId;
+    }
+
+    public boolean isAnhDaiDienBiAn() {
+        return anhDaiDienId != null && anhDaiDienId.equals(anhDaiDienAnId);
+    }
+
+    public Long visibleAvatarId() {
+        return isAnhDaiDienBiAn() ? null : anhDaiDienId;
+    }
+
+    public void hideAvatar(Long fileId) {
+        anhDaiDienAnId = fileId;
+    }
+
+    public void showAvatar() {
+        anhDaiDienAnId = null;
     }
 
     public void changeStatus(TrangThaiNguoiDung trangThai) {

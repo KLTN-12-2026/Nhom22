@@ -63,6 +63,16 @@ public interface BaiLuyenRepository extends JpaRepository<BaiLuyen, Long> {
     );
 
     @Query("""
+            select new com.do_an_tot_nghiep.k28.practice.repository.RecentRatingRow(t.theId, l.danhGia, l.createdAt)
+            from LichSuOn l
+            join TienDoThe t on t.id = l.tienDoId
+            where l.nguoiDungId = :userId
+              and l.createdAt >= :since
+            order by l.createdAt desc, l.id desc
+            """)
+    List<RecentRatingRow> recentRatings(@Param("userId") Long userId, @Param("since") Instant since);
+
+    @Query("""
             select b.ten
             from BoThe b
             where b.id = :id

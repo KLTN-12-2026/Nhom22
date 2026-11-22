@@ -69,6 +69,11 @@ class FR13ModerationTest extends AbstractIntegrationTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CONFLICT"));
         report(other, "BO_THE", deckId).andExpect(status().isCreated());
+        Actor spotter = actor(false);
+        send(spotter, post("/api/v1/reports"), Map.of("loaiDoiTuong", "BO_THE", "doiTuongId", deckId, "lyDo", "SPAM"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.lyDo").value("SPAM"))
+                .andExpect(jsonPath("$.moTa").value(org.hamcrest.Matchers.nullValue()));
 
         mockMvc.perform(get("/api/v1/admin/reports").cookie(reporter.session()))
                 .andExpect(status().isForbidden());
@@ -90,7 +95,7 @@ class FR13ModerationTest extends AbstractIntegrationTest {
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM bao_cao_noi_dung WHERE doi_tuong_id = ? "
                 + "AND loai_doi_tuong = 'BO_THE' AND trang_thai = 'DA_AN'", Long.class, Long.valueOf(deckId)))
-                .isEqualTo(2L);
+                .isEqualTo(3L);
         mockMvc.perform(get("/api/v1/library/decks/" + deckId).cookie(reporter.session()))
                 .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/v1/decks/" + deckId).cookie(author.session()))
@@ -113,7 +118,7 @@ class FR13ModerationTest extends AbstractIntegrationTest {
         assertThat(log.get("truoc").get("anKiemDuyet").asBoolean()).isFalse();
         assertThat(log.get("sau").get("trangThai").asString()).isEqualTo("DA_AN");
         assertThat(log.get("sau").get("anKiemDuyet").asBoolean()).isTrue();
-        assertThat(log.get("sau").get("baoCaoIds").size()).isEqualTo(2);
+        assertThat(log.get("sau").get("baoCaoIds").size()).isEqualTo(3);
 
         report(reporter, "BO_THE", deckId).andExpect(status().isNotFound());
     }
@@ -179,7 +184,7 @@ class FR13ModerationTest extends AbstractIntegrationTest {
     void fr13_reportValidation() throws Exception {
         Actor learner = actor(false);
         send(learner, post("/api/v1/reports"), Map.of("loaiDoiTuong", "BO_THE", "doiTuongId", "1",
-                "lyDo", "SAI_NOI_DUNG", "moTa", "ngắn"))
+                "lyDo", "KHAC", "moTa", "ngắn"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("moTa"));
         send(learner, post("/api/v1/reports"), Map.of("loaiDoiTuong", "NGUOI_DUNG", "doiTuongId", "1",

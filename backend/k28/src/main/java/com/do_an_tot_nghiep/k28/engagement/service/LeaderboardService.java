@@ -7,7 +7,12 @@ import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.common.quota.GoiDichVuResolver;
 import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.content.service.FileService;
+import com.do_an_tot_nghiep.k28.common.exception.ApiException;
+import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.content.dto.PublicBadgeResponse;
+import com.do_an_tot_nghiep.k28.engagement.dto.BadgeResponse;
 import com.do_an_tot_nghiep.k28.engagement.dto.KyXepHang;
+import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardProfileResponse;
 import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardEntryResponse;
 import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardQuery;
 import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardResponse;
@@ -34,6 +39,8 @@ public class LeaderboardService {
     private final GoiDichVuResolver plans;
     private final Clock clock;
     private final NguoiDungRepository users;
+    private final StreakService streaks;
+    private final EngagementService engagement;
 
     public LeaderboardResponse leaderboard(Long userId, LeaderboardQuery query) {
         LocalDate homNay = LocalDate.ofInstant(clock.instant(), accountService.zoneOf(userId));
@@ -53,6 +60,36 @@ public class LeaderboardService {
         boolean thamGia = !admin(userId) && settingsService.joinsLeaderboard(userId);
         return new LeaderboardResponse(query.ky(), tuNgay, denNgay, query.gioiHan(), toiThieu,
                 leaderboard.count(tuNgay, denNgay, toiThieu), thamGia, top, toi.orElse(null), truocToi);
+    }
+
+    public LeaderboardProfileResponse profile(Long id) {
+        if (id == null || id <= 0) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "id", "ID người dùng phải là số nguyên dương");
+        }
+        LeaderboardRepository.Profile row = leaderboard.profile(id)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Người học không có trên bảng xếp hạng"));
+        FileResponse avatar = fileService.publicAvatar(id);
+        LocalDate homNay = LocalDate.ofInstant(clock.instant(), accountService.zoneOf(id));
+        List<PublicBadgeResponse> huyHieu = engagement.badges(id).stream()
+                .filter(BadgeResponse::daNhan)
+                .map(badge -> new PublicBadgeResponse(badge.ma(), badge.ten(), badge.moTa(), badge.nhanAt()))
+                .toList();
+        return new LeaderboardProfileResponse(
+                String.valueOf(row.id()),
+                row.tenHienThi(),
+                avatar == null ? null : avatar.downloadUrl(),
+                Optional.ofNullable(plans.goiMa(id)).orElse("FREE"),
+                row.thamGiaAt(),
+                streaks.of(id, homNay).chuoiNgay(),
+                row.soNgayHoc(),
+                row.soLuotOn(),
+                row.soBaiLuyen(),
+                row.soBoThe(),
+                row.soBoCongKhai(),
+                row.soThe(),
+                row.soLanTop3(),
+                huyHieu
+        );
     }
 
     private boolean admin(Long userId) {

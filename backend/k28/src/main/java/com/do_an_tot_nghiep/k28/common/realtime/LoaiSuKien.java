@@ -10,5 +10,7 @@ public enum LoaiSuKien {
     HANG_CHO_QUAN_TRI,
     MUC_DA_XU_LY,
     SU_CO_HE_THONG,
-    PHIEN_HOC_MOI
+    PHIEN_HOC_MOI,
+    YEU_CAU_CONG_KHAI,
+    BAO_CAO_MOI
 }

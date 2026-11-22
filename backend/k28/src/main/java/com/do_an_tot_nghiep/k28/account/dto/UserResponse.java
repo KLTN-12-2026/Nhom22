@@ -8,6 +8,7 @@ public record UserResponse(
         String email,
         String tenHienThi,
         String anhDaiDienId,
+        boolean anhDaiDienBiAn,
         String trangThai,
         String muiGio,
         Instant emailXacThucAt,

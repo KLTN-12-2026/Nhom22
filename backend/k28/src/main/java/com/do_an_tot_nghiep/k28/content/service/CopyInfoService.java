@@ -64,8 +64,7 @@ public class CopyInfoService {
     }
 
     public NguoiDuyetCongKhai approver(BoThe source) {
-        boolean authorCase = !source.isBoMau()
-                && source.getXoaAt() == null
+        boolean authorCase = source.getXoaAt() == null
                 && source.isPublished()
                 && accounts.activeIds(List.of(source.getChuSoHuuId())).contains(source.getChuSoHuuId());
         return authorCase ? NguoiDuyetCongKhai.TAC_GIA : NguoiDuyetCongKhai.ADMIN;

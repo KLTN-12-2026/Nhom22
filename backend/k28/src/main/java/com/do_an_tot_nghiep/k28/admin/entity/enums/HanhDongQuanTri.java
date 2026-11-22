@@ -36,5 +36,7 @@ public enum HanhDongQuanTri {
     SUA_KHUYEN_MAI,
     SUA_UU_DAI,
     DUYET_HSSV,
-    TU_CHOI_HSSV
+    TU_CHOI_HSSV,
+    AN_ANH_DAI_DIEN,
+    HIEN_ANH_DAI_DIEN
 }

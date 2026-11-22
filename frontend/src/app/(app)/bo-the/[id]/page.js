@@ -5,6 +5,10 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon, ErrorState, Pagination, ConfirmDialog } from '@/components/ui';
 import { CardEntry } from '@/components/content/CardEntry';
+import { ShareDialog } from '@/components/content/ShareDialog';
+import { SnapDialog } from '@/components/content/SnapDialog';
+import { CardActions } from '@/components/content/CardActions';
+import { cardShare, deckShare } from '@/lib/share.mjs';
 import { AuthorTag } from '@/components/content/AuthorTag';
 import { useMe } from '@/hooks/useMe';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
@@ -36,6 +40,8 @@ export default function DeckDetailPage() {
   const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
   const [editing, setEditing] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [sharing, setSharing] = useState(null);
+  const [snapping, setSnapping] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const download = useMutation({ mutationFn: () => apiFetch(`/api/v1/decks/${id}/export`, { responseType: 'blob' }), onSuccess: blob => saveDownload(blob, `deck-${id}.csv`) });
   const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
@@ -65,6 +71,9 @@ export default function DeckDetailPage() {
   if (isLoading) return <div className="page sheet skeleton"><div className="sk sk-title" /><div className="sk sk-row" /></div>;
   if (error) return <div className="page sheet"><ErrorState description={error.message} onRetry={refetch} /></div>;
   if (!deck) return null;
+  const published = deck.quyenTruyCap === 'CONG_KHAI' && deck.trangThaiKiemDuyet === 'BINH_THUONG';
+  const shareDeck = () => setSharing(deckShare(window.location.origin, id, deck));
+  const shareCard = card => setSharing(cardShare(window.location.origin, id, card));
   return <div className="page page-grid with-side">
     <article className="sheet" aria-labelledby="deck-title">
       <Link className="btn btn-quiet" href="/bo-the"><Icon name="arrow-left" />Bộ của tôi</Link>
@@ -82,6 +91,7 @@ export default function DeckDetailPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setAdding(true)}><Icon name="plus" />Thêm thẻ</button>
             <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}><Icon name="chart" />Tiến độ</Link>
             <button className={`btn btn-secondary ${styles.fav}`} type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Đã yêu thích' : 'Yêu thích'}</button>
+            {published && <button type="button" className="btn btn-secondary" onClick={shareDeck}><Icon name="share" />Chia sẻ</button>}
           </div>
           <div className={styles.subActions} role="group" aria-label="Quản lý bộ thẻ">
             <Link className="btn btn-edit btn-sm" href={`/bo-the/tao?id=${id}`}><Icon name="edit" />Sửa bộ</Link>
@@ -108,12 +118,16 @@ export default function DeckDetailPage() {
         showImages={showImages}
         focused={card.id === focusId}
         tagNames={(card.nhanIds || []).map(tagId => tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`)}
-        tools={<>
-          <button type="button" className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button>
-          <button type="button" className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })} ><Icon name="trash" />Xóa thẻ</button>
-        </>}
+        tools={<CardActions word={card.tu} items={[
+          { key: 'snap', icon: 'camera', label: 'Chụp thẻ', onClick: () => setSnapping({ card, number: page * 20 + index + 1 }) },
+          published && { key: 'share', icon: 'share', label: 'Chia sẻ', onClick: () => shareCard(card) },
+          { key: 'edit', icon: 'edit', label: 'Sửa thẻ', tone: 'edit', split: true, onClick: () => setEditing(card) },
+          { key: 'delete', icon: 'trash', label: 'Xóa thẻ', tone: 'danger', disabled: deleteCard.isPending, onClick: () => setConfirmation({ type: 'card', card }) },
+        ]} />}
       />)}</ol>
       {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => { setFocusId(null); setPage(value - 1); }} />}
+      {snapping && <SnapDialog key={snapping.card.id} onClose={() => setSnapping(null)} card={snapping.card} number={snapping.number} deckId={id} deckName={deck.ten} linkable={published} />}
+      {sharing && <ShareDialog onClose={() => setSharing(null)} {...sharing} />}
       {adding && <QuickAddCardDialog deckId={id} deckName={deck.ten} onClose={() => setAdding(false)} />}
       {editing && <CardEditDialog key={editing.id} card={editing} deckId={id} onClose={() => setEditing(null)} />}
       <ConfirmDialog isOpen={!!confirmation} title={confirmation?.type === 'deck' ? 'Xóa bộ thẻ' : 'Xóa thẻ'} description={`Xóa “${confirmation?.card?.tu || deck.ten}”? Nội dung sẽ được gỡ khỏi danh sách của bạn.`} confirmLabel={confirmation?.type === 'deck' ? 'Xóa bộ' : 'Xóa thẻ'} loading={remove.isPending || deleteCard.isPending} onClose={() => setConfirmation(null)} onConfirm={() => confirmation.type === 'deck' ? remove.mutate(undefined, { onError: () => setConfirmation(null) }) : deleteCard.mutate(confirmation.card, { onError: () => setConfirmation(null) })} />

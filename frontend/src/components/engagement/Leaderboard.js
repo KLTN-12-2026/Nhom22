@@ -7,6 +7,7 @@ import { LIMITS, PERIODS, PODIUM_METAL, boardRows, chaseLine, leaderboardKey, pe
 import { TIERS, tierFromCode } from '@/lib/tier.mjs';
 import { MetalIcon } from '@/components/tier/MetalIcon';
 import { ErrorState } from '@/components/ui';
+import { LeaderPerson } from './LeaderPerson';
 import styles from './Leaderboard.module.css';
 
 const initial = name => (String(name || '?').trim().split(/\s+/).pop()?.[0] || '?').toUpperCase();
@@ -28,13 +29,15 @@ function TierMark({ code }) {
   return <span className={styles.tierMark} title={`Gói ${info.label}`}><MetalIcon name={info.icon} metal={info.metal} size={14} /><span className="sr-only">Gói {info.label}</span></span>;
 }
 
-function Podium({ entries }) {
+function Podium({ entries, context }) {
   const order = [entries[1], entries[0], entries[2]].filter(Boolean);
   return <ol className={styles.podium} aria-label="Ba người dẫn đầu">
     {order.map(entry => <li key={entry.nguoiDungId} className={styles.step} data-place={entry.hang} data-me={entry.laToi || undefined}>
       <MetalIcon name={entry.hang === 1 ? 'trophy' : 'medal'} metal={PODIUM_METAL[entry.hang]} size={entry.hang === 1 ? 40 : 30} />
-      <Avatar entry={entry} size={entry.hang === 1 ? 64 : 52} />
-      <span className={styles.stepName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
+      <LeaderPerson entry={entry} context={{ rank: entry.hang, label: context }} className={styles.stepPerson}>
+        <Avatar entry={entry} size={entry.hang === 1 ? 64 : 52} />
+        <span className={styles.stepName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
+      </LeaderPerson>
       <span className={styles.stepScore}><b>{entry.soNgay}</b> ngày · {number(entry.soLuotHopLe)} lượt</span>
       <span className={styles.stepBase}><span>{entry.hang}</span></span>
     </li>)}
@@ -47,16 +50,22 @@ function WeeklyHonors() {
   const honors = useQuery({ queryKey: ['leaderboard', 'weekly-honors'], queryFn: () => apiFetch('/api/v1/leaderboard/weekly-honors'), staleTime: 300000 });
   const list = honors.data?.vinhDanh || [];
   if (!list.length) return null;
+  const week = `tuần ${shortDay(honors.data.tuanBatDau)} – ${shortDay(honors.data.tuanKetThuc)}`;
   return <section className={styles.honors} aria-labelledby="honors-title">
-    <h2 id="honors-title" className={styles.honorsTitle}><MetalIcon name="crown" metal="gold" size={22} />Vinh danh tuần {shortDay(honors.data.tuanBatDau)} – {shortDay(honors.data.tuanKetThuc)}</h2>
+    <h2 id="honors-title" className={styles.honorsTitle}>
+      <MetalIcon name="crown" metal="gold" size={18} />
+      <span>Vinh danh <span className={styles.honorsWeek}>{week}</span></span>
+    </h2>
     <ol className={styles.honorList}>
       {list.map(entry => <li key={entry.nguoiDungId} className={styles.honor} data-place={entry.hang}>
-        <MetalIcon name={entry.hang === 1 ? 'trophy' : 'medal'} metal={PODIUM_METAL[entry.hang]} size={28} />
-        <Avatar entry={entry} size={44} />
-        <span className={styles.honorBody}>
-          <span className={styles.honorName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
-          <span className={styles.honorMeta}>{entry.soNgay} ngày · {number(entry.soLuotHopLe)} lượt{entry.soLanTop3 > 1 ? ` · ${entry.soLanTop3} lần top 3` : ''}</span>
-        </span>
+        <LeaderPerson entry={entry} context={{ rank: entry.hang, label: `Vinh danh ${week}` }} className={styles.honorPerson}>
+          <MetalIcon name={entry.hang === 1 ? 'trophy' : 'medal'} metal={PODIUM_METAL[entry.hang]} size={18} />
+          <Avatar entry={entry} size={28} />
+          <span className={styles.honorBody}>
+            <span className={styles.honorName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
+            <span className={styles.honorMeta}>{entry.soNgay} ngày · {number(entry.soLuotHopLe)} lượt{entry.soLanTop3 > 1 ? ` · ${entry.soLanTop3} lần top 3` : ''}</span>
+          </span>
+        </LeaderPerson>
       </li>)}
     </ol>
   </section>;
@@ -70,6 +79,7 @@ export function Leaderboard() {
   const rows = boardRows(data);
   const podium = (data?.top || []).slice(0, 3);
   const chase = chaseLine(data);
+  const context = ky === 'THANG' ? 'Tháng này' : 'Tuần này';
 
   return <div className={styles.page}>
     <header className={styles.head}>
@@ -102,14 +112,16 @@ export function Leaderboard() {
       : !data ? <div className={`${styles.skeleton} sk`} aria-busy="true" />
       : !data.top.length ? <p className={styles.empty}>Chưa có ai ôn tập trong kỳ này. Hãy là người đầu tiên!</p>
       : <>
-        {podium.length >= 3 && <Podium entries={podium} />}
+        {podium.length >= 3 && <Podium entries={podium} context={context} />}
         <ol className={styles.list} aria-label={`Top ${gioiHan}`} aria-busy={board.isFetching}>
           {rows.map(row => row.type === 'gap'
             ? <li key={row.key} className={styles.gap} aria-label="Các hạng ở giữa đã ẩn"><span>•</span><span>•</span><span>•</span></li>
             : <li key={row.entry.nguoiDungId} className={styles.row} data-me={row.entry.laToi || undefined} data-place={row.entry.hang <= 3 ? row.entry.hang : undefined}>
               <span className={styles.rank}>{row.entry.hang <= 3 ? <MetalIcon name="medal" metal={PODIUM_METAL[row.entry.hang]} size={22} /> : row.entry.hang}</span>
-              <Avatar entry={row.entry} />
-              <span className={styles.name}>{row.entry.tenHienThi}<TierMark code={row.entry.goiMa} />{row.entry.laToi && <span className={styles.you}>Bạn</span>}</span>
+              <LeaderPerson entry={row.entry} context={{ rank: row.entry.hang, label: context }} className={styles.person}>
+                <Avatar entry={row.entry} />
+                <span className={styles.name}>{row.entry.tenHienThi}<TierMark code={row.entry.goiMa} />{row.entry.laToi && <span className={styles.you}>Bạn</span>}</span>
+              </LeaderPerson>
               <span className={styles.days}><b>{row.entry.soNgay}</b> ngày</span>
               <span className={styles.reviews}>{number(row.entry.soLuotHopLe)} lượt</span>
             </li>)}

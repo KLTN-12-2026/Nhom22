@@ -9,3 +9,13 @@
 .typeCard :global(.choice-body) { display: grid; gap: 4px; min-width: 0; }
 .typeCard :global(.choice-body) > div { margin-top: 6px; width: 100%; }
 .typeGrid + section { margin-top: var(--sp-4); }
+.sourceTitle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1) var(--sp-2); }
+.sourceDetail { display: grid; gap: var(--sp-3); margin-top: var(--sp-3); padding-left: var(--sp-3); border-left: var(--rule-strong) solid var(--primary-line); }
+.sourceEmpty { margin-top: var(--sp-3); }
+.ratingGrid { display: grid; gap: var(--sp-2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px) { .ratingGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.recentWords { list-style: none; margin: 0; padding: 0; display: grid; }
+.recentWords li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--sp-3); align-items: center; padding: var(--sp-2) 0; border-bottom: var(--rule) dashed var(--primary-line); }
+.recentWords .word { font-weight: 650; overflow-wrap: anywhere; }
+.recentWords .meaning { grid-column: 1; font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.recentWords :global(.stamp) { grid-column: 2; grid-row: 1 / span 2; }

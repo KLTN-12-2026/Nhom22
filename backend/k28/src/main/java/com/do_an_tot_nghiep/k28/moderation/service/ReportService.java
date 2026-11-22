@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.moderation.service;
 
 import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
 import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
+import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.ai.service.AiModerationService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -10,6 +11,7 @@ import com.do_an_tot_nghiep.k28.content.service.ContentModerationService;
 import com.do_an_tot_nghiep.k28.moderation.dto.CreateReportRequest;
 import com.do_an_tot_nghiep.k28.moderation.dto.ReportResponse;
 import com.do_an_tot_nghiep.k28.moderation.entity.BaoCaoNoiDung;
+import com.do_an_tot_nghiep.k28.moderation.entity.enums.LyDoBaoCao;
 import com.do_an_tot_nghiep.k28.moderation.entity.enums.TrangThaiBaoCao;
 import com.do_an_tot_nghiep.k28.moderation.mapper.ReportMapper;
 import com.do_an_tot_nghiep.k28.moderation.repository.BaoCaoNoiDungRepository;
@@ -31,13 +33,19 @@ public class ReportService {
     private final ReportMapper mapper;
     private final JsonMapper json;
     private final RealtimeService realtime;
+    private final AccountService accounts;
 
     @Transactional
     public ReportResponse create(Long userId, CreateReportRequest request) {
+        if (!request.lyDo().appliesTo(request.loaiDoiTuong())) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "lyDo", "Lý do không áp dụng cho loại báo cáo này");
+        }
+        String moTa = description(request);
         Map<String, Object> snapshot = switch (request.loaiDoiTuong()) {
             case BO_THE -> content.deckSnapshot(userId, request.doiTuongId());
             case THE_TU_VUNG -> content.cardSnapshot(userId, request.doiTuongId());
             case YEU_CAU_AI -> ai.reportSnapshot(userId, request.doiTuongId());
+            case NGUOI_DUNG -> accounts.reportSnapshot(userId, request.doiTuongId());
         };
         if (reports.existsByNguoiBaoCaoIdAndLoaiDoiTuongAndDoiTuongIdAndTrangThai(
                 userId, request.loaiDoiTuong(), request.doiTuongId(), TrangThaiBaoCao.CHO_XU_LY)) {
@@ -50,14 +58,26 @@ public class ReportService {
                     .loaiDoiTuong(request.loaiDoiTuong())
                     .doiTuongId(request.doiTuongId())
                     .lyDo(request.lyDo())
-                    .moTa(request.moTa().strip())
+                    .moTa(moTa)
                     .noiDungJson(json.writeValueAsString(snapshot))
                     .build());
             realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
+            realtime.toAdmins(LoaiSuKien.BAO_CAO_MOI, "BAO_CAO:" + saved.getId());
             return mapper.toResponse(saved);
         } catch (DataIntegrityViolationException ex) {
             throw duplicate();
         }
+    }
+
+    private static String description(CreateReportRequest request) {
+        String moTa = request.moTa() == null ? null : request.moTa().strip();
+        if (moTa != null && moTa.isEmpty()) {
+            moTa = null;
+        }
+        if (request.lyDo() == LyDoBaoCao.KHAC && (moTa == null || moTa.length() < 10)) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "moTa", "Lý do khác cần mô tả ít nhất 10 ký tự");
+        }
+        return moTa;
     }
 
     private static ApiException duplicate() {

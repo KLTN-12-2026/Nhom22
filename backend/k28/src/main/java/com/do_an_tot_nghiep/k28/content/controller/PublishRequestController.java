@@ -4,6 +4,7 @@ import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CopyDiffResponse;
 import com.do_an_tot_nghiep.k28.content.dto.DeckPublishStatusResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.PublishDecisionRequest;
@@ -51,6 +52,16 @@ public class PublishRequestController {
             @Valid @RequestBody PublishDecisionRequest request
     ) {
         return service.decide(currentUser.id(), checkedId(id), request, false);
+    }
+
+    @GetMapping("/decks/{id}/publish-changes")
+    public CopyDiffResponse copyChanges(@PathVariable("id") Long id) {
+        return service.copyChanges(currentUser.id(), checkedId(id));
+    }
+
+    @GetMapping("/publish-requests/{id}/changes")
+    public CopyDiffResponse changes(@PathVariable("id") Long id) {
+        return service.requestChanges(currentUser.id(), checkedId(id), false);
     }
 
     @GetMapping("/publish-requests/{id}/cards")

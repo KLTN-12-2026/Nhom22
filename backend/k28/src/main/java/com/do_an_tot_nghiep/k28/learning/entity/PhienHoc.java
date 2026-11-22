@@ -60,6 +60,9 @@ public class PhienHoc extends BaseEntity {
     @Column(nullable = false, length = 20)
     private CheDoPhien cheDo;
 
+    @Column(nullable = false)
+    private boolean hocTuDo;
+
     @Version
     private Long version;
 
@@ -70,7 +73,8 @@ public class PhienHoc extends BaseEntity {
             String muiGio,
             Instant batDauAt,
             int quyThoiGian,
-            CheDoPhien cheDo
+            CheDoPhien cheDo,
+            boolean hocTuDo
     ) {
         PhienHoc session = new PhienHoc();
         session.nguoiDungId = nguoiDungId;
@@ -81,6 +85,7 @@ public class PhienHoc extends BaseEntity {
         session.trangThai = TrangThaiPhienHoc.DANG_HOC;
         session.quyThoiGian = quyThoiGian;
         session.cheDo = cheDo;
+        session.hocTuDo = hocTuDo;
         return session;
     }
 

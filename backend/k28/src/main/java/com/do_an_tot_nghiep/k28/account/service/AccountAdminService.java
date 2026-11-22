@@ -72,6 +72,26 @@ public class AccountAdminService {
         return mapper.toAdminView(user);
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public UserAdminView hideAvatar(Long id, Long fileId) {
+        NguoiDung user = lockedUser(id);
+        Long target = fileId == null ? user.getAnhDaiDienId() : fileId;
+        if (target == null) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Người dùng chưa có ảnh đại diện");
+        }
+        user.hideAvatar(target);
+        users.flush();
+        return mapper.toAdminView(user);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public UserAdminView showAvatar(Long id) {
+        NguoiDung user = lockedUser(id);
+        user.showAvatar();
+        users.flush();
+        return mapper.toAdminView(user);
+    }
+
     private NguoiDung lockedUser(Long id) {
         return users.findForUpdate(id)
                 .filter(user -> !SYSTEM_EMAIL.equals(user.getEmail()))

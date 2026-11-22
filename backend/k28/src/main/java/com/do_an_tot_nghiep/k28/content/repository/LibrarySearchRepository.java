@@ -23,6 +23,7 @@ public class LibrarySearchRepository {
             b.xoa_at IS NULL
               AND b.quyen_truy_cap = 'CONG_KHAI'
               AND b.trang_thai_kiem_duyet = 'BINH_THUONG'
+              AND EXISTS (SELECT 1 FROM nguoi_dung o WHERE o.id = b.chu_so_huu_id AND o.trang_thai = 'HOAT_DONG')
             """;
 
     private static final String CARD_MATCH = """

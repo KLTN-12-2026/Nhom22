@@ -97,10 +97,10 @@ public class LibraryService {
 
         BoThe deck = decks.findOne(
                 LibraryDeckSpecifications.visibleById(id)
-        ).orElseThrow(() -> new ApiException(
-                ErrorCode.NOT_FOUND,
-                "Không tìm thấy bộ thẻ"
-        ));
+        ).orElseThrow(() -> decks.findById(id)
+                .filter(found -> accounts.isUnavailable(found.getChuSoHuuId()))
+                .map(found -> UnavailableUser.error())
+                .orElseGet(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bộ thẻ")));
 
         int page = cardPage(deck.getId(), request);
 
