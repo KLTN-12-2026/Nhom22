@@ -17,7 +17,8 @@ export const SETTINGS_LINKS = [
   ],
   [
     { key: 'plans', label: 'Gói dịch vụ', icon: 'card', href: '/thanh-toan-goi' },
-    { key: 'payment-history', label: 'Lịch sử thanh toán', icon: 'clock', href: '/thanh-toan-lich-su' }
+    { key: 'payment-history', label: 'Lịch sử thanh toán', icon: 'clock', href: '/thanh-toan-lich-su' },
+    { key: 'support-tickets', label: 'Phiếu hỗ trợ', icon: 'mail', href: '/phieu-ho-tro' }
   ]
 ];
 
