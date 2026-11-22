@@ -19,6 +19,8 @@
 .ledger { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); margin: 0; border-top: var(--rule-strong) solid var(--graphite); border-bottom: var(--rule) solid var(--line); }
 .entry { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 2px; min-width: 0; padding: var(--sp-3) var(--sp-4); --tone: var(--primary); }
 .entry + .entry { border-left: var(--rule) solid var(--line); }
+.ledger[data-cols="2"] .entry:nth-child(odd) { border-left: 0; }
+.ledger[data-cols="2"] .entry:nth-child(n+3) { border-top: var(--rule) solid var(--line); }
 .entry[data-tone="warning"] { --tone: var(--warning-text); }
 .entry[data-tone="secondary"] { --tone: var(--secondary-text); }
 .entry[data-tone="media"] { --tone: var(--media-ink); }

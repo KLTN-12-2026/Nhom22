@@ -35,9 +35,9 @@ export default function ProfileOverviewPage() {
     <>
       <h1 id="page-title" className="sr-only">Tổng quan hồ sơ</h1>
 
-      <ProfileLedger items={stats} loading={isLoading} label="Số liệu hồ sơ" />
-
-      <MembershipPanel name={me?.tenHienThi} />
+      <MembershipPanel name={me?.tenHienThi}>
+        <ProfileLedger items={stats} loading={isLoading} label="Số liệu hồ sơ" cols={2} />
+      </MembershipPanel>
 
       <section aria-labelledby="pinned-title">
         <div className={styles.sectionHead}>

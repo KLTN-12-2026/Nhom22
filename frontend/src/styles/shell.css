@@ -1,3 +1,7 @@
+.nav-link { --nav-ic: var(--hue, var(--primary)); }
+:root[data-theme="dark"] .nav-link { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav-link { --nav-ic: color-mix(in srgb, var(--hue, var(--primary)) 62%, #ffffff); } }
+
 .app-header { background: var(--sheet); border-bottom: var(--rule) solid var(--line); box-shadow: none; }
 .app-header .header-actions { gap: var(--sp-3); }
 .header-tools, .header-status { display: flex; align-items: center; gap: var(--sp-1); }
@@ -25,19 +29,20 @@
   .sidebar .nav-fold[open] > summary { color: var(--ink-2); }
 
   .sidebar .nav-link { position: relative; display: flex; align-items: center; gap: var(--sp-3); min-height: var(--tap); padding: 0 var(--sp-3); border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); font-weight: 500; box-shadow: none; transition: background var(--dur-1), color var(--dur-1); }
-  .sidebar .nav-link .icon { width: 20px; height: 20px; flex: none; color: var(--ink-3); stroke-width: 1.9; transform: none; transition: color var(--dur-1), transform var(--dur-2) var(--ease-out); }
+  .sidebar .nav-link .icon { width: 20px; height: 20px; flex: none; color: var(--nav-ic); stroke-width: 1.9; transform: none; transition: color var(--dur-1), transform var(--dur-2) var(--ease-out); }
   .sidebar .nav-link:hover { background: var(--sunk); color: var(--ink); text-decoration: none; }
-  .sidebar .nav-link:hover .icon { color: var(--ink-2); transform: translateX(2px); }
-  .sidebar .nav-link[aria-current="page"] { background: var(--primary-tint); color: var(--primary-strong); font-weight: 700; }
-  .sidebar .nav-link[aria-current="page"] .icon { color: var(--primary); stroke-width: 2.2; transform: none; }
-  .sidebar .nav-link[aria-current="page"]::before { content: ""; position: absolute; left: calc(var(--sp-3) * -1); top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: var(--primary); }
+  .sidebar .nav-link:hover .icon { transform: translateX(2px) scale(1.06); }
+  .sidebar .nav-link[aria-current="page"] { background: color-mix(in srgb, var(--nav-ic) 13%, var(--sheet)); color: var(--ink); font-weight: 700; }
+  .sidebar .nav-link[aria-current="page"] .icon { color: var(--nav-ic); stroke-width: 2.2; transform: none; }
+  .sidebar .nav-link[aria-current="page"]::before { content: ""; position: absolute; left: calc(var(--sp-3) * -1); top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: var(--nav-ic); }
   .sidebar .nav-link:focus-visible { outline: none; box-shadow: var(--focus); }
   .tier-side { margin-top: auto; padding-top: var(--sp-4); }
 }
 
-.app-menu .nav-link .icon { color: var(--ink-3); }
-.app-menu .nav-link[aria-current="page"] { background: var(--primary-tint); color: var(--primary-strong); font-weight: 700; }
-.app-menu .nav-link[aria-current="page"] .icon { color: var(--primary); }
+.app-menu .nav-link .icon { color: var(--nav-ic); }
+.app-menu .nav-link, .app-menu .nav-link:hover { color: var(--ink); }
+.app-menu .nav-link[aria-current="page"] { background: color-mix(in srgb, var(--nav-ic) 13%, var(--sheet)); color: var(--ink); font-weight: 700; }
+.app-menu .nav-link[aria-current="page"] .icon { color: var(--nav-ic); }
 
 @media (max-width: 1023px) {
   .header-status { padding-left: 0; border-left: 0; }

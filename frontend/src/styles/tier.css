@@ -197,3 +197,15 @@ div.tier-card { cursor: default; }
 .muc-toggle { position: relative; }
 .muc-hat { position: absolute; left: 50%; top: -10px; transform: translateX(-50%) rotate(6deg); line-height: 0; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .3)); }
 .muc-hat-pro { top: -6px; left: 70%; transform: rotate(14deg); }
+
+.tier-showcase { container-type: inline-size; min-width: 0; }
+.tier-showcase-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); align-items: center; }
+.tier-showcase-card { display: grid; justify-items: center; gap: var(--sp-2); min-width: 0; }
+.tier-showcase-card .tier-card-stage { justify-items: start; }
+.tier-showcase-side { display: grid; gap: var(--sp-4); align-content: center; min-width: 0; }
+.tier-showcase-side .tier-actions { justify-content: flex-start; }
+.tier-card-skeleton { width: min(400px, 100%); aspect-ratio: 1.586; border-radius: 18px; }
+@container (min-width: 600px) {
+  .tier-showcase-grid { grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: var(--sp-5); }
+  .tier-showcase-card { justify-items: start; }
+}

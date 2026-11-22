@@ -556,6 +556,18 @@ Hợp đồng theo mã nguồn và `FR04PublishRequestTest` (21/11/2026); chưa 
 
 `GET /api/v1/admin/dashboard/queue` (ADMIN) trả khối `canXuLy` giống trong `/admin/dashboard`, dùng cho số đếm menu. Giữ polling chậm làm dự phòng khi mất luồng. Đã làm ở FE: F3.19. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md).
 
+### 5.20 B3.20 — Realtime giai đoạn 2
+
+Cùng luồng `/api/v1/events/stream`, thêm 3 loại:
+
+| `loai` | Nhận | `id` | FE nên làm |
+|---|---|---|---|
+| `MUC_DA_XU_LY` | ADMIN, trừ người vừa xử lý | `BAO_CAO:<id>` hoặc `CONG_KHAI:<id>` | Tải lại hàng chờ; nếu đang mở đúng mục thì đóng và báo "vừa được quản trị viên khác xử lý" |
+| `SU_CO_HE_THONG` | ADMIN | `CSDL:DOWN`, `CSDL:UP`, `REDIS:DOWN`, `REDIS:UP`, `TAC_VU:<id>` | Tải lại `['admin-dashboard']`, `['admin-queue']`, `['admin-service-usage']`; toast |
+| `PHIEN_HOC_MOI` | Chủ phiên | id phiên | Nếu khác phiên đang mở ở `/hoc-phien` thì báo phiên đã mở ở nơi khác |
+
+`CSDL`/`REDIS` chỉ gửi khi trạng thái đổi, kiểm mỗi 30 giây ở từng instance. Đã làm ở FE: F3.20. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md#giai-đoạn-2-b320).
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).

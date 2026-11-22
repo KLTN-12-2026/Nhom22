@@ -281,6 +281,11 @@ frontend/
 - **Kiểm chứng 22/11/2026:** eslint 0 lỗi, `tests/realtime.test.mjs` 3/3, `next build` thành công. `npm test` còn 2 lỗi có sẵn từ trước ở `api-client.test.mjs` (mascot), không liên quan.
 - **Trình duyệt thật 22/11/2026:** `next start` 3002 + BE 8081, đăng nhập `an@vocab.local`: `/events/stream` 200, banner thông báo hệ thống hiện/biến mất ngay khi Admin tạo/xóa. Proxy Next không giữ đệm luồng.
 
+### [x] F3.20 Cập nhật thời gian thực, giai đoạn 2 — xử lý trùng, sự cố, phiên học ← B3.20 (yêu cầu 22/11/2026)
+- **Đã làm 22/11/2026:** `realtime.mjs` thêm 3 loại, `incidentMessage`, `handledId`; `useEventStream` phát `CustomEvent('vl:realtime')`, toast sự cố (tác vụ lỗi tối đa 1 lần/phút); hook `useRealtimeEvent`. Trang báo cáo và duyệt công khai: mục đang mở bị Admin khác xử lý → đóng ngăn kéo, báo vàng. `/hoc-phien`: phiên khác vừa mở → báo vàng.
+- **Kiểm chứng 22/11/2026:** eslint 0 lỗi, `tests/realtime.test.mjs` 5/5, `next build` thành công.
+- **Trình duyệt thật 22/11/2026:** BE dev 8081 + FE `next start` 3003 (proxy Next), tài khoản thử `rt*@test.local`. Admin 1 mở báo cáo #5, Admin 2 xử lý qua API → ngăn kéo của Admin 1 tự đóng, hiện báo vàng, danh sách tự tải lại. Đang học phiên 29, mở phiên 31 từ thiết bị khác → báo phiên học khác. Chèn tác vụ nền loại lạ → worker đánh `LOI`/`CHUA_DANG_KY`, Admin thấy toast "Có tác vụ nền vừa lỗi", sổ trực ban tự tải lại. Không thử dừng Redis/CSDL thật (sẽ làm gián đoạn BE dev khác); nhánh này có trong `FR12RealtimeTest`. Đã xóa tác vụ thử và gỡ quyền ADMIN tạm.
+
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
 
 ### [ ] F4.1 E2E Playwright cho kịch bản demo TK §20.2

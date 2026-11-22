@@ -10,6 +10,7 @@ import { useMe } from '@/hooks/useMe';
 import { libraryPage } from '@/lib/library-query.mjs';
 import { ProfileAvatar, ProfileBadges, ProfileIdentity, ProfileLedger, ProfileMeta } from '@/components/profile/ProfileParts';
 import { MembershipCard } from '@/components/tier/MembershipCard';
+import { TierShowcase } from '@/components/tier/MembershipPanel';
 import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
 import { tierFromCode } from '@/lib/tier.mjs';
 import styles from './page.module.css';
@@ -64,6 +65,11 @@ function AuthorContent() {
   const joined = monthYear(profile?.thamGiaAt);
   const badges = profile?.huyHieu || [];
   const tier = profile?.goiMa ? tierFromCode(profile.goiMa) : null;
+  const ledger = profile && <ProfileLedger label="Số liệu tác giả" cols={profile.goiMa ? 2 : 3} items={[
+    { label: 'Bộ công khai', value: profile.soBoThe, tone: 'primary' },
+    { label: 'Thẻ từ vựng', value: profile.soThe, tone: 'secondary' },
+    { label: 'Huy hiệu', value: badges.length, tone: 'warning' },
+  ]} />;
 
   return (
     <div className={`page ${styles.profile}`}>
@@ -86,15 +92,9 @@ function AuthorContent() {
       </aside>
 
       <section className={styles.main} aria-labelledby="decks-title">
-        {profile && <ProfileLedger label="Số liệu tác giả" items={[
-          { label: 'Bộ công khai', value: profile.soBoThe, tone: 'primary' },
-          { label: 'Thẻ từ vựng', value: profile.soThe, tone: 'secondary' },
-          { label: 'Huy hiệu', value: badges.length, tone: 'warning' },
-        ]} />}
-        {profile?.goiMa && <section className="sheet tier-panel" aria-label={`Thẻ thành viên của ${profile.tenHienThi}`}>
-          <MembershipCard tier={tier} name={profile.tenHienThi} since={profile.thamGiaAt} />
-          <p className="tier-hint">Bấm vào thẻ để lật xem quyền lợi</p>
-        </section>}
+        {profile && (profile.goiMa
+          ? <TierShowcase label={`Thẻ thành viên của ${profile.tenHienThi}`} card={<MembershipCard tier={tier} name={profile.tenHienThi} since={profile.thamGiaAt} />}>{ledger}</TierShowcase>
+          : ledger)}
         {profile && <ActivityHeatmap title="Hoạt động học trong năm" source={{ url: `/api/v1/library/authors/${id}/activity`, queryKey: ['author-activity', String(id)], metrics: ['soLuotOn', 'soCongKhai'] }} />}
         <nav className={styles.tabs} aria-label="Hồ sơ tác giả">
           <span className={styles.tab} aria-current="page">

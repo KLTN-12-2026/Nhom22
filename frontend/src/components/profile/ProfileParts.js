@@ -38,9 +38,9 @@ export function ProfileMeta({ items }) {
   );
 }
 
-export function ProfileLedger({ items, loading = false, label }) {
+export function ProfileLedger({ items, loading = false, label, cols }) {
   return (
-    <dl className={styles.ledger} aria-label={label} style={{ '--cols': items.length }}>
+    <dl className={styles.ledger} aria-label={label} data-cols={cols || items.length} style={{ '--cols': cols || items.length }}>
       {items.map(item => (
         <div key={item.label} className={styles.entry} data-tone={item.tone || 'primary'}>
           <dt>{item.label}</dt>
