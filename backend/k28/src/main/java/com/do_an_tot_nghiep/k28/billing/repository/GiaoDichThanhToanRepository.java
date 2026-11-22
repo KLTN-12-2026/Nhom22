@@ -91,6 +91,15 @@ public interface GiaoDichThanhToanRepository extends JpaRepository<GiaoDichThanh
 
     Optional<GiaoDichThanhToan> findByMaDon(String maDon);
 
+    boolean existsByNguoiDungIdAndTrangThai(Long nguoiDungId, TrangThaiGiaoDich trangThai);
+
+    Optional<GiaoDichThanhToan> findFirstByNguoiDungIdAndGoiMaAndTrangThaiOrderByHoanTatAtDesc(
+            Long nguoiDungId, String goiMa, TrangThaiGiaoDich trangThai);
+
+    long countByKhuyenMaiIdAndTrangThai(Long khuyenMaiId, TrangThaiGiaoDich trangThai);
+
+    long countByKhuyenMaiIdAndNguoiDungIdAndTrangThai(Long khuyenMaiId, Long nguoiDungId, TrangThaiGiaoDich trangThai);
+
     @Query("""
             SELECT g.hoanTatAt AS hoanTatAt, g.goiMa AS goiMa, g.soTien AS soTien
             FROM GiaoDichThanhToan g

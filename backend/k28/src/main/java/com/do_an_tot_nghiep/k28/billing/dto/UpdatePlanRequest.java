@@ -15,12 +15,12 @@ public record UpdatePlanRequest(
         String ten,
 
         @NotNull(message = "Nhập giá tháng")
-        @Min(value = 1000, message = "Giá tháng tối thiểu 1.000 ₫")
+        @Min(value = 0, message = "Giá tháng không được âm")
         @Max(value = 100000000, message = "Giá tháng tối đa 100.000.000 ₫")
         Long giaThang,
 
         @NotNull(message = "Nhập giá năm")
-        @Min(value = 1000, message = "Giá năm tối thiểu 1.000 ₫")
+        @Min(value = 0, message = "Giá năm không được âm")
         @Max(value = 1000000000, message = "Giá năm tối đa 1.000.000.000 ₫")
         Long giaNam,
 

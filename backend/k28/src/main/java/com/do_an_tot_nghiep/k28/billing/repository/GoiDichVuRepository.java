@@ -15,5 +15,5 @@ public interface GoiDichVuRepository extends JpaRepository<GoiDichVu, Long> {
 
     List<GoiDichVu> findAllByOrderByGiaThangAsc();
 
-    long countByHoatDongTrueAndMaNot(String ma);
+    long countByHoatDongTrueAndMaNotAndGiaThangGreaterThan(String ma, long giaThang);
 }

@@ -5,6 +5,9 @@ import com.do_an_tot_nghiep.k28.billing.dto.CancelSubscriptionRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.CurrentPlanResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.PlanResponse;
+import com.do_an_tot_nghiep.k28.billing.dto.QuoteResponse;
+import com.do_an_tot_nghiep.k28.billing.dto.StudentOfferResponse;
+import com.do_an_tot_nghiep.k28.billing.dto.StudentVerificationRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.SubscriptionResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.TransactionQuery;
 import com.do_an_tot_nghiep.k28.billing.dto.TransactionResponse;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import com.do_an_tot_nghiep.k28.billing.dto.VnpayIpnResponse;
 import com.do_an_tot_nghiep.k28.billing.service.BillingService;
 import com.do_an_tot_nghiep.k28.billing.service.PaymentConfirmationService;
+import com.do_an_tot_nghiep.k28.billing.service.StudentOfferService;
 import com.do_an_tot_nghiep.k28.billing.service.PaymentConfirmationService.KetQuaXacNhan;
 import com.do_an_tot_nghiep.k28.billing.service.PaymentConfirmationService.XacNhan;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
@@ -45,6 +49,7 @@ public class BillingController {
 
     private final BillingService billing;
     private final PaymentConfirmationService confirmation;
+    private final StudentOfferService students;
     private final CurrentUser currentUser;
 
     @Value("${app.frontend-url}")
@@ -68,6 +73,33 @@ public class BillingController {
     @PostMapping("/api/v1/me/subscription/cancel")
     public SubscriptionResponse cancelSubscription(@Valid @RequestBody CancelSubscriptionRequest request) {
         return billing.cancelSubscription(currentUser.id(), request);
+    }
+
+    @PostMapping("/api/v1/billing/quotes")
+    public QuoteResponse quote(@Valid @RequestBody CheckoutRequest request) {
+        return billing.quote(currentUser.id(), request);
+    }
+
+    @PostMapping("/api/v1/me/subscription/trial")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SubscriptionResponse startTrial() {
+        return billing.startTrial(currentUser.id());
+    }
+
+    @GetMapping("/api/v1/me/student-offer")
+    public StudentOfferResponse studentOffer() {
+        return students.status(currentUser.id());
+    }
+
+    @PostMapping("/api/v1/me/student-verifications")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StudentOfferResponse submitStudentVerification(@Valid @RequestBody StudentVerificationRequest request) {
+        return students.submit(currentUser.id(), request);
+    }
+
+    @PostMapping("/api/v1/me/student-offer/claim")
+    public StudentOfferResponse claimStudentOffer() {
+        return students.claim(currentUser.id());
     }
 
     @PostMapping("/api/v1/billing/checkouts")

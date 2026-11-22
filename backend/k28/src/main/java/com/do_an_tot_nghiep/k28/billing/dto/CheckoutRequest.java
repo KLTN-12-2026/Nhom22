@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record CheckoutRequest(
         @NotBlank @Size(max = 20) String goiMa,
-        @NotNull ChuKy chuKy
+        @NotNull ChuKy chuKy,
+        @Size(max = 30) String maKhuyenMai
 ) {
 }

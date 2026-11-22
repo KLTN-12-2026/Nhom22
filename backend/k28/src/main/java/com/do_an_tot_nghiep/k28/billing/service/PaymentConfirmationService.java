@@ -80,7 +80,7 @@ public class PaymentConfirmationService {
         }
         if (cong.thanhCong()) {
             don.ketThuc(TrangThaiGiaoDich.THANH_CONG, cong.maGiaoDichCong(), cong.maPhanHoi(), duLieu, now);
-            entitlements.activate(don.getNguoiDungId(), don.getGoiMa(), don.getChuKy(), now);
+            entitlements.activate(don.getNguoiDungId(), don.getGoiMa(), don.getChuKy(), now, don.isNangCap());
         } else {
             don.ketThuc(TrangThaiGiaoDich.THAT_BAI, cong.maGiaoDichCong(), cong.maPhanHoi(), duLieu, now);
         }

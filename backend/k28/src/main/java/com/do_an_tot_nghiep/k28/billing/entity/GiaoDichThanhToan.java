@@ -44,6 +44,20 @@ public class GiaoDichThanhToan extends BaseEntity {
     private ChuKy chuKy;
     @Column(nullable = false, updatable = false)
     private long soTien;
+    @Column(nullable = false, updatable = false)
+    private long giaGoc;
+    @Column(nullable = false, updatable = false)
+    private long giamGia;
+    @Column(nullable = false, updatable = false)
+    private long khauTru;
+    @Column(updatable = false)
+    private Long khuyenMaiId;
+    @Column(updatable = false, length = 30)
+    private String maKhuyenMai;
+    @Column(nullable = false, updatable = false)
+    private boolean uuDaiHssv;
+    @Column(nullable = false, updatable = false)
+    private boolean nangCap;
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, updatable = false, length = 20)
