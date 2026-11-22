@@ -86,6 +86,13 @@ app:
     image:
       provider: ${IMAGE_PROVIDER:fake}
       max-bytes: 2097152
+      imagen:
+        base-url: ${IMAGEN_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+        api-key: ${GOOGLE_AI_API_KEY:}
+        model: ${IMAGEN_MODEL:imagen-4.0-generate-001}
+        kich-thuoc: 512
+        connect-timeout: 5s
+        read-timeout: 60s
   tts:
     provider: ${TTS_PROVIDER:fake}
     model: ${TTS_MODEL:gpt-4o-mini-tts}
@@ -144,6 +151,11 @@ app:
     enabled: ${REMINDERS_ENABLED:true}
     interval-ms: ${REMINDERS_INTERVAL_MS:900000}
     initial-delay-ms: ${REMINDERS_INITIAL_DELAY_MS:60000}
+  dictionary:
+    import-on-startup: ${DICTIONARY_IMPORT:true}
+    batch-size: 500
+    anh-viet: classpath:dictionary/anh-viet.jsonl.gz
+    viet-anh: classpath:dictionary/viet-anh.jsonl.gz
   statistics:
     so-luot-toi-da: 20
     so-quan-sat-toi-thieu: 5

@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 
 import { AppShell } from './AppShell';
+import { GlobalSearch } from './GlobalSearch';
 
 export function PublicLayout({ children }) {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export function PublicLayout({ children }) {
 
   const navLinks = [
     { href: '/thu-vien', label: 'Thư viện', key: 'library' },
+    { href: '/tu-dien', label: 'Từ điển', key: 'dictionary' },
     { href: '/huong-dan', label: 'Cách học', key: 'guide' },
     { href: '/chinh-sach', label: 'Chính sách', key: 'policy' },
   ];
@@ -53,6 +55,8 @@ export function PublicLayout({ children }) {
               </Link>
             ))}
           </nav>
+
+          <GlobalSearch pages={[{ href: '/thu-vien', label: 'Thư viện', icon: 'library' }, { href: '/tu-dien', label: 'Từ điển Anh – Việt', icon: 'book' },{ href: '/huong-dan', label: 'Cách học', icon: 'info' }, { href: '/chinh-sach', label: 'Chính sách', icon: 'file' }, { href: '/dang-nhap', label: 'Đăng nhập', icon: 'user' }, { href: '/dang-ky', label: 'Tạo tài khoản', icon: 'user' }]} />
 
           <div className="header-actions"><ThemeToggle />
             <Link href="/dang-nhap" className="btn btn-quiet">Đăng nhập</Link>

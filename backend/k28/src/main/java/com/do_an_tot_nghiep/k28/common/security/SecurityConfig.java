@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.common.security;
 
+import jakarta.servlet.DispatcherType;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -51,9 +52,10 @@ public class SecurityConfig {
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(csrfHandler))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/public/**", "/api/v1/library/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/public/**", "/api/v1/library/**", "/api/v1/dictionary/**").permitAll()
                         .requestMatchers("/api/v1/billing/plans", "/api/v1/billing/vnpay/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

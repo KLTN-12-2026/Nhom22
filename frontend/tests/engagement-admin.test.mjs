@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newMotivation, motivationPayload, motivationErrors } from '../src/lib/engagement-admin.mjs';
+import { newMotivation, motivationPayload, motivationErrors, motivationCondition } from '../src/lib/engagement-admin.mjs';
 
 test('badge writes retain server version and immutable code without copying response-only fields', () => {
   const original = { id: '9223372036854775800', ma: 'CHUOI_7', version: 12 };
@@ -37,4 +37,12 @@ test('validation rejects blank text, invalid code, unsupported condition and non
 test('valid badge and challenge drafts satisfy current server limits', () => {
   assert.deepEqual(motivationErrors('badges', { ...newMotivation('badges'), ma: 'BUOC_DAU', ten: 'Bước đầu', moTa: 'Lượt ôn đầu tiên' }), {});
   assert.deepEqual(motivationErrors('challenges', { ...newMotivation('challenges'), ma: 'TUAN', ten: 'Tuần học', moTa: 'Đạt lượt ôn trong tuần' }), {});
+});
+
+test('weekly ranking badges from main remain editable without changing their award condition', () => {
+  const badge = { id: '15', ma: 'TOP_3_TUAN', ten: 'Bục vinh quang', moTa: 'Đứng top 3 bảng xếp hạng siêng năng của một tuần', loaiDieuKien: 'XEP_HANG_TUAN', nguong: 3, thuTu: 102, hoatDong: true, version: 0 };
+  const draft = { ...badge, ten: 'Bục vinh quang tuần' };
+  assert.deepEqual(motivationErrors('badges', draft), {});
+  assert.equal(motivationPayload('badges', draft, badge).loaiDieuKien, 'XEP_HANG_TUAN');
+  assert.equal(motivationCondition('badges', badge), 'Top 3 bảng xếp hạng tuần');
 });

@@ -1,0 +1,28 @@
+
+.sectionHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.sectionTitle { margin: 0; font-size: 1rem; font-weight: 600; }
+.more { font-size: var(--fs-caption); }
+
+.pinned { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.deck { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-4); border: var(--rule) solid var(--line); border-radius: var(--radius-card); background: var(--sheet); transition: border-color var(--dur-1), box-shadow var(--dur-1); }
+.deck:hover { border-color: var(--line-2); box-shadow: var(--shadow-soft); }
+.deckHead { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.deckHead > :global(.icon) { width: 16px; height: 16px; flex: none; color: var(--ink-3); }
+.deckName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--primary); text-decoration: none; }
+.deckName:hover { text-decoration: underline; }
+.access { margin-left: auto; flex: none; padding: 0 8px; border: var(--rule) solid var(--line-2); border-radius: 99px; color: var(--ink-3); font-size: 11.5px; font-weight: 500; line-height: 20px; }
+.deckDesc { margin: 0; color: var(--ink-3); font-size: var(--fs-caption); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.deckMeta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: 0; color: var(--ink-3); font-size: 12px; }
+.deckMeta span { display: inline-flex; align-items: center; gap: 4px; }
+.deckMeta :global(.icon) { width: 13px; height: 13px; color: var(--favorite); }
+.levelDot { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
+.levelDot[data-level="CO_BAN"] { background: var(--edit); }
+.levelDot[data-level="TRUNG_CAP"] { background: var(--warning); }
+.levelDot[data-level="NANG_CAO"] { background: var(--favorite); }
+.empty { margin: 0; padding: var(--sp-4); border: var(--rule) dashed var(--line-2); border-radius: var(--radius-card); color: var(--ink-3); }
+
+@media (max-width: 767px) {
+
+  .pinned { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .deck { transition: none; } }

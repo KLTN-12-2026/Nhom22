@@ -154,9 +154,10 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
     @Test
     void tc03_keysAreCaseSensitiveAndScopedToUser() throws Exception {
         String first = body(copy(learner, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
-        String second = body(copy(learner, sourceId, "case").andExpect(status().isCreated()).andReturn()).get("id").asText();
+        copy(learner, sourceId, "case").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details.boTheId").value(first));
         String third = body(copy(author, sourceId, "Case").andExpect(status().isCreated()).andReturn()).get("id").asText();
-        assertThat(List.of(first, second, third)).doesNotHaveDuplicates();
+        assertThat(List.of(first, third)).doesNotHaveDuplicates();
     }
 
     @ParameterizedTest
@@ -186,6 +187,29 @@ class FR04DeckCopyTest extends AbstractIntegrationTest {
         jdbc.update("UPDATE bo_the SET " + change + " WHERE id=?", sourceId);
         copy(learner, sourceId, "hidden").andExpect(status().isNotFound());
         copy(author, sourceId, "own-hidden").andExpect(status().isNotFound());
+    }
+
+    @Test
+    void tc03_ownCopiesListsOnlyCallersLiveCopies() throws Exception {
+        String copyId = body(copy(learner, sourceId, "own").andExpect(status().isCreated()).andReturn())
+                .get("id").asText();
+        copy(author, sourceId, "author-own").andExpect(status().isCreated());
+
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", sourceId + "," + Long.MAX_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].boNguonId").value(sourceId.toString()))
+                .andExpect(jsonPath("$[0].boTheId").value(copyId));
+
+        jdbc.update("UPDATE bo_the SET xoa_at=CURRENT_TIMESTAMP(3) WHERE id=?", Long.valueOf(copyId));
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", sourceId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        send(learner, get("/api/v1/decks/copies").param("sourceIds", "0"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/decks/copies").param("sourceIds", sourceId.toString()))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

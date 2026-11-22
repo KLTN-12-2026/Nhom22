@@ -7,7 +7,11 @@ import '@/styles/mascot.css';
 import '@/styles/deck-illustrations.css';
 import '@/styles/learning-refinements.css';
 import '@/styles/effects.css';
+import '@/styles/paper.css';
+import '@/styles/tier.css';
+import '@/styles/shell.css';
 import { Providers } from './providers';
+import { MucCompanion } from '@/components/mascot/MucCompanion';
 
 export const metadata = {
   title: { default: 'VocabLearning', template: '%s — VocabLearning' },
@@ -29,8 +33,8 @@ export default function RootLayout({ children }) {
       <body>
         <Providers>
           {children}
+          <MucCompanion />
         </Providers>
-        <Script src="/mascot.js" strategy="afterInteractive" />
         <Script src="/fx.js" strategy="afterInteractive" />
       </body>
     </html>

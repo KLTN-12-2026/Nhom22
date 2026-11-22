@@ -20,6 +20,7 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,6 +91,25 @@ public class AccountService {
                         NguoiDungRepository.PublicDisplayName::getId,
                         NguoiDungRepository.PublicDisplayName::getTenHienThi
                 ));
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> adminIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return users.findAllById(ids).stream()
+                .filter(user -> user.hasRole("ADMIN"))
+                .map(NguoiDung::getId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> activeIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(users.findIdsByTrangThai(ids, TrangThaiNguoiDung.HOAT_DONG));
     }
 
     @Transactional(readOnly = true)

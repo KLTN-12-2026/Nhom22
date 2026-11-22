@@ -134,6 +134,55 @@ class FR04LibraryTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tc03_trendingFavoritesAndNewestRankByCommunitySignals() throws Exception {
+        Long a = deck(" A");
+        Long b = deck(" B");
+        Long c = deck(" C");
+        jdbc.update("UPDATE bo_the SET created_at = '2026-10-01 00:00:00.000' WHERE id = ?", a);
+        jdbc.update("UPDATE bo_the SET created_at = '2026-10-02 00:00:00.000' WHERE id = ?", b);
+        jdbc.update("UPDATE bo_the SET created_at = '2026-10-03 00:00:00.000' WHERE id = ?", c);
+        Long fan1 = user();
+        Long fan2 = user();
+        favorite(fan1, a, 10);
+        favorite(fan2, a, 10);
+        favorite(fan1, b, 1);
+        favorite(ownerId, c, 1);
+        BoThe copy = BoThe.create(fan2, null, "copy " + UUID.randomUUID(), null,
+                TrinhDo.CO_BAN, QuyenTruyCap.RIENG_TU);
+        Long copyId = decks.saveAndFlush(copy).getId();
+        jdbc.update("UPDATE bo_the SET bo_nguon_id = ? WHERE id = ?", c, copyId);
+
+        expectOrder("favorites", a, b, c);
+        expectOrder("trending", b, c, a);
+        expectOrder("newest", c, b, a);
+        mockMvc.perform(get(PATH).param("sort", "views"))
+                .andExpect(status().isBadRequest());
+    }
+
+    private void expectOrder(String sort, Long first, Long second, Long third) throws Exception {
+        mockMvc.perform(get(PATH).param("q", prefix).param("sort", sort))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(first.toString()))
+                .andExpect(jsonPath("$.items[1].id").value(second.toString()))
+                .andExpect(jsonPath("$.items[2].id").value(third.toString()));
+    }
+
+    private Long user() {
+        NguoiDung user = NguoiDung.register(
+                UUID.randomUUID() + "@test.local", "Fan",
+                passwords.encode("matkhau123"), "Asia/Ho_Chi_Minh",
+                roles.findByMa("USER").orElseThrow()
+        );
+        user.verifyEmail(clock.instant());
+        return users.saveAndFlush(user).getId();
+    }
+
+    private void favorite(Long userId, Long deckId, int daysAgo) {
+        jdbc.update("INSERT INTO bo_yeu_thich (nguoi_dung_id, bo_the_id, created_at) VALUES (?, ?, ?)",
+                userId, deckId, java.sql.Timestamp.from(clock.instant().minus(java.time.Duration.ofDays(daysAgo))));
+    }
+
+    @Test
     void tc03_searchEscapesWildcardsNormalizesNfcAndSearchesDescription() throws Exception {
         Long literal = deck(" _%! café");
         deck(" XZZ cafe");

@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.billing.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationContact;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
@@ -55,6 +57,7 @@ public class SubscriptionExpiryService {
     private final MailService mail;
     private final BillingProperties props;
     private final TransactionTemplate tx;
+    private final RealtimeService realtime;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -114,6 +117,7 @@ public class SubscriptionExpiryService {
             if (dangKyGoi.hetHanNeuDenHan(item.getId(), now) != 1) {
                 return false;
             }
+            realtime.toUser(item.getNguoiDungId(), LoaiSuKien.GOI_THAY_DOI, null);
             if (contact != null && contact.trangThai() == TrangThaiNguoiDung.HOAT_DONG) {
                 ZoneId zone = ZoneId.of(contact.muiGio());
                 String noiDung = "Gói " + tenGoi + " đã hết hạn lúc " + GIO_NGAY.format(item.getHetHanAt().atZone(zone))

@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.notification.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.dto.ReminderTarget;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -42,6 +44,7 @@ public class NotificationService {
     private final NotificationMapper mapper;
     private final DailyUsageService dailyUsage;
     private final MailService mail;
+    private final RealtimeService realtime;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -77,8 +80,12 @@ public class NotificationService {
             boolean hienThi,
             boolean guiEmail
     ) {
-        return notifications.insertOnce(userId, loai.name(), ngay, tieuDe, noiDung, lienKet,
+        boolean created = notifications.insertOnce(userId, loai.name(), ngay, tieuDe, noiDung, lienKet,
                 hienThi, guiEmail, clock.instant()) == 1;
+        if (created && hienThi) {
+            realtime.toUser(userId, LoaiSuKien.THONG_BAO_MOI, null);
+        }
+        return created;
     }
 
     @Transactional

@@ -1,0 +1,13 @@
+.card { display: grid; gap: var(--sp-4); align-content: start; padding: var(--sp-5); }
+.avatarTools { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.actions { display: grid; gap: var(--sp-1); }
+.actions :global(.btn) { justify-content: center; }
+.form { display: grid; gap: var(--sp-2); }
+.formActions { display: flex; gap: var(--sp-2); }
+.saved { margin: 0; color: var(--secondary-text, var(--secondary)); font-size: var(--fs-caption); }
+.mobileOnly { display: grid; gap: var(--sp-2); }
+@media (min-width: 1024px) { .mobileOnly { display: none; } }
+@media (max-width: 1023px) {
+  .card { padding: var(--sp-4); }
+  .actions { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+}

@@ -13,7 +13,9 @@ import com.do_an_tot_nghiep.k28.content.service.DeckMediaService;
 import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.content.entity.enums.VaiTroTep;
 import jakarta.validation.Valid;
+import com.do_an_tot_nghiep.k28.content.dto.OwnCopyResponse;
 import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/decks")
 public class DeckController {
+
+    private static final int MAX_SOURCE_IDS = 100;
 
     private final DeckService service;
     private final CurrentUser currentUser;
@@ -40,6 +44,18 @@ public class DeckController {
         }
         DeckResponse response = copies.copy(userId, checkedId(id), key);
         return ResponseEntity.created(URI.create("/api/v1/decks/" + response.id())).body(response);
+    }
+
+    @GetMapping("/copies")
+    public List<OwnCopyResponse> ownCopies(
+            @RequestParam("sourceIds") List<Long> sourceIds
+    ) {
+        if (sourceIds.isEmpty() || sourceIds.size() > MAX_SOURCE_IDS) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "sourceIds",
+                    "sourceIds phải có từ 1 đến " + MAX_SOURCE_IDS + " ID");
+        }
+        sourceIds.forEach(this::checkedId);
+        return copies.ownCopies(currentUser.id(), sourceIds);
     }
 
     @GetMapping("/{id}/cards/{cardId}/files/{role}")

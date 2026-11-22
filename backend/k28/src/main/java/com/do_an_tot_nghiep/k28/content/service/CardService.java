@@ -56,6 +56,16 @@ public class CardService {
             int page,
             int size
     ) {
+        return list(userId, deckId, page, size, null);
+    }
+
+    public PageResponse<CardResponse> list(
+            Long userId,
+            Long deckId,
+            int page,
+            int size,
+            Long theId
+    ) {
         BoThe deck = ownedDeck(userId, deckId);
 
         if (page < 0 || size < 1 || size > 100) {
@@ -63,6 +73,11 @@ public class CardService {
                     ErrorCode.VALIDATION_FAILED,
                     "page phải không âm, size từ 1 đến 100"
             );
+        }
+
+        if (theId != null && theId > 0
+                && cards.existsByIdAndBoTheIdAndXoaAtIsNull(theId, deck.getId())) {
+            page = (int) (cards.countByBoTheIdAndXoaAtIsNullAndIdGreaterThan(deck.getId(), theId) / size);
         }
 
         Page<TheTuVung> result =

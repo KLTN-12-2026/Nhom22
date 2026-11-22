@@ -94,6 +94,7 @@ public class RewardService {
                 .collect(Collectors.toSet());
         List<HuyHieu> pending = badges.findByHoatDongTrueOrderByThuTuAscIdAsc().stream()
                 .filter(badge -> !owned.contains(badge.getId()))
+                .filter(badge -> badge.getLoaiDieuKien() != LoaiDieuKienHuyHieu.XEP_HANG_TUAN)
                 .toList();
         Map<LoaiDieuKienHuyHieu, Long> values = new EnumMap<>(LoaiDieuKienHuyHieu.class);
         for (HuyHieu badge : pending) {
@@ -110,6 +111,7 @@ public class RewardService {
             case TONG_BAI_LUYEN -> ledger.countByNguoiDungIdAndLoaiSuKien(userId, LoaiSuKien.BAI_LUYEN);
             case TONG_DIEM -> ledger.totalPoints(userId);
             case CHUOI_NGAY -> streakService.of(userId, ngay).chuoiNgay();
+            case XEP_HANG_TUAN -> 0L;
         };
     }
 }

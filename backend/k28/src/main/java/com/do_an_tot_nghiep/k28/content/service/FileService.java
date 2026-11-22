@@ -187,6 +187,17 @@ public class FileService {
         return id == null ? null : get(userId, id);
     }
 
+    public FileResponse publicAvatar(Long userId) {
+        Long id = accountService.avatarId(userId);
+        if (id == null) {
+            return null;
+        }
+        return files.findByIdAndChuSoHuuId(id, userId)
+                .filter(file -> file.getTrangThaiXoa() != TrangThaiXoaTep.DA_XOA && file.getHoanTatAt() != null)
+                .map(this::response)
+                .orElse(null);
+    }
+
     public void delete(Long userId, Long fileId) {
         TepTin deleted = new TransactionTemplate(txManager).execute(status -> {
             TepTin file = files.findOwnedForUpdate(fileId, userId)

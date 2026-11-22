@@ -9,6 +9,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
 import { fx, RATE_SOUND, nextReviewText } from '@/lib/fx';
+import { mucReview } from '@/lib/mascot.mjs';
+import { useRealtimeEvent } from '@/hooks/useEventStream';
 
 const ALWAYS_DUE = ['MOI', 'ON_TAP'];
 const currentTime = () => Date.now();
@@ -35,6 +37,10 @@ function FlashcardSessionContent() {
   const cardStartTimeRef = useRef(0);
   const finishStarted = useRef(false);
 
+  const [otherSession, setOtherSession] = useState(false);
+  useRealtimeEvent('PHIEN_HOC_MOI', sessionId => {
+    if (sessionId && sessionId !== String(id)) setOtherSession(true);
+  });
   const [flippedKey, setFlippedKey] = useState(null);
   const [queueDraft, setQueue] = useState(null);
   const [notice, setNotice] = useState('');
@@ -137,6 +143,7 @@ function FlashcardSessionContent() {
         expectedVersion: item.tienDo?.version ?? 0,
         thoiGianTraLoiMs
       });
+      mucReview(rate !== 'QUEN');
       const rateIndex = ratings.findIndex(([value]) => value === rate);
       fx.play(RATE_SOUND[rate]);
       fx.floatText(rateButtons.current[rateIndex], res.laiTrongPhien ? 'Gặp lại trong phiên này' : nextReviewText(res.tienDo?.hanOnAt), RATE_SOUND[rate]);
@@ -199,6 +206,7 @@ function FlashcardSessionContent() {
       </div>
       <main className="session-main" id="main">
         <div className="sheet flash">
+          {otherSession && <p className="notice notice-warning study-error" role="status">Bạn vừa mở một phiên học khác ở tab hoặc thiết bị khác. Phiên này vẫn lưu từng thẻ đã chấm, nhưng nên học tiếp ở một nơi để tránh chấm trùng.</p>}
           {notice && <p className="notice notice-danger study-error" role="alert">{notice}</p>}
           {finishMutation.isError && (
             <p className="notice notice-danger study-error" role="alert">{finishMutation.error.message || 'Chưa kết thúc được phiên. Hãy thử lại.'}</p>

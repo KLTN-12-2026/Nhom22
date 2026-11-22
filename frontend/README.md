@@ -137,4 +137,4 @@ Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và
 
 Trang `/quan-tri/dong-luc` bổ sung trở lại UI54 theo yêu cầu mới, có lối vào trong menu quản trị. Hai tab Huy hiệu/Thử thách đọc API quản trị thật, hỗ trợ tạo/sửa, xác nhận bật/tắt và phân trang. Ghi kèm `version`; lỗi xung đột yêu cầu tải lại danh mục. Thử thách đã có tiến độ không được đổi mục tiêu. Không có thao tác cộng điểm thủ công hoặc xóa thành tích.
 
-Cần backend có migration `V28__admin_motivation.sql`; khởi động lại backend sau khi cập nhật mã. [Hợp đồng API và quy tắc](../docs/luong-backend/B3.6a-quan-tri-dong-luc.md). Mockup HTML vẫn là bản demo độc lập, không phải nguồn dữ liệu frontend.
+Cần backend có migration `V34__admin_motivation.sql`; khởi động lại backend sau khi cập nhật mã. [Hợp đồng API và quy tắc](../docs/luong-backend/B3.6a-quan-tri-dong-luc.md). Mockup HTML vẫn là bản demo độc lập, không phải nguồn dữ liệu frontend.

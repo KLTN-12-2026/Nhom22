@@ -1,148 +1,234 @@
 'use client';
-
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Drawer, Icon } from '@/components/ui';
+import { AdminTable } from '@/components/admin/AdminTable';
 import { apiFetch } from '@/lib/api-client';
-import { REPORT_KINDS, REPORT_REASONS, REPORT_STATES, SNAPSHOT_LABELS, reportQuery, reportTitle, resolutionPayload, snapshotEntries } from '@/lib/moderation-admin.mjs';
+import { relativeTime } from '@/lib/admin-dashboard.mjs';
+import { handledId } from '@/lib/realtime.mjs';
+import { useRealtimeEvent } from '@/hooks/useEventStream';
 import { useCooldown } from '@/hooks/useCooldown';
-import { Button, ErrorState, Icon, Modal, Pagination, Select, Textarea } from '@/components/ui';
-import styles from './page.module.css';
+import { SNAPSHOT_LABELS, snapshotEntries } from '@/lib/moderation-admin.mjs';
+import {
+  REASON_MAX, REPORT_REASON, REPORT_STATUS, REPORT_TABS, TARGET_TYPE, contentLink, listReports, reasonError,
+  resolveReport,
+} from '@/lib/admin-ops.mjs';
 
-const queueKey = ['admin-reports'];
-const options = labels => Object.entries(labels).map(([value, label]) => ({ value, label }));
-const date = value => value ? new Date(value).toLocaleString('vi-VN') : 'Chưa có';
+const fullTime = iso => (iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 
-function ReportState({ state }) {
-  const shown = REPORT_STATES[state];
-  return <span className={`stamp ${shown?.style || 'stamp-quiet'}`}>{shown?.label || state}</span>;
+function StatusPill({ status }) {
+  const [label, tone] = REPORT_STATUS[status] || [status, 'mute'];
+  return <span className={`adm-pill adm-pill-${tone}`}>{label}</span>;
 }
 
 function SnapshotValue({ value }) {
-  if (value == null || value === '') return <span className="muted">Chưa có</span>;
+  if (value == null || value === '') return <span className="adm-muted">Chưa có</span>;
   if (typeof value === 'boolean') return value ? 'Có' : 'Không';
-  if (Array.isArray(value)) return value.length ? <ol className={styles.evidenceList}>{value.map((item, index) => <li key={index}><SnapshotValue value={item} /></li>)}</ol> : <span className="muted">Không có mục nào</span>;
-  if (typeof value === 'object') return <dl className={styles.evidenceDetails}>{Object.entries(value).map(([key, item]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={item} /></dd></Fragment>)}</dl>;
+  if (Array.isArray(value)) return value.length ? <ol>{value.map((item, index) => <li key={index}><SnapshotValue value={item} /></li>)}</ol> : <span className="adm-muted">Không có mục nào</span>;
+  if (typeof value === 'object') return <dl className="adm-kv">{Object.entries(value).map(([key, item]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={item} /></dd></Fragment>)}</dl>;
   return String(value);
 }
 
-export default function ReportsAdminPage() {
+function ResolveForm({ report, onDone }) {
   const client = useQueryClient();
-  const [state, setState] = useState('CHO_XU_LY');
-  const [kind, setKind] = useState('');
-  const [page, setPage] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [decision, setDecision] = useState('GIU');
-  const [reason, setReason] = useState('');
-  const [fields, setFields] = useState({});
-  const [message, setMessage] = useState('');
+  const [quyetDinh, setQuyetDinh] = useState('');
+  const [lyDo, setLyDo] = useState('');
+  const [touched, setTouched] = useState(false);
   const busy = useRef(false);
-  const queue = useQuery({
-    queryKey: [...queueKey, state, kind, page],
-    queryFn: () => apiFetch(`/api/v1/admin/reports?${reportQuery({ trangThai: state, loaiDoiTuong: kind, page })}`),
-    staleTime: 0,
-    refetchInterval: 30000,
-  });
-  const resolve = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/reports/${encodeURIComponent(id)}/resolve`, { method: 'POST', body: JSON.stringify(body) }),
-    retry: false,
-    onSuccess: (_, { body }) => {
-      setSelected(null);
-      setMessage(body.quyetDinh === 'AN' ? 'Đã ẩn nội dung và ghi lý do xử lý.' : 'Đã giữ nội dung và ghi lý do xử lý.');
-      for (const queryKey of [queueKey, ['admin-audit'], ['library-decks'], ['library-deck'], ['ai-history'], ['ai-request']]) {
+  const mutation = useMutation({
+    mutationFn: () => resolveReport(apiFetch, report.id, { quyetDinh, lyDo }),
+    onSuccess: result => {
+      for (const queryKey of [['admin-reports'], ['admin-dashboard'], ['admin-queue'], ['admin-audit'], ['library-decks'], ['library-deck'], ['ai-history'], ['ai-request']]) {
         void client.invalidateQueries({ queryKey });
       }
+      onDone(result, quyetDinh === 'AN' ? 'Đã ẩn nội dung và đóng mọi báo cáo đang chờ về nội dung này.' : 'Đã giữ nội dung và đóng mọi báo cáo đang chờ về nội dung này.');
+    },
+    onError: error => {
+      if (error.status === 409 || error.status === 404) client.invalidateQueries({ queryKey: ['admin-reports'] });
     },
   });
-  const cooldown = useCooldown(resolve.error);
-  const conflict = resolve.error?.status === 409 || resolve.error?.status === 404;
-  const pending = selected?.trangThai === 'CHO_XU_LY';
-  const reports = queue.data?.items || [];
-  const total = queue.data?.totalElements || 0;
-  const orderNote = state === 'CHO_XU_LY' ? 'Báo cáo chờ xử lý, cũ trước' : 'Báo cáo nội dung, mới trước';
-
-  const openReview = report => {
-    setSelected(report); setDecision('GIU'); setReason(''); setFields({}); resolve.reset();
-  };
-  const reloadQueue = () => {
-    setSelected(null); resolve.reset();
-    void client.invalidateQueries({ queryKey: queueKey });
-  };
+  const cooldown = useCooldown(mutation.error);
+  const conflict = mutation.error?.status === 409 || mutation.error?.status === 404;
+  const reasonMsg = reasonError(lyDo);
+  const serverField = mutation.error?.fieldErrors?.find(f => f.field === 'lyDo')?.message;
   const submit = async event => {
     event.preventDefault();
-    if (busy.current || resolve.isPending || !pending || conflict || cooldown) return;
-    let body;
-    try { body = resolutionPayload(decision, reason); }
-    catch (error) {
-      setFields({ [error.field]: error.message });
-      event.currentTarget.elements.namedItem(error.field)?.focus();
-      return;
-    }
+    if (busy.current || mutation.isPending || cooldown || conflict) return;
+    setTouched(true);
+    if (!quyetDinh || reasonMsg) return;
     busy.current = true;
-    setFields({});
-    try { await resolve.mutateAsync({ id: selected.id, body }); }
-    catch (error) { setFields(Object.fromEntries((error.fieldErrors || []).map(({ field, message }) => [field, message]))); }
+    try { await mutation.mutateAsync(); }
+    catch { /* The mutation error is shown below. */ }
     finally { busy.current = false; }
   };
-
-  return <div className={`page ${styles.page}`}>
-    <article className="sheet" aria-labelledby="page-title">
-      <nav className={styles.breadcrumb} aria-label="Đường dẫn"><Link href="/quan-tri">Quản trị</Link><span aria-hidden="true">/</span><span aria-current="page">Hàng đợi báo cáo</span></nav>
-      <div className="form-head">
-        <div className="form-code"><span>Quản trị</span><span>Kiểm duyệt nội dung</span></div>
-        <h1 id="page-title">Hàng đợi báo cáo</h1>
-        <p>Xem bằng chứng, chọn quyết định và lưu lý do.</p>
+  return (
+    <form id="resolve-form" onSubmit={submit} noValidate>
+      <p className="adm-section-title">Quyết định</p>
+      <fieldset className="adm-choice" aria-label="Quyết định xử lý" disabled={mutation.isPending || conflict}>
+        <label><input type="radio" name="quyetDinh" value="GIU" checked={quyetDinh === 'GIU'} onChange={() => setQuyetDinh('GIU')} /><span><b>Giữ nội dung</b><small>Báo cáo không đúng, nội dung tiếp tục hiển thị.</small></span></label>
+        <label><input type="radio" name="quyetDinh" value="AN" checked={quyetDinh === 'AN'} onChange={() => setQuyetDinh('AN')} /><span><b>Ẩn nội dung</b><small>Gỡ khỏi thư viện; chủ sở hữu vẫn thấy trạng thái đã ẩn.</small></span></label>
+      </fieldset>
+      {touched && !quyetDinh && <p className="adm-error" role="alert">Chọn giữ hoặc ẩn nội dung.</p>}
+      <label className="adm-label" htmlFor="resolve-reason" style={{ marginTop: 14 }}>Lý do xử lý</label>
+      <textarea id="resolve-reason" className="adm-textarea" rows={4} maxLength={REASON_MAX} disabled={mutation.isPending || conflict} value={lyDo} onChange={event => setLyDo(event.target.value)} aria-invalid={touched && !!(reasonMsg || serverField)} aria-describedby="resolve-reason-hint" placeholder="Ví dụ: Đã đối chiếu từ điển, nghĩa tiếng Việt đúng." />
+      <p id="resolve-reason-hint" className={touched && (reasonMsg || serverField) ? 'adm-error' : 'adm-hint'}>
+        {touched && (reasonMsg || serverField) ? (reasonMsg || serverField) : `${lyDo.trim().length}/${REASON_MAX} ký tự · lý do được ghi vào nhật ký quản trị.`}
+      </p>
+      {mutation.isError && !serverField && (
+        <p className="adm-notice adm-notice-bad" role="alert" style={{ marginTop: 12 }}><Icon name="alert" />{mutation.error.status === 409 ? 'Báo cáo này vừa được người khác xử lý. Danh sách đã được tải lại.' : mutation.error.message}</p>
+      )}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+        <button type="submit" className={`adm-btn ${quyetDinh === 'AN' ? 'adm-btn-danger' : 'adm-btn-primary'}`} disabled={mutation.isPending || cooldown > 0 || conflict}>
+          {cooldown ? `Thử lại sau ${cooldown}s` : mutation.isPending ? 'Đang lưu…' : quyetDinh === 'AN' ? 'Ẩn nội dung' : quyetDinh === 'GIU' ? 'Giữ nội dung' : 'Xác nhận'}
+        </button>
       </div>
-      <div className={styles.toolbar}>
-        <div className={styles.filters}>
-          <Select id="report-state" label="Trạng thái" value={state} options={[{ value: '', label: 'Tất cả' }, ...Object.entries(REPORT_STATES).map(([value, item]) => ({ value, label: item.label }))]} onChange={event => { setState(event.target.value); setPage(0); }} />
-          <Select id="report-kind" label="Loại nội dung" value={kind} options={[{ value: '', label: 'Tất cả nội dung' }, ...options(REPORT_KINDS)]} onChange={event => { setKind(event.target.value); setPage(0); }} />
+    </form>
+  );
+}
+
+function ReportDetail({ report, onDone }) {
+  const rows = snapshotEntries(report.noiDung);
+  const link = contentLink(report);
+  return (
+    <>
+      <p className="adm-section-title">Báo cáo</p>
+      <dl className="adm-kv">
+        <dt>Trạng thái</dt><dd><StatusPill status={report.trangThai} /></dd>
+        <dt>Loại nội dung</dt><dd>{TARGET_TYPE[report.loaiDoiTuong] || report.loaiDoiTuong} · #{report.doiTuongId}</dd>
+        <dt>Lý do</dt><dd>{REPORT_REASON[report.lyDo] || report.lyDo}</dd>
+        <dt>Người báo cáo</dt><dd>{report.nguoiBaoCao?.tenHienThi || '—'}</dd>
+        <dt>Thời điểm</dt><dd>{fullTime(report.createdAt)}</dd>
+      </dl>
+      <p className="adm-section-title">Mô tả của người báo cáo</p>
+      <p className="adm-quote">{report.moTa}</p>
+      <p className="adm-section-title">Nội dung lúc bị báo cáo</p>
+      <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{report.noiDung?.ten || '—'}</p>
+      {rows.length ? <dl className="adm-kv">{rows.map(([key, value]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={value} /></dd></Fragment>)}</dl> : <p className="adm-muted">Không có thêm trường nào.</p>}
+      {link && <p style={{ margin: '10px 0 0' }}><Link className="adm-btn adm-btn-sm" href={link} target="_blank" rel="noopener"><Icon name="link" />Mở nội dung hiện tại</Link></p>}
+      {report.trangThai === 'CHO_XU_LY' ? <ResolveForm key={report.id} report={report} onDone={onDone} /> : (
+        <>
+          <p className="adm-section-title">Kết quả xử lý</p>
+          <dl className="adm-kv">
+            <dt>Người xử lý</dt><dd>{report.nguoiXuLy?.tenHienThi || '—'}</dd>
+            <dt>Thời điểm</dt><dd>{fullTime(report.xuLyAt)}</dd>
+            <dt>Lý do</dt><dd>{report.lyDoXuLy || '—'}</dd>
+          </dl>
+        </>
+      )}
+    </>
+  );
+}
+
+function ReportsContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const trangThai = params.has('trangThai') ? params.get('trangThai') : 'CHO_XU_LY';
+  const loaiDoiTuong = params.get('loai') || '';
+  const page = Math.max(0, Number.parseInt(params.get('page') || '0', 10) || 0);
+  const [selected, setSelected] = useState(null);
+  const [notice, setNotice] = useState('');
+
+  const setQuery = changes => {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([key, value]) => { if (value === null || value === undefined) next.delete(key); else next.set(key, value); });
+    if (!('page' in changes)) next.delete('page');
+    router.replace(`${pathname}?${next}`, { scroll: false });
+  };
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ['admin-reports', trangThai, loaiDoiTuong, page],
+    queryFn: () => listReports(apiFetch, { trangThai, loaiDoiTuong, page }),
+    placeholderData: previous => previous,
+    refetchInterval: 30_000,
+  });
+  const pending = useQuery({
+    queryKey: ['admin-reports', 'CHO_XU_LY', '', 'count'],
+    queryFn: () => listReports(apiFetch, { trangThai: 'CHO_XU_LY', size: 1 }),
+    staleTime: 30_000,
+  });
+  const items = data?.items || [];
+  const [takenOver, setTakenOver] = useState('');
+
+  useRealtimeEvent('MUC_DA_XU_LY', id => {
+    const reportId = handledId(id, 'BAO_CAO');
+    if (!reportId || !selected || String(selected.id) !== reportId || selected.trangThai !== 'CHO_XU_LY') return;
+    setSelected(null);
+    setTakenOver('Báo cáo bạn đang mở vừa được quản trị viên khác xử lý. Danh sách đã được tải lại.');
+  });
+
+  const done = (result, message) => {
+    setSelected(result);
+    setNotice(message);
+  };
+
+  return (
+    <div className="adm-page">
+      <div className="adm-head">
+        <div>
+          <h1>Báo cáo vi phạm</h1>
+          <p>Người học báo cáo bộ thẻ, thẻ hoặc đầu ra AI có vấn đề. Xem bản chụp nội dung lúc bị báo cáo rồi quyết định giữ hay ẩn; mỗi quyết định ghi vào nhật ký.</p>
         </div>
-        <Button variant="secondary" loading={queue.isFetching} onClick={() => queue.refetch()}><Icon name="refresh" />Làm mới</Button>
+        <div className="adm-head-actions">
+          <button type="button" className="adm-btn" onClick={() => refetch()} disabled={isFetching}><Icon name="refresh" />{isFetching ? 'Đang tải…' : 'Làm mới'}</button>
+          <Link href="/quan-tri/nhat-ky" className="adm-btn"><Icon name="clock" />Nhật ký</Link>
+        </div>
       </div>
-      {message && <p className={`notice notice-success ${styles.message}`} role="status">{message}</p>}
-      {queue.isPending ? <div className="skeleton" role="status" aria-label="Đang tải hàng đợi báo cáo"><div className="sk sk-row" /><div className="sk sk-row" /><div className="sk sk-row" /></div>
-        : queue.isError ? <ErrorState title="Chưa tải được hàng đợi báo cáo" description={queue.error.message} onRetry={queue.refetch} />
-        : reports.length === 0 ? <div className="empty"><Icon name="check" /><h2>Không có báo cáo ở trạng thái này</h2><p>{page > 0 ? 'Trang này không còn báo cáo. Quay về trang đầu để xem hàng đợi hiện tại.' : 'Các báo cáo phù hợp với bộ lọc sẽ hiển thị tại đây.'}</p>
-          {page > 0 ? <Button variant="secondary" onClick={() => setPage(0)}>Về trang đầu</Button> : (state !== '' || kind !== '') && <Button variant="secondary" onClick={() => { setState(''); setKind(''); setPage(0); }}>Xem tất cả báo cáo</Button>}
-        </div> : <>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <caption><strong>{total.toLocaleString('vi-VN')} báo cáo</strong><span>{orderNote}</span></caption>
-              <thead><tr><th scope="col">Nội dung</th><th scope="col">Lý do</th><th scope="col">Người báo cáo</th><th scope="col">Trạng thái</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr></thead>
-              <tbody>{reports.map(report => <tr key={report.id}>
-                <td data-label="Nội dung"><div className={styles.target}><span className={styles.type}>{REPORT_KINDS[report.loaiDoiTuong] || report.loaiDoiTuong} #{report.doiTuongId}</span><strong>{reportTitle(report)}</strong><span className={styles.meta}>Báo cáo #{report.id}</span></div></td>
-                <td data-label="Lý do">{REPORT_REASONS[report.lyDo] || report.lyDo}</td>
-                <td data-label="Người báo cáo"><span>{report.nguoiBaoCao?.tenHienThi || 'Người dùng ẩn danh'}</span><time className={styles.meta} dateTime={report.createdAt}>{date(report.createdAt)}</time></td>
-                <td data-label="Trạng thái"><ReportState state={report.trangThai} /></td>
-                <td data-label="Thao tác"><Button variant="secondary" onClick={() => openReview(report)} aria-label={`${report.trangThai === 'CHO_XU_LY' ? 'Xử lý' : 'Xem'} báo cáo #${report.id}`}><Icon name={report.trangThai === 'CHO_XU_LY' ? 'edit' : 'eye'} />{report.trangThai === 'CHO_XU_LY' ? 'Xử lý' : 'Xem'}</Button></td>
-              </tr>)}</tbody>
-            </table>
-          </div>
-          <Pagination className={styles.pager} page={page + 1} totalPages={queue.data.totalPages} onPageChange={value => setPage(value - 1)} />
-        </>}
-    </article>
 
-    <Modal isOpen={!!selected} onClose={() => setSelected(null)} title={`Báo cáo #${selected?.id || ''}`} loading={resolve.isPending} className={styles.reviewDialog}
-      footer={<><Button variant="secondary" disabled={resolve.isPending} onClick={() => setSelected(null)}>{pending ? 'Hủy' : 'Đóng'}</Button>
-        {pending && (conflict ? <Button onClick={reloadQueue}><Icon name="refresh" />Tải lại hàng đợi</Button> : <Button type="submit" form="resolve-report-form" variant={decision === 'AN' ? 'danger-solid' : 'primary'} loading={resolve.isPending} disabled={cooldown > 0}>{resolve.isPending ? 'Đang lưu…' : cooldown > 0 ? `Thử lại sau ${cooldown}s` : 'Lưu quyết định'}</Button>)}
-      </>}>
-      {selected && <div className={styles.reviewBody}>
-        <div className={styles.reviewHeading}><span className={styles.type}>{REPORT_KINDS[selected.loaiDoiTuong]} #{selected.doiTuongId}</span><h3>{reportTitle(selected)}</h3><ReportState state={selected.trangThai} /></div>
-        <section className={styles.evidence} aria-labelledby="evidence-title"><h3 id="evidence-title">Bản chụp lúc báo cáo</h3><p className="muted small">{date(selected.createdAt)} · Nội dung được lưu khi người học gửi báo cáo.</p>
-          {snapshotEntries(selected.noiDung).length > 0 ? <dl className={styles.evidenceDetails}>{snapshotEntries(selected.noiDung).map(([key, value]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={value} /></dd></Fragment>)}</dl> : <p className="muted">Không có thông tin bổ sung trong bản chụp.</p>}
-        </section>
-        <section className={styles.complaint} aria-labelledby="complaint-title"><h3 id="complaint-title">{REPORT_REASONS[selected.lyDo] || selected.lyDo}</h3><p>{selected.moTa}</p><p className="muted small">Người báo cáo: {selected.nguoiBaoCao?.tenHienThi || 'Người dùng ẩn danh'}</p></section>
-        {pending ? <form id="resolve-report-form" className={styles.form} onSubmit={submit} noValidate>
-          <fieldset className={styles.fields} disabled={resolve.isPending || conflict}>
-            <Select id="decision" name="quyetDinh" label="Quyết định" required value={decision} error={fields.quyetDinh} options={[{ value: 'GIU', label: 'Giữ nội dung' }, { value: 'AN', label: 'Ẩn nội dung' }]} onChange={event => { setDecision(event.target.value); setFields(current => ({ ...current, quyetDinh: undefined })); }} />
-            <Textarea id="resolve-reason" name="lyDo" label="Lý do quyết định" required value={reason} minLength={10} maxLength={500} error={fields.lyDo} onChange={event => { setReason(event.target.value); setFields(current => ({ ...current, lyDo: undefined })); }} />
-          </fieldset>
-          <p className="muted small">Nhập từ 10 đến 500 ký tự. Quyết định áp cho mọi báo cáo đang chờ của cùng nội dung và được ghi vào nhật ký thao tác.</p>
-          {decision === 'AN' && <p className="notice notice-warning">Nội dung sẽ bị ẩn khỏi thư viện hoặc đầu ra AI tương ứng sau khi lưu.</p>}
-          {resolve.error && <p className={`notice ${conflict ? 'notice-warning' : 'notice-danger'}`} role="alert">{conflict ? `${resolve.error.message} Tải lại hàng đợi để xem trạng thái hiện tại.` : resolve.error.message}</p>}
-        </form> : <section className={styles.resolution} aria-labelledby="resolution-title"><h3 id="resolution-title">Kết quả xử lý</h3><p>{selected.lyDoXuLy || 'Chưa có lý do xử lý'}</p><p className="muted small">{selected.nguoiXuLy?.tenHienThi || 'Quản trị viên'} · {date(selected.xuLyAt)}</p></section>}
-      </div>}
-    </Modal>
-  </div>;
+      {notice && <p className="adm-notice adm-notice-ok" role="status"><Icon name="check" />{notice}</p>}
+      {takenOver && <p className="adm-notice adm-notice-warn" role="alert"><Icon name="alert" />{takenOver}</p>}
+
+      <section className="adm-card">
+        <AdminTable
+          caption="Báo cáo nội dung"
+          rows={items}
+          loading={isLoading}
+          error={isError ? error : null}
+          onRetry={refetch}
+          onRowClick={report => { setNotice(''); setTakenOver(''); setSelected(report); }}
+          rowLabel={report => `Báo cáo về ${report.noiDung?.ten || report.doiTuongId}`}
+          toolbar={<>
+            <div className="adm-seg" role="tablist" aria-label="Trạng thái báo cáo">
+              {REPORT_TABS.map(tab => (
+                <button key={tab.value || 'all'} type="button" role="tab" aria-selected={trangThai === tab.value} onClick={() => setQuery({ trangThai: tab.value })}>
+                  {tab.label}{tab.value === 'CHO_XU_LY' && pending.data?.totalElements ? ` (${pending.data.totalElements})` : ''}
+                </button>
+              ))}
+            </div>
+            <label className="sr-only" htmlFor="report-type">Loại nội dung</label>
+            <select id="report-type" className="adm-select" value={loaiDoiTuong} onChange={event => setQuery({ loai: event.target.value || null })}>
+              <option value="">Mọi loại nội dung</option>
+              {Object.entries(TARGET_TYPE).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            {trangThai === 'CHO_XU_LY' && <span className="adm-muted">cũ nhất trước</span>}
+          </>}
+          columns={[
+            { key: 'content', header: 'Nội dung', sortValue: r => r.noiDung?.ten, render: r => <span style={{ display: 'block', minWidth: 200 }}><b style={{ fontWeight: 500 }}>{r.noiDung?.ten || `#${r.doiTuongId}`}</b><br /><span className="adm-muted">{TARGET_TYPE[r.loaiDoiTuong] || r.loaiDoiTuong}</span></span> },
+            { key: 'reason', header: 'Lý do', sortValue: r => r.lyDo, render: r => <span style={{ display: 'block', minWidth: 200, maxWidth: 360 }}><span className="adm-pill adm-pill-mute">{REPORT_REASON[r.lyDo] || r.lyDo}</span><span className="adm-muted" style={{ marginTop: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.moTa}</span></span> },
+            { key: 'reporter', header: 'Người báo cáo', sortValue: r => r.nguoiBaoCao?.tenHienThi, render: r => r.nguoiBaoCao?.tenHienThi || '—' },
+            { key: 'time', header: 'Gửi lúc', nowrap: true, sortValue: r => Date.parse(r.createdAt), render: r => <span title={fullTime(r.createdAt)}>{relativeTime(r.createdAt)}</span> },
+            { key: 'status', header: 'Trạng thái', sortValue: r => r.trangThai, render: r => <StatusPill status={r.trangThai} /> },
+            { key: 'actions', header: 'Thao tác', srHeader: true, render: r => <div className="adm-row-actions"><button type="button" className={`adm-btn adm-btn-sm ${r.trangThai === 'CHO_XU_LY' ? 'adm-btn-primary' : ''}`} onClick={() => { setNotice(''); setTakenOver(''); setSelected(r); }}>{r.trangThai === 'CHO_XU_LY' ? 'Xem & xử lý' : 'Xem'}</button></div> },
+          ]}
+          emptyTitle={trangThai === 'CHO_XU_LY' ? 'Không còn báo cáo nào chờ xử lý' : 'Không có báo cáo phù hợp'}
+          emptyText={trangThai === 'CHO_XU_LY' ? 'Hàng đợi đã sạch.' : 'Thử đổi bộ lọc.'}
+          pagination={data ? { page, size: 20, totalElements: data.totalElements, totalPages: data.totalPages, onPageChange: value => setQuery({ page: value ? String(value) : null }) } : null}
+        />
+      </section>
+
+      <Drawer isOpen={!!selected} onClose={() => setSelected(null)} title={selected?.trangThai === 'CHO_XU_LY' ? 'Xử lý báo cáo' : 'Chi tiết báo cáo'}>
+        {selected && <ReportDetail report={selected} onDone={done} />}
+      </Drawer>
+    </div>
+  );
+}
+
+export default function AdminReportsPage() {
+  return (
+    <Suspense fallback={<div className="adm-empty" role="status">Đang tải…</div>}>
+      <ReportsContent />
+    </Suspense>
+  );
 }

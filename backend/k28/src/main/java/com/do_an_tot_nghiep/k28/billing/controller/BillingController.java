@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.billing.controller;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CancelSubscriptionRequest;
 import com.do_an_tot_nghiep.k28.billing.dto.CheckoutResponse;
+import com.do_an_tot_nghiep.k28.billing.dto.CurrentPlanResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.PlanResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.SubscriptionResponse;
 import com.do_an_tot_nghiep.k28.billing.dto.TransactionQuery;
@@ -57,6 +58,11 @@ public class BillingController {
     @GetMapping("/api/v1/me/subscription")
     public SubscriptionResponse subscription() {
         return billing.subscription(currentUser.id());
+    }
+
+    @GetMapping("/api/v1/me/plan")
+    public CurrentPlanResponse currentPlan() {
+        return billing.currentPlan(currentUser.id());
     }
 
     @PostMapping("/api/v1/me/subscription/cancel")

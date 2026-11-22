@@ -72,6 +72,12 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
 
     Optional<BoThe> findByIdAndChuSoHuuIdAndBoMauTrueAndXoaAtIsNull(Long id, Long chuSoHuuId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select d from BoThe d where d.id = :id")
+    Optional<BoThe> findForUpdate(@Param("id") Long id);
+
+    Optional<BoThe> findFirstByChuSoHuuIdAndBoNguonIdAndXoaAtIsNullOrderByIdDesc(Long chuSoHuuId, Long boNguonId);
+
     @Query("""
             select d.boNguonId as id, count(d) as soLuong
             from BoThe d
@@ -89,6 +95,26 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
             group by d.chuSoHuuId
             """)
     List<DeckCount> countByOwners(@Param("ownerIds") Collection<Long> ownerIds);
+
+    @Query("""
+            select d.boNguonId as boNguonId, max(d.id) as boTheId
+            from BoThe d
+            where d.chuSoHuuId = :ownerId
+              and d.boNguonId in :sourceIds
+              and d.xoaAt is null
+            group by d.boNguonId
+            """)
+    List<CopyLink> findOwnCopies(
+            @Param("ownerId") Long ownerId,
+            @Param("sourceIds") Collection<Long> sourceIds
+    );
+
+    interface CopyLink {
+
+        Long getBoNguonId();
+
+        Long getBoTheId();
+    }
 
     interface DeckCount {
 

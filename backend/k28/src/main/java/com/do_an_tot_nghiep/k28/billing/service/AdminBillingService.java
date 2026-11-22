@@ -1,5 +1,7 @@
 package com.do_an_tot_nghiep.k28.billing.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationContact;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.admin.entity.enums.HanhDongQuanTri;
@@ -64,6 +66,7 @@ public class AdminBillingService {
     private final JsonMapper json;
     private final Clock clock;
     private final TransactionTemplate tx;
+    private final RealtimeService realtime;
 
     @Transactional(readOnly = true)
     public PageResponse<AdminPaymentResponse> payments(AdminPaymentQuery query) {
@@ -162,6 +165,7 @@ public class AdminBillingService {
         Instant cu = dangKy.getHetHanAt();
         dangKy.doiHetHan(hetHanMoi);
         dangKyGoi.saveAndFlush(dangKy);
+        realtime.toUser(dangKy.getNguoiDungId(), LoaiSuKien.GOI_THAY_DOI, null);
         NotificationContact contact = accounts.contacts(List.of(dangKy.getNguoiDungId())).get(dangKy.getNguoiDungId());
         audit.record(actorId, HanhDongQuanTri.SUA_HAN_GOI, LoaiDoiTuong.DANG_KY_GOI, dangKy.getId(),
                 (contact == null ? dangKy.getNguoiDungId().toString() : contact.email()) + " — " + dangKy.getGoiMa(),

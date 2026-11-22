@@ -1,218 +1,157 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { Icon } from '@/components/ui';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { AdminPageHead, Pill } from '@/components/admin/AdminPageHead';
 import { apiFetch } from '@/lib/api-client';
-import { Button, ErrorState } from '@/components/ui';
-import { useMe } from '@/hooks/useMe';
+import { ACTION_LABEL, ACTION_TONE, relativeTime } from '@/lib/admin-dashboard.mjs';
+import { fetchAllPages, setParams } from '@/lib/admin-table.mjs';
 
-const ACTION = {
-  KHOA_TAI_KHOAN: 'Khóa tài khoản', MO_KHOA_TAI_KHOAN: 'Mở khóa tài khoản', CAP_QUYEN_QUAN_TRI: 'Cấp quyền quản trị', THU_QUYEN_QUAN_TRI: 'Thu quyền quản trị',
-  TAO_BO_MAU: 'Tạo bộ mẫu', SUA_BO_MAU: 'Sửa bộ mẫu', XUAT_BAN_BO_MAU: 'Xuất bản bộ mẫu', CHUYEN_VE_NHAP: 'Chuyển bộ về nháp', AN_BO_MAU: 'Ẩn bộ mẫu', HIEN_BO_MAU: 'Hiện lại bộ mẫu', XOA_BO_MAU: 'Xóa bộ mẫu',
-  TAO_THE_MAU: 'Thêm thẻ mẫu', SUA_THE_MAU: 'Sửa thẻ mẫu', XOA_THE_MAU: 'Xóa thẻ mẫu',
-  TAO_HUY_HIEU: 'Tạo huy hiệu', SUA_HUY_HIEU: 'Sửa huy hiệu', TAO_THU_THACH: 'Tạo thử thách', SUA_THU_THACH: 'Sửa thử thách'
+const KIND = {
+  NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', GOI_DICH_VU: 'Gói dịch vụ', DANG_KY_GOI: 'Gói người dùng',
+  YEU_CAU_AI: 'Đầu ra AI', HAN_MUC_DICH_VU: 'Hạn mức dịch vụ', THONG_BAO_HE_THONG: 'Thông báo hệ thống',
+  HUY_HIEU: 'Huy hiệu', THU_THACH: 'Thử thách',
 };
+const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ', soLuotNgay: 'Số lượt/ngày', hetHanAt: 'Hết hạn', giaThang: 'Giá tháng', giaNam: 'Giá năm', tieuDe: 'Tiêu đề', noiDung: 'Nội dung', hienThi: 'Hiển thị', ma: 'Mã danh mục', loaiDieuKien: 'Loại điều kiện', nguong: 'Ngưỡng đạt', thuTu: 'Thứ tự hiển thị', hoatDong: 'Đang dùng', chuKy: 'Chu kỳ', version: 'Phiên bản' };
+const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Công khai', RIENG_TU: 'Riêng tư', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn', GIAO_TIEP: 'Giao tiếp', MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao', CHO_DUYET: 'Chờ duyệt', DA_DUYET: 'Đã duyệt', TU_CHOI: 'Từ chối', THU_HOI: 'Thu hồi' };
+const PAGE_SIZE = 20;
+const cap = text => (text ? text[0].toUpperCase() + text.slice(1) : text);
+const actionText = code => cap(ACTION_LABEL[code] || String(code).toLowerCase().replaceAll('_', ' '));
+const fullTime = iso => new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'medium' });
 
-const KIND = { NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ mẫu', THE_TU_VUNG: 'Thẻ mẫu', HUY_HIEU: 'Huy hiệu', THU_THACH: 'Thử thách' };
-const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ', ma: 'Mã danh mục', loaiDieuKien: 'Loại điều kiện', nguong: 'Ngưỡng đạt', thuTu: 'Thứ tự hiển thị', hoatDong: 'Đang dùng', chuKy: 'Chu kỳ', version: 'Phiên bản' };
-const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Đã xuất bản', RIENG_TU: 'Bản nháp', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn' };
-const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
-const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
+function show(value) {
+  if (value === null || value === undefined || value === '') return <span className="adm-muted">(trống)</span>;
+  if (Array.isArray(value)) return value.map(x => VALUE[x] || x).join(', ');
+  if (typeof value === 'object') return JSON.stringify(value);
+  if (typeof value === 'boolean') return value ? 'Có' : 'Không';
+  return VALUE[value] || String(value);
+}
 
-function AdminAuditContent() {
+function targetLink(target) {
+  if (!target) return null;
+  if (target.loai === 'NGUOI_DUNG' && target.ten) return `/quan-tri/tai-khoan?q=${encodeURIComponent(target.ten)}`;
+  if (target.loai === 'BO_THE' && target.id) return `/quan-tri/bo-mau?id=${target.id}`;
+  if (target.loai === 'HAN_MUC_DICH_VU') return '/quan-tri/dich-vu';
+  if (target.loai === 'THONG_BAO_HE_THONG') return '/quan-tri/thong-bao';
+  if (target.loai === 'HUY_HIEU' || target.loai === 'THU_THACH') return '/quan-tri/dong-luc';
+  if (target.loai === 'GOI_DICH_VU' || target.loai === 'DANG_KY_GOI') return '/quan-tri/thanh-toan';
+  return null;
+}
+
+function Diff({ log }) {
+  const keys = [...new Set(Object.keys(log.truoc || {}).concat(Object.keys(log.sau || {})))];
+  return (
+    <div style={{ display: 'grid', gap: 10, paddingTop: 10 }}>
+      {log.lyDo && <p className="adm-quote"><b>Lý do:</b> {log.lyDo}</p>}
+      {keys.length > 0 && (
+        <table className="adm-diff">
+          <thead><tr><th>Trường</th><th>Trước</th><th>Sau</th></tr></thead>
+          <tbody>{keys.map(key => <tr key={key}><td>{FIELD[key] || key}</td><td>{show(log.truoc?.[key])}</td><td>{show(log.sau?.[key])}</td></tr>)}</tbody>
+        </table>
+      )}
+      <p className="adm-muted" style={{ margin: 0 }}>Mã nhật ký #{log.id} · {fullTime(log.createdAt)}</p>
+    </div>
+  );
+}
+
+function auditUrl({ q, hanhDong, loai, tuNgay, denNgay, page, size }) {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (q) params.set('q', q);
+  if (hanhDong) params.set('hanhDong', hanhDong);
+  if (loai) params.set('loai', loai);
+  if (tuNgay) params.set('tuNgay', tuNgay);
+  if (denNgay) params.set('denNgay', denNgay);
+  return `/api/v1/admin/audit-logs?${params}`;
+}
+
+function AuditContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { data: me } = useMe();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const filters = {
+    q: params.get('q') || '',
+    hanhDong: params.get('hanhDong') || '',
+    loai: params.get('loai') || '',
+    tuNgay: params.get('tuNgay') || '',
+    denNgay: params.get('denNgay') || '',
+  };
+  const page = Math.max(0, Number.parseInt(params.get('page') || '0', 10) || 0);
+  const [search, setSearch] = useState(filters.q);
+  const go = changes => router.replace(`${pathname}${setParams(params, changes)}`, { scroll: false });
+  const badRange = filters.tuNgay && filters.denNgay && filters.tuNgay > filters.denNgay;
 
-  const today = new Date().toLocaleDateString('en-CA');
-
-  const defaultQ = searchParams.get('q') || '';
-  const defaultHanhDong = searchParams.get('hanhDong') || '';
-  const defaultLoai = searchParams.get('loai') || '';
-  const defaultTuNgay = searchParams.get('tuNgay') || '';
-  const defaultDenNgay = searchParams.get('denNgay') || '';
-  const page = parseInt(searchParams.get('page') || '0', 10);
-
-  const [q, setQ] = useState(defaultQ);
-  const [hanhDong, setHanhDong] = useState(defaultHanhDong);
-  const [loai, setLoai] = useState(defaultLoai);
-  const [tuNgay, setTuNgay] = useState(defaultTuNgay);
-  const [denNgay, setDenNgay] = useState(defaultDenNgay);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['admin-audit', defaultQ, defaultHanhDong, defaultLoai, defaultTuNgay, defaultDenNgay, page],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (defaultQ) params.set('q', defaultQ);
-      if (defaultHanhDong) params.set('hanhDong', defaultHanhDong);
-      if (defaultLoai) params.set('loai', defaultLoai);
-      if (defaultTuNgay) params.set('tuNgay', defaultTuNgay);
-      if (defaultDenNgay) params.set('denNgay', defaultDenNgay);
-      params.set('page', page.toString());
-      params.set('size', '20');
-      return apiFetch(`/api/v1/admin/audit-logs?${params.toString()}`);
-    }
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ['admin-audit', filters, page],
+    queryFn: () => apiFetch(auditUrl({ ...filters, page, size: PAGE_SIZE })),
+    placeholderData: previous => previous,
+    enabled: !badRange,
   });
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (tuNgay && denNgay && tuNgay > denNgay) {
-      alert('Ngày bắt đầu phải trước ngày kết thúc');
-      return;
-    }
-    const params = new URLSearchParams(searchParams);
-    if (q) params.set('q', q); else params.delete('q');
-    if (hanhDong) params.set('hanhDong', hanhDong); else params.delete('hanhDong');
-    if (loai) params.set('loai', loai); else params.delete('loai');
-    if (tuNgay) params.set('tuNgay', tuNgay); else params.delete('tuNgay');
-    if (denNgay) params.set('denNgay', denNgay); else params.delete('denNgay');
-    params.set('page', '0');
-    router.push(`/quan-tri/nhat-ky?${params.toString()}`, { scroll: false });
-  };
+  const columns = [
+    { key: 'time', header: 'Thời gian', nowrap: true, sortValue: l => Date.parse(l.createdAt), csv: l => fullTime(l.createdAt), render: l => <span title={fullTime(l.createdAt)}>{relativeTime(l.createdAt)}</span> },
+    { key: 'actor', header: 'Người thực hiện', sortValue: l => l.nguoiThucHien?.tenHienThi, csv: l => l.nguoiThucHien?.tenHienThi || 'Hệ thống', render: l => l.nguoiThucHien?.tenHienThi || <span className="adm-muted">Hệ thống</span> },
+    { key: 'action', header: 'Hành động', sortValue: l => actionText(l.hanhDong), csv: l => actionText(l.hanhDong), render: l => <Pill tone={ACTION_TONE[l.hanhDong] || 'acc'}>{actionText(l.hanhDong)}</Pill> },
+    { key: 'target', header: 'Đối tượng', csv: l => `${KIND[l.doiTuong?.loai] || l.doiTuong?.loai || ''}: ${l.doiTuong?.ten || ''}`, render: l => {
+      const link = targetLink(l.doiTuong);
+      const name = l.doiTuong?.ten || (l.doiTuong?.id ? `#${l.doiTuong.id}` : '(không rõ)');
+      return <span style={{ display: 'block', maxWidth: 340 }}><span className="adm-muted">{KIND[l.doiTuong?.loai] || l.doiTuong?.loai}</span><br />{link ? <Link className="adm-a" href={link}>{name}</Link> : name}</span>;
+    } },
+    { key: 'reason', header: 'Lý do', csv: l => l.lyDo || '', render: l => (l.lyDo ? <span className="adm-muted" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', maxWidth: 320 }}>{l.lyDo}</span> : <span className="adm-muted">—</span>) },
+    { key: 'before', header: 'Trước', hidden: true, csv: l => (l.truoc ? JSON.stringify(l.truoc) : '') },
+    { key: 'after', header: 'Sau', hidden: true, csv: l => (l.sau ? JSON.stringify(l.sau) : '') },
+  ];
 
-  const handleClear = () => {
-    setQ('');
-    setHanhDong('');
-    setLoai('');
-    setTuNgay('');
-    setDenNgay('');
-    router.push('/quan-tri/nhat-ky', { scroll: false });
-  };
-
-  if (!me?.vaiTro?.includes('ADMIN')) return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
-
-  const showVal = (v) => {
-    if (v === null || v === undefined || v === '') return <span style={{ color: 'var(--color-ink-3)' }}>(trống)</span>;
-    if (Array.isArray(v)) return v.map(x => VALUE[x] || x).join(', ');
-    return VALUE[v] || GOAL[v] || LEVEL[v] || String(v);
-  };
+  const toolbar = (
+    <>
+      <form role="search" onSubmit={event => { event.preventDefault(); go({ q: search.trim() }); }} style={{ display: 'contents' }}>
+        <label className="sr-only" htmlFor="audit-q">Tìm theo người làm, đối tượng hoặc lý do</label>
+        <input id="audit-q" className="adm-input" type="search" placeholder="Người làm, đối tượng, lý do… Enter" value={search} onChange={event => setSearch(event.target.value)} />
+      </form>
+      <label className="sr-only" htmlFor="audit-action">Hành động</label>
+      <select id="audit-action" className="adm-select" value={filters.hanhDong} onChange={event => go({ hanhDong: event.target.value })}>
+        <option value="">Mọi hành động</option>
+        {Object.keys(ACTION_LABEL).map(code => <option key={code} value={code}>{actionText(code)}</option>)}
+      </select>
+      <label className="sr-only" htmlFor="audit-kind">Đối tượng</label>
+      <select id="audit-kind" className="adm-select" value={filters.loai} onChange={event => go({ loai: event.target.value })}>
+        <option value="">Mọi đối tượng</option>
+        {Object.entries(KIND).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      </select>
+      <label className="adm-muted" htmlFor="audit-from">Từ</label>
+      <input id="audit-from" className="adm-input" type="date" value={filters.tuNgay} onChange={event => go({ tuNgay: event.target.value })} aria-invalid={!!badRange} />
+      <label className="adm-muted" htmlFor="audit-to">đến</label>
+      <input id="audit-to" className="adm-input" type="date" value={filters.denNgay} onChange={event => go({ denNgay: event.target.value })} aria-invalid={!!badRange} />
+      {Object.values(filters).some(Boolean) && <button type="button" className="adm-btn" onClick={() => { setSearch(''); router.replace(pathname, { scroll: false }); }}>Xóa lọc</button>}
+    </>
+  );
 
   return (
-    <div className="page" style={{ padding: 'var(--space-5)', maxWidth: '1000px', margin: '0 auto' }}>
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
-            <span>Quản trị</span>
-            <span>{data?.totalElements !== undefined ? `${data.totalElements} mục` : '—'}</span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Nhật ký quản trị</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Mọi thao tác quản trị quan trọng: ai làm, làm gì, trên đối tượng nào, vì sao, và giá trị trước, sau. Nhật ký chỉ đọc, không sửa hay xóa được.</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
-          <button style={{ padding: '6px 12px', border: 'none', background: 'var(--primary-fill)', color: 'var(--on-primary)', borderRadius: 'var(--radius-full)', fontWeight: 'bold' }}>Thao tác quản trị</button>
-          <button disabled title="Có ở Đợt 3" style={{ padding: '6px 12px', border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-ink-3)', borderRadius: 'var(--radius-full)', cursor: 'not-allowed', fontWeight: 'bold' }}>Tác vụ nền (Đợt 3)</button>
-        </div>
-
-        <form onSubmit={handleSearch} style={{ display: 'grid', gap: 'var(--space-3)', marginBottom: 'var(--space-5)', paddingBottom: 'var(--space-5)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Tìm theo người làm, đối tượng hoặc lý do</label>
-              <input type="search" value={q} onChange={e => setQ(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Hành động</label>
-              <select value={hanhDong} onChange={e => setHanhDong(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả hành động</option>
-                {Object.entries(ACTION).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Đối tượng</label>
-              <select value={loai} onChange={e => setLoai(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả đối tượng</option>
-                {Object.entries(KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Từ ngày</label>
-              <input type="date" value={tuNgay} onChange={e => setTuNgay(e.target.value)} max={today} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Đến ngày</label>
-              <input type="date" value={denNgay} onChange={e => setDenNgay(e.target.value)} max={today} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button type="submit" variant="primary">Lọc nhật ký</Button>
-            <Button type="button" variant="ghost" onClick={handleClear}>Xóa bộ lọc</Button>
-          </div>
-        </form>
-
-        {isLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
-        ) : isError ? (
-          <ErrorState title="Chưa tải được nhật ký" description={error?.message} onRetry={() => refetch()} />
-        ) : data?.items?.length > 0 ? (
-          <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-            {data.items.map((l, i) => {
-              const keys = [...new Set(Object.keys(l.truoc || {}).concat(Object.keys(l.sau || {})))];
-              const target = l.doiTuong || {};
-              const targetName = target.ten || (target.id ? `#${target.id}` : '(không rõ)');
-              return (
-                <li key={l.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                  <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px', marginBottom: 'var(--space-1)' }}>
-                      <strong style={{ fontSize: '1.125rem' }}>{ACTION[l.hanhDong] || l.hanhDong}</strong>
-                      <span>
-                        {KIND[target.loai] || target.loai || 'Đối tượng'}: {target.loai === 'NGUOI_DUNG' && target.ten ? (
-                          <Link href={`/quan-tri/tai-khoan?q=${encodeURIComponent(target.ten)}`} style={{ color: 'var(--color-primary-strong)' }}>{targetName}</Link>
-                        ) : target.loai === 'BO_THE' && target.id ? (
-                          <Link href={`/quan-tri/bo-mau?id=${target.id}`} style={{ color: 'var(--color-primary-strong)' }}>{targetName}</Link>
-                        ) : (
-                          targetName
-                        )}
-                      </span>
-                    </div>
-                    
-                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>
-                      <span style={{ fontWeight: 'bold' }}>{l.nguoiThucHien?.tenHienThi || 'Hệ thống'}</span>
-                      <span style={{ margin: '0 8px' }}>&bull;</span>
-                      <span>{new Date(l.createdAt).toLocaleString('vi-VN')}</span>
-                    </div>
-
-                    {l.lyDo && (
-                      <div style={{ padding: 'var(--space-2) var(--space-3)', borderLeft: '4px solid var(--color-primary-tint)', background: 'var(--color-bg)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-2)' }}>
-                        <strong>Lý do:</strong> {l.lyDo}
-                      </div>
-                    )}
-
-                    {keys.length > 0 && (
-                      <details style={{ fontSize: 'var(--font-size-sm)' }}>
-                        <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: 'var(--color-primary)' }}>Trước và sau ({keys.length} trường)</summary>
-                        <table style={{ width: '100%', marginTop: '8px', borderCollapse: 'collapse', textAlign: 'left' }}>
-                          <thead>
-                            <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                              <th style={{ padding: '8px' }}>Trường</th>
-                              <th style={{ padding: '8px' }}>Trước</th>
-                              <th style={{ padding: '8px' }}>Sau</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {keys.map(k => (
-                              <tr key={k} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                <td style={{ padding: '8px', fontWeight: 'bold' }}>{FIELD[k] || k}</td>
-                                <td style={{ padding: '8px' }}>{showVal(l.truoc?.[k])}</td>
-                                <td style={{ padding: '8px' }}>{showVal(l.sau?.[k])}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </details>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Chưa có thao tác nào</h2>
-            <p style={{ color: 'var(--color-ink-2)' }}>Khi quản trị viên khóa tài khoản, đổi vai trò hay sửa bộ mẫu, thao tác sẽ hiện ở đây.</p>
-          </div>
-        )}
+    <div className="adm-page">
+      <AdminPageHead
+        title="Nhật ký thao tác"
+        meta={data ? data.totalElements.toLocaleString('vi-VN') : null}
+        description="Ai làm gì, trên đối tượng nào, vì sao, giá trị trước và sau. Nhật ký chỉ đọc. Bấm mũi tên ở đầu dòng để xem thay đổi chi tiết."
+        actions={<button type="button" className="adm-btn" onClick={() => refetch()} disabled={isFetching}><Icon name="refresh" />{isFetching ? 'Đang tải…' : 'Làm mới'}</button>}
+      />
+      {badRange && <p className="adm-notice adm-notice-bad" role="alert"><Icon name="alert" />Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.</p>}
+      <section className="adm-card">
+        <AdminTable
+          caption="Nhật ký thao tác quản trị"
+          columns={columns.filter(c => !c.hidden)}
+          rows={badRange ? [] : data?.items || []}
+          loading={isLoading && !badRange}
+          error={error}
+          onRetry={refetch}
+          toolbar={toolbar}
+          expand={log => <Diff log={log} />}
+          emptyTitle="Không có thao tác phù hợp"
+          emptyText="Đổi bộ lọc hoặc khoảng ngày."
+          pagination={data && !badRange ? { page, size: PAGE_SIZE, totalElements: data.totalElements, totalPages: data.totalPages, onPageChange: value => go({ page: value || null }) } : null}
+          exportCsv={{ filename: 'nhat-ky-quan-tri.csv', columns, fetchAll: () => fetchAllPages((p, size) => apiFetch(auditUrl({ ...filters, page: p, size }))) }}
+        />
       </section>
     </div>
   );
@@ -220,8 +159,8 @@ function AdminAuditContent() {
 
 export default function AdminAuditPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
-      <AdminAuditContent />
+    <Suspense fallback={<div className="adm-empty" role="status">Đang tải…</div>}>
+      <AuditContent />
     </Suspense>
   );
 }

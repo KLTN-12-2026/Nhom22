@@ -4,6 +4,10 @@ import com.do_an_tot_nghiep.k28.account.dto.LearningSettingsRequest;
 import com.do_an_tot_nghiep.k28.account.dto.LearningSettingsResponse;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationSettingsRequest;
 import com.do_an_tot_nghiep.k28.account.dto.NotificationSettingsResponse;
+import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsRequest;
+import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsResponse;
+import com.do_an_tot_nghiep.k28.account.entity.CaiDatRiengTu;
+import com.do_an_tot_nghiep.k28.account.repository.CaiDatRiengTuRepository;
 import com.do_an_tot_nghiep.k28.account.dto.UpdateProfileRequest;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
 import com.do_an_tot_nghiep.k28.account.entity.CaiDatThongBao;
@@ -31,6 +35,7 @@ public class SettingsService {
     private final NguoiDungRepository users;
     private final HoSoHocTapRepository profiles;
     private final CaiDatThongBaoRepository notificationSettings;
+    private final CaiDatRiengTuRepository privacySettings;
     private final SettingsMapper settingsMapper;
     private final AccountService accountService;
     private final TopicService topicService;
@@ -86,6 +91,33 @@ public class SettingsService {
         return settingsMapper.toResponse(notificationSettings.saveAndFlush(caiDat));
     }
 
+    @Transactional
+    public PrivacySettingsResponse privacy(Long userId) {
+        return settingsMapper.toResponse(privacyOf(userId));
+    }
+
+    @Transactional
+    public PrivacySettingsResponse updatePrivacy(Long userId, PrivacySettingsRequest request) {
+        CaiDatRiengTu caiDat = privacyOf(userId);
+        checkVersion(caiDat.getVersion(), request.version());
+        caiDat.update(request.congKhaiHoatDong(), request.thamGiaXepHang());
+        return settingsMapper.toResponse(privacySettings.saveAndFlush(caiDat));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean publicActivity(Long userId) {
+        return privacySettings.findById(userId).map(CaiDatRiengTu::isCongKhaiHoatDong).orElse(true);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean joinsLeaderboard(Long userId) {
+        return privacySettings.findById(userId).map(CaiDatRiengTu::isThamGiaXepHang).orElse(true);
+    }
+
+    private CaiDatRiengTu privacyOf(Long userId) {
+        return privacySettings.findById(userId)
+                .orElseGet(() -> privacySettings.saveAndFlush(CaiDatRiengTu.defaultFor(userId)));
+    }
 
     private HoSoHocTap profileOf(Long userId) {
         return profiles.findById(userId)

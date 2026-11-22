@@ -3,7 +3,9 @@ package com.do_an_tot_nghiep.k28.content.service;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.BanSaoResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CreateDeckRequest;
+import com.do_an_tot_nghiep.k28.content.dto.DeckPublishStatusResponse;
 import com.do_an_tot_nghiep.k28.content.dto.DeckResponse;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateDeckRequest;
 import com.do_an_tot_nghiep.k28.content.entity.BoThe;
@@ -36,6 +38,7 @@ public class DeckService {
     private final DeckFavoriteRepository favorites;
     private final TheTuVungRepository cards;
     private final DeckMapper mapper;
+    private final CopyInfoService copyInfo;
     private final Clock clock;
 
     public PageResponse<DeckResponse> list(Long userId, boolean yeuThich, int page, int size) {
@@ -56,11 +59,15 @@ public class DeckService {
                 ? Set.copyOf(deckIds)
                 : favorites.findFavoriteDeckIds(userId, deckIds);
         Map<Long, Long> cardCounts = cardCounts(deckIds);
+        Map<Long, BanSaoResponse> origins = copyInfo.origins(result.getContent());
+        Map<Long, DeckPublishStatusResponse> statuses = copyInfo.statuses(result.getContent());
 
         return PageResponse.of(result.map(deck -> mapper.toResponse(
                 deck,
                 favoriteIds.contains(deck.getId()),
-                Math.toIntExact(cardCounts.getOrDefault(deck.getId(), 0L))
+                Math.toIntExact(cardCounts.getOrDefault(deck.getId(), 0L)),
+                origins.get(deck.getId()),
+                statuses.get(deck.getId())
         )));
     }
 
@@ -90,6 +97,13 @@ public class DeckService {
     ) {
         BoThe deck = ownedDeck(userId, id);
         checkVersion(deck, request.version());
+        if (deck.getBoNguonId() != null
+                && request.quyenTruyCap() == QuyenTruyCap.CONG_KHAI
+                && deck.getQuyenTruyCap() != QuyenTruyCap.CONG_KHAI) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE,
+                    "Bản sao chỉ được công khai khi tác giả bộ gốc duyệt, hãy gửi yêu cầu công khai",
+                    Map.of("lyDo", "CAN_DUYET_CONG_KHAI"));
+        }
 
         Long topicId = deck.getChuDeId();
         if (request.boChuDe()) {
@@ -172,7 +186,9 @@ public class DeckService {
         return mapper.toResponse(
                 deck,
                 favorites.exists(userId, deck.getId()),
-                Math.toIntExact(cardCounts(List.of(deck.getId())).getOrDefault(deck.getId(), 0L))
+                Math.toIntExact(cardCounts(List.of(deck.getId())).getOrDefault(deck.getId(), 0L)),
+                copyInfo.origins(List.of(deck)).get(deck.getId()),
+                copyInfo.statuses(List.of(deck)).get(deck.getId())
         );
     }
 

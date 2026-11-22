@@ -1,0 +1,49 @@
+.picker { display: grid; gap: var(--sp-2); min-width: 0; }
+.head { display: grid; gap: 4px; }
+.current { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: var(--fs-small); color: var(--ink); }
+.current svg { width: 16px; height: 16px; color: var(--primary); }
+
+.modes { display: flex; flex-wrap: wrap; border: var(--rule) solid var(--line-2, var(--line)); }
+.mode { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 var(--sp-3); border: 0; background: transparent; color: var(--ink-2); font: inherit; font-size: var(--fs-small); font-weight: 650; cursor: pointer; white-space: nowrap; }
+.mode + .mode { border-left: var(--rule) solid var(--line-2, var(--line)); }
+.mode svg { width: 16px; height: 16px; }
+.mode:hover { background: var(--primary-tint); color: var(--ink); }
+.mode[aria-selected="true"] { background: var(--primary-fill); color: var(--on-primary); }
+.mode:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+.panel { display: grid; gap: var(--sp-2); padding: var(--sp-3); border: var(--rule) solid var(--line); background: var(--field); min-width: 0; }
+.hint { margin: 0; font-size: var(--fs-caption); color: var(--ink-3); }
+
+.list { list-style: none; margin: 0; padding: 0; max-height: 15rem; overflow-y: auto; border: var(--rule) solid var(--line); background: var(--sheet); }
+.option { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) auto auto; align-items: center; gap: var(--sp-2); padding: 6px var(--sp-2); cursor: pointer; border-bottom: var(--rule) dashed var(--line); }
+.option:last-child { border-bottom: 0; }
+.option.active { background: var(--primary-tint); }
+.option[aria-selected="true"] { box-shadow: inset 3px 0 0 var(--primary); }
+.option > svg { width: 16px; height: 16px; color: var(--primary); }
+.flag { display: grid; place-items: center; height: 22px; border: var(--rule) solid var(--primary-line); font-family: var(--font-form); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--primary-strong); background: var(--primary-tint); }
+.optMain { display: grid; min-width: 0; line-height: 1.25; }
+.optMain strong { font-size: var(--fs-small); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.optMain span { font-size: var(--fs-caption); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.optSide { display: grid; justify-items: end; line-height: 1.25; }
+.offset { font-family: var(--font-form); font-size: var(--fs-caption); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.time { font-size: var(--fs-caption); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.none { padding: var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+
+.gmtScale { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.25rem, 1fr)); gap: 3px; }
+.gmtScale button { min-height: 30px; border: var(--rule) solid var(--line); background: var(--sheet); color: var(--ink-2); font: inherit; font-size: var(--fs-caption); font-weight: 650; font-variant-numeric: tabular-nums; cursor: pointer; }
+.gmtScale button:hover { border-color: var(--primary); color: var(--ink); }
+.gmtScale button.on { background: var(--primary-fill); border-color: var(--primary-fill); color: var(--on-primary); }
+
+.device { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); }
+.device > svg { width: 28px; height: 28px; color: var(--primary); }
+.device p { margin: 2px 0 0; }
+
+.note { display: flex; gap: 6px; align-items: flex-start; margin: 0; font-size: var(--fs-caption); color: var(--ink-3); }
+.note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
+
+@media (max-width: 520px) {
+  .mode { flex-basis: 100%; }
+  .mode + .mode { border-left: 0; border-top: var(--rule) solid var(--line-2, var(--line)); }
+  .device { grid-template-columns: auto minmax(0, 1fr); }
+  .device > .btn, .device > :global(.btn) { grid-column: 1 / -1; }
+}

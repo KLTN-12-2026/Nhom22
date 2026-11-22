@@ -8,8 +8,12 @@ import { ErrorState, Pagination, Icon } from '@/components/ui';
 import styles from './page.module.css';
 import { useDecks } from '@/hooks/useDecks';
 import { useTopics } from '@/hooks/useTopics';
+import { CopyBadge } from '@/components/content/CopyBadge';
+import { AuthorTag } from '@/components/content/AuthorTag';
+import { useMe } from '@/hooks/useMe';
 
 export default function DecksPage() {
+  const { data: me } = useMe();
   const { data: plan } = useQuery({ queryKey: ['learning-settings'], queryFn: () => apiFetch('/api/v1/me/learning-settings') });
   const [activeTab, setActiveTab] = useState('mine');
   const [search, setSearch] = useState('');
@@ -68,10 +72,15 @@ export default function DecksPage() {
                     <Link className="answer-title" href={`/bo-the/${deck.id}`}>{deck.ten}</Link>
                     </div>
                     <div className="answer-meta">
+                      {deck.banSao
+                        ? <AuthorTag name={deck.banSao.tacGiaGoc || 'Không rõ'} prefix="Tác giả gốc" />
+                        : <AuthorTag id={me?.id} name={me?.tenHienThi} prefix="" you />}
                       {deck.quyenTruyCap === 'CONG_KHAI'
                         ? <span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>
                         : <span className="stamp stamp-quiet"><Icon name="lock" />Riêng tư</span>
                       }
+                      <CopyBadge banSao={deck.banSao} compact />
+                      {deck.yeuCauCongKhai?.trangThai === 'CHO_DUYET' && <span className="stamp stamp-warning">Chờ duyệt công khai</span>}
                       <span>Sửa {deck.updatedAt ? new Date(deck.updatedAt).toLocaleDateString('vi-VN') : '—'}</span>
                     </div>
                   </div>

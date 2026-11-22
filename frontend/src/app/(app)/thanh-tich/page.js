@@ -1,158 +1,183 @@
 'use client';
-
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { dateTime } from '@/lib/remote-contract.mjs';
-import { Icon, Pagination } from '@/components/ui';
-import { RemoteState, EmptyData } from '@/components/remote/Remote';
+import { ErrorState, Icon, Pagination } from '@/components/ui';
+import { BadgeArt } from '@/components/engagement/BadgeArt';
 import styles from './page.module.css';
 
-const REWARD_SOURCE = { ON_THE: 'Lượt ôn thẻ', BAI_LUYEN: 'Bài luyện đã nộp' };
-const number = value => value == null ? '—' : value.toLocaleString('vi-VN');
-const day = value => value ? value.split('-').reverse().join('/') : '—';
-const rewardOptions = page => ({
-  queryKey: ['rewards', page],
-  queryFn: () => apiFetch(`/api/v1/rewards/history?page=${page - 1}&size=20`),
-});
+const SOURCE = { ON_THE: 'Lượt ôn thẻ', BAI_LUYEN: 'Bài luyện đã nộp' };
+const CONDITION = {
+  TONG_LUOT_ON: n => `${n} lượt ôn hợp lệ`,
+  CHUOI_NGAY: n => `Chuỗi ${n} ngày học`,
+  TONG_BAI_LUYEN: n => `${n} bài luyện đã nộp`,
+  TONG_DIEM: n => `${n} điểm thưởng`,
+  XEP_HANG_TUAN: n => (n === 1 ? 'Hạng nhất bảng xếp hạng tuần' : `Top ${n} bảng xếp hạng tuần`)
+};
 
-function RewardHistory() {
-  const [page, setPage] = useState(1);
-  const rewards = useQuery(rewardOptions(page));
-  const history = rewards.data?.lichSu;
+const fmtDay = day => {
+  if (!day) return '';
+  const [y, m, d] = String(day).slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
+};
+const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '');
 
+function Meter({ value, max, label }) {
+  const v = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   return (
-    <section className={styles.section} aria-labelledby="history-title">
-      <h2 id="history-title">Lịch sử thưởng</h2>
-      <div aria-live="polite" aria-busy={rewards.isFetching}>
-        <RemoteState queries={[rewards]}>
-          {!history?.items.length ? (
-            <EmptyData>Chưa có điểm thưởng. Hoàn thành lượt ôn hoặc nộp bài luyện để nhận điểm.</EmptyData>
-          ) : (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <caption>{number(history.totalElements)} sự kiện thưởng, mới nhất trước</caption>
-                <thead><tr><th scope="col">Ngày</th><th scope="col">Nguồn hợp lệ</th><th scope="col">Điểm</th></tr></thead>
-                <tbody>
-                  {history.items.map(reward => (
-                    <tr key={reward.id}>
-                      <td data-label="Ngày"><time dateTime={reward.ngayDiaPhuong}>{day(reward.ngayDiaPhuong)}</time></td>
-                      <td data-label="Nguồn hợp lệ">{REWARD_SOURCE[reward.loaiSuKien] || reward.loaiSuKien}</td>
-                      <td data-label="Điểm">
-                        <span className={styles.points}>+{number(reward.soDiem)}</span>
-                        {reward.soDiem < reward.diemGoc && <span className={styles.capNote}>Đã chạm trần ngày</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </RemoteState>
-      </div>
-      <Pagination page={page} totalPages={history?.totalPages || 0} onPageChange={setPage} />
-    </section>
+    <div className="meter is-progress" role="progressbar" aria-label={label} aria-valuenow={Math.min(value, max || 1)} aria-valuemin={0} aria-valuemax={max || 1}>
+      <span style={{ '--v': v }}></span>
+    </div>
   );
 }
 
 export default function AchievementsPage() {
-  const rewards = useQuery(rewardOptions(1));
+  const [page, setPage] = useState(1);
+  const rewards = useQuery({ queryKey: ['rewards', page], queryFn: () => apiFetch(`/api/v1/rewards/history?page=${page - 1}&size=20`) });
   const badges = useQuery({ queryKey: ['badges'], queryFn: () => apiFetch('/api/v1/badges') });
   const challenges = useQuery({ queryKey: ['challenges'], queryFn: () => apiFetch('/api/v1/challenges') });
-  const today = useQuery({ queryKey: ['learning-today'], queryFn: () => apiFetch('/api/v1/learning/today') });
-  const currentChallenge = challenges.data?.[0];
-  const metrics = [
-    [number(rewards.data?.tongDiem), 'Điểm thưởng'],
-    [today.data ? `${number(today.data.chuoiNgay)} ngày` : '—', 'Chuỗi ngày hợp lệ'],
-    [badges.data ? `${number(badges.data.filter(badge => badge.daNhan).length)} / ${number(badges.data.length)}` : '—', 'Huy hiệu đã nhận'],
-    [currentChallenge ? `${number(currentChallenge.giaTri)} / ${number(currentChallenge.mucTieu)}` : '—', 'Lượt ôn trong thử thách'],
-  ];
+  const today = useQuery({ queryKey: ['learning-today'], queryFn: () => apiFetch('/api/v1/learning/today'), retry: false });
+
+  const all = badges.data || [];
+  const earned = all.filter(b => b.daNhan);
+  const latest = [...earned].sort((a, b) => new Date(b.nhanAt) - new Date(a.nhanAt))[0];
+  const h = rewards.data;
+  const c = challenges.data?.[0];
+  const queries = [rewards, badges, challenges];
+  const failed = queries.find(q => q.isError);
+  const loading = queries.some(q => q.isPending);
 
   return (
-    <div className={`page ${styles.page}`}>
+    <div className="page">
       <article className="sheet" aria-labelledby="page-title">
-        <nav className={styles.breadcrumb} aria-label="Đường dẫn">
-          <Link href="/hom-nay">Hôm nay</Link><span aria-hidden="true">/</span><span aria-current="page">Thành tích của bạn</span>
+        <nav className={styles.crumb} aria-label="Đường dẫn">
+          <Link href="/hom-nay">Hôm nay</Link><span aria-hidden="true">/</span><span>Thành tích</span>
         </nav>
         <div className="form-head">
-          <div className="form-code"><span>Học và mở rộng</span></div>
+          <div className="form-code"><span>Học và mở rộng</span><span>Điểm · Huy hiệu · Thử thách</span></div>
           <h1 id="page-title">Thành tích của bạn</h1>
-          <p>Ghi nhận những bước học hợp lệ, không chạy đua điểm.</p>
+          <p>Điểm và điều kiện được máy chủ xác nhận từ việc học. Mỗi huy hiệu mở khóa một lần, không mất đi.</p>
         </div>
 
-        <section className={styles.overview} aria-label="Tổng quan thành tích">
-          <RemoteState queries={[rewards, badges, challenges, today]}>
-            <dl className={styles.metrics}>
-              {metrics.map(([value, label]) => (
-                <div className={styles.metric} key={label}><dt>{label}</dt><dd>{value}</dd></div>
-              ))}
-            </dl>
-            <p className={styles.summary}>Hôm nay <strong>{number(rewards.data?.diemHomNay)} / {number(rewards.data?.diemToiDaNgay)} điểm.</strong></p>
-            <p className={styles.restNote}>
-              <Icon name="info" />
-              <span>{today.data?.daDungNgayNghiTuanNay
-                ? `Đã dùng ngày nghỉ tuần này (${day(today.data.ngayNghiDaDung)}). Nghỉ thêm một ngày trong tuần sẽ đứt chuỗi.`
-                : 'Mỗi tuần (thứ Hai–Chủ nhật) được nghỉ 1 ngày mà không đứt chuỗi.'}</span>
-            </p>
-          </RemoteState>
-        </section>
+        {failed && <ErrorState title="Chưa tải được thành tích" description={failed.error.message} onRetry={() => queries.forEach(q => q.refetch())} />}
+        {loading && !failed && (
+          <div className="skeleton" role="status" aria-label="Đang tải thành tích">
+            <div className="sk sk-row"></div><div className="sk sk-row"></div><div className="sk sk-row"></div>
+          </div>
+        )}
 
-        <section className={styles.section} aria-labelledby="badges-title">
-          <h2 id="badges-title">Huy hiệu</h2>
-          <RemoteState queries={[badges]}>
-            {!badges.data?.length ? <EmptyData>Chưa có huy hiệu để hiển thị.</EmptyData> : (
-              <div className={styles.grid}>
-                {badges.data.map(badge => (
-                  <article className={styles.card} key={badge.id}>
-                    <Icon name="shield" />
-                    <div>
-                      <h3>{badge.ten}</h3>
-                      <p>{badge.moTa}</p>
-                      <span className={`stamp ${badge.daNhan ? 'stamp-success' : 'stamp-quiet'}`}>
-                        <Icon name={badge.daNhan ? 'check' : 'lock'} />
-                        {badge.daNhan ? 'Đã nhận' : 'Chưa nhận'}
-                        {badge.daNhan && badge.nhanAt && <> · <time dateTime={badge.nhanAt}>{dateTime(badge.nhanAt)}</time></>}
-                      </span>
-                    </div>
-                  </article>
-                ))}
+        {!loading && !failed && <>
+          <div className={styles.hero}>
+            <div className={styles.heroArt}>
+              {latest ? <BadgeArt badge={latest} size={112} celebrate /> : <BadgeArt badge={all[0]} earned={false} size={112} />}
+            </div>
+            <div className={styles.heroBody}>
+              <span className="caption">{latest ? `Huy hiệu mới nhất · ${fmtDate(latest.nhanAt)}` : 'Huy hiệu đầu tiên đang chờ bạn'}</span>
+              <h2>{latest ? latest.ten : all[0]?.ten || 'Bắt đầu hành trình'}</h2>
+              <p>{latest ? latest.moTa : all[0]?.moTa || 'Ôn thẻ hoặc làm bài luyện để nhận điểm và huy hiệu.'}</p>
+              <div className={styles.collect}>
+                <span><strong>{earned.length}</strong>/{all.length} huy hiệu</span>
+                <Meter value={earned.length} max={all.length} label="Huy hiệu đã nhận" />
               </div>
-            )}
-          </RemoteState>
-        </section>
+            </div>
+          </div>
 
-        <section className={styles.section} aria-labelledby="challenges-title">
-          <h2 id="challenges-title">Thử thách tuần</h2>
-          <RemoteState queries={[challenges]}>
-            {!challenges.data?.length ? <EmptyData>Chưa có thử thách trong tuần này.</EmptyData> : challenges.data.map(challenge => (
-              <article className={styles.challenge} key={challenge.id}>
+          <dl className={`tally cols-2 ${styles.tally}`}>
+            <div>
+              <dt>Điểm thưởng<small>tích lũy từ lượt ôn và bài luyện</small></dt>
+              <dd><span className="tally-n">{h?.tongDiem ?? 0}</span>điểm</dd>
+            </div>
+            <div className={styles.withMeter}>
+              <dt>Điểm hôm nay<small>tối đa {h?.diemToiDaNgay ?? 0} điểm mỗi ngày</small></dt>
+              <dd><span className="tally-n">{h?.diemHomNay ?? 0}</span>/{h?.diemToiDaNgay ?? 0}</dd>
+              <Meter value={h?.diemHomNay || 0} max={h?.diemToiDaNgay || 0} label="Điểm hôm nay" />
+            </div>
+            <div>
+              <dt>Chuỗi ngày hợp lệ<small>mỗi tuần được nghỉ 1 ngày không đứt chuỗi</small></dt>
+              <dd><span className="tally-n">{today.data?.chuoiNgay ?? '—'}</span>ngày</dd>
+            </div>
+            <div className={styles.withMeter}>
+              <dt>Thử thách tuần<small>{c ? c.ten : 'chưa có thử thách'}</small></dt>
+              <dd><span className="tally-n">{c ? c.giaTri : '—'}</span>{c ? `/${c.mucTieu}` : ''}</dd>
+              {c && <Meter value={c.giaTri} max={c.mucTieu} label={c.ten} />}
+            </div>
+          </dl>
+
+          {today.isError && <ErrorState title="Chưa tải được chuỗi ngày" description={today.error.message} onRetry={today.refetch} />}
+          {today.data && <p className={styles.restNote}>
+            <Icon name="info" />
+            <span>{today.data.daDungNgayNghiTuanNay
+              ? `Đã dùng ngày nghỉ tuần này (${fmtDay(today.data.ngayNghiDaDung)}). Nghỉ thêm một ngày trong tuần sẽ đứt chuỗi.`
+              : 'Mỗi tuần (thứ Hai–Chủ nhật) được nghỉ 1 ngày mà không đứt chuỗi.'}</span>
+          </p>}
+
+          <section className={styles.section} aria-labelledby="badge-title">
+            <div className={styles.secHead}>
+              <h2 id="badge-title">Huy hiệu</h2>
+              <span className="small muted">{earned.length} đã nhận · {all.length - earned.length} chưa mở khóa</span>
+            </div>
+            {all.length ? (
+              <ul className={styles.badges} role="list">
+                {all.map((b, i) => (
+                  <li key={b.id} className={b.daNhan ? styles.isEarned : styles.isLocked}>
+                    <BadgeArt badge={b} earned={b.daNhan} size={76} delay={Math.min(i, 12) * 60} />
+                    <div className={styles.badgeBody}>
+                      <h3>{b.ten}</h3>
+                      <p>{b.moTa}</p>
+                      <span className={styles.cond}><Icon name="target" />{(CONDITION[b.loaiDieuKien] || (n => `Ngưỡng ${n}`))(b.nguong)}</span>
+                      {b.daNhan
+                        ? <span className="stamp stamp-success"><Icon name="check" />Đã nhận{b.nhanAt && <> · <time dateTime={b.nhanAt}>{dateTime(b.nhanAt)}</time></>}</span>
+                        : <span className="stamp stamp-quiet">Chưa mở khóa</span>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="notice">Chưa có huy hiệu nào đang hoạt động.</p>}
+          </section>
+
+          <section className={styles.section} aria-labelledby="challenge-title">
+            <h2 id="challenge-title">Thử thách tuần</h2>
+            {challenges.data?.length ? challenges.data.map(x => (
+              <article key={x.id} className={`panel ${styles.challenge}`}>
                 <div className={styles.challengeHead}>
-                  <h3>{challenge.ten}</h3>
-                  <span className={`stamp ${challenge.hoanThanhAt ? 'stamp-success' : 'stamp-quiet'}`}>
-                    {challenge.hoanThanhAt && <Icon name="check" />}
-                    {challenge.hoanThanhAt ? 'Đã hoàn thành' : 'Đang tham gia'}
-                  </span>
+                  <h3>{x.ten}</h3>
+                  <span className={`stamp ${x.hoanThanhAt ? 'stamp-success' : 'stamp-quiet'}`}>{x.hoanThanhAt ? 'Đã hoàn thành' : 'Đang tham gia'}</span>
                 </div>
-                <p className={styles.challengeMeta}>
-                  <span>{number(challenge.giaTri)} / {number(challenge.mucTieu)} lượt ôn hợp lệ</span>
-                  <span><time dateTime={challenge.tuanBatDau}>{day(challenge.tuanBatDau)}</time> – <time dateTime={challenge.tuanKetThuc}>{day(challenge.tuanKetThuc)}</time></span>
-                </p>
-                <div className="meter is-progress" role="progressbar" aria-label={challenge.ten}
-                  aria-valuenow={Math.min(challenge.giaTri, challenge.mucTieu)} aria-valuemin={0} aria-valuemax={challenge.mucTieu || 1}
-                  aria-valuetext={`${number(challenge.giaTri)} trên ${number(challenge.mucTieu)} lượt ôn hợp lệ`}
-                  style={{ '--v': challenge.mucTieu > 0 ? Math.min(1, Math.max(0, challenge.giaTri / challenge.mucTieu)) : 0 }}>
-                  <span />
-                </div>
-                <p className={styles.challengeDescription}>{challenge.moTa}</p>
-                <p className={styles.challengeDescription}>Điểm và điều kiện do máy chủ xác nhận.</p>
-                <Link className="btn btn-accent" href="/hoc"><Icon name="play" />Bắt đầu học</Link>
+                <p className={styles.challengeNum}><strong>{x.giaTri}</strong>/{x.mucTieu} lượt ôn hợp lệ · {fmtDay(x.tuanBatDau)} – {fmtDay(x.tuanKetThuc)}</p>
+                <Meter value={x.giaTri} max={x.mucTieu} label={x.ten} />
+                <p className="small muted">{x.moTa}. Điểm và điều kiện do máy chủ xác nhận.</p>
+                {!x.hoanThanhAt && <Link className="btn btn-accent" href="/hoc">Bắt đầu học</Link>}
               </article>
-            ))}
-          </RemoteState>
-        </section>
+            )) : <p className="notice">Tuần này chưa có thử thách.</p>}
+          </section>
 
-        <RewardHistory />
+          <section className={styles.section} aria-labelledby="history-title">
+            <h2 id="history-title">Lịch sử thưởng</h2>
+            {h?.lichSu?.items?.length ? <>
+              <div className="table-wrap">
+                <table className="data-table">
+                  <caption className="sr-only">{h.lichSu.totalElements} sự kiện thưởng, mới nhất trước</caption>
+                  <thead><tr><th scope="col">Ngày</th><th scope="col">Nguồn hợp lệ</th><th scope="col" className={styles.num}>Điểm</th></tr></thead>
+                  <tbody>
+                    {h.lichSu.items.map(r => (
+                      <tr key={r.id}>
+                        <td>{fmtDay(r.ngayDiaPhuong)}</td>
+                        <td>{SOURCE[r.loaiSuKien] || r.loaiSuKien}</td>
+                        <td className={styles.num}>
+                          <strong className={styles.plus}>+{r.soDiem}</strong>
+                          {r.soDiem < r.diemGoc && <span className="small muted"> (đã chạm trần ngày)</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pagination page={page} totalPages={h.lichSu.totalPages || 0} onPageChange={setPage} />
+            </> : <p className="notice">Chưa có điểm thưởng. Hoàn thành lượt ôn hoặc nộp bài luyện để nhận điểm.</p>}
+          </section>
+        </>}
       </article>
     </div>
   );

@@ -42,6 +42,7 @@ class FR14AccountDeletionTest extends AbstractIntegrationTest {
     void tc16_deletionErasesPrivateDataAnonymizesSharedDecksAndRevokesFiles() throws Exception {
         Actor author = actor();
         Actor other = actor();
+        Actor third = actor();
 
         String privateDeck = deck(author, "Bộ riêng");
         String privateCard = card(author, privateDeck, "invoice");
@@ -53,7 +54,7 @@ class FR14AccountDeletionTest extends AbstractIntegrationTest {
                         .with(xsrf()).header("Idempotency-Key", UUID.randomUUID().toString()))
                 .andExpect(status().isCreated())).get("id").asString();
         String sourceOfPrivate = body(mockMvc.perform(post("/api/v1/decks/" + publicDeck + "/copy")
-                        .cookie(other.session()).with(xsrf()).header("Idempotency-Key", UUID.randomUUID().toString()))
+                        .cookie(third.session()).with(xsrf()).header("Idempotency-Key", UUID.randomUUID().toString()))
                 .andExpect(status().isCreated())).get("id").asString();
         jdbc.update("UPDATE bo_the SET bo_nguon_id = ? WHERE id = ?", Long.valueOf(privateDeck), Long.valueOf(sourceOfPrivate));
         send(other, put("/api/v1/decks/" + publicDeck + "/favorite"), Map.of()).andExpect(status().is2xxSuccessful());

@@ -20,10 +20,14 @@ import com.do_an_tot_nghiep.k28.learning.repository.TienDoTheRepository;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
 import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudyTimeService;
+import com.do_an_tot_nghiep.k28.stats.dto.ActivityDayResponse;
+import com.do_an_tot_nghiep.k28.stats.dto.ActivityQuery;
+import com.do_an_tot_nghiep.k28.stats.dto.ActivityResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.OverviewQuery;
 import com.do_an_tot_nghiep.k28.stats.dto.StatisticsOverviewResponse;
 import com.do_an_tot_nghiep.k28.stats.dto.TheoNgayResponse;
 import com.do_an_tot_nghiep.k28.stats.repository.StatisticsRepository;
+import com.do_an_tot_nghiep.k28.stats.service.ActivityService;
 import com.do_an_tot_nghiep.k28.stats.service.StatisticsService;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
@@ -320,6 +324,59 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[2].soQuanSat").value(1))
                 .andExpect(jsonPath("$[0].soQuanSat").value(0));
+    }
+
+    @Test
+    void activityHeatmapCoversFiftyThreeWeeksFromMondayInLocalDays() throws Exception {
+        Learner learner = learner();
+        Learner stranger = learner();
+        long a = card(learner, learner.deckId(), "a");
+        long session = session(learner, "2025-10-19T10:00:00Z");
+        long aEnVi = addProgress(learner, a, "EN_VI");
+        review(learner, session, aEnVi, "NHO", 60000, "2025-10-19T10:00:00Z");
+        review(learner, session, aEnVi, "NHO", 60000, "2026-10-18T16:59:59Z");
+        review(learner, session, aEnVi, "DE", 60000, "2026-10-18T17:00:00Z");
+        attempt(learner, practice(learner, learner.deckId(), false), 4, 5, 600000, "2026-10-19T04:30:00Z");
+        long sourceDeck = Long.parseLong(learner.deckId());
+        publishRequest(learner, sourceDeck, "DA_DUYET", "2026-10-19T01:00:00Z");
+        publishRequest(learner, sourceDeck, "TU_CHOI", "2026-10-19T02:00:00Z");
+        publishRequest(stranger, Long.parseLong(stranger.deckId()), "DA_DUYET", "2026-10-19T01:00:00Z");
+
+        ActivityResponse activity = new ActivityService(fixedClock(), accountService, studyTime, statistics, null, null)
+                .activity(learner.id(), new ActivityQuery(null));
+
+        assertThat(activity.muiGio()).isEqualTo(HCM);
+        assertThat(activity.tuNgay()).isEqualTo(LocalDate.parse("2025-10-20"));
+        assertThat(activity.denNgay()).isEqualTo(LocalDate.parse("2026-10-19"));
+        assertThat(activity.theoNgay()).hasSize(365);
+        assertThat(activity.theoNgay().getFirst().ngay()).isEqualTo(LocalDate.parse("2025-10-20"));
+        ActivityDayResponse homQua = activity.theoNgay().get(363);
+        ActivityDayResponse homNay = activity.theoNgay().get(364);
+        assertThat(homQua.ngay()).isEqualTo(LocalDate.parse("2026-10-18"));
+        assertThat(homQua.soLuotOn()).isEqualTo(1);
+        assertThat(homNay.soLuotOn()).isEqualTo(1);
+        assertThat(homNay.soCauLuyen()).isEqualTo(5);
+        assertThat(homNay.soCongKhai()).isEqualTo(1);
+        assertThat(homNay.soPhut()).isEqualTo(11);
+        assertThat(activity.theoNgay().stream().mapToInt(ActivityDayResponse::soLuotOn).sum()).isEqualTo(2);
+
+        mockMvc.perform(get("/api/v1/statistics/activity").cookie(learner.session()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.theoNgay[0].ngay").exists())
+                .andExpect(jsonPath("$.theoNgay[0].soCongKhai").value(0));
+        mockMvc.perform(get("/api/v1/statistics/activity").cookie(learner.session()).param("denNgay", "2099-01-01"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("denNgay"));
+        mockMvc.perform(get("/api/v1/statistics/activity").cookie(learner.session()).param("denNgay", "19-10-2026"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/statistics/activity"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private void publishRequest(Learner learner, long deckId, String status, String handledAt) {
+        jdbc.update("INSERT INTO yeu_cau_cong_khai (bo_the_id, bo_nguon_id, nguoi_gui_id, nguoi_duyet, trang_thai, "
+                        + "het_han_at, xu_ly_at, created_at, updated_at) VALUES (?, ?, ?, 'TAC_GIA', ?, ?, ?, ?, ?)",
+                deckId, deckId, learner.id(), status, utc(handledAt), utc(handledAt), utc(handledAt), utc(handledAt));
     }
 
     private void expectBadRequest(Learner learner, String k1, String v1, String k2, String v2) throws Exception {

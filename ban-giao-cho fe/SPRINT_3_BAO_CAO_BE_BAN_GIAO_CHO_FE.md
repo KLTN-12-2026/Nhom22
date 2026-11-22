@@ -39,6 +39,9 @@
 | B3.11 Quản trị vận hành (gọn mạnh, FR-13) | 🟡 3 API; `V26__service_ops.sql`; `FR13ServiceOpsTest` 2/2, toàn bộ 544/544 (16/11); HTTP thật trên dev pass, Postman (16/11); ✅ xong | F3.11 UI51 | Nối API thật (mục 5.15); hạn mức theo từng gói |
 | B3.12b Lịch sử giao dịch, hết hạn gói, quyền lợi | 🟡 Code xong 16/11 (test pass); HTTP thật lịch sử + biên nhận pass 16/11; Postman đồng bộ 16/11; mockup UI56 đúng DTO 16/11; chưa chạy job hết hạn trên dev | F3.12 UI56, banner `AppShell`, UI44, UI49 | Nối API thật (mục 5.10); bắt 422 `details.quyenLoi` |
 | B3.12c Quản lý thanh toán, doanh thu | 🟡 Code xong 16/11 (test pass); HTTP thật 6/8 API pass 16/11, 2 công cụ demo chưa (server tắt `BILLING_DEMO_TOOLS`); Postman đồng bộ 16/11; mockup UI58–UI59 đúng DTO 16/11 | F3.13 UI58–UI59 | Nối API thật (mục 5.11) |
+| B3.14 Giới hạn sao chép & duyệt công khai bản sao (FR-04, TC-25, 21/11/2026) | 🟡 6 API mới + đổi `POST /decks/{id}/copy` (409/422 mới) và `PATCH /decks/{id}` (422 khi công khai bản sao); `V29__publish_requests.sql`; `DeckResponse`/`LibraryDeckResponse` thêm `banSao`, `DeckResponse` thêm `yeuCauCongKhai`; `FR04PublishRequestTest` 8/8 + hồi quy pass (21/11); chưa HTTP thật, Postman, mockup | F3.14 UI14, UI03, UI60, UI61 | Nối API thật (mục 5.16); huy hiệu "Bản sao" + link bộ gốc; nút "Xin công khai" thay ô công khai trên bản sao |
+| B3.15 Bảng điều khiển quản trị (FR-13, UI46, 21/11/2026) | 🟡 `GET /admin/dashboard?soNgay=7\|30\|90`, chỉ đọc, không migration; `FR13DashboardTest` 2/2; HTTP thật 200 trên BE dev; chưa Postman | F3.15 UI46 `/quan-tri` | FE đã nối (mục 5.17) |
+| B3.16 Hồ sơ người dùng cho quản trị (FR-13, 21/11/2026) | 🟡 `GET /admin/users/{id}`, `GET /admin/audit-logs?doiTuongId=`; chỉ đọc; `FR13UserDetailTest` 2/2; HTTP thật 200 trên BE dev; chưa Postman | F3.15 UI47 `/quan-tri/tai-khoan?nguoi={id}` | FE đã nối (mục 5.18) |
 
 **Chưa có:** không còn API Đợt 3 chưa code. Phần FE chưa nối API thật vẫn có thể dùng MSW với response ở mục 5. Tab "Tác vụ nền" UI53, UI46, UI52, UI54 đã cắt khỏi Đợt 3 ([KE_HOACH_CAT_DOT3](../docs/KE_HOACH_CAT_DOT3.md)).
 
@@ -488,6 +491,83 @@ Lỗi thật: `version` cũ → 409 `{"code":"VERSION_CONFLICT","message":"Hạn
 
 Lỗi: 400 `fieldErrors` (`hanMuc`, `lyDo`, `tuNgay`, `denNgay`; mục trùng gói+loại), 404 gói/loại không có, 409 `VERSION_CONFLICT`, 403 không phải Admin. Mọi lần sửa ghi nhật ký `SUA_HAN_MUC` (xem ở `/admin/audit-logs?loai=HAN_MUC_DICH_VU`).
 
+### 5.16 B3.14 — Giới hạn sao chép và duyệt công khai bản sao (UI14, UI03, UI60, UI61)
+
+Hợp đồng theo mã nguồn và `FR04PublishRequestTest` (21/11/2026); chưa HTTP thật. Luồng: [B3.14](../docs/luong-backend/B3.14-gioi-han-sao-chep-duyet-cong-khai.md). Luật: TK §6.2a.
+
+| Method / path | Request | Response | FE |
+|---|---|---|---|
+| `POST /api/v1/decks/{id}/copy` | như B1.11 | 201 `DeckResponse` + `banSao`; **409** `details.boTheId` khi đã có bản sao chưa xóa; **422** `details {lyDo: "LA_BAN_SAO", boGocId}` | 409 → báo "Bạn đã có bản sao" và mở `/bo-the/{boTheId}`; 422 → nút "Xem bộ gốc" |
+| `PATCH /api/v1/decks/{id}` | như B1.8 | **422** `details.lyDo = "CAN_DUYET_CONG_KHAI"` khi bản sao riêng tư đổi sang `CONG_KHAI` | Với bộ có `banSao`: không cho chọn "Công khai" trực tiếp, hiện nút "Xin công khai" |
+| `POST /api/v1/decks/{id}/publish-requests` | `{loiNhan?}` ≤ 500 | 201 `{id, nguoiDuyet, trangThai, loiNhan, lyDo, hetHanAt, xuLyAt, guiLaiSauAt, createdAt, version}` | 409 đang chờ; 422 `details.lyDo`: `KHONG_PHAI_BAN_SAO`, `DA_CONG_KHAI`, `DA_AN`, `BO_CAO_CAP`, `CHO_GUI_LAI` (+ `guiLaiSauAt`) |
+| `DELETE /api/v1/publish-requests/{id}` | — | 200 như trên, `trangThai = DA_RUT` | Nút "Rút yêu cầu" khi `CHO_DUYET` |
+| `GET /api/v1/me/publish-requests` | `?trangThai&page&size` | `PageResponse<{id, boTheId, tenBoThe, boNguonId, tenBoNguon, nguoiGuiId, tenNguoiGui, nguoiDuyet, trangThai, loiNhan, lyDo, hetHanAt, xuLyAt, createdAt, version}>` | UI60 `/yeu-cau-cong-khai`, xem bản sao qua `/thu-vien/{boTheId}` chỉ khi đã công khai |
+| `POST /api/v1/publish-requests/{id}/decision` | `{quyetDinh: DUYET\|TU_CHOI\|THU_HOI, lyDo?, version}`; `lyDo` 10–500 bắt buộc khi từ chối/thu hồi | 200 phần tử như trên | 409 → tải lại; 404 khi yêu cầu đã chuyển cho Admin |
+| `GET /api/v1/publish-requests/{id}/cards`, `GET /api/v1/admin/publish-requests/{id}/cards` | `?page&size` | `PageResponse<LibraryCardResponse>` | Xem nội dung bản sao trong hộp duyệt; chỉ hiện chữ (bản sao riêng tư, không tải media) |
+| `GET /api/v1/admin/publish-requests`, `POST /api/v1/admin/publish-requests/{id}/decision` | như trên | như trên | UI61 `/quan-tri/duyet-cong-khai` |
+
+`DeckResponse` thêm `banSao` (`null` hoặc `{boGocId, boGocTen, tacGiaGoc, boGocXemDuoc}`) và `yeuCauCongKhai` (yêu cầu gần nhất hoặc `null`); `LibraryDeckResponse` (danh sách, chi tiết, điểm nổi bật) thêm `banSao`. `boGocXemDuoc = false` → hiện "Bộ gốc không còn công khai", không có link. Thông báo mới: `YEU_CAU_CONG_KHAI` (`lienKet` `/yeu-cau-cong-khai`), `KET_QUA_CONG_KHAI` (`lienKet` `/bo-the/{id}`), `ngayDiaPhuong = null`.
+
+### 5.17 B3.15 — Bảng điều khiển quản trị (UI46)
+
+`GET /api/v1/admin/dashboard?soNgay=7|30|90` (ADMIN; khác 7/30/90 → 400 `VALIDATION_FAILED` field `soNgay`). Ngày theo `muiGio` (Asia/Ho_Chi_Minh), `theoNgay` đủ `soNgay` phần tử kể cả ngày trống, `doanhThuTheoThang` đủ 12 tháng (`thang` = `YYYY-MM`).
+
+| Khối | Trường |
+|---|---|
+| `chiSo` | `tongNguoiDung`, `dangHoatDong`, `biKhoa`, `chuaXacThuc`, `soQuanTri`, `nguoiDungMoi`/`nguoiDungMoiKyTruoc`, `hoatDongHomNay`/`hoatDongHomQua`, `nguoiHocTrongKy`, `luotOnTrongKy`/`luotOnKyTruoc`, `tyLeNho` (% hoặc null), `thueBaoHieuLuc`, `doanhThuThangNay`/`doanhThuThangTruoc` (VND) |
+| `theoNgay[]` | `ngay`, `dangKy`, `nguoiHoc`, `luotOn`, `tyLeNho` |
+| `doanhThuTheoThang[]` | `thang`, `doanhThu`, `soGiaoDich` |
+| `coCauGoi[]` | `goiMa`, `ten`, `soNguoi` (miễn phí = `dangHoatDong − thueBaoHieuLuc`, FE tự tính) |
+| `canXuLy` | `congKhaiChoDuyet`, `congKhaiCuNhatAt`, `baoCaoChoXuLy`, `thueBaoSapHetHan`, `giaoDichTreo`, `chuaXacThucQua48h`, `tacVuLoi24h` |
+| `boMauNoiBat[]` | `id`, `ten`, `soNguoiHoc`, `soLuotOn`, `tyLeNho` (gộp bản sao theo bộ gốc) |
+| `nguoiDungMoi[]` | `id`, `email`, `tenHienThi`, `trangThai`, `createdAt`, `goiMa` (null = miễn phí) |
+| `dichVuHomNay` | như `GET /admin/service-usage` cho hôm nay |
+| `nhatKyGanDay[]` | như phần tử `GET /admin/audit-logs` (6 dòng mới nhất) |
+| `heThong` | `csdl`, `redis` (`UP`/`DOWN`), `tacVuCho`, `tacVuLoi24h` |
+
+### 5.18 B3.16 — Hồ sơ người dùng (ngăn chi tiết ở UI47)
+
+`GET /api/v1/admin/users/{id}` (ADMIN; 404 `NOT_FOUND` khi không có). Nhật ký của người dùng: `GET /api/v1/admin/audit-logs?loai=NGUOI_DUNG&doiTuongId={id}` (phân trang như cũ).
+
+| Khối | Trường |
+|---|---|
+| gốc | `nguoiDung` (như phần tử `GET /admin/users`), `muiGio`, `emailXacThucAt` (null = chưa xác thực) |
+| `hocTap` | `soTheDaHoc`, `soTheDenHan`, `soTheTamNgung`, `luotOn` (30 ngày), `tyLeNho` (% hoặc null), `soNgayHoc`, `chuoiNgay`, `hocCuoiNgay`, `theoNgay[]` 30 phần tử `{ngay, luotOn, theMoi}` theo múi giờ người dùng |
+| `goiHienTai` | `{id, goiMa, tenGoi, trangThai, batDauAt, hetHanAt, huyAt}` hoặc null (miễn phí) |
+| `lichSuGoi[]` | như `goiHienTai`, 10 dòng mới nhất |
+| `thanhToan` | `tongDaChi` (VND), `soThanhCong`, `soThatBai`, `ganDay[]` 10 dòng `{id, maDon, goiMa, chuKy, soTien, trangThai, taoAt, hoanTatAt}` |
+| `dichVu[]` | `{loai: AI/ANH, soDung, chiPhi}` 30 ngày |
+| `boThe[]` | 5 bộ cập nhật gần nhất `{id, ten, quyenTruyCap, soThe, updatedAt}` |
+| `baoCao` | `daGui`, `biBaoCao`, `biBaoCaoChoXuLy` (báo cáo về bộ/thẻ của người này) |
+
+### 5.19 B3.19 — Cập nhật thời gian thực bằng SSE
+
+`GET /api/v1/events/stream` (cần đăng nhập, không bị chặn khi chưa có gói). Mở bằng `new EventSource('/api/v1/events/stream', { withCredentials: true })`; nghe theo tên sự kiện. Dữ liệu mỗi sự kiện: `{loai, id}` (`id` rỗng khi không có). Sự kiện đầu `SAN_SANG`; comment `ping` mỗi 25 giây; luồng tự đóng sau 15 phút và trình duyệt tự nối lại.
+
+| `loai` | Nhận | FE nên làm |
+|---|---|---|
+| `THONG_BAO_MOI` | Người nhận | Tải lại `['notifications']`, toast |
+| `THONG_BAO_HE_THONG` | Tất cả | Tải lại `['announcements']` |
+| `TAI_KHOAN_BI_KHOA` | Người bị khóa | Xóa cache, về `/dang-nhap` (phiên đã bị thu hồi) |
+| `GOI_THAY_DOI` | Chủ gói | Tải lại `['billing']`, `['me-plan']`, `['service-quota']`, `['me']` |
+| `THANH_TOAN` | Chủ đơn (`id` = `maDon`) | Tải lại `['billing']` |
+| `YEU_CAU_AI` | Người gửi (`id` = yêu cầu) | Tải lại `['ai-request', id]`, `['ai-history']`, `['service-quota']` |
+| `HANG_CHO_QUAN_TRI` | ADMIN | Tải lại `['admin-queue']`, `['admin-dashboard']`, `['publish-requests']`, `['admin-reports']` |
+
+`GET /api/v1/admin/dashboard/queue` (ADMIN) trả khối `canXuLy` giống trong `/admin/dashboard`, dùng cho số đếm menu. Giữ polling chậm làm dự phòng khi mất luồng. Đã làm ở FE: F3.19. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md).
+
+### 5.20 B3.20 — Realtime giai đoạn 2
+
+Cùng luồng `/api/v1/events/stream`, thêm 3 loại:
+
+| `loai` | Nhận | `id` | FE nên làm |
+|---|---|---|---|
+| `MUC_DA_XU_LY` | ADMIN, trừ người vừa xử lý | `BAO_CAO:<id>` hoặc `CONG_KHAI:<id>` | Tải lại hàng chờ; nếu đang mở đúng mục thì đóng và báo "vừa được quản trị viên khác xử lý" |
+| `SU_CO_HE_THONG` | ADMIN | `CSDL:DOWN`, `CSDL:UP`, `REDIS:DOWN`, `REDIS:UP`, `TAC_VU:<id>` | Tải lại `['admin-dashboard']`, `['admin-queue']`, `['admin-service-usage']`; toast |
+| `PHIEN_HOC_MOI` | Chủ phiên | id phiên | Nếu khác phiên đang mở ở `/hoc-phien` thì báo phiên đã mở ở nơi khác |
+
+`CSDL`/`REDIS` chỉ gửi khi trạng thái đổi, kiểm mỗi 30 giây ở từng instance. Đã làm ở FE: F3.20. Luồng: [B3.19](../docs/luong-backend/B3.19-realtime-sse.md#giai-đoạn-2-b320).
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
@@ -562,6 +642,7 @@ Trạng thái BE đến 16/11/2026: mọi F-step Đợt 3 đã có API (mục 5.
 - [ ] F3.11 UI51: hạn mức theo gói × loại, gửi `version`, 409 → tải lại; lỗi `null` hiện "Không ghi nhận"
 - [ ] F3.12 UI55, UI56, UI57 nối `billing`, bắt 402 `SUBSCRIPTION_REQUIRED` chuyển `/thanh-toan-goi`
 - [ ] F3.13 UI58, UI59 quản lý thanh toán Admin
+- [x] F3.14 (FE đã làm 21/11/2026, xem roadmap FE) huy hiệu "Bản sao" + link bộ gốc (UI14, UI03, thư viện, tìm kiếm); 409/422 khi sao chép; nút "Xin công khai", trạng thái yêu cầu, rút yêu cầu; UI60 tác giả duyệt và UI61 Admin duyệt kèm lý do, 409 tải lại
 
 ## 9. Sắp có ở Đợt 4 — hợp đồng dự kiến
 

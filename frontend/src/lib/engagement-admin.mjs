@@ -3,6 +3,7 @@ export const BADGE_CONDITIONS = {
   CHUOI_NGAY: 'Chuỗi ngày học hợp lệ',
   TONG_BAI_LUYEN: 'Tổng bài luyện đã nộp',
   TONG_DIEM: 'Tổng điểm thưởng',
+  XEP_HANG_TUAN: 'Thứ hạng bảng xếp hạng tuần',
 };
 
 export const newMotivation = kind => ({
@@ -42,5 +43,6 @@ export function motivationCondition(kind, item) {
   return ({
     TONG_LUOT_ON: `${value} lượt ôn hợp lệ`, CHUOI_NGAY: `Chuỗi ${value} ngày học hợp lệ`,
     TONG_BAI_LUYEN: `${value} bài luyện đã nộp`, TONG_DIEM: `${value} điểm thưởng`,
+    XEP_HANG_TUAN: item.nguong === 1 ? 'Hạng nhất bảng xếp hạng tuần' : `Top ${value} bảng xếp hạng tuần`,
   })[item.loaiDieuKien] || 'Điều kiện chưa được hỗ trợ';
 }

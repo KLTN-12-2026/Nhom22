@@ -152,11 +152,12 @@ class FR12RewardTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$[0].tuanKetThuc").value(tuan.plusDays(6).toString()));
         mockMvc.perform(get("/api/v1/badges").cookie(learner.session()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(6))
+                .andExpect(jsonPath("$.length()").value(9))
                 .andExpect(jsonPath("$[?(@.ma == 'BUOC_DAU')].daNhan").value(true))
                 .andExpect(jsonPath("$[?(@.ma == 'CHUOI_3')].daNhan").value(true))
                 .andExpect(jsonPath("$[?(@.ma == 'CHUOI_7')].daNhan").value(false))
-                .andExpect(jsonPath("$[?(@.ma == 'ON_100')].daNhan").value(false));
+                .andExpect(jsonPath("$[?(@.ma == 'ON_100')].daNhan").value(false))
+                .andExpect(jsonPath("$[?(@.ma == 'QUAN_QUAN_TUAN')].daNhan").value(false));
         assertThat(count("nguoi_dung_huy_hieu", learner)).isEqualTo(2);
         mockMvc.perform(get("/api/v1/learning/today").cookie(learner.session()))
                 .andExpect(status().isOk())

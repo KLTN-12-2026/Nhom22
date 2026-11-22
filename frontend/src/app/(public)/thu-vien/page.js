@@ -2,12 +2,27 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api-client';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { libraryPage } from '@/lib/library-query.mjs';
 import styles from './page.module.css';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { DeckCover } from '@/components/ui/DeckCover';
+import { AuthorTag } from '@/components/content/AuthorTag';
+
+const VIEW_TABS = [
+  { value: 'trending', label: 'Thịnh hành' },
+  { value: 'favorites', label: 'Yêu thích nhất' },
+  { value: 'newest', label: 'Mới đăng' },
+  { value: 'updated', label: 'Mới cập nhật' }
+];
+
+const VIEW_HINT = {
+  trending: 'Xếp theo lượt yêu thích và sao chép từ người khác trong 7 ngày qua.',
+  favorites: 'Xếp theo tổng lượt yêu thích từ người khác.'
+};
 
 const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
 const LEVEL_VALUE = { MOI_BAT_DAU: 1, CO_BAN: 2, TRUNG_CAP: 3, NANG_CAO: 4 };
@@ -25,7 +40,7 @@ function LibraryContent() {
   const goal = search.get('mucTieu') || '';
   const level = search.get('trinhDo') || '';
   const source = search.get('nguon') || '';
-  const sort = search.get('sort') || 'updated';
+  const sort = search.get('sort') || 'trending';
   const page = libraryPage(search.get('page'));
   const requestedSize = Number(search.get('size') || 8);
   const size = Number.isInteger(requestedSize) && requestedSize >= 1 && requestedSize <= 100 ? requestedSize : 8;
@@ -64,6 +79,18 @@ function LibraryContent() {
   
   const decks = decksData?.items || [];
   const total = decksData?.totalElements || 0;
+
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiFetch('/api/v1/me'), retry: false, staleTime: 60000 });
+  const deckIds = decks.map(deck => deck.id);
+  const { data: ownCopies = [] } = useQuery({
+    queryKey: ['own-copies', deckIds],
+    queryFn: () => apiFetch(`/api/v1/decks/copies?sourceIds=${deckIds.join(',')}`),
+    enabled: !!me && deckIds.length > 0,
+    staleTime: 60000,
+    retry: false
+  });
+  const copyOf = new Map(ownCopies.map(link => [link.boNguonId, link.boTheId]));
+
 
   return (
     <div className="page page-grid with-side">
@@ -139,6 +166,15 @@ function LibraryContent() {
           </div>
         </form>
 
+        <div className={styles.tabs} role="group" aria-label="Xem theo">
+          {VIEW_TABS.map(tab => (
+            <button key={tab.value} type="button" aria-pressed={sort === tab.value} onClick={() => setSort(tab.value)}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {VIEW_HINT[sort] && <p className={`caption ${styles.tabHint}`}>{VIEW_HINT[sort]}</p>}
+
         <div className={styles.resultBar}>
           <p id="result-count" className="muted" aria-live="polite">
             {error ? 'Không tải được thư viện' : isLoading ? 'Đang tải thư viện…' : total === 0 ? 'Không có kết quả' : `${total} bộ thẻ`}
@@ -153,6 +189,9 @@ function LibraryContent() {
             <div className={styles.resultControl}>
             <label htmlFor="sort" className="caption">Sắp xếp</label>
             <select className="select" id="sort" value={sort} onChange={e => setSort(e.target.value)}>
+              <option value="trending">Thịnh hành</option>
+              <option value="favorites">Yêu thích nhất</option>
+              <option value="newest">Mới đăng</option>
               <option value="updated">Mới cập nhật</option>
               <option value="name">Tên A–Z</option>
               <option value="size">Nhiều thẻ nhất</option>
@@ -183,7 +222,7 @@ function LibraryContent() {
             </div>
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
-                <li key={deck.id} className="answer-row deck-row">
+                <li key={deck.id} className={`answer-row deck-row${copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
                   <span className="answer-no">{page * size + i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
@@ -197,6 +236,12 @@ function LibraryContent() {
                       ) : (
                         <span className="stamp stamp-graphite">Người học chia sẻ</span>
                       )}
+                      {copyOf.has(deck.id) && (
+                        <Link className={`stamp stamp-success ${styles.copiedStamp}`} href={`/bo-the/${copyOf.get(deck.id)}`} title="Mở bản sao của bạn">
+                          <Icon name="check" />Đã sao chép
+                        </Link>
+                      )}
+                      <AuthorTag id={deck.chuSoHuuId} name={deck.tenTacGia} prefix="" />
                       <span>{deck.tenChuDe || 'Chưa phân chủ đề'}</span>
                       {deck.tenTacGia && <span>{deck.tenTacGia}</span>}
                       <span className="muted">Cập nhật {new Date(deck.updatedAt).toLocaleDateString('vi-VN')}</span>

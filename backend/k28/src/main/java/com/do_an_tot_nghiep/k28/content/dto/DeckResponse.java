@@ -21,6 +21,8 @@ public record DeckResponse(
         int soThe,
         Instant createdAt,
         Instant updatedAt,
-        Long version
+        Long version,
+        BanSaoResponse banSao,
+        DeckPublishStatusResponse yeuCauCongKhai
 ) {
 }

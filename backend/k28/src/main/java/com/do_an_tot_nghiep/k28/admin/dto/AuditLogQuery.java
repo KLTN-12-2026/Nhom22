@@ -12,6 +12,9 @@ public record AuditLogQuery(
 
         LoaiDoiTuong loai,
 
+        @Min(value = 1, message = "doiTuongId phải lớn hơn 0")
+        Long doiTuongId,
+
         @Size(max = 150, message = "Từ khóa tối đa 150 ký tự")
         String q,
 

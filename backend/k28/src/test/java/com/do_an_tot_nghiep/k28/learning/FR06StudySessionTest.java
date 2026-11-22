@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.learning;
 
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -77,6 +78,8 @@ class FR06StudySessionTest extends AbstractIntegrationTest {
     CardService cardService;
     @Autowired
     LichSuOnRepository history;
+    @Autowired
+    RealtimeService realtime;
 
     @Test
     void fr06_queueOrderIsStepsThenReviewsThenNewWithinQuota() throws Exception {
@@ -298,7 +301,7 @@ class FR06StudySessionTest extends AbstractIntegrationTest {
             String instant, Learner learner, String deckId, ChieuHoc direction, int minutes) {
         Clock fixed = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
         return new StudySessionService(fixed, accountService, settingsService, progress, usage,
-                sessions, queue, cardService, history, jsonMapper)
+                sessions, queue, cardService, history, jsonMapper, realtime)
                 .create(learner.id(), new CreateSessionRequest(deckId, direction, minutes, null));
     }
 

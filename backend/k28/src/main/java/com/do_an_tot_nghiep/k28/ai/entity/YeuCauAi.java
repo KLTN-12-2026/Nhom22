@@ -158,6 +158,6 @@ public class YeuCauAi extends BaseEntity {
     }
 
     public boolean isMoPhong() {
-        return !"openai".equals(nhaCungCap);
+        return !"openai".equals(nhaCungCap) && !"google".equals(nhaCungCap);
     }
 }

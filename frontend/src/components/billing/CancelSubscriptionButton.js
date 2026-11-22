@@ -22,6 +22,7 @@ export function CancelSubscriptionButton({ subscription }) {
       // Refetch current subscription: a retry may refer to an older, already cancelled registration.
       void queryClient.invalidateQueries({ queryKey: ['billing'] });
       void queryClient.invalidateQueries({ queryKey: ['service-quota'] });
+      void queryClient.invalidateQueries({ queryKey: ['me-plan'] });
     },
   });
   const busy = cancel.isPending || reloading;

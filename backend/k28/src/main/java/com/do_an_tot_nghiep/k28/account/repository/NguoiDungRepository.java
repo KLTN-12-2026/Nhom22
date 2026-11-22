@@ -22,6 +22,8 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByIdAndVaiTro_Ma(Long id, String ma);
+
     @Modifying(flushAutomatically = true)
     @Query("update NguoiDung u set u.dangNhapCuoiAt = :at where u.id = :id")
     int recordLogin(@Param("id") Long id, @Param("at") Instant at);
@@ -70,6 +72,10 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
             @Param("vaiTro") String vaiTro,
             @Param("trangThai") TrangThaiNguoiDung trangThai
     );
+
+    @Query("select u.id from NguoiDung u where u.id in :ids and u.trangThai = :trangThai")
+    List<Long> findIdsByTrangThai(@Param("ids") Collection<Long> ids,
+                                  @Param("trangThai") TrangThaiNguoiDung trangThai);
 
     interface PublicDisplayName {
         Long getId();

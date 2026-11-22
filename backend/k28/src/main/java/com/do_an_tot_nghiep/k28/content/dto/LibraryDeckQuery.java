@@ -28,8 +28,18 @@ public record LibraryDeckQuery(
         NguonBo nguon,
 
         @Pattern(
-                regexp = "updated|name|size",
-                message = "Sắp xếp phải là updated, name hoặc size"
+                regexp = "[1-9][0-9]{0,18}",
+                message = "ID tác giả không hợp lệ"
+        )
+        @DecimalMax(
+                value = "9223372036854775807",
+                message = "ID tác giả không hợp lệ"
+        )
+        String chuSoHuuId,
+
+        @Pattern(
+                regexp = "updated|name|size|trending|favorites|newest",
+                message = "Sắp xếp phải là updated, name, size, trending, favorites hoặc newest"
         )
         String sort,
 
@@ -43,6 +53,7 @@ public record LibraryDeckQuery(
         public LibraryDeckQuery {
                 q = nullableText(q);
                 chuDeId = nullableText(chuDeId);
+                chuSoHuuId = nullableText(chuSoHuuId);
                 sort = nullableText(sort);
                 sort = sort == null ? "updated" : sort;
                 page = page == null ? 0 : page;
@@ -51,6 +62,10 @@ public record LibraryDeckQuery(
 
         public Long topicId() {
                 return chuDeId == null ? null : Long.valueOf(chuDeId);
+        }
+
+        public Long ownerId() {
+                return chuSoHuuId == null ? null : Long.valueOf(chuSoHuuId);
         }
 
         @AssertTrue(message = "Vị trí phân trang vượt giới hạn hỗ trợ")

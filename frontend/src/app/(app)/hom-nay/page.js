@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon, ErrorState } from '@/components/ui';
+import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/DashboardHighlights';
+import { LeaderboardMini } from '@/components/engagement/LeaderboardMini';
 import styles from './page.module.css';
 
 const MINUTE_OPTIONS = [5, 10, 20];
@@ -129,15 +131,62 @@ function ResumeBlock({ session, onFinish, finishing, finishError }) {
   );
 }
 
+const dayLabel = (i, ngay) => (i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : fmtDay(ngay));
+
+function RescueSplit({ rescue, active, setActive, refreshing }) {
+  const total = rescue.soTheCanOn || 0;
+  const shown = rescue.keHoach.reduce((a, d) => a + d.soThe, 0);
+  const rest = Math.max(0, total - shown);
+  const restDays = Math.max(0, rescue.soNgay - rescue.keHoach.length);
+  return (
+    <div className={styles.split} aria-busy={refreshing}>
+      <p className={styles.equation} aria-label={`${total} thẻ cần ôn, mỗi ngày khoảng ${rescue.luotMoiNgay} thẻ trong ${rescue.phutMoiNgay} phút, chia thành ${rescue.soNgay} ngày`}>
+        <span className={styles.term}><b>{total}</b><small>thẻ cần ôn</small></span>
+        <span className={styles.op} aria-hidden="true">÷</span>
+        <span className={styles.term}><b>{rescue.luotMoiNgay}</b><small>thẻ mỗi ngày · {rescue.phutMoiNgay} phút</small></span>
+        <span className={styles.op} aria-hidden="true">=</span>
+        <span className={`${styles.term} ${styles.result}`}><b>{rescue.soNgay}</b><small>ngày là xong</small></span>
+      </p>
+      <div className={styles.bar} role="list" aria-label="Chia thẻ theo ngày">
+        {rescue.keHoach.map((d, i) => (
+          <button
+            key={d.ngay}
+            type="button"
+            role="listitem"
+            className={styles.seg}
+            data-day={i % 2}
+            data-active={active === i ? '' : undefined}
+            style={{ flexGrow: d.soThe }}
+            onMouseEnter={() => setActive(i)}
+            onMouseLeave={() => setActive(null)}
+            onFocus={() => setActive(i)}
+            onBlur={() => setActive(null)}
+            aria-label={`${dayLabel(i, d.ngay)}: ${d.soThe} thẻ, khoảng ${d.phut} phút`}
+          >
+            <span className={styles.segDay}>{dayLabel(i, d.ngay)}</span>
+            <span className={styles.segN}>{d.soThe} thẻ</span>
+          </button>
+        ))}
+        {rest > 0 && (
+          <span role="listitem" className={`${styles.seg} ${styles.segRest}`} style={{ flexGrow: rest }}>
+            <span className={styles.segDay}>{restDays} ngày sau</span>
+            <span className={styles.segN}>{rest} thẻ</span>
+          </span>
+        )}
+      </div>
+      <p className="small muted">Mỗi ngày ôn một đoạn. Đổi số phút bên dưới để xem kế hoạch dài hay ngắn lại; {rescue.soQuaHan} thẻ đang quá hạn được ôn trước.</p>
+    </div>
+  );
+}
+
 function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pauseNew, setPauseNew, onStart, starting, startError, refreshing }) {
   const [dir, setDir] = useState('EN_VI');
+  const [active, setActive] = useState(null);
   const current = rescueMinutes ?? rescue.phutMoiNgay;
   return (
     <section className={styles.rescue} aria-labelledby="rescue-title">
       <h2 id="rescue-title" style={{ fontSize: 'var(--fs-h3)' }}>Kế hoạch học lại sau thời gian nghỉ</h2>
-      <p className={styles.rescueLead}>
-        Có <strong>{rescue.soTheCanOn}</strong> thẻ cần ôn ({rescue.soQuaHan} quá hạn); hôm nay bạn có <strong>{rescue.phutMoiNgay}</strong> phút. Chia thành {rescue.soNgay} ngày là vừa sức.
-      </p>
+      <RescueSplit rescue={rescue} active={active} setActive={setActive} refreshing={refreshing} />
       <form className="stack" onSubmit={(e) => e.preventDefault()}>
         <fieldset className="fieldset">
           <legend>Mỗi ngày bạn dành được bao nhiêu phút?</legend>
@@ -178,10 +227,10 @@ function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pau
       <div aria-live="polite" aria-busy={refreshing}>
         <ol className={`answer-list ${styles.planList}`} role="list">
           {rescue.keHoach.map((d, i) => (
-            <li key={d.ngay} className="answer-row">
+            <li key={d.ngay} className="answer-row" data-active={active === i ? '' : undefined} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(null)}>
               <span className="answer-no">{i + 1}</span>
               <div className="answer-main">
-                <span className="answer-title">{i === 0 ? 'Hôm nay' : i === 1 ? 'Ngày mai' : fmtDay(d.ngay)}</span>
+                <span className="answer-title">{dayLabel(i, d.ngay)}</span>
                 <span className="answer-meta"><span>{d.ngay.split('-').reverse().join('/')}</span></span>
               </div>
               <span className={styles.when}>{d.soThe} thẻ, khoảng {d.phut} phút</span>
@@ -200,6 +249,30 @@ function RescueBlock({ rescue, giayMoiLuot, rescueMinutes, setRescueMinutes, pau
         </Button>
         <Link className="btn btn-quiet" href="/luyen-tap">Tự chọn bộ và dạng bài</Link>
       </div>
+    </section>
+  );
+}
+
+function ChallengePanel() {
+  const { data } = useQuery({ queryKey: ['challenges'], queryFn: () => apiFetch('/api/v1/challenges'), retry: false, staleTime: 60000 });
+  if (!Array.isArray(data) || !data.length) return null;
+  const open = data.filter((c) => !c.hoanThanhAt);
+  const pick = (open.length ? open : data).reduce((a, c) => (c.giaTri / (c.mucTieu || 1) > a.giaTri / (a.mucTieu || 1) ? c : a));
+  const done = !!pick.hoanThanhAt;
+  const left = Math.max(0, pick.mucTieu - pick.giaTri);
+  return (
+    <section className="panel" aria-labelledby="challenge-title">
+      <h2 className="panel-title" id="challenge-title">Thử thách tuần</h2>
+      <p className={styles.goalLine}>
+        <span>{pick.ten}</span>
+        <span className="num">{Math.min(pick.giaTri, pick.mucTieu)}/{pick.mucTieu}</span>
+      </p>
+      <div className="meter is-progress" role="img" aria-label={`${pick.ten}: ${pick.giaTri} trên ${pick.mucTieu}`} style={{ '--v': Math.min(1, pick.giaTri / (pick.mucTieu || 1)) }}><span></span></div>
+      <p className="small muted" style={{ marginTop: 'var(--sp-2)' }}>
+        {done ? 'Đã hoàn thành tuần này.' : `Còn ${left} nữa, hạn ${fmtDay(pick.tuanKetThuc)}.`}
+        {open.length > 1 && ` Còn ${open.length - 1} thử thách khác.`}
+      </p>
+      <Link className="btn btn-quiet" href="/thanh-tich" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem thành tích</Link>
     </section>
   );
 }
@@ -282,11 +355,13 @@ export default function TodayPage() {
       )}
 
       {!isLoading && plan?.tongSoThe === 0 && (
+        <>
         <section className="sheet" data-when="empty" aria-labelledby="empty-title">
           <div className="form-head">
             <div className="form-code"><span>Hôm nay</span><span>{todayStr}</span></div>
             <h1 id="empty-title">Hôm nay học gì?</h1>
           </div>
+          <AnnouncementBanner />
           <div className="empty">
             <div className="empty-sheet" aria-hidden="true">
               <span data-n="1"><i></i><i></i><i></i><i></i></span>
@@ -301,6 +376,8 @@ export default function TodayPage() {
             </div>
           </div>
         </section>
+        <CommunitySection />
+        </>
       )}
 
       {!isLoading && plan?.tongSoThe > 0 && (
@@ -317,6 +394,8 @@ export default function TodayPage() {
                     : `Có ${(plan.soQuaHan || 0) + (plan.soDenHan || 0)} thẻ cần ôn và ${plan.soMoiConLai || 0} từ mới, cần khoảng ${plan.uocTinhPhut || 0} phút (ước tính).`}
               </p>
             </div>
+
+            <AnnouncementBanner />
 
             <ResumeBlock
               session={plan.phienDangDo}
@@ -432,20 +511,19 @@ export default function TodayPage() {
           </section>
 
           <aside className="side-col" data-when="ready">
-            <section className="panel" aria-labelledby="streak-title">
-              <h2 className="panel-title" id="streak-title">Chuỗi ngày học</h2>
+            <LeaderboardMini />
+
+            <section className="panel" aria-labelledby="goal-title">
+              <h2 className="panel-title" id="goal-title">Chuỗi ngày và mục tiêu</h2>
               <p className={styles.streak}>
                 <span className="tally-n">{plan.chuoiNgay || 0}</span>
                 <span>ngày liên tiếp</span>
               </p>
-              <p className="small muted">
-                {plan.homNayDaTinhChuoi ? 'Hôm nay đã được tính. ' : 'Hôm nay chưa được tính. '}
-                Một ngày được tính khi bạn có ít nhất {plan.luotToiThieuChuoi || 5} lượt ôn trong ngày, không cần kết thúc phiên.
+              <p className="small muted" style={{ marginBottom: 'var(--sp-4)' }}>
+                {plan.homNayDaTinhChuoi
+                  ? 'Hôm nay đã được tính vào chuỗi.'
+                  : `Hôm nay chưa được tính: cần ít nhất ${plan.luotToiThieuChuoi || 5} lượt ôn, không cần kết thúc phiên.`}
               </p>
-            </section>
-
-            <section className="panel" aria-labelledby="goal-title">
-              <h2 className="panel-title" id="goal-title">Mục tiêu mỗi ngày</h2>
               <p className={styles.goalLine}>
                 <span>Đã học {plan.daHocHomNay?.soLuot || 0} lượt hôm nay</span>
                 <span className="num">{plan.daHocHomNay?.soPhut || 0}/{plan.phutMoiNgay || 10} phút</span>
@@ -468,11 +546,13 @@ export default function TodayPage() {
               </Link>
             </section>
 
+            <ChallengePanel />
+
             {plan.boThe && plan.boThe.length > 0 && (
               <section className="panel" aria-labelledby="decks-title">
                 <h2 className="panel-title" id="decks-title">Theo bộ thẻ</h2>
                 <ul className={styles.deckMini} role="list">
-                  {plan.boThe.map((b) => (
+                  {plan.boThe.slice(0, 3).map((b) => (
                     <li key={b.boTheId}>
                       <span className={styles.name}>{b.ten}</span>
                       <span className={styles.meta}>
@@ -480,20 +560,21 @@ export default function TodayPage() {
                         <span>{b.soMoi} từ chưa học</span>
                       </span>
                       <span className="row" style={{ gap: 'var(--sp-2)' }}>
-                        <Link className="btn btn-secondary btn-sm" href={`/luyen-tap?loaiBai=FLASHCARD&boTheId=${b.boTheId}`}>Học bộ này</Link>
+                        <Link className="btn btn-secondary btn-sm" href={`/hoc?boTheId=${encodeURIComponent(b.boTheId)}`}>Học bộ này</Link>
                         <Link className="btn btn-quiet btn-sm" href={`/bo-the/${b.boTheId}/tien-do`}>Tiến độ</Link>
                       </span>
                     </li>
                   ))}
                 </ul>
+                {plan.boThe.length > 3 && (
+                  <Link className="btn btn-quiet" href="/bo-the" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem tất cả {plan.boThe.length} bộ</Link>
+                )}
               </section>
             )}
 
-            <nav className={`panel ${styles.links}`} aria-label="Liên kết nhanh">
-              <Link className="btn btn-quiet" href="/thong-ke">Xem thống kê học tập</Link>
-              <Link className="btn btn-quiet" href="/bo-the">Bộ của tôi</Link>
-            </nav>
           </aside>
+
+          <CommunitySection />
         </>
       )}
     </div>

@@ -6,3 +6,6 @@
 .recent li { display: grid; gap: 2px; padding: var(--sp-3) 0; border-bottom: var(--rule) dashed var(--primary-line); }
 .recent li:first-child { padding-top: 0; }
 .recent .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-small); color: var(--ink-2); }
+.typeCard :global(.choice-body) { display: grid; gap: 4px; min-width: 0; }
+.typeCard :global(.choice-body) > div { margin-top: 6px; width: 100%; }
+.typeGrid + section { margin-top: var(--sp-4); }

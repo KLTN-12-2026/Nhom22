@@ -36,6 +36,33 @@ public interface StatisticsRepository extends Repository<LichSuOn, Long> {
     );
 
     @Query("""
+            select l.createdAt
+            from LichSuOn l
+            where l.nguoiDungId = :userId
+              and l.createdAt >= :batDau
+              and l.createdAt < :ketThuc
+            """)
+    List<Instant> reviewTimes(
+            @Param("userId") Long userId,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc
+    );
+
+    @Query("""
+            select y.xuLyAt
+            from YeuCauCongKhai y
+            where y.nguoiGuiId = :userId
+              and y.trangThai = com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiYeuCauCongKhai.DA_DUYET
+              and y.xuLyAt >= :batDau
+              and y.xuLyAt < :ketThuc
+            """)
+    List<Instant> approvedPublishTimes(
+            @Param("userId") Long userId,
+            @Param("batDau") Instant batDau,
+            @Param("ketThuc") Instant ketThuc
+    );
+
+    @Query("""
             select new com.do_an_tot_nghiep.k28.stats.repository.AttemptStatRow(a.nopAt, a.soCauDung, a.tongSoCau)
             from LanLamBai a
             join BaiLuyen b on b.id = a.baiId

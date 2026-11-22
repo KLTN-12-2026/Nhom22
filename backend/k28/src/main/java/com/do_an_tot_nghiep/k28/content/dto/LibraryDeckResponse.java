@@ -20,6 +20,7 @@ public record LibraryDeckResponse(
         String tenTacGia,
         long soThe,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        BanSaoResponse banSao
 ) {
 }

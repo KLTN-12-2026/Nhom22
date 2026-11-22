@@ -1,0 +1,55 @@
+.card {
+  --cell: 12px;
+  --gap: 3px;
+  --empty: color-mix(in srgb, var(--ink) 6%, var(--sheet));
+  padding: var(--sp-4);
+  border: var(--rule) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--sheet);
+}
+.head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.title { margin: 0; font-size: 1.05rem; font-weight: 600; }
+.title b { color: color-mix(in srgb, var(--hue) 80%, var(--ink)); font-variant-numeric: tabular-nums; }
+.meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: var(--sp-1) 0 0; font-size: var(--fs-caption); color: var(--ink-3); }
+.meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.metrics { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.metric { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: var(--rule) solid var(--line); border-radius: 99px; background: var(--sheet); color: var(--ink-2); font: inherit; font-size: var(--fs-caption); font-weight: 500; cursor: pointer; transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1); }
+.metric:hover { border-color: var(--hue); color: var(--ink); }
+.metric[aria-checked="true"] { border-color: var(--hue); background: color-mix(in srgb, var(--hue) 14%, var(--sheet)); color: color-mix(in srgb, var(--hue) 75%, var(--ink)); font-weight: 600; }
+.metric:focus-visible { outline: none; box-shadow: var(--focus); }
+.dot { width: 8px; height: 8px; border-radius: 99px; background: var(--hue); }
+
+.wrap { position: relative; }
+.scroll { overflow-x: auto; padding-bottom: var(--sp-1); scrollbar-width: thin; }
+.grid { display: grid; grid-template-columns: 22px repeat(var(--weeks), minmax(9px, 1fr)); grid-template-rows: 16px; gap: var(--gap); min-width: calc(22px + var(--weeks) * (10px + var(--gap))); max-width: calc(22px + var(--weeks) * (16px + var(--gap))); }
+.month { grid-row: 1; font-size: 11px; line-height: 16px; color: var(--ink-3); white-space: nowrap; }
+.row { grid-column: 1; position: sticky; left: 0; z-index: 1; align-self: stretch; display: flex; align-items: center; background: var(--sheet); font-size: 10px; line-height: 1; color: var(--ink-3); }
+.grid .cell { width: auto; height: auto; aspect-ratio: 1; }
+
+.cell { display: inline-block; width: var(--cell); height: var(--cell); border-radius: 2px; background: var(--empty); outline: 1px solid color-mix(in srgb, var(--ink) 5%, transparent); outline-offset: -1px; transition: transform var(--dur-1); }
+.cell[data-level="1"] { background: color-mix(in srgb, var(--hue) 30%, var(--sheet)); }
+.cell[data-level="2"] { background: color-mix(in srgb, var(--hue) 55%, var(--sheet)); }
+.cell[data-level="3"] { background: color-mix(in srgb, var(--hue) 78%, var(--sheet)); }
+.cell[data-level="4"] { background: var(--hue); }
+.grid .cell:hover { transform: scale(1.25); outline-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+.cell[data-today] { outline: 1.5px solid color-mix(in srgb, var(--hue) 70%, var(--ink)); }
+
+.tip { position: absolute; z-index: 5; transform: translate(-50%, calc(-100% - 8px)); display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: var(--sheet); font-size: 12px; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow-pop); }
+.tip span { opacity: .8; }
+
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-3); font-size: 11.5px; color: var(--ink-3); }
+.legend { display: inline-flex; align-items: center; gap: var(--gap); }
+.legend .cell { width: 11px; height: 11px; }
+.legend .cell:first-child { margin-left: 4px; }
+.legend .cell:last-child { margin-right: 4px; }
+
+.skeleton { height: 128px; border-radius: 8px; }
+.state { margin: 0; color: var(--ink-3); }
+
+@media (max-width: 599px) {
+  .card { --cell: 11px; padding: var(--sp-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell, .metric { transition: none; }
+  .grid .cell:hover { transform: none; }
+}

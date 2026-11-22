@@ -1,9 +1,11 @@
 package com.do_an_tot_nghiep.k28.admin.controller;
 
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
+import com.do_an_tot_nghiep.k28.admin.dto.AdminUserDetailResponse;
 import com.do_an_tot_nghiep.k28.admin.dto.AdminUserResponse;
 import com.do_an_tot_nghiep.k28.admin.dto.UserRolesRequest;
 import com.do_an_tot_nghiep.k28.admin.dto.UserStatusRequest;
+import com.do_an_tot_nghiep.k28.admin.service.AdminUserDetailService;
 import com.do_an_tot_nghiep.k28.admin.service.AdminUserService;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.security.SessionAuthenticator;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminUserController {
 
     private final AdminUserService service;
+    private final AdminUserDetailService detailService;
     private final CurrentUser currentUser;
     private final SessionAuthenticator sessionAuthenticator;
 
@@ -43,6 +46,11 @@ public class AdminUserController {
     ) {
         return service.list(q == null || q.isBlank() ? null : q.strip(), trangThai,
                 vaiTro == null || vaiTro.isBlank() ? null : vaiTro.strip(), page, size);
+    }
+
+    @GetMapping("/{id}")
+    public AdminUserDetailResponse detail(@PathVariable Long id) {
+        return detailService.detail(id);
     }
 
     @PatchMapping("/{id}/status")

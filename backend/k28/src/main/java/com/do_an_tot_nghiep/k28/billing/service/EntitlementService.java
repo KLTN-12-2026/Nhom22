@@ -1,5 +1,9 @@
 package com.do_an_tot_nghiep.k28.billing.service;
 
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
+import com.do_an_tot_nghiep.k28.account.entity.VaiTro;
+import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.billing.config.BillingProperties;
 import com.do_an_tot_nghiep.k28.billing.entity.DangKyGoi;
 import com.do_an_tot_nghiep.k28.billing.entity.GoiDichVu;
@@ -30,12 +34,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class EntitlementService {
 
     static final String GOI_MAC_DINH_KHI_TAT = "PRO";
+    static final String GOI_QUAN_TRI = "PREMIUM";
     private static final Locale VI = Locale.forLanguageTag("vi-VN");
 
     private final DangKyGoiRepository dangKyGoi;
     private final GoiDichVuRepository goiDichVu;
     private final BillingProperties props;
     private final Clock clock;
+    private final NguoiDungRepository nguoiDung;
+    private final RealtimeService realtime;
 
     @Transactional(readOnly = true)
     public Optional<DangKyGoi> current(Long nguoiDungId) {
@@ -45,12 +52,22 @@ public class EntitlementService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<GoiDichVu> plan(Long nguoiDungId) {
-        Optional<String> goiMa = current(nguoiDungId).map(DangKyGoi::getGoiMa);
-        if (goiMa.isEmpty() && !props.enforce()) {
-            goiMa = Optional.of(GOI_MAC_DINH_KHI_TAT);
+    public boolean admin(Long nguoiDungId) {
+        return nguoiDungId != null && nguoiDung.existsByIdAndVaiTro_Ma(nguoiDungId, VaiTro.ADMIN);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<String> planCode(Long nguoiDungId) {
+        if (admin(nguoiDungId)) {
+            return Optional.of(GOI_QUAN_TRI);
         }
-        return goiMa.flatMap(goiDichVu::findByMa);
+        Optional<String> goiMa = current(nguoiDungId).map(DangKyGoi::getGoiMa);
+        return goiMa.isEmpty() && !props.enforce() ? Optional.of(GOI_MAC_DINH_KHI_TAT) : goiMa;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<GoiDichVu> plan(Long nguoiDungId) {
+        return planCode(nguoiDungId).flatMap(goiDichVu::findByMa);
     }
 
     @Transactional(readOnly = true)
@@ -105,6 +122,7 @@ public class EntitlementService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public DangKyGoi activate(Long nguoiDungId, String goiMa, ChuKy chuKy, Instant now) {
+        realtime.toUser(nguoiDungId, LoaiSuKien.GOI_THAY_DOI, null);
         Optional<DangKyGoi> hienTai = dangKyGoi.findForUpdateByNguoiDungIdAndTrangThai(nguoiDungId, TrangThaiDangKy.HIEU_LUC);
         if (hienTai.isPresent()) {
             DangKyGoi dangKy = hienTai.get();

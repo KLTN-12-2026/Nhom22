@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.learning.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.learning.dto.ChuoiNgayResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.CreateSessionRequest;
 import com.do_an_tot_nghiep.k28.learning.dto.HistoryQuery;
 import com.do_an_tot_nghiep.k28.learning.dto.LichSuOnResponse;
@@ -14,6 +15,7 @@ import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
 import com.do_an_tot_nghiep.k28.learning.service.HistoryService;
 import com.do_an_tot_nghiep.k28.learning.service.LearningPlanService;
 import com.do_an_tot_nghiep.k28.learning.service.ReviewService;
+import com.do_an_tot_nghiep.k28.learning.service.StreakService;
 import com.do_an_tot_nghiep.k28.learning.service.StudySessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +35,21 @@ public class LearningController {
     private final StudySessionService sessionService;
     private final ReviewService reviewService;
     private final HistoryService historyService;
+    private final StreakService streakService;
 
     @GetMapping("/today")
     public TodayPlanResponse today(@Valid @ModelAttribute TodayQuery query) {
         return planService.today(currentUser.id(), query);
+    }
+
+    @GetMapping("/streak")
+    public ChuoiNgayResponse streak() {
+        return streakService.status(currentUser.id());
+    }
+
+    @PostMapping("/streak/restore")
+    public ChuoiNgayResponse restoreStreak() {
+        return streakService.restore(currentUser.id());
     }
 
     @PostMapping("/sessions")

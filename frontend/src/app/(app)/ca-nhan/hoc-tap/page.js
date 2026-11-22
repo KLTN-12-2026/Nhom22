@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import styles from './page.module.css';
 import { SpeechSettings } from '@/components/content/SpeechSettings';
+import { MascotSettings } from '@/components/mascot/MascotSettings';
 import { ErrorState, Icon } from '@/components/ui';
 
 export default function LearningSettingsPage() {
@@ -232,6 +233,7 @@ export default function LearningSettingsPage() {
         </div>
       </form>
       <SpeechSettings />
+      <MascotSettings />
     </>
   );
 }

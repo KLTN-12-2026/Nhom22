@@ -1,0 +1,22 @@
+.box { position: relative; }
+.icon { position: absolute; left: 14px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); color: var(--ink-3); pointer-events: none; }
+.input { width: 100%; min-height: 56px; padding-left: 44px; padding-right: 44px; font-family: var(--font-word); font-size: 1.375rem; font-weight: 700; }
+.input::placeholder { font-family: var(--font-body, inherit); font-size: 1rem; font-weight: 400; }
+.spinner { position: absolute; right: 16px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border: 2px solid var(--primary-line); border-top-color: var(--primary); border-radius: 50%; animation: spin 700ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pop { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; border: var(--rule) solid var(--primary-line); background: var(--sheet); box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18); }
+.list { margin: 0; padding: 4px 0; list-style: none; max-height: min(340px, 50vh); overflow-y: auto; }
+.groupLabel { margin: 0; padding: 8px 14px 4px; font-family: var(--font-form); font-size: var(--fs-caption); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+.groupList { margin: 0; padding: 0; list-style: none; }
+.option { display: grid; gap: 1px; padding: 7px 14px; cursor: pointer; border-left: 3px solid transparent; }
+.active { background: var(--primary-tint); border-left-color: var(--primary); }
+.line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--sp-2); }
+.word { font-family: var(--font-word); font-weight: 700; color: var(--ink); }
+.sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--fs-small); color: var(--ink-2); }
+.none { margin: 0; padding: 12px 14px; font-size: var(--fs-small); color: var(--ink-2); }
+.keys { margin: 0; padding: 6px 14px; border-top: var(--rule) solid var(--line); font-size: var(--fs-caption); color: var(--ink-3); }
+.keys kbd { display: inline-block; min-width: 1.4em; padding: 0 4px; margin-right: 2px; border: var(--rule) solid var(--line); border-radius: 4px; font-family: inherit; text-align: center; background: var(--field); }
+
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+@media (max-width: 520px) { .keys { display: none; } }

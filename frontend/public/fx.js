@@ -81,6 +81,13 @@
     tone(freq * 2.01, at, dur * 0.6, { gain: gain * 0.25 });
   };
 
+  const clink = (freq, at, gain = 0.12) => {
+    noise(at, 0.03, { freq: 7000, q: 0.7, gain: gain * 1.4, attack: 0.001 });
+    [[1, 1, 0.9], [2.756, 0.55, 0.55], [5.404, 0.3, 0.32], [8.933, 0.16, 0.2]].forEach(([ratio, level, dur]) => {
+      tone(freq * ratio, at, dur, { gain: gain * level, attack: 0.001 });
+    });
+  };
+
   const SOUNDS = {
     tap() { tone(1200, 0, 0.05, { type: 'triangle', gain: 0.06 }); },
     select() { tone(660, 0, 0.07, { type: 'triangle', gain: 0.09 }); tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.06 }); },
@@ -110,6 +117,12 @@
       for (let i = 0; i < 8; i++) bell(2000 + Math.random() * 2000, 0.45 + i * 0.05, 0.035, 0.3);
     },
     streak() { [659.25, 880, 1318.5].forEach((f, i) => bell(f, i * 0.07, 0.12, 0.5)); },
+    metal() { clink(1480, 0, 0.12); clink(2210, 0.055, 0.06); },
+    metalGold() { clink(1046.5, 0, 0.13); clink(1568, 0.05, 0.08); clink(2637, 0.11, 0.04); },
+    metalFlip() {
+      noise(0, 0.2, { freq: 3200, to: 900, q: 0.8, gain: 0.18 });
+      clink(1760, 0.14, 0.09);
+    },
   };
 
   function play(name) {

@@ -34,6 +34,32 @@ function formatDay(dateStr, includeYear = false) {
   }
 }
 
+function Meter({ value, label: aria }) {
+  const v = Math.min(Math.max(Number(value) || 0, 0), 100);
+  return (
+    <div className="meter is-progress" role="img" aria-label={aria}>
+      <span style={{ '--v': v / 100 }}></span>
+    </div>
+  );
+}
+
+function Tally({ title, note, value, unit, meter }) {
+  const hasMeter = meter !== undefined && meter !== null;
+  return (
+    <div className={hasMeter ? styles.tallyMeter : undefined}>
+      <dt>{title}<small>{note}</small></dt>
+      <dd><span className="tally-n">{value}</span>{unit}</dd>
+      {hasMeter && <Meter value={meter} label={`${title} ${Math.round(meter)}%`} />}
+    </div>
+  );
+}
+
+const goalShare = overview => {
+  const days = overview?.theoNgay?.length || 0;
+  const target = (overview?.phutMoiNgay || 0) * days;
+  return target > 0 ? Math.min(100, Math.round((overview?.tongPhut || 0) * 100 / target)) : null;
+};
+
 function StatsContent() {
   const [today] = useState(todayLocal);
   const [tz] = useState(browserZone);
@@ -83,6 +109,7 @@ function StatsContent() {
   };
 
   const hasActivity = overview?.theoNgay?.some(d => d.soLuotOn || d.soCauLuyen || d.soPhut);
+  const dayCount = overview?.theoNgay?.length || 0;
 
   const getLowestSkill = () => {
     if (!skills) return null;
@@ -109,7 +136,8 @@ function StatsContent() {
           </div>
           <div className={styles.chartPlot} role="img">
             {overview.theoNgay.map((d, i) => {
-              const h = (d.soPhut / maxGrid);
+              const active = d.soLuotOn || d.soCauLuyen || d.thoiGian > 0;
+              const h = Math.max(d.soPhut / maxGrid, active ? 0.02 : 0);
               const isGoal = d.thoiGian > 0 && d.thoiGian >= (overview.phutMoiNgay || 0) * 60000;
               return (
                 <div key={i} className={styles.chartBar} data-goal={isGoal ? "" : undefined} title={`${formatDay(d.ngay, true)}: ${d.soPhut} phút`}>
@@ -253,14 +281,14 @@ function StatsContent() {
           </div>
           <div data-when="ready">
             <h2 className={styles.secTitle} style={{ marginTop: 0 }} id="range-title">Tổng quan {formatDay(overview?.tuNgay)} đến {formatDay(overview?.denNgay)}</h2>
-            <dl className="tally cols-2" id="tally">
-              <div><dt>Từ đã học</dt><dd>{overview?.soTuDaHoc || 0}</dd></div>
-              <div><dt>Lượt ôn</dt><dd>{overview?.soLuotOn || 0}</dd></div>
-              <div><dt>Tỷ lệ nhớ</dt><dd>{percent(overview?.tyLeNho)}</dd></div>
-              <div><dt>Bài luyện</dt><dd>{overview?.baiLuyen?.soCauDung || 0}/{overview?.baiLuyen?.tongSoCau || 0} câu ({percent(overview?.baiLuyen?.tyLeDung)} đúng)</dd></div>
-              <div><dt>Thời gian học</dt><dd>{overview?.tongPhut || 0} phút</dd></div>
-              <div><dt>Ngày đạt mục tiêu</dt><dd>{overview?.soNgayDatMucTieu || 0}/{overview?.soNgayCoHoc || 0} ngày</dd></div>
-              <div><dt>Chuỗi ngày</dt><dd>{overview?.chuoiNgay || 0} ngày</dd></div>
+            <dl className={`tally cols-2 ${styles.tally}`} id="tally">
+              <Tally title="Từ đã học" note="thẻ có lượt ôn" value={overview?.soTuDaHoc || 0} unit="từ" />
+              <Tally title="Lượt ôn" note="mỗi chiều tính riêng" value={overview?.soLuotOn || 0} unit="lượt" />
+              <Tally title="Tỷ lệ nhớ" note="Khó, Nhớ, Dễ trên tổng lượt" value={percent(overview?.tyLeNho)} meter={overview?.tyLeNho} />
+              <Tally title="Bài luyện" note={`${overview?.baiLuyen?.soBai || 0} bài, ${overview?.baiLuyen?.soCauDung || 0}/${overview?.baiLuyen?.tongSoCau || 0} câu đúng`} value={percent(overview?.baiLuyen?.tyLeDung)} unit="đúng" meter={overview?.baiLuyen?.tyLeDung} />
+              <Tally title="Thời gian học" note={`mục tiêu ${overview?.phutMoiNgay || 0} phút mỗi ngày`} value={overview?.tongPhut || 0} unit="phút" meter={goalShare(overview)} />
+              <Tally title="Ngày đạt mục tiêu" note={`có học ${overview?.soNgayCoHoc || 0}/${dayCount} ngày`} value={overview?.soNgayDatMucTieu || 0} unit={`/${dayCount} ngày`} meter={dayCount ? Math.round((overview?.soNgayDatMucTieu || 0) * 100 / dayCount) : null} />
+              <Tally title="Chuỗi ngày hiện tại" note="tính đến hôm nay" value={overview?.chuoiNgay || 0} unit="ngày" />
             </dl>
 
             <div className={styles.secHead}>
@@ -311,7 +339,7 @@ function StatsContent() {
                         {s.duDuLieu ? (
                           <>
                             <div className={styles.skillPct}>{s.mucLamChu}%</div>
-                            <div className="meter" aria-hidden="true"><i style={{ width: `${s.mucLamChu}%` }}></i></div>
+                            <Meter value={s.mucLamChu} label={`Mức làm chủ ${s.mucLamChu}%`} />
                           </>
                         ) : (
                           <>

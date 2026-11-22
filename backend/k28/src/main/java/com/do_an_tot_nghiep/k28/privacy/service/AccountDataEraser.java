@@ -77,6 +77,9 @@ public class AccountDataEraser {
         run(u, "DELETE FROM danh_tinh_oauth WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM ho_so_hoc_tap WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM cai_dat_thong_bao WHERE nguoi_dung_id = :u");
+        run(u, "DELETE FROM cai_dat_rieng_tu WHERE nguoi_dung_id = :u");
+        run(u, "DELETE FROM vinh_danh_tuan WHERE nguoi_dung_id = :u");
+        run(u, "DELETE FROM khoi_phuc_chuoi WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM nguoi_dung_vai_tro WHERE nguoi_dung_id = :u");
 
         update("""
@@ -97,6 +100,7 @@ public class AccountDataEraser {
         update("DELETE FROM the_tep WHERE the_id IN (:ids)", cards);
         ketQua.put("theDaXoa", update("DELETE FROM the_tu_vung WHERE id IN (:ids)", cards));
 
+        update("DELETE FROM yeu_cau_cong_khai WHERE bo_the_id IN (:ids) OR bo_nguon_id IN (:ids)", decks);
         update("UPDATE bo_the SET bo_nguon_id = NULL WHERE bo_nguon_id IN (:ids)", decks);
         update("DELETE FROM yeu_cau_sao_chep_bo WHERE bo_nguon_id IN (:ids) OR bo_ket_qua_id IN (:ids)", decks);
         update("DELETE FROM bo_yeu_thich WHERE bo_the_id IN (:ids)", decks);
