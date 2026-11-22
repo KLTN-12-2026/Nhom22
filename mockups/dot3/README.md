@@ -78,6 +78,24 @@ tạo thêm route FE cho ba khối này. UI53 liên kết về tab nhật ký đ
 
 ## Kiểm tra
 
+### Phiếu hỗ trợ (mockup bổ sung)
+
+Mở `phieu-ho-tro.html?as=an` từ danh mục hoặc mục **Tài khoản → Phiếu hỗ trợ**.
+Route dự kiến của ứng dụng là `/support-tickets`; bản mockup dùng tệp HTML trong đợt 3.
+Tab đồng bộ `?status=open|resolved`, hỗ trợ Back/Forward; tìm tiêu đề/mô tả sau 300 ms,
+không phân biệt hoa thường hoặc dấu tiếng Việt. Lọc loại vấn đề và độ ưu tiên, gỡ từng
+chip hoặc đặt lại tất cả; phân trang 6 phiếu/trang, ngày hiển thị theo giờ Việt Nam.
+Badge đếm các điều kiện đang áp dụng, gồm tìm kiếm, trạng thái, loại và độ ưu tiên.
+
+Hộp thoại tạo phiếu kiểm tra tiêu đề bắt buộc/tối đa 150 ký tự và mô tả bắt buộc;
+không chấp nhận chuỗi chỉ có khoảng trắng. Mặc định Kỹ thuật/Trung bình. Gửi mô phỏng
+trong 650 ms, khóa thao tác khi gửi; thành công đóng hộp thoại, hiện toast, đặt lại bộ lọc
+và đưa phiếu mới lên đầu. Nếu không lưu được, giữ form và cho thử lại.
+Dữ liệu lưu trong `localStorage` với khóa `vocab:support-tickets:v1:<userId>`, tách theo
+tài khoản demo. Không gọi API hoặc tạo yêu cầu hỗ trợ thật, không đổi frontend/backend.
+
+### Các màn đợt 3
+
 Mỗi trang có bộ chọn “Trạng thái mô phỏng”: có dữ liệu, tải, trống, lỗi,
 hết hạn mức AI, AI chưa rõ kết quả. Không khóa học SRS khi AI lỗi/hết hạn mức.
 Kiểm tra sáng/tối, 360–390px và desktop; form/dialog bằng bàn phím, nhãn dài,
