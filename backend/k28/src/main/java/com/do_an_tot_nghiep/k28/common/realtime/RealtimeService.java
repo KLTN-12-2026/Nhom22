@@ -19,6 +19,10 @@ public class RealtimeService {
         events.publishEvent(new SuKienRealtime(null, PhamVi.QUAN_TRI, loai, null));
     }
 
+    public void toOtherAdmins(Long nguoiXuLyId, LoaiSuKien loai, Object id) {
+        events.publishEvent(new SuKienRealtime(nguoiXuLyId, PhamVi.QUAN_TRI, loai, id == null ? null : id.toString()));
+    }
+
     public void toEveryone(LoaiSuKien loai) {
         events.publishEvent(new SuKienRealtime(null, PhamVi.TAT_CA, loai, null));
     }

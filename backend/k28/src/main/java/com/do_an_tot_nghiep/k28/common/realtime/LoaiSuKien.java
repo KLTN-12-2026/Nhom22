@@ -7,5 +7,8 @@ public enum LoaiSuKien {
     GOI_THAY_DOI,
     THANH_TOAN,
     YEU_CAU_AI,
-    HANG_CHO_QUAN_TRI
+    HANG_CHO_QUAN_TRI,
+    MUC_DA_XU_LY,
+    SU_CO_HE_THONG,
+    PHIEN_HOC_MOI
 }

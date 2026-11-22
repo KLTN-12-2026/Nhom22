@@ -3,6 +3,8 @@ package com.do_an_tot_nghiep.k28.common.job;
 import com.do_an_tot_nghiep.k28.common.job.entity.TacVuNen;
 import com.do_an_tot_nghiep.k28.common.job.entity.enums.TrangThaiTacVu;
 import com.do_an_tot_nghiep.k28.common.job.repository.TacVuNenRepository;
+import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
+import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -32,16 +34,22 @@ public class JobWorker {
     private final TransactionTemplate tx;
     private final JobProperties props;
     private final Clock clock;
+    private final RealtimeService realtime;
     private final String workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
 
     @Autowired
     public JobWorker(ObjectProvider<JobHandler> handlers, TacVuNenRepository jobs, TransactionTemplate tx,
-                     JobProperties props, Clock clock) {
-        this(handlers.orderedStream().toList(), jobs, tx, props, clock);
+                     JobProperties props, Clock clock, ObjectProvider<RealtimeService> realtime) {
+        this(handlers.orderedStream().toList(), jobs, tx, props, clock, realtime.getIfAvailable());
     }
 
     public JobWorker(List<JobHandler> handlers, TacVuNenRepository jobs, TransactionTemplate tx,
                      JobProperties props, Clock clock) {
+        this(handlers, jobs, tx, props, clock, null);
+    }
+
+    public JobWorker(List<JobHandler> handlers, TacVuNenRepository jobs, TransactionTemplate tx,
+                     JobProperties props, Clock clock, RealtimeService realtime) {
         handlers.forEach(handler -> {
             if (this.handlers.putIfAbsent(handler.loai(), handler) != null) {
                 throw new IllegalStateException("Duplicate job handler for type " + handler.loai());
@@ -51,6 +59,7 @@ public class JobWorker {
         this.tx = tx;
         this.props = props;
         this.clock = clock;
+        this.realtime = realtime;
     }
 
     @Scheduled(initialDelayString = "${app.jobs.initial-delay-ms:10000}",
@@ -128,6 +137,9 @@ public class JobWorker {
             }
             if (outcome.to() != TrangThaiTacVu.CHO && handler != null) {
                 handler.khiKetThuc(job, new KetQuaTacVu(outcome.to(), outcome.maLoi()));
+            }
+            if (realtime != null && (outcome.to() == TrangThaiTacVu.LOI || outcome.to() == TrangThaiTacVu.KHONG_XAC_DINH)) {
+                realtime.toOtherAdmins(null, LoaiSuKien.SU_CO_HE_THONG, "TAC_VU:" + job.getId());
             }
         });
     }

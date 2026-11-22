@@ -4,6 +4,7 @@ import com.do_an_tot_nghiep.k28.common.security.AuthUser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -57,7 +58,7 @@ public class RealtimeHub implements MessageListener {
     void dispatch(SuKienRealtime event) {
         Stream<KetNoi> targets = switch (event.phamVi()) {
             case NGUOI_DUNG -> ketNoi.getOrDefault(event.nguoiDungId(), Set.of()).stream();
-            case QUAN_TRI -> all().filter(KetNoi::quanTri);
+            case QUAN_TRI -> all().filter(kn -> kn.quanTri() && !Objects.equals(kn.nguoiDungId(), event.nguoiDungId()));
             case TAT_CA -> all();
         };
         String data = json.writeValueAsString(Map.of("loai", event.loai().name(), "id", event.id() == null ? "" : event.id()));

@@ -83,6 +83,7 @@ public class AdminReportService {
         pending.forEach(item -> item.resolve(request.quyetDinh(), adminId, lyDo, now));
         reports.flush();
         realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
+        pending.forEach(item -> realtime.toOtherAdmins(adminId, LoaiSuKien.MUC_DA_XU_LY, "BAO_CAO:" + item.getId()));
 
         Map<String, Object> truoc = new LinkedHashMap<>();
         truoc.put("trangThai", TrangThaiBaoCao.CHO_XU_LY);

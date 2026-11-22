@@ -1,0 +1,52 @@
+.app-header { background: var(--sheet); border-bottom: var(--rule) solid var(--line); box-shadow: none; }
+.app-header .header-actions { gap: var(--sp-3); }
+.header-tools, .header-status { display: flex; align-items: center; gap: var(--sp-1); }
+.header-status { gap: var(--sp-2); padding-left: var(--sp-3); border-left: var(--rule) solid var(--line); }
+
+.app-header .btn-icon, .app-header .theme-toggle { width: var(--tap); min-width: var(--tap); height: var(--tap); min-height: var(--tap); padding: 0; justify-content: center; border: 0; border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); transition: background var(--dur-1), color var(--dur-1); }
+.app-header .btn-icon:hover, .app-header .theme-toggle:hover, .app-header .theme-picker[open] .theme-toggle { background: var(--sunk); color: var(--ink); }
+.app-header .btn-icon:focus-visible, .app-header .theme-toggle:focus-visible { outline: none; box-shadow: var(--focus); }
+.app-header .theme-track { display: none; }
+.app-header .theme-toggle .icon { width: 20px; height: 20px; }
+[data-theme="dark"] .app-header .theme-toggle { justify-content: center; }
+
+.app-header .user-chip { min-height: 40px; padding: 3px var(--sp-3) 3px 3px; border: var(--rule) solid var(--line); border-radius: 99px; background: var(--sheet); color: var(--ink); transition: background var(--dur-1), border-color var(--dur-1); }
+.app-header .user-chip:hover { background: var(--sunk); border-color: var(--line-2); text-decoration: none; }
+.app-header .user-chip .user-name { font-weight: 600; font-size: var(--fs-small); }
+
+@media (min-width: 1024px) {
+  .sidebar { display: flex; flex-direction: column; background: var(--sheet); border-right: var(--rule) solid var(--line); padding: var(--sp-4) var(--sp-3) var(--sp-5); scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+  .sidebar-links { display: grid; gap: var(--sp-3); }
+  .sidebar .nav-group { display: grid; gap: 2px; }
+  .sidebar .nav-group + .nav-group { margin-top: 0; padding-top: var(--sp-3); border-top: var(--rule) solid var(--line); }
+  .sidebar .nav-group-title, .sidebar .nav-fold > summary { color: var(--ink-3); font-size: var(--fs-caption); font-weight: 600; }
+  .sidebar .nav-fold > summary { min-height: 36px; border-radius: var(--radius-btn); }
+  .sidebar .nav-fold > summary:hover { background: var(--sunk); color: var(--ink); }
+  .sidebar .nav-fold[open] > summary { color: var(--ink-2); }
+
+  .sidebar .nav-link { position: relative; display: flex; align-items: center; gap: var(--sp-3); min-height: var(--tap); padding: 0 var(--sp-3); border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); font-weight: 500; box-shadow: none; transition: background var(--dur-1), color var(--dur-1); }
+  .sidebar .nav-link .icon { width: 20px; height: 20px; flex: none; color: var(--ink-3); stroke-width: 1.9; transform: none; transition: color var(--dur-1), transform var(--dur-2) var(--ease-out); }
+  .sidebar .nav-link:hover { background: var(--sunk); color: var(--ink); text-decoration: none; }
+  .sidebar .nav-link:hover .icon { color: var(--ink-2); transform: translateX(2px); }
+  .sidebar .nav-link[aria-current="page"] { background: var(--primary-tint); color: var(--primary-strong); font-weight: 700; }
+  .sidebar .nav-link[aria-current="page"] .icon { color: var(--primary); stroke-width: 2.2; transform: none; }
+  .sidebar .nav-link[aria-current="page"]::before { content: ""; position: absolute; left: calc(var(--sp-3) * -1); top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: var(--primary); }
+  .sidebar .nav-link:focus-visible { outline: none; box-shadow: var(--focus); }
+  .tier-side { margin-top: auto; padding-top: var(--sp-4); }
+}
+
+.app-menu .nav-link .icon { color: var(--ink-3); }
+.app-menu .nav-link[aria-current="page"] { background: var(--primary-tint); color: var(--primary-strong); font-weight: 700; }
+.app-menu .nav-link[aria-current="page"] .icon { color: var(--primary); }
+
+@media (max-width: 1023px) {
+  .header-status { padding-left: 0; border-left: 0; }
+  .app-header .header-actions { gap: var(--sp-1); }
+}
+@media (max-width: 639px) {
+  .app-header .sound-toggle { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar .nav-link, .sidebar .nav-link .icon, .app-header .btn-icon, .app-header .user-chip { transition: none; }
+  .sidebar .nav-link:hover .icon { transform: none; }
+}

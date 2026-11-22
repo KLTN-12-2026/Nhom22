@@ -1,8 +1,8 @@
 .profile { display: grid; gap: var(--sp-5); align-items: start; }
 .side { min-width: 0; }
 .main { min-width: 0; display: grid; gap: var(--sp-4); align-content: start; }
-.tabs { display: flex; gap: var(--sp-1); overflow-x: auto; border-bottom: var(--rule) solid var(--line); scrollbar-width: none; }
-.tab { display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--ink-2); font-size: .95rem; font-weight: 500; text-decoration: none; white-space: nowrap; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: var(--rule) solid var(--line); scrollbar-width: none; }
+.tab { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 10px; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--ink-2); font-size: var(--fs-small); font-weight: 500; text-decoration: none; white-space: nowrap; }
 .tab :global(.icon) { width: 16px; height: 16px; color: var(--ink-3); }
 .tab:hover { color: var(--ink); border-bottom-color: var(--line-2); }
 .tab[aria-current="page"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--primary); }
@@ -10,6 +10,6 @@
 .tab:focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
 .main > :global(.sheet), .main > :global(form), .main > section { min-width: 0; }
 @media (min-width: 1024px) {
-  .profile { grid-template-columns: 272px minmax(0, 1fr); gap: var(--sp-7, 40px); }
+  .profile { grid-template-columns: 300px minmax(0, 1fr); gap: var(--sp-6); }
   .side { position: sticky; top: calc(var(--header-h, 64px) + var(--sp-4)); }
 }

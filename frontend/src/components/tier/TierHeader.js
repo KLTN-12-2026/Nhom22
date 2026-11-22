@@ -36,7 +36,7 @@ export function TierHeader({ tier, plan, user }) {
     {tier === 'pro' && <Link href="/thanh-toan-goi" className="tier-cta tier-cta-up" aria-label="Nâng cấp lên Premium">
       <MetalIcon name="crown" metal="gold" size={18} /><span className="tier-cta-text">Lên Premium</span>
     </Link>}
-    <button type="button" className="tier-badge" title={title} aria-label={title} onClick={ringBadge(tier)} onAnimationEnd={event => { if (event.animationName === 'tier-ring') event.currentTarget.classList.remove('is-ringing'); }}>
+    <button type="button" className="tier-badge" data-plate={tier} title={title} aria-label={title} onClick={ringBadge(tier)} onAnimationEnd={event => { if (event.animationName === 'tier-ring') event.currentTarget.classList.remove('is-ringing'); }}>
       <MetalIcon name={info.icon} metal={info.badgeMetal} size={16} />
       <span className="tier-badge-text">{info.label}</span>
     </button>

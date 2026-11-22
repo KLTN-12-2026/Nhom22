@@ -6,6 +6,8 @@ import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
 import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
 import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
+import com.do_an_tot_nghiep.k28.common.realtime.SystemHealthMonitor;
+import com.do_an_tot_nghiep.k28.common.realtime.SystemHealthMonitor.ThanhPhan;
 import com.do_an_tot_nghiep.k28.support.AbstractIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
@@ -47,6 +49,9 @@ class FR12RealtimeTest extends AbstractIntegrationTest {
 
     @Autowired
     private PlatformTransactionManager txManager;
+
+    @Autowired
+    private SystemHealthMonitor health;
 
     private record Actor(Long id, Cookie session) {
     }
@@ -114,6 +119,40 @@ class FR12RealtimeTest extends AbstractIntegrationTest {
                         .content(toJson(Map.of("trangThai", "BI_KHOA", "lyDo", "Kiểm thử realtime"))))
                 .andExpect(status().isOk());
         waitFor(() -> body(stream).contains("event:TAI_KHOAN_BI_KHOA"));
+    }
+
+    @Test
+    void tc26_handledItemReachesOtherAdminsButNotTheActor() throws Exception {
+        Actor actorAdmin = actor(true);
+        Actor otherAdmin = actor(true);
+        MockHttpServletResponse own = open(actorAdmin);
+        MockHttpServletResponse other = open(otherAdmin);
+
+        realtime.toOtherAdmins(actorAdmin.id(), LoaiSuKien.MUC_DA_XU_LY, "BAO_CAO:7");
+        waitFor(() -> body(other).contains("event:MUC_DA_XU_LY"));
+        assertThat(body(other)).contains("\"id\":\"BAO_CAO:7\"");
+
+        realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
+        waitFor(() -> body(own).contains("event:HANG_CHO_QUAN_TRI"));
+        assertThat(body(own)).doesNotContain("MUC_DA_XU_LY");
+    }
+
+    @Test
+    void tc26_healthChangesAlertAdminsOnlyOnTransition() throws Exception {
+        Actor learner = actor(false);
+        Actor admin = actor(true);
+        MockHttpServletResponse sLearner = open(learner);
+        MockHttpServletResponse sAdmin = open(admin);
+
+        health.report(ThanhPhan.REDIS, true);
+        health.report(ThanhPhan.REDIS, false);
+        health.report(ThanhPhan.REDIS, false);
+        health.report(ThanhPhan.REDIS, true);
+        waitFor(() -> body(sAdmin).contains("REDIS:UP"));
+        String adminBody = body(sAdmin);
+        assertThat(adminBody.split("REDIS:DOWN", -1)).hasSize(2);
+        assertThat(adminBody.indexOf("REDIS:DOWN")).isLessThan(adminBody.indexOf("REDIS:UP"));
+        assertThat(body(sLearner)).doesNotContain("SU_CO_HE_THONG");
     }
 
     private MockHttpServletResponse open(Actor actor) throws Exception {

@@ -210,6 +210,9 @@ public class PublishRequestService {
                     body.lyDo(), Map.of("trangThai", before.name()), after);
         }
         realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
+        if (asAdmin) {
+            realtime.toOtherAdmins(actorId, LoaiSuKien.MUC_DA_XU_LY, "CONG_KHAI:" + request.getId());
+        }
         return responses(List.of(request)).getFirst();
     }
 

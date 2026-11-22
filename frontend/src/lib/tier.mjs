@@ -24,7 +24,7 @@ export const METAL_PATHS = {
 
 export const TIERS = {
   free: { label: 'Free', icon: 'leaf', metal: 'silver', badgeMetal: 'silver', rank: 0, member: 'Free member' },
-  pro: { label: 'Pro', icon: 'bolt', metal: 'steel', badgeMetal: 'white', rank: 1, member: 'Pro member' },
+  pro: { label: 'Pro', icon: 'bolt', metal: 'steel', badgeMetal: 'steel', rank: 1, member: 'Pro member' },
   premium: { label: 'Premium', icon: 'crown', metal: 'gold', badgeMetal: 'gold-dark', rank: 2, member: 'Premium member' },
   admin: { label: 'Admin', icon: 'shield', metal: 'gold', badgeMetal: 'gold-dark', rank: 2, member: 'Admin · Premium' }
 };
