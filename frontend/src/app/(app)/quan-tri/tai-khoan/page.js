@@ -60,13 +60,16 @@ function UsersContent() {
   const rows = data?.items || [];
 
   const setStatus = (user, next, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/status`, { method: 'PATCH', body: JSON.stringify({ trangThai: next, lyDo }) });
+  const setAvatar = (user, an, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/avatar`, { method: 'PATCH', body: JSON.stringify({ an, lyDo }) });
   const setRoles = (user, roles, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/roles`, { method: 'PUT', body: JSON.stringify({ vaiTro: roles, lyDo }) });
 
   async function act(kind, user) {
     if (busy) return;
     const self = user.id === me?.id;
     const options = {
-      lock: { title: 'Khóa tài khoản', message: `${user.tenHienThi} sẽ bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho tới khi mở khóa.`, confirmLabel: 'Khóa tài khoản', tone: 'danger' },
+      lock: { title: 'Khóa tài khoản', message: `${user.tenHienThi} sẽ bị đăng xuất khỏi mọi thiết bị, không đăng nhập được, hồ sơ và bộ thẻ công khai bị ẩn cho tới khi mở khóa. Người dùng nhận email kèm lý do.`, confirmLabel: 'Khóa tài khoản', tone: 'danger' },
+      hideAvatar: { title: 'Ẩn ảnh đại diện', message: `Ảnh đại diện hiện tại của ${user.tenHienThi} sẽ thay bằng ảnh mặc định ở mọi nơi. Người dùng được báo và có thể tải ảnh khác.`, confirmLabel: 'Ẩn ảnh đại diện', tone: 'danger' },
+      showAvatar: { title: 'Hiện lại ảnh đại diện', message: `Ảnh đại diện của ${user.tenHienThi} sẽ hiển thị lại như cũ.`, confirmLabel: 'Hiện ảnh đại diện' },
       unlock: { title: 'Mở khóa tài khoản', message: `${user.tenHienThi} sẽ đăng nhập lại được.`, confirmLabel: 'Mở khóa' },
       grant: { title: 'Cấp quyền quản trị', message: `${user.tenHienThi} sẽ vào được toàn bộ trang quản trị.`, confirmLabel: 'Cấp quyền' },
       revoke: { title: 'Thu quyền quản trị', message: self ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ rời trang quản trị.' : `${user.tenHienThi} sẽ không vào được trang quản trị nữa.`, confirmLabel: 'Thu quyền', tone: 'danger' },
@@ -78,6 +81,8 @@ function UsersContent() {
       let result;
       if (kind === 'lock') result = await setStatus(user, 'BI_KHOA', answer.lyDo);
       if (kind === 'unlock') result = await setStatus(user, 'HOAT_DONG', answer.lyDo);
+      if (kind === 'hideAvatar') result = await setAvatar(user, true, answer.lyDo);
+      if (kind === 'showAvatar') result = await setAvatar(user, false, answer.lyDo);
       if (kind === 'grant') result = await setRoles(user, ['USER', 'ADMIN'], answer.lyDo);
       if (kind === 'revoke') result = await setRoles(user, ['USER'], answer.lyDo);
       if (result?.banThanMatQuyen || (kind === 'revoke' && self)) {
@@ -142,6 +147,8 @@ function UsersContent() {
       <div className="adm-row-actions">
         {u.trangThai === 'HOAT_DONG' && u.id !== me?.id && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('lock', u)}><Icon name="lock" />Khóa</button>}
         {u.trangThai === 'BI_KHOA' && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('unlock', u)}>Mở khóa</button>}
+        {u.anhDaiDienBiAn ? <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('showAvatar', u)}>Hiện ảnh</button>
+          : u.anhDaiDienId && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('hideAvatar', u)}><Icon name="eye-off" />Ẩn ảnh</button>}
         {isAdmin(u) ? <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('revoke', u)}>Thu quyền</button>
           : u.trangThai === 'HOAT_DONG' && <button type="button" className="adm-btn adm-btn-sm" disabled={busy} onClick={() => act('grant', u)}><Icon name="shield" />Cấp quyền</button>}
         <Link className="adm-btn adm-btn-sm" href={`/quan-tri/nhat-ky?loai=NGUOI_DUNG&q=${encodeURIComponent(u.email)}`} title="Nhật ký của tài khoản" aria-label={`Nhật ký của ${u.tenHienThi}`}><Icon name="clock" /></Link>

@@ -43,7 +43,7 @@ public class BaoCaoNoiDung extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(nullable = false, updatable = false, length = 20)
+    @Column(nullable = false, updatable = false, length = 30)
     private LyDoBaoCao lyDo;
 
     @Column(updatable = false, length = 500)

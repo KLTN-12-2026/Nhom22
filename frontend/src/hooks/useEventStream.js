@@ -38,6 +38,15 @@ export function useEventStream(userId) {
         keysFor(type, id).forEach(queryKey => queryClient.invalidateQueries({ queryKey }));
         window.dispatchEvent(new CustomEvent(REALTIME_EVENT, { detail: { loai: type, id } }));
         if (type === 'THONG_BAO_MOI') announce();
+        if (type === 'BAO_CAO_MOI') {
+          fx.play('notify');
+          toast('Một người học vừa gửi báo cáo vi phạm.', {
+            variant: 'notify',
+            title: 'Có báo cáo mới',
+            duration: 8000,
+            action: { label: 'Xem', onClick: () => router.push('/quan-tri/bao-cao') },
+          });
+        }
         if (type === 'SU_CO_HE_THONG') {
           const message = incidentMessage(id);
           const isJob = id?.startsWith('TAC_VU');

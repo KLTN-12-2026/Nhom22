@@ -97,6 +97,7 @@ export function ProfileCard({ me }) {
         </div>
       )}
 
+      {me?.anhDaiDienBiAn && <p className="notice notice-warning" role="status"><Icon name="alert" />Ảnh đại diện của bạn đã bị quản trị viên ẩn vì vi phạm quy định cộng đồng. Mọi người đang thấy ảnh mặc định; hãy chọn Chỉnh sửa hồ sơ rồi Đổi ảnh để tải ảnh khác.</p>}
       {message.error && <p className="notice notice-error" role="alert">{message.error}</p>}
       {message.ok && <p className={styles.saved} aria-live="polite">{message.ok}</p>}
 

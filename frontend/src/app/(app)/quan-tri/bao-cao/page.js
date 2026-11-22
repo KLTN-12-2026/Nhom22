@@ -31,57 +31,64 @@ function SnapshotValue({ value }) {
   return String(value);
 }
 
+const DECISIONS = {
+  content: [
+    { value: 'GIU', title: 'Giữ nội dung', hint: 'Báo cáo không đúng, nội dung tiếp tục hiển thị.', button: 'Giữ nội dung', done: 'Đã giữ nội dung và đóng mọi báo cáo đang chờ về nội dung này.' },
+    { value: 'AN', title: 'Ẩn nội dung', hint: 'Gỡ khỏi thư viện; chủ sở hữu vẫn thấy trạng thái đã ẩn.', button: 'Ẩn nội dung', danger: true, done: 'Đã ẩn nội dung và đóng mọi báo cáo đang chờ về nội dung này.' },
+  ],
+  user: [
+    { value: 'GIU', title: 'Không vi phạm', hint: 'Giữ nguyên hồ sơ, đóng các báo cáo đang chờ.', button: 'Đóng báo cáo', done: 'Đã đóng mọi báo cáo đang chờ về người dùng này.' },
+    { value: 'AN', title: 'Ẩn ảnh đại diện', hint: 'Ảnh bị báo cáo thay bằng ảnh mặc định ở mọi nơi; người dùng được báo và có thể tải ảnh khác.', button: 'Ẩn ảnh đại diện', danger: true, done: 'Đã ẩn ảnh đại diện và báo cho người dùng.' },
+    { value: 'KHOA', title: 'Khóa tài khoản', hint: 'Đăng xuất mọi thiết bị, chặn đăng nhập, ẩn hồ sơ và bộ thẻ công khai. Người dùng nhận email kèm lý do. Mở khóa ở màn Tài khoản.', button: 'Khóa tài khoản', danger: true, done: 'Đã khóa tài khoản và gửi email cho người dùng.' },
+  ],
+};
+
 function ResolveForm({ report, onDone }) {
   const client = useQueryClient();
+  const options = DECISIONS[report.loaiDoiTuong === 'NGUOI_DUNG' ? 'user' : 'content'];
   const [quyetDinh, setQuyetDinh] = useState('');
   const [lyDo, setLyDo] = useState('');
   const [touched, setTouched] = useState(false);
-  const busy = useRef(false);
+  const chosen = options.find(option => option.value === quyetDinh);
   const mutation = useMutation({
     mutationFn: () => resolveReport(apiFetch, report.id, { quyetDinh, lyDo }),
     onSuccess: result => {
-      for (const queryKey of [['admin-reports'], ['admin-dashboard'], ['admin-queue'], ['admin-audit'], ['library-decks'], ['library-deck'], ['ai-history'], ['ai-request']]) {
-        void client.invalidateQueries({ queryKey });
-      }
-      onDone(result, quyetDinh === 'AN' ? 'Đã ẩn nội dung và đóng mọi báo cáo đang chờ về nội dung này.' : 'Đã giữ nội dung và đóng mọi báo cáo đang chờ về nội dung này.');
+      client.invalidateQueries({ queryKey: ['admin-reports'] });
+      client.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      onDone(result, chosen?.done || 'Đã xử lý báo cáo.');
     },
     onError: error => {
       if (error.status === 409 || error.status === 404) client.invalidateQueries({ queryKey: ['admin-reports'] });
     },
   });
-  const cooldown = useCooldown(mutation.error);
-  const conflict = mutation.error?.status === 409 || mutation.error?.status === 404;
   const reasonMsg = reasonError(lyDo);
   const serverField = mutation.error?.fieldErrors?.find(f => f.field === 'lyDo')?.message;
-  const submit = async event => {
+  const submit = event => {
     event.preventDefault();
-    if (busy.current || mutation.isPending || cooldown || conflict) return;
     setTouched(true);
     if (!quyetDinh || reasonMsg) return;
-    busy.current = true;
-    try { await mutation.mutateAsync(); }
-    catch { /* The mutation error is shown below. */ }
-    finally { busy.current = false; }
+    mutation.mutate();
   };
   return (
     <form id="resolve-form" onSubmit={submit} noValidate>
       <p className="adm-section-title">Quyết định</p>
-      <fieldset className="adm-choice" aria-label="Quyết định xử lý" disabled={mutation.isPending || conflict}>
-        <label><input type="radio" name="quyetDinh" value="GIU" checked={quyetDinh === 'GIU'} onChange={() => setQuyetDinh('GIU')} /><span><b>Giữ nội dung</b><small>Báo cáo không đúng, nội dung tiếp tục hiển thị.</small></span></label>
-        <label><input type="radio" name="quyetDinh" value="AN" checked={quyetDinh === 'AN'} onChange={() => setQuyetDinh('AN')} /><span><b>Ẩn nội dung</b><small>Gỡ khỏi thư viện; chủ sở hữu vẫn thấy trạng thái đã ẩn.</small></span></label>
+      <fieldset className="adm-choice" aria-label="Quyết định xử lý">
+        {options.map(option => (
+          <label key={option.value}><input type="radio" name="quyetDinh" value={option.value} checked={quyetDinh === option.value} onChange={() => setQuyetDinh(option.value)} /><span><b>{option.title}</b><small>{option.hint}</small></span></label>
+        ))}
       </fieldset>
-      {touched && !quyetDinh && <p className="adm-error" role="alert">Chọn giữ hoặc ẩn nội dung.</p>}
+      {touched && !quyetDinh && <p className="adm-error" role="alert">Chọn một quyết định.</p>}
       <label className="adm-label" htmlFor="resolve-reason" style={{ marginTop: 14 }}>Lý do xử lý</label>
-      <textarea id="resolve-reason" className="adm-textarea" rows={4} maxLength={REASON_MAX} disabled={mutation.isPending || conflict} value={lyDo} onChange={event => setLyDo(event.target.value)} aria-invalid={touched && !!(reasonMsg || serverField)} aria-describedby="resolve-reason-hint" placeholder="Ví dụ: Đã đối chiếu từ điển, nghĩa tiếng Việt đúng." />
+      <textarea id="resolve-reason" className="adm-textarea" rows={4} maxLength={REASON_MAX + 50} value={lyDo} onChange={event => setLyDo(event.target.value)} aria-invalid={touched && !!(reasonMsg || serverField)} aria-describedby="resolve-reason-hint" placeholder={report.loaiDoiTuong === 'NGUOI_DUNG' ? 'Ví dụ: Ảnh đại diện có hình ảnh phản cảm.' : 'Ví dụ: Đã đối chiếu từ điển, nghĩa tiếng Việt đúng.'} />
       <p id="resolve-reason-hint" className={touched && (reasonMsg || serverField) ? 'adm-error' : 'adm-hint'}>
-        {touched && (reasonMsg || serverField) ? (reasonMsg || serverField) : `${lyDo.trim().length}/${REASON_MAX} ký tự · lý do được ghi vào nhật ký quản trị.`}
+        {touched && (reasonMsg || serverField) ? (reasonMsg || serverField) : `${lyDo.trim().length}/${REASON_MAX} ký tự · lý do được ghi vào nhật ký quản trị${quyetDinh === 'KHOA' ? ' và gửi cho người dùng qua email' : ''}.`}
       </p>
       {mutation.isError && !serverField && (
         <p className="adm-notice adm-notice-bad" role="alert" style={{ marginTop: 12 }}><Icon name="alert" />{mutation.error.status === 409 ? 'Báo cáo này vừa được người khác xử lý. Danh sách đã được tải lại.' : mutation.error.message}</p>
       )}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
-        <button type="submit" className={`adm-btn ${quyetDinh === 'AN' ? 'adm-btn-danger' : 'adm-btn-primary'}`} disabled={mutation.isPending || cooldown > 0 || conflict}>
-          {cooldown ? `Thử lại sau ${cooldown}s` : mutation.isPending ? 'Đang lưu…' : quyetDinh === 'AN' ? 'Ẩn nội dung' : quyetDinh === 'GIU' ? 'Giữ nội dung' : 'Xác nhận'}
+        <button type="submit" className={`adm-btn ${chosen?.danger ? 'adm-btn-danger' : 'adm-btn-primary'}`} disabled={mutation.isPending}>
+          {mutation.isPending ? 'Đang lưu…' : chosen?.button || 'Xác nhận'}
         </button>
       </div>
     </form>
@@ -104,9 +111,12 @@ function ReportDetail({ report, onDone }) {
       <p className="adm-section-title">Mô tả của người báo cáo</p>
       {report.moTa ? <p className="adm-quote">{report.moTa}</p> : <p className="adm-muted">Người báo cáo không ghi thêm mô tả.</p>}
       <p className="adm-section-title">Nội dung lúc bị báo cáo</p>
+      {report.loaiDoiTuong === 'NGUOI_DUNG' && (report.anhDaiDienUrl
+        ? <img src={report.anhDaiDienUrl} alt={`Ảnh đại diện lúc bị báo cáo của ${report.noiDung?.ten || 'người dùng'}`} width={96} height={96} style={{ display: 'block', objectFit: 'cover', borderRadius: 'var(--radius-control)', border: '1px solid var(--line)', margin: '0 0 8px' }} />
+        : <p className="adm-muted">Không có ảnh đại diện lúc bị báo cáo.</p>)}
       <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{report.noiDung?.ten || '—'}</p>
       {rows.length ? <dl className="adm-kv">{rows.map(([key, value]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={value} /></dd></Fragment>)}</dl> : <p className="adm-muted">Không có thêm trường nào.</p>}
-      {link && <p style={{ margin: '10px 0 0' }}><Link className="adm-btn adm-btn-sm" href={link} target="_blank" rel="noopener"><Icon name="link" />Mở nội dung hiện tại</Link></p>}
+      {link && <p style={{ margin: '10px 0 0' }}><Link className="adm-btn adm-btn-sm" href={link} target="_blank" rel="noopener"><Icon name="link" />{report.loaiDoiTuong === 'NGUOI_DUNG' ? 'Mở hồ sơ tài khoản' : 'Mở nội dung hiện tại'}</Link></p>}
       {report.trangThai === 'CHO_XU_LY' ? <ResolveForm key={report.id} report={report} onDone={onDone} /> : (
         <>
           <p className="adm-section-title">Kết quả xử lý</p>
@@ -169,7 +179,7 @@ function ReportsContent() {
       <div className="adm-head">
         <div>
           <h1>Báo cáo vi phạm</h1>
-          <p>Người học báo cáo bộ thẻ, thẻ hoặc đầu ra AI có vấn đề. Xem bản chụp nội dung lúc bị báo cáo rồi quyết định giữ hay ẩn; mỗi quyết định ghi vào nhật ký.</p>
+          <p>Người học báo cáo bộ thẻ, thẻ, đầu ra AI hoặc người dùng khác. Xem bản chụp lúc bị báo cáo rồi quyết định giữ, ẩn hoặc khóa tài khoản; mỗi quyết định ghi vào nhật ký và báo cho người báo cáo.</p>
         </div>
         <div className="adm-head-actions">
           <button type="button" className="adm-btn" onClick={() => refetch()} disabled={isFetching}><Icon name="refresh" />{isFetching ? 'Đang tải…' : 'Làm mới'}</button>

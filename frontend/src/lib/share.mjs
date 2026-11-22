@@ -56,6 +56,25 @@ export const REPORT_REASONS = [
   { value: 'KHAC', title: 'Lý do khác', desc: 'Tự mô tả vấn đề bạn gặp.' },
 ];
 
+export const USER_REPORT_REASONS = [
+  { value: 'ANH_DAI_DIEN_NHAY_CAM', title: 'Ảnh đại diện nhạy cảm', desc: 'Ảnh khỏa thân, bạo lực hoặc phản cảm.' },
+  { value: 'TEN_KHONG_PHU_HOP', title: 'Tên hiển thị không phù hợp', desc: 'Tên thô tục, xúc phạm hoặc kích động.' },
+  { value: 'SPAM', title: 'Spam hoặc quảng cáo', desc: 'Liên tục đăng nội dung rác, chèn quảng cáo.' },
+  { value: 'MAO_DANH', title: 'Mạo danh', desc: 'Giả làm người khác hoặc một tổ chức.' },
+  { value: 'QUAY_ROI', title: 'Quấy rối', desc: 'Nhắm vào, đe dọa hoặc bắt nạt người khác.' },
+  { value: 'KHAC', title: 'Lý do khác', desc: 'Tự mô tả vấn đề bạn gặp.' },
+];
+
+export function reportReasons(loaiDoiTuong) {
+  return loaiDoiTuong === 'NGUOI_DUNG' ? USER_REPORT_REASONS : REPORT_REASONS;
+}
+
+export const UNAVAILABLE_USER = 'NGUOI_DUNG_KHONG_KHA_DUNG';
+
+export function isUnavailableUser(error) {
+  return error?.status === 404 && error?.data?.details?.lyDo === UNAVAILABLE_USER;
+}
+
 export const REPORT_NOTE_MIN = 10;
 export const REPORT_NOTE_MAX = 500;
 

@@ -16,6 +16,8 @@ const KIND = {
   YEU_CAU_CONG_KHAI: { icon: 'globe', tone: 'info', label: 'Công khai' },
   KET_QUA_CONG_KHAI: { icon: 'check', tone: 'ok', label: 'Công khai' },
   VINH_DANH_TUAN: { icon: 'shield', tone: 'plan', label: 'Vinh danh' },
+  KET_QUA_BAO_CAO: { icon: 'flag', tone: 'ok', label: 'Báo cáo' },
+  ANH_DAI_DIEN_BI_AN: { icon: 'alert', tone: 'warn', label: 'Hồ sơ' },
 };
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 

@@ -606,6 +606,23 @@ Yêu cầu người dùng 22/11/2026, FR-07. Không phá hợp đồng cũ: khô
 
 **FE đã làm:** `/luyen-tap` mặc định chọn "Từ vừa học cần ôn" (nhãn Mặc định), bộ lọc 4 mức theo thứ tự Quên–Khó–Nhớ–Dễ, xem trước 8 từ; không có lượt chấm 7 ngày → tắt lựa chọn, báo rỗng, chọn "Bộ thẻ của tôi". URL `?nguon=SO_TAY`, `?boTheId=` vẫn được ưu tiên.
 
+### 5.23 B3.23 — Báo cáo người dùng, ẩn ảnh đại diện, khóa từ báo cáo (UI45, UI50, UI47, hồ sơ tác giả)
+
+Yêu cầu người dùng 22/11/2026, FR-13. Không phá hợp đồng cũ: loại, lý do, quyết định cũ giữ nguyên.
+
+| Method | Path | Body / response chính |
+|---|---|---|
+| POST | `/api/v1/reports` | `{loaiDoiTuong: "NGUOI_DUNG", doiTuongId, lyDo, moTa?}`; `lyDo` ∈ `ANH_DAI_DIEN_NHAY_CAM, TEN_KHONG_PHU_HOP, SPAM, MAO_DANH, QUAY_ROI, KHAC`; lý do của thẻ/bộ → 400 `lyDo`; tự báo cáo → 422; người không hoạt động → 404; trùng khi đang chờ → 409 |
+| GET | `/api/v1/admin/reports?loaiDoiTuong=NGUOI_DUNG` | `noiDung {ten, tenHienThi, anhDaiDienId, thamGiaAt}`, thêm `anhDaiDienUrl` (ảnh lúc bị báo cáo, null với loại khác); trạng thái mới `DA_KHOA` |
+| POST | `/api/v1/admin/reports/{id}/resolve` | `quyetDinh` thêm `KHOA` (chỉ `NGUOI_DUNG`, khác → 400 `quyetDinh`); với `NGUOI_DUNG`: `AN` = ẩn ảnh bị báo cáo (không có ảnh → 422), `KHOA` = khóa như B3.16 + email; mọi người báo cáo nhận thông báo `KET_QUA_BAO_CAO` |
+| PATCH | `/api/v1/admin/users/{id}/avatar` | `{an: boolean, lyDo}` → `AdminUserResponse` có `anhDaiDienId`, `anhDaiDienBiAn`; ẩn khi chưa có ảnh → 422 |
+| GET | `/api/v1/me` | thêm `anhDaiDienBiAn`; `GET /me/avatar` trả 204 khi ảnh bị ẩn |
+| GET | `/api/v1/library/decks/{id}`, `/api/v1/library/authors/{id}` | chủ bị khóa/đang xóa → 404 `details.lyDo = "NGUOI_DUNG_KHONG_KHA_DUNG"` |
+
+Realtime: `BAO_CAO_MOI` (`id = "BAO_CAO:<id>"`, tới mọi Admin) khi có báo cáo mới; `THONG_BAO_MOI` cho người báo cáo khi xử lý xong và cho người bị ẩn ảnh; `TAI_KHOAN_BI_KHOA` cho người bị khóa. Thông báo mới: `KET_QUA_BAO_CAO`, `ANH_DAI_DIEN_BI_AN` (liên kết `/ca-nhan`).
+
+**FE đã làm:** nút "Báo cáo người dùng" trên `/tac-gia/[id]` (đã đăng nhập, không phải chính mình); `ReportDialog` chọn bộ lý do theo loại (`reportReasons`); "Người dùng không khả dụng" ở `/tac-gia/[id]` và `/thu-vien/[id]` (`isUnavailableUser`); `/quan-tri/bao-cao` 3 quyết định cho người dùng + ảnh lúc bị báo cáo + link mở tài khoản; `/quan-tri/tai-khoan` nút Ẩn ảnh / Hiện ảnh; `/ca-nhan` báo ảnh bị ẩn; chuông có 2 loại mới; Admin nhận toast "Có báo cáo mới" kèm nút Xem; `THONG_BAO_MOI` tải lại `['me']` để ảnh đổi ngay.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).
