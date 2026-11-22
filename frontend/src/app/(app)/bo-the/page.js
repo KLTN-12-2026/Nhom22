@@ -71,12 +71,12 @@ export default function DecksPage() {
             </div>
             <ol className="answer-list" role="list">
               {myDecks.map((deck, i) => (
-                <li key={deck.id} className="answer-row deck-row has-actions">
+                <li key={deck.id} data-tour-deck={deck.id} className="answer-row deck-row has-actions">
                   <span className="answer-no">{i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
                     <DeckCover deck={deck} topicName={topicName(deck.chuDeId)} priority={i < 2} />
-                    <Link className="answer-title" href={`/bo-the/${deck.id}`}>{deck.ten}</Link>
+                    <Link className="answer-title" data-tour="deck-title" href={`/bo-the/${deck.id}`}>{deck.ten}</Link>
                     </div>
                     <div className="answer-meta">
                       {deck.banSao

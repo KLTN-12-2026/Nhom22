@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { cardPayload, normalizeTerm } from '@/lib/content-contract.mjs';
+import { tourSignal } from '@/lib/onboarding-tour.mjs';
 import { ErrorState, Icon } from '@/components/ui';
 import { FileUpload } from './FileUpload';
 import { CardMedia } from './CardMedia';
@@ -32,6 +33,7 @@ export function CardEditor({ deckId, initial, onSaved, onCancel, modal = false, 
     onSuccess: card => {
       client.invalidateQueries({ queryKey: ['deck-cards', deckId] });
       client.invalidateQueries({ queryKey: ['deck', deckId] });
+      if (!initial) tourSignal('card-saved');
       setSaved(card);
     },
   });

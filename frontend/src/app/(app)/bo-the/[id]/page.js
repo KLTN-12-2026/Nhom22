@@ -88,7 +88,7 @@ export default function DeckDetailPage() {
         <div className={styles.actions}>
           <div className={styles.mainActions}>
             <Link className="btn btn-primary" href={`/hoc?boTheId=${encodeURIComponent(id)}`}><Icon name="play" />Học bộ này</Link>
-            <button type="button" className="btn btn-secondary" onClick={() => setAdding(true)}><Icon name="plus" />Thêm thẻ</button>
+            <button type="button" data-tour="add-card" className="btn btn-secondary" onClick={() => setAdding(true)}><Icon name="plus" />Thêm thẻ</button>
             <Link className="btn btn-secondary" href={`/bo-the/${id}/tien-do`}><Icon name="chart" />Tiến độ</Link>
             <button className={`btn btn-secondary ${styles.fav}`} type="button" disabled={favorite.isPending} aria-busy={favorite.isPending} aria-pressed={deck.yeuThich} onClick={() => favorite.mutate()}><Icon name="heart" />{deck.yeuThich ? 'Đã yêu thích' : 'Yêu thích'}</button>
             {published && <button type="button" className="btn btn-secondary" onClick={shareDeck}><Icon name="share" />Chia sẻ</button>}

@@ -13,6 +13,7 @@ import '@/styles/shell.css';
 import '@/styles/marketing.css';
 import { Providers } from './providers';
 import { MucCompanion } from '@/components/mascot/MucCompanion';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 export const metadata = {
   title: { default: 'VocabLearning', template: '%s — VocabLearning' },
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
         <Providers>
           {children}
           <MucCompanion />
+          <OnboardingTour />
         </Providers>
         <Script src="/fx.js" strategy="afterInteractive" />
       </body>

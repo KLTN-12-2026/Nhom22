@@ -11,6 +11,7 @@ import { ErrorState, Icon } from '@/components/ui';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { apiFetch } from '@/lib/api-client';
+import { tourSignal } from '@/lib/onboarding-tour.mjs';
 import styles from './page.module.css';
 
 export default function OnboardingPage() {
@@ -29,8 +30,9 @@ export default function OnboardingPage() {
   const [mins, setMins] = useState('10');
   const [cards, setCards] = useState('10');
   const [savedSettings, setSavedSettings] = useState(null);
+  const [starter, setStarter] = useState(null);
   const done = useRef({ profile: null, notification: null });
-  const starters = useLibraryDecks({ nguon: 'MAU', mucTieu: savedSettings?.mucTieu, trinhDo: savedSettings?.trinhDo, size: 4 }, { enabled: step === 5 && !!savedSettings });
+  const starters = useLibraryDecks({ nguon: 'MAU', mucTieu: savedSettings?.mucTieu, trinhDo: savedSettings?.trinhDo, size: 4 }, { enabled: step === 5 && !!savedSettings && !starter?.boKhoiDongId });
 
   useEffect(() => {
     const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -60,6 +62,14 @@ export default function OnboardingPage() {
       }
       const saved = await apiFetch('/api/v1/me/learning-settings', { method: 'PUT', body: JSON.stringify({ mucTieu: goal, trinhDo: level, chuDeIds: topics, phutMoiNgay: Number(mins), tuMoiMoiNgay: Number(cards), version: current.version }) });
       setSavedSettings(saved);
+      try {
+        const started = await apiFetch('/api/v1/me/onboarding-tour/start', { method: 'POST' });
+        queryClient.setQueryData(['onboarding-tour'], started);
+        setStarter(started);
+        tourSignal('restart');
+      } catch { setStarter({ boKhoiDongId: null }); }
+      await queryClient.invalidateQueries({ queryKey: ['learning-today'] });
+      await queryClient.invalidateQueries({ queryKey: ['my-decks'] });
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       await queryClient.invalidateQueries({ queryKey: ['learning-settings'] });
       await queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
@@ -223,12 +233,24 @@ export default function OnboardingPage() {
 
             <div className={styles.onbStep} data-step="5" hidden={step !== 5}>
               <h2>Đã lưu phiếu của bạn</h2>
-              <p>Xem bộ mẫu phù hợp với mục tiêu và trình độ đã lưu.</p>
-              {starters.isLoading && <p role="status">Đang tìm bộ mẫu…</p>}
-              {starters.error && <ErrorState description={starters.error.message} onRetry={starters.refetch} />}
-              {starters.data?.items.length === 0 && <p>Chưa có bộ mẫu phù hợp. Bạn có thể xem toàn bộ thư viện hoặc tạo bộ đầu tiên.</p>}
-              <ul>{starters.data?.items.map(deck => <li key={deck.id}><Link href={`/thu-vien/${deck.id}`}>{deck.ten}</Link> — {deck.soThe} thẻ</li>)}</ul>
-              <Link href="/thu-vien" className="btn btn-secondary">Xem thư viện</Link>
+              {starter?.boKhoiDongId ? (
+                <div className="notice notice-success" role="status">
+                  <Icon name="check" />
+                  <div className="stack-sm">
+                    <p className="notice-title">Bộ “Khởi động — Một ngày của tôi” đã vào Bộ của tôi</p>
+                    <p className="small">8 từ theo trình tự một ngày, từ lúc báo thức reo đến lúc đi ngủ. Bấm Hoàn tất, mình sẽ dẫn bạn học phiên đầu tiên qua 4 nhiệm vụ ngắn.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p>Xem bộ mẫu phù hợp với mục tiêu và trình độ đã lưu.</p>
+                  {starters.isLoading && <p role="status">Đang tìm bộ mẫu…</p>}
+                  {starters.error && <ErrorState description={starters.error.message} onRetry={starters.refetch} />}
+                  {starters.data?.items.length === 0 && <p>Chưa có bộ mẫu phù hợp. Bạn có thể xem toàn bộ thư viện hoặc tạo bộ đầu tiên.</p>}
+                  <ul>{starters.data?.items.map(deck => <li key={deck.id}><Link href={`/thu-vien/${deck.id}`}>{deck.ten}</Link> — {deck.soThe} thẻ</li>)}</ul>
+                  <Link href="/thu-vien" className="btn btn-secondary">Xem thư viện</Link>
+                </>
+              )}
             </div>
             {topicsError && <ErrorState description={topicsError.message} onRetry={reloadTopics} />}
             {errorMsg && <p className="notice notice-error" role="alert">{errorMsg}</p>}

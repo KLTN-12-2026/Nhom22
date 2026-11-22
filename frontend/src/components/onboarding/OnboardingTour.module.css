@@ -1,0 +1,134 @@
+.blockers {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.shade {
+  position: fixed;
+  background: color-mix(in srgb, var(--ink) 58%, transparent);
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+
+.lock {
+  position: fixed;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.ring {
+  position: fixed;
+  z-index: 1001;
+  border-radius: var(--radius-control);
+  box-shadow: 0 0 0 3px var(--accent);
+  pointer-events: none;
+  transition: top var(--dur-2) var(--ease-out), left var(--dur-2) var(--ease-out),
+    width var(--dur-2) var(--ease-out), height var(--dur-2) var(--ease-out);
+}
+
+.ringForce {
+  animation: pulse 1.6s var(--ease) infinite;
+}
+
+.bubble {
+  position: fixed;
+  z-index: 1002;
+  padding: var(--sp-4);
+  background: var(--sheet);
+  color: var(--ink);
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-pop);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+}
+
+.nudge {
+  animation: nudge 0.32s var(--ease);
+}
+
+.compact {
+  padding: var(--sp-3);
+}
+
+.compact .code {
+  margin-bottom: var(--sp-1);
+  padding-bottom: var(--sp-1);
+}
+
+.compact .title {
+  margin-bottom: var(--sp-1);
+  font-size: var(--fs-body);
+}
+
+.compact .actions {
+  margin-top: var(--sp-2);
+}
+
+.code {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px dashed var(--rule);
+  font-family: var(--font-form);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.code span:first-child {
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-tight);
+}
+
+.body {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-body);
+  color: var(--ink-2);
+}
+
+.pointer {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.finish {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: flex-start;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--accent); }
+  50% { box-shadow: 0 0 0 3px var(--accent), 0 0 0 9px color-mix(in srgb, var(--accent) 28%, transparent); }
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring { transition: none; }
+  .ringForce, .nudge { animation: none; }
+}

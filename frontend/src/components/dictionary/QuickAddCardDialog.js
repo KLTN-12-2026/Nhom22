@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { cardPayload, normalizeTerm } from '@/lib/content-contract.mjs';
 import { DICTIONARY_SOURCE } from '@/lib/dictionary.mjs';
+import { tourSignal } from '@/lib/onboarding-tour.mjs';
 import { Icon, Modal } from '@/components/ui';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { WordCombobox } from './WordCombobox';
@@ -43,6 +44,7 @@ export function QuickAddCardDialog({ deckId, deckName, onClose }) {
       client.invalidateQueries({ queryKey: ['deck-cards', deckId] });
       client.invalidateQueries({ queryKey: ['deck', deckId] });
       client.invalidateQueries({ queryKey: ['my-decks'] });
+      tourSignal('card-saved');
       if (closeAfter.current) { onClose(); return; }
       setAdded(list => [{ id: card.id, tu: card.tu, trung: card.trung }, ...list]);
       setValues(current => ({ ...EMPTY, doKho: current.doKho, nguon: current.nguon === DICTIONARY_SOURCE.cardNote ? '' : current.nguon }));

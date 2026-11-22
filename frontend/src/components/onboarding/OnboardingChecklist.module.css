@@ -1,0 +1,104 @@
+.card {
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--primary-tint);
+  border: 1.5px solid var(--primary-line);
+  border-radius: var(--radius-card);
+}
+
+.head {
+  margin-bottom: var(--sp-3);
+}
+
+.code {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 var(--sp-1);
+  font-family: var(--font-form);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.code span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-strong);
+  font-weight: 700;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-h3);
+}
+
+.list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.bubble {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--bubble);
+  height: var(--bubble);
+  border: 1.5px solid var(--control-line);
+  border-radius: 50%;
+  background: var(--field);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.bubble svg {
+  width: 14px;
+  height: 14px;
+}
+
+.item[data-state="current"] .bubble {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.item[data-state="done"] .bubble {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+}
+
+.itemTitle {
+  font-weight: 600;
+}
+
+.item[data-state="done"] .itemTitle {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.itemDesc {
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}

@@ -9,7 +9,10 @@ import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsRequest;
 import com.do_an_tot_nghiep.k28.account.dto.PrivacySettingsResponse;
 import com.do_an_tot_nghiep.k28.account.dto.UpdateProfileRequest;
 import com.do_an_tot_nghiep.k28.account.dto.UserResponse;
+import com.do_an_tot_nghiep.k28.account.dto.OnboardingTourRequest;
+import com.do_an_tot_nghiep.k28.account.dto.OnboardingTourResponse;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
+import com.do_an_tot_nghiep.k28.account.service.OnboardingTourService;
 import com.do_an_tot_nghiep.k28.account.service.PasswordService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
@@ -34,6 +37,7 @@ public class MeController {
     private final PasswordService passwordService;
     private final SettingsService settingsService;
     private final FileService fileService;
+    private final OnboardingTourService onboardingTourService;
 
     @PutMapping("/avatar")
     public FileResponse updateAvatar(@Valid @RequestBody UpdateAvatarRequest request) {
@@ -77,6 +81,21 @@ public class MeController {
     @PutMapping("/learning-settings")
     LearningSettingsResponse updateLearningSettings(@Valid @RequestBody LearningSettingsRequest request) {
         return settingsService.updateLearning(currentUser.id(), request);
+    }
+
+    @GetMapping("/onboarding-tour")
+    OnboardingTourResponse onboardingTour() {
+        return onboardingTourService.tour(currentUser.id());
+    }
+
+    @PostMapping("/onboarding-tour/start")
+    OnboardingTourResponse startOnboardingTour() {
+        return onboardingTourService.start(currentUser.id());
+    }
+
+    @PutMapping("/onboarding-tour")
+    OnboardingTourResponse advanceOnboardingTour(@Valid @RequestBody OnboardingTourRequest request) {
+        return onboardingTourService.advance(currentUser.id(), request);
     }
 
     @GetMapping("/privacy-settings")
