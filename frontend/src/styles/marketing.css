@@ -1,0 +1,47 @@
+.aside-sheet { gap: var(--sp-3); }
+.aside-stage { perspective: 1100px; }
+.aside-flip { transform-origin: 50% 50%; backface-visibility: hidden; }
+.aside-face { display: grid; gap: var(--sp-2); }
+.aside-word-vi { font-family: var(--font-body); font-stretch: 90%; font-size: 2.5rem; }
+.aside-options li { min-height: 30px; transition: color var(--dur-2); }
+.aside-options li[data-answer] { font-weight: 700; }
+.aside-timer { height: 2px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
+.aside-timer span { display: block; height: 100%; background: rgba(255, 255, 255, 0.75); transform-origin: left; animation: card-timer linear both; }
+.aside-timer span[data-paused] { animation-play-state: paused; }
+.aside-sheet figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.aside-dots { display: flex; gap: 6px; }
+.aside-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.35); cursor: pointer; transition: width var(--dur-2) var(--ease), background var(--dur-2); }
+.aside-dots button[aria-current="true"] { width: 20px; border-radius: 99px; background: #fff; }
+.aside-dots button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+@keyframes card-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes card-flip { 0% { transform: rotateY(-88deg); opacity: 0.2; } 60% { transform: rotateY(8deg); opacity: 1; } 100% { transform: rotateY(0); } }
+@keyframes card-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .aside-flip { animation: card-flip 700ms var(--ease-out) both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aside-flip { animation: card-fade var(--dur-2) ease both; }
+  .aside-timer { display: none; }
+}
+
+.site-header { background: var(--desk); border-bottom: var(--rule) solid var(--line); }
+.site-header-inner { gap: var(--sp-3); }
+.site-header .brand { flex-shrink: 0; }
+.site-nav { flex-shrink: 0; gap: 2px; }
+.site-nav a { padding: 0 10px; white-space: nowrap; color: var(--ink-2); }
+.site-nav a:hover { background: color-mix(in srgb, var(--ink) 6%, var(--desk)); color: var(--ink); text-decoration: none; }
+.site-header .header-actions { flex-shrink: 0; gap: var(--sp-2); }
+.site-header .header-actions .btn { white-space: nowrap; }
+.site-header .site-search { flex: 1 1 12rem; min-width: 0; max-width: 26rem; margin-inline: var(--sp-2); }
+.site-header .theme-toggle { width: var(--tap); min-width: var(--tap); height: var(--tap); min-height: var(--tap); padding: 0; justify-content: center; border: 0; border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); }
+.site-header .theme-toggle:hover, .site-header .theme-picker[open] .theme-toggle { background: color-mix(in srgb, var(--ink) 6%, var(--desk)); color: var(--ink); }
+.site-header .theme-track { display: none; }
+.site-header .theme-toggle .icon { width: 20px; height: 20px; }
+@media (min-width: 1024px) and (max-width: 1239px) {
+  .site-nav a[href="/chinh-sach"] { display: none; }
+  .site-header .site-search kbd { display: none; }
+}
+@media (min-width: 768px) {
+  .site-header .site-search form > div[role="listbox"] { min-width: 26rem; right: auto; }
+}

@@ -1,32 +1,32 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { CARD_INTERVAL_MS, DEMO_CARDS as QUIZ } from '@/lib/demo-cards.mjs';
+import { useCardCycle } from '@/hooks/useCardCycle';
 import styles from './page.module.css';
 
-const QUIZ = [
-  { dir: "Anh → Việt", prompt: "receipt", sub: "/rɪˈsiːt/  n.", en: true, options: ["lời mời", "biên lai, giấy biên nhận", "công thức nấu ăn", "người nhận"], answer: 1, note: "receipt là biên lai; recipe mới là công thức nấu ăn." },
-  { dir: "Việt → Anh", prompt: "hoãn lại", sub: "động từ", en: false, options: ["postpone", "prepare", "propose", "purchase"], answer: 0, note: "The meeting has been postponed until Friday." },
-  { dir: "Anh → Việt", prompt: "complimentary", sub: "/ˌkɑːmplɪˈmentri/  adj.", en: true, options: ["bổ sung cho nhau", "miễn phí, tặng kèm", "phức tạp", "khen ngợi quá mức"], answer: 1, note: "Dễ nhầm với complementary (bổ sung cho nhau)." }
+const TESTIMONIALS = [
+  { name: 'Trần Minh Khang', role: 'Giảng viên luyện thi TOEIC', initials: 'MK', hue: '#3b5bdb', score: 'TOEIC 965', quote: 'Tôi giao bộ thẻ cho cả lớp, học viên tự ôn ở nhà. Lịch ôn hai chiều giúp các em nhớ cách viết chứ không chỉ nhận ra nghĩa.' },
+  { name: 'Nguyễn Hà My', role: 'Du học sinh thạc sĩ', initials: 'HM', hue: '#0c8599', score: 'IELTS 8.0', quote: 'Mỗi sáng 10 phút trên xe buýt là đủ. Từ nào hay quên thì app tự đưa lại sớm, mình không phải tự lập lịch nữa.' },
+  { name: 'Lê Quốc Bảo', role: 'Kỹ sư phần mềm', initials: 'QB', hue: '#ae3ec9', score: '1.200 từ / 3 tháng', quote: 'Xưởng thẻ AI tạo ví dụ đúng ngữ cảnh công việc. Phần thống kê nói thật: chưa đủ dữ liệu thì ghi là chưa đủ.' },
+  { name: 'Phạm Thu Trang', role: 'Nhân viên xuất nhập khẩu', initials: 'TT', hue: '#e8590c', score: 'Chuỗi 120 ngày', quote: 'Bộ TOEIC có sẵn nên bắt đầu được ngay. Phần phân biệt từ dễ nhầm như receipt và recipe là thứ mình cần nhất.' }
 ];
 
 export default function HomePage() {
-  const [quizIdx, setQuizIdx] = useState(0);
-  const [quizState, setQuizState] = useState(null); // null, { selected: number, isCorrect: boolean }
+  const [quizState, setQuizState] = useState(null);
+  const [hover, setHover] = useState(false);
+  const { index: quizIdx, tick, go, restart } = useCardCycle(QUIZ.length, { interval: CARD_INTERVAL_MS, paused: hover });
 
   const q = QUIZ[quizIdx];
+  const shown = quizState?.idx === quizIdx ? quizState : null;
 
   const handleQuizSelect = (idx) => {
-    if (quizState) return;
-    setQuizState({
-      selected: idx,
-      isCorrect: idx === q.answer
-    });
+    if (shown) return;
+    setQuizState({ idx: quizIdx, selected: idx, isCorrect: idx === q.answer });
+    restart();
   };
 
-  const nextQuiz = () => {
-    setQuizIdx((prev) => (prev + 1) % QUIZ.length);
-    setQuizState(null);
-  };
+  const nextQuiz = () => go(current => current + 1);
 
   return (
     <>
@@ -66,27 +66,30 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <section className={styles.quiz} aria-labelledby="quiz-title" aria-live="polite">
+              <section className={styles.quiz} aria-labelledby="quiz-title" aria-live="polite"
+                onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                 <div className={styles.quizHead}>
                   <span id="quiz-title">Thử một câu</span>
-                  <span id="quiz-code">Câu {quizIdx + 1} ({q.dir})</span>
+                  <span id="quiz-code">Câu {quizIdx + 1}/{QUIZ.length} ({q.dir})</span>
                 </div>
+                <div className={styles.quizTimer} aria-hidden="true"><span key={`${tick}-${hover}`} data-paused={hover || undefined} style={{ animationDuration: `${CARD_INTERVAL_MS}ms` }} /></div>
+                <div className={styles.quizStage}>
                 <div key={quizIdx} className={`${styles.quizBody} ${styles.quizBodySwap}`}>
                   <p className={`${styles.quizPrompt} ${!q.en ? styles.quizPromptVi : ''}`}>{q.prompt}</p>
-                  <p className={styles.quizSub}>{q.sub}</p>
+                  <p className={styles.quizSub}>{q.sub}{q.pos ? `  ${q.pos}` : ''}</p>
                   <ul className={styles.quizOptions} role="list">
                     {q.options.map((opt, i) => {
                       let dataResult = undefined;
-                      if (quizState) {
-                        if (i === q.answer) dataResult = quizState.isCorrect ? 'correct' : 'answer';
-                        else if (i === quizState.selected && !quizState.isCorrect) dataResult = 'wrong';
+                      if (shown) {
+                        if (i === q.answer) dataResult = shown.isCorrect ? 'correct' : 'answer';
+                        else if (i === shown.selected && !shown.isCorrect) dataResult = 'wrong';
                       }
                       return (
                         <li key={i}>
                           <button
                             type="button"
                             onClick={() => handleQuizSelect(i)}
-                            disabled={quizState !== null}
+                            disabled={shown !== null}
                             data-result={dataResult}
                           >
                             <span className={`bubble ${dataResult === 'correct' || dataResult === 'wrong' ? 'is-filled' : ''}`} aria-hidden="true">{['A','B','C','D'][i]}</span>
@@ -97,11 +100,12 @@ export default function HomePage() {
                     })}
                   </ul>
                 </div>
+                </div>
                 <div className={styles.quizFoot}>
-                  <p className={`${styles.verdict} verdict`} role="status" data-kind={quizState ? (quizState.isCorrect ? 'ok' : 'no') : undefined}>
-                    {quizState ? (quizState.isCorrect ? `Đúng. ${q.note}` : `Chưa đúng, đáp án là ${['A','B','C','D'][q.answer]}. ${q.note}`) : 'Chọn một đáp án.'}
+                  <p className={`${styles.verdict} verdict`} role="status" data-kind={shown ? (shown.isCorrect ? 'ok' : 'no') : undefined}>
+                    {shown ? (shown.isCorrect ? `Đúng. ${q.note}` : `Chưa đúng, đáp án là ${['A','B','C','D'][q.answer]}. ${q.note}`) : 'Chọn một đáp án. Thẻ tự đổi sau 10 giây.'}
                   </p>
-                  {quizState && <button type="button" className="btn btn-secondary" onClick={nextQuiz}>{quizIdx < QUIZ.length - 1 ? "Câu tiếp" : "Làm lại"}</button>}
+                  <button type="button" className="btn btn-secondary" onClick={nextQuiz}>Câu tiếp</button>
                 </div>
               </section>
             </div>
@@ -151,6 +155,27 @@ export default function HomePage() {
               </table>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className={`${styles.section} ${styles.voices}`} aria-labelledby="voices-title">
+        <div className={styles.wrap}>
+          <div className={styles.voicesHead}>
+            <h2 id="voices-title">Người học nói gì</h2>
+            <span className={styles.demoStamp}>Nhận xét minh hoạ · dữ liệu demo</span>
+          </div>
+          <ul className={styles.voiceGrid} role="list">
+            {TESTIMONIALS.map(item => (
+              <li key={item.name} className={styles.voice} style={{ '--hue': item.hue }}>
+                <span className={styles.voiceScore}>{item.score}</span>
+                <blockquote><p>{item.quote}</p></blockquote>
+                <div className={styles.voiceWho}>
+                  <span className={styles.voiceAvatar} aria-hidden="true">{item.initials}</span>
+                  <span><strong>{item.name}</strong><small>{item.role}</small></span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

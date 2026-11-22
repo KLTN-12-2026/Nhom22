@@ -27,6 +27,10 @@ public class ApiException extends RuntimeException {
         this(errorCode, null, message, null, details);
     }
 
+    public ApiException(ErrorCode errorCode, String message, long retryAfterSeconds, Map<String, Object> details) {
+        this(errorCode, null, message, retryAfterSeconds, details);
+    }
+
     private ApiException(ErrorCode errorCode, String field, String message, Long retryAfterSeconds) {
         this(errorCode, field, message, retryAfterSeconds, null);
     }

@@ -1,5 +1,6 @@
 .profile { display: grid; gap: var(--sp-5); align-items: start; }
-.side { display: grid; gap: var(--sp-4); align-content: start; min-width: 0; padding: var(--sp-5); }
+.side { display: grid; gap: var(--sp-4); align-content: start; min-width: 0; padding: var(--sp-5) var(--sp-5) var(--sp-5) calc(var(--sp-5) + 14px); }
+:global(.sheet).side::before { left: 12px; top: var(--sp-5); bottom: var(--sp-5); }
 .edit { justify-content: center; }
 .back { margin: 0; }
 .back a { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--tap); color: var(--primary); font-weight: 600; }
@@ -16,5 +17,6 @@
   .side { position: sticky; top: calc(var(--header-h) + var(--sp-4)); }
 }
 @media (max-width: 1023px) {
-  .side { padding: var(--sp-4); }
+  .side { padding: var(--sp-4) var(--sp-4) var(--sp-4) calc(var(--sp-4) + 14px); }
+  :global(.sheet).side::before { left: 8px; top: var(--sp-4); bottom: var(--sp-4); }
 }

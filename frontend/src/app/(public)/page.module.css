@@ -77,10 +77,30 @@
   .heroGrid { grid-template-columns: 7fr 5fr; gap: var(--sp-7); align-items: start; }
   .wrap { padding: 0 var(--sp-5); }
 }
+.quizStage { perspective: 1200px; overflow: hidden; }
+.quizBodySwap { transform-origin: 50% 50%; backface-visibility: hidden; }
+.quizTimer { height: 2px; background: var(--primary-line); overflow: hidden; }
+.quizTimer span { display: block; height: 100%; background: var(--primary); transform-origin: left; animation: quizTimer linear both; }
+.quizTimer span[data-paused] { animation-play-state: paused; }
+@keyframes quizTimer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: no-preference) {
-  .quizBodySwap { animation: swap var(--dur-3) var(--ease-out); }
-  @keyframes swap { from { opacity: 0; transform: translateY(6px); } }
+  .quizBodySwap { animation: flip 700ms var(--ease-out) both; }
+  @keyframes flip { 0% { transform: rotateY(-88deg); opacity: 0.2; } 60% { transform: rotateY(8deg); opacity: 1; } 100% { transform: rotateY(0); } }
 }
+@media (prefers-reduced-motion: reduce) { .quizTimer { display: none; } }
+
+.voicesHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-2) var(--sp-4); }
+.demoStamp { padding: 3px 10px; border: var(--rule) dashed var(--line-2); border-radius: 99px; color: var(--ink-3); font-size: var(--fs-caption); font-weight: 600; }
+.voiceGrid { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.voice { position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: var(--sp-3); padding: var(--sp-5) var(--sp-4) var(--sp-4); background: var(--sheet); border: var(--rule) solid var(--line); border-top: 3px solid var(--hue); border-radius: var(--radius-card); box-shadow: var(--shadow-soft); }
+.voiceScore { justify-self: start; padding: 2px 9px; border-radius: 99px; background: color-mix(in srgb, var(--hue) 12%, var(--sheet)); color: color-mix(in srgb, var(--hue) 75%, var(--ink)); font-family: var(--font-form); font-weight: 700; font-size: var(--fs-caption); }
+.voice blockquote { margin: 0; }
+.voice blockquote p { margin: 0; color: var(--ink-2); line-height: 1.55; }
+.voice blockquote p::before { content: "“"; margin-right: 2px; color: var(--hue); font-family: var(--font-word); font-size: 1.5em; line-height: 0; vertical-align: -0.3em; }
+.voiceWho { display: flex; align-items: center; gap: var(--sp-3); padding-top: var(--sp-3); border-top: var(--rule) dashed var(--line); }
+.voiceAvatar { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--hue); color: #fff; font-family: var(--font-form); font-weight: 800; font-size: 0.875rem; }
+.voiceWho span:last-child { min-width: 0; display: grid; }
+.voiceWho small { color: var(--ink-3); font-size: var(--fs-caption); }
 
 .heroGrid > * { min-width:0; }
 @media(max-width:639px) { .fillRow { grid-template-columns:minmax(0,1fr); } .fillRow > span { border-right:0; } .heroGrid h1 { font-size:var(--fs-home-title); } }

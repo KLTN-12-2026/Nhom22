@@ -44,6 +44,7 @@ export async function apiFetch(path, options = {}) {
       const data = await res.json().catch(() => ({}));
       if (res.status === 403) resetCsrf();
       if (writing && attempt === 0 && res.status === 403 && data.code === 'CSRF_INVALID') continue;
+      if (data.details?.quyenLoi && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('vocab:upgrade', { detail: { status: res.status, data } }));
       throw new ApiError(res.status, data, Number.parseInt(res.headers.get('Retry-After'), 10));
     }
     if (['/api/v1/auth/login', '/api/v1/auth/logout'].includes(path)) resetCsrf();

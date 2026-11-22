@@ -63,6 +63,7 @@ Mỗi tài liệu giải thích từng bước và nhánh lỗi. Tình trạng s
 - [B3.13 — Điểm nổi bật bảng điều khiển và thông báo hệ thống](B3.13-diem-noi-bat-thong-bao-he-thong.md) (mã Mermaid, chưa sinh SVG)
 - [B3.14 — Giới hạn sao chép và duyệt công khai bản sao](B3.14-gioi-han-sao-chep-duyet-cong-khai.md) (mã Mermaid, chưa sinh SVG)
 - [B3.19 — Cập nhật thời gian thực bằng SSE](B3.19-realtime-sse.md) (mã Mermaid, chưa sinh SVG; gồm cả giai đoạn 2, B3.20)
+- [B3.21 — Gói Free, dùng thử, khuyến mãi, ưu đãi HSSV, nâng cấp giữa kỳ](B3.21-goi-free-uu-dai.md) (mã Mermaid, chưa sinh SVG)
 - [B3.5 — Gợi ý có lý do](B3.5-goi-y-co-ly-do.md) (mã Mermaid, chưa sinh SVG)
 - [B3.6 — Điểm thưởng, chuỗi ngày, huy hiệu, thử thách](B3.6-diem-chuoi-huy-hieu.md) (mã Mermaid, chưa sinh SVG)
 - [B3.7 — Thông báo và nhắc học](B3.7-thong-bao-nhac-hoc.md) (mã Mermaid, chưa sinh SVG)

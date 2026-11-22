@@ -6,6 +6,10 @@ public record CheckoutResponse(
         String maDon,
         String paymentUrl,
         long soTien,
+        long giaGoc,
+        long giamGia,
+        long khauTru,
+        String maKhuyenMai,
         Instant hanThanhToanAt,
         boolean moPhong
 ) {

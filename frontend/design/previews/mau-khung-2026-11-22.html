@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Màu khung điều hướng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Gentium+Book+Plus:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --desk:#f3f1ea;--sheet:#fffdf8;--sunk:#f4f1e8;--field:#fff;
+  --ink:#24262c;--ink-2:#474b55;--ink-3:#62677a;--line:#e6e2d6;--line-2:#d8d3c4;
+  --primary:#3549bb;--primary-tint:#eceef9;--on-primary:#fff;
+  --navy:#1f2a5c;--navy-2:#2a3770;--navy-ink:#e9ecf8;--navy-ink-3:#a9b1d6;
+  --shadow-soft:0 1px 2px rgba(16,24,40,.06),0 18px 28px -18px rgba(16,24,40,.28);
+  --font:"Archivo","Segoe UI",system-ui,sans-serif;--word:"Gentium Book Plus",Georgia,serif;
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#171a20;--sheet:#20252d;--sunk:#1b1f26;--field:#272d37;
+  --ink:#f1f0eb;--ink-2:#c2c7d1;--ink-3:#9aa2b4;--line:#2f3641;--line-2:#3a424f;
+  --primary:#aab8ff;--primary-tint:#2d344b;--on-primary:#15161a;
+  --navy:#121729;--navy-2:#1c2440;--navy-ink:#e9ecf8;--navy-ink-3:#8f98bd;
+  --shadow-soft:0 1px 2px rgba(0,0,0,.25),0 18px 32px -18px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:#e9e6dc;color:var(--ink);font-size:14px}
+[data-theme="dark"] body{background:#0f1115}
+.top{max-width:1500px;margin:0 auto;padding:24px 20px 8px;display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+.top h1{margin:0;font-size:22px}
+.top p{margin:4px 0 0;color:var(--ink-3)}
+.top button{border:1px solid var(--line-2);background:var(--sheet);color:var(--ink);border-radius:9px;padding:8px 14px;font:600 13px var(--font);cursor:pointer}
+.grid{max-width:1500px;margin:0 auto;padding:12px 20px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px}
+.opt h2{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}
+.opt h2 .tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--primary);color:var(--on-primary)}
+.opt>p{margin:0 0 10px;color:var(--ink-3);font-size:13px;line-height:1.45}
+
+.frame{--chrome:var(--desk);--chrome-ink:var(--ink-2);--chrome-ink-3:var(--ink-3);--chrome-line:var(--line);--chrome-hover:color-mix(in srgb,var(--ink) 6%,var(--desk));--chrome-field:var(--sheet);--active-bg:var(--primary-tint);--active-ink:var(--ink);--bar:var(--primary);
+  height:420px;border-radius:14px;overflow:hidden;border:1px solid var(--line-2);background:var(--desk);display:grid;grid-template-rows:48px 1fr;grid-template-columns:168px 1fr}
+.frame.b{--chrome:var(--sheet);--chrome-line:var(--line-2);--chrome-hover:var(--sunk);--chrome-field:var(--field)}
+.frame.c{--chrome:var(--navy);--chrome-ink:var(--navy-ink);--chrome-ink-3:var(--navy-ink-3);--chrome-line:var(--navy-2);--chrome-hover:var(--navy-2);--chrome-field:var(--navy-2);--active-bg:color-mix(in srgb,#fff 14%,var(--navy));--active-ink:#fff;--bar:#f2b32b}
+.hd{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--chrome);border-bottom:1px solid var(--chrome-line);color:var(--chrome-ink)}
+.logo{display:flex;align-items:center;gap:7px;font-weight:800;width:150px}
+.logo i{width:22px;height:22px;border-radius:7px;background:var(--primary);display:grid;place-items:center;color:var(--on-primary);font-style:normal;font-size:12px}
+.c .logo i{background:#f2b32b;color:#1f2a5c}
+.logo b{color:var(--primary)}
+.c .logo b{color:#f2b32b}
+.search{flex:1;height:30px;border-radius:8px;background:var(--chrome-field);border:1px solid var(--chrome-line);color:var(--chrome-ink-3);display:flex;align-items:center;padding:0 10px;font-size:12px}
+.chip{height:26px;padding:0 10px;border-radius:99px;border:1px solid var(--chrome-line);display:flex;align-items:center;font-size:12px;font-weight:600}
+.sd{background:var(--chrome);border-right:1px solid var(--chrome-line);padding:10px 8px;display:flex;flex-direction:column;gap:2px;color:var(--chrome-ink)}
+.sd small{padding:8px 10px 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--chrome-ink-3)}
+.it{position:relative;display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:8px;font-weight:500;font-size:13px}
+.it:hover{background:var(--chrome-hover)}
+.it span{width:14px;height:14px;border-radius:4px;border:2px solid var(--hue);flex:none}
+.it.on{background:var(--active-bg);color:var(--active-ink);font-weight:700}
+.it.on::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--bar)}
+.me{margin-top:auto;display:flex;align-items:center;gap:8px;padding:8px;border-top:1px solid var(--chrome-line);font-size:12px;font-weight:600}
+.me i{width:26px;height:26px;border-radius:50%;background:var(--primary-tint);color:var(--primary);display:grid;place-items:center;font-style:normal;font-weight:800}
+.mn{padding:16px;overflow:hidden}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-soft);padding:16px 18px 18px 30px;position:relative;height:100%}
+.sheet::before{content:"";position:absolute;left:12px;top:16px;bottom:16px;width:6px;background:repeating-linear-gradient(to bottom,var(--ink) 0 3px,transparent 3px 20px);opacity:.16}
+.sheet h3{margin:0 0 4px;font-size:18px}
+.sheet p{margin:0 0 12px;color:var(--ink-2);font-size:12.5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.stats div{padding:10px 8px;border-top:3px solid var(--c);font-size:11px;color:var(--ink-3)}
+.stats b{display:block;font:700 22px var(--word);color:var(--c)}
+.rows{margin-top:12px;display:grid;gap:8px}
+.rows div{height:28px;border-radius:8px;border:1px solid var(--line);background:var(--sunk)}
+.verdict{margin-top:10px;display:grid;gap:4px;font-size:12.5px;color:var(--ink-2)}
+.verdict span::before{content:"+ ";color:#2f9e44;font-weight:800}
+.verdict span.m::before{content:"– ";color:#c92a2a}
+</style>
+</head>
+<body>
+<div class="top">
+  <div><h1>Màu khung: header + sidebar</h1><p>Cùng một trang, ba cách tô khung. Nội dung (tờ giấy) giữ nguyên.</p></div>
+  <button id="t" type="button">Chế độ tối</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const OPTS=[
+  {k:'a',name:'A · Màu bàn',tag:'Đề xuất',desc:'Khung dùng --desk, kẻ mảnh --line. Chỉ tờ giấy nổi lên.',pro:['Nội dung nổi bật nhất, mắt đỡ mỏi','Dùng đúng token có sẵn, tối tự đổi'],con:['Khung hơi trầm, ít “thương hiệu”']},
+  {k:'b',name:'B · Giấy trắng (hiện tại)',desc:'Khung dùng --sheet như tờ giấy, kẻ đậm hơn --line-2.',pro:['Sáng, sạch'],con:['Khung và tờ giấy cùng màu, dễ lẫn']},
+  {k:'c',name:'C · Xanh mực',desc:'Khung xanh đậm, chữ sáng, điểm nhấn vàng.',pro:['Cá tính, rõ ranh giới'],con:['Nặng mắt, lệch phong cách giấy in']}
+];
+const NAV=[['Học tập'],['Hôm nay','#e8590c',1],['Bộ của tôi','#3b5bdb'],['Thư viện','#0c8599'],['Từ điển','#7048e8'],['Luyện tập','#1c7ed6'],['Công cụ AI'],['Xưởng thẻ AI','#ae3ec9'],['Phát âm','#c2255c']];
+document.getElementById('grid').innerHTML=OPTS.map(o=>`
+<section class="opt">
+  <h2>${o.name}${o.tag?`<span class="tag">${o.tag}</span>`:''}</h2>
+  <p>${o.desc}</p>
+  <div class="frame ${o.k}">
+    <div class="hd"><span class="logo"><i>V</i><span>Vocab<b>Learning</b></span></span><span class="search">Tra từ điển, tìm bộ thẻ…</span><span class="chip">🔥 12</span></div>
+    <nav class="sd">${NAV.map(n=>n.length===1?`<small>${n[0]}</small>`:`<a class="it${n[2]?' on':''}" style="--hue:${n[1]}"><span></span>${n[0]}</a>`).join('')}<div class="me"><i>P</i>Cài đặt</div></nav>
+    <main class="mn"><div class="sheet"><h3>Hôm nay học gì?</h3><p>4 thẻ cần ôn và 10 từ mới, khoảng 5 phút.</p>
+      <div class="stats"><div style="--c:#b07d12"><b>4</b>Quá hạn</div><div style="--c:#3549bb"><b>0</b>Đến hạn</div><div style="--c:#1e8a5a"><b>10</b>Từ mới</div></div>
+      <div class="rows"><div></div><div></div><div></div></div></div></main>
+  </div>
+  <div class="verdict">${o.pro.map(x=>`<span>${x}</span>`).join('')}${o.con.map(x=>`<span class="m">${x}</span>`).join('')}</div>
+</section>`).join('');
+const r=document.documentElement,t=document.getElementById('t');
+t.onclick=()=>{const d=r.dataset.theme!=='dark';r.dataset.theme=d?'dark':'light';t.textContent=d?'Chế độ sáng':'Chế độ tối'};
+</script>
+</body>
+</html>

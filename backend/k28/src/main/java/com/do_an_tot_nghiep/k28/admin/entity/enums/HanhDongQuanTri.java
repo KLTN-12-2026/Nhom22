@@ -27,5 +27,10 @@ public enum HanhDongQuanTri {
     XOA_THONG_BAO,
     DUYET_CONG_KHAI,
     TU_CHOI_CONG_KHAI,
-    THU_HOI_CONG_KHAI
+    THU_HOI_CONG_KHAI,
+    TAO_KHUYEN_MAI,
+    SUA_KHUYEN_MAI,
+    SUA_UU_DAI,
+    DUYET_HSSV,
+    TU_CHOI_HSSV
 }

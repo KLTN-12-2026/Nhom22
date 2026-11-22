@@ -52,7 +52,11 @@ export const Icons = {
   flame: <g><path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.2 2.2-5.3 3.6-7.4.3 1.6 1.2 2.7 2.3 3.1C11.1 7.1 12.4 4.6 15 3c-.3 2.8 1.2 4.6 2.4 6.3.9 1.3 1.6 2.9 1.6 4.8C19 18.3 16 21 12 21Z"/></g>,
   wifi: <g><path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01"/></g>,
   book: <g><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5v-15Z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/><path d="M9 7h6M9 10.5h4"/></g>,
-  keyboard: <g><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></g>
+  keyboard: <g><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></g>,
+  pin: <g><path d="M9 4h6l-1 6 4 3v2H6v-2l4-3-1-6Z"/><path d="M12 15v6"/></g>,
+  sun: <g><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g>,
+  card: <g><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></g>,
+  home: <g><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-6h6v6"/></g>
 };
 
 export function Icon({ name, className = '' }) {

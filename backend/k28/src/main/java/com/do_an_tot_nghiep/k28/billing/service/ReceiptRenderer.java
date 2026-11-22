@@ -46,6 +46,17 @@ public class ReceiptRenderer {
         }
         row(html, "Thời gian thanh toán",
                 THOI_GIAN.format(don.getHoanTatAt().atZone(zone)) + " (" + zone.getId() + ")");
+        if (don.getGiamGia() > 0 || don.getKhauTru() > 0) {
+            row(html, "Giá gốc", String.format(VI, "%,d", don.getGiaGoc()) + " ₫");
+        }
+        if (don.getGiamGia() > 0) {
+            String nguon = don.isUuDaiHssv() ? "Ưu đãi học sinh, sinh viên"
+                    : don.getMaKhuyenMai() != null ? "Khuyến mãi " + don.getMaKhuyenMai() : "Khuyến mãi";
+            row(html, nguon, "−" + String.format(VI, "%,d", don.getGiamGia()) + " ₫");
+        }
+        if (don.getKhauTru() > 0) {
+            row(html, "Trừ phần còn lại của gói cũ", "−" + String.format(VI, "%,d", don.getKhauTru()) + " ₫");
+        }
         html.append("<tr class=\"tong\"><th>Số tiền</th><td>")
                 .append(esc(String.format(VI, "%,d", don.getSoTien()))).append(" ₫</td></tr></table>")
                 .append("<p class=\"ghi-chu\">Biên nhận này xác nhận bạn đã thanh toán gói dịch vụ. ")

@@ -59,7 +59,7 @@ class FR13ServiceOpsTest extends AbstractIntegrationTest {
                             .cookie(admin.session()))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString());
-            assertThat(list.size()).isEqualTo(8);
+            assertThat(list.size()).isEqualTo(12);
             JsonNode ai = find(list, "PRO", "AI");
             JsonNode tts = find(list, "PRO", "TTS");
             assertThat(ai.get("soLuotNgay").asInt()).isEqualTo(proAi);
@@ -88,7 +88,7 @@ class FR13ServiceOpsTest extends AbstractIntegrationTest {
                     .andExpect(status().isConflict());
             update(admin, List.of(item("PRO", "AI", 1, 0), item("PRO", "AI", 2, 0)), REASON)
                     .andExpect(status().isBadRequest());
-            update(admin, List.of(item("FREE", "AI", 1, 0)), REASON).andExpect(status().isNotFound());
+            update(admin, List.of(item("KHONG", "AI", 1, 0)), REASON).andExpect(status().isNotFound());
             update(admin, List.of(item("PRO", "AI", 10001, 0)), REASON).andExpect(status().isBadRequest());
             update(admin, List.of(item("PRO", "AI", 1, 0)), "ngắn")
                     .andExpect(status().isBadRequest())

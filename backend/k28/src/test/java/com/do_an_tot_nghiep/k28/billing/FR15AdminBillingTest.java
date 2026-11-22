@@ -218,6 +218,9 @@ class FR15AdminBillingTest extends AbstractIntegrationTest {
                 WHERE nguoi_thuc_hien_id = ? AND hanh_dong = 'SUA_GOI_DICH_VU'
                 """, String.class, admin.id())).contains("giaThang", "gioiHanThe").doesNotContain("\"ten\"");
         body.put("giaThang", 0);
+        body.put("version", version + 1);
+        send(admin, put("/api/v1/admin/plans/SUA"), body).andExpect(status().isUnprocessableContent());
+        body.put("giaThang", -1);
         send(admin, put("/api/v1/admin/plans/SUA"), body).andExpect(status().isBadRequest());
         send(admin, put("/api/v1/admin/plans/KHONG"), Map.of("ten", "x", "giaThang", 2000, "giaNam", 20000,
                 "phatAm", true, "boMauCaoCap", false, "hoatDong", true, "version", 0))

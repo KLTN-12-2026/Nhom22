@@ -10,6 +10,7 @@ public record PlanResponse(
         boolean boMauCaoCap,
         Integer hanMucAi,
         Integer hanMucAnh,
-        Integer hanMucPhatAm
+        Integer hanMucPhatAm,
+        Integer hanMucTts
 ) {
 }

@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.billing.entity;
 
+import com.do_an_tot_nghiep.k28.billing.entity.enums.NguonDangKy;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiDangKy;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -41,11 +42,21 @@ public class DangKyGoi extends BaseEntity {
 
     private Instant huyAt;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
+    private NguonDangKy nguon;
+
     @Version
     private Long version;
 
     public static DangKyGoi moi(Long nguoiDungId, String goiMa, Instant batDauAt, Instant hetHanAt) {
+        return moi(nguoiDungId, goiMa, batDauAt, hetHanAt, NguonDangKy.MUA);
+    }
+
+    public static DangKyGoi moi(Long nguoiDungId, String goiMa, Instant batDauAt, Instant hetHanAt, NguonDangKy nguon) {
         DangKyGoi dangKy = new DangKyGoi();
+        dangKy.nguon = nguon;
         dangKy.nguoiDungId = nguoiDungId;
         dangKy.goiMa = goiMa;
         dangKy.batDauAt = batDauAt;
@@ -60,10 +71,22 @@ public class DangKyGoi extends BaseEntity {
 
     public void giaHan(Instant hetHanMoi) {
         this.hetHanAt = hetHanMoi;
+        this.nguon = NguonDangKy.MUA;
+    }
+
+    public boolean traPhi() {
+        return nguon == NguonDangKy.MUA;
     }
 
     public void doiHetHan(Instant hetHanMoi) {
         this.hetHanAt = hetHanMoi;
+    }
+
+    public void thayThe(Instant now) {
+        this.trangThai = TrangThaiDangKy.HET_HAN;
+        if (hetHanAt.isAfter(now) && now.isAfter(batDauAt)) {
+            this.hetHanAt = now;
+        }
     }
 
     public void hetHan() {

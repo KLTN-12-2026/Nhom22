@@ -63,3 +63,4 @@
 .miniLegend i.goal { height: 0; border-top: 1.5px dashed var(--accent-text); background: none; vertical-align: 3px; }
 .mini :global(.btn-quiet) { justify-self: start; margin-left: -12px; }
 @media (prefers-reduced-motion: reduce) { .miniBar i { transition: none; } }
+.deckPick { margin-bottom: var(--sp-4); max-width: 34rem; }

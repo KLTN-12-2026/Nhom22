@@ -8,6 +8,7 @@ import com.do_an_tot_nghiep.k28.billing.config.BillingProperties;
 import com.do_an_tot_nghiep.k28.billing.entity.DangKyGoi;
 import com.do_an_tot_nghiep.k28.billing.entity.GoiDichVu;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.ChuKy;
+import com.do_an_tot_nghiep.k28.billing.entity.enums.NguonDangKy;
 import com.do_an_tot_nghiep.k28.billing.entity.enums.TrangThaiDangKy;
 import com.do_an_tot_nghiep.k28.billing.repository.DangKyGoiRepository;
 import com.do_an_tot_nghiep.k28.billing.repository.GoiDichVuRepository;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EntitlementService {
 
+    public static final String GOI_MIEN_PHI = "FREE";
     static final String GOI_MAC_DINH_KHI_TAT = "PRO";
     static final String GOI_QUAN_TRI = "PREMIUM";
     private static final Locale VI = Locale.forLanguageTag("vi-VN");
@@ -62,7 +64,10 @@ public class EntitlementService {
             return Optional.of(GOI_QUAN_TRI);
         }
         Optional<String> goiMa = current(nguoiDungId).map(DangKyGoi::getGoiMa);
-        return goiMa.isEmpty() && !props.enforce() ? Optional.of(GOI_MAC_DINH_KHI_TAT) : goiMa;
+        if (goiMa.isPresent()) {
+            return goiMa;
+        }
+        return Optional.of(props.enforce() ? GOI_MIEN_PHI : GOI_MAC_DINH_KHI_TAT);
     }
 
     @Transactional(readOnly = true)
@@ -121,28 +126,47 @@ public class EntitlementService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public DangKyGoi activate(Long nguoiDungId, String goiMa, ChuKy chuKy, Instant now) {
+    public DangKyGoi activate(Long nguoiDungId, String goiMa, ChuKy chuKy, Instant now, boolean thayThe) {
         realtime.toUser(nguoiDungId, LoaiSuKien.GOI_THAY_DOI, null);
         Optional<DangKyGoi> hienTai = dangKyGoi.findForUpdateByNguoiDungIdAndTrangThai(nguoiDungId, TrangThaiDangKy.HIEU_LUC);
         if (hienTai.isPresent()) {
             DangKyGoi dangKy = hienTai.get();
-            if (dangKy.getHetHanAt().isAfter(now)) {
-                if (!dangKy.getGoiMa().equals(goiMa)) {
-                    throw new IllegalStateException("User " + nguoiDungId + " paid " + goiMa
-                            + " while plan " + dangKy.getGoiMa() + " is active");
-                }
+            boolean conHan = dangKy.getHetHanAt().isAfter(now);
+            if (conHan && dangKy.getGoiMa().equals(goiMa) && !thayThe) {
                 dangKy.giaHan(plus(dangKy.getHetHanAt(), chuKy));
                 return dangKy;
             }
-            dangKy.hetHan();
+            if (conHan && !thayThe && dangKy.traPhi()) {
+                throw new IllegalStateException("User " + nguoiDungId + " paid " + goiMa
+                        + " while plan " + dangKy.getGoiMa() + " is active");
+            }
+            dangKy.thayThe(now);
             dangKyGoi.saveAndFlush(dangKy);
         }
         return dangKyGoi.save(DangKyGoi.moi(nguoiDungId, goiMa, now, plus(now, chuKy)));
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public DangKyGoi grant(Long nguoiDungId, String goiMa, NguonDangKy nguon, int soNgay, Instant now) {
+        Optional<DangKyGoi> hienTai = dangKyGoi.findForUpdateByNguoiDungIdAndTrangThai(nguoiDungId, TrangThaiDangKy.HIEU_LUC);
+        if (hienTai.isPresent()) {
+            DangKyGoi dangKy = hienTai.get();
+            if (dangKy.getHetHanAt().isAfter(now) && dangKy.traPhi()) {
+                throw new ApiException(ErrorCode.BUSINESS_RULE, "Bạn đang dùng gói trả phí "
+                        + dangKy.getGoiMa() + ", hãy nhận ưu đãi sau khi gói hiện tại hết hạn");
+            }
+            dangKy.thayThe(now);
+            dangKyGoi.saveAndFlush(dangKy);
+        }
+        DangKyGoi moi = dangKyGoi.save(DangKyGoi.moi(nguoiDungId, goiMa, now,
+                now.atZone(props.businessZone()).plusDays(soNgay).toInstant(), nguon));
+        realtime.toUser(nguoiDungId, LoaiSuKien.GOI_THAY_DOI, null);
+        return moi;
+    }
+
     private Optional<GoiDichVu> upgrade(GoiDichVu hienTai, Predicate<GoiDichVu> du) {
         return goiDichVu.findByHoatDongTrueOrderByGiaThangAsc().stream()
-                .filter(goi -> !goi.getMa().equals(hienTai.getMa()))
+                .filter(goi -> !goi.getMa().equals(hienTai.getMa()) && goi.getGiaThang() > 0)
                 .filter(du)
                 .findFirst();
     }

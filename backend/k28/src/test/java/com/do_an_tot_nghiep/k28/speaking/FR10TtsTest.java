@@ -173,7 +173,7 @@ class FR10TtsTest extends AbstractIntegrationTest {
         assertThat(used(learner)).isZero();
         assertThat(reserved(learner)).isZero();
 
-        jdbc.update("UPDATE su_dung_dich_vu SET so_dung = 100 WHERE nguoi_dung_id = ? AND ngay = ? AND loai = 'TTS'",
+        jdbc.update("UPDATE su_dung_dich_vu SET so_dung = (SELECT so_luot_ngay FROM han_muc_dich_vu WHERE goi_ma = 'PRO' AND loai = 'TTS') WHERE nguoi_dung_id = ? AND ngay = ? AND loai = 'TTS'",
                 learner.id(), today());
         audio(learner, ok, null)
                 .andExpect(status().isTooManyRequests())
