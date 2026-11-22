@@ -8,7 +8,7 @@ import { AdminTable } from '@/components/admin/AdminTable';
 import { AdminPageHead, Pill, Who } from '@/components/admin/AdminPageHead';
 import { useAdminConfirm } from '@/components/admin/AdminConfirm';
 import { UserDetailDrawer } from '@/components/admin/UserDetailDrawer';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, resetCsrf } from '@/lib/api-client';
 import { useMe } from '@/hooks/useMe';
 import { relativeTime } from '@/lib/admin-dashboard.mjs';
 import { fetchAllPages, runSequential, setParams } from '@/lib/admin-table.mjs';
@@ -41,10 +41,13 @@ function UsersContent() {
   const { confirm, dialog } = useAdminConfirm();
   const [busy, setBusy] = useState(false);
 
-  const q = params.get('q') || '';
-  const trangThai = params.get('trangThai') || '';
-  const vaiTro = params.get('vaiTro') || '';
-  const page = Math.max(0, Number.parseInt(params.get('page') || '0', 10) || 0);
+  const q = (params.get('q') || '').trim().slice(0, 100);
+  const rawStatus = params.get('trangThai') || '';
+  const trangThai = Object.hasOwn(STATUS, rawStatus) ? rawStatus : '';
+  const rawRole = params.get('vaiTro') || '';
+  const vaiTro = ['ADMIN', 'USER'].includes(rawRole) ? rawRole : '';
+  const rawPage = Number(params.get('page') || 0);
+  const page = Number.isSafeInteger(rawPage) && rawPage >= 0 ? rawPage : 0;
   const openId = params.get('nguoi') || null;
   const [search, setSearch] = useState(q);
   const go = (changes, resetPage = true) => router.replace(`${pathname}${setParams(params, changes, { resetPage })}`, { scroll: false });
@@ -60,6 +63,7 @@ function UsersContent() {
   const setRoles = (user, roles, lyDo) => apiFetch(`/api/v1/admin/users/${user.id}/roles`, { method: 'PUT', body: JSON.stringify({ vaiTro: roles, lyDo }) });
 
   async function act(kind, user) {
+    if (busy) return;
     const self = user.id === me?.id;
     const options = {
       lock: { title: 'Khóa tài khoản', message: `${user.tenHienThi} sẽ bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho tới khi mở khóa.`, confirmLabel: 'Khóa tài khoản', tone: 'danger' },
@@ -71,24 +75,31 @@ function UsersContent() {
     if (!answer) return;
     setBusy(true);
     try {
-      if (kind === 'lock') await setStatus(user, 'BI_KHOA', answer.lyDo);
-      if (kind === 'unlock') await setStatus(user, 'HOAT_DONG', answer.lyDo);
-      if (kind === 'grant') await setRoles(user, ['USER', 'ADMIN'], answer.lyDo);
-      if (kind === 'revoke') await setRoles(user, ['USER'], answer.lyDo);
-      if (kind === 'revoke' && self) { window.location.href = '/hom-nay'; return; }
+      let result;
+      if (kind === 'lock') result = await setStatus(user, 'BI_KHOA', answer.lyDo);
+      if (kind === 'unlock') result = await setStatus(user, 'HOAT_DONG', answer.lyDo);
+      if (kind === 'grant') result = await setRoles(user, ['USER', 'ADMIN'], answer.lyDo);
+      if (kind === 'revoke') result = await setRoles(user, ['USER'], answer.lyDo);
+      if (result?.banThanMatQuyen || (kind === 'revoke' && self)) {
+        resetCsrf();
+        client.clear();
+        window.location.assign('/dang-nhap');
+        return;
+      }
       toast(`${options.confirmLabel}: ${user.tenHienThi}.`, { variant: 'success' });
-      client.invalidateQueries({ queryKey: ['admin-users'] });
-      client.invalidateQueries({ queryKey: ['admin-dashboard'] });
-      client.invalidateQueries({ queryKey: ['admin-user-detail', user.id] });
-      client.invalidateQueries({ queryKey: ['admin-user-audit', user.id] });
     } catch (err) {
       toast(err.message, { variant: 'error' });
     } finally {
       setBusy(false);
+      // Session revocation can fail after the account change has committed.
+      for (const queryKey of [['admin-users'], ['admin-audit'], ['admin-dashboard'], ['admin-user-detail', user.id], ['admin-user-audit', user.id]]) {
+        void client.invalidateQueries({ queryKey });
+      }
     }
   }
 
   async function bulk(kind, selected, clear) {
+    if (busy) return;
     const targets = selected.filter(user => (kind === 'lock' ? user.trangThai === 'HOAT_DONG' && user.id !== me?.id : user.trangThai === 'BI_KHOA'));
     if (!targets.length) {
       toast(kind === 'lock' ? 'Không có tài khoản đang hoạt động nào để khóa (không tự khóa chính mình).' : 'Không có tài khoản bị khóa nào trong các dòng đã chọn.', { variant: 'error' });
@@ -109,6 +120,9 @@ function UsersContent() {
     clear();
     client.invalidateQueries({ queryKey: ['admin-users'] });
     client.invalidateQueries({ queryKey: ['admin-dashboard'] });
+    client.invalidateQueries({ queryKey: ['admin-audit'] });
+    client.invalidateQueries({ queryKey: ['admin-user-detail'] });
+    client.invalidateQueries({ queryKey: ['admin-user-audit'] });
     if (result.failed.length) {
       toast(`Xong ${result.ok.length}/${targets.length}. Lỗi: ${result.failed.map(f => `${f.item.tenHienThi} (${f.error.message})`).join('; ')}`, { variant: 'error' });
     } else {

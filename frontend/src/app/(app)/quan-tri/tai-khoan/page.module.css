@@ -1,0 +1,36 @@
+.filterBar {
+  display: grid;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.filterBar > * { min-width: 0; }
+.filterBar :global(.input-wrapper) { min-width: 0; }
+.filterBar :global(.input), .filterBar :global(.select) { width: 100%; }
+
+.userRow { grid-template-columns: 2.25rem minmax(0, 1fr); }
+.userRow:hover { background: none; }
+.userHead { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.avatar { flex-shrink: 0; }
+.identity { min-width: 0; }
+.userName { font-weight: 650; overflow-wrap: anywhere; }
+.userEmail { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+.self { font-size: var(--fs-small); color: var(--ink-2); font-weight: 400; }
+.userTools { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-left: -12px; }
+.userTools .dangerText { color: var(--danger); }
+.userTools .dangerText:disabled { color: var(--ink-2); }
+.resultLine { font-size: var(--fs-small); color: var(--ink-2); margin: 0 0 var(--sp-2); }
+.pagerWrap { display: flex; justify-content: center; margin-top: var(--sp-4); }
+.rules { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-2); }
+.logLink { margin: var(--sp-2) 0 0 -12px; }
+.reasonForm { display: grid; gap: var(--sp-4); }
+.dialogEmail { font-size: var(--fs-small); color: var(--ink-2); overflow-wrap: anywhere; }
+
+@media (min-width: 720px) {
+  .filterBar { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; }
+}
+
+@media (max-width: 480px) {
+  .userRow { grid-template-columns: 1.25rem minmax(0, 1fr); gap: var(--sp-2); }
+  .userTools > button { max-width: 100%; white-space: normal; text-align: left; }
+}

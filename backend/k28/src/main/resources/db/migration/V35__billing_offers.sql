@@ -150,9 +150,10 @@ ALTER TABLE nhat_ky_quan_tri
                              'GIU_NOI_DUNG', 'AN_NOI_DUNG', 'SUA_HAN_MUC',
                              'TAO_THONG_BAO', 'SUA_THONG_BAO', 'XOA_THONG_BAO',
                              'DUYET_CONG_KHAI', 'TU_CHOI_CONG_KHAI', 'THU_HOI_CONG_KHAI',
+                             'TAO_HUY_HIEU', 'SUA_HUY_HIEU', 'TAO_THU_THACH', 'SUA_THU_THACH',
                              'TAO_KHUYEN_MAI', 'SUA_KHUYEN_MAI', 'SUA_UU_DAI', 'DUYET_HSSV', 'TU_CHOI_HSSV'
             )),
     ADD CONSTRAINT ck_nkqt_loai_doi_tuong
         CHECK (loai_doi_tuong IN ('NGUOI_DUNG', 'BO_THE', 'THE_TU_VUNG', 'GOI_DICH_VU', 'DANG_KY_GOI',
                                   'YEU_CAU_AI', 'HAN_MUC_DICH_VU', 'THONG_BAO_HE_THONG',
-                                  'KHUYEN_MAI', 'CHUONG_TRINH_UU_DAI', 'XAC_MINH_HSSV'));
+                                  'HUY_HIEU', 'THU_THACH', 'KHUYEN_MAI', 'CHUONG_TRINH_UU_DAI', 'XAC_MINH_HSSV'));

@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,4 +44,23 @@ public class HuyHieu extends BaseEntity {
     private int thuTu;
 
     private boolean hoatDong;
+
+    @Version
+    private Long version;
+
+    public static HuyHieu create(String ma, String ten, String moTa, LoaiDieuKienHuyHieu loaiDieuKien, int nguong, int thuTu, boolean hoatDong) {
+        HuyHieu row = new HuyHieu();
+        row.ma = ma;
+        row.update(ten, moTa, loaiDieuKien, nguong, thuTu, hoatDong);
+        return row;
+    }
+
+    public void update(String ten, String moTa, LoaiDieuKienHuyHieu loaiDieuKien, int nguong, int thuTu, boolean hoatDong) {
+        this.ten = ten;
+        this.moTa = moTa;
+        this.loaiDieuKien = loaiDieuKien;
+        this.nguong = nguong;
+        this.thuTu = thuTu;
+        this.hoatDong = hoatDong;
+    }
 }

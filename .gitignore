@@ -31,6 +31,7 @@ next-env.d.ts
 # Java / Maven
 backend/k28/target/
 backend/k28/HELP.md
+/backend/k28/backups/
 
 # Python
 __pycache__/

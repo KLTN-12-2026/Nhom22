@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Fragment, Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,9 +9,11 @@ import { apiFetch } from '@/lib/api-client';
 import { relativeTime } from '@/lib/admin-dashboard.mjs';
 import { handledId } from '@/lib/realtime.mjs';
 import { useRealtimeEvent } from '@/hooks/useEventStream';
+import { useCooldown } from '@/hooks/useCooldown';
+import { SNAPSHOT_LABELS, snapshotEntries } from '@/lib/moderation-admin.mjs';
 import {
   REASON_MAX, REPORT_REASON, REPORT_STATUS, REPORT_TABS, TARGET_TYPE, contentLink, listReports, reasonError,
-  resolveReport, snapshotRows,
+  resolveReport,
 } from '@/lib/admin-ops.mjs';
 
 const fullTime = iso => (iso ? new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }) : '—');
@@ -21,40 +23,56 @@ function StatusPill({ status }) {
   return <span className={`adm-pill adm-pill-${tone}`}>{label}</span>;
 }
 
+function SnapshotValue({ value }) {
+  if (value == null || value === '') return <span className="adm-muted">Chưa có</span>;
+  if (typeof value === 'boolean') return value ? 'Có' : 'Không';
+  if (Array.isArray(value)) return value.length ? <ol>{value.map((item, index) => <li key={index}><SnapshotValue value={item} /></li>)}</ol> : <span className="adm-muted">Không có mục nào</span>;
+  if (typeof value === 'object') return <dl className="adm-kv">{Object.entries(value).map(([key, item]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={item} /></dd></Fragment>)}</dl>;
+  return String(value);
+}
+
 function ResolveForm({ report, onDone }) {
   const client = useQueryClient();
   const [quyetDinh, setQuyetDinh] = useState('');
   const [lyDo, setLyDo] = useState('');
   const [touched, setTouched] = useState(false);
+  const busy = useRef(false);
   const mutation = useMutation({
     mutationFn: () => resolveReport(apiFetch, report.id, { quyetDinh, lyDo }),
     onSuccess: result => {
-      client.invalidateQueries({ queryKey: ['admin-reports'] });
-      client.invalidateQueries({ queryKey: ['admin-dashboard'] });
+      for (const queryKey of [['admin-reports'], ['admin-dashboard'], ['admin-queue'], ['admin-audit'], ['library-decks'], ['library-deck'], ['ai-history'], ['ai-request']]) {
+        void client.invalidateQueries({ queryKey });
+      }
       onDone(result, quyetDinh === 'AN' ? 'Đã ẩn nội dung và đóng mọi báo cáo đang chờ về nội dung này.' : 'Đã giữ nội dung và đóng mọi báo cáo đang chờ về nội dung này.');
     },
     onError: error => {
       if (error.status === 409 || error.status === 404) client.invalidateQueries({ queryKey: ['admin-reports'] });
     },
   });
+  const cooldown = useCooldown(mutation.error);
+  const conflict = mutation.error?.status === 409 || mutation.error?.status === 404;
   const reasonMsg = reasonError(lyDo);
   const serverField = mutation.error?.fieldErrors?.find(f => f.field === 'lyDo')?.message;
-  const submit = event => {
+  const submit = async event => {
     event.preventDefault();
+    if (busy.current || mutation.isPending || cooldown || conflict) return;
     setTouched(true);
     if (!quyetDinh || reasonMsg) return;
-    mutation.mutate();
+    busy.current = true;
+    try { await mutation.mutateAsync(); }
+    catch { /* The mutation error is shown below. */ }
+    finally { busy.current = false; }
   };
   return (
     <form id="resolve-form" onSubmit={submit} noValidate>
       <p className="adm-section-title">Quyết định</p>
-      <fieldset className="adm-choice" aria-label="Quyết định xử lý">
+      <fieldset className="adm-choice" aria-label="Quyết định xử lý" disabled={mutation.isPending || conflict}>
         <label><input type="radio" name="quyetDinh" value="GIU" checked={quyetDinh === 'GIU'} onChange={() => setQuyetDinh('GIU')} /><span><b>Giữ nội dung</b><small>Báo cáo không đúng, nội dung tiếp tục hiển thị.</small></span></label>
         <label><input type="radio" name="quyetDinh" value="AN" checked={quyetDinh === 'AN'} onChange={() => setQuyetDinh('AN')} /><span><b>Ẩn nội dung</b><small>Gỡ khỏi thư viện; chủ sở hữu vẫn thấy trạng thái đã ẩn.</small></span></label>
       </fieldset>
       {touched && !quyetDinh && <p className="adm-error" role="alert">Chọn giữ hoặc ẩn nội dung.</p>}
       <label className="adm-label" htmlFor="resolve-reason" style={{ marginTop: 14 }}>Lý do xử lý</label>
-      <textarea id="resolve-reason" className="adm-textarea" rows={4} maxLength={REASON_MAX + 50} value={lyDo} onChange={event => setLyDo(event.target.value)} aria-invalid={touched && !!(reasonMsg || serverField)} aria-describedby="resolve-reason-hint" placeholder="Ví dụ: Đã đối chiếu từ điển, nghĩa tiếng Việt đúng." />
+      <textarea id="resolve-reason" className="adm-textarea" rows={4} maxLength={REASON_MAX} disabled={mutation.isPending || conflict} value={lyDo} onChange={event => setLyDo(event.target.value)} aria-invalid={touched && !!(reasonMsg || serverField)} aria-describedby="resolve-reason-hint" placeholder="Ví dụ: Đã đối chiếu từ điển, nghĩa tiếng Việt đúng." />
       <p id="resolve-reason-hint" className={touched && (reasonMsg || serverField) ? 'adm-error' : 'adm-hint'}>
         {touched && (reasonMsg || serverField) ? (reasonMsg || serverField) : `${lyDo.trim().length}/${REASON_MAX} ký tự · lý do được ghi vào nhật ký quản trị.`}
       </p>
@@ -62,8 +80,8 @@ function ResolveForm({ report, onDone }) {
         <p className="adm-notice adm-notice-bad" role="alert" style={{ marginTop: 12 }}><Icon name="alert" />{mutation.error.status === 409 ? 'Báo cáo này vừa được người khác xử lý. Danh sách đã được tải lại.' : mutation.error.message}</p>
       )}
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
-        <button type="submit" className={`adm-btn ${quyetDinh === 'AN' ? 'adm-btn-danger' : 'adm-btn-primary'}`} disabled={mutation.isPending}>
-          {mutation.isPending ? 'Đang lưu…' : quyetDinh === 'AN' ? 'Ẩn nội dung' : quyetDinh === 'GIU' ? 'Giữ nội dung' : 'Xác nhận'}
+        <button type="submit" className={`adm-btn ${quyetDinh === 'AN' ? 'adm-btn-danger' : 'adm-btn-primary'}`} disabled={mutation.isPending || cooldown > 0 || conflict}>
+          {cooldown ? `Thử lại sau ${cooldown}s` : mutation.isPending ? 'Đang lưu…' : quyetDinh === 'AN' ? 'Ẩn nội dung' : quyetDinh === 'GIU' ? 'Giữ nội dung' : 'Xác nhận'}
         </button>
       </div>
     </form>
@@ -71,7 +89,7 @@ function ResolveForm({ report, onDone }) {
 }
 
 function ReportDetail({ report, onDone }) {
-  const rows = snapshotRows(report);
+  const rows = snapshotEntries(report.noiDung);
   const link = contentLink(report);
   return (
     <>
@@ -87,7 +105,7 @@ function ReportDetail({ report, onDone }) {
       {report.moTa ? <p className="adm-quote">{report.moTa}</p> : <p className="adm-muted">Người báo cáo không ghi thêm mô tả.</p>}
       <p className="adm-section-title">Nội dung lúc bị báo cáo</p>
       <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{report.noiDung?.ten || '—'}</p>
-      {rows.length ? <dl className="adm-kv">{rows.map(([label, value]) => <div key={label} style={{ display: 'contents' }}><dt>{label}</dt><dd>{value}</dd></div>)}</dl> : <p className="adm-muted">Không có thêm trường nào.</p>}
+      {rows.length ? <dl className="adm-kv">{rows.map(([key, value]) => <Fragment key={key}><dt>{SNAPSHOT_LABELS[key] || key}</dt><dd><SnapshotValue value={value} /></dd></Fragment>)}</dl> : <p className="adm-muted">Không có thêm trường nào.</p>}
       {link && <p style={{ margin: '10px 0 0' }}><Link className="adm-btn adm-btn-sm" href={link} target="_blank" rel="noopener"><Icon name="link" />Mở nội dung hiện tại</Link></p>}
       {report.trangThai === 'CHO_XU_LY' ? <ResolveForm key={report.id} report={report} onDone={onDone} /> : (
         <>
@@ -124,6 +142,7 @@ function ReportsContent() {
     queryKey: ['admin-reports', trangThai, loaiDoiTuong, page],
     queryFn: () => listReports(apiFetch, { trangThai, loaiDoiTuong, page }),
     placeholderData: previous => previous,
+    refetchInterval: 30_000,
   });
   const pending = useQuery({
     queryKey: ['admin-reports', 'CHO_XU_LY', '', 'count'],

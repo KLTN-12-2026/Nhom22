@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { dateTime } from '@/lib/remote-contract.mjs';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { BadgeArt } from '@/components/engagement/BadgeArt';
 import styles from './page.module.css';
@@ -26,7 +27,7 @@ const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '');
 function Meter({ value, max, label }) {
   const v = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   return (
-    <div className="meter is-progress" role="progressbar" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={max}>
+    <div className="meter is-progress" role="progressbar" aria-label={label} aria-valuenow={Math.min(value, max || 1)} aria-valuemin={0} aria-valuemax={max || 1}>
       <span style={{ '--v': v }}></span>
     </div>
   );
@@ -34,7 +35,7 @@ function Meter({ value, max, label }) {
 
 export default function AchievementsPage() {
   const [page, setPage] = useState(1);
-  const rewards = useQuery({ queryKey: ['rewards', page], queryFn: () => apiFetch(`/api/v1/rewards/history?page=${page - 1}&size=10`) });
+  const rewards = useQuery({ queryKey: ['rewards', page], queryFn: () => apiFetch(`/api/v1/rewards/history?page=${page - 1}&size=20`) });
   const badges = useQuery({ queryKey: ['badges'], queryFn: () => apiFetch('/api/v1/badges') });
   const challenges = useQuery({ queryKey: ['challenges'], queryFn: () => apiFetch('/api/v1/challenges') });
   const today = useQuery({ queryKey: ['learning-today'], queryFn: () => apiFetch('/api/v1/learning/today'), retry: false });
@@ -104,6 +105,14 @@ export default function AchievementsPage() {
             </div>
           </dl>
 
+          {today.isError && <ErrorState title="Chưa tải được chuỗi ngày" description={today.error.message} onRetry={today.refetch} />}
+          {today.data && <p className={styles.restNote}>
+            <Icon name="info" />
+            <span>{today.data.daDungNgayNghiTuanNay
+              ? `Đã dùng ngày nghỉ tuần này (${fmtDay(today.data.ngayNghiDaDung)}). Nghỉ thêm một ngày trong tuần sẽ đứt chuỗi.`
+              : 'Mỗi tuần (thứ Hai–Chủ nhật) được nghỉ 1 ngày mà không đứt chuỗi.'}</span>
+          </p>}
+
           <section className={styles.section} aria-labelledby="badge-title">
             <div className={styles.secHead}>
               <h2 id="badge-title">Huy hiệu</h2>
@@ -119,7 +128,7 @@ export default function AchievementsPage() {
                       <p>{b.moTa}</p>
                       <span className={styles.cond}><Icon name="target" />{(CONDITION[b.loaiDieuKien] || (n => `Ngưỡng ${n}`))(b.nguong)}</span>
                       {b.daNhan
-                        ? <span className="stamp stamp-success"><Icon name="check" />Đã nhận · {fmtDate(b.nhanAt)}</span>
+                        ? <span className="stamp stamp-success"><Icon name="check" />Đã nhận{b.nhanAt && <> · <time dateTime={b.nhanAt}>{dateTime(b.nhanAt)}</time></>}</span>
                         : <span className="stamp stamp-quiet">Chưa mở khóa</span>}
                     </div>
                   </li>

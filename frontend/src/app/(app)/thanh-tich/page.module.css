@@ -43,3 +43,5 @@
   .badges { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .badges li { transition: none; } }
+.restNote { display: flex; align-items: flex-start; gap: var(--sp-2); color: var(--ink-2); font-size: var(--fs-small); }
+.restNote svg { flex: 0 0 auto; width: 18px; height: 18px; }

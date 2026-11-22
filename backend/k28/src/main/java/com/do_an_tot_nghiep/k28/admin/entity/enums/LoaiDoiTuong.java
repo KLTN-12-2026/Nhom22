@@ -8,6 +8,8 @@ public enum LoaiDoiTuong {
     DANG_KY_GOI,
     YEU_CAU_AI,
     HAN_MUC_DICH_VU,
+    HUY_HIEU,
+    THU_THACH,
     THONG_BAO_HE_THONG,
     KHUYEN_MAI,
     CHUONG_TRINH_UU_DAI,

@@ -1,0 +1,55 @@
+.page { max-width: var(--app-page-max); }
+.breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-5); font-size: var(--fs-small); color: var(--ink-2); }
+.toolbar { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); flex: 1; max-width: 36rem; }
+.message { margin-bottom: var(--sp-4); }
+.tableWrap { width: 100%; overflow-x: auto; border: var(--rule) solid var(--primary-line); border-radius: var(--radius-btn); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
+.table caption { padding: var(--sp-3) var(--sp-4); text-align: left; color: var(--ink-2); background: var(--sunk); }
+.table caption strong, .table caption span { display: block; }
+.table caption strong { color: var(--ink); margin-bottom: var(--sp-1); }
+.table th, .table td { padding: var(--sp-4); text-align: left; vertical-align: middle; border-bottom: var(--rule) solid var(--primary-line); overflow-wrap: anywhere; }
+.table th { background: var(--primary-tint); color: var(--primary-strong); font-weight: 650; }
+.table th:first-child { width: 32%; }
+.table tr:last-child td { border-bottom: 0; }
+.table td:last-child { text-align: right; }
+.table td:last-child button { white-space: nowrap; }
+.target { display: grid; gap: var(--sp-1); }
+.target strong { font-size: var(--fs-body); color: var(--ink); }
+.type { display: block; color: var(--primary-strong); font-size: var(--fs-caption); font-weight: 650; }
+.meta { display: block; color: var(--ink-2); font-size: var(--fs-caption); margin-top: var(--sp-1); }
+.pager { margin-top: var(--sp-5); }
+.reviewDialog { width: min(100% - var(--sp-6), 48rem); }
+.reviewBody, .reviewHeading, .form, .fields { display: grid; gap: var(--sp-4); }
+.reviewHeading { gap: var(--sp-2); justify-items: start; }
+.reviewHeading h3 { overflow-wrap: anywhere; }
+.evidence, .complaint, .resolution { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: var(--rule) solid var(--primary-line); border-radius: var(--radius-btn); overflow-wrap: anywhere; }
+.evidence { background: var(--sunk); }
+.complaint > p, .resolution > p { white-space: pre-wrap; }
+.evidenceDetails { display: grid; grid-template-columns: minmax(6rem, 1fr) minmax(0, 3fr); gap: var(--sp-2) var(--sp-4); margin: 0; font-size: var(--fs-small); }
+.evidenceDetails dt { color: var(--ink-2); font-weight: 650; }
+.evidenceDetails dd { min-width: 0; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.evidenceDetails .evidenceDetails { grid-template-columns: minmax(0, 1fr); padding-left: var(--sp-3); border-left: var(--rule) solid var(--primary-line); }
+.evidenceList { display: grid; gap: var(--sp-3); padding-left: var(--sp-4); margin: 0; }
+.fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+.reviewDialog :global(.modal__footer) { justify-content: flex-end; }
+.reviewDialog :global(.modal__footer .btn) { max-width: 100%; white-space: normal; }
+@media (max-width: 1100px) and (min-width: 721px) { .table th, .table td { padding: var(--sp-3); } }
+@media (max-width: 720px) {
+  .filters { flex-basis: 100%; max-width: none; }
+  .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .table tbody tr { display: grid; gap: var(--sp-3); padding: var(--sp-4); border-bottom: var(--rule) solid var(--primary-line); }
+  .table tbody tr:last-child { border-bottom: 0; }
+  .table td { display: grid; grid-template-columns: 6.25rem minmax(0, 1fr); gap: var(--sp-2); padding: 0; border: 0; text-align: left; }
+  .table td::before { content: attr(data-label); color: var(--ink-2); font-weight: 650; }
+  .table td:first-child, .table td:last-child { display: block; }
+  .table td:first-child::before, .table td:last-child::before { display: none; }
+  .table td:last-child button { width: 100%; }
+  .table td :global(.stamp) { justify-self: start; }
+  .table td time { grid-column: 2; }
+}
+@media (max-width: 480px) {
+  .filters { grid-template-columns: minmax(0, 1fr); }
+  .evidenceDetails { grid-template-columns: minmax(0, 1fr); }
+  .evidenceDetails dd { margin-bottom: var(--sp-2); }
+}
