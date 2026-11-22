@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
+import { apiFetch } from '@/lib/api-client';
+import { fx } from '@/lib/fx';
 import { REALTIME_EVENT, REALTIME_KEYS, STREAM_URL, incidentMessage, keysFor, parseEvent } from '@/lib/realtime.mjs';
 
 const JOB_TOAST_GAP_MS = 60_000;
@@ -16,12 +18,26 @@ export function useEventStream(userId) {
   useEffect(() => {
     if (userId == null || typeof window === 'undefined' || typeof EventSource === 'undefined') return undefined;
     const source = new EventSource(STREAM_URL, { withCredentials: true });
+    const announce = async () => {
+      fx.play('notify');
+      let latest = null;
+      try { latest = (await apiFetch('/api/v1/notifications?page=0&size=1'))?.thongBao?.items?.[0] || null; } catch {}
+      const link = latest?.lienKet;
+      const safe = typeof link === 'string' && /^\/(?!\/)/.test(link) && !/[\\\u0000- ]/.test(link);
+      const body = latest?.noiDung || 'Mở chuông thông báo để xem chi tiết.';
+      toast(body.length > 140 ? `${body.slice(0, 140)}…` : body, {
+        variant: 'notify',
+        title: latest?.tieuDe || 'Bạn có thông báo mới',
+        duration: 8000,
+        action: safe ? { label: 'Xem', onClick: () => router.push(link) } : undefined,
+      });
+    };
     const listeners = Object.keys(REALTIME_KEYS).map(type => {
       const listener = event => {
         const { id } = parseEvent(event.data);
         keysFor(type, id).forEach(queryKey => queryClient.invalidateQueries({ queryKey }));
         window.dispatchEvent(new CustomEvent(REALTIME_EVENT, { detail: { loai: type, id } }));
-        if (type === 'THONG_BAO_MOI') toast('Bạn có thông báo mới');
+        if (type === 'THONG_BAO_MOI') announce();
         if (type === 'SU_CO_HE_THONG') {
           const message = incidentMessage(id);
           const isJob = id?.startsWith('TAC_VU');

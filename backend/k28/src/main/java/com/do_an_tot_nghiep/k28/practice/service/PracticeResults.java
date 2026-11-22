@@ -48,7 +48,11 @@ class PracticeResults {
         if (ten != null) {
             return ten;
         }
-        return nguon == NguonBaiLuyen.SO_TAY ? PracticeService.SO_TAY_TEN : PracticeService.TAT_CA_BO;
+        return switch (nguon) {
+            case SO_TAY -> PracticeService.SO_TAY_TEN;
+            case VUA_HOC -> PracticeService.VUA_HOC_TEN;
+            case BO_THE -> PracticeService.TAT_CA_BO;
+        };
     }
 
     String boTheTen(BaiLuyen practice) {

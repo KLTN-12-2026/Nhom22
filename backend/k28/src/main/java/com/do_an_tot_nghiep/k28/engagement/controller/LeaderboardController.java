@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.engagement.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
+import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardProfileResponse;
 import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardQuery;
 import com.do_an_tot_nghiep.k28.engagement.dto.LeaderboardResponse;
 import com.do_an_tot_nghiep.k28.engagement.dto.WeeklyHonorResponse;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,6 +25,11 @@ public class LeaderboardController {
     @GetMapping("/api/v1/leaderboard")
     public LeaderboardResponse leaderboard(@Valid @ModelAttribute LeaderboardQuery query) {
         return leaderboardService.leaderboard(currentUser.id(), query);
+    }
+
+    @GetMapping("/api/v1/leaderboard/users/{id}")
+    public LeaderboardProfileResponse profile(@PathVariable("id") Long id) {
+        return leaderboardService.profile(id);
     }
 
     @GetMapping("/api/v1/leaderboard/weekly-honors")

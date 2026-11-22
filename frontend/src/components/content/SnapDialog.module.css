@@ -18,7 +18,7 @@
 .format { position: relative; display: flex; align-items: center; gap: var(--sp-3); min-height: var(--tap); padding: var(--sp-2) var(--sp-3); border: var(--rule) solid var(--line-2); border-radius: var(--radius-control); background: var(--sheet); cursor: pointer; transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease); }
 .format:hover { border-color: var(--primary); }
 .format:has(input:checked) { border-color: var(--primary); background: var(--primary-tint); }
-.format:has(input:focus-visible), .theme:has(input:focus-visible), .toggle:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.format:has(input:focus-visible), .theme:has(input:focus-visible), .toggle:has(input:focus-visible) { outline: none; box-shadow: var(--focus); }
 .format input, .theme input { position: absolute; opacity: 0; pointer-events: none; }
 .formatShape { flex: none; display: grid; place-items: center; width: 30px; height: 34px; }
 .formatShape::before { content: ""; height: 30px; aspect-ratio: calc(var(--w) / var(--h)); max-width: 30px; border: 2px solid var(--ink-3); border-radius: 4px; }

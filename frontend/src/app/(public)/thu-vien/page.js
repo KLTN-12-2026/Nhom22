@@ -199,7 +199,7 @@ function LibraryContent() {
             </div>
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
-                <li key={deck.id} className={`answer-row deck-row${copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
+                <li key={deck.id} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
                   <span className="answer-no">{page * size + i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
@@ -214,6 +214,11 @@ function LibraryContent() {
                         <span className="stamp stamp-graphite">Người học chia sẻ</span>
                       )}
                       {deck.caoCap && <PlanTag code="PREMIUM" locked={false} label="Premium" />}
+                      {me && deck.chuSoHuuId === me.id && (
+                        <Link className={`stamp stamp-accent ${styles.copiedStamp}`} href={`/bo-the/${deck.id}`} title="Mở trong Bộ của tôi">
+                          <Icon name="user" />Bộ của bạn
+                        </Link>
+                      )}
                       {copyOf.has(deck.id) && (
                         <Link className={`stamp stamp-success ${styles.copiedStamp}`} href={`/bo-the/${copyOf.get(deck.id)}`} title="Mở bản sao của bạn">
                           <Icon name="check" />Đã sao chép

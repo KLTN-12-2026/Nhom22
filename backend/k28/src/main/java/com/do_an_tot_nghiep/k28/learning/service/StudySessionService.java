@@ -126,7 +126,7 @@ public class StudySessionService {
         }
 
         PhienHoc session = sessions.save(PhienHoc.start(
-                userId, boTheId, chieu, zone.getId(), now, quyThoiGian, cheDo
+                userId, boTheId, chieu, zone.getId(), now, quyThoiGian, cheDo, tuDo
         ));
         List<PhienHocThe> rows = queue.saveAll(
                 IntStream.range(0, cardIds.size())

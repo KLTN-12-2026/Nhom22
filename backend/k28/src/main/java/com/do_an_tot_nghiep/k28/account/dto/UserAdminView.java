@@ -10,6 +10,8 @@ public record UserAdminView(
         String trangThai,
         Set<String> vaiTro,
         Instant createdAt,
-        Instant dangNhapCuoiAt
+        Instant dangNhapCuoiAt,
+        String anhDaiDienId,
+        boolean anhDaiDienBiAn
 ) {
 }

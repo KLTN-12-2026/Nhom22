@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Pagination } from '@/components/ui';
+import { ConfirmDialog, Icon, Pagination } from '@/components/ui';
+import { CardActions } from '@/components/content/CardActions';
 import { SpeakButton } from '@/components/content/SpeakButton';
 import { ERROR_GROUP, label } from '@/lib/practice-labels.mjs';
 import styles from './page.module.css';
@@ -44,6 +45,7 @@ function NotebookContent() {
   const [editingNote, setEditingNote] = useState(null);
   const [noteContent, setNoteContent] = useState('');
   const [actionError, setActionError] = useState('');
+  const [removing, setRemoving] = useState(null);
   const fail = (err) => setActionError(err.message || 'Chưa thực hiện được. Hãy thử lại.');
 
   const { data: notebook, isLoading: nbLoading, error: nbError } = useQuery({
@@ -101,11 +103,9 @@ function NotebookContent() {
     updateMutation.mutate({ id: it.theId, body: { danhDauThuCong: !it.danhDauThuCong } });
   };
 
-  const removeEntry = (id) => {
-    if (window.confirm('Bỏ khỏi sổ tay? Lịch sử ôn và bài luyện vẫn giữ nguyên.')) {
-      setActionError('');
-      deleteMutation.mutate(id);
-    }
+  const confirmRemove = () => {
+    setActionError('');
+    deleteMutation.mutate(removing.theId, { onSettled: () => setRemoving(null) });
   };
 
   const startPracticeNotebook = () => {
@@ -153,9 +153,9 @@ function NotebookContent() {
         </div>
 
         <div className={styles.toolbarRow}>
-          <p className="small muted" id="filter-note" aria-live="polite"></p>
-          <button type="button" className="btn btn-accent btn-lg" id="practice" onClick={startPracticeNotebook} disabled={!totalCount || practiceMutation.isPending}>
-            Luyện các từ trong sổ tay
+          <p className="small muted">{totalCount > 0 ? 'Bài luyện gồm 10 câu lấy từ các từ trong sổ.' : 'Sổ tay chưa có từ nào để luyện.'}</p>
+          <button type="button" className="btn btn-accent btn-lg" id="practice" onClick={startPracticeNotebook} disabled={!totalCount || practiceMutation.isPending} aria-busy={practiceMutation.isPending}>
+            <Icon name="practice" />{practiceMutation.isPending ? 'Đang tạo bài…' : 'Luyện các từ trong sổ tay'}
           </button>
         </div>
 
@@ -171,93 +171,101 @@ function NotebookContent() {
           </div>
           <div data-when="ready">
             <ol className="answer-list" id="list" role="list">
-              {notebook?.items?.map((it, i) => (
+              {notebook?.items?.map((it, i) => {
+                const deckName = it.boTheTen || 'Bộ của tôi';
+                return (
                 <li key={it.theId} className={`answer-row ${styles.nbRow}`}>
                   <span className="answer-no">{page * (notebook?.size || 20) + i + 1}</span>
-                  <div className="answer-main">
-                    <div className={styles.nbWord}>
-                      <strong lang="en">{it.tu}</strong>
-                      {it.phienAm && <span className={styles.nbIpa}>{it.phienAm}</span>}
-                      {it.tuLoai && <span className="small muted">{it.tuLoai}</span>}
+                  <div className={styles.nbBody}>
+                    <div className={styles.nbHead}>
+                      <span className="entry-word" lang="en">{it.tu}</span>
+                      <SpeakButton text={it.tu} compact />
+                      {it.phienAm && <span className="entry-ipa" lang="en">{it.phienAm}</span>}
+                      {it.tuLoai && <span className="pos" lang="en">{it.tuLoai}</span>}
                     </div>
+                    <p className={styles.nbMean}>{it.nghiaVi}</p>
 
-                    <div className={styles.nbMean}>{it.nghiaVi}</div>
-
-                    <div className={styles.nbStamps}>
-                      {it.lyDo?.map(r => (
-                        <span key={r} className={`stamp${r === 'DANH_DAU_THU_CONG' ? '' : ' stamp-warning'}`}>
-                          {REASON[r]}
-                        </span>
-                      ))}
-                      {it.nhomLoi?.map(g => (
-                        <span key={g.nhomLoi} className="stamp stamp-quiet">
-                          {label(ERROR_GROUP, g.nhomLoi)} &times; {g.soLan}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="answer-meta">
-                      <Link href={`/bo-the/${it.boTheId}/tien-do`}>
-                        {(it.boTheTen || 'Bộ của tôi').length > 60 ? (it.boTheTen || 'Bộ của tôi').slice(0, 60) + '…' : (it.boTheTen || 'Bộ của tôi')}
-                      </Link>
-                      {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
-                      {it.lanGanNhatAt && <span>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
-                    </div>
+                    {(it.lyDo?.length > 0 || it.nhomLoi?.length > 0) && (
+                      <div className={styles.nbTags}>
+                        {it.lyDo?.map(r => (
+                          <span key={r} className={`${styles.reason}${r === 'DANH_DAU_THU_CONG' ? ` ${styles.reasonMine}` : ''}`}>
+                            <Icon name={r === 'DANH_DAU_THU_CONG' ? 'star' : 'alert'} />{REASON[r]}
+                          </span>
+                        ))}
+                        {it.nhomLoi?.map(g => (
+                          <span key={g.nhomLoi} className={styles.tally}>
+                            {label(ERROR_GROUP, g.nhomLoi)}<b>{g.soLan}</b>
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
                     {it.ghiChu && editingNote !== it.theId && (
-                      <div className={styles.nbNote} data-note>{it.ghiChu}</div>
+                      <div className={styles.nbNote}>
+                        <span className={styles.nbNoteLabel}>Ghi chú của bạn</span>
+                        <p>{it.ghiChu}</p>
+                      </div>
                     )}
 
                     {editingNote === it.theId && (
-                      <div className={styles.nbEdit}>
+                      <form className={styles.nbEdit} onSubmit={event => { event.preventDefault(); saveNote(it.theId); }}>
+                        <label className={styles.nbNoteLabel} htmlFor={`note-${it.theId}`}>Ghi chú của bạn</label>
                         <textarea
+                          id={`note-${it.theId}`}
                           value={noteContent}
                           onChange={(e) => setNoteContent(e.target.value)}
-                          placeholder="Ghi chú..."
+                          placeholder="Mẹo nhớ, câu ví dụ của riêng bạn…"
                           className="input"
                           rows={3}
                           maxLength={500}
+                          autoFocus
                         />
-                        <div className="row">
-                          <button type="button" className="btn btn-primary btn-sm" onClick={() => saveNote(it.theId)} disabled={updateMutation.isPending}>Lưu</button>
-                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingNote(null)}>Huỷ</button>
+                        <div className={styles.nbEditBar}>
+                          <span className="small muted">{noteContent.length}/500</span>
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditingNote(null)}>Hủy</button>
+                          <button type="submit" className="btn btn-primary btn-sm" disabled={updateMutation.isPending} aria-busy={updateMutation.isPending}>Lưu ghi chú</button>
                         </div>
-                      </div>
+                      </form>
                     )}
 
                     {it.bangChung?.length > 0 && (
                       <details className={styles.nbProof}>
-                        <summary>Lần sai gần nhất ({it.bangChung.length})</summary>
+                        <summary><Icon name="chevron-right" />Lần sai gần nhất<span className={styles.count}>{it.bangChung.length}</span></summary>
                         <ol>
                           {it.bangChung.map((b, idx) => (
                             <li key={idx}>
-                              {label(ERROR_GROUP, b.nhomLoi)}: bạn trả lời <del>{b.traLoi || '(bỏ trống)'}</del>, đáp án <strong>{b.dapAn}</strong>, {new Date(b.createdAt).toLocaleString('vi-VN')}
-                              {b.baiLuyenId && (
-                                <>
-                                  . <Link href={`/luyen-tap-ket-qua?id=${b.baiLuyenId}`}>Xem bài</Link>
-                                </>
-                              )}
+                              <span className={styles.proofGroup}>{label(ERROR_GROUP, b.nhomLoi)}</span>
+                              <span className={styles.proofAnswer}>
+                                <span className="sr-only">Bạn trả lời </span><del>{b.traLoi || '(bỏ trống)'}</del>
+                                <span className={styles.proofArrow} aria-hidden="true">→</span>
+                                <span className="sr-only">, đáp án </span><strong>{b.dapAn}</strong>
+                              </span>
+                              <span className={styles.proofTime}>
+                                {new Date(b.createdAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
+                                {b.baiLuyenId && <Link href={`/luyen-tap-ket-qua?id=${b.baiLuyenId}`}>Xem bài</Link>}
+                              </span>
                             </li>
                           ))}
                         </ol>
                       </details>
                     )}
 
-                    <div className={styles.nbTools}>
-                      <SpeakButton text={it.tu} />
-                      <button type="button" className="btn btn-edit" data-act="note" onClick={() => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); }}>
-                        {it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú'}
-                      </button>
-                      <button type="button" className="btn btn-quiet" data-act="mark" aria-pressed={it.danhDauThuCong} onClick={() => toggleMark(it)} disabled={updateMutation.isPending}>
-                        {it.danhDauThuCong ? 'Bỏ đánh dấu' : 'Đánh dấu từ khó'}
-                      </button>
-                      <button type="button" className="btn btn-quiet" data-act="remove" onClick={() => removeEntry(it.theId)} disabled={deleteMutation.isPending}>
-                        Bỏ khỏi sổ tay
-                      </button>
+                    <div className={styles.nbMeta}>
+                      <Link href={`/bo-the/${it.boTheId}/tien-do`} title={deckName}><Icon name="decks" />{deckName.length > 60 ? `${deckName.slice(0, 60)}…` : deckName}</Link>
+                      {it.soLanQuen > 0 && <span>Quên {it.soLanQuen} lần khi ôn</span>}
+                      {it.lanGanNhatAt && <span>Cập nhật {new Date(it.lanGanNhatAt).toLocaleDateString('vi-VN')}</span>}
                     </div>
                   </div>
+                  <div className={styles.nbTools}>
+                    <CardActions word={it.tu} items={[
+                      { key: 'note', icon: 'edit', label: it.ghiChu ? 'Sửa ghi chú' : 'Thêm ghi chú', tone: 'edit', onClick: () => { setEditingNote(it.theId); setNoteContent(it.ghiChu || ''); } },
+                      { key: 'mark', icon: 'star', label: it.danhDauThuCong ? 'Bỏ đánh dấu' : 'Đánh dấu từ khó', pressed: !!it.danhDauThuCong, disabled: updateMutation.isPending, onClick: () => toggleMark(it) },
+                      { key: 'remove', icon: 'trash', label: 'Bỏ khỏi sổ tay', tone: 'danger', split: true, disabled: deleteMutation.isPending, onClick: () => setRemoving(it) },
+                    ]} />
+                  </div>
                 </li>
-              ))}
+                );
+              })}
             </ol>
             <div className={styles.pagerWrap}>
               <Pagination page={page + 1} totalPages={notebook?.totalPages || 0} onPageChange={value => goToPage(value - 1)} />
@@ -280,6 +288,15 @@ function NotebookContent() {
             <p className="notice notice-danger" role="alert">{nbError?.message || 'Chưa tải được sổ tay.'}</p>
           </div>
         </div>
+        <ConfirmDialog
+          isOpen={!!removing}
+          title="Bỏ khỏi sổ tay"
+          description={`Bỏ “${removing?.tu || ''}” khỏi sổ tay? Lịch sử ôn và bài luyện vẫn giữ nguyên. Nếu bạn sai lại, từ sẽ quay lại sổ.`}
+          confirmLabel="Bỏ khỏi sổ tay"
+          loading={deleteMutation.isPending}
+          onClose={() => setRemoving(null)}
+          onConfirm={confirmRemove}
+        />
       </section>
 
       <aside className="side-col">
@@ -295,21 +312,20 @@ function NotebookContent() {
                   <li key={pr.id || i}>
                     <div className={styles.pairWords}>
                       <div>
-                        <b>{pr.the1.tu}</b>
+                        <b lang="en">{pr.the1.tu}</b>
                         <span>{pr.the1.nghiaVi}</span>
                       </div>
-                      <div className={styles.pairVs}>/</div>
+                      <div className={styles.pairVs} aria-hidden="true">vs</div>
                       <div>
-                        <b>{pr.the2.tu}</b>
+                        <b lang="en">{pr.the2.tu}</b>
                         <span>{pr.the2.nghiaVi}</span>
                       </div>
                     </div>
-                    <div className="row small muted">
-                      <strong>Dễ nhầm</strong>
-                      <span>Nhầm {pr.soLanNham} lần</span>
+                    <div className={styles.pairMeta}>
+                      <span>Nhầm <b>{pr.soLanNham}</b> lần</span>
                       {lastSeen(pr.lanCuoiAt) && <span>Gần nhất {lastSeen(pr.lanCuoiAt)}</span>}
                     </div>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>
+                    <button type="button" className={`btn btn-secondary btn-sm ${styles.pairBtn}`} onClick={() => startPracticePairs(pr.the1.id, pr.the2.id)}>
                       Luyện phân biệt
                     </button>
                   </li>

@@ -32,7 +32,9 @@ public class AdminUserDetailRepository {
             String muiGio,
             Instant emailXacThucAt,
             Instant dangNhapCuoiAt,
-            Instant createdAt
+            Instant createdAt,
+            Long anhDaiDienId,
+            Long anhDaiDienAnId
     ) {
     }
 
@@ -47,13 +49,15 @@ public class AdminUserDetailRepository {
 
     public Optional<Profile> profile(long id, String systemEmail) {
         return jdbc.query("""
-                SELECT id, email, ten_hien_thi, trang_thai, mui_gio, email_xac_thuc_at, dang_nhap_cuoi_at, created_at
+                SELECT id, email, ten_hien_thi, trang_thai, mui_gio, email_xac_thuc_at, dang_nhap_cuoi_at, created_at,
+                       anh_dai_dien_id, anh_dai_dien_an_id
                   FROM nguoi_dung
                  WHERE id = :id AND email <> :system
                 """, params(id).addValue("system", systemEmail),
                 (rs, i) -> new Profile(rs.getLong("id"), rs.getString("email"), rs.getString("ten_hien_thi"),
                         rs.getString("trang_thai"), rs.getString("mui_gio"), instant(rs, "email_xac_thuc_at"),
-                        instant(rs, "dang_nhap_cuoi_at"), instant(rs, "created_at"))).stream().findFirst();
+                        instant(rs, "dang_nhap_cuoi_at"), instant(rs, "created_at"),
+                        rs.getObject("anh_dai_dien_id", Long.class), rs.getObject("anh_dai_dien_an_id", Long.class))).stream().findFirst();
     }
 
     public Set<String> roles(long id) {

@@ -463,9 +463,16 @@ export default function TodayPage() {
                         <select id="today-deck" className="input" value={deckId} onChange={(e) => setDeckId(e.target.value)}>
                           <option value="">Tất cả bộ của tôi (khuyên dùng)</option>
                           {plan.boThe.map((b) => (
-                            <option key={b.boTheId} value={b.boTheId}>{b.ten} · {b.soCanOn} cần ôn · {b.soMoi} chưa học</option>
+                            <option key={b.boTheId} value={b.boTheId}>
+                              {b.ten} · {b.soCanOn} cần ôn · {b.soMoi} chưa học{!plan.soMoiConLai && b.soMoi > 0 ? ' · ngoài suất từ mới' : ''}
+                            </option>
                           ))}
                         </select>
+                        {deckId && !plan.soMoiConLai && (
+                          <p className="field-hint">
+                            Hôm nay bạn đã học đủ {plan.tuMoiMoiNgay} từ mới theo thiết lập. Học riêng bộ này vẫn được chấm và lưu kết quả, các từ mới học thêm được tính là học tự do.
+                          </p>
+                        )}
                       </div>
                     )}
 

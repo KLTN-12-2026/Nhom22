@@ -198,24 +198,31 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tc25_sampleCopiesGoToAdminAndPremiumCopiesNeverPublish() throws Exception {
+    void tc25_sampleCopiesGoToTheirAuthorAdminAsUserAndPremiumCopiesNeverPublish() throws Exception {
         Actor admin = actor(true);
         Long sampleId = sampleDeck(admin.id(), false);
         Long copyId = copyId(learner, sampleId);
         JsonNode pending = json(submit(learner, copyId).andExpect(status().isCreated()));
-        assertThat(pending.get("nguoiDuyet").asText()).isEqualTo("ADMIN");
+        assertThat(pending.get("nguoiDuyet").asText()).isEqualTo("TAC_GIA");
+        assertThat(notifications(admin.id(), "YEU_CAU_CONG_KHAI")).isEqualTo(1);
 
-        decide(admin, pending.get("id").asText(), "DUYET", null, 0).andExpect(status().isNotFound());
         JsonNode queue = json(send(admin, get("/api/v1/admin/publish-requests").param("trangThai", "CHO_DUYET"))
                 .andExpect(status().isOk()));
-        assertThat(queue.get("items").findValuesAsString("id")).contains(pending.get("id").asText());
-        send(learner, get("/api/v1/admin/publish-requests")).andExpect(status().isForbidden());
+        assertThat(queue.get("items").findValuesAsString("id")).doesNotContain(pending.get("id").asText());
         send(admin, post("/api/v1/admin/publish-requests/" + pending.get("id").asText() + "/decision")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(Map.of("quyetDinh", "DUYET", "version", 0))))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
+        Actor otherAdmin = actor(true);
+        decide(otherAdmin, pending.get("id").asText(), "DUYET", null, 0).andExpect(status().isNotFound());
+
+        JsonNode inbox = json(send(admin, get("/api/v1/me/publish-requests").param("trangThai", "CHO_DUYET"))
+                .andExpect(status().isOk()));
+        assertThat(inbox.get("items").findValuesAsString("id")).contains(pending.get("id").asText());
+        decide(admin, pending.get("id").asText(), "DUYET", null, 0).andExpect(status().isOk());
+        assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nhat_ky_quan_tri WHERE hanh_dong = 'DUYET_CONG_KHAI' "
-                + "AND doi_tuong_id = ?", Integer.class, copyId)).isEqualTo(1);
+                + "AND doi_tuong_id = ?", Integer.class, copyId)).isZero();
 
         Long premiumId = sampleDeck(admin.id(), true);
         BoThe premiumCopy = decks.saveAndFlush(BoThe.createCopy(learner.id(), decks.findById(premiumId).orElseThrow()));
@@ -224,18 +231,18 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tc25_adminPublishesSampleCopiesWithoutQueueing() throws Exception {
+    void tc25_adminCopierAsksTheAuthorLikeAnyUser() throws Exception {
         Actor admin = actor(true);
-        Long sampleId = sampleDeck(admin.id(), false);
-        Long copyId = copyId(admin, sampleId);
-        assertThat(json(send(admin, get("/api/v1/decks/" + copyId)).andExpect(status().isOk()))
-                .get("banSao").get("tuCongKhai").asBoolean()).isTrue();
+        Actor sampleAuthor = actor(true);
+        copy(admin, sampleDeck(admin.id(), false), "own-sample").andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.details.lyDo").value("BO_CUA_BAN"));
 
-        JsonNode approved = json(submit(admin, copyId).andExpect(status().isCreated()));
-        assertThat(approved.get("trangThai").asText()).isEqualTo("DA_DUYET");
-        assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
-        JsonNode queue = json(send(admin, get("/api/v1/admin/publish-requests")).andExpect(status().isOk()));
-        assertThat(queue.get("items").findValuesAsString("id")).doesNotContain(approved.get("id").asText());
+        Long sampleCopy = copyId(admin, sampleDeck(sampleAuthor.id(), false));
+        assertThat(json(send(admin, get("/api/v1/decks/" + sampleCopy)).andExpect(status().isOk()))
+                .get("banSao").get("tuCongKhai").asBoolean()).isFalse();
+        JsonNode pending = json(submit(admin, sampleCopy).andExpect(status().isCreated()));
+        assertThat(pending.get("trangThai").asText()).isEqualTo("CHO_DUYET");
+        assertThat(pending.get("nguoiDuyet").asText()).isEqualTo("TAC_GIA");
 
         Long otherCopy = copyId(admin, sourceId);
         assertThat(json(submit(admin, otherCopy).andExpect(status().isCreated()))
@@ -243,15 +250,9 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tc25_ownerPublishesCopyOfOwnDeckEvenWhenSourceIsPrivate() throws Exception {
-        Long copyId = copyId(author, sourceId);
-        jdbc.update("UPDATE bo_the SET quyen_truy_cap = 'RIENG_TU' WHERE id = ?", sourceId);
-        assertThat(json(send(author, get("/api/v1/decks/" + copyId)).andExpect(status().isOk()))
-                .get("banSao").get("tuCongKhai").asBoolean()).isTrue();
-
-        JsonNode approved = json(submit(author, copyId).andExpect(status().isCreated()));
-        assertThat(approved.get("trangThai").asText()).isEqualTo("DA_DUYET");
-        assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
+    void tc25_authorCannotCopyOwnDeckAndOthersNeedApproval() throws Exception {
+        copy(author, sourceId, "self-copy").andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.details.lyDo").value("BO_CUA_BAN"));
 
         Long learnerCopy = copyId(learner, publicDeck(author.id(), "Bộ khác"));
         assertThat(json(send(learner, get("/api/v1/decks/" + learnerCopy)).andExpect(status().isOk()))
@@ -276,6 +277,42 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
         assertThat(inbox.get("items").findValuesAsString("id")).contains(requestId);
         assertThat(notifications(learner.id(), "KET_QUA_CONG_KHAI")).isEqualTo(1);
         submit(learner, copyId).andExpect(status().isCreated());
+    }
+
+    @Test
+    void tc25_unchangedCopyCannotRequestAndChangesListEveryDifference() throws Exception {
+        Long copyId = copyId(learner, sourceId);
+
+        submitAsIs(learner, copyId).andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.details.lyDo").value("KHONG_CO_THAY_DOI"));
+        send(learner, get("/api/v1/decks/" + copyId + "/publish-changes")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.coThayDoi").value(false))
+                .andExpect(jsonPath("$.soTheGoc").value(1))
+                .andExpect(jsonPath("$.the.length()").value(0));
+
+        jdbc.update("UPDATE bo_the SET ten = 'Bộ táo của mình' WHERE id = ?", copyId);
+        jdbc.update("UPDATE the_tu_vung SET nghia_vi = 'trái táo' WHERE bo_the_id = ?", copyId);
+        cards.saveAndFlush(TheTuVung.create(copyId, "banana", "noun", "quả chuối", null, null, null, 1, null));
+
+        send(learner, get("/api/v1/decks/" + copyId + "/publish-changes")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.coThayDoi").value(true))
+                .andExpect(jsonPath("$.boThe[0].truong").value("ten"))
+                .andExpect(jsonPath("$.boThe[0].truoc").value("Bộ gốc của tác giả"))
+                .andExpect(jsonPath("$.boThe[0].sau").value("Bộ táo của mình"))
+                .andExpect(jsonPath("$.soThem").value(1))
+                .andExpect(jsonPath("$.soSua").value(1))
+                .andExpect(jsonPath("$.soXoa").value(0))
+                .andExpect(jsonPath("$.the[0].loai").value("THEM"))
+                .andExpect(jsonPath("$.the[0].tu").value("banana"))
+                .andExpect(jsonPath("$.the[1].loai").value("SUA"))
+                .andExpect(jsonPath("$.the[1].truong[0].truong").value("nghiaVi"))
+                .andExpect(jsonPath("$.the[1].truong[0].truoc").value("quả táo"))
+                .andExpect(jsonPath("$.the[1].truong[0].sau").value("trái táo"));
+
+        String requestId = json(submitAsIs(learner, copyId).andExpect(status().isCreated())).get("id").asText();
+        send(author, get("/api/v1/publish-requests/" + requestId + "/changes")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.soThem").value(1));
+        send(actor(false), get("/api/v1/publish-requests/" + requestId + "/changes")).andExpect(status().isNotFound());
     }
 
     private Long publicDeck(Long ownerId, String ten) {
@@ -313,6 +350,11 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     private ResultActions submit(Actor actor, Long deckId) throws Exception {
+        jdbc.update("UPDATE bo_the SET mo_ta = 'Mô tả đã bổ sung' WHERE id = ? AND bo_nguon_id IS NOT NULL", deckId);
+        return submitAsIs(actor, deckId);
+    }
+
+    private ResultActions submitAsIs(Actor actor, Long deckId) throws Exception {
         return send(actor, post("/api/v1/decks/" + deckId + "/publish-requests")
                 .contentType(MediaType.APPLICATION_JSON).content(toJson(Map.of("loiNhan", "Mình đã bổ sung ví dụ"))));
     }

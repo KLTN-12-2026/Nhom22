@@ -7,6 +7,7 @@ import { Icon, ErrorState, Pagination, ConfirmDialog } from '@/components/ui';
 import { CardEntry } from '@/components/content/CardEntry';
 import { ShareDialog } from '@/components/content/ShareDialog';
 import { SnapDialog } from '@/components/content/SnapDialog';
+import { CardActions } from '@/components/content/CardActions';
 import { cardShare, deckShare } from '@/lib/share.mjs';
 import { AuthorTag } from '@/components/content/AuthorTag';
 import { useMe } from '@/hooks/useMe';
@@ -117,12 +118,12 @@ export default function DeckDetailPage() {
         showImages={showImages}
         focused={card.id === focusId}
         tagNames={(card.nhanIds || []).map(tagId => tags.data?.find(tag => tag.id === tagId)?.ten || `Nhãn ${tagId}`)}
-        tools={<>
-          <button type="button" className="btn btn-quiet btn-sm" onClick={() => setSnapping({ card, number: page * 20 + index + 1 })} aria-label={`Chụp thẻ ${card.tu}`}><Icon name="camera" />Chụp thẻ</button>
-          {published && <button type="button" className="btn btn-quiet btn-sm" onClick={() => shareCard(card)} aria-label={`Chia sẻ thẻ ${card.tu}`}><Icon name="share" />Chia sẻ</button>}
-          <button type="button" className="btn btn-edit btn-sm" onClick={() => setEditing(card)}><Icon name="edit" />Sửa thẻ</button>
-          <button type="button" className="btn btn-danger btn-sm" disabled={deleteCard.isPending} onClick={() => setConfirmation({ type: 'card', card })} ><Icon name="trash" />Xóa thẻ</button>
-        </>}
+        tools={<CardActions word={card.tu} items={[
+          { key: 'snap', icon: 'camera', label: 'Chụp thẻ', onClick: () => setSnapping({ card, number: page * 20 + index + 1 }) },
+          published && { key: 'share', icon: 'share', label: 'Chia sẻ', onClick: () => shareCard(card) },
+          { key: 'edit', icon: 'edit', label: 'Sửa thẻ', tone: 'edit', split: true, onClick: () => setEditing(card) },
+          { key: 'delete', icon: 'trash', label: 'Xóa thẻ', tone: 'danger', disabled: deleteCard.isPending, onClick: () => setConfirmation({ type: 'card', card }) },
+        ]} />}
       />)}</ol>
       {cards.data && <Pagination page={page + 1} totalPages={cards.data.totalPages} onPageChange={value => { setFocusId(null); setPage(value - 1); }} />}
       {snapping && <SnapDialog key={snapping.card.id} onClose={() => setSnapping(null)} card={snapping.card} number={snapping.number} deckId={id} deckName={deck.ten} linkable={published} />}

@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+import { useMe } from '@/hooks/useMe';
 import { DeckCover } from '@/components/ui/DeckCover';
 import { Highlight } from '@/components/ui/Highlight';
 import { CopyBadge } from '@/components/content/CopyBadge';
@@ -8,6 +10,7 @@ const LEVEL_RANK = { MOI_BAT_DAU: 1, CO_BAN: 2, TRUNG_CAP: 3, NANG_CAO: 4 };
 const GOAL_LABEL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 
 export function LibraryDeckList({ decks = [], offset = 0, query = '', showAuthor = true }) {
+  const { data: me } = useMe();
   return (
     <>
       <div className="deck-head" aria-hidden="true">
@@ -19,7 +22,7 @@ export function LibraryDeckList({ decks = [], offset = 0, query = '', showAuthor
       </div>
       <ol className="answer-list" role="list">
         {decks.map((deck, i) => (
-          <li key={deck.id} className="answer-row deck-row">
+          <li key={deck.id} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : ''}`}>
             <span className="answer-no">{offset + i + 1}</span>
             <div className="answer-main">
               <div className="deck-name-line">
@@ -31,6 +34,7 @@ export function LibraryDeckList({ decks = [], offset = 0, query = '', showAuthor
                 {deck.nguon === 'MAU'
                   ? <span className="stamp stamp-solid">Bộ mẫu</span>
                   : <span className="stamp stamp-graphite">Người học chia sẻ</span>}
+                {me && deck.chuSoHuuId === me.id && <Link className="stamp stamp-accent" href={`/bo-the/${deck.id}`}>Bộ của bạn</Link>}
                 {deck.banSao && <CopyBadge banSao={deck.banSao} compact />}
                 <span>{deck.tenChuDe || 'Chưa phân chủ đề'}</span>
                 {showAuthor && deck.chuSoHuuId && (

@@ -595,6 +595,17 @@ Yêu cầu người dùng 22/11/2026, TK §6.9, TC-27. Luồng: [B3.21](../docs/
 
 **FE cần làm (chưa làm):** bảng giá 3 gói + gói năm có giá gạch; ô mã khuyến mãi gọi `/billing/quotes`; nút "Dùng thử Premium 7 ngày" sau thiết lập lần đầu; trang ưu đãi HSSV; màn Admin khuyến mãi, ưu đãi, duyệt HSSV. Đã sửa: dữ liệu demo giá trong `frontend/src/lib/payment-admin.mjs` và `mockups/shared/demo.js`.
 
+### 5.22 B3.22 — Luyện tập từ vừa học (UI26 màn chọn luyện tập)
+
+Yêu cầu người dùng 22/11/2026, FR-07. Không phá hợp đồng cũ: không gửi `nguon` vẫn là `BO_THE`.
+
+| Method | Path | Body / response chính |
+|---|---|---|
+| GET | `/api/v1/practice/recent-cards?danhGia=QUEN&danhGia=KHO` | `{soNgay: 7, tuNgay, danhGia[], theoDanhGia{QUEN,KHO,NHO,DE}, tongSo, the[{theId, boTheId, tu, tuLoai, nghiaVi, danhGia, chamAt}]}`; `theoDanhGia` đếm mọi mức (không theo bộ lọc), `the` tối đa 50, xếp Quên → Khó → Nhớ → Dễ rồi mới nhất; bỏ `danhGia` = QUEN+KHO+DE; giá trị sai → 400 |
+| POST | `/api/v1/practice/sessions` | thêm `nguon: "VUA_HOC"`, `danhGia?: string[]`; response `nguon: "VUA_HOC"`, `boTheTen: "Từ vừa học cần ôn"`; rỗng → 422 `BUSINESS_RULE`; `danhGia` với nguồn khác, `boTheId`/`theIds` với `VUA_HOC` → 400 |
+
+**FE đã làm:** `/luyen-tap` mặc định chọn "Từ vừa học cần ôn" (nhãn Mặc định), bộ lọc 4 mức theo thứ tự Quên–Khó–Nhớ–Dễ, xem trước 8 từ; không có lượt chấm 7 ngày → tắt lựa chọn, báo rỗng, chọn "Bộ thẻ của tôi". URL `?nguon=SO_TAY`, `?boTheId=` vẫn được ưu tiên.
+
 ## 6. Mã FE mẫu
 
 Giữ nhất quán với `src/lib/api-client.js` (đã đọc `Retry-After` thành `error.retryAfter`).

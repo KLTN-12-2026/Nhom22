@@ -12,6 +12,8 @@ public record AdminUserResponse(
         Set<String> vaiTro,
         Instant createdAt,
         Instant dangNhapCuoiAt,
+        String anhDaiDienId,
+        boolean anhDaiDienBiAn,
         int soBoThe,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Integer soPhienDaHuy,

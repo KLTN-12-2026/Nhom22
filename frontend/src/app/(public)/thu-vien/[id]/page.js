@@ -19,6 +19,7 @@ import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { ShareDialog } from '@/components/content/ShareDialog';
 import { ReportDialog } from '@/components/content/ReportDialog';
 import { SnapDialog } from '@/components/content/SnapDialog';
+import { CardActions } from '@/components/content/CardActions';
 import { cardShare, deckShare } from '@/lib/share.mjs';
 import styles from './page.module.css';
 
@@ -103,13 +104,15 @@ function LibraryDetail({ id }) {
     <article className="sheet" aria-labelledby="deck-title">
       <Link href="/thu-vien" className="btn btn-quiet"><Icon name="arrow-left" />Thư viện</Link>
       <div className="form-head">
-        <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span><CopyBadge banSao={boThe.banSao} /></div>
+        <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>{ownDeck && <span className="stamp stamp-accent"><Icon name="user" />Bộ của bạn</span>}<CopyBadge banSao={boThe.banSao} /></div>
         <h1 id="deck-title" className={styles.title}>{boThe.ten}</h1>
         {boThe.caoCap && <p className="small"><PlanTag code="PREMIUM" locked={premiumLocked} label="Bộ mẫu cao cấp · Premium" />{premiumLocked ? ' Xem trước được, sao chép cần gói Premium.' : ''}</p>}
         <AuthorTag id={boThe.chuSoHuuId} name={boThe.tenTacGia} prefix={boThe.banSao ? 'Người sao chép' : 'Tác giả'} />
         {boThe.moTa && <p>{boThe.moTa}</p>}
         <div className={styles.actions}>
-          {boThe.banSao
+          {ownDeck
+            ? <Link className="btn btn-primary btn-lg" href={`/bo-the/${id}`}><Icon name="edit" />Mở trong Bộ của tôi</Link>
+            : boThe.banSao
             ? (boThe.banSao.boGocXemDuoc && <Link className="btn btn-primary btn-lg" href={`/thu-vien/${boThe.banSao.boGocId}`}><Icon name="arrow-left" />Xem bộ gốc</Link>)
             : premiumLocked
             ? <button type="button" className="btn btn-primary btn-lg" onClick={() => requestUpgrade('BO_MAU_CAO_CAP')}><Icon name="lock" />Sao chép (cần Premium)</button>
@@ -118,7 +121,8 @@ function LibraryDetail({ id }) {
           {!ownDeck && <button type="button" className="btn btn-quiet btn-lg" onClick={() => openReport({ loaiDoiTuong: 'BO_THE', doiTuongId: id, name: boThe.ten })}><Icon name="flag" />Báo cáo</button>}
         </div>
         {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
-        {boThe.banSao && <p className="muted small">Bộ này là bản sao nên không sao chép tiếp được. Hãy sao chép từ bộ gốc.</p>}
+        {ownDeck && <p className="muted small">Đây là bộ do bạn soạn nên không cần sao chép. Người khác sao chép bộ này sẽ gửi yêu cầu công khai cho bạn duyệt.</p>}
+        {!ownDeck && boThe.banSao && <p className="muted small">Bộ này là bản sao nên không sao chép tiếp được. Hãy sao chép từ bộ gốc.</p>}
         {existingCopyId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bạn đã có bản sao của bộ này</p><p className="small">Mỗi bộ chỉ sao chép được một lần. Xóa bản sao cũ nếu muốn sao chép lại.</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${existingCopyId}`}>Mở bản sao của bạn</Link></div></div>}
         {!boThe.banSao && originId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bộ này là bản sao</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/thu-vien/${originId}`}>Xem bộ gốc</Link></div></div>}
         {copy.error && !existingCopyId && !originId && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
@@ -134,11 +138,11 @@ function LibraryDetail({ id }) {
           publicDeck
           showImages={showImages}
           focused={card.id === focusId}
-          tools={<>
-            <button type="button" className="btn btn-quiet btn-sm" onClick={() => setSnapping({ card, number: page * 20 + index + 1 })} aria-label={`Chụp thẻ ${card.tu}`}><Icon name="camera" />Chụp thẻ</button>
-            <button type="button" className="btn btn-quiet btn-sm" onClick={() => shareCard(card)} aria-label={`Chia sẻ thẻ ${card.tu}`}><Icon name="share" />Chia sẻ</button>
-            {!ownDeck && <button type="button" className="btn btn-quiet btn-sm" onClick={() => openReport({ loaiDoiTuong: 'THE_TU_VUNG', doiTuongId: card.id, name: card.tu })} aria-label={`Báo cáo thẻ ${card.tu}`}><Icon name="flag" />Báo cáo</button>}
-          </>}
+          tools={<CardActions word={card.tu} items={[
+            { key: 'snap', icon: 'camera', label: 'Chụp thẻ', onClick: () => setSnapping({ card, number: page * 20 + index + 1 }) },
+            { key: 'share', icon: 'share', label: 'Chia sẻ', onClick: () => shareCard(card) },
+            !ownDeck && { key: 'report', icon: 'flag', label: 'Báo cáo', tone: 'danger', split: true, onClick: () => openReport({ loaiDoiTuong: 'THE_TU_VUNG', doiTuongId: card.id, name: card.tu }) },
+          ]} />}
         />)}
       </ol>}
       {sharing && <ShareDialog onClose={() => setSharing(null)} {...sharing} />}
@@ -153,7 +157,7 @@ function LibraryDetail({ id }) {
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Tiến độ học bắt đầu từ đầu. Không mang theo lịch sử hay điểm của người soạn.</span></li>
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Bộ gốc cập nhật sau này không ghi đè bản sao của bạn.</span></li>
         <li><span className="bubble is-filled" aria-hidden="true" /><span>Mỗi bộ chỉ sao chép được một lần. Bản sao không sao chép tiếp được.</span></li>
-        <li><span className="bubble is-filled" aria-hidden="true" /><span>Muốn công khai bản sao, bạn gửi yêu cầu để tác giả bộ gốc (bộ mẫu: quản trị viên) duyệt.</span></li>
+        <li><span className="bubble is-filled" aria-hidden="true" /><span>Muốn công khai bản sao, bạn gửi yêu cầu để chính tác giả bộ gốc duyệt.</span></li>
       </ul></section>
     </aside>
   </div>;

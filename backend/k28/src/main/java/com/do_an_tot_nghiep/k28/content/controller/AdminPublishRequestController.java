@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.content.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CopyDiffResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.PublishDecisionRequest;
 import com.do_an_tot_nghiep.k28.content.dto.PublishRequestQuery;
@@ -22,6 +23,11 @@ public class AdminPublishRequestController {
     @GetMapping
     public PageResponse<PublishRequestResponse> list(@Valid @ModelAttribute PublishRequestQuery query) {
         return service.adminQueue(query);
+    }
+
+    @GetMapping("/{id}/changes")
+    public CopyDiffResponse changes(@PathVariable("id") Long id) {
+        return service.requestChanges(currentUser.id(), PublishRequestController.checkedId(id), true);
     }
 
     @GetMapping("/{id}/cards")

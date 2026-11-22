@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Propagation;
 
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +70,45 @@ public class AccountService {
         return users.findById(userId).orElseThrow(() ->
                 new ApiException(ErrorCode.UNAUTHENTICATED, "Bạn cần đăng nhập để tiếp tục"))
                 .getAnhDaiDienId();
+    }
+
+    @Transactional(readOnly = true)
+    public Long visibleAvatarId(Long userId) {
+        return users.findById(userId).map(NguoiDung::visibleAvatarId).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Long publicAvatarId(Long userId) {
+        return users.findById(userId)
+                .filter(user -> user.getTrangThai() == TrangThaiNguoiDung.HOAT_DONG)
+                .map(NguoiDung::visibleAvatarId)
+                .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isUnavailable(Long userId) {
+        return users.findById(userId)
+                .map(user -> user.getTrangThai() == TrangThaiNguoiDung.BI_KHOA
+                        || user.getTrangThai() == TrangThaiNguoiDung.DANG_XOA)
+                .orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> reportSnapshot(Long reporterId, Long targetId) {
+        if (targetId.equals(reporterId)) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Không thể báo cáo chính bạn");
+        }
+        NguoiDung user = users.findById(targetId)
+                .filter(found -> found.getTrangThai() == TrangThaiNguoiDung.HOAT_DONG)
+                .filter(found -> !AccountAdminService.SYSTEM_EMAIL.equals(found.getEmail()))
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Người dùng không khả dụng"));
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("ten", user.getTenHienThi());
+        snapshot.put("tenHienThi", user.getTenHienThi());
+        Long avatar = user.visibleAvatarId();
+        snapshot.put("anhDaiDienId", avatar == null ? null : String.valueOf(avatar));
+        snapshot.put("thamGiaAt", user.getCreatedAt() == null ? null : user.getCreatedAt().toString());
+        return snapshot;
     }
 
     private NguoiDung lockedUser(Long userId) {

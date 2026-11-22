@@ -9,6 +9,7 @@ import com.do_an_tot_nghiep.k28.admin.service.AuditService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CopyDiffResponse;
 import com.do_an_tot_nghiep.k28.content.dto.DeckPublishStatusResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.PublishDecisionRequest;
@@ -65,6 +66,7 @@ public class PublishRequestService {
     private final AuditService audit;
     private final Clock clock;
     private final RealtimeService realtime;
+    private final CopyDiffService diffs;
 
     public DeckPublishStatusResponse submit(Long userId, Long deckId, String loiNhan) {
         Instant now = clock.instant();
@@ -81,6 +83,9 @@ public class PublishRequestService {
         BoThe source = decks.findById(copy.getBoNguonId()).orElseThrow(this::deckNotFound);
         if (source.isCaoCap()) {
             throw rule("Bản sao của bộ mẫu cao cấp không được công khai", "BO_CAO_CAP");
+        }
+        if (!diffs.diff(copy, source).coThayDoi()) {
+            throw rule("Bản sao chưa có thay đổi nào so với bộ gốc nên chưa xin công khai được", "KHONG_CO_THAY_DOI");
         }
 
         var latest = requests.findFirstByBoTheIdOrderByIdDesc(copy.getId()).orElse(null);
@@ -115,6 +120,7 @@ public class PublishRequestService {
                     "Bản sao \"" + copy.getTen() + "\" của bộ \"" + source.getTen() + "\" đang chờ bạn duyệt.",
                     REVIEW_LINK, true, false);
         }
+        pushChange(request, source);
         realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         return copyInfo.status(request);
     }
@@ -133,6 +139,7 @@ public class PublishRequestService {
         request.resolve(TrangThaiYeuCauCongKhai.DA_RUT, userId, null, now);
         realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         requests.flush();
+        decks.findById(request.getBoNguonId()).ifPresent(source -> pushChange(request, source));
         return copyInfo.status(request);
     }
 
@@ -156,6 +163,24 @@ public class PublishRequestService {
         requireReviewer(actorId, request, asAdmin);
         return library.cardResponses(cards.findByBoTheIdAndXoaAtIsNullOrderByIdAsc(
                 request.getBoTheId(), PageRequest.of(page, size)));
+    }
+
+    @Transactional(readOnly = true)
+    public CopyDiffResponse copyChanges(Long userId, Long deckId) {
+        BoThe copy = decks.findByIdAndChuSoHuuIdAndXoaAtIsNull(deckId, userId).orElseThrow(this::deckNotFound);
+        if (copy.getBoNguonId() == null) {
+            throw rule("Bộ của bạn không phải bản sao", "KHONG_PHAI_BAN_SAO");
+        }
+        BoThe source = decks.findById(copy.getBoNguonId()).orElseThrow(this::deckNotFound);
+        return diffs.diff(copy, source);
+    }
+
+    @Transactional(readOnly = true)
+    public CopyDiffResponse requestChanges(Long actorId, Long requestId, boolean asAdmin) {
+        YeuCauCongKhai request = requests.findById(requestId).orElseThrow(this::requestNotFound);
+        BoThe source = requireReviewer(actorId, request, asAdmin);
+        BoThe copy = decks.findById(request.getBoTheId()).orElseThrow(this::deckNotFound);
+        return diffs.diff(copy, source);
     }
 
     public PublishRequestResponse decide(Long actorId, Long requestId, PublishDecisionRequest body, boolean asAdmin) {
@@ -202,6 +227,7 @@ public class PublishRequestService {
         }
         requests.flush();
         notifyResult(request, copy);
+        pushChange(request, source);
         if (asAdmin) {
             Map<String, Object> after = new LinkedHashMap<>();
             after.put("trangThai", request.getTrangThai().name());
@@ -235,6 +261,16 @@ public class PublishRequestService {
         realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
         requests.flush();
         decks.findById(request.getBoTheId()).ifPresent(copy -> notifyResult(request, copy));
+        decks.findById(request.getBoNguonId()).ifPresent(source -> pushChange(request, source));
+    }
+
+    private void pushChange(YeuCauCongKhai request, BoThe source) {
+        String id = request.getBoTheId().toString();
+        realtime.toUser(request.getNguoiGuiId(), LoaiSuKien.YEU_CAU_CONG_KHAI, id);
+        if (request.getNguoiDuyet() == NguoiDuyetCongKhai.TAC_GIA
+                && !source.getChuSoHuuId().equals(request.getNguoiGuiId())) {
+            realtime.toUser(source.getChuSoHuuId(), LoaiSuKien.YEU_CAU_CONG_KHAI, id);
+        }
     }
 
     private BoThe requireReviewer(Long actorId, YeuCauCongKhai request, boolean asAdmin) {

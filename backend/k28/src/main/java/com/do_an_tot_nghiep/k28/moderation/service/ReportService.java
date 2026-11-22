@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.moderation.service;
 
 import com.do_an_tot_nghiep.k28.common.realtime.LoaiSuKien;
 import com.do_an_tot_nghiep.k28.common.realtime.RealtimeService;
+import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.ai.service.AiModerationService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -32,14 +33,19 @@ public class ReportService {
     private final ReportMapper mapper;
     private final JsonMapper json;
     private final RealtimeService realtime;
+    private final AccountService accounts;
 
     @Transactional
     public ReportResponse create(Long userId, CreateReportRequest request) {
+        if (!request.lyDo().appliesTo(request.loaiDoiTuong())) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "lyDo", "Lý do không áp dụng cho loại báo cáo này");
+        }
         String moTa = description(request);
         Map<String, Object> snapshot = switch (request.loaiDoiTuong()) {
             case BO_THE -> content.deckSnapshot(userId, request.doiTuongId());
             case THE_TU_VUNG -> content.cardSnapshot(userId, request.doiTuongId());
             case YEU_CAU_AI -> ai.reportSnapshot(userId, request.doiTuongId());
+            case NGUOI_DUNG -> accounts.reportSnapshot(userId, request.doiTuongId());
         };
         if (reports.existsByNguoiBaoCaoIdAndLoaiDoiTuongAndDoiTuongIdAndTrangThai(
                 userId, request.loaiDoiTuong(), request.doiTuongId(), TrangThaiBaoCao.CHO_XU_LY)) {
@@ -56,6 +62,7 @@ public class ReportService {
                     .noiDungJson(json.writeValueAsString(snapshot))
                     .build());
             realtime.toAdmins(LoaiSuKien.HANG_CHO_QUAN_TRI);
+            realtime.toAdmins(LoaiSuKien.BAO_CAO_MOI, "BAO_CAO:" + saved.getId());
             return mapper.toResponse(saved);
         } catch (DataIntegrityViolationException ex) {
             throw duplicate();
