@@ -109,6 +109,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ErrorResponse> handleIntegrity(DataIntegrityViolationException ex) {
+        if (mentionsConstraint(ex, "uk_huy_hieu_ma") || mentionsConstraint(ex, "uk_thu_thach_ma")) {
+            return build(ErrorCode.CONFLICT, "Mã đã tồn tại",
+                    List.of(new ErrorResponse.FieldErrorItem("ma", "Mã đã tồn tại")));
+        }
         if (mentionsConstraint(ex, "uk_chu_de_ten")) {
             return build(
                     ErrorCode.CONFLICT,

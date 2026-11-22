@@ -1,261 +1,287 @@
 'use client';
-import { useState, Suspense } from 'react';
+
+import { Suspense, useId, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api-client';
-import { Button, ErrorState, Pagination } from '@/components/ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiFetch, resetCsrf } from '@/lib/api-client';
+import { Button, ErrorState, Input, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
+import styles from './page.module.css';
 
 const STATUS = {
   HOAT_DONG: { label: 'Đang hoạt động', className: '' },
-  BI_KHOA: { label: 'Bị khóa', className: 'var(--color-danger-bg)' },
-  CHUA_XAC_THUC: { label: 'Chưa xác thực', className: 'var(--color-warning-bg)' },
-  DANG_XOA: { label: 'Đang xóa', className: 'var(--field)' }
+  BI_KHOA: { label: 'Bị khóa', className: 'stamp-danger' },
+  CHUA_XAC_THUC: { label: 'Chưa xác thực', className: 'stamp-warning' },
+  DANG_XOA: { label: 'Đang xóa', className: 'stamp-quiet' },
+};
+const STATUS_OPTIONS = Object.entries(STATUS).map(([value, { label }]) => ({ value, label }));
+const ROLE_OPTIONS = [{ value: 'ADMIN', label: 'Quản trị viên' }, { value: 'USER', label: 'Người học' }];
+const ACTIONS = {
+  lock: {
+    title: name => `Khóa tài khoản ${name}?`,
+    message: 'Người này sẽ bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho đến khi được mở khóa. Dữ liệu học vẫn giữ nguyên.',
+    label: 'Khóa tài khoản', danger: true, endpoint: 'status', method: 'PATCH',
+    body: { trangThai: 'BI_KHOA' }, success: 'Đã khóa tài khoản',
+  },
+  unlock: {
+    title: name => `Mở khóa tài khoản ${name}?`,
+    message: 'Người này đăng nhập lại được ngay.',
+    label: 'Mở khóa', endpoint: 'status', method: 'PATCH',
+    body: { trangThai: 'HOAT_DONG' }, success: 'Đã mở khóa tài khoản',
+  },
+  grant: {
+    title: name => `Cấp quyền quản trị cho ${name}?`,
+    message: 'Người này sẽ quản lý được tài khoản, bộ mẫu và xem nhật ký quản trị. Các phiên đăng nhập hiện tại sẽ bị hủy để cập nhật quyền.',
+    label: 'Cấp quyền quản trị', endpoint: 'roles', method: 'PUT',
+    body: { vaiTro: ['USER', 'ADMIN'] }, success: 'Đã cấp quyền quản trị',
+  },
+  revoke: {
+    title: name => `Thu quyền quản trị của ${name}?`,
+    message: 'Người này vẫn học bình thường nhưng không vào được trang quản trị. Các phiên đăng nhập hiện tại sẽ bị hủy để cập nhật quyền.',
+    label: 'Thu quyền quản trị', danger: true, endpoint: 'roles', method: 'PUT',
+    body: { vaiTro: ['USER'] }, success: 'Đã thu quyền quản trị',
+  },
 };
 
-const STATUS_TEXT_COLOR = {
-  HOAT_DONG: 'var(--color-ink)',
-  BI_KHOA: 'var(--color-danger-text)',
-  CHUA_XAC_THUC: 'var(--color-warning-text)',
-  DANG_XOA: 'var(--ink-2)'
-};
+function formatDate(value, withTime = false) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return withTime ? date.toLocaleString('vi-VN') : date.toLocaleDateString('vi-VN');
+}
+
+function UsersLoading() {
+  return (
+    <div role="status" aria-label="Đang tải danh sách tài khoản" className="skeleton">
+      <div className="sk sk-row" /><div className="sk sk-row" /><div className="sk sk-row" />
+    </div>
+  );
+}
+
+function UsersFilters({ initialQ, initialStatus, initialRole, onApply }) {
+  const [q, setQ] = useState(initialQ);
+  const [trangThai, setTrangThai] = useState(initialStatus);
+  const [vaiTro, setVaiTro] = useState(initialRole);
+
+  return (
+    <form role="search" aria-label="Lọc tài khoản" className={styles.filterBar} onSubmit={event => {
+      event.preventDefault();
+      onApply({ q, trangThai, vaiTro });
+    }}>
+      <Input type="search" name="q" label="Tìm theo email hoặc tên" maxLength={100} autoComplete="off"
+        placeholder="Ví dụ: an@vocab.local" value={q} onChange={event => setQ(event.target.value)} />
+      <Select name="trangThai" label="Trạng thái" placeholder="Tất cả" options={STATUS_OPTIONS}
+        value={trangThai} onChange={event => {
+          setTrangThai(event.target.value);
+          onApply({ q, trangThai: event.target.value, vaiTro });
+        }} />
+      <Select name="vaiTro" label="Vai trò" placeholder="Tất cả" options={ROLE_OPTIONS}
+        value={vaiTro} onChange={event => {
+          setVaiTro(event.target.value);
+          onApply({ q, trangThai, vaiTro: event.target.value });
+        }} />
+      <Button type="submit">Tìm</Button>
+    </form>
+  );
+}
+
+function ReasonDialog({ selection, me, onClose, onSuccess }) {
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
+  const formId = useId();
+  const reasonId = useId();
+  const hintId = useId();
+  const queryClient = useQueryClient();
+  const config = ACTIONS[selection.kind];
+  const isSelfRevoke = selection.kind === 'revoke' && selection.user.id === me.id;
+  const mutation = useMutation({
+    mutationFn: lyDo => apiFetch(`/api/v1/admin/users/${encodeURIComponent(selection.user.id)}/${config.endpoint}`, {
+      method: config.method,
+      body: JSON.stringify({ ...config.body, lyDo }),
+    }),
+    onSuccess: result => onSuccess(result, config, isSelfRevoke),
+    // A session-revocation failure can happen after the account change commits.
+    onError: () => { queryClient.invalidateQueries({ queryKey: ['admin-users'] }); },
+  });
+  const serverReasonError = mutation.error?.fieldErrors?.find(field => field.field === 'lyDo')?.message;
+
+  function submit(event) {
+    event.preventDefault();
+    if (mutation.isPending) return;
+    const lyDo = reason.trim();
+    if (lyDo.length < 10 || lyDo.length > 500) {
+      setReasonError('Lý do cần từ 10 đến 500 ký tự sau khi bỏ khoảng trắng ở đầu và cuối.');
+      return;
+    }
+    setReasonError('');
+    mutation.mutate(lyDo);
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} loading={mutation.isPending} size="sm"
+      title={config.title(selection.user.tenHienThi || selection.user.email)}
+      footer={<>
+        <Button variant="secondary" disabled={mutation.isPending} onClick={onClose}>Hủy</Button>
+        <Button type="submit" form={formId} variant={config.danger ? 'danger-solid' : 'primary'} loading={mutation.isPending}>
+          {config.label}
+        </Button>
+      </>}>
+      <form id={formId} noValidate onSubmit={submit} className={styles.reasonForm}>
+        <p>{isSelfRevoke
+          ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ bị đăng xuất và không còn truy cập được các trang quản trị.'
+          : config.message}</p>
+        <p className={styles.dialogEmail}>{selection.user.email}</p>
+        <Textarea id={reasonId} label="Lý do thực hiện" required autoFocus maxLength={500} rows={4}
+          value={reason} disabled={mutation.isPending} placeholder="Nhập lý do để lưu vào nhật ký quản trị…"
+          error={reasonError || serverReasonError}
+          aria-describedby={reasonError || serverReasonError ? `${reasonId}-error` : hintId}
+          hint={<span id={hintId}>10–500 ký tự, được ghi vào nhật ký. {reason.trim().length}/500</span>}
+          onChange={event => {
+            setReason(event.target.value);
+            setReasonError('');
+            mutation.reset();
+          }} />
+        {mutation.isError && !serverReasonError && (
+          <p className="notice notice-danger" role="alert">{mutation.error.message || 'Chưa lưu được thay đổi. Vui lòng thử lại.'}</p>
+        )}
+      </form>
+    </Modal>
+  );
+}
 
 function AdminUsersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: me } = useMe();
-  const [actionError, setActionError] = useState(null);
+  const { toast } = useToast();
+  const [selection, setSelection] = useState(null);
+  const q = (searchParams.get('q') || '').trim().slice(0, 100);
+  const rawStatus = searchParams.get('trangThai') || '';
+  const trangThai = Object.hasOwn(STATUS, rawStatus) ? rawStatus : '';
+  const rawRole = searchParams.get('vaiTro') || '';
+  const vaiTro = ROLE_OPTIONS.some(option => option.value === rawRole) ? rawRole : '';
+  const rawPage = Number(searchParams.get('page') || 0);
+  const page = Number.isSafeInteger(rawPage) && rawPage >= 0 ? rawPage : 0;
+  const isAdmin = me?.vaiTro?.includes('ADMIN');
 
-  const defaultQ = searchParams.get('q') || '';
-  const defaultStatus = searchParams.get('trangThai') || '';
-  const defaultRole = searchParams.get('vaiTro') || '';
-  const page = parseInt(searchParams.get('page') || '0', 10);
-
-  const [q, setQ] = useState(defaultQ);
-  const [trangThai, setTrangThai] = useState(defaultStatus);
-  const [vaiTro, setVaiTro] = useState(defaultRole);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['admin-users', defaultQ, defaultStatus, defaultRole, page],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (defaultQ) params.set('q', defaultQ);
-      if (defaultStatus) params.set('trangThai', defaultStatus);
-      if (defaultRole) params.set('vaiTro', defaultRole);
-      params.set('page', page.toString());
-      params.set('size', '20');
-      return apiFetch(`/api/v1/admin/users?${params.toString()}`);
-    }
+  const { data, isPending, isFetching, isError, error, refetch } = useQuery({
+    queryKey: ['admin-users', q, trangThai, vaiTro, page],
+    enabled: !!isAdmin,
+    queryFn: ({ signal }) => {
+      const params = new URLSearchParams({ page: String(page), size: '10' });
+      if (q) params.set('q', q);
+      if (trangThai) params.set('trangThai', trangThai);
+      if (vaiTro) params.set('vaiTro', vaiTro);
+      return apiFetch(`/api/v1/admin/users?${params}`, { signal });
+    },
   });
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
-    onMutate: () => setActionError(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
-    onError: setActionError
-  });
-
-  const roleMutation = useMutation({
-    mutationFn: ({ id, body }) => apiFetch(`/api/v1/admin/users/${id}/roles`, { method: 'PUT', body: JSON.stringify(body) }),
-    onMutate: () => setActionError(null),
-    onError: setActionError,
-    onSuccess: (res, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      if (vars.isSelfRevoke) {
-        window.location.href = '/hom-nay';
-      }
-    }
-  });
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams);
-    if (q) params.set('q', q); else params.delete('q');
-    if (trangThai) params.set('trangThai', trangThai); else params.delete('trangThai');
-    if (vaiTro) params.set('vaiTro', vaiTro); else params.delete('vaiTro');
-    params.set('page', '0');
-    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
-  };
-
-  const handleClear = () => {
-    setQ('');
-    setTrangThai('');
-    setVaiTro('');
-    router.push('/quan-tri/tai-khoan', { scroll: false });
-  };
-
-  const handlePageChange = (newPage) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', newPage.toString());
-    router.push(`/quan-tri/tai-khoan?${params.toString()}`, { scroll: false });
-  };
-
-  const promptReason = () => {
-    const reason = window.prompt('Nhập lý do thực hiện thao tác (10–500 ký tự):')?.trim();
-    if (reason === undefined) return undefined;
-    if (reason.length < 10 || reason.length > 500) {
-      alert('Lý do cần từ 10 đến 500 ký tự.');
-      return undefined;
-    }
-    return reason;
-  };
-
-  const handleLock = (user) => {
-    if (user.id === me?.id) return alert('Không tự khóa tài khoản của mình');
-    if (!window.confirm(`Khóa tài khoản ${user.tenHienThi}? Người này sẽ bị đăng xuất khỏi mọi thiết bị.`)) return;
-    const lyDo = promptReason();
-    if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'BI_KHOA', lyDo } });
-  };
-
-  const handleUnlock = (user) => {
-    if (!window.confirm(`Mở khóa tài khoản ${user.tenHienThi}?`)) return;
-    const lyDo = promptReason();
-    if (lyDo) statusMutation.mutate({ id: user.id, body: { trangThai: 'HOAT_DONG', lyDo } });
-  };
-
-  const handleGrant = (user) => {
-    if (!window.confirm(`Cấp quyền quản trị cho ${user.tenHienThi}?`)) return;
-    const lyDo = promptReason();
-    if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER', 'ADMIN'], lyDo } });
-  };
-
-  const handleRevoke = (user) => {
-    const isSelf = user.id === me?.id;
-    const msg = isSelf
-      ? 'Bạn đang thu quyền của chính mình. Sau khi lưu, bạn sẽ không vào được trang quản trị nữa. Tiếp tục?'
-      : `Thu quyền quản trị của ${user.tenHienThi}?`;
-    if (!window.confirm(msg)) return;
-    const lyDo = promptReason();
-    if (lyDo) roleMutation.mutate({ id: user.id, body: { vaiTro: ['USER'], lyDo }, isSelfRevoke: isSelf });
-  };
-
-  if (!me?.vaiTro?.includes('ADMIN')) {
-    return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Không có quyền truy cập</div>;
+  function navigate(filters, nextPage = 0) {
+    const params = new URLSearchParams();
+    if (filters.q?.trim()) params.set('q', filters.q.trim());
+    if (filters.trangThai) params.set('trangThai', filters.trangThai);
+    if (filters.vaiTro) params.set('vaiTro', filters.vaiTro);
+    if (nextPage) params.set('page', String(nextPage));
+    router.push(`/quan-tri/tai-khoan${params.size ? `?${params}` : ''}`, { scroll: false });
   }
+
+  function actionSucceeded(result, config, isSelfRevoke) {
+    if (result?.banThanMatQuyen || isSelfRevoke) {
+      resetCsrf();
+      queryClient.clear();
+      window.location.assign('/dang-nhap');
+      return;
+    }
+    setSelection(null);
+    toast(`${config.success}${result?.soPhienDaHuy ? `, hủy ${result.soPhienDaHuy} phiên đăng nhập` : ''}`, { variant: 'success' });
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-audit'] });
+  }
+
+  if (!isAdmin) return null;
+  const users = data?.items || [];
 
   return (
     <div className="page page-grid with-side">
-      <section className="sheet" style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-6)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-2)', justifyContent: 'space-between' }}>
-            <span>Quản trị</span>
-            <span>{data?.totalElements !== undefined ? `${data.totalElements} tài khoản` : '—'}</span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>Tài khoản và vai trò</h1>
-          <p style={{ color: 'var(--color-ink-2)' }}>Tìm người dùng, khóa hoặc mở khóa tài khoản, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi vào nhật ký.</p>
+      <section className="sheet" aria-labelledby="page-title">
+        <div className="form-head">
+          <div className="form-code"><span>Quản trị</span><span>{data ? `${data.totalElements} tài khoản` : '—'}</span></div>
+          <h1 id="page-title">Tài khoản và vai trò</h1>
+          <p>Tìm người dùng, khóa hoặc mở khóa tài khoản, cấp hoặc thu quyền quản trị. Mỗi thao tác cần lý do và được ghi vào nhật ký.</p>
         </div>
 
-        <form onSubmit={handleSearch} style={{ display: 'grid', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', paddingBottom: 'var(--space-5)', borderBottom: '1px solid var(--color-border)' }}>
-          <div className="filter-grid">
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Tìm theo email hoặc tên</label>
-              <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Ví dụ: an@vocab.local" style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Trạng thái</label>
-              <select value={trangThai} onChange={e => setTrangThai(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả</option>
-                <option value="HOAT_DONG">Đang hoạt động</option>
-                <option value="BI_KHOA">Bị khóa</option>
-                <option value="CHUA_XAC_THUC">Chưa xác thực</option>
-                <option value="DANG_XOA">Đang xóa</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'bold', marginBottom: '4px' }}>Vai trò</label>
-              <select value={vaiTro} onChange={e => setVaiTro(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-                <option value="">Tất cả</option>
-                <option value="ADMIN">Quản trị viên</option>
-                <option value="USER">Người học</option>
-              </select>
-            </div>
-            <Button type="submit" variant="primary">Tìm</Button>
-          </div>
-        </form>
+        <UsersFilters key={searchParams.toString()} initialQ={q} initialStatus={trangThai} initialRole={vaiTro} onApply={navigate} />
 
-        {actionError && (
-          <p className="notice notice-danger" role="alert" style={{ marginBottom: 'var(--space-4)' }}>{actionError.message}</p>
-        )}
-
-        {isLoading ? (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>
-        ) : isError ? (
-          <ErrorState title="Chưa tải được danh sách tài khoản" description={error?.message} onRetry={() => refetch()} />
-        ) : data?.items?.length > 0 ? (
-          <>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>
-              {data.totalElements} tài khoản khớp bộ lọc, mới tạo trước
-            </p>
-            <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 'var(--space-4)' }}>
-              {data.items.map((u, i) => {
-                const st = STATUS[u.trangThai] || { label: u.trangThai, className: '' };
-                const isAdmin = (u.vaiTro || []).includes('ADMIN');
-                return (
-                  <li key={u.id} style={{ display: 'flex', gap: 'var(--space-4)', paddingBottom: 'var(--space-4)', borderBottom: '1px dashed var(--color-border)' }}>
-                    <div style={{ fontWeight: 'bold', color: 'var(--color-ink-3)', marginTop: '4px' }}>{page * data.size + i + 1}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--color-primary-strong)' }}>
-                          {(u.tenHienThi || u.email || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                            {u.tenHienThi} {u.id === me?.id && <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', fontWeight: 'normal' }}>(bạn)</span>}
+        <div aria-live="polite" aria-busy={isFetching}>
+          {isPending ? <UsersLoading /> : isError ? (
+            <ErrorState title="Chưa tải được danh sách tài khoản" description={error?.message} onRetry={refetch} />
+          ) : users.length ? (
+            <>
+              <p className={styles.resultLine}>{data.totalElements} tài khoản khớp bộ lọc, mới tạo trước</p>
+              <ol className="answer-list" aria-label="Danh sách tài khoản" start={page * data.size + 1}>
+                {users.map((user, index) => {
+                  const status = STATUS[user.trangThai] || { label: user.trangThai, className: 'stamp-quiet' };
+                  const admin = user.vaiTro?.includes('ADMIN');
+                  const self = user.id === me.id;
+                  return (
+                    <li key={user.id} className={`answer-row ${styles.userRow}`}>
+                      <span className="answer-no" aria-hidden="true">{page * data.size + index + 1}</span>
+                      <div className="answer-main">
+                        <div className={styles.userHead}>
+                          <span className={`avatar ${styles.avatar}`} aria-hidden="true">{(user.tenHienThi || user.email || '?').charAt(0).toLocaleUpperCase('vi-VN')}</span>
+                          <div className={styles.identity}>
+                            <div className={styles.userName}>{user.tenHienThi || 'Chưa đặt tên'}{self && <span className={styles.self}> (bạn)</span>}</div>
+                            <div className={styles.userEmail}>{user.email}</div>
                           </div>
-                          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>{u.email}</div>
+                        </div>
+                        <div className="answer-meta">
+                          <span className={`stamp ${status.className}`}>{status.label}</span>
+                          {admin ? <strong>Quản trị viên</strong> : <span>Người học</span>}
+                          <span>{user.soBoThe} bộ thẻ</span>
+                          <span>Tạo {formatDate(user.createdAt)}</span>
+                          <span>{user.dangNhapCuoiAt ? `Đăng nhập ${formatDate(user.dangNhapCuoiAt, true)}` : 'Chưa đăng nhập'}</span>
+                        </div>
+                        <div className={styles.userTools} role="group" aria-label={`Thao tác với ${user.tenHienThi || user.email}`}>
+                          {user.trangThai === 'HOAT_DONG' && (
+                            <Button variant="ghost" className={styles.dangerText} disabled={self}
+                              title={self ? 'Không tự khóa tài khoản của mình' : undefined}
+                              onClick={() => setSelection({ kind: 'lock', user })}>Khóa tài khoản</Button>
+                          )}
+                          {user.trangThai === 'BI_KHOA' && (
+                            <Button variant="ghost" disabled={self} onClick={() => setSelection({ kind: 'unlock', user })}>Mở khóa</Button>
+                          )}
+                          {admin ? (
+                            <Button variant="ghost" onClick={() => setSelection({ kind: 'revoke', user })}>Thu quyền quản trị</Button>
+                          ) : user.trangThai === 'HOAT_DONG' && (
+                            <Button variant="ghost" onClick={() => setSelection({ kind: 'grant', user })}>Cấp quyền quản trị</Button>
+                          )}
                         </div>
                       </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', fontSize: 'var(--font-size-xs)', marginBottom: 'var(--space-3)', alignItems: 'center' }}>
-                        <span style={{ padding: '2px 8px', background: st.className || 'var(--color-border)', color: STATUS_TEXT_COLOR[u.trangThai] || 'var(--color-ink)', borderRadius: '4px', fontWeight: 'bold' }}>
-                          {st.label}
-                        </span>
-                        {isAdmin ? <strong style={{ color: 'var(--color-primary-strong)' }}>Quản trị viên</strong> : <span>Người học</span>}
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>{u.soBoThe} bộ thẻ</span>
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>Tạo {new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
-                        <span style={{ color: 'var(--color-ink-2)' }}>&bull;</span>
-                        <span>{u.dangNhapCuoiAt ? `Đăng nhập ${new Date(u.dangNhapCuoiAt).toLocaleString('vi-VN')}` : 'Chưa đăng nhập'}</span>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {u.trangThai === 'HOAT_DONG' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleLock(u)} disabled={u.id === me?.id} style={u.id !== me?.id ? { color: 'var(--color-danger)' } : {}}>
-                            Khóa tài khoản
-                          </Button>
-                        )}
-                        {u.trangThai === 'BI_KHOA' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleUnlock(u)}>Mở khóa</Button>
-                        )}
-                        {isAdmin && (
-                          <Button variant="ghost" size="sm" onClick={() => handleRevoke(u)}>Thu quyền quản trị</Button>
-                        )}
-                        {!isAdmin && u.trangThai === 'HOAT_DONG' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleGrant(u)}>Cấp quyền quản trị</Button>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-            <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={value => handlePageChange(value - 1)} />
-          </>
-        ) : (
-          <div style={{ padding: 'var(--space-8)', textAlign: 'center', background: 'var(--color-bg)', borderRadius: 'var(--radius-lg)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-3)' }}>Không tìm thấy tài khoản</h2>
-            <p style={{ color: 'var(--color-ink-2)', marginBottom: 'var(--space-4)' }}>Thử bỏ bớt bộ lọc hoặc tìm bằng một phần email.</p>
-            <Button variant="secondary" onClick={handleClear}>Xóa bộ lọc</Button>
-          </div>
-        )}
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className={styles.pagerWrap}>
+                <Pagination page={page + 1} totalPages={data.totalPages} onPageChange={value => navigate({ q, trangThai, vaiTro }, value - 1)} />
+              </div>
+            </>
+          ) : (
+            <div className="empty">
+              <h2>Không tìm thấy tài khoản</h2>
+              <p>Thử bỏ bớt bộ lọc hoặc tìm bằng một phần email.</p>
+              <Button variant="secondary" onClick={() => navigate({})}>Xóa bộ lọc</Button>
+              {page > 0 && <Button variant="ghost" onClick={() => navigate({ q, trangThai, vaiTro })}>Về trang đầu</Button>}
+            </div>
+          )}
+        </div>
       </section>
 
-      <aside style={{ display: 'grid', gap: 'var(--space-5)' }}>
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Quy tắc</h2>
-          <ul style={{ paddingLeft: '20px', display: 'grid', gap: '8px', margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)' }}>
+      <aside className="side-col">
+        <section className="panel" aria-labelledby="rules-title">
+          <h2 className="panel-title" id="rules-title">Quy tắc</h2>
+          <ul className={styles.rules}>
             <li>Khóa tài khoản sẽ hủy mọi phiên đăng nhập của người đó ngay lập tức.</li>
             <li>Không tự khóa tài khoản của mình.</li>
             <li>Luôn còn ít nhất một quản trị viên đang hoạt động: không khóa và không thu quyền người cuối cùng.</li>
@@ -263,23 +289,18 @@ function AdminUsersContent() {
             <li>Trang này chỉ hiện thông tin cần để quản lý tài khoản, không hiện nội dung học riêng tư.</li>
           </ul>
         </section>
-
-        <section style={{ backgroundColor: 'var(--color-field)', padding: 'var(--space-5)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-sm)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-3)' }}>Nhật ký</h2>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-ink-2)', marginBottom: 'var(--space-3)' }}>Xem ai đã khóa, mở khóa hay đổi vai trò, lúc nào và vì sao.</p>
-          <Button variant="ghost" onClick={() => router.push('/quan-tri/nhat-ky?loai=NGUOI_DUNG')} style={{ marginLeft: '-12px' }}>
-            Mở nhật ký tài khoản
-          </Button>
+        <section className="panel" aria-labelledby="log-title">
+          <h2 className="panel-title" id="log-title">Nhật ký</h2>
+          <p className="small muted">Xem ai đã khóa, mở khóa hay đổi vai trò, lúc nào và vì sao.</p>
+          <Link className={`btn btn-quiet ${styles.logLink}`} href="/quan-tri/nhat-ky?loai=NGUOI_DUNG">Mở nhật ký tài khoản</Link>
         </section>
       </aside>
+
+      {selection && <ReasonDialog selection={selection} me={me} onClose={() => setSelection(null)} onSuccess={actionSucceeded} />}
     </div>
   );
 }
 
 export default function AdminUsersPage() {
-  return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>Đang tải...</div>}>
-      <AdminUsersContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="page sheet"><UsersLoading /></div>}><AdminUsersContent /></Suspense>;
 }

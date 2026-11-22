@@ -14,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface TienDoThuThachRepository extends JpaRepository<TienDoThuThach, Long> {
 
+    boolean existsByThuThachId(Long thuThachId);
+
     Optional<TienDoThuThach> findByNguoiDungIdAndThuThachIdAndTuanBatDau(
             Long nguoiDungId, Long thuThachId, LocalDate tuanBatDau);
 

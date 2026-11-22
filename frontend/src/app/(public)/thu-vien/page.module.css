@@ -1,13 +1,14 @@
-.filters { display: grid; gap: var(--sp-3); grid-template-columns: 1fr 1fr; margin-bottom: var(--sp-5); }
+.filters { display: grid; gap: var(--sp-3); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: var(--sp-5); }
 .filters .search { grid-column: 1 / -1; }
-@media (min-width: 720px) { .filters { grid-template-columns: repeat(4, 1fr); } }
-@media (min-width: 1200px) { .filters { grid-template-columns: 2fr repeat(4, 1fr); } .filters .search { grid-column: auto; } }
+@media (min-width: 720px) { .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .filters { grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)); } .filters .search { grid-column: auto; } }
 
 .resultBar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
 .resultControls { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .resultControl { display: flex; align-items: center; gap: var(--sp-2); }
 .resultControl label { white-space: nowrap; }
 .resultControl select { width: auto; min-height: var(--tap); }
+.pager { margin-top: var(--sp-5); }
 
 .topicLinks { list-style: none; margin: 0; padding: 0; display: grid; }
 .topicLinks button { width: 100%; display: flex; justify-content: space-between; gap: var(--sp-3); min-height: var(--tap); align-items: center; padding: 0 var(--sp-2); color: var(--ink); background: none; border: 0; border-bottom: var(--rule) dashed var(--primary-line); text-align: left; font: inherit; cursor: pointer; }

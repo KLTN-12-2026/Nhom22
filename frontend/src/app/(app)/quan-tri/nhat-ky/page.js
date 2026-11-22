@@ -10,11 +10,12 @@ import { useMe } from '@/hooks/useMe';
 const ACTION = {
   KHOA_TAI_KHOAN: 'Khóa tài khoản', MO_KHOA_TAI_KHOAN: 'Mở khóa tài khoản', CAP_QUYEN_QUAN_TRI: 'Cấp quyền quản trị', THU_QUYEN_QUAN_TRI: 'Thu quyền quản trị',
   TAO_BO_MAU: 'Tạo bộ mẫu', SUA_BO_MAU: 'Sửa bộ mẫu', XUAT_BAN_BO_MAU: 'Xuất bản bộ mẫu', CHUYEN_VE_NHAP: 'Chuyển bộ về nháp', AN_BO_MAU: 'Ẩn bộ mẫu', HIEN_BO_MAU: 'Hiện lại bộ mẫu', XOA_BO_MAU: 'Xóa bộ mẫu',
-  TAO_THE_MAU: 'Thêm thẻ mẫu', SUA_THE_MAU: 'Sửa thẻ mẫu', XOA_THE_MAU: 'Xóa thẻ mẫu'
+  TAO_THE_MAU: 'Thêm thẻ mẫu', SUA_THE_MAU: 'Sửa thẻ mẫu', XOA_THE_MAU: 'Xóa thẻ mẫu',
+  TAO_HUY_HIEU: 'Tạo huy hiệu', SUA_HUY_HIEU: 'Sửa huy hiệu', TAO_THU_THACH: 'Tạo thử thách', SUA_THU_THACH: 'Sửa thử thách'
 };
 
-const KIND = { NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ mẫu', THE_TU_VUNG: 'Thẻ mẫu' };
-const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ' };
+const KIND = { NGUOI_DUNG: 'Tài khoản', BO_THE: 'Bộ mẫu', THE_TU_VUNG: 'Thẻ mẫu', HUY_HIEU: 'Huy hiệu', THU_THACH: 'Thử thách' };
+const FIELD = { trangThai: 'Trạng thái', vaiTro: 'Vai trò', quyenTruyCap: 'Xuất bản', trangThaiKiemDuyet: 'Kiểm duyệt', ten: 'Tên', moTa: 'Mô tả', mucTieu: 'Mục tiêu', chuDeId: 'Chủ đề', trinhDo: 'Trình độ', tu: 'Từ', nghiaVi: 'Nghĩa', tuLoai: 'Từ loại', phienAm: 'Phiên âm', viDuEn: 'Ví dụ', dichVi: 'Dịch ví dụ', ma: 'Mã danh mục', loaiDieuKien: 'Loại điều kiện', nguong: 'Ngưỡng đạt', thuTu: 'Thứ tự hiển thị', hoatDong: 'Đang dùng', chuKy: 'Chu kỳ', version: 'Phiên bản' };
 const VALUE = { HOAT_DONG: 'Đang hoạt động', BI_KHOA: 'Bị khóa', CHUA_XAC_THUC: 'Chưa xác thực', DANG_XOA: 'Đang xóa', ADMIN: 'Quản trị viên', USER: 'Người học', CONG_KHAI: 'Đã xuất bản', RIENG_TU: 'Bản nháp', BINH_THUONG: 'Bình thường', DA_AN: 'Đã ẩn' };
 const GOAL = { GIAO_TIEP: 'Giao tiếp', TOEIC: 'TOEIC' };
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };

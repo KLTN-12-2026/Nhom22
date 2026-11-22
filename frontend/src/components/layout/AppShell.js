@@ -63,6 +63,8 @@ const ADMIN_NAV_ONLY = [
     { key: "admin-decks", label: "Bộ mẫu", icon: "decks", href: "/quan-tri/bo-mau" },
     { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "/quan-tri/thanh-toan" },
     { key: "admin-revenue", label: "Thống kê doanh thu", icon: "chart", href: "/quan-tri/doanh-thu" },
+    { key: "admin-motivation", label: "Huy hiệu & thử thách", icon: "shield", href: "/quan-tri/dong-luc" },
+    { key: "admin-reports", label: "Hàng đợi báo cáo", icon: "alert", href: "/quan-tri/bao-cao" },
     { key: "admin-audit", label: "Nhật ký", icon: "file", href: "/quan-tri/nhat-ky" }
   ] }
 ];
@@ -86,7 +88,8 @@ export function AppShell({ children, user, isAdmin = false }) {
   const inAdminArea = pathname.startsWith('/quan-tri');
   const navList = visible((isAdmin && inAdminArea) ? ADMIN_NAV_ONLY : (isAdmin ? ADMIN_NAV : NAV));
   const bottomItems = BOTTOM.filter(it => !isPendingRoute(it.href));
-  const adminBottomItems = visible(ADMIN_NAV_ONLY).flatMap(group => group.items);
+  // The mobile drawer holds all admin destinations; keep the bottom bar to five.
+  const adminBottomItems = visible(ADMIN_NAV_ONLY).flatMap(group => group.items).filter(item => ['back', 'admin-topics', 'admin-users', 'admin-decks', 'admin-motivation'].includes(item.key));
 
   const isActive = (href) => href === '/ca-nhan' ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
@@ -165,7 +168,7 @@ export function AppShell({ children, user, isAdmin = false }) {
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">
-        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-payments':'Thanh toán','admin-revenue':'Doanh thu','admin-audit':'Nhật ký'})[item.key]})) : bottomItems).map(it => {
+        {(inAdminArea ? adminBottomItems.map(item=>({...item,label:({'back':'Ứng dụng','admin-topics':'Chủ đề','admin-users':'Tài khoản','admin-decks':'Bộ mẫu','admin-motivation':'Huy hiệu'})[item.key]})) : bottomItems).map(it => {
           const cur = it.key==='today' ? ['/hom-nay','/hoc','/bo-the','/thong-ke'].some(route=>isActive(route)) : isActive(it.href);
           return (
             <Link key={it.key} href={it.href} aria-current={cur ? 'page' : undefined}>

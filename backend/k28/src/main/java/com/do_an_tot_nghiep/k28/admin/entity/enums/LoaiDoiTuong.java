@@ -7,5 +7,7 @@ public enum LoaiDoiTuong {
     GOI_DICH_VU,
     DANG_KY_GOI,
     YEU_CAU_AI,
-    HAN_MUC_DICH_VU
+    HAN_MUC_DICH_VU,
+    HUY_HIEU,
+    THU_THACH
 }
