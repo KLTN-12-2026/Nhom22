@@ -126,9 +126,37 @@
     },
   };
 
+  const pop = (at, from, to, gain = 0.12) => tone(from, at, 0.09, { to, gain, type: 'sine', attack: 0.004 });
+  const square = (notes, step = 0.07, gain = 0.06) => notes.forEach((f, i) => tone(f, i * step, step * 1.1, { type: 'square', gain, lowpass: 3200 }));
+  const crackle = (count, gain = 0.3) => { for (let i = 0; i < count; i++) noise(i * 0.05 + Math.random() * 0.04, 0.05, { filter: 'highpass', freq: 1800, gain, attack: 0.001 }); };
+  const happy = ['correct', 'good', 'easy'];
+  const sad = ['wrong', 'forget'];
+  const party = ['complete', 'streak'];
+  const SKIN_SOUNDS = {
+    'meo-luoi': (n) => { if (happy.includes(n)) tone(720, 0.05, 0.32, { to: 540, type: 'sawtooth', gain: 0.05, lowpass: 1800, attack: 0.03 }); },
+    'canh-cut': (n) => { if (party.includes(n)) noise(0.1, 0.6, { freq: 600, to: 3200, q: 0.6, gain: 0.12 }); if (happy.includes(n)) pop(0.04, 500, 900); },
+    'nhen-du-to': (n) => { if (happy.includes(n)) { noise(0.02, 0.03, { freq: 5200, gain: 0.25, attack: 0.001 }); tone(260, 0.05, 0.18, { to: 620, type: 'triangle', gain: 0.07 }); } if (party.includes(n)) tone(180, 0.3, 0.5, { to: 900, type: 'triangle', gain: 0.06 }); },
+    'rong': (n) => { if (party.includes(n)) { tone(98, 0.05, 2.2, { gain: 0.16, attack: 0.005 }); tone(196.5, 0.05, 1.6, { gain: 0.06 }); tone(311, 0.05, 1.2, { gain: 0.03 }); } if (happy.includes(n)) bell(587.33, 0.06, 0.06, 0.6); },
+    'dai-duong': (n) => { if (happy.includes(n)) { pop(0.03, 380, 1150, 0.1); pop(0.13, 520, 1400, 0.07); } if (party.includes(n)) tone(140, 0.2, 1.4, { to: 90, gain: 0.08, lowpass: 600, attack: 0.2 }); },
+    'rap-chieu': (n) => { if (n === 'flip') crackle(4, 0.18); if (party.includes(n)) { noise(0.02, 0.06, { filter: 'lowpass', freq: 2400, gain: 0.5, attack: 0.001 }); noise(0.1, 0.05, { filter: 'lowpass', freq: 1800, gain: 0.4, attack: 0.001 }); } },
+    'tham-tu': (n) => { if (happy.includes(n)) { noise(0, 0.02, { freq: 3000, gain: 0.25, attack: 0.001 }); clink(2093, 0.08, 0.06); } if (sad.includes(n)) tone(146.8, 0.05, 0.6, { type: 'sawtooth', gain: 0.03, lowpass: 700 }); },
+    'pixel': (n) => { if (happy.includes(n)) square([988, 1319], 0.06); if (sad.includes(n)) square([311, 233], 0.09); if (party.includes(n)) square([523, 659, 784, 1047, 784, 1047], 0.08); },
+    'muc-ninja': (n) => { if (happy.includes(n)) noise(0.02, 0.16, { freq: 6000, to: 1500, q: 1.4, gain: 0.18 }); if (party.includes(n)) { noise(0, 0.14, { freq: 5000, to: 1200, gain: 0.16 }); noise(0.12, 0.14, { freq: 5500, to: 1300, gain: 0.14 }); } },
+    'muc-phi-hanh-gia': (n) => { if (party.includes(n)) noise(0.05, 1.2, { filter: 'lowpass', freq: 200, to: 2400, gain: 0.22, attack: 0.15 }); if (happy.includes(n)) tone(1400, 0.05, 0.25, { to: 2200, gain: 0.04 }); },
+    'tet': (n) => { if (party.includes(n)) crackle(10, 0.35); if (happy.includes(n)) bell(783.99, 0.05, 0.07, 0.5); },
+    'valentine': (n) => { if (happy.includes(n)) { bell(1046.5, 0.05, 0.06, 0.5); bell(1318.5, 0.14, 0.05, 0.6); } },
+    'trung-thu': (n) => { if (happy.includes(n)) [587.33, 659.25, 880].forEach((f, i) => bell(f, 0.05 + i * 0.08, 0.05, 0.5)); if (party.includes(n)) tone(110, 0.1, 1.6, { gain: 0.12 }); },
+    'nha-giao': (n) => { if (happy.includes(n)) { clink(1318.5, 0.05, 0.07); clink(1318.5, 0.2, 0.05); } },
+    'halloween': (n) => { if (happy.includes(n)) tone(440, 0.05, 0.6, { to: 660, type: 'sine', gain: 0.05, attack: 0.05 }); if (sad.includes(n)) tone(330, 0.05, 0.7, { to: 180, gain: 0.05, attack: 0.05 }); },
+    'noel': (n) => { if (happy.includes(n) || party.includes(n)) for (let i = 0; i < 6; i++) clink(2600 + Math.random() * 900, 0.04 + i * 0.05, 0.035); },
+  };
+
   function play(name) {
+    window.dispatchEvent(new CustomEvent('vl-fx', { detail: name }));
     if (!SOUNDS[name] || !audio()) return;
     try { SOUNDS[name](); } catch {}
+    const skin = SKIN_SOUNDS[document.documentElement.dataset.skin];
+    if (skin) { try { skin(name); } catch {} }
   }
 
   const reduced = () => reduceQuery.matches;

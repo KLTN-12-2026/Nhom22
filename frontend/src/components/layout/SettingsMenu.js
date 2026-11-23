@@ -11,6 +11,7 @@ export const SETTINGS_LINKS = [
   [
     { key: 'profile', label: 'Hồ sơ', icon: 'user', href: '/ca-nhan' },
     { key: 'learning', label: 'Thiết lập học', icon: 'target', href: '/ca-nhan/hoc-tap' },
+    { key: 'skins', label: 'Giao diện', icon: 'sparkles', href: '/ca-nhan/giao-dien' },
     { key: 'notify', label: 'Thông báo', icon: 'bell', href: '/ca-nhan/thong-bao' },
     { key: 'security', label: 'Bảo mật', icon: 'shield', href: '/ca-nhan/bao-mat' },
     { key: 'privacy', label: 'Quyền riêng tư', icon: 'eye', href: '/ca-nhan/rieng-tu' }

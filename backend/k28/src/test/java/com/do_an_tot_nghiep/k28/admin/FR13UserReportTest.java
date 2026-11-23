@@ -210,8 +210,9 @@ class FR13UserReportTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/v1/library/search").param("q", "Bộ của " + target.id()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$..[?(@.id == '" + deckId + "')]").isEmpty());
-        send(reporter, post("/api/v1/decks/" + deckId + "/copy").header("Idempotency-Key", UUID.randomUUID().toString()),
-                Map.of()).andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/v1/decks/" + deckId + "/copy").cookie(reporter.session()).with(xsrf())
+                        .header("Idempotency-Key", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound());
         report(reporter, target.id(), "SPAM").andExpect(status().isNotFound());
 
         send(admin, patch("/api/v1/admin/users/" + target.id() + "/status"),

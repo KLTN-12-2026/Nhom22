@@ -7,6 +7,7 @@ import styles from './page.module.css';
 import { SpeechSettings } from '@/components/content/SpeechSettings';
 import { MascotSettings } from '@/components/mascot/MascotSettings';
 import { ErrorState, Icon } from '@/components/ui';
+import { TourRestart } from '@/components/onboarding/TourRestart';
 
 export default function LearningSettingsPage() {
   const queryClient = useQueryClient();
@@ -90,6 +91,8 @@ export default function LearningSettingsPage() {
         <h1 id="page-title">Thiết lập học</h1>
         <p>Kế hoạch mỗi ngày dùng các con số dưới đây. Thay đổi có hiệu lực từ phiên học tiếp theo.</p>
       </div>
+
+      <TourRestart />
 
       <form id="form" className="settings-form" onSubmit={handleSubmit}>
         <div data-form-error hidden={!errorMsg}>{errorMsg}</div>

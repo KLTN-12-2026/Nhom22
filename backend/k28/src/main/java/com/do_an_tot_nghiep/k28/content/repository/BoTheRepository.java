@@ -72,6 +72,8 @@ public interface BoTheRepository extends JpaRepository<BoThe, Long>, JpaSpecific
 
     Optional<BoThe> findByIdAndChuSoHuuIdAndBoMauTrueAndXoaAtIsNull(Long id, Long chuSoHuuId);
 
+    Optional<BoThe> findFirstByChuSoHuuIdAndTenAndBoMauTrueAndXoaAtIsNullOrderByIdAsc(Long chuSoHuuId, String ten);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from BoThe d where d.id = :id")
     Optional<BoThe> findForUpdate(@Param("id") Long id);

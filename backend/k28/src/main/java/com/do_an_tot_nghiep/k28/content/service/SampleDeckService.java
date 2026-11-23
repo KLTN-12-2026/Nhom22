@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SampleDeckService {
+
+    public static final String STARTER_NAME = "Khởi động — Một ngày của tôi";
 
     private final BoTheRepository decks;
     private final ChuDeRepository topics;
@@ -73,6 +76,12 @@ public class SampleDeckService {
 
     public Long ownerId() {
         return accounts.systemUserId();
+    }
+
+    public Optional<Long> starterId() {
+        return decks.findFirstByChuSoHuuIdAndTenAndBoMauTrueAndXoaAtIsNullOrderByIdAsc(accounts.systemUserId(), STARTER_NAME)
+                .filter(BoThe::isPublished)
+                .map(BoThe::getId);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

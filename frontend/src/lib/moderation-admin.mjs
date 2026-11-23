@@ -12,6 +12,7 @@ export const SNAPSHOT_LABELS = {
   giaiThich: 'Giải thích', doanLienQuan: 'Đoạn liên quan', meoNho: 'Mẹo nhớ', cauGoc: 'Câu gốc', cauSua: 'Câu sửa',
   nhanXet: 'Nhận xét', dungTuMucTieu: 'Đã dùng từ mục tiêu', cachDungTu: 'Cách dùng từ', loi: 'Lỗi',
   doanGoc: 'Đoạn gốc', doanSua: 'Đoạn sửa', nguon: 'Nguồn', tuMucTieu: 'Từ mục tiêu',
+  tenHienThi: 'Tên hiển thị', thamGiaAt: 'Tham gia',
 };
 
 export function reportQuery({ trangThai = '', loaiDoiTuong = '', page = 0, size = 20 } = {}) {
@@ -31,7 +32,9 @@ export function resolutionPayload(quyetDinh, reason) {
 }
 
 export function snapshotEntries(snapshot = {}) {
-  return Object.entries(snapshot || {}).filter(([key, value]) => !['ten', 'chuSoHuuId', 'boTheId'].includes(key) && value != null);
+  return Object.entries(snapshot || {})
+    .filter(([key, value]) => !['ten', 'chuSoHuuId', 'boTheId', 'anhDaiDienId'].includes(key) && value != null)
+    .map(([key, value]) => (key === 'thamGiaAt' ? [key, new Date(value).toLocaleDateString('vi-VN')] : [key, value]));
 }
 
 export function reportTitle(report) {

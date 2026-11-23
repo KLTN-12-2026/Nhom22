@@ -22,12 +22,12 @@ export function LibraryDeckList({ decks = [], offset = 0, query = '', showAuthor
       </div>
       <ol className="answer-list" role="list">
         {decks.map((deck, i) => (
-          <li key={deck.id} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : ''}`}>
+          <li key={deck.id} data-tour-deck={deck.id} data-tour-copied={(me && deck.chuSoHuuId === me.id) || undefined} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : ''}`}>
             <span className="answer-no">{offset + i + 1}</span>
             <div className="answer-main">
               <div className="deck-name-line">
                 <DeckCover deck={deck} priority={i < 2} />
-                <Link className="answer-title" href={`/thu-vien/${deck.id}`}><Highlight text={deck.ten} query={query} /></Link>
+                <Link className="answer-title" data-tour="deck-title" href={`/thu-vien/${deck.id}`}><Highlight text={deck.ten} query={query} /></Link>
               </div>
               {deck.moTa && <p className="muted clamp-2"><Highlight text={deck.moTa} query={query} /></p>}
               <div className="answer-meta">

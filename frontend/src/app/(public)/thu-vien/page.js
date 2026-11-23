@@ -223,12 +223,12 @@ function LibraryContent() {
             </div>
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
-                <li key={deck.id} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
+                <li key={deck.id} data-tour-deck={deck.id} data-tour-copied={copyOf.has(deck.id) || (me && deck.chuSoHuuId === me.id) || undefined} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
                   <span className="answer-no">{page * size + i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
                     <DeckCover deck={deck} priority={i < 2} />
-                    <Link className="answer-title" href={`/thu-vien/${deck.id}`}>{deck.ten}</Link>
+                    <Link className="answer-title" data-tour="deck-title" href={`/thu-vien/${deck.id}`}>{deck.ten}</Link>
                     </div>
                     {deck.moTa && <p className="muted clamp-2 small">{deck.moTa}</p>}
                     <div className="answer-meta">

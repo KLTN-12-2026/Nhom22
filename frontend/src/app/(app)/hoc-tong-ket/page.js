@@ -211,7 +211,7 @@ function SummaryContent() {
           </div>
         )}
 
-        <div style={{ marginBottom: 'var(--space-6)' }}>
+        <div data-tour="next-review" style={{ marginBottom: 'var(--space-6)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)' }}>Lần ôn tiếp theo</h2>
           <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 'var(--space-2)' }}>
             {t.lichTiepTheo?.length > 0 ? t.lichTiepTheo.map((w, i) => (

@@ -10,6 +10,7 @@ import { useAvatar } from '@/hooks/useAvatar';
 import { useEventStream } from '@/hooks/useEventStream';
 import { apiFetch, logout } from '@/lib/api-client';
 import '@/styles/admin.css';
+import { SkinOff } from '@/components/skin/SkinSync';
 
 export const ADMIN_NAV = [
   { group: 'Hằng ngày', items: [
@@ -29,6 +30,7 @@ export const ADMIN_NAV = [
     { key: 'revenue', label: 'Doanh thu', href: '/quan-tri/doanh-thu' },
     { key: 'services', label: 'Dịch vụ và hạn mức', href: '/quan-tri/dich-vu' },
     { key: 'announcements', label: 'Thông báo hệ thống', href: '/quan-tri/thong-bao' },
+    { key: 'skins', label: 'Lịch giao diện lễ hội', href: '/quan-tri/giao-dien' },
     { key: 'audit', label: 'Nhật ký thao tác', href: '/quan-tri/nhat-ky' },
   ] },
 ];
@@ -133,7 +135,7 @@ export function AdminShell({ children, user }) {
             {user && <NotificationBell key={user.id} userId={user.id} />}
           </div>
         </header>
-        <main className="adm-content" id="main">{children}</main>
+        <main className="adm-content" id="main"><SkinOff />{children}</main>
       </div>
     </div>
   );

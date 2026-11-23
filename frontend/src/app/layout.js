@@ -11,8 +11,12 @@ import '@/styles/paper.css';
 import '@/styles/tier.css';
 import '@/styles/shell.css';
 import '@/styles/marketing.css';
+import '@/styles/skins-palette.css';
+import '@/styles/skins.css';
 import { Providers } from './providers';
 import { MucCompanion } from '@/components/mascot/MucCompanion';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { RouteProgress } from '@/components/layout/RouteProgress';
 
 export const metadata = {
   title: { default: 'VocabLearning', template: '%s — VocabLearning' },
@@ -33,8 +37,10 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <Providers>
+          <RouteProgress />
           {children}
           <MucCompanion />
+          <OnboardingTour />
         </Providers>
         <Script src="/fx.js" strategy="afterInteractive" />
       </body>

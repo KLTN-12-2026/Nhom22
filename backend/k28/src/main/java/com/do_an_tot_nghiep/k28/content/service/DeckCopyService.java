@@ -65,6 +65,11 @@ public class DeckCopyService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public boolean ownsDeck(Long userId, Long deckId) {
+        return decks.findByIdAndChuSoHuuIdAndXoaAtIsNull(deckId, userId).isPresent();
+    }
+
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public DeckResponse copy(Long userId, Long sourceId, String key) {
         if (sourceId == null || sourceId <= 0) {

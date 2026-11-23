@@ -3,6 +3,7 @@ package com.do_an_tot_nghiep.k28.content.repository;
 import com.do_an_tot_nghiep.k28.account.entity.NguoiDung;
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrangThaiNguoiDung;
+import com.do_an_tot_nghiep.k28.account.service.AccountAdminService;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
@@ -49,9 +50,10 @@ public final class LibraryDeckSpecifications {
         Root<NguoiDung> user = owner.from(NguoiDung.class);
         owner.select(user.get("id")).where(
                 cb.equal(user.get("id"), root.get("chuSoHuuId")),
-                cb.equal(user.get("trangThai"), TrangThaiNguoiDung.HOAT_DONG)
+                cb.equal(user.get("trangThai"), TrangThaiNguoiDung.BI_KHOA),
+                cb.notEqual(user.get("email"), AccountAdminService.SYSTEM_EMAIL)
         );
-        return cb.exists(owner);
+        return cb.not(cb.exists(owner));
     }
 
     public static Specification<BoThe> matching(

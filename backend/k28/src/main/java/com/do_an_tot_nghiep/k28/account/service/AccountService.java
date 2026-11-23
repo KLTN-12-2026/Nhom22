@@ -80,17 +80,19 @@ public class AccountService {
     @Transactional(readOnly = true)
     public Long publicAvatarId(Long userId) {
         return users.findById(userId)
-                .filter(user -> user.getTrangThai() == TrangThaiNguoiDung.HOAT_DONG)
+                .filter(user -> !isLocked(user))
                 .map(NguoiDung::visibleAvatarId)
                 .orElse(null);
     }
 
     @Transactional(readOnly = true)
     public boolean isUnavailable(Long userId) {
-        return users.findById(userId)
-                .map(user -> user.getTrangThai() == TrangThaiNguoiDung.BI_KHOA
-                        || user.getTrangThai() == TrangThaiNguoiDung.DANG_XOA)
-                .orElse(false);
+        return users.findById(userId).map(AccountService::isLocked).orElse(false);
+    }
+
+    private static boolean isLocked(NguoiDung user) {
+        return user.getTrangThai() == TrangThaiNguoiDung.BI_KHOA
+                && !AccountAdminService.SYSTEM_EMAIL.equals(user.getEmail());
     }
 
     @Transactional(readOnly = true)

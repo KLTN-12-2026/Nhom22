@@ -9,6 +9,7 @@ import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/Das
 import { LeaderboardMini } from '@/components/engagement/LeaderboardMini';
 import { TodayRoadmap } from '@/components/dashboard/TodayRoadmap';
 import { ReviewSchedule } from '@/components/dashboard/ReviewSchedule';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import styles from './page.module.css';
 
 const MINUTE_OPTIONS = [5, 10, 20];
@@ -122,7 +123,7 @@ function ResumeBlock({ session, onFinish, finishing, finishError }) {
       {finishError && <p className="notice notice-danger" role="alert">{finishError}</p>}
       <div className="row">
         {open ? (
-          <Link className="btn btn-accent" href={`/hoc-phien?id=${session.id}`}>Tiếp tục phiên</Link>
+          <Link className="btn btn-accent" data-tour="resume-session" href={`/hoc-phien?id=${session.id}`}>Tiếp tục phiên</Link>
         ) : (
           <Button type="button" variant="primary" onClick={() => onFinish(session.id)} disabled={finishing}>
             {finishing ? 'Đang kết thúc…' : 'Kết thúc và xem tổng kết'}
@@ -365,6 +366,7 @@ export default function TodayPage() {
             <h1 id="empty-title">Hôm nay học gì?</h1>
           </div>
           <AnnouncementBanner />
+          <OnboardingChecklist />
           <div className="empty">
             <div className="empty-sheet" aria-hidden="true">
               <span data-n="1"><i></i><i></i><i></i><i></i></span>
@@ -399,6 +401,7 @@ export default function TodayPage() {
             </div>
 
             <AnnouncementBanner />
+            <OnboardingChecklist />
 
             <ResumeBlock
               session={plan.phienDangDo}
@@ -499,7 +502,7 @@ export default function TodayPage() {
                     </fieldset>
 
                     <div className={`${styles.startFoot} start-foot`} style={{ marginTop: 'var(--space-6)' }}>
-                      <Button type="submit" variant={resumeOpen ? 'secondary' : 'accent'} size="lg" disabled={sessionMutation.isPending}>
+                      <Button type="submit" data-tour="start-session" variant={resumeOpen ? 'secondary' : 'accent'} size="lg" disabled={sessionMutation.isPending}>
                         {sessionMutation.isPending ? 'Đang tạo phiên…' : resumeOpen ? 'Bắt đầu phiên mới' : 'Bắt đầu phiên hôm nay'}
                       </Button>
                       <Link className="btn btn-quiet" href="/luyen-tap">Tự chọn bộ và dạng bài</Link>

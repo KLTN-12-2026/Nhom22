@@ -46,7 +46,7 @@ public class WeeklyHonorRepository {
     public List<Honor> week(LocalDate tuanBatDau, int toiDa) {
         return jdbc.query("""
                 SELECT v.hang, v.nguoi_dung_id,
-                       CASE WHEN u.trang_thai = 'HOAT_DONG' THEN u.ten_hien_thi ELSE 'Người dùng không khả dụng' END
+                       CASE WHEN u.trang_thai = 'BI_KHOA' THEN 'Người dùng không khả dụng' ELSE u.ten_hien_thi END
                            AS ten_hien_thi,
                        v.so_ngay, v.so_luot_hop_le
                 FROM vinh_danh_tuan v JOIN nguoi_dung u ON u.id = v.nguoi_dung_id

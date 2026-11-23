@@ -2,6 +2,7 @@ export const REPORT_TABS = [
   { value: 'CHO_XU_LY', label: 'Chờ xử lý' },
   { value: 'DA_GIU', label: 'Đã giữ' },
   { value: 'DA_AN', label: 'Đã ẩn' },
+  { value: 'DA_KHOA', label: 'Đã khóa' },
   { value: '', label: 'Tất cả' },
 ];
 
@@ -9,11 +10,12 @@ export const REPORT_STATUS = {
   CHO_XU_LY: ['Chờ xử lý', 'warn'],
   DA_GIU: ['Đã giữ', 'ok'],
   DA_AN: ['Đã ẩn', 'bad'],
+  DA_KHOA: ['Đã khóa', 'bad'],
 };
 
-export const TARGET_TYPE = { BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', YEU_CAU_AI: 'Đầu ra AI' };
+export const TARGET_TYPE = { BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', YEU_CAU_AI: 'Đầu ra AI', NGUOI_DUNG: 'Người dùng' };
 
-export const REPORT_REASON = { SAI_NOI_DUNG: 'Sai nghĩa / thông tin', SAI_CHINH_TA: 'Sai chính tả, phiên âm', KHONG_PHU_HOP: 'Không phù hợp', SPAM: 'Spam / quảng cáo', BAN_QUYEN: 'Vi phạm bản quyền', KHAC: 'Lý do khác' };
+export const REPORT_REASON = { SAI_NOI_DUNG: 'Sai nghĩa / thông tin', SAI_CHINH_TA: 'Sai chính tả, phiên âm', KHONG_PHU_HOP: 'Không phù hợp', SPAM: 'Spam / quảng cáo', BAN_QUYEN: 'Vi phạm bản quyền', KHAC: 'Lý do khác', ANH_DAI_DIEN_NHAY_CAM: 'Ảnh đại diện nhạy cảm', TEN_KHONG_PHU_HOP: 'Tên không phù hợp', MAO_DANH: 'Mạo danh', QUAY_ROI: 'Quấy rối' };
 
 export const SERVICE_TYPES = ['AI', 'ANH', 'TTS', 'PHAT_AM'];
 
@@ -31,6 +33,7 @@ export const QUOTA_MAX = 10000;
 const SNAPSHOT_FIELDS = {
   BO_THE: [['moTa', 'Mô tả'], ['boMau', 'Bộ mẫu']],
   THE_TU_VUNG: [['tu', 'Từ'], ['tuLoai', 'Từ loại'], ['phienAm', 'Phiên âm'], ['nghiaVi', 'Nghĩa'], ['viDuEn', 'Ví dụ'], ['dichVi', 'Dịch ví dụ']],
+  NGUOI_DUNG: [['tenHienThi', 'Tên hiển thị'], ['thamGiaAt', 'Tham gia lúc']],
   YEU_CAU_AI: [['loai', 'Loại yêu cầu'], ['inputRef', 'Đầu vào'], ['nhaCungCap', 'Nhà cung cấp'], ['model', 'Model'], ['phienBanPrompt', 'Phiên bản prompt'], ['ketQua', 'Kết quả'], ['banNhap', 'Bản nháp']],
 };
 
@@ -76,6 +79,7 @@ export function snapshotRows(report) {
 export function contentLink(report) {
   const content = report?.noiDung || {};
   if (report?.loaiDoiTuong === 'BO_THE') return content.boMau ? `/quan-tri/bo-mau?id=${report.doiTuongId}` : `/thu-vien/${report.doiTuongId}`;
+  if (report?.loaiDoiTuong === 'NGUOI_DUNG') return `/quan-tri/tai-khoan?nguoi=${report.doiTuongId}`;
   if (report?.loaiDoiTuong === 'THE_TU_VUNG' && content.boTheId) return `/thu-vien/${content.boTheId}?the=${report.doiTuongId}`;
   return null;
 }

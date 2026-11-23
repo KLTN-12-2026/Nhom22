@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { REALTIME_KEYS, handledId, incidentMessage, keysFor, parseEvent } from '../src/lib/realtime.mjs';
 
 test('every backend event type has a mapping', () => {
-  const types = ['THONG_BAO_MOI', 'THONG_BAO_HE_THONG', 'TAI_KHOAN_BI_KHOA', 'GOI_THAY_DOI', 'THANH_TOAN', 'YEU_CAU_AI', 'HANG_CHO_QUAN_TRI', 'MUC_DA_XU_LY', 'SU_CO_HE_THONG', 'PHIEN_HOC_MOI', 'YEU_CAU_CONG_KHAI'];
+  const types = ['THONG_BAO_MOI', 'THONG_BAO_HE_THONG', 'TAI_KHOAN_BI_KHOA', 'GOI_THAY_DOI', 'THANH_TOAN', 'YEU_CAU_AI', 'HANG_CHO_QUAN_TRI', 'MUC_DA_XU_LY', 'SU_CO_HE_THONG', 'PHIEN_HOC_MOI', 'YEU_CAU_CONG_KHAI', 'BAO_CAO_MOI'];
   assert.deepEqual(Object.keys(REALTIME_KEYS).sort(), types.sort());
 });
 
@@ -18,6 +18,8 @@ test('keysFor targets the queries each event changes', () => {
   assert.ok(keysFor('HANG_CHO_QUAN_TRI').some(key => key[0] === 'admin-queue'));
   assert.deepEqual(keysFor('UNKNOWN'), []);
   assert.deepEqual(keysFor('TAI_KHOAN_BI_KHOA'), []);
+  assert.ok(keysFor('BAO_CAO_MOI').some(key => key[0] === 'admin-reports'));
+  assert.ok(keysFor('THONG_BAO_MOI').some(key => key[0] === 'me'));
 });
 
 test('incidentMessage describes component state and job failures', () => {

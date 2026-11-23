@@ -252,13 +252,13 @@ function FlashcardSessionContent() {
               </div>
               <div className="actions">
                 {!flipped ? (
-                  <Button ref={flipButton} variant="primary" className="flip" onClick={handleFlip}>
+                  <Button ref={flipButton} data-tour="flip" variant="primary" className="flip" onClick={handleFlip}>
                     Lật thẻ <span className="kbd">Space</span>
                   </Button>
                 ) : (
                   <div>
                     <p className="rate-caption">Đánh giá khả năng nhớ</p>
-                    <div className="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
+                    <div className="rates" data-tour="rates" role="group" aria-label="Bạn nhớ từ này thế nào?">
                       {ratings.map(([rate, label], index) => (
                         <button
                           type="button"

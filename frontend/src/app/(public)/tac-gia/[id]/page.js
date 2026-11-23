@@ -1,9 +1,11 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { LibraryDeckList } from '@/components/content/LibraryDeckList';
+import { ReportDialog } from '@/components/content/ReportDialog';
+import { isUnavailableUser } from '@/lib/share.mjs';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { useLibraryAuthor } from '@/hooks/useSearch';
 import { useMe } from '@/hooks/useMe';
@@ -31,6 +33,7 @@ function AuthorContent() {
   const validId = /^[1-9][0-9]{0,18}$/.test(String(id || ''));
 
   const { data: me } = useMe();
+  const [reporting, setReporting] = useState(false);
   const author = useLibraryAuthor(validId ? id : null);
   const decks = useLibraryDecks({ chuSoHuuId: id, sort, page, size: SIZE }, { enabled: validId && Boolean(author.data) });
 
@@ -40,6 +43,20 @@ function AuthorContent() {
     if (key !== 'page') next.delete('page');
     router.replace(`/tac-gia/${id}?${next}`, { scroll: false });
   };
+
+  if (isUnavailableUser(author.error)) {
+    return (
+      <div className="page">
+        <section className="sheet">
+          <div className="empty" role="status">
+            <h1>Người dùng không khả dụng</h1>
+            <p>Tài khoản này đang bị tạm khóa. Hồ sơ và các bộ thẻ công khai của họ đã được ẩn.</p>
+            <Link className="btn btn-secondary" href="/thu-vien">Mở thư viện</Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (!validId || author.error?.status === 404) {
     return (
@@ -83,6 +100,8 @@ function AuthorContent() {
           headingLevel="h1"
         />
         {isMe && <Link className={`btn btn-secondary ${styles.edit}`} href="/ca-nhan"><Icon name="edit" />Chỉnh sửa hồ sơ</Link>}
+        {me && profile && !isMe && <button type="button" className={`btn btn-quiet ${styles.edit}`} onClick={() => setReporting(true)}><Icon name="flag" />Báo cáo người dùng</button>}
+        {reporting && profile && <ReportDialog loaiDoiTuong="NGUOI_DUNG" doiTuongId={String(profile.id)} name={profile.tenHienThi} onClose={() => setReporting(false)} />}
         {profile && <ProfileMeta items={[
           { icon: 'decks', text: `${profile.soBoThe} bộ công khai · ${profile.soThe.toLocaleString('vi-VN')} thẻ` },
           joined && { icon: 'calendar', text: `Tham gia ${joined}` },

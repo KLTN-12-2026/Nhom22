@@ -21,7 +21,7 @@ import { ShareDialog } from '@/components/content/ShareDialog';
 import { ReportDialog } from '@/components/content/ReportDialog';
 import { SnapDialog } from '@/components/content/SnapDialog';
 import { CardActions } from '@/components/content/CardActions';
-import { cardShare, deckShare } from '@/lib/share.mjs';
+import { cardShare, deckShare, isUnavailableUser } from '@/lib/share.mjs';
 import styles from './page.module.css';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -110,6 +110,7 @@ function LibraryDetail({ id }) {
     setReporting(target);
   };
   if (isLoading) return <div className="page"><div className="sheet"><div className="skeleton" role="status" aria-label="Đang tải bộ thẻ"><div className="sk sk-title" /><div className="sk sk-line" /><div className={`sk sk-line ${styles.shortLine}`} /><div className="sk sk-row" /><div className="sk sk-row" /></div></div></div>;
+  if (isUnavailableUser(error)) return <div className="page sheet"><div className="empty" role="status"><h1>Người dùng không khả dụng</h1><p>Tác giả của bộ thẻ này đang bị tạm khóa nên bộ thẻ đã được ẩn khỏi thư viện.</p><Link href="/thu-vien" className="btn btn-secondary">Về thư viện</Link></div></div>;
   if (error) return <div className="page sheet"><ErrorState title={error.status === 404 ? 'Bộ thẻ không còn công khai' : 'Không tải được bộ thẻ'} description={error.message} onRetry={refetch} /><Link href="/thu-vien" className="btn btn-secondary">Về thư viện</Link></div>;
   const { boThe, the } = data;
   if (boThe.soThe === 0 && the.items.length === 0) return <div className="page sheet"><div className="empty">
@@ -140,16 +141,16 @@ function LibraryDetail({ id }) {
             ? (boThe.banSao.boGocXemDuoc && <Link className="btn btn-primary btn-lg" href={`/thu-vien/${boThe.banSao.boGocId}`}><Icon name="arrow-left" />Xem bộ gốc</Link>)
             : premiumLocked
             ? <button type="button" className="btn btn-primary btn-lg" onClick={() => requestUpgrade('BO_MAU_CAO_CAP')}><Icon name="lock" />Sao chép (cần Premium)</button>
-            : <button type="button" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
+            : <button type="button" data-tour="copy-deck" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
             <button type="button" className="btn btn-secondary btn-lg" onClick={shareDeck}><Icon name="share" />Chia sẻ</button>
           <button type="button" className="btn btn-quiet btn-lg" onClick={copyLink}><Icon name="link" />Sao chép liên kết</button>
           <ContentReportButton key={boThe.id} deck={boThe} />
           {!ownDeck && <button type="button" className="btn btn-quiet btn-lg" onClick={() => openReport({ loaiDoiTuong: 'BO_THE', doiTuongId: id, name: boThe.ten })}><Icon name="flag" />Báo cáo</button>}
         </div>
-        {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
+        {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link data-tour="open-copy" data-deck-id={copy.data.id} className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
         {ownDeck && <p className="muted small">Đây là bộ do bạn soạn nên không cần sao chép. Người khác sao chép bộ này sẽ gửi yêu cầu công khai cho bạn duyệt.</p>}
         {!ownDeck && boThe.banSao && <p className="muted small">Bộ này là bản sao nên không sao chép tiếp được. Hãy sao chép từ bộ gốc.</p>}
-        {existingCopyId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bạn đã có bản sao của bộ này</p><p className="small">Mỗi bộ chỉ sao chép được một lần. Xóa bản sao cũ nếu muốn sao chép lại.</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${existingCopyId}`}>Mở bản sao của bạn</Link></div></div>}
+        {existingCopyId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bạn đã có bản sao của bộ này</p><p className="small">Mỗi bộ chỉ sao chép được một lần. Xóa bản sao cũ nếu muốn sao chép lại.</p><Link data-tour="open-copy" data-deck-id={existingCopyId} className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${existingCopyId}`}>Mở bản sao của bạn</Link></div></div>}
         {!boThe.banSao && originId && <div className="notice notice-warning" role="status"><Icon name="info" /><div className="stack-sm"><p className="notice-title">Bộ này là bản sao</p><Link className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/thu-vien/${originId}`}>Xem bộ gốc</Link></div></div>}
         {copy.error && !existingCopyId && !originId && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
         {userError && userError.status !== 401 && <ErrorState title="Không kiểm tra được đăng nhập" description={userError.message} onRetry={() => client.invalidateQueries({ queryKey: ['me'] })} />}

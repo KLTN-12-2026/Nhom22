@@ -3,16 +3,17 @@ import { planKey } from './tier.mjs';
 export const STREAM_URL = '/api/v1/events/stream';
 
 export const REALTIME_KEYS = {
-  THONG_BAO_MOI: () => [['notifications']],
+  THONG_BAO_MOI: () => [['notifications'], ['me']],
   THONG_BAO_HE_THONG: () => [['announcements'], ['admin', 'announcements']],
   TAI_KHOAN_BI_KHOA: () => [],
-  GOI_THAY_DOI: () => [['billing'], planKey, ['service-quota'], ['me']],
+  GOI_THAY_DOI: () => [['billing'], planKey, ['service-quota'], ['me'], ['themes']],
   THANH_TOAN: () => [['billing']],
   YEU_CAU_AI: id => [id ? ['ai-request', id] : ['ai-request'], ['ai-history'], ['service-quota']],
   HANG_CHO_QUAN_TRI: () => [['admin-queue'], ['admin-dashboard'], ['publish-requests'], ['admin-reports']],
   MUC_DA_XU_LY: () => [['admin-queue'], ['admin-dashboard'], ['publish-requests'], ['admin-reports']],
   SU_CO_HE_THONG: () => [['admin-dashboard'], ['admin-queue'], ['admin-service-usage']],
   PHIEN_HOC_MOI: () => [['learning-today']],
+  BAO_CAO_MOI: () => [['admin-queue'], ['admin-dashboard'], ['admin-reports']],
   YEU_CAU_CONG_KHAI: id => [['publish-requests'], ['publish-request-cards'], ['my-decks'], id ? ['deck', id] : ['deck']],
 };
 

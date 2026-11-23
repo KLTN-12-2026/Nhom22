@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.account.entity;
 
+import com.do_an_tot_nghiep.k28.account.entity.enums.BuocHuongDan;
 import com.do_an_tot_nghiep.k28.account.entity.enums.MucTieu;
 import com.do_an_tot_nghiep.k28.account.entity.enums.TrinhDo;
 import com.do_an_tot_nghiep.k28.common.entity.BaseEntity;
@@ -12,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -35,6 +37,16 @@ public class HoSoHocTap extends BaseEntity {
     private int tuMoiMoiNgay;
 
     private boolean daHoanTatKhoiDau;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    private BuocHuongDan buocHuongDan = BuocHuongDan.CHUA_BAT_DAU;
+
+    private Long boKhoiDongId;
+
+    private Long boSaoChepId;
+
+    private String giaoDienMa;
 
     @Version
     private Long version;
@@ -68,5 +80,30 @@ public class HoSoHocTap extends BaseEntity {
         this.phutMoiNgay = phutMoiNgay;
         this.tuMoiMoiNgay = tuMoiMoiNgay;
         this.daHoanTatKhoiDau = true;
+    }
+
+    public boolean chooseTheme(String giaoDienMa) {
+        if (Objects.equals(this.giaoDienMa, giaoDienMa)) {
+            return false;
+        }
+        this.giaoDienMa = giaoDienMa;
+        return true;
+    }
+
+    public void startTour(Long boKhoiDongId) {
+        this.buocHuongDan = BuocHuongDan.HOC_BO_KHOI_DONG;
+        this.boKhoiDongId = boKhoiDongId;
+        this.boSaoChepId = null;
+    }
+
+    public boolean advanceTour(BuocHuongDan buoc, Long boSaoChepId) {
+        if (buoc.ordinal() <= buocHuongDan.ordinal()) {
+            return false;
+        }
+        this.buocHuongDan = buoc;
+        if (boSaoChepId != null) {
+            this.boSaoChepId = boSaoChepId;
+        }
+        return true;
     }
 }

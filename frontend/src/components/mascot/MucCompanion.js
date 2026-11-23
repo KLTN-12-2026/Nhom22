@@ -13,6 +13,7 @@ import { WordCombobox } from '@/components/dictionary/WordCombobox';
 import { AddToDeckDialog } from '@/components/dictionary/AddToDeckDialog';
 import { MucLookupResult } from './MucLookupResult';
 import { useMucPosition } from './useMucPosition';
+import { SkinCostume } from '@/components/skin/SkinActors';
 
 const MOOD_MS = 2400;
 const GREET_KEY = 'vocab:muc:greeted';
@@ -330,6 +331,7 @@ function Muc({ pathname }) {
       <div ref={bubbleRef} className="muc-bubble" role="status" aria-live="polite">{bubble}</div>
       <button ref={toggleRef} className="muc-toggle" type="button" aria-label={todo ? `Mở bảng việc của ${name}, còn ${todo} việc` : `Mở bảng của ${name}`} aria-expanded={open} aria-controls="muc-panel" title="Bấm để mở · kéo để di chuyển" onClick={toggle}>
         <span className="muc-svg" dangerouslySetInnerHTML={{ __html: svg }} />
+        <SkinCostume />
         {user && (tier === 'premium' || tier === 'admin') && <span className="muc-hat" aria-hidden="true"><MetalIcon name="crown" metal="gold" size={30} /></span>}
         {user && tier === 'pro' && <span className="muc-hat muc-hat-pro" aria-hidden="true"><MetalIcon name="bolt" metal="steel" size={24} /></span>}
         {todo > 0 && <span className="muc-dot" aria-hidden="true">{todo > 99 ? '99+' : todo}</span>}

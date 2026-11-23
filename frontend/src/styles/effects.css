@@ -28,8 +28,18 @@
 .rates .rate:nth-child(4) { animation-delay: 120ms; }
 @keyframes fx-rise { from { opacity: 0; transform: translateY(12px); } }
 
-.app-main > .page > .sheet, .app-main > .page > aside, .app-main > .page > .side-col { animation: fx-rise var(--dur-3) var(--ease-out) both; }
-.app-main > .page > aside, .app-main > .page > .side-col { animation-delay: 60ms; }
+@keyframes fx-enter { from { opacity: 0; transform: translate3d(0, 6px, 0); } }
+@keyframes fx-fade { from { opacity: 0; } }
+.app-main > .page > .sheet, .app-main > .page > section, .app-main > .page > aside, .app-main > .page > .side-col,
+.adm-content > *, .auth-form > * { animation: fx-enter 280ms var(--ease-out) both; }
+.app-main > .page > aside, .app-main > .page > .side-col { animation-delay: 50ms; }
+.app-main > .page.sheet.skeleton, .app-main > .page > .skeleton, .sheet .skeleton { animation: fx-fade var(--dur-2) ease 160ms both; }
+
+.route-progress { position: fixed; inset: 0 0 auto; z-index: 200; height: 2px; pointer-events: none; }
+.route-progress span { display: block; height: 100%; background: var(--primary); transform: scaleX(0); transform-origin: left; opacity: 0; }
+.route-progress span[data-state="loading"] { animation: rp-show 0s linear 120ms forwards, rp-grow 8s cubic-bezier(0.1, 0.6, 0.2, 1) 120ms forwards; }
+@keyframes rp-show { to { opacity: 1; } }
+@keyframes rp-grow { from { transform: scaleX(0.08); } to { transform: scaleX(0.92); } }
 
 .fx-confetti { position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; pointer-events: none; }
 
@@ -78,7 +88,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fx-ripple, .fx-turn, .flash .back, .fx-pop, .fx-shake, .rates .rate, .fx-stamp, .fx-float, .fx-correct, .fx-check path,
-  .app-main > .page > .sheet, .app-main > .page > aside, .app-main > .page > .side-col, .choice-card:has(input:checked) .bubble { animation: none; }
+  .app-main > .page > .sheet, .app-main > .page > section, .app-main > .page > aside, .app-main > .page > .side-col, .adm-content > *, .auth-form > *, .skeleton, .choice-card:has(input:checked) .bubble { animation: none; }
   .fx-check path { stroke-dashoffset: 0; }
   .btn:active:not(:disabled), .rate:active:not(:disabled) { transform: none; }
 }
