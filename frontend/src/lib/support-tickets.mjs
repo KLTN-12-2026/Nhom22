@@ -50,7 +50,7 @@ export function validateTicket(values) {
   return errors;
 }
 
-export function saveTicket(storage, userId, values) {
+export function saveTicket(storage, userId, values, requester) {
   if (userId == null || Object.keys(validateTicket(values)).length
     || !Object.hasOwn(TICKET_CATEGORIES, values.category) || !Object.hasOwn(TICKET_PRIORITIES, values.priority)) {
     throw new Error('Vui lòng kiểm tra lại thông tin phiếu hỗ trợ.');
@@ -61,6 +61,9 @@ export function saveTicket(storage, userId, values) {
     id: `HT-${nextId}`, title: values.title.trim(), description: values.description.trim(),
     category: values.category, priority: values.priority, status: 'open', createdAt: new Date().toISOString(),
   };
+  if (requester && String(requester.id) === String(userId)) {
+    ticket.requester = { id: String(userId), tenHienThi: requester.tenHienThi || '', email: requester.email || '' };
+  }
   const updated = [ticket, ...tickets];
   // Do not report success or change the list if storage rejects the write.
   storage.setItem(storageKey(userId), JSON.stringify(updated));

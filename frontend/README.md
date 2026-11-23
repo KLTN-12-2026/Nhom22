@@ -138,3 +138,23 @@ Linh vật hỗ trợ kéo bằng chuột/cảm ứng, Alt + phím mũi tên và
 Trang `/quan-tri/dong-luc` bổ sung trở lại UI54 theo yêu cầu mới, có lối vào trong menu quản trị. Hai tab Huy hiệu/Thử thách đọc API quản trị thật, hỗ trợ tạo/sửa, xác nhận bật/tắt và phân trang. Ghi kèm `version`; lỗi xung đột yêu cầu tải lại danh mục. Thử thách đã có tiến độ không được đổi mục tiêu. Không có thao tác cộng điểm thủ công hoặc xóa thành tích.
 
 Cần backend có migration `V34__admin_motivation.sql`; khởi động lại backend sau khi cập nhật mã. [Hợp đồng API và quy tắc](../docs/luong-backend/B3.6a-quan-tri-dong-luc.md). Mockup HTML vẫn là bản demo độc lập, không phải nguồn dữ liệu frontend.
+
+
+## Tiếp nhận hỗ trợ
+
+Trang `/quan-tri/tiep-nhan-ho-tro` triển khai giao diện từ `mockups/dot3/tiep-nhan-ho-tro.html`,
+có lối vào trong nhóm Hằng ngày của menu quản trị. `/tiep-nhan-ho-tro` chuyển tới trang này;
+layout quản trị yêu cầu vai trò ADMIN.
+
+Có thống kê, tìm mã/nội dung/tên/email không phân biệt dấu, lọc loại/ưu tiên, sắp xếp,
+phân trang 6 phiếu và tab trạng thái đồng bộ URL. Chi tiết có lịch sử, phản hồi tối đa
+2000 ký tự, giải quyết/mở lại và đổi ưu tiên. Khi giải quyết phải nhập kết quả xử lý;
+lưu lỗi giữ bản nháp và xung đột yêu cầu mở lại phiếu.
+
+Đây là giao diện dùng dữ liệu mẫu trên trình duyệt, chưa tích hợp API hỗ trợ.
+Dùng chung `vocab:support-tickets:v1:<userId>` với `/phieu-ho-tro`; mặc định có
+12 phiếu của Nguyễn An, bổ sung những tài khoản đã lưu phiếu trên cùng origin.
+Phiếu mới lưu kèm tên/email người gửi; dữ liệu cũ thiếu thông tin hiển thị mã tài khoản.
+Hai màn tự làm mới cache khi tạo/cập nhật hoặc storage thay đổi giữa các tab.
+Không gửi email, thông báo hay yêu cầu thật. Kiểm tra quy tắc lưu và xung đột bằng
+`node --test tests/support-admin.test.mjs tests/support-tickets.test.mjs`.
