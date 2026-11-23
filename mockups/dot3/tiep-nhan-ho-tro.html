@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tiếp nhận hỗ trợ – VocabLearning</title>
+  <meta name="description" content="Tiếp nhận, phản hồi và giải quyết phiếu hỗ trợ của học viên.">
+  <link rel="icon" href="../shared/assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="../shared/tokens.css?v=8eea39e030ee">
+  <link rel="stylesheet" href="../shared/base.css?v=7827f16581f9">
+  <link rel="stylesheet" href="../shared/components.css?v=bdbdbd359bfc">
+  <link rel="stylesheet" href="../shared/learning-refinements.css?v=486627ff40a2">
+  <link rel="stylesheet" href="../shared/effects.css?v=7fb6a75d9e3b">
+  <link rel="stylesheet" href="../shared/flow.css?v=3cfb00d90735">
+  <link rel="stylesheet" href="../shared/mascot.css?v=c679fd5e94c1">
+  <link rel="stylesheet" href="ui.css?v=1118572fe323">
+  <link rel="stylesheet" href="tiep-nhan-ho-tro.css?v=7329b5caeaac">
+  <script src="../shared/theme.js?v=1f85dc0dae8a"></script>
+  <script src="../shared/speech.js?v=9462ca4f1c89"></script>
+</head>
+<body data-root=".." data-auth="required" data-onboarding="skip" data-role="ADMIN" data-phase="dot3" data-screen="tiep-nhan-ho-tro" data-nav="admin-support">
+  <div class="app">
+    <header class="app-header"></header>
+    <div class="app-body">
+      <nav class="sidebar" aria-label="Điều hướng chính"></nav>
+      <main class="app-main" id="main">
+        <div class="page d3-page support-page">
+          <div class="d3-demo"><span>Bản trải nghiệm · Dữ liệu mô phỏng</span><a href="../index.html#dot3">Danh mục mockup</a></div>
+          <article class="sheet" aria-labelledby="page-title">
+            <header class="support-heading">
+              <div><p class="support-eyebrow">Quản trị / Hỗ trợ học viên</p><h1 id="page-title">Tiếp nhận hỗ trợ</h1><p class="muted">Lắng nghe, phản hồi và giải quyết yêu cầu của học viên.</p></div>
+              <button class="btn btn-secondary" type="button" id="refresh-tickets"><span data-icon="refresh"></span>Làm mới</button>
+            </header>
+            <section class="support-summary" aria-label="Tổng quan phiếu hỗ trợ">
+              <article><span>Tổng số phiếu</span><strong id="total-count">—</strong><small>Tất cả yêu cầu của học viên</small></article>
+              <article><span>Đang mở</span><strong id="open-count">—</strong><small>Cần theo dõi và phản hồi</small></article>
+              <article><span>Ưu tiên cao</span><strong id="urgent-count">—</strong><small>Phiếu đang mở cần chú ý</small></article>
+              <article><span>Đã giải quyết</span><strong id="resolved-count">—</strong><small>Yêu cầu đã được xử lý</small></article>
+            </section>
+            <div class="support-toolbar">
+              <div class="input-with-icon support-search"><span data-icon="search"></span><label class="sr-only" for="support-search">Tìm theo mã phiếu, nội dung, tên hoặc email học viên</label><input class="input" id="support-search" type="search" placeholder="Tìm mã phiếu, nội dung, email học viên…" autocomplete="off"></div>
+              <button class="btn btn-secondary" type="button" id="filter-toggle" aria-expanded="false" aria-controls="support-filters"><span data-icon="filter"></span>Bộ lọc <span class="support-count" id="filter-count" hidden></span></button>
+            </div>
+            <form class="support-filters" id="support-filters" hidden>
+              <div class="field"><label class="field-label" for="filter-category">Loại vấn đề</label><select class="select" id="filter-category"><option value="">Tất cả loại vấn đề</option><option value="technical">Kỹ thuật</option><option value="academic">Học vụ</option><option value="payment">Thanh toán</option><option value="other">Khác</option></select></div>
+              <div class="field"><label class="field-label" for="filter-priority">Độ ưu tiên</label><select class="select" id="filter-priority"><option value="">Tất cả độ ưu tiên</option><option value="critical">Nghiêm trọng</option><option value="high">Cao</option><option value="medium">Trung bình</option><option value="low">Thấp</option></select></div>
+              <div class="field"><label class="field-label" for="filter-sort">Sắp xếp</label><select class="select" id="filter-sort"><option value="newest">Mới nhất trước</option><option value="oldest">Cũ nhất trước</option><option value="priority">Ưu tiên cao trước</option></select></div>
+              <button class="btn btn-primary" type="submit">Áp dụng</button>
+            </form>
+            <div class="tabs support-tabs" role="tablist" aria-label="Trạng thái phiếu hỗ trợ">
+              <button class="tab" type="button" id="tab-all" role="tab" data-status="" aria-controls="support-panel" aria-selected="true">Tất cả <span class="support-count" data-count="all"></span></button>
+              <button class="tab" type="button" id="tab-open" role="tab" data-status="open" aria-controls="support-panel" aria-selected="false" tabindex="-1">Đang mở <span class="support-count" data-count="open"></span></button>
+              <button class="tab" type="button" id="tab-resolved" role="tab" data-status="resolved" aria-controls="support-panel" aria-selected="false" tabindex="-1">Đã giải quyết <span class="support-count" data-count="resolved"></span></button>
+            </div>
+            <div class="support-chips" id="support-chips" hidden></div>
+            <div class="support-list-heading"><p id="result-count" role="status" aria-live="polite"></p><span id="sort-label">Mới nhất trước</span></div>
+            <section id="support-panel" role="tabpanel" aria-labelledby="tab-all" tabindex="0">
+              <div class="support-table-wrap"><table class="support-table"><caption class="sr-only">Danh sách yêu cầu hỗ trợ của học viên</caption><thead><tr><th scope="col">Phiếu hỗ trợ</th><th scope="col">Học viên</th><th scope="col">Độ ưu tiên</th><th scope="col">Trạng thái</th><th scope="col"><span class="sr-only">Thao tác</span></th></tr></thead><tbody id="ticket-list"></tbody></table></div>
+              <div class="support-empty" id="support-empty" hidden><span data-icon="mail"></span><h2>Không tìm thấy phiếu hỗ trợ</h2><p>Thử tìm từ khóa khác hoặc thay đổi bộ lọc.</p><button class="btn btn-secondary" type="button" data-reset>Đặt lại bộ lọc</button></div>
+            </section>
+            <div class="support-pagination" id="support-pagination"><p id="page-summary"></p><nav class="pager" id="support-pager" aria-label="Phân trang phiếu hỗ trợ"></nav></div>
+            <footer class="d3-footer support-footer"><span data-icon="info"></span><p>Phản hồi và trạng thái chỉ được lưu trong trình duyệt của bản mockup, không gửi email hay yêu cầu thật.</p></footer>
+          </article>
+        </div>
+      </main>
+    </div>
+    <nav class="bottom-nav" aria-label="Điều hướng trên điện thoại"></nav>
+  </div>
+  <dialog class="dialog support-dialog" id="detail-dialog" aria-labelledby="detail-title">
+    <div class="dialog-body">
+      <header class="support-dialog-head"><div><p class="support-eyebrow" id="detail-id"></p><h2 id="detail-title"></h2></div><button class="btn btn-quiet btn-icon" type="button" id="close-detail" aria-label="Đóng chi tiết phiếu"><span data-icon="x"></span></button></header>
+      <div class="support-detail-meta" id="detail-meta"></div>
+      <section class="support-message" aria-label="Nội dung yêu cầu"><div class="support-sender" id="detail-sender"></div><p id="detail-description"></p><time id="detail-date"></time></section>
+      <section class="support-history" aria-labelledby="history-title"><h3 id="history-title">Lịch sử xử lý</h3><ol id="detail-history"></ol></section>
+      <form id="reply-form" novalidate>
+        <div class="support-reply-heading"><h3>Phản hồi học viên</h3><span id="reply-counter">0/2000</span></div>
+        <label class="sr-only" for="reply-content">Nội dung phản hồi</label><textarea class="textarea" id="reply-content" rows="4" maxlength="2000" placeholder="Nhập hướng dẫn hoặc kết quả xử lý cho học viên…" aria-describedby="reply-error reply-counter"></textarea>
+        <p class="field-error" id="reply-error" role="alert"></p>
+        <div class="support-reply-options"><div class="field"><label class="field-label" for="detail-status">Trạng thái sau khi lưu</label><select class="select" id="detail-status"><option value="open">Đang mở</option><option value="resolved">Đã giải quyết</option></select></div><div class="field"><label class="field-label" for="detail-priority">Độ ưu tiên</label><select class="select" id="detail-priority"><option value="low">Thấp</option><option value="medium">Trung bình</option><option value="high">Cao</option><option value="critical">Nghiêm trọng</option></select></div></div>
+        <p class="support-save-error" id="save-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button class="btn btn-quiet" type="button" id="cancel-detail">Đóng</button><button class="btn btn-primary" type="submit" id="save-reply"><span data-icon="check"></span>Lưu xử lý</button></div>
+      </form>
+    </div>
+  </dialog>
+  <noscript><p class="notice">Bật JavaScript để xem và xử lý phiếu hỗ trợ mẫu.</p></noscript>
+  <script src="../shared/demo.js?v=ea349560a517"></script>
+  <script src="../shared/app.js?v=a548e2209f8d"></script>
+  <script src="../shared/flow.js?v=05ab7c82c3ad"></script>
+  <script src="support-demo.js?v=c0a6a1f932c4"></script>
+  <script src="tiep-nhan-ho-tro.js?v=2461e8b11101"></script>
+  <script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+  <script src="../shared/fx.js?v=88576727affc"></script>
+</body>
+</html>

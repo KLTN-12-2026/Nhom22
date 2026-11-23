@@ -94,6 +94,33 @@ và đưa phiếu mới lên đầu. Nếu không lưu được, giữ form và 
 Dữ liệu lưu trong `localStorage` với khóa `vocab:support-tickets:v1:<userId>`, tách theo
 tài khoản demo. Không gọi API hoặc tạo yêu cầu hỗ trợ thật, không đổi frontend/backend.
 
+### Tiếp nhận hỗ trợ (mockup bổ sung)
+
+Mở `tiep-nhan-ho-tro.html?as=admin` từ danh mục hoặc **Quản trị → Tiếp nhận hỗ trợ**.
+Trang yêu cầu vai trò ADMIN, dùng shell và theme chung. Có tổng quan số phiếu,
+tìm mã/nội dung/tên/email không phân biệt dấu, lọc loại/ưu tiên, sắp xếp mới/cũ/ưu tiên,
+tab tất cả/đang mở/đã giải quyết đồng bộ URL và Back/Forward, phân trang 6 phiếu.
+
+Chi tiết hiện người gửi, nội dung, lịch sử xử lý. Phản hồi tối đa 2000 ký tự;
+phải có kết quả xử lý khi chuyển sang đã giải quyết. Cho phép mở lại phiếu,
+đổi ưu tiên, phản hồi nhiều lần; khóa thao tác khi lưu, giữ bản nháp khi lưu lỗi.
+Phiếu bị thay đổi ở tab khác yêu cầu mở lại chi tiết trước khi ghi.
+
+Hai màn dùng `support-demo.js` và cùng khóa localStorage
+`vocab:support-tickets:v1:<userId>`. Mặc định hiện 12 phiếu mẫu của Nguyễn An;
+những tài khoản demo khác xuất hiện khi đã có danh sách phiếu được lưu.
+Phiếu mới ở màn học viên hiện khi làm mới hoặc qua sự kiện storage giữa các tab;
+trạng thái quản trị cập nhật hiển thị ở màn học viên sau khi tải lại.
+Lịch sử phản hồi xem ở chi tiết quản trị. Không gọi API, không gửi email hay tạo
+thông báo thật; không thay đổi frontend/backend.
+
+Đã kiểm tra bằng Chrome: tìm/lọc/phân trang, URL Back/Forward, phản hồi và mở lại,
+lưu bền vững, giữ form khi lỗi lưu, chặn ghi đè phiên bản thay đổi ở tab khác,
+quyền ADMIN, luồng học viên → quản trị, Escape và hiển thị ở 360/390/768/1024/1440px,
+theme sáng/tối. Luồng tạo phiếu học viên được kiểm tra lại sau khi tách dữ liệu chung.
+`ui:sync` và `ui:check` hiện không chạy hết vì thiếu tệp nguồn có sẵn
+`frontend/public/mascot.js`; không sửa script đồng bộ hay frontend trong thay đổi này.
+
 ### Các màn đợt 3
 
 Mỗi trang có bộ chọn “Trạng thái mô phỏng”: có dữ liệu, tải, trống, lỗi,

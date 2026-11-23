@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Icon, Input, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
+import { useSupportTicketSync } from '@/hooks/useSupportTicketSync';
+import { SUPPORT_UPDATE_EVENT } from '@/lib/support-admin.mjs';
 import {
   TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES, TICKETS_PAGE_SIZE,
   filterTickets, readTickets, saveTicket, validateTicket,
@@ -67,6 +69,7 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
 }
 
 export default function SupportTickets() {
+  useSupportTicketSync();
   const { data: user } = useMe();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -119,9 +122,10 @@ export default function SupportTickets() {
     requestAnimationFrame(() => createButton.current?.focus());
   }
   const createTicket = useMutation({
-    mutationFn: values => saveTicket(window.localStorage, user.id, values),
+    mutationFn: values => saveTicket(window.localStorage, user.id, values, user),
     onSuccess: updated => {
       queryClient.setQueryData(queryKey, updated);
+      window.dispatchEvent(new Event(SUPPORT_UPDATE_EVENT));
       resetFilters(); setShowFilters(false); closeDialog();
       toast('Đã lưu phiếu hỗ trợ mẫu trên trình duyệt.', { variant: 'success' });
     },

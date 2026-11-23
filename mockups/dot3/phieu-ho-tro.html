@@ -177,9 +177,10 @@
   </dialog>
   <noscript><p class="notice">Bật JavaScript để xem và tương tác với phiếu hỗ trợ mẫu.</p></noscript>
   <script src="../shared/demo.js?v=ea349560a517"></script>
-  <script src="../shared/app.js?v=93122127d184"></script>
+  <script src="../shared/app.js?v=a548e2209f8d"></script>
   <script src="../shared/flow.js?v=05ab7c82c3ad"></script>
   <script src="../shared/mascot.js?v=f5b3325f3e36"></script>
+  <script src="support-demo.js?v=c0a6a1f932c4"></script>
   <script>
 (() => {
   'use strict';
@@ -191,32 +192,7 @@
   const STATUS = { open: 'Đang mở', resolved: 'Đã giải quyết' };
   const SIZE = 6;
   const storageKey = 'vocab:support-tickets:v1:' + VL.me().id;
-  const fixtures = [
-    ['Không nghe được âm thanh khi luyện phát âm', 'Mình đã bật âm lượng nhưng không nghe được âm thanh mẫu trong bài luyện phát âm trên Chrome.', 'technical', 'high', 'open'],
-    ['Gói Pro chưa được kích hoạt sau thanh toán', 'Mình đã thanh toán thành công qua VNPay nhưng tài khoản vẫn chưa hiển thị gói Pro.', 'payment', 'critical', 'open'],
-    ['Cần hướng dẫn điều chỉnh mục tiêu học tập', 'Mình muốn chuyển mục tiêu từ giao tiếp sang TOEIC. Nhờ đội ngũ hướng dẫn cách cập nhật.', 'academic', 'medium', 'open'],
-    ['Không tải được ảnh minh họa cho bộ thẻ', 'Ảnh minh họa trong bộ thẻ TOEIC công sở không hiển thị khi mình mở trên điện thoại.', 'technical', 'medium', 'open'],
-    ['Đề xuất thêm chủ đề từ vựng du lịch', 'Mình mong có thêm bộ từ vựng về đặt phòng khách sạn và hỏi đường để luyện giao tiếp.', 'other', 'low', 'resolved'],
-    ['Cần kiểm tra lịch sử giao dịch tháng này', 'Mình muốn xem lại biên nhận và thời hạn của gói Premium vừa gia hạn.', 'payment', 'medium', 'resolved'],
-    ['Tiến độ học chưa cập nhật trên thiết bị mới', 'Sau khi đăng nhập trên máy tính, số thẻ đã học khác với tiến độ trên điện thoại.', 'technical', 'high', 'open'],
-    ['Thắc mắc về lịch ôn tập của bộ thẻ', 'Một số từ đã nhớ vẫn xuất hiện trong lịch ôn. Mình cần giải thích thêm cách tính lịch ôn.', 'academic', 'low', 'resolved'],
-    ['Không thể nhập bộ thẻ từ tệp CSV', 'Mình chọn tệp CSV đúng định dạng nhưng màn hình không hiển thị phần xem trước.', 'technical', 'medium', 'resolved'],
-    ['Nhờ hỗ trợ thay đổi thông tin cá nhân', 'Mình cần cập nhật tên hiển thị và múi giờ để nhận thông báo học đúng giờ.', 'other', 'low', 'resolved'],
-    ['Thông báo nhắc học không xuất hiện', 'Mình đã bật nhắc học hằng ngày trong cài đặt nhưng chưa nhận được thông báo.', 'technical', 'medium', 'open'],
-    ['Câu hỏi về nội dung bộ TOEIC nâng cao', 'Mình muốn biết trình độ phù hợp trước khi bắt đầu bộ từ vựng TOEIC nâng cao.', 'academic', 'medium', 'resolved']
-  ];
-  const seed = () => fixtures.map(([title, description, category, priority, status], index) => ({
-    id: 'HT-' + String(1042 - index), title, description, category, priority, status,
-    createdAt: new Date(Date.UTC(2026, 10, 22 - index, 2, 30)).toISOString()
-  }));
-  function readTickets() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(storageKey));
-      if (Array.isArray(saved) && saved.every(t => t && typeof t.id === 'string' && typeof t.title === 'string' && typeof t.description === 'string' && Object.hasOwn(CATEGORY, t.category) && Object.hasOwn(PRIORITY, t.priority) && Object.hasOwn(STATUS, t.status) && Number.isFinite(Date.parse(t.createdAt)))) return saved;
-    } catch { /* Use the sample list when storage is unavailable or corrupt. */ }
-    return seed();
-  }
-  let tickets = readTickets();
+  let tickets = SupportDemo.read(VL.me().id);
   let state = { search: '', category: '', priority: '', status: '', page: 0 };
   let searchTimer;
   let submitting = false;
@@ -363,15 +339,16 @@
     attempted = true;
     const validTitle = validate('title'); const validDescription = validate('description');
     if (!validTitle || !validDescription) { form.querySelector('[aria-invalid="true"]').focus(); return; }
-    const nextId = Math.max(1042, ...tickets.map(t => Number(t.id.replace('HT-', '')) || 0)) + 1;
-    const ticket = { id: 'HT-' + nextId, title: $('ticket-title').value.trim(), description: $('ticket-description').value.trim(), category: $('ticket-category').value, priority: $('ticket-priority').value, status: 'open', createdAt: new Date().toISOString() };
+    const ticket = { title: $('ticket-title').value.trim(), description: $('ticket-description').value.trim(), category: $('ticket-category').value, priority: $('ticket-priority').value, status: 'open', createdAt: new Date().toISOString() };
     submitting = true; $('save-error').hidden = true;
     const controls = [...form.querySelectorAll('input, textarea, select, button')];
     controls.forEach(control => { control.disabled = true; });
     $('submit-ticket').setAttribute('aria-busy', 'true'); $('submit-ticket').textContent = 'Đang gửi…';
     try {
       await new Promise(resolve => setTimeout(resolve, 650));
-      const updated = [ticket, ...tickets];
+      const latest = SupportDemo.read(VL.me().id);
+      ticket.id = 'HT-' + (Math.max(1042, ...latest.map(t => Number(t.id.replace('HT-', '')) || 0)) + 1);
+      const updated = [ticket, ...latest];
       localStorage.setItem(storageKey, JSON.stringify(updated));
       tickets = updated;
       resetFilters();
@@ -389,6 +366,6 @@
   fromURL(); updateURL(true); render();
 })();
   </script>
-  <script src="../shared/fx.js?v=6a06e4486546"></script>
+  <script src="../shared/fx.js?v=88576727affc"></script>
 </body>
 </html>
