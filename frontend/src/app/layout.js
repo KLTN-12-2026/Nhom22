@@ -22,7 +22,12 @@ import { RouteProgress } from '@/components/layout/RouteProgress';
 export const metadata = {
   title: { default: 'VocabLearning', template: '%s — VocabLearning' },
   description: 'Học từ vựng tiếng Anh thông minh với hệ thống SRS',
-  icons: { icon: '/mascot.svg', shortcut: '/mascot.svg' },
+  icons: { icon: '/mascot.svg', shortcut: '/mascot.svg', apple: '/app-icon.svg' },
+  appleWebApp: { capable: true, title: 'VocabLearning', statusBarStyle: 'default' },
+};
+
+export const viewport = {
+  themeColor: '#3549BB',
 };
 
 export default function RootLayout({ children }) {
