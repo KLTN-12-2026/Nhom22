@@ -305,7 +305,7 @@ function PracticeForm() {
               <p className="small muted">Bạn chưa làm bài nào.</p>
             </div>
           </div>
-          <Link className="btn btn-quiet" href="/luyen-tap-lich-su" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
+          <Link className="btn btn-secondary btn-sm side-action" href="/luyen-tap-lich-su">
             Tất cả bài làm
           </Link>
         </section>
@@ -313,7 +313,7 @@ function PracticeForm() {
         <section className="panel" aria-labelledby="nb-title">
           <h2 className="panel-title" id="nb-title">Luyện từ hay sai</h2>
           <p className="small muted">Chọn nguồn <strong>Sổ tay từ khó</strong> để luyện các từ bạn sai nhiều hoặc tự đánh dấu.</p>
-          <Link className="btn btn-quiet" href="/so-tay" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
+          <Link className="btn btn-secondary btn-sm side-action" href="/so-tay">
             Mở sổ tay
           </Link>
         </section>

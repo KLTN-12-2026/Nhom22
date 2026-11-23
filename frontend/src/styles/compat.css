@@ -209,3 +209,8 @@ fieldset:disabled { opacity:.75; }
 .card-focus { background: var(--accent-bg); box-shadow: inset 4px 0 0 var(--accent); scroll-margin-top: calc(var(--header-h) + var(--sp-4)); }
 .card-focus:focus { outline: none; }
 .card-focus:focus-visible { box-shadow: inset 4px 0 0 var(--accent), var(--focus); }
+.side-action { justify-self: start; margin-top: var(--sp-3); }
+.adm-top .theme-toggle, .theme-auth .theme-toggle { width: var(--tap); min-width: var(--tap); height: var(--tap); min-height: var(--tap); padding: 0; justify-content: center; border: 0; border-radius: var(--radius-btn); background: transparent; color: var(--ink-2); transition: background var(--dur-1), color var(--dur-1); }
+.adm-top .theme-toggle:hover, .adm-top .theme-picker[open] .theme-toggle, .theme-auth .theme-toggle:hover, .theme-auth[open] .theme-toggle { background: var(--chrome-hover); color: var(--ink); }
+.adm-top .theme-track, .theme-auth .theme-track { display: none; }
+[data-theme="dark"] .adm-top .theme-toggle, [data-theme="dark"] .theme-auth .theme-toggle { justify-content: center; }

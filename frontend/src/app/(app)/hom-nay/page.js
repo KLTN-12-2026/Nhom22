@@ -275,7 +275,7 @@ function ChallengePanel() {
         {done ? 'Đã hoàn thành tuần này.' : `Còn ${left} nữa, hạn ${fmtDay(pick.tuanKetThuc)}.`}
         {open.length > 1 && ` Còn ${open.length - 1} thử thách khác.`}
       </p>
-      <Link className="btn btn-quiet" href="/thanh-tich" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem thành tích</Link>
+      <Link className="btn btn-secondary btn-sm side-action" href="/thanh-tich">Xem thành tích</Link>
     </section>
   );
 }
@@ -546,7 +546,7 @@ export default function TodayPage() {
                   ? 'Đã đạt mục tiêu hôm nay.'
                   : `Còn khoảng ${Math.ceil((goalMs - spent) / 60000)} phút để đạt mục tiêu. Thời gian tính từ lúc trả lời thẻ và làm bài luyện.`}
               </p>
-              <Link className="btn btn-quiet" href="/ca-nhan/hoc-tap" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>
+              <Link className="btn btn-secondary btn-sm side-action" href="/ca-nhan/hoc-tap">
                 Đổi thiết lập học
               </Link>
             </section>
@@ -572,7 +572,7 @@ export default function TodayPage() {
                   ))}
                 </ul>
                 {plan.boThe.length > 3 && (
-                  <Link className="btn btn-quiet" href="/bo-the" style={{ margin: 'var(--sp-2) 0 0 -12px' }}>Xem tất cả {plan.boThe.length} bộ</Link>
+                  <Link className="btn btn-secondary btn-sm side-action" href="/bo-the">Xem tất cả {plan.boThe.length} bộ</Link>
                 )}
               </section>
             )}

@@ -1,11 +1,5 @@
-.page { min-width:0; }
-.page :global(.sheet) { min-width:0; }
-.breadcrumb { display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-4); color:var(--ink-3); font-size:var(--fs-caption); }
-.breadcrumb a { color:var(--primary); }
-.heading, .cardHead, .toolbar, .periodDetail, .tableHead { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap; }
-.heading { align-items:flex-start; margin-bottom:var(--sp-5); }
-.heading :global(.form-head) { margin-bottom:0; }
-.heading > a { margin-top:var(--sp-3); }
+.body { padding-top: var(--sp-5); }
+.cardHead, .toolbar, .periodDetail, .tableHead { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap; }
 .toolbar { padding:var(--sp-4); background:var(--sunk); border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:var(--sp-5); align-items:flex-end; }
 .toolbarLeft, .yearRange, .toolbarActions { display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap; }
 .toolbar :global(.field) { margin:0; font-size:var(--fs-caption); font-weight:600; min-width:7.5rem; }
@@ -95,7 +89,6 @@
   .toolbarLeft { width:100%; }
   .period { flex:1; }
   .period button { flex:1; padding-inline:12px; }
-  .heading > a { margin-top:0; }
   .card { padding:var(--sp-4); }
 }
 @media(max-width:639px) {

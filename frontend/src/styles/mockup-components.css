@@ -624,8 +624,6 @@ a.answer-title:hover { color: var(--primary); text-decoration: underline; text-d
 .btn-edit:hover { background:var(--edit-hover); border-color:var(--edit-hover); }
 .btn-media { background:var(--media-fill); color:var(--on-primary); border-color:var(--media-fill); }
 .btn-media:hover { background:var(--media-hover); border-color:var(--media-hover); }
-.btn-export { background:var(--export-fill); color:var(--on-primary); border-color:var(--export-fill); }
-.btn-export:hover { background:var(--export-hover); border-color:var(--export-hover); }
 .btn-favorite { color:var(--favorite); border-color:var(--favorite); background:var(--field); }
 .btn-favorite:hover, .btn-favorite[aria-pressed="true"] { color:var(--favorite); border-color:var(--favorite); background:var(--favorite-bg); }
 .btn-favorite .icon { color:var(--favorite); }

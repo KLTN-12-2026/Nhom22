@@ -4,6 +4,7 @@ import { useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Icon, useToast } from '@/components/ui';
+import { AdminPageHead } from '@/components/admin/AdminPageHead';
 import { apiFetch } from '@/lib/api-client';
 import { PERIODS, number, money, percent, growthText, planAmount, rangeLabel, vietnamDate, revenueUrl, yearRangeError, revenueRows, revenuePlans, revenueCsv } from '@/lib/revenue.mjs';
 import styles from './page.module.css';
@@ -152,9 +153,9 @@ function RevenueAdmin() {
     toast('Đã xuất báo cáo doanh thu theo bộ lọc hiện tại.', { variant: 'success' });
   }
 
-  return <div className={`page ${styles.page}`}><article className="sheet" aria-labelledby="page-title">
-    <nav className={styles.breadcrumb} aria-label="Đường dẫn"><Link href="/quan-tri">Quản trị</Link><span aria-hidden="true">/</span><span aria-current="page">Thống kê doanh thu</span></nav>
-    <div className={styles.heading}><div className="form-head"><h1 id="page-title">Quản lý thống kê</h1><p>Theo dõi doanh thu và hiệu quả thanh toán theo từng giai đoạn.</p></div><Link className="btn btn-secondary" href="/quan-tri/thanh-toan">Xem giao dịch ↗</Link></div>
+  return <div className="adm-page">
+    <AdminPageHead title="Doanh thu" description="Theo dõi doanh thu và hiệu quả thanh toán theo từng giai đoạn." actions={<Link className="adm-btn" href="/quan-tri/thanh-toan">Xem giao dịch</Link>} />
+    <section className={`adm-card adm-card-body ${styles.body}`} aria-label="Thống kê doanh thu">
     <form className={styles.toolbar} aria-label="Bộ lọc thống kê doanh thu" onSubmit={event => event.preventDefault()}>
       <div className={styles.toolbarLeft}>
         <div className="field"><span id="period-label">Thống kê theo</span><div className={styles.period} role="group" aria-labelledby="period-label">{Object.entries(PERIODS).map(([value, label]) => <button key={value} type="button" aria-pressed={filters.period === value} onClick={() => update('period', value)}>{label}</button>)}</div></div>
@@ -163,11 +164,11 @@ function RevenueAdmin() {
           <label className="field">Đến năm<select className="select" value={filters.toYear} aria-invalid={!!error} aria-describedby={error ? 'revenue-filter-error' : undefined} onChange={event => update('toYear', Number(event.target.value))}>{years.map(year => <option key={year} value={year}>{year}</option>)}</select></label>
         </div>}
       </div>
-      <div className={styles.toolbarActions}><button type="button" className="btn btn-quiet" disabled={!!error || report.isFetching} onClick={() => report.refetch()}><Icon name="refresh" />Làm mới</button><button type="button" className="btn btn-secondary" disabled={!ready || report.isFetching} onClick={exportCsv}><Icon name="download" />Xuất báo cáo CSV</button></div>
+      <div className={styles.toolbarActions}><button type="button" className="adm-btn" disabled={!!error || report.isFetching} onClick={() => report.refetch()}><Icon name="refresh" />Làm mới</button><button type="button" className="adm-btn" disabled={!ready || report.isFetching} onClick={exportCsv}><Icon name="download" />Xuất báo cáo CSV</button></div>
     </form>
     <div aria-busy={!error && report.isFetching}>
       {error ? <div className={styles.state} role="alert" id="revenue-filter-error"><Icon name="calendar" /><h2>Khoảng năm chưa hợp lệ</h2><p>{error}</p></div>
-        : report.isPending ? <Loading /> : report.isError ? <div className={styles.state} role="alert"><Icon name="alert" /><h2>{report.error.status === 403 ? 'Không có quyền truy cập' : 'Chưa tải được thống kê'}</h2><p>{report.error.message}</p><button type="button" className="btn btn-secondary" disabled={report.isFetching} onClick={() => report.refetch()}>Thử lại</button></div>
+        : report.isPending ? <Loading /> : report.isError ? <div className={styles.state} role="alert"><Icon name="alert" /><h2>{report.error.status === 403 ? 'Không có quyền truy cập' : 'Chưa tải được thống kê'}</h2><p>{report.error.message}</p><button type="button" className="adm-btn" disabled={report.isFetching} onClick={() => report.refetch()}>Thử lại</button></div>
           : ready && <Report key={url} data={report.data} today={today} />}
       {!error && report.isFetching && !report.isPending && <p className={styles.scope} role="status">Đang cập nhật số liệu…</p>}
     </div>
@@ -178,10 +179,11 @@ function RevenueAdmin() {
       <li>Kỳ đang diễn ra là số lũy kế đến lúc tải; kỳ chưa bắt đầu ghi “Chưa đến kỳ”.</li>
       <li>Gói hiệu lực và sắp hết hạn tính tại thời điểm tải trang, không đổi theo kỳ doanh thu.</li>
     </ul></details>
-  </article></div>;
+    </section>
+  </div>;
 }
 
 export default function RevenuePage() {
   const hydrated = useSyncExternalStore(subscribe, () => true, () => false);
-  return hydrated ? <RevenueAdmin /> : <div className="page sheet"><Loading /></div>;
+  return hydrated ? <RevenueAdmin /> : <div className="adm-page"><section className="adm-card adm-card-body"><Loading /></section></div>;
 }

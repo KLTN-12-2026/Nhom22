@@ -309,12 +309,8 @@ h1 { font-weight: 800; letter-spacing: -0.025em; }
 .today-page .today-plan { counter-reset: today-q; gap: var(--sp-6); }
 .today-page .today-plan legend::before { counter-increment: today-q; content: counter(today-q) "."; margin-right: var(--sp-3); font-family: var(--font-word); color: var(--primary); }
 .today-page .today-plan .start-foot { margin-top: var(--sp-2) !important; padding-top: var(--sp-5); border-top: var(--rule) dashed var(--line-2); gap: var(--sp-5); }
-.today-page .side-col .panel > .btn-quiet { margin-left: calc(var(--sp-3) * -1); }
 @media (prefers-reduced-motion: reduce) { .nav-fold > summary .icon, .choice-card { transition: none; } }
 .bottom-nav { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-.personal-decks .tabs { display: inline-flex; gap: 2px; padding: 4px; border: var(--rule) solid var(--line); border-radius: var(--radius-control); background: var(--sunk); }
-.personal-decks .tab { min-height: 36px; padding: 0 var(--sp-4); border-radius: 9px; color: var(--ink-3); box-shadow: none; }
-.personal-decks .tab[aria-selected="true"] { background: var(--sheet); color: var(--ink); box-shadow: var(--shadow-soft); }
 .personal-decks .answer-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
 .personal-decks .level .bubble.is-filled::after { background: var(--primary); }
 .personal-decks .level .bubble { border-color: var(--line-2); }

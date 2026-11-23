@@ -94,8 +94,8 @@ export default function AdminTopicsPage() {
 
   const toolbar = (
     <>
-      <div className="adm-seg" role="tablist" aria-label="Danh mục">
-        {Object.entries(KINDS).map(([value, k]) => <button key={value} type="button" role="tab" aria-selected={kind === value} onClick={() => switchKind(value)}>{k.label}</button>)}
+      <div className="tabs" role="tablist" aria-label="Danh mục">
+        {Object.entries(KINDS).map(([value, k]) => <button key={value} type="button" className="tab" role="tab" aria-selected={kind === value} onClick={() => switchKind(value)}>{k.label}</button>)}
       </div>
       <form onSubmit={event => { event.preventDefault(); if (newName.trim()) add.mutate(newName.trim()); }} style={{ display: 'flex', gap: 8, flex: '1 1 320px', flexWrap: 'wrap' }}>
         <label className="sr-only" htmlFor="new-name">Tên {K.one} mới</label>
