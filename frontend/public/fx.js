@@ -151,6 +151,54 @@
     'noel': (n) => { if (happy.includes(n) || party.includes(n)) for (let i = 0; i < 6; i++) clink(2600 + Math.random() * 900, 0.04 + i * 0.05, 0.035); },
   };
 
+  SKIN_SOUNDS['mua-thu'] = (n) => { if (happy.includes(n)) noise(0.02, 0.35, { freq: 3200, q: 0.5, gain: 0.12 }); };
+  SKIN_SOUNDS['hoa-anh-dao'] = (n) => { if (happy.includes(n)) [1568, 1760, 2093].forEach((f, i) => bell(f, 0.04 + i * 0.07, 0.035, 0.4)); };
+  SKIN_SOUNDS['cho-corgi'] = (n) => { if (happy.includes(n)) { noise(0.03, 0.07, { freq: 700, q: 1.6, gain: 0.3 }); tone(420, 0.03, 0.09, { to: 280, type: 'square', gain: 0.05, lowpass: 1400 }); } };
+  SKIN_SOUNDS['gau-truc'] = (n) => { if (happy.includes(n)) for (let i = 0; i < 4; i++) noise(0.03 + i * 0.07, 0.04, { freq: 2200, q: 0.9, gain: 0.2, attack: 0.002 }); };
+  SKIN_SOUNDS['khung-long'] = (n) => { if (party.includes(n)) { noise(0.02, 0.9, { filter: 'lowpass', freq: 500, to: 160, gain: 0.35 }); tone(85, 0.02, 0.8, { type: 'sawtooth', gain: 0.06, lowpass: 400 }); } if (happy.includes(n)) tone(70, 0.02, 0.18, { gain: 0.25 }); };
+  SKIN_SOUNDS['robot'] = (n) => { if (happy.includes(n)) square([880, 1175], 0.07, 0.05); if (sad.includes(n)) square([440, 330, 220], 0.09, 0.05); if (party.includes(n)) square([523, 784, 659, 1047], 0.07, 0.05); };
+  SKIN_SOUNDS['thieu-nhi'] = (n) => { if (happy.includes(n)) { noise(0.02, 0.04, { filter: 'lowpass', freq: 3000, gain: 0.4, attack: 0.001 }); tone(700, 0.02, 0.12, { to: 140, gain: 0.08 }); } if (party.includes(n)) crackle(8, 0.25); };
+  SKIN_SOUNDS['phu-nu'] = (n) => { if (happy.includes(n)) { bell(1318.5, 0.05, 0.05, 0.5); bell(1975.5, 0.15, 0.04, 0.6); } };
+
+  const PET = {
+    purr() { for (let i = 0; i < 12; i++) noise(i * 0.06, 0.07, { filter: 'lowpass', freq: 160, gain: 0.5, attack: 0.02 }); },
+    meow() { tone(560, 0, 0.42, { to: 820, type: 'sawtooth', gain: 0.06, lowpass: 1700, attack: 0.04 }); tone(820, 0.2, 0.3, { to: 520, type: 'sawtooth', gain: 0.05, lowpass: 1500 }); },
+    hiss() { noise(0, 0.7, { filter: 'highpass', freq: 3200, gain: 0.25, attack: 0.03 }); },
+    eek() { tone(1400, 0, 0.09, { to: 2300, gain: 0.07, type: 'triangle' }); tone(1500, 0.12, 0.09, { to: 2500, gain: 0.07, type: 'triangle' }); },
+    honk() { tone(310, 0, 0.14, { type: 'square', gain: 0.06, lowpass: 1200 }); tone(270, 0.17, 0.2, { type: 'square', gain: 0.06, lowpass: 1100 }); },
+    slip() { tone(900, 0, 0.35, { to: 180, type: 'triangle', gain: 0.08 }); noise(0.36, 0.12, { filter: 'lowpass', freq: 300, gain: 0.5, attack: 0.002 }); },
+    chime() { bell(1318.5, 0, 0.08, 0.7); bell(1760, 0.09, 0.07, 0.8); bell(2093, 0.18, 0.05, 0.9); },
+    roar() { noise(0, 1, { filter: 'lowpass', freq: 700, to: 140, gain: 0.45, attack: 0.05 }); tone(95, 0, 0.9, { to: 60, type: 'sawtooth', gain: 0.07, lowpass: 500 }); },
+    splash() { noise(0, 0.6, { freq: 1200, to: 300, q: 0.6, gain: 0.35, attack: 0.005 }); pop(0.1, 300, 900, 0.08); },
+    clap() { noise(0, 0.05, { filter: 'lowpass', freq: 2600, gain: 0.7, attack: 0.001 }); },
+    type() { for (let i = 0; i < 5; i++) noise(i * 0.08, 0.02, { freq: 3500, gain: 0.3, attack: 0.001 }); clink(2093, 0.45, 0.06); },
+    coin() { tone(1046.5, 0, 0.06, { type: 'triangle', gain: 0.09 }); tone(1568, 0.06, 0.28, { type: 'triangle', gain: 0.09 }); },
+    launch() { noise(0, 1.6, { filter: 'lowpass', freq: 150, to: 3000, gain: 0.3, attack: 0.3 }); },
+    crackle() { crackle(14, 0.35); },
+    kiss() { noise(0, 0.03, { freq: 2500, gain: 0.3, attack: 0.001 }); tone(1900, 0.01, 0.08, { to: 900, gain: 0.06 }); },
+    boo() { tone(260, 0, 0.9, { to: 150, type: 'sawtooth', gain: 0.05, lowpass: 900, attack: 0.05 }); },
+    jingle() { for (let i = 0; i < 9; i++) clink(2400 + Math.random() * 1400, i * 0.045, 0.04); },
+    chalk() { tone(2900, 0, 0.12, { to: 3300, type: 'sawtooth', gain: 0.02, lowpass: 5000 }); noise(0, 0.25, { filter: 'highpass', freq: 3500, gain: 0.12 }); },
+    chirp() { [3000, 3600, 3200].forEach((f, i) => tone(f, i * 0.09, 0.07, { to: f + 900, gain: 0.05 })); },
+    snap() { noise(0, 0.025, { freq: 2400, gain: 0.5, attack: 0.001 }); noise(0.14, 0.025, { freq: 2600, gain: 0.5, attack: 0.001 }); },
+    bark() { [0, 0.2].forEach(t => { noise(t, 0.08, { freq: 650, q: 1.5, gain: 0.45 }); tone(430, t, 0.1, { to: 260, type: 'square', gain: 0.06, lowpass: 1300 }); }); },
+    beep() { square([880, 660, 990, 1320], 0.08, 0.05); },
+    pop() { noise(0, 0.04, { filter: 'lowpass', freq: 3500, gain: 0.6, attack: 0.001 }); tone(650, 0, 0.12, { to: 120, gain: 0.1 }); },
+    crunch() { for (let i = 0; i < 5; i++) noise(i * 0.09, 0.05, { freq: 1800 + Math.random() * 800, q: 0.8, gain: 0.25, attack: 0.002 }); },
+    stomp() { tone(58, 0, 0.3, { gain: 0.35, attack: 0.002 }); noise(0, 0.15, { filter: 'lowpass', freq: 250, gain: 0.5, attack: 0.002 }); },
+    rustle() { noise(0, 0.6, { freq: 3800, q: 0.4, gain: 0.16, attack: 0.05 }); },
+    whoosh() { noise(0, 0.45, { freq: 600, to: 4000, q: 0.7, gain: 0.2 }); },
+    gong() { tone(98, 0, 2.4, { gain: 0.18, attack: 0.004 }); tone(196, 0, 1.6, { gain: 0.06 }); tone(293, 0, 1.2, { gain: 0.03 }); },
+    giggle() { [900, 1150, 950, 1200, 1000].forEach((f, i) => tone(f, i * 0.07, 0.06, { type: 'triangle', gain: 0.06 })); },
+    boing() { tone(160, 0, 0.45, { to: 520, type: 'triangle', gain: 0.1 }); },
+    sniff() { for (let i = 0; i < 3; i++) noise(i * 0.12, 0.06, { freq: 5000, q: 0.6, gain: 0.12 }); },
+  };
+
+  function pet(name) {
+    if (!PET[name] || !audio()) return;
+    try { PET[name](); } catch {}
+  }
+
   function play(name) {
     window.dispatchEvent(new CustomEvent('vl-fx', { detail: name }));
     if (!SOUNDS[name] || !audio()) return;
@@ -312,7 +360,7 @@
   });
 
   window.VLFx = {
-    play, confetti, stamp, countUp, floatText, celebrate,
+    play, pet, confetti, stamp, countUp, floatText, celebrate,
     pop: el => restart(el, 'fx-pop'),
     shake: el => restart(el, 'fx-shake'),
     turn: el => restart(el, 'fx-turn'),

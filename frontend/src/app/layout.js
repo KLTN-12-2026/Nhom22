@@ -13,6 +13,7 @@ import '@/styles/shell.css';
 import '@/styles/marketing.css';
 import '@/styles/skins-palette.css';
 import '@/styles/skins.css';
+import '@/styles/skins-play.css';
 import { Providers } from './providers';
 import { MucCompanion } from '@/components/mascot/MucCompanion';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';

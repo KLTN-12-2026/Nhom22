@@ -32,6 +32,14 @@ export const SKIN_FX = {
   NHA_GIAO: { particles: 'petal', count: 10 },
   HALLOWEEN: { particles: 'bat', count: 6, costume: 'witch' },
   NOEL: { particles: 'snow', count: 22, costume: 'santa' },
+  MUA_THU: { particles: 'leaf', count: 18 },
+  HOA_ANH_DAO: { particles: 'petal', count: 18 },
+  CHO_CORGI: { particles: 'paw', count: 6 },
+  GAU_TRUC: { particles: 'leaf', count: 8 },
+  KHUNG_LONG: { particles: 'cloud', count: 3 },
+  ROBOT: { particles: 'grain', count: 12, costume: 'robot' },
+  THIEU_NHI: { particles: 'balloon', count: 10, costume: 'party' },
+  PHU_NU: { particles: 'petal', count: 14 },
 };
 
 export function skinSlug(code) {
