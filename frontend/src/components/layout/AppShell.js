@@ -18,6 +18,7 @@ import { StreakChip } from '@/components/engagement/StreakChip';
 import { useTier, useTierAttribute } from '@/components/tier/useTier';
 import { TierAvatarOrnament, TierHeader } from '@/components/tier/TierHeader';
 import { NavQuota, UpgradeDialog } from '@/components/billing/PlanAccess';
+import { SkinSync } from '@/components/skin/SkinSync';
 
 const HOME = '/hom-nay';
 const visible = (groups) => groups.map(g => ({ ...g, items: g.items.filter(it => !isPendingRoute(it.href)).map(it => it.sub && isPendingRoute(it.sub.href) ? { ...it, sub: undefined } : it) })).filter(g => g.items.length);
@@ -200,6 +201,7 @@ export function AppShell({ children, user, isAdmin = false }) {
           {children}
         </main>
         {user && <UpgradeDialog />}
+        {user && <SkinSync />}
       </div>
 
       <nav className="bottom-nav" hidden={pathname === '/hoc-phien' || pathname === '/luyen-tap-lam-bai'} aria-label="Điều hướng chính">

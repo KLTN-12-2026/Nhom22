@@ -13,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -44,6 +45,8 @@ public class HoSoHocTap extends BaseEntity {
     private Long boKhoiDongId;
 
     private Long boSaoChepId;
+
+    private String giaoDienMa;
 
     @Version
     private Long version;
@@ -77,6 +80,14 @@ public class HoSoHocTap extends BaseEntity {
         this.phutMoiNgay = phutMoiNgay;
         this.tuMoiMoiNgay = tuMoiMoiNgay;
         this.daHoanTatKhoiDau = true;
+    }
+
+    public boolean chooseTheme(String giaoDienMa) {
+        if (Objects.equals(this.giaoDienMa, giaoDienMa)) {
+            return false;
+        }
+        this.giaoDienMa = giaoDienMa;
+        return true;
     }
 
     public void startTour(Long boKhoiDongId) {

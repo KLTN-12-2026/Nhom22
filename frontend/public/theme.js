@@ -36,6 +36,19 @@
     }
   };
   apply(preference);
+  const skinKey = 'vocab:skin';
+  function applySkin(value) {
+    const slug = value && /^[a-z0-9-]{1,40}$/.test(value) && value !== 'mac-dinh' ? value : '';
+    if (slug) document.documentElement.dataset.skin = slug; else delete document.documentElement.dataset.skin;
+    window.dispatchEvent(new Event('vocab-skin-change'));
+  }
+  window.VocabSkin = {
+    get() { return document.documentElement.dataset.skin || 'mac-dinh'; },
+    set(value) { try { if (value && value !== 'mac-dinh') localStorage.setItem(skinKey, value); else localStorage.removeItem(skinKey); } catch {} applySkin(value); },
+  };
+  try { applySkin(localStorage.getItem(skinKey)); } catch {}
+  window.addEventListener('storage', event => { if (event.key === skinKey) applySkin(event.newValue); });
+  document.addEventListener('visibilitychange', () => { document.documentElement.toggleAttribute('data-hidden', document.hidden); });
   document.addEventListener('click', event => {
     const option=event.target.closest('[data-theme-value]');
     if(option){window.VocabTheme.set(option.dataset.themeValue);const picker=option.closest('details');picker.open=false;picker.querySelector('summary').focus();}
