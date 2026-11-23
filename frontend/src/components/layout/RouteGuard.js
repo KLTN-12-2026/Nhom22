@@ -25,7 +25,7 @@ export function RouteGuard({ children, requireAuth = true, requireAdmin = false 
   if (requireAuth && error && error.status !== 401) return <div className="page sheet"><ErrorState description={error.message} onRetry={refetch} /></div>; // Hoặc một skeleton/spinner
 
   if (requireAuth && !user) return null;
-  if (requireAdmin && (!user || !user.vaiTro?.includes('ADMIN'))) return <section className="page sheet"><h1>Không có quyền truy cập</h1><p>Trang này dành cho quản trị viên.</p><Link className="btn btn-primary" href="/bo-the">Bộ của tôi</Link></section>;
+  if (requireAdmin && (!user || !user.vaiTro?.includes('ADMIN'))) return <section className="page sheet"><div className="empty"><h1>Không có quyền truy cập</h1><p>Trang này dành cho quản trị viên.</p><Link className="btn btn-primary" href="/hom-nay">Về trang Hôm nay</Link></div></section>;
   if (requireAuth && needsOnboarding && !requireAdmin && pathname !== '/bat-dau') return null;
 
   return <>{children}</>;

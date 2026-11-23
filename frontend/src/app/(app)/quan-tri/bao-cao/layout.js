@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Hàng đợi báo cáo',
+  title: 'Báo cáo vi phạm',
   description: 'Xem bằng chứng và xử lý báo cáo nội dung trong VocabLearning.',
 };
 

@@ -2,6 +2,7 @@
 .demoBar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-4); color: var(--ink-2); font-size: var(--fs-small); }
 .breadcrumb { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-4); font-size: var(--fs-small); }
 .breadcrumb span:last-child { color: var(--ink-2); }
+.historyLink { margin: var(--sp-3) 0 var(--sp-4); font-size: var(--fs-small); font-weight: 600; }
 .status { min-height: 1.5em; color: var(--ink-2); margin-bottom: var(--sp-3); }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); align-items: start; }
 .recordPanel, .output { display: grid; gap: var(--sp-4); min-width: 0; }

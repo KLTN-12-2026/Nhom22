@@ -68,6 +68,16 @@ public interface TheTuVungRepository
             """)
     long countActiveOwnedBy(@Param("userId") Long userId);
 
+    @Query("""
+            select count(c)
+            from TheTuVung c
+            join BoThe b on b.id = c.boTheId
+            where b.chuSoHuuId = :userId
+              and b.xoaAt is null
+              and c.xoaAt is null
+            """)
+    long countActiveOwnedByForDisplay(@Param("userId") Long userId);
+
     @Query("select c from TheTuVung c where c.boTheId = :deckId and c.xoaAt is null and c.anKiemDuyet = false order by c.id")
     List<TheTuVung> findAllForCopy(@Param("deckId") Long deckId);
 

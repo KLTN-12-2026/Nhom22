@@ -140,7 +140,7 @@ export default function DecksPage() {
             <p className={styles.planLine}><span>Thời gian</span><span>{plan?.phutMoiNgay ?? '—'} phút/ngày</span></p>
             <p className={styles.planLine}><span>Mục tiêu</span><span>{plan?.mucTieu === 'TOEIC' ? 'TOEIC' : plan?.mucTieu === 'GIAO_TIEP' ? 'Giao tiếp' : 'Chưa chọn'}</span></p>
           </div>
-          <Link className="btn btn-quiet" href="/ca-nhan/hoc-tap" style={{ marginLeft: '-12px' }}>Đổi thiết lập học</Link>
+          <Link className="btn btn-secondary btn-sm side-action" href="/ca-nhan/hoc-tap">Đổi thiết lập học</Link>
         </section>
         <section className="panel" aria-labelledby="csv-title">
           <h2 className="panel-title" id="csv-title">Có sẵn danh sách từ?</h2>

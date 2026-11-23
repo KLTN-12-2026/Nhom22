@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { BADGE_CONDITIONS, newMotivation, motivationPayload, motivationErrors, motivationCondition } from '@/lib/engagement-admin.mjs';
 import { Button, EmptyState, ErrorState, Icon, Input, Modal, Pagination, Select, Textarea } from '@/components/ui';
+import { AdminPageHead } from '@/components/admin/AdminPageHead';
 import styles from './page.module.css';
 
 const KINDS = [{ id: 'badges', label: 'Huy hiệu', icon: 'shield' }, { id: 'challenges', label: 'Thử thách', icon: 'target' }];
@@ -85,16 +85,9 @@ export default function MotivationAdminPage() {
   const control = name => ({ id: name, name, value: draft[name], onChange: editField, error: fields[name] });
 
   return (
-    <div className={`page ${styles.page}`}>
-      <article className="sheet" aria-labelledby="page-title">
-        <nav className={styles.breadcrumb} aria-label="Đường dẫn">
-          <Link href="/quan-tri">Quản trị</Link><span aria-hidden="true">/</span><span aria-current="page">Huy hiệu và thử thách</span>
-        </nav>
-        <div className="form-head">
-          <div className="form-code"><span>Quản trị</span><span>Điều kiện ghi nhận</span></div>
-          <h1 id="page-title">Huy hiệu và thử thách</h1>
-          <p>Quản lý điều kiện ghi nhận, không thay đổi điểm tùy ý.</p>
-        </div>
+    <div className="adm-page">
+      <AdminPageHead title="Huy hiệu và thử thách" description="Quản lý điều kiện ghi nhận, không thay đổi điểm tùy ý." actions={<button type="button" className="adm-btn adm-btn-primary" onClick={() => openEditor()}><Icon name="plus" />Tạo {noun}</button>} />
+      <section className="adm-card adm-card-body" aria-label="Danh mục động lực">
         <div className={styles.toolbar}>
           <div className={`tabs ${styles.tabs}`} role="tablist" aria-label="Danh mục động lực">
             {KINDS.map((tab, index) => (
@@ -106,7 +99,6 @@ export default function MotivationAdminPage() {
                 }}><Icon name={tab.icon} />{tab.label}</button>
             ))}
           </div>
-          <Button onClick={() => openEditor()}><Icon name="plus" />Tạo {noun}</Button>
         </div>
         {message && <p className="notice notice-success" role="status">{message}</p>}
         {KINDS.map(tab => (
@@ -124,7 +116,7 @@ export default function MotivationAdminPage() {
                         <td data-label="Tên"><div className={styles.itemName}><span className={styles.itemIcon}><Icon name={tab.icon} /></span><div><strong>{item.ten}</strong><span className={styles.code}>{item.ma}</span><p>{item.moTa}</p></div></div></td>
                         <td data-label="Điều kiện"><span>{motivationCondition(kind, item)}</span>{!isBadge && <small className={styles.hint}>Thứ Hai – Chủ nhật</small>}</td>
                         <td data-label="Trạng thái"><span className={`stamp ${item.hoatDong ? 'stamp-success' : 'stamp-quiet'}`}><Icon name={item.hoatDong ? 'check' : 'pause'} />{item.hoatDong ? 'Đang dùng' : 'Đã tắt'}</span></td>
-                        <td data-label="Thao tác"><div className={styles.actions}><Button variant="edit" onClick={() => openEditor(item)} aria-label={`Sửa ${item.ten}`}><Icon name="edit" />Sửa</Button><Button variant="secondary" onClick={() => { toggle.reset(); setToggling(item); }} aria-label={`${item.hoatDong ? 'Tắt' : 'Bật'} ${item.ten}`}><Icon name={item.hoatDong ? 'pause' : 'play'} />{item.hoatDong ? 'Tắt' : 'Bật'}</Button></div></td>
+                        <td data-label="Thao tác"><div className="adm-row-actions"><button type="button" className="adm-btn adm-btn-sm" onClick={() => openEditor(item)} aria-label={`Sửa ${item.ten}`}><Icon name="edit" />Sửa</button><button type="button" className="adm-btn adm-btn-sm" onClick={() => { toggle.reset(); setToggling(item); }} aria-label={`${item.hoatDong ? 'Tắt' : 'Bật'} ${item.ten}`}><Icon name={item.hoatDong ? 'pause' : 'play'} />{item.hoatDong ? 'Tắt' : 'Bật'}</button></div></td>
                       </tr>
                     ))}</tbody>
                   </table>
@@ -134,7 +126,7 @@ export default function MotivationAdminPage() {
           </section>
         ))}
         <p className={styles.note}><Icon name="info" /><span>Điều kiện được hệ thống kiểm tra từ hoạt động học hợp lệ. Bật hoặc tắt danh mục không thay đổi điểm và huy hiệu đã ghi nhận.</span></p>
-      </article>
+      </section>
 
       <Modal isOpen={!!editor} onClose={() => setEditor(null)} title={`${editor?.item ? 'Sửa' : 'Tạo'} ${noun}`} loading={save.isPending}
         footer={<><Button variant="secondary" disabled={save.isPending} onClick={() => setEditor(null)}>Hủy</Button>{isConflict(save.error) ? <Button onClick={reload}><Icon name="refresh" />Tải lại danh mục</Button> : <Button type="submit" form="motivation-form" loading={save.isPending}>{save.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}</Button>}</>}>

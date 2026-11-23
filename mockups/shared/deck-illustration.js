@@ -1,28 +1,56 @@
 (function () {
-const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+const normalize = value => String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
 
-const TOPICS = [
-  { pattern: /\b(y te|suc khoe|benh vien|bac si|health|medical|medicine|hospital)\b/, file: 'health-cover.png' },
-  { pattern: /\b(khoa hoc|cong nghe|thi nghiem|science|technology|laboratory)\b/, file: 'science-cover.png' },
-  { pattern: /\b(toeic|cong viec|van phong|kinh doanh|tai chinh|office|business|finance|invoice)\b/, file: 'office-cover.png' },
-  { pattern: /\b(giao tiep|doi song|hang ngay|ca phe|mua sam|communication|everyday|daily|coffee|shopping)\b/, file: 'everyday-cover.png' },
+const TOPIC_CODES = [
+  { pattern: /\b(y te|suc khoe|benh vien|bac si|health|medical|hospital)\b/, code: 'Y TẾ', tone: 3 },
+  { pattern: /\b(khoa hoc|cong nghe|science|technology)\b/, code: 'KHOA HỌC', tone: 4 },
+  { pattern: /\b(toeic)\b/, code: 'TOEIC', tone: 1 },
+  { pattern: /\b(cong viec|van phong|kinh doanh|tai chinh|office|business|finance)\b/, code: 'CÔNG VIỆC', tone: 1 },
+  { pattern: /\b(doi song|hang ngay|daily|everyday)\b/, code: 'ĐỜI SỐNG', tone: 2 },
+  { pattern: /\b(giao tiep|communication)\b/, code: 'GIAO TIẾP', tone: 2 },
+  { pattern: /\b(am nhac|nghe thuat|music|art)\b/, code: 'NGHỆ THUẬT', tone: 5 },
+  { pattern: /\b(du lich|san bay|travel|airport)\b/, code: 'DU LỊCH', tone: 5 },
 ];
 
-// The title wins over the broader topic. A goal alone is not a cover subject.
-function deckIllustration(deck) {
-  for (const text of [deck.ten ?? deck.name, deck.tenChuDe ?? deck.topicName]) {
-    const normalized = normalize(text);
-    const match = TOPICS.find(topic => topic.pattern.test(normalized));
-    if (match) return match.file;
-  }
-  // Generic words like "vocabulary" do not override a specific named topic.
-  return /\b(hoc|tu vung|learning|vocabulary)\b/.test(normalize(deck.ten ?? deck.name)) ? 'learning-desk.png' : null;
+const GOAL_CODES = { TOEIC: 'TOEIC', GIAO_TIEP: 'GIAO TIẾP', IELTS: 'IELTS' };
+const TONES = 6;
+
+function hash(value) {
+  let h = 0;
+  for (const ch of String(value || '')) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return h;
 }
 
-window.VLDeckIllustration = deckIllustration;
+function firstLetter(word) {
+  return [...word].find(ch => /\p{L}|\p{N}/u.test(ch)) || '';
+}
+
+function deckMonogram(title) {
+  const text = String(title || '').trim();
+  const focus = text.includes('—') ? text.split('—').pop() : text;
+  const words = focus.split(/[\s,.;:()/-]+/).filter(Boolean);
+  const letters = words.map(firstLetter).filter(Boolean);
+  const mono = (letters[0] || '') + (letters[1] || '');
+  return mono ? mono.toLocaleUpperCase('vi') : '·';
+}
+
+function deckCover(deck = {}, topicName = deck.tenChuDe) {
+  let match = null;
+  for (const text of [deck.ten, topicName]) {
+    const normalized = normalize(text);
+    match = TOPIC_CODES.find(topic => topic.pattern.test(normalized));
+    if (match) break;
+  }
+  const code = match?.code || GOAL_CODES[deck.mucTieu] || (topicName ? String(topicName).split(/[&,]/)[0].trim().toLocaleUpperCase('vi').slice(0, 10) : 'BỘ THẺ');
+  const tone = match?.tone || (hash(deck.chuDeId || topicName || deck.id || deck.ten) % TONES) + 1;
+  const sample = String(deck.tuMau || '').trim();
+  return { code, tone, word: sample || deckMonogram(deck.ten), sample: !!sample };
+}
+
+const escape = value => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+window.VLDeckCover = deckCover;
 window.VLDeckThumbnail = function (deck) {
-  const file = deckIllustration(deck);
-  const contextCover = ['office-cover.png', 'everyday-cover.png'].includes(file);
-  return file ? '<img class="deck-thumbnail' + (contextCover ? ' is-context-cover' : '') + '" src="../shared/assets/images/' + file + '" alt="" width="' + (contextCover ? 96 : 64) + '" height="' + (contextCover ? 72 : 48) + '" loading="lazy">' : '';
+  const cover = deckCover({ ...deck, ten: deck.ten ?? deck.name }, deck.tenChuDe ?? deck.topicName);
+  return '<span class="deck-thumbnail deck-cover" data-tone="' + cover.tone + '" aria-hidden="true"><span class="deck-cover-code">' + escape(cover.code) + '</span><span class="deck-cover-word">' + escape(cover.word) + '</span></span>';
 };
 })();

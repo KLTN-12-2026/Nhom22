@@ -12,6 +12,7 @@ import { handledId } from '@/lib/realtime.mjs';
 import { useRealtimeEvent } from '@/hooks/useEventStream';
 import { CopyChanges } from '@/components/content/CopyChanges';
 import { requestChanges, summarize } from '@/lib/copy-diff.mjs';
+import { AdminPageHead } from '@/components/admin/AdminPageHead';
 import styles from './PublishRequestReview.module.css';
 
 const FILTERS = [['CHO_DUYET', 'Chờ duyệt'], ['DA_DUYET', 'Đã duyệt'], ['TU_CHOI', 'Bị từ chối'], ['', 'Tất cả']];
@@ -42,21 +43,11 @@ export function PublishRequestReview({ admin = false }) {
     client.invalidateQueries({ queryKey: ['publish-requests'] });
   };
 
-  return <div className="page page-grid with-side">
-    <section className="sheet" aria-labelledby="page-title">
-      <div className="form-head">
-        <div className="form-code"><span>{admin ? 'Quản trị' : 'Bộ của tôi'}</span><span>Yêu cầu công khai</span></div>
-        <h1 id="page-title">{admin ? 'Duyệt công khai bản sao' : 'Yêu cầu công khai bản sao'}</h1>
-        <p>{admin
-          ? 'Chỉ các yêu cầu có bộ gốc đã bị xóa, ẩn, không còn công khai hoặc tác giả không còn hoạt động. Bộ của bạn (kể cả bộ mẫu) được duyệt ở mục Yêu cầu công khai như người học.'
-          : 'Người khác đã sao chép bộ của bạn và muốn chia sẻ bản sao trong thư viện. Bạn là người duyệt.'}</p>
-        {notice && <p className="notice notice-success" role="status"><Icon name="check" />{notice}</p>}
-        {takenOver && <p className="notice notice-warning" role="alert"><Icon name="info" />{takenOver}</p>}
-      </div>
-      <div className="tabs" role="tablist" aria-label="Lọc theo trạng thái">
-        {FILTERS.map(([value, label]) => <button key={value || 'all'} type="button" className="tab" role="tab"
-          aria-selected={trangThai === value} onClick={() => { setTrangThai(value); setPage(0); setNotice(''); }}>{label}</button>)}
-      </div>
+  const notices = <>
+    {notice && <p className="notice notice-success" role="status"><Icon name="check" />{notice}</p>}
+    {takenOver && <p className="notice notice-warning" role="alert"><Icon name="info" />{takenOver}</p>}
+  </>;
+  const listing = <>
       <div data-view={isLoading ? 'loading' : error ? 'error' : items.length ? 'ready' : 'empty'}>
         <div data-when="loading"><div className="skeleton"><div className="sk sk-row" /><div className="sk sk-row" /></div></div>
         <div data-when="error"><ErrorState description={error?.message} onRetry={refetch} /></div>
@@ -84,20 +75,56 @@ export function PublishRequestReview({ admin = false }) {
           <Pagination page={page + 1} totalPages={data?.totalPages || 0} onPageChange={value => setPage(value - 1)} />
         </div>
       </div>
-    </section>
-    <aside className="side-col">
-      <section className="panel" aria-labelledby="rules-title">
-        <h2 id="rules-title" className="panel-title">Quy tắc</h2>
+  </>;
+  const rules = <>
         <ul className="small muted" style={{ paddingLeft: '1.1rem', display: 'grid', gap: 'var(--space-2)' }}>
           <li>Duyệt thì bản sao hiện trong thư viện với nhãn “Bản sao” và liên kết về bộ gốc.</li>
           <li>Từ chối hoặc thu hồi phải có lý do 10–500 ký tự; người gửi chờ 24 giờ mới gửi lại được.</li>
           <li>Yêu cầu không được xử lý trong 14 ngày sẽ tự hết hạn.</li>
           {admin && <li>Mọi quyết định được ghi vào nhật ký quản trị.</li>}
         </ul>
+  </>;
+  const dialog = selected && <ReviewDialog key={selected.id} item={selected} admin={admin} onClose={() => setSelected(null)}
+    onDone={done} onStale={() => { setSelected(null); refetch(); }} />;
+
+  if (admin) return <div className="adm-page">
+    <AdminPageHead title="Duyệt công khai bản sao" description="Chỉ các yêu cầu có bộ gốc đã bị xóa, ẩn, không còn công khai hoặc tác giả không còn hoạt động. Bộ của bạn (kể cả bộ mẫu) được duyệt ở mục Yêu cầu công khai như người học." />
+    {notices}
+    <section className="adm-card adm-card-body" aria-label="Yêu cầu công khai">
+      <div className="adm-seg" role="tablist" aria-label="Lọc theo trạng thái" style={{ marginBottom: 'var(--sp-4)' }}>
+        {FILTERS.map(([value, label]) => <button key={value || 'all'} type="button" role="tab"
+          aria-selected={trangThai === value} onClick={() => { setTrangThai(value); setPage(0); setNotice(''); }}>{label}</button>)}
+      </div>
+      {listing}
+    </section>
+    <section className="adm-card" aria-labelledby="rules-title">
+      <div className="adm-card-head"><h2 id="rules-title">Quy tắc</h2></div>
+      <div className="adm-card-body">{rules}</div>
+    </section>
+    {dialog}
+  </div>;
+
+  return <div className="page page-grid with-side">
+    <section className="sheet" aria-labelledby="page-title">
+      <div className="form-head">
+        <div className="form-code"><span>Bộ của tôi</span><span>Yêu cầu công khai</span></div>
+        <h1 id="page-title">Yêu cầu công khai bản sao</h1>
+        <p>Người khác đã sao chép bộ của bạn và muốn chia sẻ bản sao trong thư viện. Bạn là người duyệt.</p>
+        {notices}
+      </div>
+      <div className="tabs" role="tablist" aria-label="Lọc theo trạng thái">
+        {FILTERS.map(([value, label]) => <button key={value || 'all'} type="button" className="tab" role="tab"
+          aria-selected={trangThai === value} onClick={() => { setTrangThai(value); setPage(0); setNotice(''); }}>{label}</button>)}
+      </div>
+      {listing}
+    </section>
+    <aside className="side-col">
+      <section className="panel" aria-labelledby="rules-title">
+        <h2 id="rules-title" className="panel-title">Quy tắc</h2>
+        {rules}
       </section>
     </aside>
-    {selected && <ReviewDialog key={selected.id} item={selected} admin={admin} onClose={() => setSelected(null)}
-      onDone={done} onStale={() => { setSelected(null); refetch(); }} />}
+    {dialog}
   </div>;
 }
 

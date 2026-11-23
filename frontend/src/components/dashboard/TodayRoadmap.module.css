@@ -14,7 +14,7 @@
 .body { min-width: 0; }
 .title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 0; font-weight: 700; }
 .why { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-small); }
-.badge { padding: 1px 8px; border-radius: 99px; background: var(--primary); color: var(--on-primary); font-size: 11px; font-weight: 700; }
+.badge { padding: 1px 8px; border-radius: 99px; background: var(--primary-tint); color: var(--primary); font-size: 11px; font-weight: 700; }
 .doneTag { padding: 1px 8px; border-radius: 99px; background: var(--secondary-bg); color: var(--secondary-text); font-size: 11px; font-weight: 700; }
 .side { display: grid; justify-items: end; gap: 2px; text-align: right; }
 .count { font-size: var(--fs-small); color: var(--ink-2); white-space: nowrap; }

@@ -11,10 +11,7 @@
 .summary p, .summary small { color:var(--ink-3); font-size:var(--fs-caption); }
 .summary strong { display:block; font-size:clamp(1.3rem,2vw,1.85rem); line-height:1.5; letter-spacing:-.04em; margin:var(--sp-2) 0; }
 .summary .positive { color:var(--secondary-text); }
-.tabs { display:flex; gap:var(--sp-5); border-bottom:1px solid var(--line); margin-bottom:var(--sp-5); overflow-x:auto; }
-.tab { border:0; border-bottom:3px solid transparent; background:transparent; padding:var(--sp-3) 0; white-space:nowrap; min-height:var(--tap); font-weight:650; color:var(--ink-3); }
-.tab[aria-selected="true"] { color:var(--primary); border-bottom-color:var(--primary); }
-.tab:hover { color:var(--primary); }
+.tabsGap { margin-bottom:var(--sp-5); }
 .sectionHead { align-items:center; margin-bottom:var(--sp-5); }
 .sectionHead h2 { font-size:var(--fs-h3); margin-bottom:var(--sp-2); }
 .sectionHead p, .caption { font-size:var(--fs-small); color:var(--ink-3); }

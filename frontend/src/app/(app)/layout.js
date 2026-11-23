@@ -10,7 +10,7 @@ export default function AppRouteLayout({ children }) {
   const pathname = usePathname();
   const isAdmin = user?.vaiTro?.includes('ADMIN');
 
-  if (pathname.startsWith('/quan-tri')) {
+  if (pathname.startsWith('/quan-tri') && isAdmin) {
     return (
       <RouteGuard requireAuth={true}>
         <AdminShell user={user}>{children}</AdminShell>

@@ -156,12 +156,12 @@ function PaymentAdmin() {
       <div className={styles.summary} aria-label="Tổng quan thanh toán">
         {summary.map(([label, value, note], index) => <article key={label}><p>{label}</p><strong className={index === 0 ? styles.positive : undefined}>{value}</strong><small>{note}</small></article>)}
       </div>
-      <div className={styles.tabs} role="tablist" aria-label="Quản lý thanh toán" onKeyDown={tabKeyDown}>
-        {TABS.map(([id, label]) => <button key={id} type="button" className={styles.tab} id={`tab-${id}`} role="tab" aria-selected={tab === id} aria-controls={`panel-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{label}</button>)}
+      <div className={`tabs ${styles.tabsGap}`} role="tablist" aria-label="Quản lý thanh toán" onKeyDown={tabKeyDown}>
+        {TABS.map(([id, label]) => <button key={id} type="button" className="tab" id={`tab-${id}`} role="tab" aria-selected={tab === id} aria-controls={`panel-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{label}</button>)}
       </div>
 
       <section id="panel-payments" role="tabpanel" aria-labelledby="tab-payments" tabIndex={0} hidden={tab !== 'payments'}>
-        <div className={styles.sectionHead}><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói qua VNPay.</p></div><button className="btn btn-export" type="button" disabled={!items.length} onClick={() => {
+        <div className={styles.sectionHead}><div><h2>Danh sách giao dịch</h2><p>Tra cứu các đơn mua và gia hạn gói qua VNPay.</p></div><button className="adm-btn" type="button" disabled={!items.length} onClick={() => {
           download(paymentsCsv(items), 'giao-dich.csv', 'text/csv;charset=utf-8');
           toast(`Đã xuất ${items.length} giao dịch theo bộ lọc hiện tại.`);
         }}><Icon name="download" /> Xuất CSV</button></div>

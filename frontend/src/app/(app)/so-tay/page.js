@@ -313,12 +313,12 @@ function NotebookContent() {
                     <div className={styles.pairWords}>
                       <div>
                         <b lang="en">{pr.the1.tu}</b>
-                        <span>{pr.the1.nghiaVi}</span>
+                        <span title={pr.the1.nghiaVi}>{pr.the1.nghiaVi}</span>
                       </div>
                       <div className={styles.pairVs} aria-hidden="true">vs</div>
                       <div>
                         <b lang="en">{pr.the2.tu}</b>
-                        <span>{pr.the2.nghiaVi}</span>
+                        <span title={pr.the2.nghiaVi}>{pr.the2.nghiaVi}</span>
                       </div>
                     </div>
                     <div className={styles.pairMeta}>

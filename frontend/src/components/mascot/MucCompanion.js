@@ -43,7 +43,9 @@ function Muc({ pathname }) {
   const [collapsed, setCollapsed] = useState(() => readMucSettings().collapsed);
   const [selectLookup, setSelectLookup] = useState(() => readMucSettings().selectLookup);
   const [transient, setTransient] = useState(null);
-  const [bubble, setBubble] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [unread, setUnread] = useState(0);
+  const [live, setLive] = useState('');
   const [pending, setPending] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -72,12 +74,15 @@ function Muc({ pathname }) {
 
   const fill = useCallback(text => (text || '').replaceAll('{ten}', nameRef.current), []);
 
-  const say = useCallback((text, mood = 'wave', ttl = 5200) => {
-    clearTimeout(timers.current.say);
+  const say = useCallback((text, mood = 'wave') => {
     clearTimeout(timers.current.mood);
     setTransient(mood);
-    setBubble(text ? fill(text) : null);
-    timers.current.say = setTimeout(() => { setBubble(null); setTransient(null); }, text ? ttl : MOOD_MS);
+    timers.current.mood = setTimeout(() => setTransient(null), MOOD_MS);
+    if (!text) return;
+    const line = fill(text);
+    setNotes(list => [line, ...list.filter(item => item !== line)].slice(0, 5));
+    setUnread(count => count + 1);
+    setLive(line);
   }, [fill]);
 
   const mood = useCallback(value => {
@@ -108,13 +113,11 @@ function Muc({ pathname }) {
       } else if (detail.type === 'review') {
         if (detail.correct) {
           combo.current.right += 1;
-          if (combo.current.right % 5 === 0) say(`${combo.current.right} thẻ liền không quên! 💪`, 'success', 3200);
-          else mood('success');
+          mood('success');
         } else {
           combo.current.right = 0;
           combo.current.wrong += 1;
-          if (combo.current.wrong % 3 === 1) say('Không sao, thẻ này sẽ quay lại sớm thôi.', 'error', 3200);
-          else mood('error');
+          mood('error');
         }
       } else if (detail.type === 'activity') {
         client.invalidateQueries({ queryKey: ['learning-today'] });
@@ -227,7 +230,7 @@ function Muc({ pathname }) {
     delete event.currentTarget.dataset.dragged;
     if (dragged && event.detail !== 0) return;
     if (collapsed) { setCollapsed(false); try { localStorage.setItem(COLLAPSED_KEY, 'false'); } catch {} }
-    setOpen(value => !value);
+    setOpen(value => { if (!value) setUnread(0); return !value; });
     requestAnimationFrame(restore);
     mood('wave');
     if (user) client.invalidateQueries({ queryKey: ['learning-today'] });
@@ -265,12 +268,17 @@ function Muc({ pathname }) {
   const studyHref = plan?.phienDangDo?.soChuaTraLoi > 0 ? `/hoc-phien?id=${plan.phienDangDo.id}` : '/hoc';
 
   return <>
-    <aside ref={hostRef} className="muc-companion" hidden={dialogOpen} data-muc-state={state} data-collapsed={String(collapsed)} data-bubble={bubble && !open ? 'on' : 'off'} aria-label={`${name}, bạn học từ vựng`}>
+    <aside ref={hostRef} className="muc-companion" hidden={dialogOpen} data-muc-state={state} data-collapsed={String(collapsed)} aria-label={`${name}, bạn học từ vựng`}>
       <div ref={panelRef} className="muc-panel" id="muc-panel" hidden={!open}>
         <div className="muc-panel-head">
           <h2>{user ? `${name} · việc hôm nay` : `${name} · bạn học`}</h2>
           <button className="btn btn-quiet btn-icon" type="button" aria-label={`Đóng bảng ${name}`} onClick={() => { setOpen(false); toggleRef.current?.focus(); }}>×</button>
         </div>
+
+        {notes.length > 0 && <section className="muc-notes" aria-label="Lời nhắc">
+          <ol>{notes.map(note => <li key={note}>{note}</li>)}</ol>
+          <button type="button" className="muc-hide" onClick={() => setNotes([])}>Xóa lời nhắc</button>
+        </section>}
 
         {user && <>
           {today.isPending ? <p className="small muted" role="status">Đang xem lịch học…</p>
@@ -328,13 +336,13 @@ function Muc({ pathname }) {
           <button className="muc-hide" type="button" onClick={() => { resetPosition(); setOpen(false); }}>Đưa về góc</button>
         </div>
       </div>
-      <div ref={bubbleRef} className="muc-bubble" role="status" aria-live="polite">{bubble}</div>
-      <button ref={toggleRef} className="muc-toggle" type="button" aria-label={todo ? `Mở bảng việc của ${name}, còn ${todo} việc` : `Mở bảng của ${name}`} aria-expanded={open} aria-controls="muc-panel" title="Bấm để mở · kéo để di chuyển" onClick={toggle}>
+      <div ref={bubbleRef} className="sr-only" role="status" aria-live="polite">{live}</div>
+      <button ref={toggleRef} className="muc-toggle" type="button" aria-label={`Mở bảng của ${name}${unread ? `, ${unread} lời nhắc mới` : ''}${todo ? `, còn ${todo} việc` : ''}`} aria-expanded={open} aria-controls="muc-panel" title="Bấm để mở · kéo để di chuyển" onClick={toggle}>
         <span className="muc-svg" dangerouslySetInnerHTML={{ __html: svg }} />
         <SkinCostume />
         {user && (tier === 'premium' || tier === 'admin') && <span className="muc-hat" aria-hidden="true"><MetalIcon name="crown" metal="gold" size={30} /></span>}
         {user && tier === 'pro' && <span className="muc-hat muc-hat-pro" aria-hidden="true"><MetalIcon name="bolt" metal="steel" size={24} /></span>}
-        {todo > 0 && <span className="muc-dot" aria-hidden="true">{todo > 99 ? '99+' : todo}</span>}
+        {unread > 0 && !open && <span className="muc-dot" aria-hidden="true">{unread > 9 ? '9+' : unread}</span>}
       </button>
     </aside>
 

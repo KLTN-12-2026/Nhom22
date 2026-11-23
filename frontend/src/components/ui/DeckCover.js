@@ -1,19 +1,11 @@
-import Image from 'next/image';
-import { deckIllustration } from '@/lib/deck-illustration.mjs';
+import { deckCover } from '@/lib/deck-illustration.mjs';
 
-export function DeckCover({ deck, topicName, priority = false }) {
-  const illustration = deckIllustration(deck, topicName ?? deck.tenChuDe);
-  if (!illustration) return null;
-  const contextCover = ['office-cover.png', 'everyday-cover.png'].includes(illustration);
+export function DeckCover({ deck, topicName }) {
+  const cover = deckCover(deck, topicName ?? deck.tenChuDe);
   return (
-    <Image
-      className={`deck-thumbnail${contextCover ? ' is-context-cover' : ''}`}
-      src={`/images/${illustration}`}
-      alt=""
-      width={contextCover ? 96 : 64}
-      height={contextCover ? 72 : 48}
-      sizes={contextCover ? '(max-width: 639px) 80px, 96px' : '(max-width: 639px) 56px, 64px'}
-      priority={priority}
-    />
+    <span className="deck-thumbnail deck-cover" data-tone={cover.tone} aria-hidden="true">
+      <span className="deck-cover-code">{cover.code}</span>
+      <span className="deck-cover-word" lang={cover.sample ? 'en' : undefined}>{cover.word}</span>
+    </span>
   );
 }

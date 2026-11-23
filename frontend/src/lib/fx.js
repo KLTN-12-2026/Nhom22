@@ -2,6 +2,7 @@ const api = () => (typeof window !== 'undefined' ? window.VLFx : undefined);
 
 export const fx = {
   play: name => api()?.play(name),
+  pet: name => api()?.pet?.(name),
   turn: el => api()?.turn(el),
   pop: el => api()?.pop(el),
   shake: el => api()?.shake(el),

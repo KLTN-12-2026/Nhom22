@@ -62,20 +62,3 @@ export function tierFromCode(code) {
   return tierOf(code ? { goiMa: code } : null);
 }
 
-export function rosette(R, r, d, steps = 720) {
-  const k = (R - r) / r;
-  const turns = r / gcd(Math.round(R), Math.round(r));
-  const total = Math.PI * 2 * turns;
-  let path = '';
-  for (let i = 0; i <= steps; i++) {
-    const t = (total * i) / steps;
-    const x = (R - r) * Math.cos(t) + d * Math.cos(k * t);
-    const y = (R - r) * Math.sin(t) - d * Math.sin(k * t);
-    path += `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
-  }
-  return path;
-}
-
-function gcd(a, b) {
-  return b ? gcd(b, a % b) : a;
-}

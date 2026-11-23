@@ -54,7 +54,7 @@
 .pairWords > div { display: grid; gap: 2px; min-width: 0; }
 .pairWords > div:last-child { text-align: right; }
 .pairWords b { font-family: var(--font-word); font-size: 1.125rem; overflow-wrap: anywhere; }
-.pairWords span { font-size: var(--fs-caption); color: var(--ink-3); overflow-wrap: anywhere; }
+.pairWords span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: var(--fs-caption); color: var(--ink-3); overflow-wrap: break-word; }
 .pairVs { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: var(--rule) dashed var(--line-2); font-family: var(--font-word); font-style: italic; font-size: var(--fs-caption); color: var(--ink-3); }
 .pairMeta { display: flex; flex-wrap: wrap; gap: 2px var(--sp-3); font-size: var(--fs-caption); color: var(--ink-3); }
 .pairMeta b { color: var(--warning-text); }
@@ -65,6 +65,7 @@
   .nbRow { grid-template-columns: 2rem minmax(0, 1fr); }
   .nbTools { grid-column: 2; padding-top: 0; }
   .nbProof li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .toolbarRow > :global(.btn) { width: 100%; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

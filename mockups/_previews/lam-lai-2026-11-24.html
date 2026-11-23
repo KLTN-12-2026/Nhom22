@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="vi" data-theme="light" data-tier="pro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Làm lại 6 màn hình</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --desk:#f3f1ea;--sheet:#fffdf8;--field:#ffffff;--sunk:#f7f5ee;
+  --ink:#24262c;--ink-2:#474b55;--ink-3:#62677a;--line:#e6e2d6;--line-2:#d8d3c4;
+  --primary:#3549bb;--primary-hover:#293b9f;--primary-tint:#eceef9;--on-primary:#fff;
+  --secondary:#1e8a5a;--secondary-bg:#e3f2ea;--secondary-text:#14603f;
+  --accent:#f2b32b;--accent-hover:#e4a119;--accent-bg:#fcf1d6;--accent-text:#6b4a00;--on-accent:#24262c;
+  --danger:#b42318;--danger-bg:#fdecea;
+  --warning:#b07d12;--warning-bg:#fbf4e2;--warning-text:#6e4600;
+  --edit:#1762ad;--edit-bg:#e5f0ff;
+  --media:#0f7a7a;--media-bg:#dff3f1;
+  --timing:#15161a;
+  --tier-ink:#5b6270;--tier-soft:#eef1f6;
+  --shadow-sheet:0 1px 2px rgba(16,24,40,.06),0 18px 28px -18px rgba(16,24,40,.28);
+  --shadow-pop:0 2px 4px rgba(16,24,40,.08),0 24px 48px -24px rgba(16,24,40,.38);
+  --focus:0 0 0 2px var(--sheet),0 0 0 4px var(--primary);
+  --font:"Archivo","Segoe UI",system-ui,sans-serif;--word:"Gentium Book Plus",Georgia,serif;
+  --r-sheet:20px;--r:12px;--r-btn:8px;--r-field:6px;--dur-1:120ms;--dur-2:200ms;--dur-3:320ms;--ease:cubic-bezier(.2,.7,.2,1);
+  --rule-dot:color-mix(in srgb,var(--line-2) 70%,transparent);
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#171a20;--sheet:#20252d;--field:#272d37;--sunk:#1b1f26;
+  --ink:#f1f0eb;--ink-2:#c2c7d1;--ink-3:#9aa2b4;--line:#2f3641;--line-2:#3a424f;
+  --primary:#aab8ff;--primary-hover:#c5ceff;--primary-tint:#2d344b;--on-primary:#14172a;
+  --secondary:#73d5a3;--secondary-bg:#243c32;--secondary-text:#9ce8be;
+  --accent:#edb439;--accent-hover:#dda228;--accent-bg:#3c3422;--accent-text:#f3cd79;--on-accent:#231e14;
+  --danger:#ffa0aa;--danger-bg:#412b33;
+  --warning:#e5be6b;--warning-bg:#3c3422;--warning-text:#f3cd79;
+  --edit:#8cc1ff;--edit-bg:#233a54;
+  --media:#6fd6cf;--media-bg:#1f3a3a;
+  --timing:#6c7588;
+  --tier-ink:#9aa1ae;--tier-soft:#2a2f38;
+  --shadow-sheet:0 1px 2px rgba(0,0,0,.25),0 18px 32px -18px rgba(0,0,0,.6);
+  --shadow-pop:0 2px 6px rgba(0,0,0,.3),0 24px 48px -24px rgba(0,0,0,.7);
+  --rule-dot:color-mix(in srgb,var(--line-2) 80%,transparent);
+}
+[data-tier="pro"]{--tier-ink:#2b44bf;--tier-soft:#e3ebff}
+[data-tier="premium"]{--tier-ink:#9a6c0c;--tier-soft:#fff3c4}
+[data-theme="dark"][data-tier="pro"]{--tier-ink:#8fb0ff;--tier-soft:#1f2845}
+[data-theme="dark"][data-tier="premium"]{--tier-ink:#e7c25c;--tier-soft:#3a3018}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;background-color:var(--desk);background-image:radial-gradient(circle at 1px 1px,var(--rule-dot) 1px,transparent 1.4px);background-size:22px 22px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:none;box-shadow:var(--focus)}
+svg{flex:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;background:color-mix(in srgb,var(--sheet) 94%,transparent);border-bottom:1px solid var(--line)}
+.top h1{margin:0 auto 0 0;font-size:17px}
+.seg{display:inline-flex;max-width:100%;overflow-x:auto;border:1px solid var(--line-2);border-radius:var(--r-btn);background:var(--field)}
+.seg button{border:0;background:none;padding:0 12px;min-height:36px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+
+main{max-width:1120px;margin:0 auto;padding:24px 16px 160px;display:grid;gap:40px}
+.intro{max-width:72ch;color:var(--ink-2);margin:0}
+section.case{display:grid;gap:14px}
+main > *,section.case > *,.two > *,.card-wrap > *{min-width:0}
+.sheet-head > div:first-child{min-width:0;flex:1 1 260px}
+.sheet-head .tools{min-width:0;max-width:100%}
+.case-head{display:grid;gap:4px}
+.case-head .no{font:700 13px var(--font);color:var(--primary)}
+.case-head h2{margin:0;font-size:22px;line-height:1.25}
+.case-head p{margin:0;color:var(--ink-2);max-width:78ch}
+.swap{display:grid;gap:4px;margin:0;padding:10px 14px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--sunk);font-size:14px;color:var(--ink-2)}
+.swap b{color:var(--ink)}
+
+.sheet{position:relative;background:var(--sheet);border:1px solid var(--line);border-radius:var(--r-sheet);border-top-right-radius:0;padding:22px 22px 22px 40px;box-shadow:var(--shadow-sheet)}
+.sheet::before{content:"";position:absolute;left:12px;top:24px;bottom:22px;width:5px;background:repeating-linear-gradient(to bottom,var(--timing) 0 3px,transparent 3px 32px);opacity:.7;border-radius:1px}
+.sheet::after{content:"";position:absolute;top:-1px;right:-1px;width:22px;height:22px;background:linear-gradient(225deg,var(--desk) 0 50%,color-mix(in srgb,var(--sheet) 86%,var(--ink)) 50% 100%);border-bottom-left-radius:6px}
+.sheet-head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 16px;margin-bottom:16px}
+.sheet-head h3{margin:0;font-size:26px;line-height:1.15;letter-spacing:-.01em}
+.sheet-head p{margin:4px 0 0;color:var(--ink-2);font-size:14px;max-width:60ch}
+.sheet-head .tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+.muted{color:var(--ink-3)}
+.small{font-size:13px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:var(--r-btn);border:1.5px solid var(--line-2);background:var(--field);font-weight:650;font-size:14px;cursor:pointer;text-decoration:none;color:var(--ink);transition:background var(--dur-1),transform var(--dur-1)}
+.btn:active{transform:translateY(1px)}
+.btn-sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.btn-accent:hover{background:var(--accent-hover)}
+
+.stamp{display:inline-flex;align-items:center;gap:4px;padding:0 7px;min-height:22px;border:2px solid currentColor;border-radius:4px;font-size:11px;font-weight:800;letter-spacing:.04em;line-height:1;white-space:nowrap}
+.stamp.ok{color:var(--secondary-text)}
+.stamp.tier{color:var(--tier-ink)}
+
+.bubble{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--ink-3);font:700 13px var(--font);color:var(--ink-2);flex:none;font-variant-numeric:tabular-nums}
+.bubble.filled{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.dots{display:inline-flex;gap:3px;vertical-align:middle}
+.dots i{width:10px;height:10px;border-radius:50%;border:1.3px solid var(--ink-3)}
+.dots i.on{background:var(--ink);border-color:var(--ink)}
+
+.rows{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.rows > li{display:grid;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);min-height:56px}
+.rows > li:last-child{border-bottom:0}
+.rows .name{min-width:0;display:grid}
+.rows .name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.rows .name small{color:var(--ink-3);font-size:12px}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.rows > li.gap-row{display:block;text-align:center;color:var(--ink-3);min-height:0;padding:4px;letter-spacing:.4em;line-height:1}
+
+.lb > li{grid-template-columns:28px 32px minmax(0,1fr) auto 72px}
+.avatar{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--primary-tint);color:var(--primary);font-weight:700;font-size:13px;overflow:hidden}
+.lb .me{position:relative;background:linear-gradient(to top,color-mix(in srgb,var(--accent) 28%,transparent) 0 8px,transparent 8px) no-repeat 64px 100%/calc(100% - 64px) 100%}
+.lb .me::before{content:"";position:absolute;left:-18px;top:14px;width:8px;height:28px;border-left:3px solid var(--accent)}
+.you{font-size:11px;font-weight:800;color:var(--accent-text);background:var(--accent-bg);padding:1px 6px;border-radius:4px;margin-left:6px}
+.honor{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;margin-bottom:16px;border:1px solid var(--line-2);border-left:4px solid var(--ink);border-radius:var(--r);background:var(--sunk);font-size:14px}
+.honor .stamp{transform:rotate(-2deg);color:var(--ink)}
+.lb-foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-top:14px;font-size:13px;color:var(--ink-3)}
+.week{display:inline-flex;gap:2px;font-size:10px;color:var(--ink-3)}
+.daylabel{display:grid;justify-items:center;gap:1px}
+
+.card-wrap{display:grid;gap:16px;grid-template-columns:minmax(0,420px) minmax(0,1fr);align-items:start}
+.slipcard{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr);border:1px solid var(--line-2);border-radius:14px;background:var(--sheet);box-shadow:var(--shadow-sheet);overflow:hidden}
+.stub{position:relative;display:grid;place-items:center;background:var(--tier-soft);border-right:2px dashed var(--line-2)}
+.stub span{writing-mode:vertical-rl;transform:rotate(180deg);font:800 12px var(--font);letter-spacing:.12em;color:var(--tier-ink)}
+.stub::before,.stub::after{content:"";position:absolute;right:-9px;width:16px;height:16px;border-radius:50%;background:var(--desk);border:1px solid var(--line-2)}
+.stub::before{top:-9px}.stub::after{bottom:-9px}
+.slip-body{padding:16px 18px 16px 18px;display:grid;gap:2px}
+.slip-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.slip-title b{font-size:13px;color:var(--ink-3);font-weight:700}
+.rubber{font:800 15px var(--font);letter-spacing:.1em;color:var(--tier-ink);border:2.5px solid currentColor;border-radius:6px;padding:2px 10px;transform:rotate(-6deg);opacity:.9}
+.field-line{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px dotted var(--line-2);font-size:14px}
+.field-line span{color:var(--ink-3);font-size:13px}
+.field-line b{font-weight:650;overflow-wrap:anywhere}
+.field-line .hand{font-family:var(--word);font-size:17px;font-weight:700}
+.meter{height:6px;border-radius:3px;background:var(--sunk);border:1px solid var(--line);overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:var(--tier-ink)}
+.slip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+.plan-table{width:100%;border-collapse:collapse;font-size:14px}
+.plan-table th,.plan-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.plan-table thead th{border-bottom:2px solid var(--ink);vertical-align:bottom}
+.plan-table tbody th{font-weight:600;color:var(--ink-2)}
+.plan-col{min-width:150px}
+.plan-pick{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;cursor:pointer}
+.plan-pick input{position:absolute;opacity:0;pointer-events:none}
+.plan-pick .bubble{width:24px;height:24px}
+.plan-pick input:checked + .bubble{background:var(--ink);border-color:var(--ink)}
+.plan-pick input:focus-visible + .bubble{box-shadow:var(--focus)}
+.plan-pick strong{font-size:16px}
+.plan-table td.sel,.plan-table th.sel{background:color-mix(in srgb,var(--primary-tint) 70%,transparent)}
+.price{font:700 20px var(--font);font-variant-numeric:tabular-nums}
+.price small{font-size:12px;font-weight:600;color:var(--ink-3)}
+.no{color:var(--ink-3)}
+.plan-foot{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:2px solid var(--ink)}
+.plan-foot p{margin:0;font-size:14px;color:var(--ink-2)}
+.offer{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;margin-bottom:16px;border:1px solid var(--line-2);border-left:4px solid var(--accent);border-radius:var(--r);background:var(--accent-bg);font-size:14px;color:var(--accent-text)}
+.table-scroll{overflow-x:auto}
+
+.two{display:grid;gap:16px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
+.sk > li{grid-template-columns:28px minmax(0,1fr) 150px auto}
+.bar-col{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+.bar{display:block;position:relative;height:10px;border-radius:5px;background:var(--sunk);border:1px solid var(--line-2)}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--primary)}
+.bar::after{content:"";position:absolute;top:-4px;bottom:-4px;left:var(--goal,80%);width:2px;background:var(--ink-3)}
+.sk .weak{position:relative}
+.sk .weak::before{content:"";position:absolute;left:-18px;top:12px;bottom:12px;border-left:3px solid var(--accent)}
+.state{font-size:12px;color:var(--ink-3)}
+.sk-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:14px}
+.tally{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.tally li{display:grid;grid-template-columns:auto minmax(12px,1fr) auto;align-items:baseline;gap:8px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.tally li::after{content:"";grid-column:2;grid-row:1;border-bottom:2px dotted var(--line-2);transform:translateY(-4px)}
+.tally .lbl{grid-column:1;display:grid}
+.tally .lbl small{color:var(--ink-3);font-size:12px}
+.tally .val{grid-column:3;font:700 18px var(--font);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tally .val small{font-size:12px;color:var(--ink-3);font-weight:600}
+
+.stage{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:0;min-height:360px;border:1px solid var(--line);border-radius:var(--r-sheet);background:var(--desk);overflow:hidden}
+.stage .col{padding:18px;display:grid;gap:10px;align-content:start}
+.ph{height:14px;border-radius:4px;background:var(--line)}
+.ph.w60{width:60%}.ph.w80{width:80%}.ph.w40{width:40%}
+.ph-card{padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);display:grid;gap:8px}
+.gutter{position:relative;border-left:1px dashed var(--line-2)}
+.gutter-label{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11px;color:var(--ink-3)}
+.mascot{position:absolute;right:20px;bottom:18px;width:56px;height:56px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
+.mascot img{width:56px;height:56px;display:block}
+.mascot .dot{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font:700 11px/18px var(--font);border:2px solid var(--desk)}
+.mascot[aria-expanded="true"] .dot{display:none}
+.say{position:absolute;right:16px;bottom:84px;width:min(260px,calc(100% - 32px));padding:12px 14px 12px 20px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--sheet);box-shadow:var(--shadow-pop);font-size:14px;display:grid;gap:8px;transform-origin:bottom right;transition:opacity var(--dur-2) var(--ease),transform var(--dur-2) var(--ease)}
+.say::before{content:"";position:absolute;left:6px;top:10px;bottom:10px;width:4px;background:repeating-linear-gradient(to bottom,var(--primary) 0 3px,transparent 3px 9px);opacity:.7}
+.say[hidden]{display:grid;opacity:0;transform:translateY(6px) scale(.98);pointer-events:none}
+.say .say-act{display:flex;gap:6px;flex-wrap:wrap}
+.rules{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+
+.decks{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.decks li{display:grid;grid-template-columns:24px 64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line)}
+.cover{--tab:var(--primary);--tab-bg:var(--primary-tint);position:relative;width:64px;height:48px;border:1px solid var(--line-2);border-radius:6px;background:var(--sheet);overflow:hidden;display:grid;align-content:end;padding:0 6px 5px 8px;box-shadow:0 1px 0 var(--line)}
+.cover::before{content:"";position:absolute;inset:0 0 auto 0;height:12px;background:var(--tab-bg);border-bottom:1px solid color-mix(in srgb,var(--tab) 40%,transparent)}
+.cover::after{content:"";position:absolute;left:3px;top:15px;bottom:4px;width:2px;background:repeating-linear-gradient(to bottom,var(--timing) 0 2px,transparent 2px 6px);opacity:.45}
+.cover .code{position:absolute;top:0;left:6px;font:800 8px/12px var(--font);letter-spacing:.06em;color:var(--tab)}
+.cover .w{position:relative;font:700 13px/1.1 var(--word);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cover.t1{--tab:var(--primary);--tab-bg:var(--primary-tint)}
+.cover.t2{--tab:var(--secondary-text);--tab-bg:var(--secondary-bg)}
+.cover.t3{--tab:var(--accent-text);--tab-bg:var(--accent-bg)}
+.cover.t4{--tab:var(--edit);--tab-bg:var(--edit-bg)}
+.cover.t5{--tab:var(--media);--tab-bg:var(--media-bg)}
+.cover.t6{--tab:var(--danger);--tab-bg:var(--danger-bg)}
+.decks .title{min-width:0}
+.decks .title b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:650}
+.decks .title small{color:var(--ink-3);font-size:12px}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--ink-3)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+@media (max-width:900px){
+  .card-wrap,.two{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .sheet{padding:18px 14px 18px 30px}
+  .sheet::before{left:8px}
+  .sheet-head h3{font-size:22px}
+  .lb > li{grid-template-columns:28px 28px minmax(0,1fr) 64px;gap:8px}
+  .lb .week-col{display:none}
+  .sk > li{grid-template-columns:24px minmax(0,1fr) auto;row-gap:6px}
+  .sk .bar-col{grid-column:2 / -1;grid-row:2}
+  .decks li{grid-template-columns:20px 56px minmax(0,1fr);gap:10px}
+  .decks li > .btn{grid-column:3;justify-self:start}
+  .cover{width:56px;height:42px}
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .gutter{position:absolute;inset:auto 0 0 auto;width:96px;height:110px;border:0}
+  .field-line{grid-template-columns:96px minmax(0,1fr)}
+  .plan-col{min-width:104px}
+  .plan-table tbody th{min-width:92px}
+  .plan-table th,.plan-table td{padding:8px}
+  .price{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Làm lại 6 màn hình — demo 24/11</h1>
+  <div class="seg" role="group" aria-label="Giao diện">
+    <button type="button" data-theme-set="light" aria-pressed="true">Sáng</button>
+    <button type="button" data-theme-set="dark" aria-pressed="false">Tối</button>
+  </div>
+</header>
+
+<main>
+  <p class="intro">Cả 6 đề xuất đều dùng lại thế giới giấy thi của app: giấy ngà, vạch căn lề, hàng kẻ đánh số, ô tô bằng bút chì, con dấu. Không dùng bục vinh danh, thẻ ngân hàng, bảng giá 3 cột hay lưới ô số liệu. Dữ liệu là dữ liệu mẫu theo đúng các trường API hiện có.</p>
+
+  <section class="case" aria-labelledby="c1">
+    <div class="case-head"><span class="no">1 · /bang-xep-hang</span><h2 id="c1">Bảng xếp hạng thành bảng điểm danh dự</h2><p>Một danh sách kẻ dòng như bảng kết quả dán ở phòng thi. Ba hạng đầu là ô tô kín, các hạng sau là ô trống. Bảy ô nhỏ cho biết ngày nào trong tuần đã ôn đủ. Dòng của bạn có vạch bút dạ vàng.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> bục vàng/bạc/đồng, icon cúp trong tiêu đề, huy chương ở từng dòng.</span><span><b>Giữ:</b> chọn Tuần/Tháng và Top 10/50/100, phần Vinh danh tuần trước, dòng "Bạn" khi nằm ngoài top.</span></p>
+    <div class="sheet">
+      <div class="sheet-head">
+        <div><h3>Bảng xếp hạng siêng năng</h3><p>Tuần 23/11 – 29/11. Xếp theo số ngày ôn đủ 5 lượt hợp lệ; bằng ngày thì so tổng lượt ôn.</p></div>
+        <div class="tools">
+          <div class="seg" role="group" aria-label="Kỳ"><button type="button" aria-pressed="true">Tuần này</button><button type="button" aria-pressed="false">Tháng này</button></div>
+          <div class="seg" role="group" aria-label="Số người"><button type="button" aria-pressed="true">Top 10</button><button type="button" aria-pressed="false">Top 50</button><button type="button" aria-pressed="false">Top 100</button></div>
+        </div>
+      </div>
+      <div class="honor"><span class="stamp">VINH DANH</span><span>Tuần 16/11 – 22/11: <b>Người yêu cũ</b> · 1 ngày · 83 lượt</span></div>
+      <ol class="rows lb" aria-label="Xếp hạng tuần này">
+        <li><span class="bubble filled">1</span><span class="avatar">D</span><span class="name"><b title="Ma Da bá dá bà dù">Ma Da bá dá bà dù</b><small>Pro</small></span><span class="week-col"><span class="dots" aria-label="Đủ lượt 2 trên 7 ngày"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="num"><b>2</b> ngày<br><small class="muted">31 lượt</small></span></li>
+        <li><span class="bubble filled">2</span><span class="avatar">N</span><span class="name"><b>Người yêu cũ</b><small>Premium</small></span><span class="week-col"><span class="dots" aria-label="Đủ lượt 1 trên 7 ngày"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="num"><b>1</b> ngày<br><small class="muted">15 lượt</small></span></li>
+        <li><span class="bubble filled">3</span><span class="avatar">L</span><span class="name"><b>Leonel Messi</b><small>Free</small></span><span class="week-col"><span class="dots" aria-label="Đủ lượt 1 trên 7 ngày"><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="num"><b>1</b> ngày<br><small class="muted">15 lượt</small></span></li>
+        <li><span class="bubble">4</span><span class="avatar">T</span><span class="name"><b title="Trần Thị Bình với một tên hiển thị rất dài để kiểm tra dấu ba chấm">Trần Thị Bình với một tên hiển thị rất dài để kiểm tra dấu ba chấm</b><small>Free</small></span><span class="week-col"><span class="dots" aria-label="Đủ lượt 0 trên 7 ngày"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="num"><b>0</b> ngày<br><small class="muted">9 lượt</small></span></li>
+        <li class="gap-row" aria-hidden="true">· · ·</li>
+        <li class="me"><span class="bubble">14</span><span class="avatar">A</span><span class="name"><b>Nguyễn Văn An<span class="you">Bạn</span></b><small>Pro · cần thêm 1 ngày để vào top 10</small></span><span class="week-col"><span class="dots" aria-label="Đủ lượt 0 trên 7 ngày"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span><span class="num"><b>0</b> ngày<br><small class="muted">3 lượt</small></span></li>
+      </ol>
+      <div class="lb-foot"><span>Mỗi ô là một ngày từ thứ Hai đến Chủ nhật; ô tô kín là ngày đã ôn đủ 5 lượt.</span><a class="btn btn-accent" href="#c1">Học ngay</a></div>
+    </div>
+  </section>
+
+  <section class="case" aria-labelledby="c2">
+    <div class="case-head"><span class="no">2 · /ca-nhan (Tổng quan)</span><h2 id="c2">Thẻ "PRO MEMBER" thành phiếu hội viên</h2><p>Một phiếu giấy có cuống xé, con dấu tên gói đóng nghiêng, các dòng điền tay. Màu theo gói dùng lại token <code>--tier-ink</code> đang có.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> thẻ ngân hàng có chip, dải từ, nền gradient, hiệu ứng lóa theo chuột (thay cho demo 22/11).</span><span><b>Giữ:</b> hạn dùng, số ngày còn lại, nút Gia hạn / Lên Premium.</span></p>
+    <div class="card-wrap">
+      <div class="slipcard" id="slip">
+        <div class="stub"><span>VOCABLEARNING</span></div>
+        <div class="slip-body">
+          <div class="slip-title"><b>Phiếu hội viên</b><span class="rubber" id="rubber">PRO</span></div>
+          <div class="field-line"><span>Họ tên</span><b class="hand">Nguyễn Văn An</b></div>
+          <div class="field-line"><span>Gói</span><b id="f-plan">Pro · gia hạn theo tháng</b></div>
+          <div class="field-line"><span>Hiệu lực đến</span><b id="f-exp">16/12/2027 <span class="muted small">· còn 387 ngày</span></b></div>
+          <div class="field-line"><span>Số thẻ</span><b><span id="f-cards">181 / 5.000</span><div class="meter"><i id="f-meter" style="width:4%"></i></div></b></div>
+          <div class="slip-actions"><button type="button" class="btn btn-sm" id="b-renew">Gia hạn</button><button type="button" class="btn btn-sm" id="b-up">Lên Premium</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="seg" role="group" aria-label="Xem theo gói"><button type="button" data-tier-set="free" aria-pressed="false">Free</button><button type="button" data-tier-set="pro" aria-pressed="true">Pro</button><button type="button" data-tier-set="premium" aria-pressed="false">Premium</button></div>
+        <p class="small muted" style="margin-top:10px">Free: không có hạn dùng, nút "Lên Pro". Premium: số thẻ không giới hạn nên ẩn thanh đo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case" aria-labelledby="c3">
+    <div class="case-head"><span class="no">3 · /thanh-toan-goi</span><h2 id="c3">Bảng giá 3 cột thành phiếu đăng ký gói</h2><p>Một bảng kẻ dòng: mỗi gói là một cột, tô ô để chọn gói, cột đang chọn được tô nền nhạt. Gói đang dùng có con dấu. Chỉ có một nút thanh toán ở cuối, ghi đúng gói và số tiền.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> 3 thẻ giá nổi, ruy băng "Gói của bạn", nhãn "-37%", nút ở mỗi thẻ.</span><span><b>Giữ:</b> giá tháng/năm, ưu đãi sinh viên, danh sách quyền lợi, lịch sử thanh toán.</span></p>
+    <div class="sheet">
+      <div class="sheet-head">
+        <div><h3>Gói dịch vụ</h3><p>Gói Free dùng mãi. Nâng cấp để có nhiều thẻ, nhiều lượt AI và chấm phát âm hơn.</p></div>
+        <div class="tools"><div class="seg" role="group" aria-label="Chu kỳ"><button type="button" data-cycle="m" aria-pressed="true">Theo tháng</button><button type="button" data-cycle="y" aria-pressed="false">Theo năm</button></div></div>
+      </div>
+      <div class="offer"><b>Học sinh, sinh viên:</b> Pro miễn phí 180 ngày khi xác minh email trường (.edu.vn). <a class="btn btn-sm" href="#c3">Xác minh email</a></div>
+      <div class="table-scroll">
+      <table class="plan-table" id="plans">
+        <thead><tr><th scope="col"><span class="sr">Quyền lợi</span></th>
+          <th scope="col" class="plan-col" data-col="free"><label class="plan-pick"><input type="radio" name="plan" value="free"><span class="bubble" aria-hidden="true"></span><strong>Free</strong></label></th>
+          <th scope="col" class="plan-col" data-col="pro"><label class="plan-pick"><input type="radio" name="plan" value="pro"><span class="bubble" aria-hidden="true"></span><strong>Pro</strong><span class="stamp ok">ĐANG DÙNG</span></label></th>
+          <th scope="col" class="plan-col" data-col="premium"><label class="plan-pick"><input type="radio" name="plan" value="premium" checked><span class="bubble" aria-hidden="true"></span><strong>Premium</strong></label></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Giá</th><td data-col="free"><span class="price">0 đ</span></td><td data-col="pro"><span class="price" data-m="79.000 đ" data-y="599.000 đ">79.000 đ</span> <small class="muted" data-m="/tháng" data-y="/năm · bớt 349.000 đ">/tháng</small></td><td data-col="premium"><span class="price" data-m="129.000 đ" data-y="999.000 đ">129.000 đ</span> <small class="muted" data-m="/tháng" data-y="/năm · bớt 549.000 đ">/tháng</small></td></tr>
+          <tr><th scope="row">Số thẻ tối đa</th><td data-col="free">300</td><td data-col="pro">5.000</td><td data-col="premium">Không giới hạn</td></tr>
+          <tr><th scope="row">AI văn bản</th><td data-col="free">3/ngày</td><td data-col="pro">20/ngày</td><td data-col="premium">60/ngày</td></tr>
+          <tr><th scope="row">Ảnh AI</th><td data-col="free" class="no">Không có</td><td data-col="pro">3/ngày</td><td data-col="premium">10/ngày</td></tr>
+          <tr><th scope="row">Giọng đọc mẫu</th><td data-col="free">20/ngày</td><td data-col="pro">150/ngày</td><td data-col="premium">500/ngày</td></tr>
+          <tr><th scope="row">Chấm phát âm</th><td data-col="free">3/ngày</td><td data-col="pro">30/ngày</td><td data-col="premium">100/ngày</td></tr>
+          <tr><th scope="row">Bộ mẫu cao cấp</th><td data-col="free" class="no">Không có</td><td data-col="pro" class="no">Không có</td><td data-col="premium">Có</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="plan-foot"><p id="plan-note">Bạn đang dùng Pro đến 16/12/2027. Lên Premium sẽ tính phần còn lại của gói Pro.</p><button type="button" class="btn btn-primary" id="pay">Thanh toán Premium · 129.000 đ/tháng</button></div>
+    </div>
+  </section>
+
+  <section class="case" aria-labelledby="c4">
+    <div class="case-head"><span class="no">4 · /ban-do-lam-chu và /thanh-tich</span><h2 id="c4">Lưới ô số liệu thành sổ điểm</h2><p>Bản đồ làm chủ thành một bảng kẻ dòng: thanh đo có vạch mục tiêu, kỹ năng chưa đủ dữ liệu hiện 5 ô tô dần theo số lần quan sát. Chỉ kỹ năng yếu nhất có nút học màu vàng; các dòng khác dùng nút nhỏ. Bốn ô số ở Thành tích gộp thành một bảng tổng kết kiểu biên nhận.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> 5 thẻ giống nhau mỗi thẻ một nút xanh dài; 4 ô có viền trên mỗi ô một màu.</span><span><b>Giữ:</b> lọc theo bộ thẻ và kỹ năng, số quan sát tối thiểu, các con số thật.</span></p>
+    <div class="two">
+      <div class="sheet">
+        <div class="sheet-head"><div><h3>Bản đồ làm chủ</h3><p>Tổng hợp từ các lượt luyện tập. Vạch dọc là mức 80% coi như đã nắm chắc.</p></div></div>
+        <ol class="rows sk">
+          <li class="weak"><span class="bubble">1</span><span class="name"><b>Nhận nghĩa</b><small>13 quan sát</small></span><span class="bar-col"><span class="bar" style="--goal:80%"><i style="width:11%"></i></span><span class="state">11%</span></span><a class="btn btn-sm btn-accent" href="#c4">Luyện</a></li>
+          <li><span class="bubble">2</span><span class="name"><b>Viết đúng chính tả</b><small>Chưa đủ dữ liệu</small></span><span class="bar-col"><span class="dots" aria-label="0 trên 5 quan sát tối thiểu"><i></i><i></i><i></i><i></i><i></i></span> <span class="state">0/5</span></span><a class="btn btn-sm" href="#c4">Luyện</a></li>
+          <li><span class="bubble">3</span><span class="name"><b>Nghe và viết</b><small>Chưa đủ dữ liệu</small></span><span class="bar-col"><span class="dots" aria-label="2 trên 5 quan sát tối thiểu"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span> <span class="state">2/5</span></span><a class="btn btn-sm" href="#c4">Luyện</a></li>
+          <li><span class="bubble">4</span><span class="name"><b>Dùng từ trong câu</b><small>Chưa đủ dữ liệu</small></span><span class="bar-col"><span class="dots" aria-label="0 trên 5"><i></i><i></i><i></i><i></i><i></i></span> <span class="state">0/5</span></span><a class="btn btn-sm" href="#c4">Luyện</a></li>
+          <li><span class="bubble">5</span><span class="name"><b>Phân biệt cặp dễ nhầm</b><small>Chưa đủ dữ liệu</small></span><span class="bar-col"><span class="dots" aria-label="0 trên 5"><i></i><i></i><i></i><i></i><i></i></span> <span class="state">0/5</span></span><a class="btn btn-sm" href="#c4">Luyện</a></li>
+        </ol>
+      </div>
+      <div class="sheet">
+        <div class="sheet-head"><div><h3>Sổ điểm thưởng</h3><p>Huy hiệu mới nhất: Bước đầu · 16/11/2026 · 1/9 huy hiệu.</p></div></div>
+        <ul class="tally">
+          <li><span class="lbl">Điểm thưởng<small>Tích lũy từ lượt ôn và bài luyện</small></span><span class="val">10 <small>điểm</small></span></li>
+          <li><span class="lbl">Điểm hôm nay<small>Tối đa 100 điểm mỗi ngày</small></span><span class="val">0 <small>/ 100</small></span></li>
+          <li><span class="lbl">Chuỗi ngày hợp lệ<small>Được nghỉ 1 ngày mỗi tuần</small></span><span class="val">0 <small>ngày</small></span></li>
+          <li><span class="lbl">Thử thách tuần<small>Tuần học nhẹ nhàng</small></span><span class="val">0 <small>/ 40</small></span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="case" aria-labelledby="c5">
+    <div class="case-head"><span class="no">5 · Mực trên mọi trang</span><h2 id="c5">Lời nhắc của Mực không che nội dung</h2><p>Mực thu nhỏ còn 56px và chỉ ở lề phải. Lời nhắc không tự bật lên; Mực chỉ hiện chấm đỏ đếm số lời nhắc chưa đọc. Phiếu nhắc chỉ mở khi bạn bấm vào Mực, nên nó chỉ che nội dung khi bạn chủ động mở. Bấm vào Mực để thử.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> bong bóng tự hiện đè lên cột nội dung (Thư viện, Hôm nay, Luyện tập, Bảng xếp hạng trên điện thoại).</span><span><b>Giữ:</b> các trạng thái chào, nghĩ, vui, lỗi, đang nói; tắt Mực trong Cài đặt; giảm chuyển động.</span></p>
+    <div class="two">
+      <div class="stage">
+        <div class="col"><div class="ph w60"></div><div class="ph w80"></div><div class="ph-card"><div class="ph w40"></div><div class="ph w80"></div><div class="ph w60"></div></div><div class="ph-card"><div class="ph w40"></div><div class="ph w80"></div></div><div class="ph-card"><div class="ph w60"></div><div class="ph w40"></div></div></div>
+        <div class="gutter"><span class="gutter-label">lề phải</span></div>
+        <div class="say" id="say" hidden role="dialog" aria-label="Lời nhắc của Mực"><span>Còn 16 thẻ đến hạn, khoảng 9 phút là xong.</span><div class="say-act"><a class="btn btn-sm btn-accent" href="#c5">Ôn ngay</a><button type="button" class="btn btn-sm" id="say-close">Để sau</button></div></div>
+        <button type="button" class="mascot" id="mascot" aria-expanded="false" aria-controls="say" aria-label="Mực có 1 lời nhắc"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgMTYwIiBmaWxsPSJub25lIiBhcmlhLWhpZGRlbj0idHJ1ZSI+DQo8ZWxsaXBzZSBjbGFzcz0ibXVjLXNoYWRvdyIgY3g9IjgwIiBjeT0iMTQ2IiByeD0iNDMiIHJ5PSI3IiBmaWxsPSIjMjczNDYxIiBvcGFjaXR5PSIuMTYiLz4NCjxnIGNsYXNzPSJtdWMtYm9keSI+DQo8ZyBmaWxsPSIjMzU0OUJCIj48cGF0aCBkPSJNNDIgMTA3Yy0xNyAxNi0xNyAzMy01IDM0IDkgMSAxMC0xNCAyMC0xOGwtMTUtMTZaIi8+PHBhdGggZD0iTTYxIDExNmMtMTIgMjQtNyAzNCAzIDMyIDgtMiA4LTE3IDE1LTI1bC0xOC03WiIvPjxwYXRoIGQ9Ik05OCAxMTZjMTIgMjQgNyAzNC0zIDMyLTgtMi04LTE3LTE1LTI1bDE4LTdaIi8+PHBhdGggZD0iTTExNyAxMDdjMTcgMTYgMTcgMzMgNSAzNC05IDEtMTAtMTQtMjAtMThsMTUtMTZaIi8+PC9nPg0KPHBhdGggZD0iTTM3IDU1QzE0IDU3IDIwIDg4IDM5IDkxbDktMjEtMTEtMTVaTTEyMyA1NWMyMyAyIDE3IDMzLTIgMzZsLTktMjEgMTEtMTVaIiBmaWxsPSIjMjRBNUEwIi8+DQo8cGF0aCBkPSJNODAgMTljMjggMCA0OCAyMSA0OCA2MCAwIDMxLTE0IDQ5LTQ4IDQ5UzMyIDExMCAzMiA3OWMwLTM5IDIwLTYwIDQ4LTYwWiIgZmlsbD0iIzUzNjhEQyIvPg0KPHBhdGggZD0iTTM4IDgyYzEgMjcgMTMgMzkgNDIgMzlzNDEtMTIgNDItMzljMSAzMC0xMyA0Ni00MiA0NlMzNyAxMTIgMzggODJaIiBmaWxsPSIjMzU0OUJCIi8+DQo8cGF0aCBkPSJtODUgMjIgMTAtMTYgOCA3LTkgMTQtOS01WiIgZmlsbD0iI0YxQjQzNCIvPjxwYXRoIGQ9Im05NSA2IDMtNSA1IDEyLTgtN1oiIGZpbGw9IiNGREY2REQiLz4NCjxnIGNsYXNzPSJtdWMtZmFjZSI+PGcgY2xhc3M9Im11Yy1leWVzIj48ZWxsaXBzZSBjeD0iNjAiIGN5PSI2NiIgcng9IjE1IiByeT0iMTgiIGZpbGw9IiNGRkZDRjIiLz48ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNjYiIHJ4PSIxNSIgcnk9IjE4IiBmaWxsPSIjRkZGQ0YyIi8+PGcgY2xhc3M9Im11Yy1wdXBpbHMiIGZpbGw9IiMyMDJCNTAiPjxlbGxpcHNlIGN4PSI2NCIgY3k9IjY4IiByeD0iNiIgcnk9IjkiLz48ZWxsaXBzZSBjeD0iOTYiIGN5PSI2OCIgcng9IjYiIHJ5PSI5Ii8+PGNpcmNsZSBjeD0iNjYiIGN5PSI2NSIgcj0iMiIgZmlsbD0id2hpdGUiLz48Y2lyY2xlIGN4PSI5OCIgY3k9IjY1IiByPSIyIiBmaWxsPSJ3aGl0ZSIvPjwvZz48L2c+DQo8ZyBjbGFzcz0ibXVjLWJyb3dzIiBzdHJva2U9IiMyNTM4ODIiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJtNDggNDIgMTYtMk05NiA0MGwxNiAyIi8+PC9nPg0KPGVsbGlwc2UgY3g9IjQ0IiBjeT0iODUiIHJ4PSI3IiByeT0iNCIgZmlsbD0iI0Y0QUI5MSIvPjxlbGxpcHNlIGN4PSIxMTYiIGN5PSI4NSIgcng9IjciIHJ5PSI0IiBmaWxsPSIjRjRBQjkxIi8+DQo8cGF0aCBjbGFzcz0ibXVjLXNtaWxlIiBkPSJNNjkgODRjMyAxMCAxOSAxMCAyMiAwIiBmaWxsPSIjMjAyQjUwIi8+PHBhdGggZD0iTTczIDg1aDE0IiBzdHJva2U9IiNGRkZDRjIiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+DQo8ZWxsaXBzZSBjbGFzcz0ibXVjLW1vdXRoLW9wZW4iIG9wYWNpdHk9IjAiIGN4PSI4MCIgY3k9Ijg4IiByeD0iOCIgcnk9IjEwIiBmaWxsPSIjMjAyQjUwIi8+PHBhdGggY2xhc3M9Im11Yy1tb3V0aC1zb2Z0IiBvcGFjaXR5PSIwIiBkPSJNNzIgODlxOC02IDE2IDAiIHN0cm9rZT0iIzIwMkI1MCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4NCjwvZz4NCjxwYXRoIGQ9Ik02NSAxMDRoMjVsOCA4djE0SDY1di0yMloiIGZpbGw9IiNGRkY5RTgiLz48cGF0aCBkPSJNOTAgMTA0djhoOCIgZmlsbD0iI0YxQjQzNCIvPjxwYXRoIGQ9Ik03MSAxMTVoMTNNNzEgMTIwaDE5IiBzdHJva2U9IiM3RDg5QkQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+DQo8ZyBjbGFzcz0ibXVjLWFybS1sZWZ0Ij48cGF0aCBkPSJNNDIgOTZjLTE1LTUtMjEgMS0yMCA5IDEgNyAxMiA4IDI0IDQiIGZpbGw9IiM1MzY4REMiLz48cGF0aCBkPSJNMjUgMTAxaDgiIHN0cm9rZT0iIzM1NDlCQiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L2c+DQo8ZyBjbGFzcz0ibXVjLWFybS1yaWdodCI+PHBhdGggZD0iTTExOCA5NmMxNS01IDIxIDEgMjAgOS0xIDctMTIgOC0yNCA0IiBmaWxsPSIjNTM2OERDIi8+PHBhdGggZD0iTTEyNyAxMDFoOCIgc3Ryb2tlPSIjMzU0OUJCIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvZz4NCjwvZz48ZyBjbGFzcz0ibXVjLXNwYXJrcyIgb3BhY2l0eT0iMCIgZmlsbD0iI0YxQjQzNCI+PHBhdGggZD0ibTIwIDM2IDMtOCAzIDggOCAzLTggMy0zIDgtMy04LTgtMyA4LTNaIi8+PHBhdGggZD0ibTEzNCAyNCAyLTYgMiA2IDYgMi02IDItMiA2LTItNi02LTIgNi0yWiIvPjwvZz4NCjwvc3ZnPg==" alt=""><span class="dot">1</span></button>
+      </div>
+      <div class="sheet">
+        <div class="sheet-head"><div><h3>Quy tắc hiển thị</h3></div></div>
+        <ul class="rules">
+          <li>Lời nhắc không tự bật lên. Mỗi lời nhắc chỉ tăng số trên chấm đỏ.</li>
+          <li>Phiếu nhắc rộng tối đa 260px, mở phía trên Mực; đóng bằng "Để sau", bấm ra ngoài hoặc phím Esc.</li>
+          <li>Dưới 1024px: Mực nằm trên thanh điều hướng dưới, phiếu nhắc mở thành tấm trượt từ dưới lên, có nút đóng.</li>
+          <li>Ở màn học, làm bài và trong hộp thoại: ẩn Mực (giữ như hiện nay).</li>
+          <li>Phản hồi đúng/sai sau thao tác vẫn hiện bằng nét mặt của Mực, không có chữ.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="case" aria-labelledby="c6">
+    <div class="case-head"><span class="no">6 · /bo-the, /thu-vien</span><h2 id="c6">Ảnh minh họa lặp thành bìa vở theo chữ</h2><p>Mỗi bộ có một bìa vở nhỏ vẽ bằng CSS: tab màu theo chủ đề, mã chủ đề, và từ đầu tiên của bộ viết bằng font chữ có chân. Vì lấy từ dữ liệu của chính bộ nên không bộ nào trùng bìa, không cần ảnh, không lỗi khi thiếu ảnh.</p></div>
+    <p class="swap"><span><b>Bỏ:</b> ảnh PNG dùng chung cho nhiều bộ (bàn làm việc, cảnh văn phòng).</span><span><b>Giữ:</b> kích thước 64×48 (máy tính) và 56×42 (điện thoại); bộ chưa có thẻ thì hiện hai chữ cái đầu của tên bộ.</span></p>
+    <div class="sheet">
+      <ol class="decks">
+        <li><span class="bubble">1</span><span class="cover t3"><span class="code">Y TẾ</span><span class="w">clinic</span></span><span class="title"><b>Có gì trong bệnh viện?</b><small>Giao tiếp · Trung cấp · 124 thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+        <li><span class="bubble">2</span><span class="cover t1"><span class="code">TOEIC</span><span class="w">payroll</span></span><span class="title"><b>TOEIC trung cấp — Tài chính, nhân sự và quy trình</b><small>TOEIC · Trung cấp · 50 thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+        <li><span class="bubble">3</span><span class="cover t1"><span class="code">TOEIC</span><span class="w">liability</span></span><span class="title"><b>TOEIC nâng cao — Hợp đồng, rủi ro và chiến lược</b><small>TOEIC · Nâng cao · 50 thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+        <li><span class="bubble">4</span><span class="cover t2"><span class="code">ĐỜI SỐNG</span><span class="w">weekend</span></span><span class="title"><b>Đời sống — Cuối tuần và sở thích</b><small>Giao tiếp · Cơ bản · 12 thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+        <li><span class="bubble">5</span><span class="cover t5"><span class="code">ÂM NHẠC</span><span class="w">rhythm</span></span><span class="title"><b>Bộ thẻ có tên rất dài để kiểm tra việc cắt dòng khi tên vượt quá hai dòng trong danh sách bộ thẻ của người học</b><small>Âm nhạc & nghệ thuật · Mới bắt đầu · 8 thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+        <li><span class="bubble">6</span><span class="cover t6"><span class="code">BỘ MỚI</span><span class="w">TĐ</span></span><span class="title"><b>Từ đồng nghĩa</b><small>Chưa có thẻ</small></span><a class="btn btn-sm" href="#c6">Mở</a></li>
+      </ol>
+      <p class="legend" style="margin-top:12px"><span>Màu tab lấy theo chủ đề, dùng các màu sẵn có của app; chủ đề không có trong danh sách sẽ lấy màu theo mã chủ đề.</span></p>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.addEventListener('click', () => {
+    root.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+
+  document.querySelectorAll('.sheet .seg').forEach(group => group.querySelectorAll('button:not([data-cycle])').forEach(b => b.addEventListener('click', () => {
+    group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  })));
+
+  const tiers = {
+    free: { stamp: 'FREE', plan: 'Free · dùng mãi', exp: 'Không giới hạn thời gian', cards: '181 / 300', pct: 60, renew: false, up: 'Lên Pro' },
+    pro: { stamp: 'PRO', plan: 'Pro · gia hạn theo tháng', exp: '16/12/2027 <span class="muted small">· còn 387 ngày</span>', cards: '181 / 5.000', pct: 4, renew: true, up: 'Lên Premium' },
+    premium: { stamp: 'PREMIUM', plan: 'Premium · gia hạn theo năm', exp: '02/03/2027 <span class="muted small">· còn 98 ngày</span>', cards: '181 · không giới hạn', pct: null, renew: true, up: null },
+  };
+  document.querySelectorAll('[data-tier-set]').forEach(b => b.addEventListener('click', () => {
+    const t = tiers[b.dataset.tierSet];
+    root.dataset.tier = b.dataset.tierSet;
+    document.querySelectorAll('[data-tier-set]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    document.getElementById('rubber').textContent = t.stamp;
+    document.getElementById('f-plan').textContent = t.plan;
+    document.getElementById('f-exp').innerHTML = t.exp;
+    document.getElementById('f-cards').textContent = t.cards;
+    const meter = document.getElementById('f-meter').parentElement;
+    meter.hidden = t.pct == null;
+    if (t.pct != null) document.getElementById('f-meter').style.width = t.pct + '%';
+    document.getElementById('b-renew').hidden = !t.renew;
+    const up = document.getElementById('b-up');
+    up.hidden = !t.up; if (t.up) up.textContent = t.up;
+  }));
+
+  const names = { free: 'Free', pro: 'Pro', premium: 'Premium' };
+  let cycle = 'm';
+  const pay = document.getElementById('pay');
+  const note = document.getElementById('plan-note');
+  function syncPlan() {
+    const v = document.querySelector('input[name="plan"]:checked').value;
+    document.querySelectorAll('#plans [data-col]').forEach(c => c.classList.toggle('sel', c.dataset.col === v));
+    document.querySelectorAll('#plans [data-m]').forEach(el => { el.textContent = el.dataset[cycle]; });
+    if (v === 'free') { pay.disabled = true; pay.textContent = 'Gói Free không cần thanh toán'; note.textContent = 'Chuyển về Free khi gói Pro hết hạn; dữ liệu giữ nguyên.'; return; }
+    if (v === 'pro') { pay.disabled = false; pay.textContent = cycle === 'm' ? 'Gia hạn Pro · 79.000 đ/tháng' : 'Gia hạn Pro · 599.000 đ/năm'; note.textContent = 'Bạn đang dùng Pro đến 16/12/2027. Gia hạn sẽ cộng thêm vào hạn hiện tại.'; return; }
+    pay.disabled = false; pay.textContent = cycle === 'm' ? 'Thanh toán Premium · 129.000 đ/tháng' : 'Thanh toán Premium · 999.000 đ/năm';
+    note.textContent = 'Bạn đang dùng Pro đến 16/12/2027. Lên Premium sẽ tính phần còn lại của gói Pro.';
+  }
+  document.querySelectorAll('input[name="plan"]').forEach(i => i.addEventListener('change', syncPlan));
+  document.querySelectorAll('[data-cycle]').forEach(b => b.addEventListener('click', () => {
+    cycle = b.dataset.cycle;
+    document.querySelectorAll('[data-cycle]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    syncPlan();
+  }));
+  syncPlan();
+
+  const mascot = document.getElementById('mascot');
+  const say = document.getElementById('say');
+  function setSay(open) {
+    say.hidden = !open;
+    mascot.setAttribute('aria-expanded', String(open));
+    mascot.setAttribute('aria-label', open ? 'Đóng lời nhắc của Mực' : 'Mực có 1 lời nhắc');
+    if (open) say.querySelector('a,button').focus();
+  }
+  mascot.addEventListener('click', () => setSay(say.hidden));
+  document.getElementById('say-close').addEventListener('click', () => { setSay(false); mascot.focus(); });
+  say.addEventListener('keydown', e => { if (e.key === 'Escape') { setSay(false); mascot.focus(); } });
+  document.addEventListener('click', e => { if (!say.hidden && !say.contains(e.target) && !mascot.contains(e.target)) setSay(false); });
+})();
+</script>
+</body>
+</html>

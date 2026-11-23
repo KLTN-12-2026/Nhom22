@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Quản lý thanh toán',
+  title: 'Thanh toán và gói',
   description: 'Theo dõi giao dịch, thời hạn và cấu hình gói dịch vụ VocabLearning.',
 };
 
