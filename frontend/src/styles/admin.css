@@ -332,12 +332,12 @@ body:has(.adm) .muc-companion { display: none; }
 .adm-dt-detail > td { padding: 0 var(--sp-5) var(--sp-4) 72px !important; background: var(--sunk); }
 .adm-dt-skeleton td span { display: block; height: 14px; border-radius: 2px; background: var(--primary-tint); animation: adm-pulse var(--dur-pending) ease-in-out infinite; }
 @keyframes adm-pulse { 50% { opacity: .45; } }
-.adm-row-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: flex-end; }
+.adm-row-actions { display: flex; flex-wrap: nowrap; gap: var(--sp-2); justify-content: flex-end; white-space: nowrap; }
 .adm-who { display: inline-flex; align-items: center; gap: var(--sp-3); min-width: 0; color: inherit; text-decoration: none; }
 a.adm-who:hover b { color: var(--primary); }
-.adm-who-text { min-width: 0; }
-.adm-who-text b { display: block; font-weight: 650; overflow-wrap: anywhere; }
-.adm-who-text small { display: block; color: var(--ink-3); font-size: var(--fs-caption); overflow-wrap: anywhere; }
+.adm-who-text { min-width: 8rem; max-width: 12rem; }
+.adm-who-text b { display: block; font-weight: 650; overflow-wrap: break-word; }
+.adm-who-text small { display: block; color: var(--ink-3); font-size: var(--fs-caption); width: 0; min-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .adm-avatar-sm { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--graphite-soft); color: var(--ink-2); font-size: var(--fs-caption); font-weight: 700; }
 .adm-a { color: var(--primary); font-weight: 600; text-decoration: underline; text-decoration-color: var(--primary-line); text-underline-offset: 3px; }
 .adm-a:hover { text-decoration-color: currentColor; }

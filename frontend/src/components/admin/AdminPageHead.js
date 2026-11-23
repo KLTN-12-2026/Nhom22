@@ -16,7 +16,7 @@ export function Pill({ tone = 'mute', children, title }) {
 
 export function Who({ name, sub, initials, href, LinkComponent }) {
   const text = initials || (name || sub || '?').trim().split(/\s+/).slice(-2).map(word => word[0]).join('').toUpperCase();
-  const body = <><span className="adm-avatar-sm" aria-hidden="true">{text}</span><span className="adm-who-text"><b>{name}</b>{sub && <small>{sub}</small>}</span></>;
+  const body = <><span className="adm-avatar-sm" aria-hidden="true">{text}</span><span className="adm-who-text"><b>{name}</b>{sub && <small title={typeof sub === 'string' ? sub : undefined}>{sub}</small>}</span></>;
   if (href && LinkComponent) return <LinkComponent href={href} className="adm-who">{body}</LinkComponent>;
   return <span className="adm-who">{body}</span>;
 }

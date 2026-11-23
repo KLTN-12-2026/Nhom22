@@ -15,7 +15,7 @@ public class CardLimitService {
 
     public CardUsageResponse usage(Long userId) {
         Integer gioiHan = entitlements.plan(userId).map(goi -> goi.getGioiHanThe()).orElse(null);
-        return new CardUsageResponse(cards.countActiveOwnedBy(userId), gioiHan);
+        return new CardUsageResponse(cards.countActiveOwnedByForDisplay(userId), gioiHan);
     }
 
     public void requireCapacity(Long userId, long soTheThem) {

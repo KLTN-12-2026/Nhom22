@@ -36,7 +36,7 @@ function Podium({ entries, context }) {
       <MetalIcon name={entry.hang === 1 ? 'trophy' : 'medal'} metal={PODIUM_METAL[entry.hang]} size={entry.hang === 1 ? 40 : 30} />
       <LeaderPerson entry={entry} context={{ rank: entry.hang, label: context }} className={styles.stepPerson}>
         <Avatar entry={entry} size={entry.hang === 1 ? 64 : 52} />
-        <span className={styles.stepName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
+        <span className={styles.stepName}><span className={styles.nameText} title={entry.tenHienThi}>{entry.tenHienThi}</span><TierMark code={entry.goiMa} /></span>
       </LeaderPerson>
       <span className={styles.stepScore}><b>{entry.soNgay}</b> ngày · {number(entry.soLuotHopLe)} lượt</span>
       <span className={styles.stepBase}><span>{entry.hang}</span></span>
@@ -62,7 +62,7 @@ function WeeklyHonors() {
           <MetalIcon name={entry.hang === 1 ? 'trophy' : 'medal'} metal={PODIUM_METAL[entry.hang]} size={18} />
           <Avatar entry={entry} size={28} />
           <span className={styles.honorBody}>
-            <span className={styles.honorName}>{entry.tenHienThi}<TierMark code={entry.goiMa} /></span>
+            <span className={styles.honorName}><span className={styles.nameText} title={entry.tenHienThi}>{entry.tenHienThi}</span><TierMark code={entry.goiMa} /></span>
             <span className={styles.honorMeta}>{entry.soNgay} ngày · {number(entry.soLuotHopLe)} lượt{entry.soLanTop3 > 1 ? ` · ${entry.soLanTop3} lần top 3` : ''}</span>
           </span>
         </LeaderPerson>
@@ -120,7 +120,7 @@ export function Leaderboard() {
               <span className={styles.rank}>{row.entry.hang <= 3 ? <MetalIcon name="medal" metal={PODIUM_METAL[row.entry.hang]} size={22} /> : row.entry.hang}</span>
               <LeaderPerson entry={row.entry} context={{ rank: row.entry.hang, label: context }} className={styles.person}>
                 <Avatar entry={row.entry} />
-                <span className={styles.name}>{row.entry.tenHienThi}<TierMark code={row.entry.goiMa} />{row.entry.laToi && <span className={styles.you}>Bạn</span>}</span>
+                <span className={styles.name}><span className={styles.nameText} title={row.entry.tenHienThi}>{row.entry.tenHienThi}</span><TierMark code={row.entry.goiMa} />{row.entry.laToi && <span className={styles.you}>Bạn</span>}</span>
               </LeaderPerson>
               <span className={styles.days}><b>{row.entry.soNgay}</b> ngày</span>
               <span className={styles.reviews}>{number(row.entry.soLuotHopLe)} lượt</span>
