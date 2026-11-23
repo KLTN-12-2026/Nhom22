@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { ErrorState, Icon } from '@/components/ui';
 import { CancelSubscriptionButton } from '@/components/billing/CancelSubscriptionButton';
-import { PlanTag } from '@/components/billing/PlanAccess';
 import { usePlans } from '@/hooks/usePlanAccess';
 import { usePlan } from '@/components/tier/useTier';
 import { FEATURES, formatLimit, planValue } from '@/lib/plan-access.mjs';
@@ -22,7 +21,6 @@ const ROWS = ['GIOI_HAN_THE', 'AI', 'ANH', 'TTS', 'PHAT_AM', 'BO_MAU_CAO_CAP'];
 const SOURCE = { DUNG_THU: 'dùng thử', HSSV: 'ưu đãi học sinh, sinh viên', MUA: '' };
 
 const formatPrice = value => `${Number(value || 0).toLocaleString('vi-VN')} đ`;
-const saving = p => p.giaThang > 0 ? Math.round((1 - p.giaNam / (p.giaThang * 12)) * 100) : 0;
 
 function rowText(key, p) {
   const value = planValue(p, key);
@@ -35,6 +33,7 @@ function rowText(key, p) {
 export default function ThanhToanGoiPage() {
   const client = useQueryClient();
   const [selected, setSelected] = useState(null);
+  const [pick, setPick] = useState(null);
   const [cycle, setCycle] = useState('THANG');
   const [code, setCode] = useState('');
   const [appliedCode, setAppliedCode] = useState('');
@@ -104,6 +103,21 @@ export default function ThanhToanGoiPage() {
   const rank = p => plans.indexOf(p);
   const currentRank = current?.quanTri ? plans.length : Math.max(0, rank(currentPlan));
   const student = studentQuery.data;
+  const pickCode = pick || selected || (currentPlan && currentPlan.giaThang > 0 ? currentPlan.ma : plans.find(p => p.giaThang > 0)?.ma);
+  const pickPlan = plans.find(p => p.ma === pickCode);
+  const pickPaid = pickPlan && pickPlan.giaThang > 0;
+  const pickIsCurrent = !current?.quanTri && pickCode === current?.goiMa;
+  const pickLabel = current?.quanTri ? 'Đã có quyền lợi Premium'
+    : !pickPaid ? 'Gói Free không cần thanh toán'
+    : pickIsCurrent ? `Gia hạn ${pickPlan.ten}`
+    : rank(pickPlan) > currentRank ? `Nâng cấp lên ${pickPlan.ten}` : `Chọn ${pickPlan.ten}`;
+  const pickNote = !pickPlan ? '' : current?.quanTri ? 'Tài khoản quản trị không cần mua gói.'
+    : !pickPaid ? 'Khi gói trả phí hết hạn, tài khoản tự về Free; dữ liệu giữ nguyên.'
+    : pickIsCurrent ? 'Gia hạn khi còn hạn sẽ cộng dồn thêm thời gian.'
+    : rank(pickPlan) > currentRank && currentRank > 0 ? 'Phần còn lại của gói hiện tại được trừ vào giá khi nâng cấp.'
+    : `Từ ${formatPrice(pickPlan.giaThang)}/tháng. Chọn chu kỳ và mã khuyến mãi ở bước sau.`;
+  const choose = code => { setPick(code); if (selected) setSelected(code === 'FREE' ? null : code); };
+
   const neverSubscribed = subscription?.trangThai === 'CHUA_CO_GOI' && !current?.quanTri;
 
   return (
@@ -151,42 +165,40 @@ export default function ThanhToanGoiPage() {
           {offerMessage && <p className="notice" role="status">{offerMessage}</p>}
         </div>}
 
-        <h2 className={styles.sectionHeading}>So sánh gói</h2>
+        <h2 className={styles.sectionHeading} id="compare-title">So sánh gói</h2>
         {error && <p className="notice" role="alert">{error}</p>}
-        <div className={styles.planGrid} role="list">
-          {plans.map(p => {
-            const owned = rank(p) <= currentRank;
-            const isCurrent = !current?.quanTri && p.ma === current?.goiMa;
-            return (
-              <div key={p.ma} className={`${styles.planCard} ${p.ma === 'PRO' ? styles.recommended : ''} ${isCurrent ? styles.currentCard : ''}`} role="listitem">
-                {isCurrent ? <div className={styles.currentBadge}>Gói của bạn</div> : p.ma === 'PRO' && <div className={styles.recommendedBadge}>Phổ biến nhất</div>}
-                <div className={styles.planTop}>
-                  <h3><Icon name={owned ? 'check' : 'lock'} /> {p.ten} {!owned && <PlanTag code={p.ma} label={owned ? 'Đã mở' : 'Chưa mở'} />}</h3>
-                  {p.giaThang > 0 ? <>
-                    <div className={styles.price}><strong>{formatPrice(p.giaThang)}</strong><span>/tháng</span></div>
-                    <p className={styles.yearly}>hoặc {formatPrice(p.giaNam)}/năm · ≈ {formatPrice(Math.round(p.giaNam / 12))}/tháng <b>−{saving(p)}%</b></p>
-                  </> : <div className={styles.price}><strong>0 đ</strong><span>mãi mãi</span></div>}
-                </div>
-                <div className={styles.divider} />
-                <ul className={styles.features}>
-                  {ROWS.map(key => {
-                    const has = planValue(p, key) > 0;
-                    return <li key={key}>
-                      <span className={`${styles.featureIcon} ${has ? styles.ok : styles.no}`} aria-hidden="true">{has ? <Icon name="check" /> : <Icon name="lock" />}</span>
-                      <span>{FEATURES[key].label}: <strong>{rowText(key, p)}</strong></span>
-                    </li>;
-                  })}
-                </ul>
-                <div className={styles.planFooter}>
-                  {p.giaThang <= 0 ? <button type="button" className="btn btn-secondary" disabled>{isCurrent ? 'Đang dùng' : 'Gói mặc định'}</button>
-                    : current?.quanTri ? <button type="button" className="btn btn-secondary" disabled>Đã có quyền lợi</button>
-                    : <button type="button" className="btn btn-primary" onClick={() => selectPlan(p.ma)}>
-                      {isCurrent ? `Gia hạn ${p.ten}` : rank(p) > currentRank ? `Nâng cấp lên ${p.ten}` : `Chọn ${p.ten}`}
-                    </button>}
-                </div>
-              </div>
-            );
-          })}
+        <div className={styles.tableScroll}>
+          <table className={styles.planTable} aria-labelledby="compare-title">
+            <thead><tr>
+              <th scope="col"><span className="sr-only">Quyền lợi</span></th>
+              {plans.map(p => {
+                const isCurrent = !current?.quanTri && p.ma === current?.goiMa;
+                return <th key={p.ma} scope="col" className={`${styles.planCol} ${pickCode === p.ma ? styles.picked : ''}`}>
+                  <label className={styles.pick}>
+                    <input type="radio" name="plan-pick" value={p.ma} checked={pickCode === p.ma} onChange={() => choose(p.ma)} />
+                    <span className={styles.pickBubble} aria-hidden="true" />
+                    <strong>{p.ten}</strong>
+                    {isCurrent && <span className={styles.stamp}>Đang dùng</span>}
+                  </label>
+                </th>;
+              })}
+            </tr></thead>
+            <tbody>
+              <tr><th scope="row">Giá</th>{plans.map(p => <td key={p.ma} className={pickCode === p.ma ? styles.picked : ''}>
+                {p.giaThang > 0 ? <><span className={styles.price}>{formatPrice(p.giaThang)}</span><small className={styles.unit}>/tháng</small>
+                  <span className={styles.yearly}>hoặc {formatPrice(p.giaNam)}/năm, bớt {formatPrice(p.giaThang * 12 - p.giaNam)}</span></>
+                  : <><span className={styles.price}>0 đ</span><small className={styles.unit}>dùng mãi</small></>}
+              </td>)}</tr>
+              {ROWS.map(key => <tr key={key}><th scope="row">{FEATURES[key].label}</th>{plans.map(p => {
+                const has = planValue(p, key) > 0;
+                return <td key={p.ma} className={`${pickCode === p.ma ? styles.picked : ''} ${has ? '' : styles.none}`}>{rowText(key, p)}</td>;
+              })}</tr>)}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.pickFoot}>
+          <p>{pickNote}</p>
+          <button type="button" className="btn btn-primary" disabled={!pickPaid || current?.quanTri} onClick={() => { selectPlan(pickCode); requestAnimationFrame(() => document.getElementById('payment-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}>{pickLabel}</button>
         </div>
         <p className={styles.planNote}>Ôn tập, luyện tập, xuất CSV và yêu cầu xóa dữ liệu luôn dùng được ở mọi gói. Lượt dùng AI, giọng đọc và chấm phát âm đặt lại lúc 00:00 mỗi ngày.</p>
 
@@ -207,7 +219,7 @@ export default function ThanhToanGoiPage() {
                       <input type="radio" name="cycle" value={value} checked={cycle === value} onChange={() => setCycle(value)} />
                       <span>{label}</span>
                       <strong>{formatPrice(value === 'NAM' ? plan.giaNam : plan.giaThang)}</strong>
-                      {value === 'NAM' && <small>Tiết kiệm {saving(plan)}%</small>}
+                      {value === 'NAM' && plan.giaThang * 12 > plan.giaNam && <small>Bớt {formatPrice(plan.giaThang * 12 - plan.giaNam)}</small>}
                     </label>
                   ))}
                 </div>

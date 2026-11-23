@@ -5,26 +5,9 @@
 .planInfo strong { font-size:var(--fs-small); }
 .planInfo span, .summaryRow span, .summaryNote { color:var(--ink-2); font-size:var(--fs-caption); }
 .sectionHeading { color:var(--ink-2); font-size:var(--fs-small); font-weight:700; margin:0 0 var(--sp-4); }
-.planGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:var(--sp-4); margin-bottom:var(--sp-4); }
 .planNote { color:var(--ink-2); font-size:var(--fs-small); line-height:1.5; margin:0 0 var(--sp-6); }
-.planCard { position:relative; display:flex; flex-direction:column; overflow:hidden; background:var(--sheet); border:2px solid var(--primary-line); border-radius:var(--radius-field); }
-.planCard.recommended { border-color:var(--primary); }
-.planTop { padding:var(--sp-5) var(--sp-5) var(--sp-4); }
-.planTop h3 { font-size:var(--fs-body); margin:0 0 var(--sp-2); }
-.price { display:flex; align-items:baseline; gap:4px; }
-.price strong { color:var(--primary); font-size:1.75rem; }
-.price span { color:var(--ink-2); font-size:var(--fs-small); }
-.recommendedBadge { position:absolute; top:-1px; right:14px; padding:2px 10px; border-radius:0 0 8px 8px; background:var(--accent); color:var(--on-accent); font-size:var(--fs-caption); font-weight:700; }
 .divider { height:1px; background:var(--primary-line); }
-.planCard > .divider { margin:0 var(--sp-5); }
 .paymentSection > .divider { margin-bottom:var(--sp-6); }
-.features { display:flex; flex:1; flex-direction:column; gap:var(--sp-2); list-style:none; margin:0; padding:var(--sp-4) var(--sp-5); }
-.features li { display:flex; align-items:flex-start; gap:var(--sp-2); color:var(--ink); font-size:var(--fs-small); line-height:1.45; }
-.featureIcon { display:flex; align-items:center; justify-content:center; flex:none; width:18px; height:18px; border-radius:50%; font-size:var(--fs-caption); margin-top:1px; }
-.ok { background:var(--secondary-bg); color:var(--secondary-text); }
-.no { background:var(--desk); color:var(--ink-3); }
-.planFooter { padding:var(--sp-4) var(--sp-5) var(--sp-5); }
-.planFooter :global(.btn) { width:100%; justify-content:center; }
 .paymentGrid { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:var(--sp-6); align-items:start; }
 .paymentTitle { display:flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-lead); margin:0 0 var(--sp-5); }
 .backButton { min-width:44px; min-height:44px; border:0; background:none; color:var(--ink-2); cursor:pointer; font-size:2rem; line-height:1; }
@@ -52,15 +35,8 @@
 .successCard p { color:var(--ink-2); font-size:var(--fs-small); line-height:1.6; margin:0 0 var(--sp-6); }
 .successCard :global(.btn) { width:100%; justify-content:center; }
 .successIcon { display:flex; align-items:center; justify-content:center; width:64px; height:64px; margin:0 auto var(--sp-5); border-radius:50%; background:var(--secondary-bg); color:var(--secondary-text); font-size:2rem; }
-@media (max-width:800px) { .planGrid, .paymentGrid { grid-template-columns:1fr; } .summary { position:static; } }
+@media (max-width:800px) { .paymentGrid { grid-template-columns:1fr; } .summary { position:static; } }
 @media (max-width:520px) { .cycleToggle, .currentBanner { flex-direction:column; align-items:stretch; } .currentBanner > a { margin-left:0; } }
-.planTop h3 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.planTop h3 :global(.icon) { width:18px; height:18px; }
-.yearly { margin:var(--sp-1) 0 0; color:var(--ink-2); font-size:var(--fs-caption); }
-.yearly b { color:var(--secondary-text); }
-.featureIcon :global(.icon) { width:12px; height:12px; }
-.currentCard { border-color:var(--secondary); }
-.currentBadge { position:absolute; top:-1px; right:14px; padding:2px 10px; border-radius:0 0 8px 8px; background:var(--secondary); color:#fff; font-size:var(--fs-caption); font-weight:700; }
 .offers { display:grid; gap:var(--sp-3); margin-bottom:var(--sp-6); }
 .offer { display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; padding:var(--sp-3) var(--sp-4); border:1.5px dashed var(--accent); border-radius:var(--radius-field); background:var(--accent-bg); }
 .offer > :global(.icon) { width:22px; height:22px; color:var(--accent-text); flex:none; }
@@ -68,3 +44,30 @@
 .offer span { color:var(--ink-2); font-size:var(--fs-caption); }
 .promo { display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-bottom:var(--sp-4); }
 .promo :global(.input) { flex:1; min-width:160px; text-transform:uppercase; }
+.tableScroll { overflow-x:auto; margin-bottom:var(--sp-4); }
+.planTable { width:100%; border-collapse:collapse; font-size:var(--fs-small); }
+.planTable th, .planTable td { padding:var(--sp-3); border-bottom:var(--rule) solid var(--line); text-align:left; vertical-align:middle; }
+.planTable thead th { border-bottom:var(--rule-strong) solid var(--ink); vertical-align:bottom; }
+.planTable tbody th { font-weight:600; color:var(--ink-2); }
+.planCol { min-width:150px; }
+.picked { background:color-mix(in srgb, var(--primary-tint) 70%, transparent); }
+.pick { position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3); cursor:pointer; }
+.pick input { position:absolute; opacity:0; pointer-events:none; }
+.pickBubble { width:24px; height:24px; flex:none; border-radius:50%; border:1.5px solid var(--ink-3); background:var(--field); }
+.pick input:checked + .pickBubble { background:var(--ink); border-color:var(--ink); }
+.pick input:focus-visible + .pickBubble { box-shadow:var(--focus); }
+.pick strong { font-size:var(--fs-body); }
+.stamp { padding:1px 6px; border:2px solid currentColor; border-radius:4px; color:var(--secondary-text); font-size:var(--fs-caption); font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
+.price { font:700 1.25rem/1.2 var(--font-form); font-variant-numeric:tabular-nums; }
+.unit { margin-left:4px; color:var(--ink-3); font-size:var(--fs-caption); font-weight:600; }
+.yearly { display:block; margin-top:2px; color:var(--ink-3); font-size:var(--fs-caption); }
+.none { color:var(--ink-3); }
+.pickFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-3) var(--sp-4); padding-top:var(--sp-4); margin-bottom:var(--sp-4); border-top:var(--rule-strong) solid var(--ink); }
+.pickFoot p { margin:0; flex:1 1 280px; color:var(--ink-2); font-size:var(--fs-small); }
+@media (max-width:560px) {
+  .planCol { min-width:104px; }
+  .planTable th, .planTable td { padding:var(--sp-2); }
+  .planTable tbody th { min-width:92px; }
+  .price { font-size:1.05rem; }
+  .pickFoot :global(.btn) { width:100%; }
+}

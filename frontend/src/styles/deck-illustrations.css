@@ -1,12 +1,20 @@
-/* Topic illustrations and row geometry are shared with the HTML mockups. */
 .deck-list-sheet { container: deck-list / inline-size; }
 .deck-title-group { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-3); min-width: 0; }
 .deck-total { color: var(--ink-2); font-size: var(--fs-small); font-weight: 600; white-space: nowrap; }
 .deck-name-line { display: flex; align-items: flex-start; gap: var(--sp-3); min-width: 0; }
 .deck-name-line .answer-title { min-width: 0; flex: 1; }
-.deck-thumbnail { width: var(--deck-thumb-w); height: var(--deck-thumb-h); flex: 0 0 var(--deck-thumb-w); object-fit: cover; border: var(--rule) solid var(--primary-line); border-radius: var(--radius-field); background: var(--sheet); }
+.deck-thumbnail { width: var(--deck-thumb-w); height: var(--deck-thumb-h); flex: 0 0 var(--deck-thumb-w); border: var(--rule) solid var(--line-2); border-radius: var(--radius-field); background: var(--sheet); }
 @media (max-width: 639px) { .deck-thumbnail { width: var(--deck-thumb-mobile-w); height: var(--deck-thumb-mobile-h); flex-basis: var(--deck-thumb-mobile-w); } }
-/* A sidebar can make the sheet narrow even on desktop. Reuse its stacked rows. */
+.deck-cover { --cover-ink: var(--primary); --cover-bg: var(--primary-tint); position: relative; display: grid; align-content: end; padding: 0 6px 5px 9px; overflow: hidden; box-shadow: 0 1px 0 var(--line); }
+.deck-cover::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 13px; background: var(--cover-bg); border-bottom: var(--rule) solid color-mix(in srgb, var(--cover-ink) 40%, transparent); }
+.deck-cover::after { content: ""; position: absolute; left: 3px; top: 16px; bottom: 4px; width: 2px; background: repeating-linear-gradient(to bottom, var(--timing) 0 2px, transparent 2px 6px); opacity: .45; }
+.deck-cover-code { position: absolute; top: 0; left: 6px; right: 4px; overflow: hidden; white-space: nowrap; text-overflow: clip; font: 800 8px/13px var(--font-form); letter-spacing: .05em; color: var(--cover-ink); }
+.deck-cover-word { position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 14px/1.1 var(--font-word); color: var(--ink); }
+.deck-cover[data-tone="2"] { --cover-ink: var(--secondary-text); --cover-bg: var(--secondary-bg); }
+.deck-cover[data-tone="3"] { --cover-ink: var(--accent-text); --cover-bg: var(--accent-bg); }
+.deck-cover[data-tone="4"] { --cover-ink: var(--edit); --cover-bg: var(--edit-bg); }
+.deck-cover[data-tone="5"] { --cover-ink: var(--media-ink); --cover-bg: var(--media-bg); }
+.deck-cover[data-tone="6"] { --cover-ink: var(--danger); --cover-bg: var(--danger-bg); }
 @container deck-list (max-width: 700px) {
   .deck-head { display: none; }
   .deck-row, .deck-row.has-actions { grid-template-columns: 2.25rem minmax(0, 1fr); }
@@ -14,7 +22,6 @@
   .deck-actions { grid-column: 2; flex-wrap: wrap; }
 }
 
-/* Personal decks have four actual columns. Actions occupy the right edge. */
 .personal-decks .deck-row, .personal-decks .deck-head {
   grid-template-columns: 2rem minmax(0, 1fr) 9rem 9.5rem;
   align-items: center;

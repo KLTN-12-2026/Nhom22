@@ -11,11 +11,6 @@
 .answer-meta { line-height: var(--lh-body); }
 .deck-row { padding-block: var(--sp-5); }
 .answer-row:hover, .answer-row:focus-within { background: var(--primary-tint); }
-.deck-thumbnail { border-color: var(--primary-line); }
-.deck-thumbnail.is-context-cover { width: var(--deck-context-w); height: var(--deck-context-h); flex-basis: var(--deck-context-w); }
-@media (max-width: 639px) {
-  .deck-thumbnail.is-context-cover { width: var(--deck-context-mobile-w); height: var(--deck-context-mobile-h); flex-basis: var(--deck-context-mobile-w); }
-}
 @media (min-width: 1024px) {
   .sidebar .nav-link { min-height: var(--tap); padding-inline: var(--sp-3);  }
   .sidebar .nav-group + .nav-group { border-top: var(--rule) solid var(--primary-line); margin-top: var(--sp-3); padding-top: var(--sp-3); }
@@ -285,7 +280,6 @@ h1 { font-weight: 800; letter-spacing: -0.025em; }
 .answer-row { border-bottom-color: var(--line); }
 .answer-row:hover, .answer-row:focus-within { background: var(--sunk); }
 .answer-no { color: var(--ink-3); font-family: var(--font-word); font-stretch: normal; }
-.deck-thumbnail { border-radius: var(--radius-control); border-color: var(--line); overflow: hidden; }
 .deck-row { padding-block: var(--sp-5); }
 
 .meter { height: 8px; border-radius: 99px; background: var(--sunk); border-color: var(--line); }
@@ -332,11 +326,6 @@ h1 { font-weight: 800; letter-spacing: -0.025em; }
 .nav-link[aria-current="page"] { background: color-mix(in srgb, var(--hue, var(--primary)) 14%, var(--sheet)); color: var(--ink); border-radius: var(--radius-btn); box-shadow: none; }
 .app-header { box-shadow: inset 0 -1px 0 var(--line); }
 .app-body .form-code, .app-body .form-head .form-code { display: none; }
-.tally > div { --tone: var(--primary); box-shadow: inset 0 3px 0 var(--tone); }
-.tally > div:nth-child(1) { --tone: var(--warning); }
-.tally > div:nth-child(3) { --tone: var(--secondary); }
-.tally > div:nth-child(4) { --tone: var(--media-ink); }
-.tally .tally-n, .today-page .tally .tally-n { color: var(--tone); }
 .side-col > .panel { --tone: var(--primary); --tone-text: var(--primary); }
 .side-col > .panel:nth-of-type(4n+1) { --tone: var(--warning); --tone-text: var(--warning-text); }
 .side-col > .panel:nth-of-type(4n+3) { --tone: var(--secondary); --tone-text: var(--secondary-text); }

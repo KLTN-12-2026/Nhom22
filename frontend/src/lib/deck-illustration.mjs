@@ -1,17 +1,47 @@
-const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+const normalize = value => String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
 
-const TOPICS = [
-  { pattern: /\b(y te|suc khoe|benh vien|bac si|health|medical|medicine|hospital)\b/, file: 'health-cover.png' },
-  { pattern: /\b(khoa hoc|cong nghe|thi nghiem|science|technology|laboratory)\b/, file: 'science-cover.png' },
-  { pattern: /\b(toeic|cong viec|van phong|kinh doanh|tai chinh|office|business|finance|invoice)\b/, file: 'office-cover.png' },
-  { pattern: /\b(giao tiep|doi song|hang ngay|ca phe|mua sam|communication|everyday|daily|coffee|shopping)\b/, file: 'everyday-cover.png' },
+const TOPIC_CODES = [
+  { pattern: /\b(y te|suc khoe|benh vien|bac si|health|medical|hospital)\b/, code: 'Y TẾ', tone: 3 },
+  { pattern: /\b(khoa hoc|cong nghe|science|technology)\b/, code: 'KHOA HỌC', tone: 4 },
+  { pattern: /\b(toeic)\b/, code: 'TOEIC', tone: 1 },
+  { pattern: /\b(cong viec|van phong|kinh doanh|tai chinh|office|business|finance)\b/, code: 'CÔNG VIỆC', tone: 1 },
+  { pattern: /\b(doi song|hang ngay|daily|everyday)\b/, code: 'ĐỜI SỐNG', tone: 2 },
+  { pattern: /\b(giao tiep|communication)\b/, code: 'GIAO TIẾP', tone: 2 },
+  { pattern: /\b(am nhac|nghe thuat|music|art)\b/, code: 'NGHỆ THUẬT', tone: 5 },
+  { pattern: /\b(du lich|san bay|travel|airport)\b/, code: 'DU LỊCH', tone: 5 },
 ];
 
-export function deckIllustration(deck, topicName = deck.tenChuDe) {
+const GOAL_CODES = { TOEIC: 'TOEIC', GIAO_TIEP: 'GIAO TIẾP', IELTS: 'IELTS' };
+const TONES = 6;
+
+function hash(value) {
+  let h = 0;
+  for (const ch of String(value || '')) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return h;
+}
+
+function firstLetter(word) {
+  return [...word].find(ch => /\p{L}|\p{N}/u.test(ch)) || '';
+}
+
+export function deckMonogram(title) {
+  const text = String(title || '').trim();
+  const focus = text.includes('—') ? text.split('—').pop() : text;
+  const words = focus.split(/[\s,.;:()/-]+/).filter(Boolean);
+  const letters = words.map(firstLetter).filter(Boolean);
+  const mono = (letters[0] || '') + (letters[1] || '');
+  return mono ? mono.toLocaleUpperCase('vi') : '·';
+}
+
+export function deckCover(deck = {}, topicName = deck.tenChuDe) {
+  let match = null;
   for (const text of [deck.ten, topicName]) {
     const normalized = normalize(text);
-    const match = TOPICS.find(topic => topic.pattern.test(normalized));
-    if (match) return match.file;
+    match = TOPIC_CODES.find(topic => topic.pattern.test(normalized));
+    if (match) break;
   }
-  return /\b(hoc|tu vung|learning|vocabulary)\b/.test(normalize(deck.ten)) ? 'learning-desk.png' : null;
+  const code = match?.code || GOAL_CODES[deck.mucTieu] || (topicName ? String(topicName).split(/[&,]/)[0].trim().toLocaleUpperCase('vi').slice(0, 10) : 'BỘ THẺ');
+  const tone = match?.tone || (hash(deck.chuDeId || topicName || deck.id || deck.ten) % TONES) + 1;
+  const sample = String(deck.tuMau || '').trim();
+  return { code, tone, word: sample || deckMonogram(deck.ten), sample: !!sample };
 }

@@ -99,7 +99,7 @@ export function shortDay(isoDate) {
 }
 
 export function planShare(data) {
-  const paid = data.coCauGoi.map(plan => ({ code: plan.goiMa, name: plan.ten, count: plan.soNguoi }));
+  const paid = data.coCauGoi.filter(plan => plan.goiMa !== 'FREE').map(plan => ({ code: plan.goiMa, name: plan.ten, count: plan.soNguoi }));
   const free = Math.max(0, data.chiSo.dangHoatDong - data.chiSo.thueBaoHieuLuc);
   const rows = [{ code: 'FREE', name: 'Miễn phí', count: free }, ...paid];
   const total = rows.reduce((sum, row) => sum + row.count, 0);
