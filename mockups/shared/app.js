@@ -333,6 +333,7 @@
       { key: "thanh-tich", label: "Thành tích", icon: "shield", href: "dot3/thanh-tich.html" }
     ] },
     { group: "Tài khoản", items: [
+      { key: "support-tickets", label: "Phiếu hỗ trợ", icon: "mail", href: "dot3/phieu-ho-tro.html" },
       { key: "thong-bao", label: "Thông báo của tôi", icon: "bell", href: "dot3/thong-bao.html" },
       { key: "ca-nhan-du-lieu", label: "Dữ liệu cá nhân", icon: "user", href: "dot3/ca-nhan-du-lieu.html" },
       { key: "profile", label: "Hồ sơ", icon: "user", href: "dot1/ca-nhan.html" },
@@ -344,6 +345,7 @@
       { key: "quan-tri-tong-quan", label: "Tổng quan", icon: "chart", href: "dot3/quan-tri-tong-quan.html" },
       { key: "quan-tri-bao-cao", label: "Báo cáo nội dung", icon: "alert", href: "dot3/quan-tri-bao-cao.html" },
       { key: "quan-tri-dich-vu", label: "Dịch vụ", icon: "settings", href: "dot3/quan-tri-dich-vu.html" },
+      { key: "admin-support", label: "Tiếp nhận hỗ trợ", icon: "mail", href: "dot3/tiep-nhan-ho-tro.html" },
       { key: "admin-payments", label: "Quản lý thanh toán", icon: "file", href: "dot3/quan-ly-thanh-toan.html" },
       { key: "admin-revenue", label: "Thống kê doanh thu", icon: "chart", href: "dot3/quan-ly-thong-ke.html" },
       { key: "quan-tri-thong-bao", label: "Thông báo hệ thống", icon: "bell", href: "dot3/quan-tri-thong-bao.html" },
@@ -360,7 +362,7 @@
     { key: "library", label: "Thư viện", icon: "library", href: "dot1/thu-vien.html" },
     { key: "practice", label: "Luyện tập", icon: "practice", href: "dot2/luyen-tap.html", also: ["ai-viet-cau", "phat-am", "ai-lich-su", "phat-am-lich-su", "ai-giai-thich"] },
     { key: "notebook", label: "Sổ tay", icon: "notebook", href: "dot2/so-tay.html" },
-    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["profile", "learning", "security", "notify", "thong-bao", "ca-nhan-du-lieu", "bao-cao-noi-dung", "admin-topics", "admin-users", "admin-decks", "admin-audit"] }
+    { key: "me", label: "Tôi", icon: "user", href: "dot1/ca-nhan.html", also: ["support-tickets", "profile", "learning", "security", "notify", "thong-bao", "ca-nhan-du-lieu", "bao-cao-noi-dung", "admin-topics", "admin-users", "admin-decks", "admin-audit"] }
   ];
 
   function renderAppShell(u) {

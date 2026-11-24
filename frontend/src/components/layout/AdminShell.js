@@ -16,6 +16,7 @@ export const ADMIN_NAV = [
   { group: 'Hằng ngày', items: [
     { key: 'dashboard', label: 'Sổ trực ban', href: '/quan-tri', exact: true },
     { key: 'publish', label: 'Duyệt công khai', href: '/quan-tri/duyet-cong-khai', badge: 'publish' },
+    { key: 'support', label: 'Tiếp nhận hỗ trợ', href: '/quan-tri/tiep-nhan-ho-tro' },
     { key: 'reports', label: 'Báo cáo vi phạm', href: '/quan-tri/bao-cao', badge: 'reports', tone: 'red' },
   ] },
   { group: 'Hồ sơ', items: [
