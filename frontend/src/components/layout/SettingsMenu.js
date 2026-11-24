@@ -49,7 +49,7 @@ function Avatar({ user, avatar }) {
   return <span className="rail-avatar">{avatar?.downloadUrl ? <img src={avatar.downloadUrl} alt="" /> : initial(user)}</span>;
 }
 
-export function SettingsMenu({ user, avatar, tier, isAdmin, open, onOpenChange, onLogout }) {
+export function SettingsMenu({ user, avatar, tier, plan, isAdmin, open, onOpenChange, onLogout }) {
   const pathname = usePathname();
   const button = useRef(null);
   const panel = useRef(null);
@@ -58,6 +58,7 @@ export function SettingsMenu({ user, avatar, tier, isAdmin, open, onOpenChange, 
   const { of } = usePlanAccess(!!user);
   const ai = of('AI');
   const tierLabel = TIERS[tier]?.label;
+  const planLine = tier === 'admin' ? 'Quản trị viên' : plan?.soNgayConLai != null ? `${tierLabel} · còn ${plan.soNgayConLai} ngày` : tierLabel ? `Gói ${tierLabel}` : 'Cài đặt';
 
   useEffect(() => { onOpenChange(false); }, [pathname, onOpenChange]);
 
@@ -84,12 +85,12 @@ export function SettingsMenu({ user, avatar, tier, isAdmin, open, onOpenChange, 
 
   return <>
     <button ref={button} type="button" className="rail-settings" aria-haspopup="menu" aria-expanded={open} aria-controls="settings-menu" onClick={() => onOpenChange(!open)}>
-      <span className="rail-settings-avatar">
+      <span className="rail-settings-avatar" data-plate={tier || 'none'}>
         <Avatar user={user} avatar={avatar} />
         <span className="rail-gear"><Icon name="settings" /></span>
       </span>
-      <span className="rail-who"><strong>{user?.tenHienThi || 'User'}</strong><small>Cài đặt{tierLabel ? ` · ${tierLabel}` : ''}</small></span>
-      <Icon name="chevron-right" className="rail-chev" />
+      <span className="rail-who"><strong>{user?.tenHienThi || 'User'}</strong><small>{planLine}</small></span>
+      {tier && <span className="rail-card" data-card-tier={tier} aria-hidden="true" />}
     </button>
 
     <div ref={panel} id="settings-menu" className="settings-menu" role="menu" aria-label="Cài đặt" hidden={!open}>
