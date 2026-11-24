@@ -107,9 +107,9 @@
   .rail-who { min-width: 0; display: grid; opacity: 0; transition: opacity var(--dur-1); }
   .rail-who strong { overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-small); }
   .rail-who small { overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); font-size: 12px; }
-  .rail-card { position: relative; flex: none; margin-left: auto; width: 40px; aspect-ratio: 1.586; overflow: hidden; border-radius: 5px; background: linear-gradient(150deg, #f6f5f1, #d8d6cf); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); opacity: 0; transition: opacity var(--dur-1); }
-  .rail-card[data-card-tier="pro"] { background: linear-gradient(150deg, #1a2a7a, #2f47c2 55%, #12205e); }
-  .rail-card:is([data-card-tier="premium"], [data-card-tier="admin"]) { background: linear-gradient(150deg, #2a2519, #0c0b09 60%); box-shadow: inset 0 0 0 1px #6e5520; }
+  .rail-card { --chip: linear-gradient(135deg, #8d8a80, #ecebe5 45%, #aeaa9f); --ink-line: rgba(40, 38, 32, .28); --sheen: rgba(255, 255, 255, .6); --base: linear-gradient(150deg, #f6f5f1, #d8d6cf); --edge: rgba(0, 0, 0, .15); position: relative; flex: none; margin-left: auto; width: 40px; aspect-ratio: 1.586; overflow: hidden; border-radius: 5px; background: var(--chip) 14% 40% / 22% 30% no-repeat, linear-gradient(var(--ink-line), var(--ink-line)) 14% 78% / 50% 2px no-repeat, radial-gradient(circle at 88% 12%, var(--sheen), transparent 45%), var(--base); box-shadow: inset 0 0 0 1px var(--edge), 0 1px 2px rgba(0, 0, 0, .18); opacity: 0; transition: opacity var(--dur-1); }
+  .rail-card[data-card-tier="pro"] { --chip: linear-gradient(135deg, #8f9ab8, #f1f4fb 45%, #a9b5d2); --ink-line: rgba(201, 215, 255, .55); --sheen: rgba(160, 190, 255, .45); --base: linear-gradient(150deg, #1a2a7a, #2f47c2 55%, #12205e); --edge: #2a3f9e; }
+  .rail-card:is([data-card-tier="premium"], [data-card-tier="admin"]) { --chip: linear-gradient(135deg, #8a6110, #f6d779 45%, #b98410); --ink-line: rgba(233, 199, 102, .6); --sheen: rgba(246, 215, 121, .3); --base: linear-gradient(150deg, #2a2519, #0c0b09 60%, #1d1a14); --edge: #6e5520; }
   .rail-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%); transform: translateX(-120%); }
   .rail-settings:hover .rail-card::after { transform: translateX(120%); transition: transform 700ms var(--ease); }
   .rail[data-open] .rail-who, .rail[data-open] .rail-card { opacity: 1; }
