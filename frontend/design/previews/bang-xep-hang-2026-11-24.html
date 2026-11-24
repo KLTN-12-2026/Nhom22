@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng xếp hạng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Gentium+Book+Plus:wght@400;700&display=swap" rel="stylesheet">
+<style>:root {
+  color-scheme: light;
+  --sheet: #fffdf8;
+  --desk: #f3f1ea;
+  --sunk: #f7f5ee;
+  --line: #e6e2d6;
+  --line-2: #d8d3c4;
+  --radius-sheet: 20px;
+  --radius-card: 14px;
+  --radius-control: 12px;
+  --shadow-soft: 0 1px 2px rgba(21, 22, 26, 0.05), 0 12px 32px -18px rgba(21, 22, 26, 0.22);
+  --field: #ffffff;
+  --ink: #24262c;
+  --ink-2: #474b55;
+  --ink-3: #62677a;
+  --graphite: #2b2d33;
+  --graphite-soft: #55585f;
+  --timing: #15161a;
+
+  --primary: #3549bb;
+  --primary-strong: #23337f;
+  --primary-hover: #293b9f;
+  --primary-tint: #eceef9;
+  --primary-tint-2: #dfe2f4;
+  --primary-line: #d5dae5;
+  --on-primary: #ffffff;
+  --on-primary-soft: #c9cdf0;
+
+  --secondary: #1e8a5a;
+  --secondary-bg: #e3f2ea;
+  --secondary-text: #14603f;
+
+  --accent: #f2b32b;
+  --accent-hover: #e4a119;
+  --accent-bg: #fcf1d6;
+  --accent-text: #6b4a00;
+  --on-accent: #24262c;
+
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --warning: #b07d12;
+  --warning-bg: #fbf4e2;
+  --warning-text: #6e4600;
+
+  --font-form: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-word: "Gentium Book Plus", "Gentium Plus", "Charis SIL", "Noto Serif", Georgia, serif;
+  --stretch-form: 100%;
+
+  --fs-caption: 0.8125rem;
+  --fs-small: 0.875rem;
+  --fs-body: 1rem;
+  --fs-lead: 1.125rem;
+  --fs-h3: 1.25rem;
+  --fs-h2: 1.5rem;
+  --fs-h1: clamp(1.75rem, 1.4rem + 1.4vw, 2.375rem);
+  --fs-word: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+  --fs-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  --lh-tight: 1.15;
+  --lh-body: 1.6;
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4.5rem;
+
+  --rule: 1px;
+  --rule-strong: 2px;
+  --radius-field: 6px;
+  --radius-btn: 8px;
+  --bubble: 1.375rem;
+  --bubble-lg: 2.75rem;
+
+  --tap: 44px;
+  --tap-primary: 48px;
+  --sidebar-w: 240px;
+  --side-col: 304px;
+  --header-h: 68px;
+  --bottom-nav-h: 64px;
+  --measure: 68ch;
+
+  --shadow-sheet: 0 1px 2px rgba(21, 22, 26, 0.06), 0 8px 24px -12px rgba(21, 22, 26, 0.18);
+  --shadow-pop: 0 2px 6px rgba(21, 22, 26, 0.08), 0 18px 40px -16px rgba(21, 22, 26, 0.28);
+  --shadow-press: inset 0 2px 0 rgba(21, 22, 26, 0.18);
+
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-flip: 460ms;
+  --dur-celebrate: 900ms;
+  --dur-ripple: 520ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --focus: 0 0 0 2px var(--sheet), 0 0 0 4px var(--primary);
+  --fs-home-title: clamp(2.25rem, 1.8rem + 2.4vw, 3.75rem);
+  --fs-meaning: clamp(1.375rem, 1.1rem + 1.4vw, 2rem);
+  --fs-word-mobile: clamp(1.75rem, 7vw, 2.25rem);
+  --icon-nav: 22px;
+  --dur-pending: 1400ms;
+  --sidebar-compact: calc(var(--tap) + var(--sp-3) * 2);
+  --deck-context-w: 96px;
+  --deck-context-h: 72px;
+  --deck-context-mobile-w: 80px;
+  --deck-context-mobile-h: 60px;
+  --deck-thumb-w: 64px;
+  --deck-thumb-h: 48px;
+  --deck-thumb-mobile-w: 56px;
+  --deck-thumb-mobile-h: 42px;
+  --app-page-max: 1440px;
+
+  --primary-fill: #3549bb;
+  --primary-fill-hover: #293b9f;
+  --brand-surface: #23337f;
+  --edit: #1762ad;
+  --edit-bg: #e5f0ff;
+  --edit-hover: #124c88;
+  --on-edit: #ffffff;
+  --favorite: #cf2938;
+  --favorite-bg: #ffedf1;
+  --media-ink: #096f74;
+  --media-bg: #e5f4f2;
+  --media-line: #81b9b6;
+  --media-fill: #096f74;
+  --media-hover: #07595d;
+  --danger-fill: #a62b38;
+  --on-danger: #ffffff;
+  --control-line: #8c93a6;
+  --overlay: rgba(15, 19, 28, .55);
+  --toast-surface: #303541;
+  --on-toast: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --desk: #171a20;
+  --sheet: #20252d;
+  --field: #272d37;
+  --sunk: #1b1f26;
+  --line: #2f3641;
+  --line-2: #3a424f;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2), 0 16px 40px -20px rgba(0, 0, 0, 0.55);
+  --ink: #f1f0eb;
+  --ink-2: #c2c7d1;
+  --ink-3: #a2aabc;
+  --graphite: #c5cad4;
+  --graphite-soft: #8e97aa;
+  --timing: #7c8598;
+  --primary: #aab8ff;
+  --primary-strong: #d9dfff;
+  --primary-hover: #c5ceff;
+  --primary-tint: #2d344b;
+  --primary-tint-2: #353e5c;
+  --primary-line: #46515f;
+  --primary-fill: #5262c9;
+  --primary-fill-hover: #4759c4;
+  --brand-surface: #2e375b;
+  --on-primary: #ffffff;
+  --on-primary-soft: #d8deff;
+  --secondary: #73d5a3;
+  --secondary-bg: #243c32;
+  --secondary-text: #9ce8be;
+  --accent: #edb439;
+  --accent-hover: #dda228;
+  --accent-bg: #3c3422;
+  --accent-text: #f3cd79;
+  --on-accent: #231e14;
+  --edit: #226eb8;
+  --edit-bg: #243a54;
+  --edit-hover: #2065a8;
+  --on-edit: #ffffff;
+  --favorite: #ff8b87;
+  --favorite-bg: #432b2f;
+  --media-ink: #84ddd7;
+  --media-bg: #203c3e;
+  --media-line: #446d70;
+  --media-fill: #137479;
+  --media-hover: #09666b;
+  --danger: #ffa0aa;
+  --danger-bg: #412b33;
+  --danger-fill: #a62b38;
+  --on-danger: #ffffff;
+  --warning: #e5be6b;
+  --warning-bg: #3c3422;
+  --warning-text: #f3cd79;
+  --control-line: #6e788e;
+  --overlay: rgba(6, 8, 12, .72);
+  --toast-surface: #303541;
+  --shadow-sheet: 0 2px 12px rgba(0, 0, 0, .14);
+  --shadow-pop: 0 8px 32px rgba(0, 0, 0, .35);
+}
+</style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font-form);background:var(--desk);color:var(--ink);font-size:15px;line-height:1.5}
+a{color:var(--primary)}
+.demo{position:fixed;right:16px;bottom:16px;z-index:9;display:flex;flex-wrap:wrap;gap:6px;align-items:center;max-width:320px;padding:10px 12px;background:var(--sheet);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-soft);font-size:12.5px}
+.demo b{width:100%}
+.demo button{font:inherit;font-size:12px;padding:4px 8px;border:1px solid var(--line-2);border-radius:7px;background:var(--sheet);color:var(--ink);cursor:pointer}
+.demo button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+
+.page{max-width:960px;margin:0 auto;padding:32px 24px 80px}
+.sheet{position:relative;background:var(--sheet);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-soft);padding:30px 34px 28px 52px}
+.sheet::before{content:"";position:absolute;left:16px;top:28px;bottom:28px;width:7px;background:repeating-linear-gradient(to bottom,var(--timing) 0 3px,transparent 3px 22px);opacity:.16}
+
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.kicker{margin:0 0 4px;color:var(--ink-3);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.head h1{margin:0;font-family:var(--font-word);font-size:clamp(1.9rem,1.4rem + 1.6vw,2.5rem);line-height:1.1}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;background:var(--field);overflow:hidden}
+.seg button{min-height:36px;padding:0 12px;border:0;background:none;color:var(--ink-2);font:600 13.5px/1 var(--font-form);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-checked="true"]{background:var(--ink);color:var(--sheet)}
+
+.slip{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px 22px;margin:22px 0 6px;padding:16px 20px;border:1px solid var(--line-2);border-radius:14px;background:var(--sunk)}
+.slip::before,.slip::after{content:"";position:absolute;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:var(--sheet);border:1px solid var(--line-2)}
+.slip::before{left:-10px;clip-path:inset(0 0 0 50%)}
+.slip::after{right:-10px;clip-path:inset(0 50% 0 0)}
+.my-rank{display:grid;justify-items:center;padding-right:22px;border-right:2px dashed var(--line-2)}
+.my-rank small{color:var(--ink-3);font-size:12px;font-weight:600}
+.my-rank b{font:800 2.3rem/1 var(--font-form);font-variant-numeric:tabular-nums}
+.my-rank span{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.my-body{min-width:0}
+.my-body p{margin:0}
+.my-line{font-weight:700}
+.my-chase{color:var(--ink-2);font-size:14px}
+.my-chase mark{background:linear-gradient(transparent 55%,color-mix(in srgb,var(--accent) 55%,transparent) 55%);color:inherit;padding:0 2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:8px;border:1px solid var(--accent-hover);background:var(--accent);color:var(--on-accent);font:700 14.5px/1 var(--font-form);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--accent-hover)}
+
+.honor{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:18px 0 0;font-size:13.5px;color:var(--ink-2)}
+.stamp{padding:2px 8px;border:2px solid var(--danger);border-radius:4px;color:var(--danger);font-weight:800;font-size:12px;transform:rotate(-2deg)}
+.honor .who{display:inline-flex;align-items:center;gap:6px}
+.honor .who b{color:var(--ink)}
+.honor .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--sheet);font-size:11px;font-weight:800}
+
+table{width:100%;margin-top:18px;border-collapse:collapse;font-variant-numeric:tabular-nums}
+thead th{padding:0 8px 8px;border-bottom:2px solid var(--ink);color:var(--ink-3);font-size:12.5px;font-weight:700;text-align:left;white-space:nowrap}
+th.num,td.num{text-align:right}
+th.rk{width:56px}
+th.wk{width:178px}
+th.d{width:72px}
+th.l{width:80px}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+
+.rank{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--graphite);font-weight:800;font-size:13px}
+tr[data-top] .rank{border:0;color:#2a1c02;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.18)}
+tr[data-top="1"] .rank{background:linear-gradient(160deg,#fff3c4,#e6c674 45%,#b98410)}
+tr[data-top="2"] .rank{background:linear-gradient(160deg,#ffffff,#d7dbe2 45%,#9aa1ae);color:#2b2f38}
+tr[data-top="3"] .rank{background:linear-gradient(160deg,#ffd9b8,#d08a55 45%,#8a4a22);color:#fff}
+
+.person{display:flex;align-items:center;gap:12px;min-width:0}
+.av{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--primary-tint);color:var(--primary);font-weight:800;font-size:14px;box-shadow:0 0 0 2px var(--sheet),0 0 0 3px var(--line-2)}
+tr[data-tier="premium"] .av{box-shadow:0 0 0 2px var(--sheet),0 0 0 3.5px #c99a2e}
+tr[data-tier="pro"] .av{box-shadow:0 0 0 2px var(--sheet),0 0 0 3.5px #5c75d6}
+.nm{display:grid;min-width:0}
+.nm a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:700;text-decoration:none}
+.nm a:hover{color:var(--primary);text-decoration:underline}
+.nm small{color:var(--ink-3);font-size:12.5px}
+tr[data-top="1"] .nm a{font-family:var(--font-word);font-size:1.15rem}
+.you{margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--accent-bg);color:var(--accent-text);font-size:11.5px;font-weight:800;vertical-align:1px}
+tr[data-me] td{background:color-mix(in srgb,var(--accent) 12%,var(--sheet))}
+tr[data-me] td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+
+.week{display:flex;gap:5px}
+.week i{position:relative;width:18px;height:18px;border-radius:50%;border:1.4px solid var(--ink-3);font-style:normal;font-size:9.5px;font-weight:700;color:var(--ink-3);display:grid;place-items:center}
+.week i[data-on]{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.week i[data-today]{outline:1.5px dashed var(--ink-3);outline-offset:2px}
+.month{display:flex;align-items:center;gap:8px}
+.bar{position:relative;flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar b{position:absolute;inset:0 auto 0 0;background:var(--ink);border-radius:99px}
+.month span{color:var(--ink-3);font-size:12px;min-width:38px;text-align:right}
+td.d b{font-size:1.1rem}
+td.d small,td.l small{color:var(--ink-3);font-size:12px;font-weight:500;margin-left:2px}
+td.l{color:var(--ink-2)}
+.gap td{padding:4px;text-align:center;color:var(--ink-3);letter-spacing:.5em}
+
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-3);font-size:13px}
+.foot p{margin:0;max-width:60ch}
+
+@media (max-width:720px){
+  .sheet{padding:22px 16px 20px 30px}
+  .sheet::before{left:8px}
+  .slip{grid-template-columns:auto minmax(0,1fr)}
+  .slip .btn{grid-column:1/-1;width:100%}
+  th.wk,td.wk{display:none}
+  th.l,td.l{display:none}
+  .person{gap:10px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <article class="sheet">
+    <header class="head">
+      <div>
+        <p class="kicker" id="period">Tuần 23/11 – 29/11 · 4 người tham gia</p>
+        <h1>Bảng xếp hạng siêng năng</h1>
+      </div>
+      <div class="controls">
+        <div class="seg" role="radiogroup" aria-label="Kỳ xếp hạng" id="ky"><button role="radio" aria-checked="true" data-v="TUAN">Tuần này</button><button role="radio" aria-checked="false" data-v="THANG">Tháng này</button></div>
+        <div class="seg" role="radiogroup" aria-label="Số người"><button role="radio" aria-checked="true">Top 10</button><button role="radio" aria-checked="false">Top 50</button><button role="radio" aria-checked="false">Top 100</button></div>
+      </div>
+    </header>
+
+    <section class="slip" aria-label="Hạng của bạn">
+      <div class="my-rank"><small>Hạng của bạn</small><b>4</b><span>/ 4 người</span></div>
+      <div class="my-body">
+        <p class="my-line">1 ngày đủ lượt · 8 lượt ôn</p>
+        <p class="my-chase">Ôn thêm <mark>8 lượt</mark> hôm nay để vượt Leonel Messi.</p>
+      </div>
+      <a class="btn" href="#">Học ngay</a>
+    </section>
+
+    <p class="honor"><span class="stamp">Vinh danh</span><span>Tuần 16/11 – 22/11:</span>
+      <span class="who"><span class="n">1</span><b>Người yêu cũ</b> · 1 ngày · 83 lượt</span>
+    </p>
+
+    <table>
+      <thead><tr><th class="rk">Hạng</th><th>Người học</th><th class="wk" id="wkHead">T2 → CN</th><th class="num d">Ngày</th><th class="num l">Lượt</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <footer class="foot">
+      <p>Một ngày được tính khi bạn ôn đủ 5 lượt hợp lệ. Bằng số ngày thì xếp theo tổng lượt ôn.</p>
+      <a href="#">Tắt hiển thị tên trong Quyền riêng tư</a>
+    </footer>
+  </article>
+</div>
+
+<div class="demo"><b>Demo bảng xếp hạng</b>
+  <button data-theme-btn="light" aria-pressed="true">Sáng</button><button data-theme-btn="dark">Tối</button>
+</div>
+
+<script>
+const ROWS=[
+  {h:1,n:'Ma Da bá dá bà dù',t:'premium',d:2,l:31,w:[1,1,0,0,0,0,0],m:2},
+  {h:2,n:'Người yêu cũ',t:'premium',d:1,l:15,w:[1,0,0,0,0,0,0],m:9},
+  {h:3,n:'Leonel Messi',t:'free',d:1,l:15,w:[0,1,0,0,0,0,0],m:6},
+  {h:4,n:'Tour Test',t:'free',d:1,l:8,w:[0,1,0,0,0,0,0],m:3,me:1}
+];
+const DAYS=['T2','T3','T4','T5','T6','T7','CN'];
+let ky='TUAN';
+const ini=n=>n.trim().split(/\s+/).pop()[0].toUpperCase();
+function render(){
+  document.getElementById('wkHead').textContent=ky==='TUAN'?'T2 → CN':'Ngày đủ lượt / 30';
+  document.getElementById('period').textContent=ky==='TUAN'?'Tuần 23/11 – 29/11 · 4 người tham gia':'Tháng 11/2026 · 4 người tham gia';
+  document.getElementById('rows').innerHTML=ROWS.map(r=>{
+    const wk=ky==='TUAN'?`<span class="week" role="img" aria-label="Đủ lượt ${r.w.filter(Boolean).length} trên 7 ngày">${r.w.map((on,i)=>`<i${on?' data-on':''}${i===1?' data-today':''}>${DAYS[i].replace('T','')}</i>`).join('')}</span>`
+      :`<span class="month"><span class="bar"><b style="width:${r.m/30*100}%"></b></span><span>${r.m}/30</span></span>`;
+    const d=ky==='TUAN'?r.d:r.m;
+    return `<tr${r.h<=3?` data-top="${r.h}"`:''} data-tier="${r.t}"${r.me?' data-me':''}><td><span class="rank">${r.h}</span></td><td><span class="person"><span class="av">${ini(r.n)}</span><span class="nm"><a href="#">${r.n}${r.me?'<span class="you">Bạn</span>':''}</a><small>${r.t==='premium'?'Premium':r.t==='pro'?'Pro':'Free'}</small></span></span></td><td class="wk">${wk}</td><td class="num d"><b>${d}</b><small>ngày</small></td><td class="num l">${r.l*(ky==='TUAN'?1:3)}<small>lượt</small></td></tr>`;
+  }).join('');
+}
+document.getElementById('ky').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ky=b.dataset.v;document.querySelectorAll('#ky button').forEach(x=>x.setAttribute('aria-checked',x===b));render()});
+document.querySelectorAll('[data-theme-btn]').forEach(b=>b.addEventListener('click',()=>{document.documentElement.dataset.theme=b.dataset.themeBtn;document.querySelectorAll('[data-theme-btn]').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
+render();
+</script>
+</body>
+</html>
