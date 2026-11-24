@@ -10,15 +10,15 @@ import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { useLibraryAuthor } from '@/hooks/useSearch';
 import { useMe } from '@/hooks/useMe';
 import { libraryPage } from '@/lib/library-query.mjs';
-import { ProfileAvatar, ProfileBadges, ProfileIdentity, ProfileLedger, ProfileMeta } from '@/components/profile/ProfileParts';
+import { ProfileAvatar } from '@/components/profile/ProfileParts';
+import { MemberActions, MemberFields, MemberHero, monthText } from '@/components/profile/MemberSheet';
 import { MembershipCard } from '@/components/tier/MembershipCard';
-import { TierShowcase } from '@/components/tier/MembershipPanel';
+import { TierPlate } from '@/components/tier/TierPlate';
 import { ActivityHeatmap } from '@/components/stats/ActivityHeatmap';
-import { tierFromCode } from '@/lib/tier.mjs';
+import { TIERS, tierFromCode } from '@/lib/tier.mjs';
 import styles from './page.module.css';
 
 const SIZE = 20;
-const monthYear = value => (value ? new Date(value).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) : null);
 
 export default function AuthorPage() {
   return <Suspense fallback={<p className="page" role="status">Đang tải tác giả…</p>}><AuthorContent /></Suspense>;
@@ -79,41 +79,40 @@ function AuthorContent() {
   const profile = author.data;
   const items = decks.data?.items || [];
   const isMe = Boolean(me && profile && String(me.id) === String(profile.id));
-  const joined = monthYear(profile?.thamGiaAt);
   const badges = profile?.huyHieu || [];
   const tier = profile?.goiMa ? tierFromCode(profile.goiMa) : null;
-  const ledger = profile && <ProfileLedger label="Số liệu tác giả" cols={profile.goiMa ? 2 : 3} items={[
-    { label: 'Bộ công khai', value: profile.soBoThe, tone: 'primary' },
-    { label: 'Thẻ từ vựng', value: profile.soThe, tone: 'secondary' },
-    { label: 'Huy hiệu', value: badges.length, tone: 'warning' },
-  ]} />;
 
   return (
     <div className={`page ${styles.profile}`}>
-      <aside className={`sheet ${styles.side}`} aria-labelledby="page-title" aria-busy={author.isLoading}>
-        <ProfileIdentity
-          avatar={<ProfileAvatar src={profile?.anhDaiDienUrl} name={profile?.tenHienThi} tier={tier} />}
-          name={profile ? profile.tenHienThi : 'Đang tải…'}
-          subtitle={isMe ? 'Hồ sơ công khai của bạn' : 'Tác giả bộ thẻ công khai'}
-          tier={tier}
-          headingId="page-title"
-          headingLevel="h1"
-        />
-        {isMe && <Link className={`btn btn-secondary ${styles.edit}`} href="/ca-nhan"><Icon name="edit" />Chỉnh sửa hồ sơ</Link>}
-        {me && profile && !isMe && <button type="button" className={`btn btn-quiet ${styles.edit}`} onClick={() => setReporting(true)}><Icon name="flag" />Báo cáo người dùng</button>}
-        {reporting && profile && <ReportDialog loaiDoiTuong="NGUOI_DUNG" doiTuongId={String(profile.id)} name={profile.tenHienThi} onClose={() => setReporting(false)} />}
-        {profile && <ProfileMeta items={[
-          { icon: 'decks', text: `${profile.soBoThe} bộ công khai · ${profile.soThe.toLocaleString('vi-VN')} thẻ` },
-          joined && { icon: 'calendar', text: `Tham gia ${joined}` },
-        ]} />}
-        {profile && <ProfileBadges badges={badges} empty="Chưa có huy hiệu." />}
-        <p className={styles.back}><Link href="/thu-vien"><Icon name="arrow-left" />Về thư viện</Link></p>
-      </aside>
+      <p className={styles.back}><Link href="/thu-vien"><Icon name="arrow-left" />Về thư viện</Link></p>
+      <MemberHero
+        card={tier && profile ? <MembershipCard tier={tier} name={profile.tenHienThi} since={profile.thamGiaAt} /> : null}
+        avatar={<ProfileAvatar src={profile?.anhDaiDienUrl} name={profile?.tenHienThi} tier={tier} size="md" />}
+        name={profile ? profile.tenHienThi : 'Đang tải…'}
+        sub={<>{tier && <TierPlate tier={tier} />}<span>{isMe ? 'Hồ sơ công khai của bạn' : 'Tác giả bộ thẻ công khai'}</span></>}
+        statsLabel="Số liệu tác giả"
+        statsLoading={author.isLoading}
+        stats={[
+          { label: 'Bộ công khai', value: profile?.soBoThe },
+          { label: 'Thẻ từ vựng', value: profile?.soThe },
+        ]}
+        badges={{ earned: badges }}
+      >
+        <MemberFields items={[
+          { label: 'Tham gia', value: monthText(profile?.thamGiaAt) },
+          { label: 'Gói', value: TIERS[tier]?.label || 'Free' },
+          { label: 'Vai trò', value: tier === 'admin' ? 'Quản trị viên' : 'Tác giả' },
+        ]} />
+        {(isMe || (me && profile)) && (
+          <MemberActions>
+            {isMe && <Link className="btn btn-secondary" href="/ca-nhan"><Icon name="edit" />Chỉnh sửa hồ sơ</Link>}
+            {me && profile && !isMe && <button type="button" className="btn btn-quiet" onClick={() => setReporting(true)}><Icon name="flag" />Báo cáo người dùng</button>}
+          </MemberActions>
+        )}
+      </MemberHero>
+      {reporting && profile && <ReportDialog loaiDoiTuong="NGUOI_DUNG" doiTuongId={String(profile.id)} name={profile.tenHienThi} onClose={() => setReporting(false)} />}
 
       <section className={styles.main} aria-labelledby="decks-title">
-        {profile && (profile.goiMa
-          ? <TierShowcase label={`Thẻ thành viên của ${profile.tenHienThi}`} card={<MembershipCard tier={tier} name={profile.tenHienThi} since={profile.thamGiaAt} />}>{ledger}</TierShowcase>
-          : ledger)}
         {profile && <ActivityHeatmap title="Hoạt động học trong năm" source={{ url: `/api/v1/library/authors/${id}/activity`, queryKey: ['author-activity', String(id)], metrics: ['soLuotOn', 'soCongKhai'] }} />}
         <nav className={styles.tabs} aria-label="Hồ sơ tác giả">
           <span className={styles.tab} aria-current="page">

@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Icon } from '@/components/ui';
-import { ProfileCard } from '@/components/profile/ProfileCard';
+import { MemberSheet, ProfileStrip } from '@/components/profile/MemberSheet';
 import styles from './layout.module.css';
 
 const TABS = [
@@ -24,21 +24,19 @@ export default function ProfileLayout({ children }) {
     return <div className="page"><div className="sheet"><div className="skeleton"><div className="sk sk-title"></div><div className="sk sk-row"></div><div className="sk sk-row"></div></div></div></div>;
   }
 
+  const overview = pathname === '/ca-nhan';
+
   return (
     <div className={`page ${styles.profile}`}>
-      <aside className={styles.side} aria-labelledby="profile-name">
-        <ProfileCard me={me} />
-      </aside>
-      <div className={styles.main}>
-        <nav className={styles.tabs} aria-label="Tài khoản">
-          {TABS.map(tab => (
-            <Link key={tab.href} href={tab.href} className={styles.tab} aria-current={pathname === tab.href ? 'page' : undefined}>
-              <Icon name={tab.icon} />{tab.label}
-            </Link>
-          ))}
-        </nav>
-        {pathname === '/ca-nhan' ? children : <section className="sheet" aria-labelledby="page-title">{children}</section>}
-      </div>
+      {overview ? <MemberSheet me={me} /> : <ProfileStrip me={me} />}
+      <nav className={styles.tabs} aria-label="Tài khoản">
+        {TABS.map(tab => (
+          <Link key={tab.href} href={tab.href} className={styles.tab} aria-current={pathname === tab.href ? 'page' : undefined}>
+            <Icon name={tab.icon} />{tab.label}
+          </Link>
+        ))}
+      </nav>
+      {overview ? children : <section className="sheet" aria-labelledby="page-title">{children}</section>}
     </div>
   );
 }
