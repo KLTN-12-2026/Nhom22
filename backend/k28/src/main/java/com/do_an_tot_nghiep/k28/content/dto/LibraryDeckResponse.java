@@ -15,7 +15,6 @@ public record LibraryDeckResponse(
         TrinhDo trinhDo,
         MucTieu mucTieu,
         NguonBo nguon,
-        boolean caoCap,
         String chuSoHuuId,
         String tenTacGia,
         long soThe,

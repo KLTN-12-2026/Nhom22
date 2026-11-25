@@ -3,6 +3,8 @@ export const SHARE_TARGETS = [
   { key: 'messenger', label: 'Messenger', hint: 'Gửi tin nhắn', mark: 'm', tone: '#0a7cff', mobile: true, url: ({ url }) => `fb-messenger://share/?link=${encodeURIComponent(url)}` },
   { key: 'telegram', label: 'Telegram', hint: 'Gửi tin nhắn', mark: 't', tone: '#1c8adb', url: ({ url, text }) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
   { key: 'whatsapp', label: 'WhatsApp', hint: 'Gửi tin nhắn', mark: 'w', tone: '#128c4a', url: ({ url, text }) => `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}` },
+  { key: 'zalo', label: 'Zalo', hint: 'Gửi tin nhắn', mark: 'Z', tone: '#0068ff', url: ({ url }) => `https://sp.zalo.me/plugins/share?dv=zalo-share-plugin&url=${encodeURIComponent(url)}` },
+  { key: 'reddit', label: 'Reddit', hint: 'Đăng bài', mark: 'r', tone: '#ff4500', url: ({ url, title }) => `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}` },
   { key: 'x', label: 'X', hint: 'Đăng bài', mark: 'X', tone: '#14171a', url: ({ url, text }) => `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
   { key: 'linkedin', label: 'LinkedIn', hint: 'Đăng bài', mark: 'in', tone: '#0a66c2', url: ({ url }) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` },
   { key: 'email', label: 'Email', hint: 'Gửi thư', icon: 'mail', tone: '#5b6472', url: ({ url, text, title }) => `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${text}\n${url}`)}` },

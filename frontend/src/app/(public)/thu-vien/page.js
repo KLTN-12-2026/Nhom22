@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { ErrorState, Icon, Pagination } from '@/components/ui';
 import { libraryPage } from '@/lib/library-query.mjs';
-import { PlanTag } from '@/components/billing/PlanAccess';
 import styles from './page.module.css';
 import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
@@ -237,7 +236,6 @@ function LibraryContent() {
                       ) : (
                         <span className="stamp stamp-graphite">Người học chia sẻ</span>
                       )}
-                      {deck.caoCap && <PlanTag code="PREMIUM" locked={false} label="Premium" />}
                       {me && deck.chuSoHuuId === me.id && (
                         <Link className={`stamp stamp-accent ${styles.copiedStamp}`} href={`/bo-the/${deck.id}`} title="Mở trong Bộ của tôi">
                           <Icon name="user" />Bộ của bạn
@@ -328,10 +326,6 @@ function LibraryContent() {
             <div>
               <span><span className="stamp stamp-graphite">Người học chia sẻ</span></span>
               <p className="muted">Bộ do người học đăng công khai. Kiểm tra lại trước khi học.</p>
-            </div>
-            <div>
-              <span><PlanTag code="PREMIUM" locked={false} label="Premium" /></span>
-              <p className="muted">Bộ mẫu cao cấp: ai cũng xem trước được, sao chép về để học cần gói Premium.</p>
             </div>
             <div>
               <span className="level">

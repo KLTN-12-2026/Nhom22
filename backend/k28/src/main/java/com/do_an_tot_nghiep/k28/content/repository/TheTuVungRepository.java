@@ -33,6 +33,29 @@ public interface TheTuVungRepository
 
     Optional<TheTuVung> findByIdAndXoaAtIsNull(Long id);
 
+    long countByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalse(Long boTheId);
+
+    @Query("""
+            select c from TheTuVung c
+            where c.boTheId = :deckId
+              and c.xoaAt is null
+              and (c.tu like :pattern escape '\\'
+                   or c.nghiaVi like :pattern escape '\\'
+                   or c.phienAm like :pattern escape '\\')
+            """)
+    Page<TheTuVung> searchOwned(@Param("deckId") Long deckId, @Param("pattern") String pattern, Pageable pageable);
+
+    @Query("""
+            select c from TheTuVung c
+            where c.boTheId = :deckId
+              and c.xoaAt is null
+              and c.anKiemDuyet = false
+              and (c.tu like :pattern escape '\\'
+                   or c.nghiaVi like :pattern escape '\\'
+                   or c.phienAm like :pattern escape '\\')
+            """)
+    Page<TheTuVung> searchPublic(@Param("deckId") Long deckId, @Param("pattern") String pattern, Pageable pageable);
+
     boolean existsByIdAndBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalse(Long id, Long boTheId);
 
     long countByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseAndIdGreaterThan(Long boTheId, Long id);

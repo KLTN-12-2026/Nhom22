@@ -34,8 +34,6 @@ public record UpdateSampleDeckRequest(
 
         TrangThaiKiemDuyet trangThaiKiemDuyet,
 
-        Boolean caoCap,
-
         @Size(min = 10, max = 500, message = "Nhập lý do từ 10 đến 500 ký tự")
         String lyDo,
 

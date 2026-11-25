@@ -17,7 +17,7 @@ const CYCLES = [
   ['NAM', 'Hàng năm', 'năm'],
 ];
 
-const ROWS = ['GIOI_HAN_THE', 'AI', 'ANH', 'TTS', 'PHAT_AM', 'BO_MAU_CAO_CAP'];
+const ROWS = ['GIOI_HAN_THE', 'AI', 'ANH', 'TTS', 'PHAT_AM'];
 const SOURCE = { DUNG_THU: 'dùng thử', HSSV: 'ưu đãi học sinh, sinh viên', MUA: '' };
 
 const formatPrice = value => `${Number(value || 0).toLocaleString('vi-VN')} đ`;

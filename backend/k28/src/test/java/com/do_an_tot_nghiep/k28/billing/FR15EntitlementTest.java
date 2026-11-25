@@ -44,8 +44,8 @@ class FR15EntitlementTest extends AbstractIntegrationTest {
     @BeforeEach
     void testPlan() {
         jdbc.update("""
-                INSERT IGNORE INTO goi_dich_vu (ma, ten, gia_thang, gia_nam, gioi_han_the, phat_am, bo_mau_cao_cap, hoat_dong)
-                VALUES ('THU', 'Thử', 1000, 10000, 2, FALSE, FALSE, FALSE)
+                INSERT IGNORE INTO goi_dich_vu (ma, ten, gia_thang, gia_nam, gioi_han_the, phat_am, hoat_dong)
+                VALUES ('THU', 'Thử', 1000, 10000, 2, FALSE, FALSE)
                 """);
     }
 
@@ -109,49 +109,6 @@ class FR15EntitlementTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Tài khoản quản trị đã có đầy đủ quyền lợi Premium, không cần mua gói"));
 
         mockMvc.perform(get("/api/v1/me/plan")).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void tc22_premiumSampleDeckOnlyCopiesWithPremium() throws Exception {
-        Actor admin = actor(true, null);
-        String id = body(send(admin, post("/api/v1/admin/decks"), Map.of(
-                "ten", "Bộ cao cấp " + UUID.randomUUID(), "trinhDo", "CO_BAN", "mucTieu", "TOEIC", "caoCap", true))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.caoCap").value(true))).get("id").asString();
-        try {
-            premiumSample(admin, id);
-        } finally {
-            jdbc.update("UPDATE bo_the SET xoa_at = UTC_TIMESTAMP(3) WHERE id = ?", Long.valueOf(id));
-        }
-    }
-
-    private void premiumSample(Actor admin, String id) throws Exception {
-        send(admin, post("/api/v1/admin/decks/" + id + "/cards"), Map.of("tu", "invoice", "nghiaVi", "hóa đơn"))
-                .andExpect(status().isCreated());
-        send(admin, patch("/api/v1/admin/decks/" + id), Map.of("quyenTruyCap", "CONG_KHAI", "version", 0))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/api/v1/library/decks/" + id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.boThe.caoCap").value(true));
-
-        Actor pro = actor(false, "PRO");
-        copy(pro, id)
-                .andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.details.quyenLoi").value("BO_MAU_CAO_CAP"))
-                .andExpect(jsonPath("$.details.goiCanNangCap").value("PREMIUM"));
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM bo_the WHERE chu_so_huu_id = ?", Integer.class, pro.id()))
-                .isZero();
-
-        Actor premium = actor(false, "PREMIUM");
-        String copyId = body(copy(premium, id).andExpect(status().isCreated())
-                .andExpect(jsonPath("$.soThe").value(1))).get("id").asString();
-        assertThat(jdbc.queryForObject("SELECT cao_cap FROM bo_the WHERE id = ?", Boolean.class, Long.valueOf(copyId)))
-                .isFalse();
-
-        send(admin, patch("/api/v1/admin/decks/" + id), Map.of("caoCap", false, "version", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.caoCap").value(false));
-        copy(pro, id).andExpect(status().isCreated());
     }
 
     private ResultActions copy(Actor actor, String deckId) throws Exception {

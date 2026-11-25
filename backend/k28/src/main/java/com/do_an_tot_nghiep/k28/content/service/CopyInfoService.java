@@ -71,7 +71,7 @@ public class CopyInfoService {
     }
 
     public boolean selfPublishable(BoThe copy, BoThe source) {
-        if (source.isCaoCap() || source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
+        if (source.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
             return false;
         }
         Long owner = copy.getChuSoHuuId();

@@ -16,8 +16,7 @@ const WAVES = Array.from({ length: 9 }, (_, row) => {
 
 const PERKS = [
   { key: 'cards', icon: 'star', need: 1, title: 'Nhiều thẻ hơn', text: ['Pro: 5.000 thẻ', '5.000 thẻ', 'Không giới hạn'] },
-  { key: 'speech', icon: 'mic', need: 1, title: 'Chấm phát âm AI', text: ['Cần gói Pro', 'Đã mở', 'Đã mở'] },
-  { key: 'premium', icon: 'crown', need: 2, title: 'Bộ mẫu cao cấp', text: ['Cần Premium', 'Cần Premium', 'Đã mở'] }
+  { key: 'speech', icon: 'mic', need: 1, title: 'Chấm phát âm AI', text: ['Cần gói Pro', 'Đã mở', 'Đã mở'] }
 ];
 
 function Pattern({ tier }) {

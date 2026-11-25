@@ -24,6 +24,8 @@ import { useDeck } from '@/hooks/useDeck';
 import { useTopics } from '@/hooks/useTopics';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { cardListParams } from '@/lib/card-list.mjs';
+import { CardSearchBar } from '@/components/content/CardSearchBar';
 import { saveDownload } from '@/lib/csv.mjs';
 
 const LEVEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -37,6 +39,7 @@ export default function DeckDetailPage() {
   const { data: me } = useMe();
   const { data: topics = [] } = useTopics();
   const [page, setPage] = useState(0);
+  const [list, setList] = useState({ search: '', sort: 'MOI_NHAT' });
   const [focusId, setFocusId] = useState(() => /^[1-9][0-9]{0,18}$/.test(params.get('the') || '') ? params.get('the') : null);
   const [editing, setEditing] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -47,9 +50,10 @@ export default function DeckDetailPage() {
   const tags = useQuery({ queryKey: ['public-tags'], queryFn: () => fetchAllPages('/api/v1/public/tags') });
   const [locating, setLocating] = useState(Boolean(focusId));
   const cards = useQuery({
-    queryKey: ['deck-cards', id, locating ? `the-${focusId}` : page],
+    queryKey: ['deck-cards', id, locating ? `the-${focusId}` : page, list.search, list.sort],
+    placeholderData: previous => previous,
     queryFn: async () => {
-      const result = await apiFetch(`/api/v1/decks/${id}/cards?page=${page}&size=20${locating && focusId ? `&theId=${focusId}` : ''}`);
+      const result = await apiFetch(`/api/v1/decks/${id}/cards?${cardListParams({ page, search: list.search, sort: list.sort, focusId: locating ? focusId : null })}`);
       if (locating) { setPage(result.page); setLocating(false); }
       return result;
     },
@@ -106,6 +110,7 @@ export default function DeckDetailPage() {
       {params.get('imported') && <p className="notice notice-success" role="status">Đã nhập {params.get('imported')} thẻ từ CSV.</p>}
       {params.get('saved') && <p className="notice notice-success" role="status">Đã lưu thẻ{params.get('duplicate') ? '. Thẻ có thể trùng với thẻ đã có trong bộ.' : '.'}</p>}
       <div className={styles.listBar}><h2>Thẻ trong bộ <span className="muted num">{cards.data?.totalElements ?? ''}</span></h2><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
+      <CardSearchBar search={list.search} sort={list.sort} onChange={next => { setList(next); setPage(0); setFocusId(null); setLocating(false); }} />
       {cards.isLoading && <p role="status">Đang tải thẻ…</p>}
       {cards.error && <ErrorState description={cards.error.message} onRetry={cards.refetch} />}
       {deleteCard.error && <ErrorState description={deleteCard.error.message} onRetry={() => deleteCard.reset()} />}

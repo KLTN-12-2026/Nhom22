@@ -14,7 +14,7 @@ test('admin billing collects every backend page and preserves server amounts, ve
   globalThis.fetch = async (path, options) => {
     requests.push(path);
     assert.equal(options.credentials, 'include');
-    if (path.includes('/plans')) return Response.json([{ ma: 'PRO', ten: 'Pro cập nhật', giaThang: 350000, giaNam: 3500000, gioiHanThe: null, phatAm: true, boMauCaoCap: false, hoatDong: true, version: 4 }]);
+    if (path.includes('/plans')) return Response.json([{ ma: 'PRO', ten: 'Pro cập nhật', giaThang: 350000, giaNam: 3500000, gioiHanThe: null, phatAm: true, hoatDong: true, version: 4 }]);
     if (path.includes('/subscriptions')) return Response.json({ items: [{ id: '9', tenHienThi: 'An', goiMa: 'PRO', trangThai: 'HIEU_LUC', hetHanAt: '2099-01-01T00:00:00Z', soNgayConLai: 3 }], totalPages: 1 });
     return Response.json({ items: [{ maDon: path.includes('page=1') ? 'ORDER-2' : 'ORDER-1', soTien: 123456, goiMa: 'PRO', tenGoi: 'Pro', trangThai: 'THANH_CONG', taoAt: '2026-11-17T02:00:00Z' }], totalPages: 2 });
   };
@@ -33,8 +33,8 @@ test('backend errors propagate without falling back to demo payment data', async
 });
 
 test('plan update uses backend field names, nullable card limit and unchanged concurrency version', () => {
-  const payload = billing.planPayload({ name: 'Pro', month: 100000, year: 1000000, cards: null, speech: true, premium: false, active: true, version: 0, ai: 99 });
-  assert.deepEqual(payload, { ten: 'Pro', giaThang: 100000, giaNam: 1000000, gioiHanThe: null, phatAm: true, boMauCaoCap: false, hoatDong: true, version: 0 });
+  const payload = billing.planPayload({ name: 'Pro', month: 100000, year: 1000000, cards: null, speech: true, active: true, version: 0, ai: 99 });
+  assert.deepEqual(payload, { ten: 'Pro', giaThang: 100000, giaNam: 1000000, gioiHanThe: null, phatAm: true, hoatDong: true, version: 0 });
 });
 
 test('live CSV exports supplied records, with formula protection and Vietnam time', () => {

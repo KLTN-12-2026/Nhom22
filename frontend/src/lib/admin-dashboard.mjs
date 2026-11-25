@@ -110,6 +110,7 @@ export function planShare(data) {
 export function queueItems(queue) {
   return [
     { key: 'publish', label: 'Yêu cầu công khai bản sao', count: queue.congKhaiChoDuyet, icon: 'check', tone: 'acc', href: '/quan-tri/duyet-cong-khai', overdue: queue.congKhaiCuNhatAt && Date.now() - Date.parse(queue.congKhaiCuNhatAt) > 48 * 3600e3 },
+    { key: 'support', label: 'Phiếu hỗ trợ đang mở', count: queue.hoTroDangMo ?? 0, icon: 'mail', tone: 'acc', href: '/quan-tri/tiep-nhan-ho-tro?status=open' },
     { key: 'reports', label: 'Báo cáo nội dung chờ xử lý', count: queue.baoCaoChoXuLy, icon: 'alert', tone: 'bad', href: '/quan-tri/bao-cao' },
     { key: 'expiring', label: 'Thuê bao hết hạn trong 7 ngày', count: queue.thueBaoSapHetHan, icon: 'clock', tone: 'warn', href: '/quan-tri/thanh-toan' },
     { key: 'pending-pay', label: 'Giao dịch chờ quá 15 phút', count: queue.giaoDichTreo, icon: 'file', tone: 'bad', href: '/quan-tri/thanh-toan' },

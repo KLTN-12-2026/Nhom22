@@ -83,7 +83,6 @@ class FR15BillingTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$[1].gioiHanThe").value(5000))
                 .andExpect(jsonPath("$[1].hanMucAi").value(20))
                 .andExpect(jsonPath("$[1].hanMucTts").value(150))
-                .andExpect(jsonPath("$[1].boMauCaoCap").value(false))
                 .andExpect(jsonPath("$[2].ma").value("PREMIUM"))
                 .andExpect(jsonPath("$[2].giaThang").value(129000))
                 .andExpect(jsonPath("$[2].giaNam").value(999000))

@@ -5,11 +5,11 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Icon, Input, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
-import { useSupportTicketSync } from '@/hooks/useSupportTicketSync';
-import { SUPPORT_UPDATE_EVENT } from '@/lib/support-admin.mjs';
+import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import {
   TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES, TICKETS_PAGE_SIZE,
-  filterTickets, readTickets, saveTicket, validateTicket,
+  filterTickets, fromApiTicket, toApiCreate, validateTicket,
 } from '@/lib/support-tickets.mjs';
 import styles from './page.module.css';
 
@@ -59,7 +59,7 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
         <Select name="priority" label="Độ ưu tiên" options={options(TICKET_PRIORITIES)} value={values.priority}
           disabled={saving} onChange={event => update('priority', event.target.value)} />
       </div>
-      {saveError && <p className={styles.saveError} role="alert">Không lưu được phiếu hỗ trợ. Vui lòng cho phép lưu dữ liệu trong trình duyệt và thử lại.</p>}
+      {saveError && <p className={styles.saveError} role="alert">{saveError.message || 'Không gửi được phiếu hỗ trợ. Vui lòng thử lại.'}</p>}
       <div className={styles.dialogActions}>
         <button type="button" className="btn btn-quiet" disabled={saving} onClick={onClose}>Hủy</button>
         <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Đang lưu…' : 'Tạo phiếu hỗ trợ'}</button>
@@ -69,7 +69,6 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
 }
 
 export default function SupportTickets() {
-  useSupportTicketSync();
   const { data: user } = useMe();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -89,13 +88,11 @@ export default function SupportTickets() {
   const filterButton = useRef(null);
   const categorySelect = useRef(null);
   const panel = useRef(null);
-  const queryKey = ['support-tickets-demo', user?.id];
+  const queryKey = ['support-tickets', user?.id];
   const ticketsQuery = useQuery({
     queryKey,
-    queryFn: () => readTickets({ getItem: key => window.localStorage.getItem(key) }, user.id),
+    queryFn: async () => (await fetchAllPages('/api/v1/support-tickets')).map(fromApiTicket),
     enabled: user?.id != null,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
   });
   const tickets = ticketsQuery.data || [];
 
@@ -122,12 +119,12 @@ export default function SupportTickets() {
     requestAnimationFrame(() => createButton.current?.focus());
   }
   const createTicket = useMutation({
-    mutationFn: values => saveTicket(window.localStorage, user.id, values, user),
-    onSuccess: updated => {
-      queryClient.setQueryData(queryKey, updated);
-      window.dispatchEvent(new Event(SUPPORT_UPDATE_EVENT));
+    mutationFn: values => apiFetch('/api/v1/support-tickets', { method: 'POST', body: JSON.stringify(toApiCreate(values)) }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
       resetFilters(); setShowFilters(false); closeDialog();
-      toast('Đã lưu phiếu hỗ trợ mẫu trên trình duyệt.', { variant: 'success' });
+      toast('Đã gửi phiếu hỗ trợ. Đội ngũ sẽ phản hồi sớm.', { variant: 'success' });
     },
   });
   const matchesWithoutStatus = filterTickets(tickets, { ...filters, search: debouncedSearch });
@@ -161,7 +158,6 @@ export default function SupportTickets() {
   }
 
   return <div className={`page ${styles.page}`}>
-    <p className={styles.demoNotice} role="note"><Icon name="info" />Bản trải nghiệm · Dữ liệu mẫu được lưu trên trình duyệt, chưa gửi đến đội ngũ hỗ trợ.</p>
     <article className="sheet" aria-labelledby="support-page-title">
       <header className={styles.heading}>
         <div><p className={styles.eyebrow}>Tài khoản / Hỗ trợ học viên</p>
@@ -206,6 +202,7 @@ export default function SupportTickets() {
               : matches.length > 0 ? <ul className={styles.list} aria-label="Danh sách phiếu hỗ trợ">
                 {matches.slice(start, start + TICKETS_PAGE_SIZE).map(ticket => <li key={ticket.id} className={styles.row}>
                   <div><h2>{ticket.title}</h2><p className={styles.description} title={ticket.description}>{ticket.description}</p>
+                    {ticket.history.at(-1)?.message && <p className={styles.description} title={ticket.history.at(-1).message}><strong>Phản hồi:</strong> {ticket.history.at(-1).message}</p>}
                     <div className={styles.meta}><span className={styles.ticketId}>#{ticket.id}</span><span className={styles.category}><Icon name="tag" />{TICKET_CATEGORIES[ticket.category]}</span><span className={styles.priority} data-priority={ticket.priority}>{TICKET_PRIORITIES[ticket.priority]}</span></div>
                   </div>
                   <div className={styles.side}><span className={styles.status} data-state={ticket.status}><Icon name={ticket.status === 'resolved' ? 'check' : 'clock'} />{TICKET_STATUSES[ticket.status]}</span><time dateTime={ticket.createdAt} title={dateTimeFormat.format(new Date(ticket.createdAt))}>{dateFormat.format(new Date(ticket.createdAt))}</time></div>

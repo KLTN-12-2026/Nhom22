@@ -8,5 +8,6 @@ public enum LoaiThongBao {
     KET_QUA_CONG_KHAI,
     VINH_DANH_TUAN,
     KET_QUA_BAO_CAO,
-    ANH_DAI_DIEN_BI_AN
+    ANH_DAI_DIEN_BI_AN,
+    PHAN_HOI_HO_TRO
 }

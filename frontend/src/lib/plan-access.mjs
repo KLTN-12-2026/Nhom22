@@ -3,7 +3,6 @@ export const FEATURES = {
   ANH: { label: 'Ảnh AI', unit: 'ảnh AI', quota: 'hanMucAnh', icon: 'image' },
   TTS: { label: 'Giọng đọc mẫu', unit: 'lượt nghe giọng mẫu', quota: 'hanMucTts', icon: 'volume' },
   PHAT_AM: { label: 'Chấm phát âm', unit: 'lượt chấm phát âm', quota: 'hanMucPhatAm', flag: 'phatAm', icon: 'mic' },
-  BO_MAU_CAO_CAP: { label: 'Bộ mẫu cao cấp', flag: 'boMauCaoCap', icon: 'star' },
   GIOI_HAN_THE: { label: 'Số thẻ tối đa', limit: 'gioiHanThe', icon: 'decks' }
 };
 

@@ -198,9 +198,9 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tc25_sampleCopiesGoToTheirAuthorAdminAsUserAndPremiumCopiesNeverPublish() throws Exception {
+    void tc25_sampleCopiesGoToTheirAuthorAdminAsUser() throws Exception {
         Actor admin = actor(true);
-        Long sampleId = sampleDeck(admin.id(), false);
+        Long sampleId = sampleDeck(admin.id());
         Long copyId = copyId(learner, sampleId);
         JsonNode pending = json(submit(learner, copyId).andExpect(status().isCreated()));
         assertThat(pending.get("nguoiDuyet").asText()).isEqualTo("TAC_GIA");
@@ -223,21 +223,16 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
         assertThat(decks.findById(copyId).orElseThrow().getQuyenTruyCap()).isEqualTo(QuyenTruyCap.CONG_KHAI);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nhat_ky_quan_tri WHERE hanh_dong = 'DUYET_CONG_KHAI' "
                 + "AND doi_tuong_id = ?", Integer.class, copyId)).isZero();
-
-        Long premiumId = sampleDeck(admin.id(), true);
-        BoThe premiumCopy = decks.saveAndFlush(BoThe.createCopy(learner.id(), decks.findById(premiumId).orElseThrow()));
-        submit(learner, premiumCopy.getId()).andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.details.lyDo").value("BO_CAO_CAP"));
     }
 
     @Test
     void tc25_adminCopierAsksTheAuthorLikeAnyUser() throws Exception {
         Actor admin = actor(true);
         Actor sampleAuthor = actor(true);
-        copy(admin, sampleDeck(admin.id(), false), "own-sample").andExpect(status().isUnprocessableContent())
+        copy(admin, sampleDeck(admin.id()), "own-sample").andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.details.lyDo").value("BO_CUA_BAN"));
 
-        Long sampleCopy = copyId(admin, sampleDeck(sampleAuthor.id(), false));
+        Long sampleCopy = copyId(admin, sampleDeck(sampleAuthor.id()));
         assertThat(json(send(admin, get("/api/v1/decks/" + sampleCopy)).andExpect(status().isOk()))
                 .get("banSao").get("tuCongKhai").asBoolean()).isFalse();
         JsonNode pending = json(submit(admin, sampleCopy).andExpect(status().isCreated()));
@@ -322,10 +317,9 @@ class FR04PublishRequestTest extends AbstractIntegrationTest {
         return deck.getId();
     }
 
-    private Long sampleDeck(Long ownerId, boolean premium) {
+    private Long sampleDeck(Long ownerId) {
         BoThe deck = BoThe.createSample(ownerId, null, "Bộ mẫu " + UUID.randomUUID(), "Mô tả", TrinhDo.CO_BAN, null);
         deck.updateDetails(null, deck.getTen(), deck.getMoTa(), deck.getTrinhDo(), QuyenTruyCap.CONG_KHAI);
-        deck.markPremium(premium);
         Long id = decks.saveAndFlush(deck).getId();
         card(id);
         return id;

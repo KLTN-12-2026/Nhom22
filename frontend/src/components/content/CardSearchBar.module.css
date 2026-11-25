@@ -1,0 +1,5 @@
+.bar { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-3, 12px); margin: var(--sp-3, 12px) 0; }
+.search { flex: 1 1 260px; min-width: 0; }
+.sort { display: grid; gap: 4px; flex: 0 0 auto; }
+.sort label { font-size: 0.8125rem; color: var(--ink-muted, inherit); }
+@media (max-width: 560px) { .sort { flex: 1 1 100%; } }

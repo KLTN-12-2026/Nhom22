@@ -3,19 +3,16 @@ import assert from 'node:assert/strict';
 import { access, nextPlanFor, lowestPlanFor, upgradeFromError, usageLevel, formatLimit, planValue } from '../src/lib/plan-access.mjs';
 
 const plans = [
-  { ma: 'FREE', ten: 'Free', giaThang: 0, gioiHanThe: 300, phatAm: true, boMauCaoCap: false, hanMucAi: 3, hanMucAnh: 0, hanMucPhatAm: 3, hanMucTts: 20 },
-  { ma: 'PRO', ten: 'Pro', giaThang: 79000, gioiHanThe: 5000, phatAm: true, boMauCaoCap: false, hanMucAi: 20, hanMucAnh: 3, hanMucPhatAm: 30, hanMucTts: 150 },
-  { ma: 'PREMIUM', ten: 'Premium', giaThang: 129000, gioiHanThe: null, phatAm: true, boMauCaoCap: true, hanMucAi: 60, hanMucAnh: 10, hanMucPhatAm: 100, hanMucTts: 500 }
+  { ma: 'FREE', ten: 'Free', giaThang: 0, gioiHanThe: 300, phatAm: true, hanMucAi: 3, hanMucAnh: 0, hanMucPhatAm: 3, hanMucTts: 20 },
+  { ma: 'PRO', ten: 'Pro', giaThang: 79000, gioiHanThe: 5000, phatAm: true, hanMucAi: 20, hanMucAnh: 3, hanMucPhatAm: 30, hanMucTts: 150 },
+  { ma: 'PREMIUM', ten: 'Premium', giaThang: 129000, gioiHanThe: null, phatAm: true, hanMucAi: 60, hanMucAnh: 10, hanMucPhatAm: 100, hanMucTts: 500 }
 ];
 
-test('free plan locks image AI and premium decks and points at the cheapest plan that has them', () => {
+test('free plan locks image AI and points at the cheapest plan that has it', () => {
   const image = access({ plans, planCode: 'FREE', feature: 'ANH' });
   assert.equal(image.locked, true);
   assert.equal(image.required.ma, 'PRO');
-  const premium = access({ plans, planCode: 'PRO', feature: 'BO_MAU_CAO_CAP' });
-  assert.equal(premium.locked, true);
-  assert.equal(premium.required.ma, 'PREMIUM');
-  assert.equal(access({ plans, planCode: 'PREMIUM', feature: 'BO_MAU_CAO_CAP' }).locked, false);
+  assert.equal(access({ plans, planCode: 'PRO', feature: 'ANH' }).locked, false);
 });
 
 test('quota from the server wins and an empty quota is exhausted with a bigger plan offered', () => {

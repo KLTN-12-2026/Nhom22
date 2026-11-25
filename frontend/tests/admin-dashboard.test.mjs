@@ -50,4 +50,5 @@ test('queueItems marks a publish request older than 48 hours as overdue', () => 
   const items = queueItems({ congKhaiChoDuyet: 2, congKhaiCuNhatAt: old, baoCaoChoXuLy: 0, thueBaoSapHetHan: 1, giaoDichTreo: 0, chuaXacThucQua48h: 3, tacVuLoi24h: 0 });
   assert.equal(items.find(i => i.key === 'publish').overdue, true);
   assert.equal(items.find(i => i.key === 'unverified').href, '/quan-tri/tai-khoan?trangThai=CHUA_XAC_THUC');
+  assert.equal(queueItems({ hoTroDangMo: 4 }).find(i => i.key === 'support').count, 4);
 });

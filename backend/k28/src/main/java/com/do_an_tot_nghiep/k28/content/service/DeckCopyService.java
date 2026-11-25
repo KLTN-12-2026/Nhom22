@@ -116,9 +116,6 @@ public class DeckCopyService {
             throw new ApiException(ErrorCode.CONFLICT, "Bạn đã có bản sao của bộ này",
                     Map.of("boTheId", existing.getId().toString()));
         });
-        if (source.isCaoCap()) {
-            entitlements.requirePremiumSamples(userId);
-        }
         List<TheTuVung> originals = cards.findAllForCopy(sourceId);
         limits.requireCapacity(userId, originals.size());
         List<Long> originalIds = originals.stream().map(TheTuVung::getId).toList();
