@@ -1,4 +1,5 @@
 export const PRACTICE_TYPE = {
+  FLASHCARD: 'Luyện Flashcard (SRS)',
   CHON_NGHIA: 'Chọn nghĩa',
   CHON_TU: 'Chọn từ',
   GHEP_TU: 'Ghép từ với nghĩa',
