@@ -110,16 +110,6 @@ public class EntitlementService {
     }
 
     @Transactional(readOnly = true)
-    public void requirePremiumSamples(Long nguoiDungId) {
-        plan(nguoiDungId).filter(goi -> !goi.isBoMauCaoCap()).ifPresent(goi -> {
-            Optional<GoiDichVu> nangCap = upgrade(goi, GoiDichVu::isBoMauCaoCap);
-            throw denied("BO_MAU_CAO_CAP", nangCap, "Bộ mẫu cao cấp chỉ dành cho gói "
-                    + nangCap.map(GoiDichVu::getTen).orElse("cao hơn") + ". Gói " + goi.getTen()
-                    + " vẫn sao chép được các bộ mẫu khác", Map.of());
-        });
-    }
-
-    @Transactional(readOnly = true)
     public Optional<DangKyGoi> latest(Long nguoiDungId) {
         return current(nguoiDungId)
                 .or(() -> dangKyGoi.findFirstByNguoiDungIdOrderByIdDesc(nguoiDungId));

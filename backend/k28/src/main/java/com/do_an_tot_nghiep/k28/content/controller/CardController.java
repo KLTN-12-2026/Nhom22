@@ -5,6 +5,7 @@ import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CardResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CardSort;
 import com.do_an_tot_nghiep.k28.content.dto.CreateCardRequest;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateCardRequest;
 import com.do_an_tot_nghiep.k28.content.service.CardService;
@@ -35,10 +36,12 @@ public class CardController {
             @PathVariable("id") Long id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(name = "theId", required = false) Long theId
+            @RequestParam(name = "theId", required = false) Long theId,
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "sapXep", required = false) CardSort sapXep
     ) {
         return service.list(
-                currentUser.id(), checkedId(id, "bộ thẻ"), page, size, theId
+                currentUser.id(), checkedId(id, "bộ thẻ"), page, size, theId, q, sapXep
         );
     }
 

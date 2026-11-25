@@ -248,7 +248,7 @@ class FR15OffersTest extends AbstractIntegrationTest {
         }
         assertThat(free).isNotNull();
         Map<String, Object> body = new HashMap<>(Map.of("ten", "Free", "giaThang", 1000, "giaNam", 0, "gioiHanThe", 300,
-                "phatAm", true, "boMauCaoCap", false, "hoatDong", true, "lyDo", REASON,
+                "phatAm", true, "hoatDong", true, "lyDo", REASON,
                 "version", free.get("version").asLong()));
         send(admin, put("/api/v1/admin/plans/FREE"), body).andExpect(status().isUnprocessableContent());
         body.put("giaThang", 0);

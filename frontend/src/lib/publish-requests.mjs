@@ -22,7 +22,6 @@ export const PUBLISH_REASON = {
   KHONG_PHAI_BAN_SAO: 'Bộ này không phải bản sao, bạn có thể đổi quyền truy cập trực tiếp.',
   DA_CONG_KHAI: 'Bản sao đã được công khai.',
   DA_AN: 'Bản sao đang bị ẩn do kiểm duyệt nên chưa gửi được.',
-  BO_CAO_CAP: 'Bản sao của bộ mẫu cao cấp không được công khai.',
   CHO_GUI_LAI: 'Bạn cần chờ 24 giờ sau lần bị từ chối hoặc thu hồi.',
   CAN_DUYET_CONG_KHAI: 'Bản sao chỉ được công khai khi tác giả bộ gốc duyệt.',
   BAN_SAO_KHONG_HOP_LE: 'Bản sao đã bị xóa hoặc đang bị ẩn.',

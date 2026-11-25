@@ -5,9 +5,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Icon, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
-import { useSupportTicketSync } from '@/hooks/useSupportTicketSync';
+import { apiFetch } from '@/lib/api-client';
+import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES, TICKETS_PAGE_SIZE } from '@/lib/support-tickets.mjs';
-import { filterAdminTickets, readAdminTickets, saveSupportUpdate, validateSupportUpdate, SUPPORT_SORTS, SUPPORT_UPDATE_EVENT } from '@/lib/support-admin.mjs';
+import { filterAdminTickets, toAdminEntry, toApiRespond, validateSupportUpdate, SUPPORT_SORTS } from '@/lib/support-admin.mjs';
 import styles from './page.module.css';
 
 const options = labels => Object.entries(labels).map(([value, label]) => ({ value, label }));
@@ -28,18 +29,15 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
   const textarea = useRef(null);
   const busy = useRef(false);
   const mutation = useMutation({
-    mutationFn: async next => {
-      await new Promise(resolve => setTimeout(resolve, 450));
-      return saveSupportUpdate(window.localStorage, selected, next, actor);
-    },
-    onSuccess: result => {
-      client.setQueryData(['support-tickets-demo', result.ownerId], result.tickets);
-      window.dispatchEvent(new Event(SUPPORT_UPDATE_EVENT));
+    mutationFn: next => apiFetch(`/api/v1/admin/support-tickets/${ticket.rawId}/respond`, { method: 'POST', body: JSON.stringify(toApiRespond(ticket, next)) }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['admin-support-tickets'] });
+      void client.invalidateQueries({ queryKey: ['support-tickets'] });
       onSaved();
     },
-    onError: () => { void client.invalidateQueries({ queryKey: ['admin-support-tickets-demo'] }); },
+    onError: () => { void client.invalidateQueries({ queryKey: ['admin-support-tickets'] }); },
   });
-  const conflict = mutation.error?.code === 'SUPPORT_CONFLICT';
+  const conflict = mutation.error?.code === 'VERSION_CONFLICT';
   const error = attempted ? validateSupportUpdate(ticket, values) : '';
   function submit(event) {
     event.preventDefault();
@@ -54,7 +52,7 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
     <p className={styles.eyebrow}>Phiếu #{ticket.id}</p>
     <div className={styles.detailMeta}><Badge status={ticket.status} /><Badge priority={ticket.priority} /><span>{TICKET_CATEGORIES[ticket.category]}</span></div>
     <section className={styles.message} aria-label="Nội dung yêu cầu">
-      <div className={styles.sender}><strong>{owner.tenHienThi}</strong><small>{owner.email || 'Chưa có email trong dữ liệu mẫu'}</small></div>
+      <div className={styles.sender}><strong>{owner.tenHienThi}</strong><small>{owner.email || 'Chưa có email'}</small></div>
       <p>{ticket.description}</p><time dateTime={ticket.createdAt}>Gửi lúc {dateTime.format(new Date(ticket.createdAt))}</time>
     </section>
     <section className={styles.history} aria-labelledby="history-title"><h3 id="history-title">Lịch sử xử lý</h3>
@@ -62,7 +60,7 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
         <strong>{typeof item.author === 'string' ? item.author : 'Quản trị viên'}</strong>
         <p>{typeof item.message === 'string' ? item.message : ''}</p><p className="muted">{typeof item.action === 'string' ? item.action : ''}</p>
         {Number.isFinite(Date.parse(item.createdAt)) && <time dateTime={item.createdAt}>{dateTime.format(new Date(item.createdAt))}</time>}
-      </li>) : <li className="muted">Chưa có phản hồi được lưu trong bản mẫu.</li>}</ol>
+      </li>) : <li className="muted">Chưa có phản hồi.</li>}</ol>
     </section>
     <form id="reply-form" noValidate onSubmit={submit} aria-busy={mutation.isPending}>
       <div className={styles.replyHeading}><h3>Phản hồi học viên</h3><span id="reply-counter">{values.message.length}/2000</span></div>
@@ -73,14 +71,13 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
         <Select id="detail-status" label="Trạng thái sau khi lưu" options={options(TICKET_STATUSES)} value={values.status} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, status: event.target.value }))} />
         <Select id="detail-priority" label="Độ ưu tiên" options={options(TICKET_PRIORITIES)} value={values.priority} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, priority: event.target.value }))} />
       </div>
-      {mutation.isError && <p className={styles.saveError} role="alert">{conflict ? mutation.error.message : 'Không lưu được thay đổi. Kiểm tra quyền lưu dữ liệu của trình duyệt rồi thử lại.'}</p>}
+      {mutation.isError && <p className={styles.saveError} role="alert">{mutation.error.message || 'Không lưu được thay đổi. Vui lòng thử lại.'}</p>}
       <div className={styles.dialogActions}><button className="btn btn-quiet" type="button" onClick={onClose} disabled={mutation.isPending}>Đóng</button><button className="btn btn-primary" type="submit" disabled={mutation.isPending || conflict}><Icon name="check" />{mutation.isPending ? 'Đang lưu…' : 'Lưu xử lý'}</button></div>
     </form>
   </Modal>;
 }
 
 export default function SupportIntake() {
-  useSupportTicketSync();
   const { data: user } = useMe();
   const { toast } = useToast();
   const router = useRouter(), pathname = usePathname(), params = useSearchParams();
@@ -90,10 +87,9 @@ export default function SupportIntake() {
   const [showFilters, setShowFilters] = useState(false), [page, setPage] = useState(1), [selected, setSelected] = useState(null);
   const searchInput = useRef(null), categorySelect = useRef(null), filterButton = useRef(null), panel = useRef(null), trigger = useRef(null);
   const query = useQuery({
-    queryKey: ['admin-support-tickets-demo', user?.id],
-    queryFn: () => readAdminTickets(window.localStorage),
+    queryKey: ['admin-support-tickets', user?.id],
+    queryFn: async () => (await fetchAllPages('/api/v1/admin/support-tickets')).map(toAdminEntry),
     enabled: !!user?.vaiTro?.includes('ADMIN'),
-    staleTime: Infinity,
   });
   const entries = query.data || [];
   useEffect(() => { const timer = setTimeout(() => setDebounced(search.trim()), 300); return () => clearTimeout(timer); }, [search]);
@@ -134,7 +130,6 @@ export default function SupportIntake() {
     { label: 'Đã giải quyết', count: entries.filter(({ ticket }) => ticket.status === 'resolved').length, note: 'Yêu cầu đã được xử lý', tone: 'resolved' },
   ];
   return <div className={`page ${styles.page}`}>
-    <p className={styles.demoNotice} role="note"><Icon name="info" />Bản trải nghiệm · Phiếu và phản hồi chỉ lưu trên trình duyệt, chưa gửi đến dịch vụ hỗ trợ.</p>
     <article className="sheet" aria-labelledby="support-page-title">
       <header className={styles.heading}><div><p className={styles.eyebrow}>Quản trị / Hỗ trợ học viên</p><h1 id="support-page-title">Tiếp nhận hỗ trợ</h1><p className="muted">Lắng nghe, phản hồi và giải quyết yêu cầu của học viên.</p></div>
         <button className="btn btn-secondary" type="button" disabled={query.isFetching} onClick={async () => { const result = await query.refetch(); if (!result.isError) toast('Đã làm mới danh sách phiếu hỗ trợ.', { variant: 'success' }); }}><Icon name="refresh" />{query.isFetching ? 'Đang tải…' : 'Làm mới'}</button>
@@ -157,15 +152,15 @@ export default function SupportIntake() {
             : matches.length > 0 ? <div className={styles.tableWrap}><table className={styles.table}><caption className="sr-only">Danh sách yêu cầu hỗ trợ của học viên</caption><thead><tr><th scope="col">Phiếu hỗ trợ</th><th scope="col">Học viên</th><th scope="col">Độ ưu tiên</th><th scope="col">Trạng thái</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr></thead><tbody>
               {matches.slice(start, start + TICKETS_PAGE_SIZE).map(entry => <tr key={entry.key}>
                 <td><button className={styles.ticketTitle} type="button" data-ticket={entry.key} onClick={event => { trigger.current = event.currentTarget; setSelected(entry); }}>{entry.ticket.title}</button><div className={styles.ticketMeta}><span>#{entry.ticket.id}</span><span>{TICKET_CATEGORIES[entry.ticket.category]}</span><time dateTime={entry.ticket.createdAt}>{date.format(new Date(entry.ticket.createdAt))}</time></div></td>
-                <td><span className={styles.student}>{entry.owner.tenHienThi}</span><span className={styles.email}>{entry.owner.email || 'Chưa có email trong dữ liệu mẫu'}</span></td>
+                <td><span className={styles.student}>{entry.owner.tenHienThi}</span><span className={styles.email}>{entry.owner.email || 'Chưa có email'}</span></td>
                 <td><Badge priority={entry.ticket.priority} /></td><td><Badge status={entry.ticket.status} /></td>
                 <td><button className="btn btn-quiet btn-icon" type="button" aria-label={`Xem phiếu ${entry.ticket.id} của ${entry.owner.tenHienThi}`} onClick={event => { trigger.current = event.currentTarget; setSelected(entry); }}><Icon name="eye" /></button></td>
               </tr>)}
             </tbody></table></div> : <div className={styles.empty}><Icon name="mail" /><h2>{chips.length ? 'Không tìm thấy phiếu hỗ trợ' : 'Chưa có phiếu hỗ trợ'}</h2><p>{chips.length ? 'Thử tìm từ khóa khác hoặc thay đổi bộ lọc.' : 'Các yêu cầu mới của học viên sẽ xuất hiện tại đây.'}</p>{chips.length > 0 && <button className="btn btn-secondary" type="button" data-reset onClick={reset}>Đặt lại bộ lọc</button>}</div>}
       </section>
       {matches.length > 0 && <div className={styles.pagination}><p>Hiển thị {start + 1}–{Math.min(start + TICKETS_PAGE_SIZE, matches.length)} trên {matches.length} phiếu</p><Pagination page={currentPage} totalPages={totalPages} onPageChange={next => { setPage(next); panel.current?.focus(); }} /></div>}
-      <footer className={styles.footer}><Icon name="info" /><p>Phản hồi và trạng thái chỉ được lưu trong trình duyệt của bản trải nghiệm, không gửi email hay yêu cầu thật.</p></footer>
+      <footer className={styles.footer}><Icon name="info" /><p>Phản hồi và trạng thái được lưu cho học viên xem trong trang Phiếu hỗ trợ của họ.</p></footer>
     </article>
-    {selected && <TicketDetail key={selected.key} selected={selected} actor={user} onClose={closeDetail} onSaved={() => { closeDetail(); toast('Đã lưu xử lý phiếu hỗ trợ mẫu.', { variant: 'success' }); }} />}
+    {selected && <TicketDetail key={selected.key} selected={selected} actor={user} onClose={closeDetail} onSaved={() => { closeDetail(); toast('Đã lưu xử lý phiếu hỗ trợ.', { variant: 'success' }); }} />}
   </div>;
 }

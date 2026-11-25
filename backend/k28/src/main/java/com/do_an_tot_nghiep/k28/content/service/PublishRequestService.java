@@ -81,9 +81,6 @@ public class PublishRequestService {
             throw rule("Bản sao đang bị ẩn do kiểm duyệt", "DA_AN");
         }
         BoThe source = decks.findById(copy.getBoNguonId()).orElseThrow(this::deckNotFound);
-        if (source.isCaoCap()) {
-            throw rule("Bản sao của bộ mẫu cao cấp không được công khai", "BO_CAO_CAP");
-        }
         if (!diffs.diff(copy, source).coThayDoi()) {
             throw rule("Bản sao chưa có thay đổi nào so với bộ gốc nên chưa xin công khai được", "KHONG_CO_THAY_DOI");
         }
@@ -202,9 +199,6 @@ public class PublishRequestService {
                 requirePending(request);
                 if (copy.getXoaAt() != null || copy.getTrangThaiKiemDuyet() != TrangThaiKiemDuyet.BINH_THUONG) {
                     throw rule("Bản sao đã bị xóa hoặc đang bị ẩn", "BAN_SAO_KHONG_HOP_LE");
-                }
-                if (source.isCaoCap()) {
-                    throw rule("Bản sao của bộ mẫu cao cấp không được công khai", "BO_CAO_CAP");
                 }
                 request.resolve(TrangThaiYeuCauCongKhai.DA_DUYET, actorId, body.lyDo(), now);
                 setVisibility(copy, QuyenTruyCap.CONG_KHAI);

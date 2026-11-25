@@ -7,7 +7,6 @@ public record AdminPlanResponse(
         long giaNam,
         Integer gioiHanThe,
         boolean phatAm,
-        boolean boMauCaoCap,
         boolean hoatDong,
         long soDangKyHieuLuc,
         Long version

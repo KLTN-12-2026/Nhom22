@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CARD_INTERVAL_MS, DEMO_CARDS as QUIZ } from '@/lib/demo-cards.mjs';
 import { useCardCycle } from '@/hooks/useCardCycle';
+import { useMe } from '@/hooks/useMe';
 import styles from './page.module.css';
 
 const TESTIMONIALS = [
@@ -15,6 +16,7 @@ const TESTIMONIALS = [
 export default function HomePage() {
   const [quizState, setQuizState] = useState(null);
   const [hover, setHover] = useState(false);
+  const { data: me } = useMe();
   const { index: quizIdx, tick, go, restart } = useCardCycle(QUIZ.length, { interval: CARD_INTERVAL_MS, paused: hover });
 
   const q = QUIZ[quizIdx];
@@ -61,7 +63,7 @@ export default function HomePage() {
                 <p className="muted small" id="plan-note" aria-live="polite" style={{ marginTop: 'var(--sp-2)' }}>Tô thử hai ô trên. Bạn có thể lưu kế hoạch trong phần thiết lập học sau khi đăng nhập.</p>
 
                 <div className={styles.ctaRow}>
-                  <Link href="/dang-ky" className="btn btn-primary btn-lg">Bắt đầu học miễn phí</Link>
+                  <Link href={me ? '/hom-nay' : '/dang-ky'} className="btn btn-primary btn-lg">{me ? 'Vào học ngay' : 'Bắt đầu học miễn phí'}</Link>
                   <Link href="/thu-vien" className="btn btn-secondary btn-lg">Xem thư viện</Link>
                 </div>
               </div>
@@ -183,7 +185,7 @@ export default function HomePage() {
         <div className={styles.wrap}>
           <h2>Bắt đầu từ số 0</h2>
           <p>Tạo tài khoản bằng email của bạn và xác thực qua liên kết trong thư để lưu thiết lập học và quản lý bộ thẻ.</p>
-          <div><Link href="/dang-ky" className={`btn btn-lg ${styles.btnOnDark}`}>Tạo tài khoản học thử</Link></div>
+          <div><Link href={me ? '/hom-nay' : '/dang-ky'} className={`btn btn-lg ${styles.btnOnDark}`}>{me ? 'Vào học ngay' : 'Tạo tài khoản học thử'}</Link></div>
         </div>
       </section>
     </>

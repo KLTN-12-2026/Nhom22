@@ -63,9 +63,9 @@ public class LibrarySearchRepository {
 
     private static final String AUTHORS = """
             FROM nguoi_dung u
-            JOIN bo_the b ON b.chu_so_huu_id = u.id
-            WHERE %s
-              AND u.trang_thai = 'HOAT_DONG'
+            LEFT JOIN bo_the b ON b.chu_so_huu_id = u.id
+              AND %s
+            WHERE u.trang_thai = 'HOAT_DONG'
             """.formatted(VISIBLE);
 
     private static final String DECK_CARD_COUNT = """

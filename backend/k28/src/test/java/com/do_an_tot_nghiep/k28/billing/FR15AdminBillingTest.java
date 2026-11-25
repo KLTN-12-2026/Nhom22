@@ -42,8 +42,8 @@ class FR15AdminBillingTest extends AbstractIntegrationTest {
     @BeforeEach
     void testPlan() {
         jdbc.update("""
-                INSERT IGNORE INTO goi_dich_vu (ma, ten, gia_thang, gia_nam, gioi_han_the, phat_am, bo_mau_cao_cap, hoat_dong)
-                VALUES ('SUA', 'Gói sửa', 1000, 10000, 10, FALSE, FALSE, FALSE)
+                INSERT IGNORE INTO goi_dich_vu (ma, ten, gia_thang, gia_nam, gioi_han_the, phat_am, hoat_dong)
+                VALUES ('SUA', 'Gói sửa', 1000, 10000, 10, FALSE, FALSE)
                 """);
     }
 
@@ -203,7 +203,7 @@ class FR15AdminBillingTest extends AbstractIntegrationTest {
         long version = plan.get("version").asLong();
         Map<String, Object> body = new java.util.HashMap<>(Map.of(
                 "ten", "Gói sửa", "giaThang", 2000, "giaNam", 20000, "phatAm", true,
-                "boMauCaoCap", false, "hoatDong", false, "lyDo", "Điều chỉnh giá thử nghiệm"));
+                "hoatDong", false, "lyDo", "Điều chỉnh giá thử nghiệm"));
         body.put("version", version + 9);
         send(admin, put("/api/v1/admin/plans/SUA"), body).andExpect(status().isConflict());
         body.put("version", version);
@@ -223,7 +223,7 @@ class FR15AdminBillingTest extends AbstractIntegrationTest {
         body.put("giaThang", -1);
         send(admin, put("/api/v1/admin/plans/SUA"), body).andExpect(status().isBadRequest());
         send(admin, put("/api/v1/admin/plans/KHONG"), Map.of("ten", "x", "giaThang", 2000, "giaNam", 20000,
-                "phatAm", true, "boMauCaoCap", false, "hoatDong", true, "version", 0))
+                "phatAm", true, "hoatDong", true, "version", 0))
                 .andExpect(status().isNotFound());
     }
 

@@ -5,18 +5,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { libraryPage } from '@/lib/library-query.mjs';
+import { cardListParams, parseCardSort } from '@/lib/card-list.mjs';
+import { CardSearchBar } from '@/components/content/CardSearchBar';
 import { clearDeckCopyKey, copyDeck, deckCopyKey } from '@/lib/deck-copy.mjs';
 import { useMe } from '@/hooks/useMe';
 import { ErrorState, Icon, Pagination, useToast } from '@/components/ui';
 import { CardEntry } from '@/components/content/CardEntry';
 import { AuthorTag } from '@/components/content/AuthorTag';
 import { CardImagePreference } from '@/components/content/CardImagePreference';
-import { ContentReportButton } from '@/components/content/ContentReportButton';
 import { useCardImages } from '@/hooks/useCardImages';
 import { useFocusCard } from '@/hooks/useFocusCard';
 import { CopyBadge } from '@/components/content/CopyBadge';
-import { PlanTag, requestUpgrade } from '@/components/billing/PlanAccess';
-import { usePlanAccess } from '@/hooks/usePlanAccess';
 import { ShareDialog } from '@/components/content/ShareDialog';
 import { ReportDialog } from '@/components/content/ReportDialog';
 import { SnapDialog } from '@/components/content/SnapDialog';
@@ -40,6 +39,8 @@ function LibraryDetail({ id }) {
   const [showImages, setShowImages] = useCardImages();
   const search = useSearchParams();
   const requestedPage = libraryPage(search.get('page'));
+  const searchText = (search.get('q') || '').slice(0, 100);
+  const sortCards = parseCardSort(search.get('sapXep'));
   const focusId = /^[1-9][0-9]{0,18}$/.test(search.get('the') || '') ? search.get('the') : null;
   const [sharing, setSharing] = useState(null);
   const [reporting, setReporting] = useState(null);
@@ -47,10 +48,10 @@ function LibraryDetail({ id }) {
   const attempt = useRef(null);
   const busy = useRef(false);
   const { data: me, isLoading: loadingUser, error: userError } = useMe();
-  const planAccess = usePlanAccess(!!me);
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['library-deck', id, requestedPage, focusId],
-    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?page=${requestedPage}&size=20${focusId ? `&theId=${focusId}` : ''}`),
+    queryKey: ['library-deck', id, requestedPage, focusId, searchText, sortCards],
+    placeholderData: previous => previous,
+    queryFn: () => apiFetch(`/api/v1/library/decks/${encodeURIComponent(id)}?${cardListParams({ page: requestedPage, search: searchText, sort: sortCards, focusId })}`),
   });
   const deckName = data?.boThe?.ten;
   useEffect(() => {
@@ -120,8 +121,19 @@ function LibraryDetail({ id }) {
   </div></div>;
 
   const existingCopyId = copy.error?.status === 409 ? copy.error.data?.details?.boTheId : null;
-  const premiumLocked = !!(boThe.caoCap && me && planAccess.of('BO_MAU_CAO_CAP')?.locked);
   const ownDeck = !!me && boThe.chuSoHuuId === me.id;
+  const changeList = ({ search: nextSearch, sort }) => {
+    const next = new URLSearchParams();
+    if (nextSearch) next.set('q', nextSearch);
+    if (sort !== 'MOI_NHAT') next.set('sapXep', sort);
+    router.replace(`/thu-vien/${encodeURIComponent(id)}${next.size ? `?${next}` : ''}`, { scroll: false });
+  };
+  const pageUrl = value => {
+    const next = new URLSearchParams({ page: String(value) });
+    if (searchText) next.set('q', searchText);
+    if (sortCards !== 'MOI_NHAT') next.set('sapXep', sortCards);
+    return `/thu-vien/${encodeURIComponent(id)}?${next}`;
+  };
   const shareDeck = () => setSharing(deckShare(window.location.origin, id, boThe));
   const shareCard = card => setSharing(cardShare(window.location.origin, id, card));
   const originId = boThe.banSao?.boGocId || (copy.error?.data?.details?.lyDo === 'LA_BAN_SAO' ? copy.error.data.details.boGocId : null);
@@ -131,7 +143,6 @@ function LibraryDetail({ id }) {
       <div className="form-head">
         <div className="answer-meta"><span className={`stamp ${boThe.nguon === 'MAU' ? 'stamp-solid' : 'stamp-graphite'}`}>{boThe.nguon === 'MAU' ? 'Bộ mẫu' : 'Người học chia sẻ'}</span>{boThe.mucTieu && <span className="stamp">{GOAL[boThe.mucTieu] || boThe.mucTieu}</span>}<span className="stamp stamp-quiet"><Icon name="globe" />Công khai</span>{ownDeck && <span className="stamp stamp-accent"><Icon name="user" />Bộ của bạn</span>}<CopyBadge banSao={boThe.banSao} /></div>
         <h1 id="deck-title" className={styles.title}>{boThe.ten}</h1>
-        {boThe.caoCap && <p className="small"><PlanTag code="PREMIUM" locked={premiumLocked} label="Bộ mẫu cao cấp · Premium" />{premiumLocked ? ' Xem trước được, sao chép cần gói Premium.' : ''}</p>}
         <AuthorTag id={boThe.chuSoHuuId} name={boThe.tenTacGia} prefix={boThe.banSao ? 'Người sao chép' : 'Tác giả'} />
         {boThe.moTa && <p>{boThe.moTa}</p>}
         <div className={styles.actions}>
@@ -139,12 +150,9 @@ function LibraryDetail({ id }) {
             ? <Link className="btn btn-primary btn-lg" href={`/bo-the/${id}`}><Icon name="edit" />Mở trong Bộ của tôi</Link>
             : boThe.banSao
             ? (boThe.banSao.boGocXemDuoc && <Link className="btn btn-primary btn-lg" href={`/thu-vien/${boThe.banSao.boGocId}`}><Icon name="arrow-left" />Xem bộ gốc</Link>)
-            : premiumLocked
-            ? <button type="button" className="btn btn-primary btn-lg" onClick={() => requestUpgrade('BO_MAU_CAO_CAP')}><Icon name="lock" />Sao chép (cần Premium)</button>
             : <button type="button" data-tour="copy-deck" className="btn btn-primary btn-lg" disabled={loadingUser || copy.isPending || copy.isSuccess || !!existingCopyId || (!!userError && userError.status !== 401)} aria-busy={copy.isPending} onClick={handleCopy}>{copy.isSuccess ? 'Đã sao chép' : copy.isPending ? 'Đang sao chép…' : 'Sao chép để học'}</button>}
             <button type="button" className="btn btn-secondary btn-lg" onClick={shareDeck}><Icon name="share" />Chia sẻ</button>
           <button type="button" className="btn btn-quiet btn-lg" onClick={copyLink}><Icon name="link" />Sao chép liên kết</button>
-          <ContentReportButton key={boThe.id} deck={boThe} />
           {!ownDeck && <button type="button" className="btn btn-quiet btn-lg" onClick={() => openReport({ loaiDoiTuong: 'BO_THE', doiTuongId: id, name: boThe.ten })}><Icon name="flag" />Báo cáo</button>}
         </div>
         {copy.isSuccess && <div className="notice notice-success" role="status"><Icon name="check" /><div className="stack-sm"><p className="notice-title">Đã sao chép bộ thẻ vào Bộ của tôi</p><Link data-tour="open-copy" data-deck-id={copy.data.id} className={`btn btn-secondary btn-sm ${styles.successLink}`} href={`/bo-the/${copy.data.id}`}>Mở bộ vừa sao chép</Link></div></div>}
@@ -155,8 +163,9 @@ function LibraryDetail({ id }) {
         {copy.error && !existingCopyId && !originId && <ErrorState title="Không sao chép được bộ thẻ" description={copy.error.message} onRetry={handleCopy} />}
         {userError && userError.status !== 401 && <ErrorState title="Không kiểm tra được đăng nhập" description={userError.message} onRetry={() => client.invalidateQueries({ queryKey: ['me'] })} />}
       </div>
-      <div className={`library-card-toolbar ${styles.cardToolbar}`}><div className="library-card-summary"><h2 id="cards-title" className={styles.listTitle}>Thẻ mẫu</h2><p className="muted small" id="sample-note">Hiển thị {the.items.length}/{boThe.soThe} thẻ</p></div><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
-      {the.items.length === 0 ? <div className="empty"><h2>Bộ thẻ này chưa có thẻ ở trang này</h2><p>Chọn trang trước hoặc quay lại thư viện.</p><button type="button" className="btn btn-secondary" onClick={() => router.replace(`/thu-vien/${encodeURIComponent(id)}`, { scroll: false })}>Về trang đầu</button></div> : <ol className="answer-list" id="cards" role="list" aria-labelledby="cards-title" aria-describedby="sample-note">
+      <div className={`library-card-toolbar ${styles.cardToolbar}`}><div className="library-card-summary"><h2 id="cards-title" className={styles.listTitle}>Thẻ mẫu</h2><p className="muted small" id="sample-note">{searchText ? `Tìm thấy ${the.totalElements}/${boThe.soThe} thẻ` : `Hiển thị ${the.items.length}/${boThe.soThe} thẻ`}</p></div><CardImagePreference checked={showImages} onChange={setShowImages} /></div>
+      <CardSearchBar search={searchText} sort={sortCards} onChange={changeList} />
+      {the.items.length === 0 ? <div className="empty"><h2>{searchText ? 'Không tìm thấy từ nào' : 'Bộ thẻ này chưa có thẻ ở trang này'}</h2><p>{searchText ? 'Thử từ khóa khác hoặc xóa ô tìm kiếm.' : 'Chọn trang trước hoặc quay lại thư viện.'}</p><button type="button" className="btn btn-secondary" onClick={() => router.replace(`/thu-vien/${encodeURIComponent(id)}`, { scroll: false })}>{searchText ? 'Xóa tìm kiếm' : 'Về trang đầu'}</button></div> : <ol className="answer-list" id="cards" role="list" aria-labelledby="cards-title" aria-describedby="sample-note">
         {the.items.map((card, index) => <CardEntry
           key={card.id}
           card={card}
@@ -175,7 +184,7 @@ function LibraryDetail({ id }) {
       {sharing && <ShareDialog onClose={() => setSharing(null)} {...sharing} />}
       {snapping && <SnapDialog key={snapping.card.id} onClose={() => setSnapping(null)} card={snapping.card} number={snapping.number} deckId={id} deckName={boThe.ten} publicDeck />}
       {reporting && <ReportDialog key={`${reporting.loaiDoiTuong}-${reporting.doiTuongId}`} onClose={() => setReporting(null)} {...reporting} />}
-      <Pagination className={styles.pager} page={page + 1} totalPages={the.totalPages} onPageChange={value => router.replace(`/thu-vien/${encodeURIComponent(id)}?page=${value - 1}`, { scroll: false })} />
+      <Pagination className={styles.pager} page={page + 1} totalPages={the.totalPages} onPageChange={value => router.replace(pageUrl(value - 1), { scroll: false })} />
     </article>
     <aside className="side-col">
       <section className="panel" aria-labelledby="info-title">

@@ -4,6 +4,7 @@ import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CardSort;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardQuery;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckDetailResponse;
@@ -102,16 +103,26 @@ public class LibraryService {
                 .map(found -> UnavailableUser.error())
                 .orElseGet(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bộ thẻ")));
 
-        int page = cardPage(deck.getId(), request);
-
-        Page<TheTuVung> cardPage =
-                cards.findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
-                        deck.getId(),
-                        PageRequest.of(page, request.size())
-                );
+        boolean filtered = CardSort.filtered(request.q(), request.sapXep());
+        Page<TheTuVung> cardPage;
+        long totalCards;
+        if (filtered) {
+            cardPage = cards.searchPublic(
+                    deck.getId(),
+                    CardSort.likePattern(request.q()),
+                    PageRequest.of(request.page(), request.size(), request.sapXep().sort())
+            );
+            totalCards = cards.countByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalse(deck.getId());
+        } else {
+            cardPage = cards.findByBoTheIdAndXoaAtIsNullAndAnKiemDuyetFalseOrderByIdDesc(
+                    deck.getId(),
+                    PageRequest.of(cardPage(deck.getId(), request), request.size())
+            );
+            totalCards = cardPage.getTotalElements();
+        }
 
         return new LibraryDeckDetailResponse(
-                detailMetadata(deck, cardPage.getTotalElements()),
+                detailMetadata(deck, totalCards),
                 cardResponses(cardPage)
         );
     }

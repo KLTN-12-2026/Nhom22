@@ -47,7 +47,7 @@ public class AdminDeckService {
 
     @Transactional
     public SampleDeckResponse create(Long actorId, CreateSampleDeckRequest request) {
-        SampleDeckResponse deck = samples.create(request.toDeckRequest(), Boolean.TRUE.equals(request.caoCap()));
+        SampleDeckResponse deck = samples.create(request.toDeckRequest());
         audit.record(actorId, HanhDongQuanTri.TAO_BO_MAU, LoaiDoiTuong.BO_THE, Long.valueOf(deck.id()), deck.ten(),
                 null, null, deckFields(deck));
         return deck;
@@ -56,7 +56,7 @@ public class AdminDeckService {
     @Transactional
     public SampleDeckResponse update(Long actorId, Long id, UpdateSampleDeckRequest request) {
         SampleDeckResponse before = samples.lock(id);
-        SampleDeckResponse after = samples.update(id, request.toDeckRequest(), request.trangThaiKiemDuyet(), request.caoCap());
+        SampleDeckResponse after = samples.update(id, request.toDeckRequest(), request.trangThaiKiemDuyet());
         Map<String, Object> truoc = deckFields(before);
         Map<String, Object> sau = deckFields(after);
         truoc.keySet().removeIf(key -> Objects.equals(truoc.get(key), sau.get(key)));
@@ -150,7 +150,6 @@ public class AdminDeckService {
         fields.put("trinhDo", deck.trinhDo());
         fields.put("quyenTruyCap", deck.quyenTruyCap());
         fields.put("trangThaiKiemDuyet", deck.trangThaiKiemDuyet());
-        fields.put("caoCap", deck.caoCap());
         return fields;
     }
 

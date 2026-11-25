@@ -32,7 +32,7 @@ function unitText(feature, value) {
   return value > 0 ? 'Có' : 'Không có';
 }
 
-const HIGHLIGHTS = ['GIOI_HAN_THE', 'AI', 'ANH', 'PHAT_AM', 'BO_MAU_CAO_CAP'];
+const HIGHLIGHTS = ['GIOI_HAN_THE', 'AI', 'ANH', 'PHAT_AM'];
 
 export function UpgradeDialog() {
   const client = useQueryClient();

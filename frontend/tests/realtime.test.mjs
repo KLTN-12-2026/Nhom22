@@ -16,6 +16,8 @@ test('parseEvent reads loai and id and survives bad data', () => {
 test('keysFor targets the queries each event changes', () => {
   assert.deepEqual(keysFor('YEU_CAU_AI', '7')[0], ['ai-request', '7']);
   assert.ok(keysFor('HANG_CHO_QUAN_TRI').some(key => key[0] === 'admin-queue'));
+  assert.ok(keysFor('HANG_CHO_QUAN_TRI').some(key => key[0] === 'admin-support-tickets'));
+  assert.ok(keysFor('THONG_BAO_MOI').some(key => key[0] === 'support-tickets'));
   assert.deepEqual(keysFor('UNKNOWN'), []);
   assert.deepEqual(keysFor('TAI_KHOAN_BI_KHOA'), []);
   assert.ok(keysFor('BAO_CAO_MOI').some(key => key[0] === 'admin-reports'));

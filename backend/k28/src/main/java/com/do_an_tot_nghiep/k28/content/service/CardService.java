@@ -5,6 +5,7 @@ import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CardAudioSource;
 import com.do_an_tot_nghiep.k28.content.dto.CardResponse;
+import com.do_an_tot_nghiep.k28.content.dto.CardSort;
 import com.do_an_tot_nghiep.k28.content.dto.CreateCardRequest;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateCardRequest;
@@ -56,7 +57,7 @@ public class CardService {
             int page,
             int size
     ) {
-        return list(userId, deckId, page, size, null);
+        return list(userId, deckId, page, size, null, null, null);
     }
 
     public PageResponse<CardResponse> list(
@@ -64,7 +65,9 @@ public class CardService {
             Long deckId,
             int page,
             int size,
-            Long theId
+            Long theId,
+            String q,
+            CardSort sapXep
     ) {
         BoThe deck = ownedDeck(userId, deckId);
 
@@ -75,15 +78,30 @@ public class CardService {
             );
         }
 
-        if (theId != null && theId > 0
-                && cards.existsByIdAndBoTheIdAndXoaAtIsNull(theId, deck.getId())) {
-            page = (int) (cards.countByBoTheIdAndXoaAtIsNullAndIdGreaterThan(deck.getId(), theId) / size);
+        if (q != null && q.strip().length() > 100) {
+            throw new ApiException(
+                    ErrorCode.VALIDATION_FAILED,
+                    "q",
+                    "Từ khóa tối đa 100 ký tự"
+            );
         }
 
-        Page<TheTuVung> result =
-                cards.findByBoTheIdAndXoaAtIsNullOrderByIdDesc(
-                        deck.getId(), PageRequest.of(page, size)
-                );
+        Page<TheTuVung> result;
+        if (CardSort.filtered(q, sapXep)) {
+            result = cards.searchOwned(
+                    deck.getId(),
+                    CardSort.likePattern(q),
+                    PageRequest.of(page, size, CardSort.orDefault(sapXep).sort())
+            );
+        } else {
+            if (theId != null && theId > 0
+                    && cards.existsByIdAndBoTheIdAndXoaAtIsNull(theId, deck.getId())) {
+                page = (int) (cards.countByBoTheIdAndXoaAtIsNullAndIdGreaterThan(deck.getId(), theId) / size);
+            }
+            result = cards.findByBoTheIdAndXoaAtIsNullOrderByIdDesc(
+                    deck.getId(), PageRequest.of(page, size)
+            );
+        }
 
         if (result.isEmpty()) {
             return PageResponse.of(

@@ -81,7 +81,7 @@ function Duty({ queue, oldest }) {
                 {item.count > 0 && <Ring index={ringIndex} />}
               </span>
               {item.count > 0 && item.href
-                ? <Link className={`adm-btn adm-btn-sm${index === 0 ? ' adm-btn-primary' : ''}`} href={item.href}>{index === 0 ? 'Duyệt' : 'Xem'}</Link>
+                ? <Link className={`adm-btn adm-btn-sm${index === 0 ? ' adm-btn-primary' : ''}`} href={item.href}>Mở sổ</Link>
                 : <span className={item.count ? styles.wait : styles.ok}>{item.count ? 'Cần kiểm tra' : 'Ổn'}</span>}
             </li>
           );
@@ -264,7 +264,7 @@ export default function AdminDashboardPage() {
   });
 
   const head = (
-    <div className={styles.head}>
+    <div className={`${styles.head} adm-register`}>
       <div>
         <h1>Sổ trực ban</h1>
         <p>Việc đang chờ ở trên, số liệu so với kỳ trước ở dưới. Số khoanh đỏ là việc cần bạn xử lý.</p>

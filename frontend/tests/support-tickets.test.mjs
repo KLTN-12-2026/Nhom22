@@ -1,59 +1,37 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { filterTickets, readTickets, sampleTickets, saveTicket, validateTicket } from '../src/lib/support-tickets.mjs';
+import { filterTickets, fromApiTicket, toApiCreate, validateTicket } from '../src/lib/support-tickets.mjs';
 
-function memoryStorage() {
-  const data = new Map();
-  return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
-}
-const values = { title: '  Kiểm tra giao diện  ', description: '  Mô tả vấn đề  ', category: 'technical', priority: 'high' };
-
-test('search ignores Vietnamese accents and case, searches descriptions, and combines filters', () => {
-  const tickets = sampleTickets();
-  assert.equal(filterTickets(tickets, { search: 'DIEU CHINH' })[0].category, 'academic');
-  assert.equal(filterTickets(tickets, { search: 'vnpay' })[0].priority, 'critical');
-  assert.equal(filterTickets(tickets, { category: 'technical', priority: 'high', status: 'open' }).length, 2);
-  assert.equal(filterTickets(tickets, { search: 'vnpay', status: 'resolved' }).length, 0);
-  const reversed = [...tickets].reverse();
-  assert.equal(filterTickets(reversed)[0].id, 'HT-1042');
-  assert.equal(reversed[0].id, tickets.at(-1).id);
+const api = (id, over = {}) => ({
+  id: String(id), version: 0, tieuDe: 'Thanh toán VNPay chưa kích hoạt', moTa: 'Gói Pro chưa hiển thị', loaiVanDe: 'THANH_TOAN',
+  doUuTien: 'NGHIEM_TRONG', trangThai: 'DANG_MO', createdAt: `2026-11-2${id}T02:30:00Z`, updatedAt: `2026-11-2${id}T02:30:00Z`,
+  phanHoi: [], ...over,
 });
 
-test('creating a ticket trims fields, persists through reloads and isolates accounts', () => {
-  const storage = memoryStorage();
-  const updated = saveTicket(storage, 'learner-a', values);
-  assert.equal(updated.length, 13);
-  assert.equal(updated[0].title, 'Kiểm tra giao diện');
-  assert.equal(updated[0].description, 'Mô tả vấn đề');
-  assert.equal(updated[0].status, 'open');
-  assert.equal(updated[0].id, 'HT-1043');
-  assert.deepEqual(readTickets(storage, 'learner-a'), updated);
-  assert.equal(readTickets(storage, 'learner-b').length, 12);
-  assert.equal(saveTicket(storage, 'learner-a', values)[0].id, 'HT-1044');
+test('API tickets map to FE keys and replies map to history', () => {
+  const ticket = fromApiTicket(api(3, { phanHoi: [{ id: '1', nguoiXuLy: 'Admin', noiDung: 'Đã xử lý', hanhDong: 'Trạng thái: Đã giải quyết', createdAt: '2026-11-23T03:00:00Z' }] }));
+  assert.equal(ticket.id, 'HT-3');
+  assert.equal(ticket.rawId, '3');
+  assert.deepEqual([ticket.category, ticket.priority, ticket.status], ['payment', 'critical', 'open']);
+  assert.deepEqual(ticket.history[0], { author: 'Admin', message: 'Đã xử lý', action: 'Trạng thái: Đã giải quyết', createdAt: '2026-11-23T03:00:00Z' });
 });
 
-test('corrupt, duplicate and inaccessible storage fall back safely to sample tickets', () => {
-  for (const saved of ['{invalid', '{}', JSON.stringify([{ ...sampleTickets()[0], status: 'unknown' }]), JSON.stringify([sampleTickets()[0], sampleTickets()[0]])]) {
-    assert.deepEqual(readTickets({ getItem: () => saved }, 'a'), sampleTickets());
-  }
-  assert.deepEqual(readTickets({ getItem() { throw new Error('Denied'); } }, 'a'), sampleTickets());
-  assert.deepEqual(readTickets({ getItem: () => '[]' }, 'a'), []);
+test('create payload trims fields and uses API enums', () => {
+  assert.deepEqual(toApiCreate({ title: '  A  ', description: ' B ', category: 'academic', priority: 'low' }),
+    { tieuDe: 'A', moTa: 'B', loaiVanDe: 'HOC_VU', doUuTien: 'THAP' });
 });
 
-test('failed storage writes propagate and leave saved data unchanged', () => {
-  const storage = memoryStorage();
-  const saved = saveTicket(storage, 'a', values);
-  assert.throws(() => saveTicket({ ...storage, setItem() { throw new Error('Quota exceeded'); } }, 'a', values), /Quota exceeded/);
-  assert.deepEqual(readTickets(storage, 'a'), saved);
+test('search ignores accents and combines filters, newest first', () => {
+  const tickets = [api(1), api(2, { tieuDe: 'Không nghe được âm thanh', moTa: 'Chrome', loaiVanDe: 'KY_THUAT', doUuTien: 'CAO' }),
+    api(3, { trangThai: 'DA_GIAI_QUYET' })].map(fromApiTicket);
+  assert.equal(filterTickets(tickets, { search: 'AM THANH' })[0].id, 'HT-2');
+  assert.equal(filterTickets(tickets, { category: 'payment', status: 'open' }).length, 1);
+  assert.equal(filterTickets(tickets)[0].id, 'HT-3');
 });
 
-test('blank, overlong or invalid form values cannot be saved', () => {
-  assert.deepEqual(Object.keys(validateTicket({ title: '   ', description: '\n' })), ['title', 'description']);
-  assert.match(validateTicket({ title: 'x'.repeat(151), description: 'Valid' }).title, /150/);
-  const storage = memoryStorage();
-  for (const invalid of [{ ...values, title: ' ' }, { ...values, description: '' }, { ...values, category: 'unknown' }, { ...values, priority: 'urgent' }]) {
-    assert.throws(() => saveTicket(storage, 'a', invalid));
-  }
-  assert.throws(() => saveTicket(storage, null, values));
-  assert.equal(readTickets(storage, 'a').length, 12);
+test('blank or overlong values are rejected', () => {
+  assert.ok(validateTicket({ title: ' ', description: 'x' }).title);
+  assert.ok(validateTicket({ title: 'x'.repeat(151), description: 'x' }).title);
+  assert.ok(validateTicket({ title: 'x', description: ' ' }).description);
+  assert.deepEqual(validateTicket({ title: 'x', description: 'y' }), {});
 });

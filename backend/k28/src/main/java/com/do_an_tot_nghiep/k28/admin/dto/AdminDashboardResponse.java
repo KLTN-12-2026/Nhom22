@@ -58,7 +58,8 @@ public record AdminDashboardResponse(
             long thueBaoSapHetHan,
             long giaoDichTreo,
             long chuaXacThucQua48h,
-            long tacVuLoi24h
+            long tacVuLoi24h,
+            long hoTroDangMo
     ) {
     }
 

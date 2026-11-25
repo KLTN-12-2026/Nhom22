@@ -1,6 +1,0 @@
-.dialog { width: min(100% - var(--sp-6), 36rem); }
-.form, .fields { display: grid; gap: var(--sp-4); }
-.fields { border: 0; padding: 0; margin: 0; min-width: 0; }
-.target { overflow-wrap: anywhere; }
-.dialog :global(.modal__footer) { justify-content: flex-end; }
-.dialog :global(.modal__footer .btn) { max-width: 100%; white-space: normal; }

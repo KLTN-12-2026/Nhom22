@@ -101,7 +101,7 @@ function PaymentAdmin() {
         return;
       }
     }
-    for (const key of ['active', 'speech', 'premium']) updated[key] = fields.has(key);
+    for (const key of ['active', 'speech']) updated[key] = fields.has(key);
     setSaving(true);
     setFormError('');
     try {
@@ -222,7 +222,7 @@ function PaymentAdmin() {
         <div className={styles.planGrid}>{data.plans.map(p => <article key={p.code} className={styles.planCard}>
           <div className={styles.sectionHead}><h3>{planName(p.code)}</h3><StatusBadge status={p.active ? ['Đang mở bán', 'success'] : ['Ngừng mở bán', 'expired']} /></div>
           <p className={styles.price}>{money(p.month)} <small>/ tháng</small></p><p className={styles.yearPrice}>{money(p.year)} / năm</p>
-          <ul className={styles.featureList}>{[['Số thẻ tối đa', p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')], ['Đánh giá phát âm', p.speech ? 'Có' : 'Không'], ['Bộ mẫu cao cấp', p.premium ? 'Có' : 'Không']].map(([label, value]) => <li key={label}><span>{label}</span><strong>{value}</strong></li>)}</ul>
+          <ul className={styles.featureList}>{[['Số thẻ tối đa', p.cards === null ? 'Không giới hạn' : p.cards.toLocaleString('vi-VN')], ['Đánh giá phát âm', p.speech ? 'Có' : 'Không']].map(([label, value]) => <li key={label}><span>{label}</span><strong>{value}</strong></li>)}</ul>
           <button className="btn btn-secondary" type="button" aria-label={`Chỉnh sửa gói ${planName(p.code)}`} onClick={() => openDialog({ type: 'plan', plan: p })}><Icon name="edit" /> Chỉnh sửa gói</button><p className={styles.caption}>Phiên bản {p.version}</p>
         </article>)}</div>
         <p className={styles.info}>Giá mới chỉ áp dụng cho đơn tạo sau khi lưu. Đơn đã tạo giữ nguyên số tiền và gói người dùng đang dùng giữ nguyên thời hạn.</p>
@@ -235,7 +235,7 @@ function PaymentAdmin() {
       {dialog?.type === 'plan' && <form key={`${dialog.plan.code}-${dialog.plan.version}-${conflict}`} onSubmit={savePlan}>
         <p className={styles.dialogSubtitle}>Phiên bản {dialog.plan.version}</p>
         <div className={styles.editGrid}>{[['Giá tháng (VND)', 'month', 1000], ['Giá năm (VND)', 'year', 1000], ['Số thẻ tối đa (trống = không giới hạn)', 'cards', 1]].map(([label, name, min]) => <label className="field" key={name}>{label}<input className="input" name={name} type="number" min={min} max={name === 'month' ? 100000000 : 1000000000} step={1} defaultValue={dialog.plan[name] ?? ''} placeholder={name === 'cards' ? 'Không giới hạn' : undefined} required={name !== 'cards'} disabled={conflict || saving} /></label>)}
-          {[['active', 'Mở bán gói'], ['speech', 'Đánh giá phát âm'], ['premium', 'Bộ mẫu cao cấp']].map(([name, label]) => <label className={styles.check} key={name}><input name={name} type="checkbox" defaultChecked={dialog.plan[name]} disabled={conflict || saving} /> {label}</label>)}
+          {[['active', 'Mở bán gói'], ['speech', 'Đánh giá phát âm']].map(([name, label]) => <label className={styles.check} key={name}><input name={name} type="checkbox" defaultChecked={dialog.plan[name]} disabled={conflict || saving} /> {label}</label>)}
         </div>
         <p className={styles.formError} role="alert">{formError}</p>
         <div className={styles.actions}><button className="btn btn-quiet" type="button" onClick={() => setDialog(null)} disabled={saving}>Hủy</button>{conflict && <button className="btn btn-secondary" type="button" onClick={reloadPlan}>Tải lại cấu hình</button>}<button className="btn btn-primary" type="submit" disabled={conflict || saving}>Lưu thay đổi</button></div>

@@ -138,10 +138,11 @@ public class AdminDashboardRepository {
                        (SELECT COUNT(*) FROM dang_ky_goi WHERE trang_thai = 'HIEU_LUC' AND het_han_at > :now AND het_han_at <= :tuan) AS sap_het_han,
                        (SELECT COUNT(*) FROM giao_dich_thanh_toan WHERE trang_thai = 'CHO_THANH_TOAN' AND tao_at < :treo) AS treo,
                        (SELECT COUNT(*) FROM nguoi_dung WHERE trang_thai = 'CHUA_XAC_THUC' AND created_at < :haiNgay) AS chua_xac_thuc,
-                       (SELECT COUNT(*) FROM tac_vu_nen WHERE trang_thai IN ('LOI', 'KHONG_XAC_DINH') AND updated_at >= :motNgay) AS tac_vu_loi
+                       (SELECT COUNT(*) FROM tac_vu_nen WHERE trang_thai IN ('LOI', 'KHONG_XAC_DINH') AND updated_at >= :motNgay) AS tac_vu_loi,
+                       (SELECT COUNT(*) FROM phieu_ho_tro WHERE trang_thai = 'DANG_MO') AS ho_tro
                 """, p, (rs, i) -> new AdminDashboardResponse.CanXuLy(rs.getLong("cong_khai"),
                 instant(rs, "cong_khai_cu"), rs.getLong("bao_cao"), rs.getLong("sap_het_han"),
-                rs.getLong("treo"), rs.getLong("chua_xac_thuc"), rs.getLong("tac_vu_loi")));
+                rs.getLong("treo"), rs.getLong("chua_xac_thuc"), rs.getLong("tac_vu_loi"), rs.getLong("ho_tro")));
     }
 
     public long pendingJobs() {
