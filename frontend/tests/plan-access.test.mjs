@@ -52,3 +52,19 @@ test('helpers for limits', () => {
   assert.equal(formatLimit(null), 'Không giới hạn');
   assert.equal(formatLimit(5000), '5.000');
 });
+
+test('free tier limits: practice quota upgrades to Pro and advanced stats is a Pro flag', () => {
+  const tiers = plans.map(p => ({ ...p, hanMucLuyenTap: { FREE: 5, PRO: 50, PREMIUM: 200 }[p.ma], thongKeNangCao: p.ma !== 'FREE' }));
+  const practice = access({ plans: tiers, planCode: 'FREE', quota: { hanMuc: [{ loai: 'LUYEN_TAP', gioiHan: 5, conLai: 0 }] }, feature: 'LUYEN_TAP' });
+  assert.equal(practice.exhausted, true);
+  assert.equal(practice.upgrade.ma, 'PRO');
+  const stats = access({ plans: tiers, planCode: 'FREE', feature: 'THONG_KE_NANG_CAO' });
+  assert.equal(stats.locked, true);
+  assert.equal(stats.required.ma, 'PRO');
+  assert.equal(access({ plans: tiers, planCode: 'PRO', feature: 'THONG_KE_NANG_CAO' }).locked, false);
+  const denied = upgradeFromError(422, { message: 'x', details: { quyenLoi: 'THONG_KE_NANG_CAO', goiCanNangCap: 'PRO' } }, tiers, 'FREE');
+  assert.equal(denied.target.ma, 'PRO');
+  const limited = upgradeFromError(429, { message: 'x', details: { quyenLoi: 'HAN_MUC', loai: 'LUYEN_TAP', gioiHan: 5 } }, tiers, 'FREE');
+  assert.equal(limited.reason, 'HET_LUOT');
+  assert.equal(limited.target.ma, 'PRO');
+});

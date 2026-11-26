@@ -11,7 +11,10 @@ import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { DeckCover } from '@/components/ui/DeckCover';
 import { AuthorTag } from '@/components/content/AuthorTag';
-import { ForYouPanel } from '@/components/content/ForYouDecks';
+import { ForYouEmpty } from '@/components/content/ForYouDecks';
+import { useForYouDecks } from '@/hooks/useForYouDecks';
+
+const FOR_YOU_TAB = { value: 'forYou', label: 'Dành cho bạn' };
 
 const VIEW_TABS = [
   { value: 'trending', label: 'Thịnh hành' },
@@ -22,7 +25,8 @@ const VIEW_TABS = [
 
 const VIEW_HINT = {
   trending: 'Xếp theo lượt yêu thích và sao chép từ người khác trong 7 ngày qua.',
-  favorites: 'Xếp theo tổng lượt yêu thích từ người khác.'
+  favorites: 'Xếp theo tổng lượt yêu thích từ người khác.',
+  forYou: 'Bộ công khai thuộc chủ đề quan tâm mà bạn chưa sao chép, chưa học; bộ đúng trình độ của bạn đứng trước. Bộ lọc phía trên không áp dụng cho mục này.'
 };
 
 const LEVEL_LABEL = { MOI_BAT_DAU: 'Mới bắt đầu', CO_BAN: 'Cơ bản', TRUNG_CAP: 'Trung cấp', NANG_CAO: 'Nâng cao' };
@@ -76,12 +80,16 @@ function LibraryContent() {
   const setSort = value => change('sort', value);
   
   const { data: topics = [], error: topicsError, refetch: reloadTopics } = useTopics();
-  const { data: decksData, isLoading, error, refetch } = useLibraryDecks({ chuDeId: topicId, q, mucTieu: goal, trinhDo: level, nguon: source, sort, page, size });
-  
-  const decks = decksData?.items || [];
-  const total = decksData?.totalElements || 0;
-
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiFetch('/api/v1/me'), retry: false, staleTime: 60000 });
+  const forYou = sort === 'forYou' && !!me;
+  const libraryResult = useLibraryDecks({ chuDeId: topicId, q, mucTieu: goal, trinhDo: level, nguon: source, sort: sort === 'forYou' ? 'trending' : sort, page, size }, { enabled: !forYou });
+  const forYouResult = useForYouDecks(20, { enabled: forYou });
+  const { data: decksData, isLoading, error, refetch } = forYou ? forYouResult : libraryResult;
+  const viewTabs = me ? [FOR_YOU_TAB, ...VIEW_TABS] : VIEW_TABS;
+  const view = forYou ? 'forYou' : sort === 'forYou' ? 'trending' : sort;
+
+  const decks = (forYou ? decksData?.boThe : decksData?.items) || [];
+  const total = forYou ? decks.length : decksData?.totalElements || 0;
   const deckIds = decks.map(deck => deck.id);
   const { data: ownCopies = [] } = useQuery({
     queryKey: ['own-copies', deckIds],
@@ -168,20 +176,20 @@ function LibraryContent() {
         </form>
 
         <div className={styles.tabs} role="group" aria-label="Xem theo">
-          {VIEW_TABS.map(tab => (
-            <button key={tab.value} type="button" aria-pressed={sort === tab.value} onClick={() => setSort(tab.value)}>
+          {viewTabs.map(tab => (
+            <button key={tab.value} type="button" aria-pressed={view === tab.value} onClick={() => setSort(tab.value)}>
               {tab.label}
             </button>
           ))}
         </div>
-        {VIEW_HINT[sort] && <p className={`caption ${styles.tabHint}`}>{VIEW_HINT[sort]}</p>}
+        {VIEW_HINT[view] && <p className={`caption ${styles.tabHint}`}>{VIEW_HINT[view]}</p>}
 
         <div className={styles.resultBar}>
           <p id="result-count" className="muted" aria-live="polite">
             {error ? 'Không tải được thư viện' : isLoading ? 'Đang tải thư viện…' : total === 0 ? 'Không có kết quả' : `${total} bộ thẻ`}
           </p>
           <div className={styles.resultControls}>
-            <div className={styles.resultControl}>
+            <div className={styles.resultControl} hidden={forYou}>
             <label htmlFor="size" className="caption">Mỗi trang</label>
             <select className="select" id="size" value={size} onChange={e => change('size', e.target.value)}>
               {pageSizes.map(value => <option key={value} value={value}>{value} bộ</option>)}
@@ -189,7 +197,8 @@ function LibraryContent() {
             </div>
             <div className={styles.resultControl}>
             <label htmlFor="sort" className="caption">Sắp xếp</label>
-            <select className="select" id="sort" value={sort} onChange={e => setSort(e.target.value)}>
+            <select className="select" id="sort" value={view} onChange={e => setSort(e.target.value)}>
+              {me && <option value="forYou">Dành cho bạn</option>}
               <option value="trending">Thịnh hành</option>
               <option value="favorites">Yêu thích nhất</option>
               <option value="newest">Mới đăng</option>
@@ -224,7 +233,7 @@ function LibraryContent() {
             <ol className="answer-list" id="list" role="list">
               {decks.map((deck, i) => (
                 <li key={deck.id} data-tour-deck={deck.id} data-tour-copied={copyOf.has(deck.id) || (me && deck.chuSoHuuId === me.id) || undefined} className={`answer-row deck-row${me && deck.chuSoHuuId === me.id ? ' is-mine' : copyOf.has(deck.id) ? ` ${styles.copied}` : ''}`}>
-                  <span className="answer-no">{page * size + i + 1}</span>
+                  <span className="answer-no">{forYou ? i + 1 : page * size + i + 1}</span>
                   <div className="answer-main">
                     <div className="deck-name-line">
                     <DeckCover deck={deck} priority={i < 2} />
@@ -270,14 +279,14 @@ function LibraryContent() {
                 </li>
               ))}
             </ol>
-            <Pagination className={styles.pager} page={page + 1} totalPages={decksData?.totalPages || 0} onPageChange={value => {
+            {!forYou && <Pagination className={styles.pager} page={page + 1} totalPages={decksData?.totalPages || 0} onPageChange={value => {
               change('page', String(value - 1));
               document.getElementById('page-title')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-            }} />
+            }} />}
           </div>
           
           <div data-when="empty">
-            <div className="empty">
+            {forYou ? <ForYouEmpty daChonChuDe={decksData?.daChonChuDe} /> : <div className="empty">
               <div className="empty-sheet" aria-hidden="true">
                 <span data-n="1"><i></i><i></i><i></i><i></i></span>
                 <span data-n="2"><i></i><i></i><i></i><i></i></span>
@@ -293,13 +302,12 @@ function LibraryContent() {
               >
                 Xóa bộ lọc
               </button>
-            </div>
+            </div>}
           </div>
         </div>
       </section>
 
       <aside className="side-col">
-        <ForYouPanel enabled={!!me} />
         <section className={`panel ${styles.sideTopics}`} aria-labelledby="t-title">
           <h2 className="panel-title" id="t-title">Chủ đề</h2>
           <ul className={styles.topicLinks} id="topic-links">

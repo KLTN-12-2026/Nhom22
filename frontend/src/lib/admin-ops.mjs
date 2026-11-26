@@ -17,13 +17,14 @@ export const TARGET_TYPE = { BO_THE: 'Bộ thẻ', THE_TU_VUNG: 'Thẻ', YEU_CAU
 
 export const REPORT_REASON = { SAI_NOI_DUNG: 'Sai nghĩa / thông tin', SAI_CHINH_TA: 'Sai chính tả, phiên âm', KHONG_PHU_HOP: 'Không phù hợp', SPAM: 'Spam / quảng cáo', BAN_QUYEN: 'Vi phạm bản quyền', KHAC: 'Lý do khác', ANH_DAI_DIEN_NHAY_CAM: 'Ảnh đại diện nhạy cảm', TEN_KHONG_PHU_HOP: 'Tên không phù hợp', MAO_DANH: 'Mạo danh', QUAY_ROI: 'Quấy rối' };
 
-export const SERVICE_TYPES = ['AI', 'ANH', 'TTS', 'PHAT_AM'];
+export const SERVICE_TYPES = ['AI', 'ANH', 'TTS', 'PHAT_AM', 'LUYEN_TAP'];
 
 export const SERVICE_INFO = {
   AI: ['Trợ lý AI', 'Giải thích ngữ cảnh, sửa câu, xưởng thẻ'],
   ANH: ['Ảnh thẻ AI', 'Tạo ảnh minh họa cho thẻ'],
   TTS: ['Đọc phát âm', 'Âm thanh đọc từ và câu ví dụ'],
   PHAT_AM: ['Chấm phát âm', 'Đánh giá giọng đọc của người học'],
+  LUYEN_TAP: ['Bài luyện tập', 'Số bài luyện tập tạo mới mỗi ngày, không tính luyện lại câu sai'],
 };
 
 export const REASON_MIN = 10;

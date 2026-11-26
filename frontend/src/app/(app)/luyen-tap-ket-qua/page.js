@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon } from '@/components/ui';
+import { AiMistakeExplain } from '@/components/practice/AiMistakeExplain';
 import { fx } from '@/lib/fx';
 import { mucActivity, mucCelebrate, mucSay } from '@/lib/mascot.mjs';
 import { ERROR_GROUP, PRACTICE_TYPE, SKILL, label, splitBlank } from '@/lib/practice-labels.mjs';
@@ -168,6 +169,7 @@ function PracticeResultContent() {
               )}
             </div>
           )}
+          {!r.dung && <AiMistakeExplain sessionId={id} questionId={r.cauHoiId} existing={r.giaiThichAi} />}
         </div>
       </section>
     );

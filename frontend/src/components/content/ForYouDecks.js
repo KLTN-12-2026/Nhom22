@@ -24,25 +24,8 @@ function NoDecks() {
   );
 }
 
-export function ForYouPanel({ enabled = true }) {
-  const { data, isError } = useForYouDecks(5, { enabled });
-  if (!enabled || isError || !data) return null;
-
-  return (
-    <section className="panel" aria-labelledby="for-you-title">
-      <h2 className="panel-title" id="for-you-title">Dành cho bạn</h2>
-      {!data.daChonChuDe ? <NoTopics /> : data.boThe.length === 0 ? <NoDecks /> : (
-        <ul className={styles.compact} role="list">
-          {data.boThe.map(deck => (
-            <li key={deck.id}>
-              <Link href={`/thu-vien/${deck.id}`}>{deck.ten}</Link>
-              <span>{[deck.tenChuDe, LEVEL_LABEL[deck.trinhDo], `${deck.soThe} thẻ`].filter(Boolean).join(' · ')}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+export function ForYouEmpty({ daChonChuDe }) {
+  return daChonChuDe ? <NoDecks /> : <NoTopics />;
 }
 
 export function ForYouSection() {

@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { SKILL, SKILL_PRACTICE, label } from '@/lib/practice-labels.mjs';
+import { PlanTag, requestUpgrade } from '@/components/billing/PlanAccess';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 import styles from './page.module.css';
 
 const MAX_DAYS = 90;
@@ -72,6 +74,18 @@ function StatsContent() {
   const [deckId, setDeckId] = useState('');
 
   const [viewMode, setViewMode] = useState('chart');
+  const advanced = usePlanAccess().of('THONG_KE_NANG_CAO');
+  const basic = !!advanced?.locked;
+  const minBasic = shiftDay(today, -6);
+  const lockedTag = basic ? <PlanTag code={advanced.required?.ma} /> : null;
+  const pickRange = value => {
+    if (basic && value === '30') return requestUpgrade('THONG_KE_NANG_CAO');
+    setRangeType(value);
+  };
+  const pickDeck = value => {
+    if (basic && value) return requestUpgrade('THONG_KE_NANG_CAO');
+    setDeckId(value);
+  };
 
   const { data: myDecks = [] } = useQuery({
     queryKey: ['my-decks', 'all'],
@@ -100,6 +114,10 @@ function StatsContent() {
       if (!tuNgay || !denNgay) return setRangeError('Chọn ngày bắt đầu và ngày kết thúc');
       if (tuNgay > denNgay) return setRangeError('Ngày bắt đầu phải trước ngày kết thúc');
       if (inclusiveDays(tuNgay, denNgay) > MAX_DAYS) return setRangeError(`Chọn khoảng tối đa ${MAX_DAYS} ngày`);
+      if (basic && tuNgay < minBasic) {
+        requestUpgrade('THONG_KE_NANG_CAO');
+        return setRangeError('Gói hiện tại chỉ xem 7 ngày gần nhất. Nâng cấp để xem khoảng dài hơn.');
+      }
       if (custom?.tu !== tuNgay || custom?.den !== denNgay) {
         setCustom({ tu: tuNgay, den: denNgay });
         return;
@@ -227,17 +245,17 @@ function StatsContent() {
             <legend>Khoảng thời gian</legend>
             <div className={`choice-grid cols-3 ${styles.choiceGrid}`}>
               <label className="choice choice-card">
-                <input type="radio" name="range" value="7" checked={rangeType === '7'} onChange={(e) => setRangeType(e.target.value)} />
+                <input type="radio" name="range" value="7" checked={rangeType === '7'} onChange={(e) => pickRange(e.target.value)} />
                 <span className="bubble" aria-hidden="true"></span>
                 <span className="choice-body"><span className="choice-title">7 ngày</span></span>
               </label>
               <label className="choice choice-card">
-                <input type="radio" name="range" value="30" checked={rangeType === '30'} onChange={(e) => setRangeType(e.target.value)} />
+                <input type="radio" name="range" value="30" checked={rangeType === '30'} onChange={(e) => pickRange(e.target.value)} />
                 <span className="bubble" aria-hidden="true"></span>
-                <span className="choice-body"><span className="choice-title">30 ngày</span></span>
+                <span className="choice-body"><span className="choice-title">30 ngày {lockedTag}</span></span>
               </label>
               <label className="choice choice-card">
-                <input type="radio" name="range" value="custom" checked={rangeType === 'custom'} onChange={(e) => setRangeType(e.target.value)} />
+                <input type="radio" name="range" value="custom" checked={rangeType === 'custom'} onChange={(e) => pickRange(e.target.value)} />
                 <span className="bubble" aria-hidden="true"></span>
                 <span className="choice-body"><span className="choice-title">Tự chọn</span></span>
               </label>
@@ -247,7 +265,7 @@ function StatsContent() {
           <div className={styles.dates} id="dates" hidden={rangeType !== 'custom'}>
             <div className="field" data-field="tuNgay">
               <label className="field-label" htmlFor="tuNgay">Từ ngày</label>
-              <input className="input" type="date" id="tuNgay" name="tuNgay" value={tuNgay} onChange={e => setTuNgay(e.target.value)} max={today} />
+              <input className="input" type="date" id="tuNgay" name="tuNgay" value={tuNgay} onChange={e => setTuNgay(e.target.value)} min={basic ? minBasic : undefined} max={today} />
               <p className="field-error"></p>
             </div>
             <div className="field" data-field="denNgay">
@@ -255,13 +273,13 @@ function StatsContent() {
               <input className="input" type="date" id="denNgay" name="denNgay" value={denNgay} onChange={e => setDenNgay(e.target.value)} max={today} />
               <p className="field-error"></p>
             </div>
-            {rangeError ? <p className="field-error" role="alert" style={{ gridColumn: '1/-1' }}>{rangeError}</p> : <p className="field-hint" style={{ gridColumn: '1/-1' }}>Chọn tối đa {MAX_DAYS} ngày.</p>}
+            {rangeError ? <p className="field-error" role="alert" style={{ gridColumn: '1/-1' }}>{rangeError}</p> : <p className="field-hint" style={{ gridColumn: '1/-1' }}>{basic ? 'Gói hiện tại xem được 7 ngày gần nhất.' : `Chọn tối đa ${MAX_DAYS} ngày.`}</p>}
           </div>
 
           <div className={styles.foot}>
             <div className="field" data-field="boTheId">
-              <label className="field-label" htmlFor="deck">Bộ thẻ</label>
-              <select className="select" id="deck" name="boTheId" value={deckId} onChange={e => setDeckId(e.target.value)}>
+              <label className="field-label" htmlFor="deck">Bộ thẻ {lockedTag}</label>
+              <select className="select" id="deck" name="boTheId" value={deckId} onChange={e => pickDeck(e.target.value)}>
                 <option value="">Tất cả bộ của tôi</option>
                 {myDecks.map(d => (
                   <option key={d.id} value={d.id}>{d.ten}</option>

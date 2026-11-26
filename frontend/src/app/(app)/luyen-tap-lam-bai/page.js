@@ -363,257 +363,200 @@ function HiniGameView({ session, id }) {
     setIsTimerActive(true);
   };
 
-  const chosenBlankWord =
-    currentAnswer === '__TIMEOUT__'
-      ? '(Hết giờ)'
-      : typeof currentAnswer === 'string'
-      ? currentAnswer
-      : '';
+  const [full, setFull] = useState(false);
+  useFocusMode(setFull);
 
-  const renderSentenceWithBlank = (sentence) => {
-    if (!sentence) return null;
-    const parts = sentence.split(/_____|____|___|\?/g);
-    const isAnswered = !!currentFb;
-    const isCorr = currentFb?.isCorrect;
+  const activeOptions = currentQ ? (questionOptionsMap[currentQ.id] || currentQ.phuongAn || []) : [];
 
-    let highlightClass = styles.hiniBlankHighlight;
-    if (isAnswered) {
-      highlightClass += isCorr ? ` ${styles.hiniBlankHighlightCorrect}` : ` ${styles.hiniBlankHighlightWrong}`;
-    }
+  useEffect(() => {
+    if (isFinished) return;
+    const onKey = (e) => {
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (currentFb) {
+        if (e.key === 'Enter' && !submitMutation.isPending) { e.preventDefault(); handleContinue(); }
+        return;
+      }
+      const idx = ['1', '2', '3', '4'].indexOf(e.key) >= 0 ? Number(e.key) - 1 : HINI_LABELS.indexOf(e.key.toUpperCase());
+      if (idx >= 0 && activeOptions[idx]) { e.preventDefault(); handleSelectOption(currentQ.id, activeOptions[idx]); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
-    if (parts.length <= 1) {
-      return (
-        <span>
-          {sentence} <span className={highlightClass}>{chosenBlankWord || '_______'}</span>
-        </span>
-      );
-    }
-    return (
-      <span>
-        {parts[0]}
-        <span className={highlightClass}>{chosenBlankWord || '_______'}</span>
-        {parts.slice(1).join('_______')}
-      </span>
-    );
-  };
-
-  const activeOptions = currentQ ? (questionOptionsMap[currentQ.id] || currentQ.phuongAn) : [];
+  const exitButton = (
+    <button type="button" className="btn btn-quiet btn-icon" aria-label="Thoát bài luyện" title="Thoát bài luyện" onClick={() => router.push('/luyen-tap')}><Icon name="x" /></button>
+  );
+  const barTools = (
+    <>
+      <SoundToggle />
+      <ThemeToggle className="theme-session" />
+      <button type="button" className="btn btn-quiet btn-icon" aria-pressed={full} aria-label={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} title={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} onClick={toggleFullscreen}><FullscreenIcon on={full} /></button>
+    </>
+  );
+  const barTitle = `Bài luyện · ${label(PRACTICE_TYPE, session.loaiBai)}${isRetryMode ? ' · Luyện lại câu sai' : ''}`;
 
   if (isFinished) {
     const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-    const emoji = accuracy >= 90 ? '🏆' : accuracy >= 70 ? '⭐' : '📚';
-    const titleText = accuracy >= 90 ? 'Xuất Sắc!' : accuracy >= 70 ? 'Khá Tốt!' : 'Cần Cố Gắng Thêm!';
+    const titleText = accuracy >= 90 ? 'Làm rất tốt' : accuracy >= 70 ? 'Khá tốt' : 'Cần luyện thêm';
+    const hasWrong = wrongQuestions.length > 0;
 
     return (
-      <div className={styles.hiniContainer}>
-        <div className={styles.hiniWrapper}>
-          <div className={styles.hiniEndScreen}>
-            <span className={styles.hiniEndEmoji}>{emoji}</span>
-            <h2 className={styles.hiniEndTitle}>{titleText}</h2>
-            <p className={styles.hiniEndScore}>
-              Bạn trả lời đúng {correctCount}/{total} câu · Điểm: {score} · Độ chính xác: {accuracy}%
-            </p>
-
-            <div className={styles.hiniRetryActions}>
-              {wrongQuestions.length > 0 && (
-                <button type="button" className={styles.hiniBtnGold} onClick={handleStartRetry}>
-                  🔄 LUYỆN LẠI CÂU SAI ({wrongQuestions.length} CÂU)
-                </button>
-              )}
-              <button type="button" className={styles.hiniBtnOutline} onClick={handleRestartAll}>
-                ↻ LÀM LẠI TỪ ĐẦU
-              </button>
-              <button
-                type="button"
-                className={styles.hiniBtnSecondaryAction}
-                onClick={() => router.push(`/luyen-tap-ket-qua?id=${id}`)}
-              >
-                📊 XEM BÁO CÁO CHI TIẾT
-              </button>
-              <Link href="/luyen-tap" className={styles.hiniBtnExitEnd}>
-                Quay về trang Luyện tập
-              </Link>
-            </div>
+      <div className="session">
+        <header className="session-bar">
+          {exitButton}
+          <div className="grow">
+            <p className="bar-title">{barTitle}</p>
+            <p className="bar-sub">{session.boTheTen && <span>{session.boTheTen}</span>}<span>Đã xong {total} câu</span></p>
           </div>
+          {barTools}
+        </header>
+        <div className="meter is-progress session-meter" role="progressbar" aria-label="Tiến độ bài luyện" aria-valuemin={0} aria-valuemax={total} aria-valuenow={total}>
+          <span style={{ '--v': 1 }} />
         </div>
+
+        <main className={`session-main ${styles.main}`} id="main">
+          <section className={`sheet ${styles.question} ${styles.answered}`} aria-labelledby="hini-end-title">
+            <h2 id="hini-end-title" className={styles.endTitle}>{titleText}</h2>
+            <dl className={styles.endStats}>
+              <div><dt>Câu đúng</dt><dd>{correctCount}/{total}</dd></div>
+              <div><dt>Độ chính xác</dt><dd>{accuracy}%</dd></div>
+              <div><dt>Điểm</dt><dd>{score}</dd></div>
+            </dl>
+            {isRetryMode && <p className={styles.intro}>Kết quả luyện lại không thay đổi bài đã nộp.</p>}
+            {submitError && <p className="notice notice-danger" role="alert">{submitError}</p>}
+            <div className={styles.endActions}>
+              {hasWrong && (
+                <Button variant="primary" size="lg" onClick={handleStartRetry}>Luyện lại {wrongQuestions.length} câu sai</Button>
+              )}
+              {!isRetryMode && (
+                <Button variant={hasWrong ? 'secondary' : 'primary'} size={hasWrong ? undefined : 'lg'} onClick={() => router.push(`/luyen-tap-ket-qua?id=${id}`)}>Xem kết quả chi tiết</Button>
+              )}
+              <Button variant="secondary" onClick={handleRestartAll}>Làm lại từ đầu</Button>
+              <Link href="/luyen-tap" className="btn btn-quiet">Về trang Luyện tập</Link>
+            </div>
+          </section>
+        </main>
       </div>
     );
   }
 
+  const answeredSoFar = currentIndex + (currentFb ? 1 : 0);
+  const lowTime = timeLeft <= 5 && !currentFb;
+  const blankWord =
+    currentAnswer === '__TIMEOUT__' ? 'hết giờ' : typeof currentAnswer === 'string' ? currentAnswer : '';
+  const blankClass = `${styles.blank}${currentFb ? ` ${currentFb.isCorrect ? styles.blankRight : styles.blankWrong}` : ''}`;
+  const context =
+    currentQ?.deBai?.dichVi || currentQ?.deBai?.viDuVi || currentQ?.deBai?.goiY || '';
+
   return (
-    <div className={styles.hiniContainer}>
-      <div className={styles.hiniWrapper}>
-        <div className={styles.hiniTopBar}>
-          <Link href="/luyen-tap" className={styles.hiniExitBtn}>
-            <Icon name="arrow-left" size={16} /> Thoát
-          </Link>
-
-          <div className={styles.hiniBrandCenter}>
-            <div className={styles.hiniBrandTitle}>
-              {isRetryMode ? 'LUYỆN LẠI CÂU SAI 🔄' : (session.boTheTen || 'Điền Chỗ Trống')}
-            </div>
-            <div className={styles.hiniBrandSub}>Dạng bài: Điền chỗ trống (HINI 20s)</div>
-          </div>
-
-          <div className={styles.hiniStatCards}>
-            <div className={styles.hiniStatCard}>
-              <span className={styles.hiniStatNum}>{score}</span>
-              <span className={styles.hiniStatLabel}>ĐIỂM</span>
-            </div>
-            <div className={styles.hiniStatCard}>
-              <span className={styles.hiniStatNum}>{correctCount}</span>
-              <span className={styles.hiniStatLabel}>CÂU ĐÚNG</span>
-            </div>
-          </div>
+    <div className="session">
+      <header className="session-bar">
+        {exitButton}
+        <div className="grow">
+          <p className="bar-title">{barTitle}</p>
+          <p className="bar-sub">{session.boTheTen && <span>{session.boTheTen}</span>}<span>Câu {currentIndex + 1} / {total} · Đúng {correctCount} · {score} điểm</span></p>
         </div>
-
-        {isRetryMode && (
-          <div style={{ textAlign: 'center' }}>
-            <span className={styles.hiniRetryBadge}>
-              <Icon name="sparkles" size={13} /> Đang luyện lại các câu chưa đúng
-            </span>
-          </div>
-        )}
-
-        <div className={styles.hiniTimelineRow}>
-          <span className={`${styles.hiniTimeDisplay} ${timeLeft <= 5 ? styles.hiniTimeDisplayDanger : ''}`}>
-            {timeLeft}s
-          </span>
-          <div className={styles.hiniProgressTrack}>
-            <div
-              className={`${styles.hiniProgressFill} ${timeLeft <= 5 ? styles.hiniProgressFillDanger : ''}`}
-              style={{ width: `${(timeLeft / HINI_TIME_LIMIT) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div className={styles.hiniQuestionCard}>
-          <span className={styles.hiniQuestionTag}>
-            QUESTION {currentIndex + 1} / {total}
-          </span>
-          <div className={styles.hiniQuestionSentence}>
-            {currentQ?.deBai?.cau ? (
-              renderSentenceWithBlank(currentQ.deBai.cau)
-            ) : (
-              currentQ?.deBai?.nghiaVi || 'Câu hỏi'
-            )}
-          </div>
-        </div>
-
-        <div className={styles.hiniContextCard}>
-          <div className={styles.hiniContextHeader}>
-            <Icon name="sparkles" size={15} /> NGỮ CẢNH TIẾNG VIỆT
-          </div>
-          <div className={styles.hiniContextText}>
-            {currentQ?.deBai?.dichVi ||
-              currentQ?.deBai?.viDuVi ||
-              currentQ?.deBai?.goiY ||
-              (currentQ?.deBai?.tuLoai ? `Từ loại: [${currentQ.deBai.tuLoai}]` : 'Nhận diện từ và ngữ cảnh câu')}
-          </div>
-        </div>
-
-        {activeOptions && Array.isArray(activeOptions) && activeOptions.length > 0 && (
-          <div className={styles.hiniOptionsGrid}>
-            {activeOptions.map((opt, i) => {
-              const letter = HINI_LABELS[i] || String.fromCharCode(65 + i);
-              const isSelected = currentAnswer === opt.noiDung || currentAnswer === opt.id;
-              const hasAnswered = !!currentFb;
-              const isOptionCorrect = !!currentFb && sameWord(opt.noiDung, currentFb.correctText);
-
-              let cardClass = styles.hiniOptionCard;
-              if (hasAnswered) {
-                if (isSelected) {
-                  cardClass += currentFb.isCorrect ? ` ${styles.hiniOptionCardSelected}` : ` ${styles.hiniOptionCardWrong}`;
-                } else if (isOptionCorrect && (!currentFb.isCorrect || currentAnswer === '__TIMEOUT__')) {
-                  cardClass += ` ${styles.hiniOptionCardReveal}`;
-                }
-              }
-
-              return (
-                <button
-                  key={opt.id || opt.noiDung}
-                  type="button"
-                  className={cardClass}
-                  disabled={hasAnswered || !isTimerActive}
-                  onClick={() => handleSelectOption(currentQ.id, opt)}
-                >
-                  <span className={styles.hiniOptionBadge}>{letter}</span>
-                  <span className={styles.hiniOptionContent}>
-                    <span className={styles.hiniOptionMain}>{opt.noiDung}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {currentFb && (
-          <div className={styles.hiniAnalysisGrid} style={{ marginBottom: '20px' }}>
-            {!currentFb.isCorrect && (
-              <div className={`${styles.hiniAnalysisItem} ${styles.hiniAnalysisWrong}`}>
-                <div className={`${styles.hiniAnalysisHead} ${styles.hiniAnalysisHeadWrong}`}>
-                  <Icon name="x" size={18} />
-                  {currentFb.isTimeout ? (
-                    'HẾT THỜI GIAN (20s)'
-                  ) : (
-                    <>
-                      BẠN ĐÃ CHỌN SAI: <strong>{currentFb.selectedText}</strong>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className={`${styles.hiniAnalysisItem} ${styles.hiniAnalysisCorrect}`}>
-              <div className={`${styles.hiniAnalysisHead} ${styles.hiniAnalysisHeadCorrect}`}>
-                <Icon name="check" size={18} />
-                ĐÁP ÁN ĐÚNG: <strong>{currentFb.correctText}</strong>
-              </div>
-              {currentFb.correctMeaning && (
-                <div className={styles.hiniAnalysisDesc}>Nghĩa: &ldquo;{currentFb.correctMeaning}&rdquo;</div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {submitError && (
-          <div
-            style={{
-              color: '#ef4444',
-              background: 'rgba(239, 68, 68, 0.15)',
-              padding: '12px 18px',
-              borderRadius: '10px',
-              marginBottom: '16px',
-              fontWeight: '500'
-            }}
-          >
-            {submitError}
-          </div>
-        )}
-
-        {currentFb && (
-          <button
-            type="button"
-            className={styles.hiniContinueBtn}
-            onClick={handleContinue}
-            disabled={submitMutation.isPending}
-          >
-            {isLastQuestion
-              ? isRetryMode
-                ? 'HOÀN THÀNH LUYỆN LẠI 🏆'
-                : 'XEM KẾT QUẢ 🏆'
-              : 'TIẾP TỤC ➔'}
-          </button>
-        )}
+        <span className={`stamp ${lowTime ? 'stamp-danger' : ''} ${styles.timer}`} role="timer" aria-label={`Còn ${timeLeft} giây`}><Icon name="clock" />{timeLeft}s</span>
+        {barTools}
+      </header>
+      <div className="meter is-progress session-meter" role="progressbar" aria-label="Số câu đã làm" aria-valuemin={0} aria-valuemax={total} aria-valuenow={answeredSoFar}>
+        <span style={{ '--v': total ? answeredSoFar / total : 0 }} />
       </div>
+
+      <main className={`session-main ${styles.main}`} id="main">
+        <p className={styles.intro}>Chọn từ đúng cho chỗ trống trong {HINI_TIME_LIMIT} giây. Có thể bấm phím 1–4, sau đó Enter để sang câu tiếp.</p>
+
+        <section className={`sheet ${styles.question}${currentFb ? ` ${styles.answered}` : ''}`} aria-labelledby="hini-q-title">
+          <div className={styles.qHead}>
+            <span className={styles.qNo}>{currentIndex + 1}</span>
+            <span id="hini-q-title" className={styles.qType}>{label(PRACTICE_TYPE, currentQ?.loaiCau || session.loaiBai)}</span>
+          </div>
+
+          <div className={`meter ${styles.countdown}${lowTime ? ` ${styles.countdownLow}` : ''}`} aria-hidden="true">
+            <span style={{ '--v': timeLeft / HINI_TIME_LIMIT }} />
+          </div>
+
+          {currentQ?.deBai?.cau ? (
+            <div className={styles.sentence} lang="en"><BlankSentence sentence={currentQ.deBai.cau} mark={blankWord} className={blankClass} /></div>
+          ) : (
+            <div className={styles.prompt}>{currentQ?.deBai?.nghiaVi || 'Câu hỏi'}</div>
+          )}
+
+          {(context || currentQ?.deBai?.tuLoai) && (
+            <p className={styles.hint}>
+              {currentQ?.deBai?.tuLoai && <span className="pos">{currentQ.deBai.tuLoai}</span>}
+              {context && <span>{context}</span>}
+            </p>
+          )}
+
+          {activeOptions.length > 0 && (
+            <div className={styles.options} role="group" aria-label={`Phương án câu ${currentIndex + 1}`}>
+              {activeOptions.map((opt, i) => {
+                const isSelected = currentAnswer === opt.noiDung || currentAnswer === opt.id;
+                const isOptionCorrect = !!currentFb && sameWord(opt.noiDung, currentFb.correctText);
+                let state = '';
+                if (currentFb) {
+                  if (isOptionCorrect) state = ` ${styles.right}`;
+                  else if (isSelected) state = ` ${styles.wrong}`;
+                } else if (isSelected) state = ` ${styles.picked}`;
+                return (
+                  <button
+                    key={opt.id || opt.noiDung}
+                    type="button"
+                    className={`${styles.option}${state}`}
+                    aria-pressed={isSelected}
+                    disabled={!!currentFb || !isTimerActive}
+                    onClick={() => handleSelectOption(currentQ.id, opt)}
+                  >
+                    <span className={styles.key}>{i + 1}</span>
+                    <span lang="en">{opt.noiDung}</span>
+                    {currentFb && isOptionCorrect && <Icon name="check" className={styles.optMark} />}
+                    {currentFb && isSelected && !isOptionCorrect && <Icon name="x" className={styles.optMark} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {currentFb && (
+            <div className={`notice ${currentFb.isCorrect ? 'notice-success' : 'notice-danger'}`} role="status">
+              <div>
+              <p className="notice-title">
+                {currentFb.isCorrect ? 'Đúng rồi' : currentFb.isTimeout ? 'Hết thời gian' : <>Chưa đúng · bạn chọn <span lang="en">{currentFb.selectedText}</span></>}
+              </p>
+              {currentFb.correctText && <p>Đáp án: <strong lang="en">{currentFb.correctText}</strong>{currentFb.correctMeaning && <> · {currentFb.correctMeaning}</>}</p>}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {submitError && <p className="notice notice-danger" role="alert">{submitError}</p>}
+
+        {currentFb && (
+          <div className={styles.footer}>
+            <div><strong>{answeredSoFar}/{total}</strong> câu đã làm</div>
+            <Button variant="primary" size="lg" onClick={handleContinue} disabled={submitMutation.isPending}>
+              {submitMutation.isPending ? 'Đang nộp…' : isLastQuestion ? 'Xem kết quả' : 'Câu tiếp'}
+            </Button>
+          </div>
+        )}
+      </main>
     </div>
   );
+}
+
+const MATCH_ROUND_TIME = 45;
+
+function soundOn() {
+  try { return localStorage.getItem('vl-sound') !== 'off'; } catch { return true; }
 }
 
 function MatchingGameView({ session, id }) {
   const router = useRouter();
   const startRef = useRef(0);
   const submitKey = useRef('');
+  const noteTimer = useRef(null);
 
   const questions = useMemo(() => session.cauHoi || [], [session]);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -626,15 +569,14 @@ function MatchingGameView({ session, id }) {
   const [score, setScore] = useState(0);
   const [pairsMatched, setPairsMatched] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [floatingScores, setFloatingScores] = useState([]);
-  const [toast, setToast] = useState('');
+  const [note, setNote] = useState('');
 
-  const ROUND_TIME = 45;
-  const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
+  const [timeLeft, setTimeLeft] = useState(MATCH_ROUND_TIME);
   const [isPaused, setIsPaused] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [full, setFull] = useState(false);
+  useFocusMode(setFull);
 
   const currentQ = questions[roundIndex] || questions[0];
   const totalPairsCount = useMemo(() => {
@@ -643,6 +585,7 @@ function MatchingGameView({ session, id }) {
 
   useEffect(() => {
     startRef.current = now();
+    return () => clearTimeout(noteTimer.current);
   }, []);
 
   const submitMutation = useMutation({
@@ -653,77 +596,53 @@ function MatchingGameView({ session, id }) {
       }),
     onError: (err) => {
       if (err.status === 409) return;
-      setSubmitError(err.message || 'Chưa nộp được bài lên hệ thống.');
+      setSubmitError(err.message || 'Chưa nộp được bài. Thử lại sau ít phút.');
     }
   });
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2200);
+  const showNote = (msg) => {
+    clearTimeout(noteTimer.current);
+    setNote(msg);
+    noteTimer.current = setTimeout(() => setNote(''), 2400);
   };
 
   const playCustomTone = (freq, type = 'sine', duration = 0.15, vol = 0.1) => {
-    if (!soundEnabled) return;
+    if (!soundOn()) return;
     playTone(freq, type, duration, vol);
   };
 
   const playSuccessSound = () => {
-    if (!soundEnabled) return;
+    if (!soundOn()) return;
     playTone(523.25, 'triangle', 0.12, 0.15);
     setTimeout(() => playTone(659.25, 'triangle', 0.12, 0.15), 90);
     setTimeout(() => playTone(783.99, 'triangle', 0.25, 0.2), 180);
   };
 
   const playErrorSound = () => {
-    if (!soundEnabled) return;
+    if (!soundOn()) return;
     playTone(220, 'sawtooth', 0.15, 0.12);
     setTimeout(() => playTone(180, 'sawtooth', 0.2, 0.12), 120);
   };
 
   const speakEnglish = (word) => {
-    if (!soundEnabled || !word) return;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(word);
-        utter.lang = 'en-US';
-        utter.rate = 0.95;
-        window.speechSynthesis.speak(utter);
-      } catch {}
-    }
+    if (!soundOn() || !word) return;
+    speak(word);
   };
 
   useEffect(() => {
     if (!currentQ || !currentQ.deBai) return;
     const cotTrai = currentQ.deBai.cotTrai || [];
     const cotPhai = currentQ.deBai.cotPhai || [];
-
-    const list = [];
-    cotTrai.forEach((t) => {
-      list.push({
-        uid: `en_${currentQ.id}_${t.id}`,
-        id: t.id,
-        text: t.noiDung,
-        type: 'en',
-        speakText: t.noiDung
-      });
-    });
-    cotPhai.forEach((n) => {
-      list.push({
-        uid: `vi_${currentQ.id}_${n.id}`,
-        id: n.id,
-        text: n.noiDung,
-        type: 'vi',
-        speakText: ''
-      });
-    });
-
+    const list = [
+      ...cotTrai.map((t) => ({ uid: `en_${currentQ.id}_${t.id}`, id: t.id, text: t.noiDung, type: 'en' })),
+      ...cotPhai.map((n) => ({ uid: `vi_${currentQ.id}_${n.id}`, id: n.id, text: n.noiDung, type: 'vi' }))
+    ];
     setRoundCards(shuffle(list));
     setSelectedCards([]);
     setCorrectUids(new Set());
     setWrongUids(new Set());
     setMatchedUids(new Set());
-    setTimeLeft(ROUND_TIME);
+    setTimeLeft(MATCH_ROUND_TIME);
   }, [roundIndex, currentQ]);
 
   useEffect(() => {
@@ -735,21 +654,17 @@ function MatchingGameView({ session, id }) {
           handleTimeOver();
           return 0;
         }
-        if (prev <= 10 && soundEnabled) {
+        if (prev <= 10 && soundOn()) {
           playTone(800, 'sine', 0.05, 0.04);
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, isFinished, soundEnabled]);
+  }, [isPaused, isFinished]);
 
   const handleSubmitSession = (finalAnswers = answers) => {
-    const traLoi = questions.map((q) => {
-      const capList = finalAnswers[q.id] || [];
-      return { cauHoiId: q.id, cap: capList };
-    });
-
+    const traLoi = questions.map((q) => ({ cauHoiId: q.id, cap: finalAnswers[q.id] || [] }));
     if (!submitKey.current) submitKey.current = submitKeyFor(id);
     setSubmitError('');
     submitMutation.mutate({
@@ -765,21 +680,7 @@ function MatchingGameView({ session, id }) {
     setIsFinished(true);
   };
 
-  const triggerFloatingScore = (e, text) => {
-    const rect = e?.currentTarget?.getBoundingClientRect?.() || { left: 200, top: 200, width: 60 };
-    const newPopup = {
-      id: Date.now() + Math.random(),
-      x: rect.left + rect.width / 2 - 15,
-      y: rect.top,
-      text
-    };
-    setFloatingScores((prev) => [...prev, newPopup]);
-    setTimeout(() => {
-      setFloatingScores((prev) => prev.filter((p) => p.id !== newPopup.id));
-    }, 800);
-  };
-
-  const handleCardClick = async (card, e) => {
+  const handleCardClick = async (card) => {
     if (isPaused || timeLeft <= 0 || isFinished) return;
     if (matchedUids.has(card.uid) || correctUids.has(card.uid)) return;
 
@@ -787,77 +688,65 @@ function MatchingGameView({ session, id }) {
       setSelectedCards((prev) => prev.filter((c) => c.uid !== card.uid));
       return;
     }
-
     if (selectedCards.length >= 2) return;
 
-    const newSelected = [...selectedCards, card];
+    const sameSide = selectedCards.find((c) => c.type === card.type);
+    const newSelected = sameSide ? [...selectedCards.filter((c) => c.type !== card.type), card] : [...selectedCards, card];
     setSelectedCards(newSelected);
     playCustomTone(card.type === 'en' ? 440 : 380, 'sine', 0.08, 0.06);
+    if (card.type === 'en') speakEnglish(card.text);
 
-    if (newSelected.length === 2) {
-      const [cardA, cardB] = newSelected;
-      const rect = e?.currentTarget?.getBoundingClientRect?.();
-      const at = rect ? { currentTarget: { getBoundingClientRect: () => rect } } : null;
-      let isMatch = false;
-      if (cardA.type !== cardB.type) {
-        const en = cardA.type === 'en' ? cardA : cardB;
-        const vi = cardA.type === 'vi' ? cardA : cardB;
-        try {
-          const result = await checkAnswer(id, currentQ.id, { cap: [{ traiId: en.id, phaiId: vi.id }] });
-          isMatch = !!result.dung;
-        } catch (err) {
-          showToast(err.message || 'Chưa chấm được cặp này. Thử lại.');
-          setSelectedCards([]);
-          return;
-        }
-      }
+    if (newSelected.length !== 2) return;
+    const enCard = newSelected.find((c) => c.type === 'en');
+    const viCard = newSelected.find((c) => c.type === 'vi');
+    let isMatch = false;
+    try {
+      const result = await checkAnswer(id, currentQ.id, { cap: [{ traiId: enCard.id, phaiId: viCard.id }] });
+      isMatch = !!result.dung;
+    } catch (err) {
+      showNote(err.message || 'Chưa chấm được cặp này. Thử lại.');
+      setSelectedCards([]);
+      return;
+    }
 
-      if (isMatch) {
-        setCorrectUids((prev) => new Set([...prev, cardA.uid, cardB.uid]));
-        playSuccessSound();
+    if (isMatch) {
+      setCorrectUids((prev) => new Set([...prev, enCard.uid, viCard.uid]));
+      playSuccessSound();
+      setScore((prev) => prev + 25);
+      setPairsMatched((prev) => prev + 1);
+      setTimeLeft((prev) => Math.min(MATCH_ROUND_TIME, prev + 3));
 
-        const enCard = cardA.type === 'en' ? cardA : cardB;
-        const viCard = cardA.type === 'vi' ? cardA : cardB;
-        speakEnglish(enCard.speakText);
+      const updatedAnswers = {
+        ...answers,
+        [currentQ.id]: [...(answers[currentQ.id] || []), { traiId: enCard.id, phaiId: viCard.id }]
+      };
+      setAnswers(updatedAnswers);
 
-        setScore((prev) => prev + 25);
-        setPairsMatched((prev) => prev + 1);
-        setTimeLeft((prev) => Math.min(ROUND_TIME, prev + 3));
-        triggerFloatingScore(at, '+25');
-
-        const pairObj = { traiId: enCard.id, phaiId: viCard.id };
-        const updatedAnswers = {
-          ...answers,
-          [currentQ.id]: [...(answers[currentQ.id] || []), pairObj]
-        };
-        setAnswers(updatedAnswers);
-
-        setTimeout(() => {
-          setMatchedUids((prev) => {
-            const next = new Set([...prev, cardA.uid, cardB.uid]);
-            if (next.size >= roundCards.length && roundCards.length > 0) {
-              if (roundIndex + 1 < questions.length) {
-                showToast('🎉 Xuất sắc! Nạp vòng tiếp theo (+50 điểm)...');
-                setScore((s) => s + 50);
-                setTimeout(() => setRoundIndex((r) => r + 1), 600);
-              } else {
-                handleSubmitSession(updatedAnswers);
-                setIsFinished(true);
-              }
+      setTimeout(() => {
+        setMatchedUids((prev) => {
+          const next = new Set([...prev, enCard.uid, viCard.uid]);
+          if (next.size >= roundCards.length && roundCards.length > 0) {
+            if (roundIndex + 1 < questions.length) {
+              showNote('Xong vòng này, cộng 50 điểm. Sang vòng tiếp.');
+              setScore((s) => s + 50);
+              setTimeout(() => setRoundIndex((r) => r + 1), 600);
+            } else {
+              handleSubmitSession(updatedAnswers);
+              setIsFinished(true);
             }
-            return next;
-          });
-          setSelectedCards([]);
-          setCorrectUids(new Set());
-        }, 350);
-      } else {
-        setWrongUids(new Set([cardA.uid, cardB.uid]));
-        playErrorSound();
-        setTimeout(() => {
-          setSelectedCards([]);
-          setWrongUids(new Set());
-        }, 500);
-      }
+          }
+          return next;
+        });
+        setSelectedCards([]);
+        setCorrectUids(new Set());
+      }, 350);
+    } else {
+      setWrongUids(new Set([enCard.uid, viCard.uid]));
+      playErrorSound();
+      setTimeout(() => {
+        setSelectedCards([]);
+        setWrongUids(new Set());
+      }, 500);
     }
   };
 
@@ -870,206 +759,155 @@ function MatchingGameView({ session, id }) {
     setCorrectUids(new Set());
     setWrongUids(new Set());
     setMatchedUids(new Set());
-    setTimeLeft(ROUND_TIME);
+    setTimeLeft(MATCH_ROUND_TIME);
     setIsPaused(false);
     setIsFinished(false);
     setSubmitError('');
     startRef.current = now();
   };
 
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
+  const barTitle = `Bài luyện · ${label(PRACTICE_TYPE, session.loaiBai)}`;
+  const exitButton = (
+    <button type="button" className="btn btn-quiet btn-icon" aria-label="Thoát bài luyện" title="Thoát bài luyện" onClick={() => router.push('/luyen-tap')}><Icon name="x" /></button>
+  );
+  const barTools = (
+    <>
+      <SoundToggle />
+      <ThemeToggle className="theme-session" />
+      <button type="button" className="btn btn-quiet btn-icon" aria-pressed={full} aria-label={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} title={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} onClick={toggleFullscreen}><FullscreenIcon on={full} /></button>
+    </>
+  );
+
+  if (isFinished) {
+    const allDone = totalPairsCount > 0 && pairsMatched >= totalPairsCount;
+    const titleText = allDone ? 'Đã nối hết các cặp' : 'Hết giờ';
+    return (
+      <div className="session">
+        <header className="session-bar">
+          {exitButton}
+          <div className="grow">
+            <p className="bar-title">{barTitle}</p>
+            <p className="bar-sub">{session.boTheTen && <span>{session.boTheTen}</span>}<span>Đã nộp bài</span></p>
+          </div>
+          {barTools}
+        </header>
+        <div className="meter is-progress session-meter" role="progressbar" aria-label="Số cặp đã nối" aria-valuemin={0} aria-valuemax={totalPairsCount} aria-valuenow={pairsMatched}>
+          <span style={{ '--v': totalPairsCount ? pairsMatched / totalPairsCount : 0 }} />
+        </div>
+        <main className={`session-main ${styles.main}`} id="main">
+          <section className={`sheet ${styles.question} ${styles.answered}`} aria-labelledby="match-end-title">
+            <h2 id="match-end-title" className={styles.endTitle}>{titleText}</h2>
+            <dl className={styles.endStats}>
+              <div><dt>Cặp đã nối</dt><dd>{pairsMatched}/{totalPairsCount}</dd></div>
+              <div><dt>Vòng</dt><dd>{Math.min(roundIndex + 1, questions.length)}/{questions.length}</dd></div>
+              <div><dt>Điểm</dt><dd>{score}</dd></div>
+            </dl>
+            {submitMutation.isPending && <p className={styles.intro} role="status">Đang nộp bài…</p>}
+            {submitError && <p className="notice notice-danger" role="alert">{submitError}</p>}
+            <div className={styles.endActions}>
+              <Button variant="primary" size="lg" disabled={submitMutation.isPending} onClick={() => router.push(`/luyen-tap-ket-qua?id=${id}`)}>Xem kết quả chi tiết</Button>
+              <Button variant="secondary" onClick={handleRestart}>Làm lại</Button>
+              <Link href="/luyen-tap" className="btn btn-quiet">Về trang Luyện tập</Link>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  const lowTime = timeLeft <= 10;
+  const enCards = roundCards.filter((c) => c.type === 'en');
+  const viCards = roundCards.filter((c) => c.type === 'vi');
+
+  const renderCard = (card) => {
+    const isSelected = selectedCards.some((c) => c.uid === card.uid);
+    const isCorrect = correctUids.has(card.uid);
+    const isWrong = wrongUids.has(card.uid);
+    const isMatched = matchedUids.has(card.uid);
+    let state = '';
+    if (isMatched) state = ` ${styles.matched}`;
+    else if (isCorrect) state = ` ${styles.right}`;
+    else if (isWrong) state = ` ${styles.wrong}`;
+    else if (isSelected) state = ` ${styles.picked}`;
+    return (
+      <button
+        key={card.uid}
+        type="button"
+        className={`${styles.option}${state}`}
+        aria-pressed={isSelected}
+        disabled={isMatched || isPaused}
+        onClick={() => handleCardClick(card)}
+      >
+        <span className={card.type === 'en' ? styles.pairWord : styles.pairMeaning} lang={card.type === 'en' ? 'en' : undefined}>{card.text}</span>
+        {(isMatched || isCorrect) && <Icon name="check" className={styles.optMark} />}
+        {isWrong && <Icon name="x" className={styles.optMark} />}
+      </button>
+    );
   };
 
   return (
-    <div className={styles.matchContainer}>
-      <div className={styles.matchWrapper}>
-        <div className={styles.matchHeader}>
-          <div className={styles.matchTitleGroup}>
-            <Link href="/luyen-tap" className={styles.matchBackBtn} title="Quay lại">
-              <Icon name="arrow-left" size={16} /> Thoát
-            </Link>
-            <div className={styles.matchPuzzleIcon}>🧩</div>
-            <div className={styles.matchTitleTexts}>
-              <h1>{session.boTheTen || 'Nối Từ'}</h1>
-              <p>Chạm từ tiếng Anh và nghĩa tiếng Việt tương ứng để nối cặp</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            className={styles.matchToolBtn}
-            onClick={toggleFullScreen}
-            title="Toàn màn hình"
-          >
-            ⛶
-          </button>
+    <div className="session">
+      <header className="session-bar">
+        {exitButton}
+        <div className="grow">
+          <p className="bar-title">{barTitle}</p>
+          <p className="bar-sub">{session.boTheTen && <span>{session.boTheTen}</span>}<span>{questions.length > 1 ? `Vòng ${roundIndex + 1} / ${questions.length} · ` : ''}{pairsMatched} / {totalPairsCount} cặp · {score} điểm</span></p>
         </div>
+        <span className={`stamp ${lowTime ? 'stamp-danger' : ''} ${styles.timer}`} role="timer" aria-label={`Còn ${timeLeft} giây`}><Icon name="clock" />{timeLeft}s</span>
+        <button type="button" className="btn btn-quiet btn-icon" aria-pressed={isPaused} aria-label={isPaused ? 'Tiếp tục' : 'Tạm dừng'} title={isPaused ? 'Tiếp tục' : 'Tạm dừng'} onClick={() => setIsPaused((p) => !p)}><Icon name={isPaused ? 'play' : 'pause'} /></button>
+        {barTools}
+      </header>
+      <div className="meter is-progress session-meter" role="progressbar" aria-label="Số cặp đã nối" aria-valuemin={0} aria-valuemax={totalPairsCount} aria-valuenow={pairsMatched}>
+        <span style={{ '--v': totalPairsCount ? pairsMatched / totalPairsCount : 0 }} />
+      </div>
 
-        <div className={styles.matchStatusBar}>
-          <div className={styles.matchTimerContainer}>
-            <span className={styles.matchTimerIcon}>⏱️</span>
-            <div className={styles.matchTimerTrack}>
-              <div
-                className={`${styles.matchTimerFill} ${timeLeft <= 10 ? styles.matchTimerFillDanger : ''}`}
-                style={{ width: `${Math.max(0, (timeLeft / ROUND_TIME) * 100)}%` }}
-              />
+      <main className={`session-main ${styles.main}`} id="main">
+        <p className={styles.intro}>Chọn một từ tiếng Anh rồi chọn nghĩa đúng của nó. Mỗi cặp đúng được cộng 3 giây.</p>
+
+        <section className={`sheet ${styles.question}`} aria-labelledby="match-q-title">
+          <div className={styles.qHead}>
+            <span className={styles.qNo}>{roundIndex + 1}</span>
+            <span id="match-q-title" className={styles.qType}>{label(PRACTICE_TYPE, currentQ?.loaiCau || session.loaiBai)}</span>
+          </div>
+
+          <div className={`meter ${styles.countdown}${lowTime ? ` ${styles.countdownLow}` : ''}`} aria-hidden="true">
+            <span style={{ '--v': timeLeft / MATCH_ROUND_TIME }} />
+          </div>
+
+          {isPaused ? (
+            <div className={`notice notice-warning ${styles.paused}`} role="status">
+              <div>
+                <p className="notice-title">Đã tạm dừng</p>
+                <p>Đồng hồ đang dừng. Bấm Tiếp tục để làm tiếp.</p>
+              </div>
+              <Button variant="primary" onClick={() => setIsPaused(false)}>Tiếp tục</Button>
             </div>
-            <span
-              className={`${styles.matchTimerText} ${timeLeft <= 10 ? styles.matchTimerTextDanger : ''}`}
-            >
-              {timeLeft}s
-            </span>
-          </div>
-
-          <div className={styles.matchScoreBadge}>
-            <span>🏆</span>
-            <span>{score}</span>
-          </div>
-
-          {questions.length > 1 && (
-            <div className={styles.matchRoundBadge}>
-              Vòng {roundIndex + 1}/{questions.length}
+          ) : (
+            <div className={styles.pairBoard}>
+              <div className={styles.pairCol} role="group" aria-label="Từ tiếng Anh">
+                <p className={styles.pairHead}>Từ tiếng Anh</p>
+                {enCards.map(renderCard)}
+              </div>
+              <div className={styles.pairCol} role="group" aria-label="Nghĩa tiếng Việt">
+                <p className={styles.pairHead}>Nghĩa tiếng Việt</p>
+                {viCards.map(renderCard)}
+              </div>
             </div>
           )}
 
-          <button
-            type="button"
-            className={styles.matchToolBtn}
-            onClick={() => {
-              setSoundEnabled((prev) => !prev);
-              showToast(!soundEnabled ? 'Đã bật âm thanh 🔊' : 'Đã tắt âm thanh 🔇');
-            }}
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
+          <p className={styles.pairNote} role="status" aria-live="polite">{note}</p>
+        </section>
 
-          <button
-            type="button"
-            className={styles.matchToolBtn}
-            onClick={() => {
-              setIsPaused((prev) => !prev);
-              showToast(!isPaused ? 'Đã tạm dừng ⏸' : 'Tiếp tục ▶');
-            }}
-            title={isPaused ? 'Tiếp tục' : 'Tạm dừng'}
-          >
-            {isPaused ? '▶' : '⏸'}
-          </button>
-        </div>
-
-        <div className={styles.matchBoard}>
-          <div className={styles.matchCardsGrid}>
-            {roundCards.map((card) => {
-              const isSelected = selectedCards.some((c) => c.uid === card.uid);
-              const isCorrect = correctUids.has(card.uid);
-              const isWrong = wrongUids.has(card.uid);
-              const isMatched = matchedUids.has(card.uid);
-
-              let cardClass = `${styles.matchCard} ${card.type === 'en' ? styles.matchCardEn : styles.matchCardVi}`;
-              if (isSelected) cardClass += ` ${styles.matchCardSelected}`;
-              if (isCorrect) cardClass += ` ${styles.matchCardCorrect}`;
-              if (isWrong) cardClass += ` ${styles.matchCardWrong}`;
-              if (isMatched) cardClass += ` ${styles.matchCardMatched}`;
-
-              return (
-                <div
-                  key={card.uid}
-                  className={cardClass}
-                  onClick={(e) => handleCardClick(card, e)}
-                >
-                  <span className={styles.matchCardTag}>
-                    {card.type === 'en' ? 'Aa' : '•••'}
-                  </span>
-                  <span>{card.text}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {floatingScores.map((item) => (
-          <div
-            key={item.id}
-            className={styles.matchFloatingScore}
-            style={{ left: `${item.x}px`, top: `${item.y}px` }}
-          >
-            {item.text}
-          </div>
-        ))}
-
-        {toast && <div className={styles.matchToast}>{toast}</div>}
-
-        {submitError && (
-          <div
-            style={{
-              color: '#ef4444',
-              background: 'rgba(239, 68, 68, 0.15)',
-              padding: '12px 18px',
-              borderRadius: '10px',
-              fontWeight: '500'
-            }}
-          >
-            {submitError}
-          </div>
-        )}
-
-        {isFinished && (
-          <div className={styles.matchModalOverlay}>
-            <div className={styles.matchGameOverBox}>
-              <div className={styles.matchModalEmoji}>
-                {pairsMatched >= totalPairsCount && totalPairsCount > 0 ? '🏆' : timeLeft <= 0 ? '⏱️' : '⭐'}
-              </div>
-              <h2 className={styles.matchModalTitle}>
-                {timeLeft <= 0 ? 'Hết giờ!' : 'Hoàn thành xuất sắc!'}
-              </h2>
-
-              <div className={styles.matchStatsRow}>
-                <div className={styles.matchStatBox}>
-                  <span className={styles.matchStatNumber}>{score}</span>
-                  <span className={styles.matchStatLabel}>ĐIỂM</span>
-                </div>
-                <div className={styles.matchStatBox}>
-                  <span className={styles.matchStatNumber}>
-                    {pairsMatched}/{totalPairsCount}
-                  </span>
-                  <span className={styles.matchStatLabel}>CẶP TỪ</span>
-                </div>
-              </div>
-
-              <div className={styles.matchModalActions}>
-                <button
-                  type="button"
-                  className={styles.matchBtnReplay}
-                  onClick={handleRestart}
-                >
-                  🔄 Chơi lại
-                </button>
-                <Link
-                  href={`/luyen-tap-ket-qua?id=${id}`}
-                  className={styles.matchBtnReport}
-                >
-                  📊 Xem báo cáo chi tiết
-                </Link>
-                <Link href="/luyen-tap" className={styles.matchBtnExit}>
-                  ✕ Thoát
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        {submitError && <p className="notice notice-danger" role="alert">{submitError}</p>}
+      </main>
     </div>
   );
 }
 
-function BlankSentence({ sentence, mark = '' }) {
+function BlankSentence({ sentence, mark = '', className = styles.blank }) {
   const [before, after] = splitBlank(sentence);
   if (after === null) return before;
-  return <>{before}<span className={styles.blank}>{mark}</span>{after}</>;
+  return <>{before}<span className={className}>{mark}</span>{after}</>;
 }
 
 function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {

@@ -33,8 +33,8 @@ test('backend errors propagate without falling back to demo payment data', async
 });
 
 test('plan update uses backend field names, nullable card limit and unchanged concurrency version', () => {
-  const payload = billing.planPayload({ name: 'Pro', month: 100000, year: 1000000, cards: null, speech: true, active: true, version: 0, ai: 99 });
-  assert.deepEqual(payload, { ten: 'Pro', giaThang: 100000, giaNam: 1000000, gioiHanThe: null, phatAm: true, hoatDong: true, version: 0 });
+  const payload = billing.planPayload({ name: 'Pro', month: 100000, year: 1000000, cards: null, speech: true, stats: true, active: true, version: 0, ai: 99 });
+  assert.deepEqual(payload, { ten: 'Pro', giaThang: 100000, giaNam: 1000000, gioiHanThe: null, phatAm: true, thongKeNangCao: true, hoatDong: true, version: 0 });
 });
 
 test('live CSV exports supplied records, with formula protection and Vietnam time', () => {

@@ -8,7 +8,7 @@ export const time = value => value ? new Intl.DateTimeFormat('vi-VN', { timeZone
 export const statuses = { THANH_CONG: ['Thành công', 'success'], CHO_THANH_TOAN: ['Chờ thanh toán', 'pending'], THAT_BAI: ['Thất bại', 'failed'], HET_HAN: ['Hết hạn', 'expired'] };
 export const normalize = value => String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
 export const mapPayment = t => ({ id: t.maDon, name: t.email || t.nguoiDungId || '—', email: t.email, plan: t.goiMa, planName: t.tenGoi, cycle: t.chuKy, amount: t.soTien, status: t.trangThai, created: t.taoAt, gatewayId: t.maGiaoDichCong, response: t.maPhanHoi, gateway: t.cong });
-export const mapPlan = p => ({ code: p.ma, name: p.ten, month: p.giaThang, year: p.giaNam, cards: p.gioiHanThe, speech: p.phatAm, active: p.hoatDong, version: p.version });
+export const mapPlan = p => ({ code: p.ma, name: p.ten, month: p.giaThang, year: p.giaNam, cards: p.gioiHanThe, speech: p.phatAm, stats: p.thongKeNangCao, active: p.hoatDong, version: p.version });
 export const isCancelled = s => s.status === 'DA_HUY';
 export const isExpired = s => !isCancelled(s) && (s.status === 'HET_HAN' || Date.parse(s.expiry) <= Date.now());
 export const isActiveSubscription = s => s.status === 'HIEU_LUC' && !isExpired(s);
@@ -28,7 +28,7 @@ export async function loadAdminBilling() {
   return { transactions: payments.map(mapPayment), plans: plans.map(mapPlan), subscriptions: subscriptions.map(s => ({ id: s.id, name: s.tenHienThi || s.email, email: s.email, plan: s.goiMa, start: s.batDauAt, expiry: s.hetHanAt, status: s.trangThai, days: s.soNgayConLai })) };
 }
 export function planPayload(p) {
-  return { ten: p.name, giaThang: p.month, giaNam: p.year, gioiHanThe: p.cards, phatAm: p.speech, hoatDong: p.active, version: p.version };
+  return { ten: p.name, giaThang: p.month, giaNam: p.year, gioiHanThe: p.cards, phatAm: p.speech, thongKeNangCao: p.stats, hoatDong: p.active, version: p.version };
 }
 export function paymentsCsv(items) {
   const rows = [['Mã đơn', 'Email', 'Gói', 'Chu kỳ', 'Số tiền (VND)', 'Trạng thái', 'Ngày tạo (giờ Việt Nam)'], ...items.map(t => [t.id, t.email || '', t.planName || t.plan, t.cycle, t.amount, statuses[t.status]?.[0] || t.status, `${date(t.created)} ${time(t.created)}`])];

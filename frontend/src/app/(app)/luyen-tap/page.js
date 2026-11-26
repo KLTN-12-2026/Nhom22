@@ -2,11 +2,14 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { PracticeSample } from '@/components/practice/PracticeGuide';
 import { Icon } from '@/components/ui';
+import { GuardedAction, QuotaMeter } from '@/components/billing/PlanAccess';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
+import { quotaKey } from '@/lib/plan-access.mjs';
 import { useMucTip } from '@/components/mascot/useMucTip';
 import { SKILL, SKILL_PRACTICE } from '@/lib/practice-labels.mjs';
 import {
@@ -80,9 +83,13 @@ function PracticeForm() {
   const weakType = weakest && TYPES.find(t => t.id === SKILL_PRACTICE[weakest.kyNang]);
   useMucTip(weakest && weakType && weakest.mucLamChu < 80 ? `Kỹ năng “${SKILL[weakest.kyNang]}” đang yếu nhất (${weakest.mucLamChu}%). Thử dạng “${weakType.name}” nhé.` : null);
 
+  const queryClient = useQueryClient();
+  const practiceQuota = usePlanAccess().of('LUYEN_TAP');
+  const practiceExhausted = loaiBai !== 'FLASHCARD' && !!practiceQuota?.exhausted;
   const sessionMutation = useMutation({
     mutationFn: (body) => apiFetch('/api/v1/practice/sessions', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: quotaKey });
       router.push(`/luyen-tap-lam-bai?id=${res.id}`);
     },
     onError: (err) => {
@@ -295,10 +302,13 @@ function PracticeForm() {
             </span>
           </label>
 
+          {loaiBai !== 'FLASHCARD' && <QuotaMeter feature="LUYEN_TAP" />}
+          {practiceExhausted && <p className="field-hint">Hôm nay bạn đã dùng hết lượt tạo bài mới. Bạn vẫn ôn thẻ đến hạn và luyện lại câu sai trong <Link href="/luyen-tap-lich-su">lịch sử bài làm</Link> bình thường.</p>}
+
           <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
           <div className={styles.formFoot}>
-            <button
+            {practiceExhausted ? <GuardedAction feature="LUYEN_TAP" className="btn btn-accent btn-lg">Làm bài</GuardedAction> : <button
               type="submit"
               className="btn btn-accent btn-lg"
               id="submit"
@@ -307,7 +317,7 @@ function PracticeForm() {
               {sessionMutation.isPending || flashcardMutation.isPending
                 ? 'Đang tạo...'
                 : (loaiBai === 'FLASHCARD' ? 'Bắt đầu học' : 'Làm bài')}
-            </button>
+            </button>}
             <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>
           </div>
         </form>

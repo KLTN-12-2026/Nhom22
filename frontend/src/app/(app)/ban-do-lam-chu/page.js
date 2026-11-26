@@ -6,6 +6,8 @@ import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
 import { SKILL, SKILL_PRACTICE } from '@/lib/practice-labels.mjs';
 import { RemoteState } from '@/components/remote/Remote';
+import { PlanTag, requestUpgrade } from '@/components/billing/PlanAccess';
+import { usePlanAccess } from '@/hooks/usePlanAccess';
 import styles from './page.module.css';
 
 function Evidence({ seen, need }) {
@@ -19,6 +21,9 @@ function Evidence({ seen, need }) {
 export default function MasteryMapPage() {
   const [deck, setDeck] = useState('');
   const [skill, setSkill] = useState('');
+  const advanced = usePlanAccess().of('THONG_KE_NANG_CAO');
+  const basic = !!advanced?.locked;
+  const pickDeck = value => basic && value ? requestUpgrade('THONG_KE_NANG_CAO') : setDeck(value);
   const decks = useQuery({ queryKey: ['all-my-decks'], queryFn: () => fetchAllPages('/api/v1/decks') });
   const stats = useQuery({ queryKey: ['skills', deck], queryFn: () => apiFetch(`/api/v1/statistics/skills${deck ? `?boTheId=${encodeURIComponent(deck)}` : ''}`) });
   const rows = (stats.data || []).filter(k => !skill || k.kyNang === skill);
@@ -29,7 +34,7 @@ export default function MasteryMapPage() {
   return <div className={`page ${styles.page}`}><article className="sheet">
     <div className="form-head"><h1>Bản đồ làm chủ</h1><p>Mức độ làm chủ theo kỹ năng, tổng hợp từ các lượt luyện tập.</p></div>
     <form className={styles.filter} onSubmit={e => e.preventDefault()}>
-      <label className="field">Bộ thẻ<select className="select" value={deck} onChange={e => setDeck(e.target.value)}><option value="">Tất cả bộ</option>{decks.data?.map(d => <option key={d.id} value={d.id}>{d.ten}</option>)}</select></label>
+      <label className="field"><span>Bộ thẻ {basic && <PlanTag code={advanced.required?.ma} />}</span><select className="select" value={deck} onChange={e => pickDeck(e.target.value)}><option value="">Tất cả bộ</option>{decks.data?.map(d => <option key={d.id} value={d.id}>{d.ten}</option>)}</select></label>
       <label className="field">Kỹ năng<select className="select" value={skill} onChange={e => setSkill(e.target.value)}><option value="">Tất cả kỹ năng</option>{Object.entries(SKILL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
     </form>
     <RemoteState queries={[decks, stats]}>

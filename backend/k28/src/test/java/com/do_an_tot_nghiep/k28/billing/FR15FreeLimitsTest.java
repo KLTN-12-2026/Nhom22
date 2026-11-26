@@ -114,8 +114,8 @@ class FR15FreeLimitsTest extends AbstractIntegrationTest {
         assertThat(aiUsed(free)).isEqualTo(1);
 
         String payload = jdbc.queryForObject("""
-                SELECT payload_json FROM tac_vu_nen WHERE payload_json LIKE ? ORDER BY id DESC LIMIT 1
-                """, String.class, "%\"yeuCauId\":" + requestId + "%");
+                SELECT payload_json FROM tac_vu_nen WHERE JSON_EXTRACT(payload_json, '$.yeuCauId') = ?
+                """, String.class, Long.valueOf(requestId));
         assertThat(payload).contains("NHAP_TU_THEO_NGHIA").contains("noiDung");
         for (int i = 0; i < 10 && worker.runOnce("test-worker") > 0; i++) {
         }
