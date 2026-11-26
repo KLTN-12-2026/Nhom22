@@ -142,6 +142,7 @@ AI hỗ trợ những tác vụ cần xử lý ngôn ngữ, phản hồi và g�
 - Xem mức làm chủ theo kỹ năng, chủ đề/bộ, so sánh kỳ và tổng kết tuần.
 - Nhận điểm kinh nghiệm, huy hiệu, thử thách ngày/tuần và thông báo thành tích.
 - Mua gói (bắt buộc trước khi học), gia hạn gói qua cổng thanh toán, xem gói đang dùng và số ngày còn lại, nhận thông báo sắp hết hạn, xem lịch sử giao dịch và tải biên nhận (FR-15).
+- Gửi phiếu hỗ trợ (tiêu đề, mô tả, loại vấn đề, độ ưu tiên), xem trạng thái và phản hồi của Admin, nhận thông báo khi phiếu có cập nhật (FR-13, §6.8a).
 
 ### 4.2. Chức năng đối với Admin
 
@@ -190,7 +191,7 @@ Các mã dưới đây phục vụ truy vết yêu cầu, thiết kế, API và 
 | FR-10 | Phát âm | P1 | Xin quyền micro; nghe lại trước gửi; lưu kết quả có/thiếu chỉ số; xóa được bản ghi |
 | FR-11 | Thống kê | P0/P1 | Tổng số lấy từ sự kiện hợp lệ; không cộng trùng; bộ lọc ngày theo múi giờ người học; bảng điều khiển và trang thống kê dùng cùng cách tính |
 | FR-12 | Thưởng/nhắc | P1 | Thưởng có giới hạn; nhận một lần; nhắc đúng cài đặt và không gửi trùng |
-| FR-13 | Quản trị | P0/P1 | Phân quyền máy chủ; thao tác quan trọng có người thực hiện, thời gian và lý do |
+| FR-13 | Quản trị | P0/P1 | Phân quyền máy chủ; thao tác quan trọng có người thực hiện, thời gian và lý do. Phiếu hỗ trợ (bổ sung 27/11/2026, §6.8a): User chỉ thấy phiếu của mình; Admin phản hồi hoặc đổi trạng thái/ưu tiên, mỗi lần lưu thành một dòng lịch sử có người xử lý, thời gian, hành động; đóng phiếu bắt buộc có kết quả xử lý; User nhận thông báo |
 | FR-14 | Dữ liệu cá nhân | P1 | Có yêu cầu xóa, trạng thái xử lý, xóa tệp và dữ liệu phụ thuộc theo chính sách |
 | FR-15 | Gói dịch vụ & thanh toán (bổ sung 07/11/2026, sửa 10/11/2026, thiết kế lại 22/11/2026) | P1 | Không có gói hiệu lực thì dùng gói FREE có hạn mức, dữ liệu không mất; dùng thử Premium một lần; khuyến mãi, ưu đãi HSSV và nâng cấp giữa kỳ tính giá ở máy chủ, Admin chỉnh được; gói chỉ kích hoạt khi cổng xác nhận có chữ ký hợp lệ và đúng số tiền; mỗi đơn kích hoạt đúng một lần; không lưu dữ liệu thẻ; nhắc sắp hết hạn mỗi ngày đúng một lần trong 7 ngày cuối; hạn mức áp theo gói ở máy chủ; doanh thu theo tháng/quý/năm chỉ tính giao dịch thành công, theo giờ Việt Nam |
 
@@ -295,6 +296,19 @@ Nếu mất mạng, hiển thị kết quả chưa đồng bộ và cho gửi l�
 Triển khai B3.8 (16/11/2026): chỉ báo cáo bộ/thẻ công khai của người khác hoặc đầu ra AI đã hoàn tất của chính mình; một quyết định áp cho mọi báo cáo đang chờ của cùng đối tượng; ẩn bộ = `DA_AN`, ẩn thẻ hoặc đầu ra AI = `an_kiem_duyet` (chủ bộ vẫn thấy thẻ; đầu ra AI không trả `ketQua`/`banNhap`). Chi tiết: `docs/luong-backend/B3.8-bao-cao-kiem-duyet.md`.
 
 Bổ sung B3.23 (chốt 22/11/2026, thay mục "thông báo cho người liên quan: hướng phát triển"): User báo cáo **người dùng** khác (`NGUOI_DUNG`) với lý do riêng: ảnh đại diện nhạy cảm, tên không phù hợp, spam, mạo danh, quấy rối, khác. Admin quyết định giữ, **ẩn ảnh đại diện** (ảnh bị báo cáo thay bằng ảnh mặc định ở mọi nơi; tải ảnh mới thì hiện lại; Admin có thể hiện lại) hoặc **khóa tài khoản** (dùng `BI_KHOA`, vĩnh viễn tới khi Admin mở; thu hồi mọi phiên; đăng nhập bị từ chối; hồ sơ và bộ thẻ công khai bị ẩn, thư viện/hồ sơ hiện "Người dùng không khả dụng"; mở khóa tự khôi phục vì bộ thẻ không bị sửa). Thông báo: Admin nhận realtime `BAO_CAO_MOI` khi có báo cáo; mọi người báo cáo nhận thông báo kết quả; người bị ẩn ảnh nhận thông báo trong ứng dụng; người bị khóa nhận email kèm lý do và bị đóng luồng realtime.
+
+### 6.8a. Phiếu hỗ trợ [Đã triển khai, bổ sung vào TK 27/11/2026, B3.25]
+
+Khác báo cáo nội dung (§6.8): báo cáo nói về một bộ/thẻ/người dùng cụ thể; phiếu hỗ trợ là câu hỏi hoặc sự cố của chính người học (lỗi kỹ thuật, học vụ, thanh toán).
+
+1. User gửi phiếu ở UI62 `/phieu-ho-tro`: tiêu đề (≤ 150 ký tự), mô tả (≤ 5000), loại vấn đề `KY_THUAT`/`HOC_VU`/`THANH_TOAN`/`KHAC`, độ ưu tiên `THAP`/`TRUNG_BINH`/`CAO`/`NGHIEM_TRONG`. Chuỗi chỉ có khoảng trắng bị từ chối. Tối đa 10 phiếu/giờ/người (Redis), vượt thì 429.
+2. Phiếu mới ở trạng thái `DANG_MO`; Admin nhận realtime `HANG_CHO_QUAN_TRI` và số phiếu đang mở trên bảng điều khiển UI46.
+3. Admin xử lý ở UI63 `/quan-tri/tiep-nhan-ho-tro`: lọc theo trạng thái, loại, ưu tiên; mỗi lần lưu gửi kèm `version` của phiếu (khác → 409, mở lại để xem bản mới). Phải có ít nhất một thay đổi: nội dung phản hồi (≤ 2000), trạng thái hoặc ưu tiên, không thì 422. Chuyển sang `DA_GIAI_QUYET` bắt buộc có nội dung kết quả xử lý. Mở lại phiếu đã giải quyết được phép.
+4. Mỗi lần lưu ghi một dòng `phan_hoi_phieu_ho_tro` (người xử lý, nội dung, hành động như "Trạng thái: Đã giải quyết · Ưu tiên: Cao", thời gian). Đây là lịch sử xử lý của phiếu; không ghi thêm vào `nhat_ky_quan_tri`.
+5. User nhận thông báo trong ứng dụng `PHAN_HOI_HO_TRO` ("Phiếu hỗ trợ #HT-<id> có cập nhật", link `/phieu-ho-tro`); Admin khác đang mở hàng đợi nhận `MUC_DA_XU_LY` với `id` = `HO_TRO:<id>`.
+6. User chỉ xem phiếu của mình, không thấy email; Admin thấy tên hiển thị và email người gửi. Xóa tài khoản (B3.10) xóa phiếu của người đó và phản hồi kèm theo.
+
+Ngoài phạm vi: đính kèm tệp, User trả lời lại trong phiếu, gán phiếu cho Admin cụ thể, SLA/thời hạn xử lý, email.
 
 ### 6.9. Gói dịch vụ, ưu đãi và thanh toán [Thiết kế, bổ sung 07/11/2026; sửa 10/11/2026 theo góp ý GVHD; thiết kế lại 22/11/2026]
 
@@ -558,6 +572,7 @@ Triển khai B3.9 (16/11/2026, đề xuất): `GET /statistics/weekly-summary?ng
 | Động lực | Huy hiệu, thử thách, điểm, lịch sử thưởng |
 | Cá nhân | Hồ sơ, mục tiêu, bảo mật, thông báo, dữ liệu và xóa tài khoản |
 | Gói & thanh toán (FR-15) | UI55 chọn gói, chu kỳ, chuyển sang cổng; UI56 lịch sử giao dịch, biên nhận; UI57 kết quả thanh toán |
+| Hỗ trợ (FR-13, §6.8a) | UI62 `/phieu-ho-tro`: gửi phiếu, danh sách phiếu của tôi, trạng thái và lịch sử phản hồi; UI63 `/quan-tri/tiep-nhan-ho-tro`: hàng đợi có bộ lọc, phản hồi, đổi trạng thái/ưu tiên |
 | Quản trị | Tài khoản, chủ đề, nội dung mẫu, báo cáo, dịch vụ/hạn mức, quản lý thanh toán (UI59), doanh thu tháng/quý/năm (UI58), nhật ký. thông báo hệ thống (UI52, khôi phục dạng gọn 20/11/2026). Tổng quan (UI46) khôi phục 21/11/2026 dạng bảng điều khiển Admin Console (B3.15). Cắt khỏi Đợt 3 (07/11/2026): tab tác vụ nền (UI53), huy hiệu/thử thách (UI54) |
 
 ## 11. Kiến trúc hệ thống
@@ -598,6 +613,7 @@ Worker là tiến trình xử lý của ứng dụng, có thể chạy riêng kh
 | `dong_luc` | Điểm, huy hiệu, thử thách và sổ thưởng |
 | `thong_bao` | Trong ứng dụng, email, lịch nhắc |
 | `quan_tri` | Phân quyền, kiểm duyệt, cấu hình và nhật ký |
+| `ho_tro` | Phiếu hỗ trợ của User và phản hồi của Admin (package `support`, §6.8a) |
 | `thanh_toan` | Gói dịch vụ, đơn thanh toán, adapter cổng (`VnpayGateway`, `FakePaymentGateway`), đăng ký gói, quyền lợi theo gói (`EntitlementService`), chặn khi không có gói (`SubscriptionGuard`), nhắc/hết hạn (`SubscriptionExpiryJob`), quản lý và doanh thu cho Admin (`RevenueService`) |
 | `ha_tang` | Tệp, tác vụ, quan sát vận hành và cấu hình bí mật |
 
@@ -671,6 +687,7 @@ Mỗi module có lớp API, nghiệp vụ và truy cập dữ liệu. Không đ�
 | `thong_bao` | nguoi_dung_id, loai (`NHAC_HOC`, `GOI_SAP_HET_HAN`, `GOI_DA_HET_HAN`), ngay_dia_phuong, tieu_de, noi_dung, lien_ket, hien_thi (false khi User tắt kênh trong ứng dụng, dòng vẫn giữ để chống trùng), gui_email, da_doc_at (V17, B3.7); unique `(nguoi_dung_id, loai, ngay_dia_phuong)` để mỗi loại tối đa một lần/ngày |
 | `cai_dat_thong_bao` | nguoi_dung_id, nhan_trong_ung_dung, nhan_email, nhac_hoc, gio_nhac nullable, version (V1) |
 | `bao_cao_noi_dung` | V25 (B3.8): nguoi_bao_cao_id, loai_doi_tuong (`BO_THE`/`THE_TU_VUNG`/`YEU_CAU_AI`), doi_tuong_id, ly_do (`SAI_NOI_DUNG`/`KHONG_PHU_HOP`/`KHAC`), mo_ta (10–500), noi_dung_json (bản chụp nội dung lúc báo cáo), trang_thai (`CHO_XU_LY`/`DA_GIU`/`DA_AN`), nguoi_xu_ly_id, ly_do_xu_ly, xu_ly_at; unique một báo cáo đang chờ cho mỗi (người, loại, đối tượng) qua cột sinh `khoa_cho_xu_ly`. Ẩn thẻ/đầu ra AI dùng cờ `an_kiem_duyet` trên `the_tu_vung`, `yeu_cau_ai` |
+| `phieu_ho_tro`, `phan_hoi_phieu_ho_tro` | V46 (B3.25): nguoi_dung_id, tieu_de (≤150), mo_ta (≤5000), loai_van_de (`KY_THUAT`/`HOC_VU`/`THANH_TOAN`/`KHAC`), do_uu_tien (`THAP`/`TRUNG_BINH`/`CAO`/`NGHIEM_TRONG`), trang_thai (`DANG_MO`/`DA_GIAI_QUYET`), version; index (nguoi_dung_id, created_at), (trang_thai, created_at). Phản hồi: phieu_id (xóa theo phiếu), nguoi_xu_ly_id, noi_dung (≤2000, có thể rỗng khi chỉ đổi trạng thái/ưu tiên), hanh_dong (≤200). V48 thêm loại `thong_bao` `PHAN_HOI_HO_TRO` |
 | `nhat_ky_quan_tri` | V14 (B2.11): nguoi_thuc_hien_id, hanh_dong (14 mã: khóa/mở tài khoản, cấp/thu quyền, tạo/sửa/xuất bản/chuyển nháp/ẩn/hiện/xóa bộ mẫu, tạo/sửa/xóa thẻ mẫu), loai_doi_tuong (`NGUOI_DUNG`/`BO_THE`/`THE_TU_VUNG`), doi_tuong_id, ten_doi_tuong (snapshot), ly_do (10–500, nullable), truoc_json/sau_json chỉ gồm trường được phép (không email, hash, token, ID tệp), created_at; chỉ ghi thêm, không sửa/xóa. B3.12b thêm hành động `SUA_GOI_DICH_VU`, `SUA_HAN_GOI`, `CHAY_KIEM_TRA_HET_HAN` và loại đối tượng `GOI_DICH_VU`, `DANG_KY_GOI` |
 | `tac_vu_nen` | V15 (B3.1): loai, payload_json, trang_thai (`CHO`/`DANG_CHAY`/`XONG`/`LOI`/`KHONG_XAC_DINH`), retry_count, max_retry, next_run_at, khoa_boi và khoa_den_at (lease), ma_loi; index (trang_thai, next_run_at, id) cho hàng đợi |
 | `yeu_cau_xoa_du_lieu` | V24 (B3.10): nguoi_dung_id, pham_vi (`TAI_KHOAN`), trang_thai (`CHO_XU_LY`/`DANG_XU_LY`/`HOAN_TAT`/`LOI`), ket_qua_json (số lượng đã xóa/giữ), ma_loi, yeu_cau_at, hoan_tat_at; một yêu cầu đang mở mỗi người |
@@ -742,6 +759,7 @@ erDiagram
 | Phát âm | `GET /cards/{id}/audio`, `POST /pronunciation/assessments`, `GET /pronunciation/assessments/{id}`, `GET /pronunciation/history`, `DELETE /pronunciation/recordings/{id}` |
 | Thống kê/thưởng | `GET /statistics/overview`, `/statistics/skills`, `/statistics/weekly-summary`, `/statistics/activity`, `GET /rewards/history`, `GET /badges`, `GET /challenges` |
 | Thông báo/báo cáo | `GET /notifications`, `PATCH /notifications/{id}`, `POST /reports` |
+| Hỗ trợ (B3.25, §6.8a) | `POST /support-tickets` `{tieuDe, moTa, loaiVanDe, doUuTien}` → 201; `GET /support-tickets?page&size` (phiếu của tôi, mới nhất trước); ADMIN: `GET /admin/support-tickets?trangThai&loaiVanDe&doUuTien&page&size`, `POST /admin/support-tickets/{id}/respond` `{noiDung?, trangThai, doUuTien, version}`. Response `{id, tieuDe, moTa, loaiVanDe, doUuTien, trangThai, version, createdAt, updatedAt, nguoiDung (chỉ Admin: {id, tenHienThi, email}), phanHoi[{id, nguoiXuLy, noiDung, hanhDong, createdAt}]}`; `size` 1–100 |
 | Thời gian thực (B3.19) | `GET /events/stream` (SSE, cần đăng nhập, ngoài kiểm tra gói), `GET /admin/dashboard/queue` (ADMIN) |
 | Quản trị | `GET /admin/users`, `GET /admin/users/{id}` (B3.16, 21/11/2026: hồ sơ chỉ đọc gồm học tập 30 ngày, gói, thanh toán, dịch vụ, bộ thẻ, báo cáo), `PATCH /admin/users/{id}/status`, `PUT /admin/users/{id}/roles`, CRUD `/admin/topics`, `/admin/tags`, `/admin/decks` (B2.11: thẻ mẫu qua `GET/POST /admin/decks/{id}/cards`, `PATCH/DELETE /admin/cards/{id}`), `GET /admin/reports`, `POST /admin/reports/{id}/resolve`, `GET /admin/publish-requests`, `GET /admin/publish-requests/{id}/cards`, `POST /admin/publish-requests/{id}/decision` (B3.14, ghi nhật ký), `GET/PUT /admin/service-quotas` (B3.11: sửa `han_muc_dich_vu` theo gói, có `version` và lý do, ghi nhật ký `SUA_HAN_MUC`), `GET /admin/service-usage` (B3.11: lượt dùng/đang giữ/số người theo loại; lỗi và không xác định chỉ cho `AI`, `ANH` từ `yeu_cau_ai`), `GET /admin/audit-logs` (lọc thêm `doiTuongId`, B3.16), `GET /admin/dashboard?soNgay=7|30|90` (B3.15, 21/11/2026: chỉ số người dùng, học tập theo ngày, doanh thu 12 tháng, cơ cấu gói, hàng đợi cần xử lý, bộ mẫu học nhiều, người dùng mới, dịch vụ hôm nay, nhật ký gần đây, Redis/tác vụ nền; chỉ đọc). Cắt 07/11/2026 (hướng phát triển): `GET /admin/statistics` (thống kê tổng hợp chung; doanh thu có riêng `GET /admin/revenue`, FR-15), `GET /admin/jobs`, `POST /admin/announcements`, CRUD `/admin/badges`, `/admin/challenges`, `GET /admin/deletion-requests` |
 
@@ -956,6 +974,7 @@ Phân công theo trách nhiệm, không khẳng định đây là phân công đ
 | TC-25 | Sao chép cùng bộ hai lần (kể cả song song), sao chép một bản sao, đổi bản sao sang công khai bằng PATCH, xin công khai bản sao bộ mẫu thường/cao cấp, tác giả tự sao chép bộ mình, gửi hai yêu cầu chờ, gửi lại trong 24 giờ sau từ chối, tác giả bị khóa, người khác gọi quyết định | Chỉ một bản sao (409 lần sau; xóa rồi sao chép lại được); 422 với bản sao và PATCH công khai; bộ mẫu do tác giả bộ mẫu duyệt như người dùng, cao cấp 422; tự sao chép 422 `BO_CUA_BAN`; một yêu cầu chờ; 422 trong 24 giờ; yêu cầu chuyển Admin; người không phải người duyệt 404; duyệt → `CONG_KHAI`, thu hồi → `RIENG_TU`; mỗi quyết định gửi đúng một thông báo |
 | TC-26 | Mở luồng sự kiện khi chưa đăng nhập, chưa có gói; phát thông báo cho A, sự kiện hàng chờ, thông báo hệ thống; Admin khóa tài khoản đang mở luồng | 401 khi chưa đăng nhập, người chưa có gói vẫn mở được; sự kiện chỉ tới đúng người (A không nhận sự kiện Admin, B không nhận thông báo của A); thông báo hệ thống tới mọi kết nối; khóa tài khoản đẩy `TAI_KHOAN_BI_KHOA` rồi đóng luồng; dữ liệu bị rollback không phát sự kiện; Admin xử lý một mục thì Admin khác nhận `MUC_DA_XU_LY`, người xử lý không nhận; sự cố CSDL/Redis chỉ báo khi đổi trạng thái và chỉ tới ADMIN |
 | TC-27 | Dùng thử hai lần; mua Pro khi đang dùng thử; nâng Pro → Premium giữa kỳ và hạ ngược lại; mã khuyến mãi hết lượt, sai gói, chỉ lần đầu; khuyến mãi tự áp dụng; HSSV qua email trường và qua ảnh thẻ, nhận ưu đãi hai lần; Admin sửa gói Free | Dùng thử đúng một lần; gói mua thay thế dùng thử; nâng cấp chỉ trả phần chênh lệch, hạ gói 422; khuyến mãi chọn mức giảm lớn nhất, không cộng dồn, hết lượt thì 422; HSSV duyệt đúng luồng, nhận một lần; Free luôn giá 0 và không ngừng được; mọi thao tác Admin có nhật ký |
+| TC-28 | User A gửi phiếu chỉ có khoảng trắng, phiếu thứ 11 trong một giờ, xem phiếu của B; Admin lưu không đổi gì, đóng phiếu không có kết quả, hai Admin lưu cùng phiếu bằng `version` cũ; User gọi API Admin; xóa tài khoản có phiếu (bổ sung 27/11/2026) | 400/429 đúng; A chỉ thấy phiếu của mình, không thấy email; 422 khi không đổi gì hoặc đóng thiếu kết quả; Admin thứ hai nhận 409; User gọi API Admin bị 403; mỗi lần lưu có một dòng lịch sử và một thông báo cho người gửi; xóa tài khoản xóa phiếu và phản hồi |
 
 Kiểm thử công thức dùng đồng hồ cố định và bộ dữ liệu dự kiến; kiểm thử AI dùng phản hồi mô phỏng để tái lập lỗi, bổ sung một số lượt dịch vụ thật cho nghiệm thu tích hợp. Không coi nội dung AI giống từng chữ là tiêu chí thành công.
 

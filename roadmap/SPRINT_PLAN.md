@@ -274,6 +274,8 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | UI59 | Quản trị — quản lý thanh toán: giao dịch, gói người dùng, cấu hình gói, công cụ demo sửa hạn (góp ý GVHD 10/11/2026) | `/quan-tri/thanh-toan` | A | S9 |
 | UI60 | Yêu cầu công khai bản sao gửi tới tác giả (B3.14, 21/11/2026) | `/yeu-cau-cong-khai` | U | S9 |
 | UI61 | Quản trị — duyệt công khai bản sao bộ mẫu (B3.14, 21/11/2026) | `/quan-tri/duyet-cong-khai` | A | S9 |
+| UI62 | Phiếu hỗ trợ của tôi (B3.25, đưa vào TK 27/11/2026) | `/phieu-ho-tro` | L | S9 |
+| UI63 | Quản trị — tiếp nhận hỗ trợ (B3.25, đưa vào TK 27/11/2026) | `/quan-tri/tiep-nhan-ho-tro` | A | S9 |
 
 Quyền: G khách · L đã đăng nhập · O chủ sở hữu · A Admin.
 
