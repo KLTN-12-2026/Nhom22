@@ -150,6 +150,7 @@ public class AdminBillingService {
         }
         Map<String, Object> truoc = planFields(goi);
         goi.capNhat(request.ten(), request.giaThang(), request.giaNam(), request.gioiHanThe(), request.phatAm(),
+                request.thongKeNangCao() == null ? goi.isThongKeNangCao() : request.thongKeNangCao(),
                 request.hoatDong());
         Map<String, Object> sau = planFields(goi);
         truoc.keySet().removeIf(key -> Objects.equals(truoc.get(key), sau.get(key)));
@@ -228,7 +229,7 @@ public class AdminBillingService {
 
     private AdminPlanResponse toPlan(GoiDichVu goi, Instant now) {
         return new AdminPlanResponse(goi.getMa(), goi.getTen(), goi.getGiaThang(), goi.getGiaNam(), goi.getGioiHanThe(),
-                goi.isPhatAm(), goi.isHoatDong(),
+                goi.isPhatAm(), goi.isThongKeNangCao(), goi.isHoatDong(),
                 dangKyGoi.countByGoiMaAndTrangThaiAndHetHanAtAfter(goi.getMa(), TrangThaiDangKy.HIEU_LUC, now),
                 goi.getVersion());
     }
@@ -240,6 +241,7 @@ public class AdminBillingService {
         fields.put("giaNam", goi.getGiaNam());
         fields.put("gioiHanThe", goi.getGioiHanThe());
         fields.put("phatAm", goi.isPhatAm());
+        fields.put("thongKeNangCao", goi.isThongKeNangCao());
         fields.put("hoatDong", goi.isHoatDong());
         return fields;
     }

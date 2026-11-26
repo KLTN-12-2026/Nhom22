@@ -7,9 +7,11 @@ import com.do_an_tot_nghiep.k28.ai.dto.AiHistoryQuery;
 import com.do_an_tot_nghiep.k28.ai.dto.AiRequestAcceptedResponse;
 import com.do_an_tot_nghiep.k28.ai.dto.CardImageRequest;
 import com.do_an_tot_nghiep.k28.ai.dto.ContextExplanationRequest;
+import com.do_an_tot_nghiep.k28.ai.dto.MistakeExplanationInput;
 import com.do_an_tot_nghiep.k28.ai.dto.SentenceFeedbackRequest;
 import com.do_an_tot_nghiep.k28.ai.entity.YeuCauAi;
 import com.do_an_tot_nghiep.k28.ai.entity.enums.LoaiYeuCauAi;
+import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiYeuCauAi;
 import com.do_an_tot_nghiep.k28.ai.mapper.AiRequestMapper;
 import com.do_an_tot_nghiep.k28.ai.repository.YeuCauAiRepository;
 import com.do_an_tot_nghiep.k28.common.job.JobService;
@@ -19,6 +21,8 @@ import com.do_an_tot_nghiep.k28.common.quota.entity.enums.LoaiDichVu;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.ai.dto.AiFailureCount;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.stream.Collectors;
 import java.util.EnumMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +67,26 @@ public class AiTaskService {
                 request.tu().strip(), null, null, nghia);
     }
 
+    @Transactional
+    public AiRequestAcceptedResponse explainMistake(Long userId, MistakeExplanationInput input) {
+        GiuCho giuCho = quota.giuCho(userId, LoaiDichVu.AI);
+        String inputRef = input.tu() == null ? null : input.tu().substring(0, Math.min(100, input.tu().length()));
+        YeuCauAi yeuCau = requests.saveAndFlush(YeuCauAi.moi(userId, LoaiYeuCauAi.GIAI_THICH_LOI, inputRef,
+                AiTaskPrompt.PHIEN_BAN_GIAI_THICH_LOI, aiClient.nhaCungCap(), giuCho));
+        jobs.enqueue(AiTaskJobHandler.LOAI, new AiTaskPayload(yeuCau.getId(), input.tu(), input.deBai(),
+                input.traLoi(), input.nghia(), input.loaiCau(), input.dapAn()));
+        return new AiRequestAcceptedResponse(yeuCau.getId().toString(), yeuCau.getTrangThai());
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, TrangThaiYeuCauAi> statuses(Long userId, Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return requests.findByNguoiDungIdAndIdIn(userId, ids).stream()
+                .collect(Collectors.toMap(YeuCauAi::getId, YeuCauAi::getTrangThai));
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<AiHistoryItem> history(Long userId, AiHistoryQuery query) {
         LoaiYeuCauAi loai = query.loai();
@@ -86,7 +110,7 @@ public class AiTaskService {
                                               String tu, String nguCanh, String cau, String nghia) {
         GiuCho giuCho = quota.giuCho(userId, hanMuc);
         YeuCauAi yeuCau = requests.saveAndFlush(YeuCauAi.moi(userId, loai, tu, phienBan, nhaCungCap, giuCho));
-        jobs.enqueue(jobLoai, new AiTaskPayload(yeuCau.getId(), tu, nguCanh, cau, nghia));
+        jobs.enqueue(jobLoai, new AiTaskPayload(yeuCau.getId(), tu, nguCanh, cau, nghia, null, null));
         return new AiRequestAcceptedResponse(yeuCau.getId().toString(), yeuCau.getTrangThai());
     }
 }

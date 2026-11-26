@@ -30,6 +30,8 @@ public record UpdatePlanRequest(
         @NotNull(message = "Chọn có đánh giá phát âm hay không")
         Boolean phatAm,
 
+        Boolean thongKeNangCao,
+
         @NotNull(message = "Chọn trạng thái bán")
         Boolean hoatDong,
 

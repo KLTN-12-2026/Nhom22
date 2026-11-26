@@ -34,6 +34,8 @@ public class TraLoiBaiLuyen extends BaseEntity {
     @Column(nullable = false, columnDefinition = "json")
     private String ketQuaJson;
 
+    private Long yeuCauGiaiThichId;
+
     public static TraLoiBaiLuyen create(
             Long lanLamId,
             Long cauHoiId,
@@ -48,5 +50,9 @@ public class TraLoiBaiLuyen extends BaseEntity {
         answer.dung = dung;
         answer.ketQuaJson = ketQuaJson;
         return answer;
+    }
+
+    public void ganGiaiThich(Long yeuCauId) {
+        this.yeuCauGiaiThichId = yeuCauId;
     }
 }

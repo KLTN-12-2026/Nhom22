@@ -11,6 +11,7 @@ import com.do_an_tot_nghiep.k28.account.repository.NguoiDungRepository;
 import com.do_an_tot_nghiep.k28.account.repository.VaiTroRepository;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
+import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayPlanResponse;
 import com.do_an_tot_nghiep.k28.learning.dto.TodayQuery;
 import com.do_an_tot_nghiep.k28.learning.repository.PhienHocRepository;
@@ -56,6 +57,9 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
     private static final String PASSWORD = "matkhau123";
     private static final String HCM = "Asia/Ho_Chi_Minh";
     private static final String NOW = "2026-10-19T05:00:00Z";
+
+    @Autowired
+    EntitlementService entitlements;
 
     @Autowired
     NguoiDungRepository users;
@@ -387,7 +391,7 @@ class FR11StatisticsTest extends AbstractIntegrationTest {
 
     private StatisticsOverviewResponse overviewAt(Learner learner, String tuNgay, String denNgay, String deckId) {
         return new StatisticsService(fixedClock(), accountService, settingsService, learningPlanService,
-                studyTime, statistics).overview(learner.id(), new OverviewQuery(tuNgay, denNgay, deckId));
+                studyTime, statistics, entitlements).overview(learner.id(), new OverviewQuery(tuNgay, denNgay, deckId));
     }
 
     private TodayPlanResponse planAt(Learner learner) {

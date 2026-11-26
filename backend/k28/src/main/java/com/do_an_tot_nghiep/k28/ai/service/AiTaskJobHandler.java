@@ -55,6 +55,8 @@ public class AiTaskJobHandler implements JobHandler {
         AiRequest request = switch (loai) {
             case NGU_CANH -> prompt.nguCanh(payload.tu(), payload.nguCanh());
             case SUA_CAU -> prompt.suaCau(payload.tu(), payload.cau());
+            case GIAI_THICH_LOI -> prompt.giaiThichLoi(payload.tu(), payload.nghia(), payload.loaiCau(),
+                    payload.nguCanh(), payload.dapAn(), payload.cau());
             default -> throw new JobException(Kieu.LOI, "LOAI_KHONG_HO_TRO");
         };
         Instant start = clock.instant();
@@ -69,9 +71,11 @@ public class AiTaskJobHandler implements JobHandler {
         int thoiLuong = elapsed(start);
         tx.executeWithoutResult(status -> requests.findForUpdate(yeuCauId).ifPresent(y -> y.ghiCuocGoi(
                 response.model(), response.providerRequestId(), thoiLuong, response.tokenVao(), response.tokenRa())));
-        Object ketQua = loai == LoaiYeuCauAi.NGU_CANH
-                ? parser.nguCanh(response.noiDung())
-                : parser.suaCau(response.noiDung());
+        Object ketQua = switch (loai) {
+            case NGU_CANH -> parser.nguCanh(response.noiDung());
+            case GIAI_THICH_LOI -> parser.giaiThichLoi(response.noiDung());
+            default -> parser.suaCau(response.noiDung());
+        };
         String ketQuaJson = json.writeValueAsString(ketQua);
         tx.executeWithoutResult(status -> requests.findForUpdate(yeuCauId).ifPresent(y -> y.luuKetQua(ketQuaJson)));
     }

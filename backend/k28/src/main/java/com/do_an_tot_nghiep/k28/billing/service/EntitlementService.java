@@ -110,6 +110,17 @@ public class EntitlementService {
     }
 
     @Transactional(readOnly = true)
+    public void requireAdvancedStats(Long nguoiDungId) {
+        plan(nguoiDungId).filter(goi -> !goi.isThongKeNangCao()).ifPresent(goi -> {
+            Optional<GoiDichVu> nangCap = upgrade(goi, GoiDichVu::isThongKeNangCao);
+            throw denied("THONG_KE_NANG_CAO", nangCap, "Gói " + goi.getTen()
+                    + " chỉ xem thống kê 7 ngày gần nhất trên toàn bộ bộ thẻ"
+                    + nangCap.map(g -> ". Gói " + g.getTen() + " xem được khoảng dài hơn và từng bộ thẻ").orElse(""),
+                    Map.of());
+        });
+    }
+
+    @Transactional(readOnly = true)
     public Optional<DangKyGoi> latest(Long nguoiDungId) {
         return current(nguoiDungId)
                 .or(() -> dangKyGoi.findFirstByNguoiDungIdOrderByIdDesc(nguoiDungId));

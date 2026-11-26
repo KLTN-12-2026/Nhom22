@@ -2,6 +2,7 @@ package com.do_an_tot_nghiep.k28.stats.service;
 
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.account.service.SettingsService;
+import com.do_an_tot_nghiep.k28.billing.service.EntitlementService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.DanhGia;
@@ -51,6 +52,7 @@ public class StatisticsService {
     private final LearningPlanService learningPlanService;
     private final StudyTimeService studyTimeService;
     private final StatisticsRepository statistics;
+    private final EntitlementService entitlements;
 
     @Value("${app.statistics.so-luot-toi-da:20}")
     private int soLuotToiDa;
@@ -60,6 +62,15 @@ public class StatisticsService {
 
     @Transactional
     public StatisticsOverviewResponse overview(Long userId, OverviewQuery query) {
+        return overview(userId, query, true);
+    }
+
+    @Transactional
+    public StatisticsOverviewResponse weekOverview(Long userId, OverviewQuery query) {
+        return overview(userId, query, false);
+    }
+
+    private StatisticsOverviewResponse overview(Long userId, OverviewQuery query, boolean kiemGoi) {
         ZoneId zone = accountService.zoneOf(userId);
         LocalDate homNay = LocalDate.ofInstant(clock.instant(), zone);
         LocalDate denNgay = query.denNgay() == null ? homNay : parseDate(query.denNgay(), "denNgay");
@@ -69,6 +80,9 @@ public class StatisticsService {
         validateRange(tuNgay, denNgay, homNay);
         Long boTheId = query.deckId();
         requireDeck(userId, boTheId);
+        if (kiemGoi && (boTheId != null || tuNgay.isBefore(homNay.minusDays(SO_NGAY_MAC_DINH - 1)))) {
+            entitlements.requireAdvancedStats(userId);
+        }
 
         Instant batDau = tuNgay.atStartOfDay(zone).toInstant();
         Instant ketThuc = denNgay.plusDays(1).atStartOfDay(zone).toInstant();
@@ -122,6 +136,9 @@ public class StatisticsService {
     public List<SkillStatResponse> skills(Long userId, SkillsQuery query) {
         Long boTheId = query.deckId();
         requireDeck(userId, boTheId);
+        if (boTheId != null) {
+            entitlements.requireAdvancedStats(userId);
+        }
 
         Map<KyNang, long[]> counts = new EnumMap<>(KyNang.class);
         for (SkillCountRow row : statistics.skillCounts(userId, boTheId)) {

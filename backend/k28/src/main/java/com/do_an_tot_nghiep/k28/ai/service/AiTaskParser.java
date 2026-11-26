@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.ai.service;
 
 import com.do_an_tot_nghiep.k28.ai.dto.ContextExplanationResult;
+import com.do_an_tot_nghiep.k28.ai.dto.MistakeExplanationResult;
 import com.do_an_tot_nghiep.k28.ai.dto.SentenceFeedbackResult;
 import com.do_an_tot_nghiep.k28.common.job.JobException;
 import com.do_an_tot_nghiep.k28.common.job.JobException.Kieu;
@@ -39,6 +40,12 @@ public class AiTaskParser {
                 required(root, "dichVi", 500),
                 optional(root, "meoNho", 500),
                 optional(root, "doanLienQuan", MAX_TEXT));
+    }
+
+    public MistakeExplanationResult giaiThichLoi(String content) {
+        JsonNode root = root(content);
+        return new MistakeExplanationResult(required(root, "giaiThich", MAX_TEXT),
+                optional(root, "meoNho", 500), optional(root, "viDu", 500));
     }
 
     public SentenceFeedbackResult suaCau(String content) {

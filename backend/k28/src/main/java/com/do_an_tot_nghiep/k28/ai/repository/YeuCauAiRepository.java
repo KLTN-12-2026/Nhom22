@@ -1,6 +1,7 @@
 package com.do_an_tot_nghiep.k28.ai.repository;
 
 import com.do_an_tot_nghiep.k28.common.quota.entity.enums.LoaiDichVu;
+import java.util.Collection;
 import java.util.List;
 import java.time.LocalDate;
 import com.do_an_tot_nghiep.k28.ai.entity.YeuCauAi;
@@ -19,6 +20,8 @@ public interface YeuCauAiRepository extends JpaRepository<YeuCauAi, Long> {
     Optional<YeuCauAi> findByIdAndNguoiDungId(Long id, Long nguoiDungId);
 
     Page<YeuCauAi> findByNguoiDungId(Long nguoiDungId, Pageable pageable);
+
+    List<YeuCauAi> findByNguoiDungIdAndIdIn(Long nguoiDungId, Collection<Long> ids);
 
     Page<YeuCauAi> findByNguoiDungIdAndLoai(Long nguoiDungId, LoaiYeuCauAi loai, Pageable pageable);
 

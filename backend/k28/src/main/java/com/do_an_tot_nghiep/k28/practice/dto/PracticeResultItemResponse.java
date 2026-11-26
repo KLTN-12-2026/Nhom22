@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.practice.dto;
 
+import com.do_an_tot_nghiep.k28.ai.dto.AiRequestAcceptedResponse;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.LoaiCau;
 import com.do_an_tot_nghiep.k28.practice.entity.enums.NhomLoi;
 import java.util.List;
@@ -19,6 +20,7 @@ public record PracticeResultItemResponse(
         int diem,
         NhomLoi nhomLoi,
         List<Map<String, Object>> chiTiet,
-        JsonNode giaiThich
+        JsonNode giaiThich,
+        AiRequestAcceptedResponse giaiThichAi
 ) {
 }

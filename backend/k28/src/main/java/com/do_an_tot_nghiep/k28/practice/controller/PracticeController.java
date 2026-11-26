@@ -1,5 +1,6 @@
 package com.do_an_tot_nghiep.k28.practice.controller;
 
+import com.do_an_tot_nghiep.k28.ai.dto.AiRequestAcceptedResponse;
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
@@ -65,6 +66,17 @@ public class PracticeController {
             @Valid @RequestBody PracticeCheckRequest request
     ) {
         return submissionService.check(currentUser.id(), id, questionId, request);
+    }
+
+    @PostMapping("/sessions/{id}/questions/{questionId}/ai-explanation")
+    public ResponseEntity<AiRequestAcceptedResponse> explain(
+            @PathVariable("id") Long id,
+            @PathVariable("questionId") Long questionId
+    ) {
+        PracticeService.Explanation outcome = practiceService.explain(currentUser.id(), id, questionId);
+        return ResponseEntity
+                .status(outcome.created() ? HttpStatus.ACCEPTED : HttpStatus.OK)
+                .body(outcome.body());
     }
 
     @PostMapping("/sessions/{id}/submissions")
