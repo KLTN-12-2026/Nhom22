@@ -13,6 +13,8 @@ import { WordCombobox } from '@/components/dictionary/WordCombobox';
 import { AddToDeckDialog } from '@/components/dictionary/AddToDeckDialog';
 import { MucLookupResult } from './MucLookupResult';
 import { useMucPosition } from './useMucPosition';
+import { PixelMuc } from './PixelMuc';
+import { RobotMuc } from './RobotMuc';
 import { SkinCostume } from '@/components/skin/SkinActors';
 
 const MOOD_MS = 2400;
@@ -338,7 +340,9 @@ function Muc({ pathname }) {
       </div>
       <div ref={bubbleRef} className="sr-only" role="status" aria-live="polite">{live}</div>
       <button ref={toggleRef} className="muc-toggle" type="button" aria-label={`Mở bảng của ${name}${unread ? `, ${unread} lời nhắc mới` : ''}${todo ? `, còn ${todo} việc` : ''}`} aria-expanded={open} aria-controls="muc-panel" title="Bấm để mở · kéo để di chuyển" onClick={toggle}>
-        <span className="muc-svg" dangerouslySetInnerHTML={{ __html: svg }} />
+        <span className="muc-svg muc-svg-smooth" dangerouslySetInnerHTML={{ __html: svg }} />
+        <PixelMuc tier={user ? tier : null} />
+        <RobotMuc />
         <SkinCostume />
         {user && (tier === 'premium' || tier === 'admin') && <span className="muc-hat" aria-hidden="true"><MetalIcon name="crown" metal="gold" size={30} /></span>}
         {user && tier === 'pro' && <span className="muc-hat muc-hat-pro" aria-hidden="true"><MetalIcon name="bolt" metal="steel" size={24} /></span>}

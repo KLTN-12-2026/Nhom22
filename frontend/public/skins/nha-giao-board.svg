@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" viewBox="0 0 640 440">
+  <defs>
+    <filter id="chalk" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="3" seed="20" result="grain"/>
+      <feColorMatrix in="grain" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 3 -.7"/>
+      <feComposite in="SourceGraphic" operator="in"/>
+    </filter>
+    <filter id="board-grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="10" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+  <path d="M45 90 Q190 55 310 86 M360 365 Q460 340 575 362" fill="none" stroke="#ecebdd" stroke-width="25" stroke-linecap="round" opacity=".025"/>
+  <g filter="url(#chalk)" opacity=".68">
+    <g fill="#f5f1df" font-family="'Chalkboard SE', 'Segoe Print', 'Comic Sans MS', cursive" font-style="italic" font-weight="700" text-anchor="middle">
+      <text x="320" y="204" font-size="44">Chúc Mừng 20/10</text>
+      <text x="320" y="260" font-size="32">Tri Ân Thầy Cô Giáo</text>
+    </g>
+    <g fill="none" stroke="#f5f1df" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M170 282 Q320 294 470 282 M200 294 Q320 302 440 294"/>
+      <path d="M72 177 L76 190 L89 194 L76 198 L72 211 L68 198 L55 194 L68 190 Z M568 235 L572 248 L585 252 L572 256 L568 269 L564 256 L551 252 L564 248 Z"/>
+      <path d="M491 116 Q503 98 512 113 Q523 98 532 110 Q544 126 512 145 Q493 132 491 116Z"/>
+    </g>
+  </g>
+  <rect width="640" height="440" filter="url(#board-grain)" opacity=".055"/>
+</svg>

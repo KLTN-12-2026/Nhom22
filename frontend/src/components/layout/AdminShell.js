@@ -147,20 +147,22 @@ export function AdminShell({ children, user }) {
 
       <div className="adm-main">
         <header className="adm-top">
-          <button type="button" className="adm-icon-btn adm-menu" aria-label="Mở điều hướng" aria-controls="adm-side" aria-expanded={open} onClick={() => setOpen(true)}><Icon name="menu" /></button>
-          <nav className="adm-crumb" aria-label="Đường dẫn">
-            <span>Phòng quản trị</span>
-            {current && <><span aria-hidden="true">/</span><b aria-current="page">{current.label}</b></>}
-          </nav>
-          <LedgerSearch />
-          <div className="adm-top-actions">
-            {publish > 0 && (
-              <Link href="/quan-tri/duyet-cong-khai" className="adm-pending">
-                <Icon name="alert" /><span><b>{publish}</b> yêu cầu chờ duyệt</span>
-              </Link>
-            )}
-            <ThemeToggle />
-            {user && <NotificationBell key={user.id} userId={user.id} />}
+          <div className="adm-top-inner">
+            <button type="button" className="adm-icon-btn adm-menu" aria-label="Mở điều hướng" aria-controls="adm-side" aria-expanded={open} onClick={() => setOpen(true)}><Icon name="menu" /></button>
+            <nav className="adm-crumb" aria-label="Đường dẫn">
+              <span>Phòng quản trị</span>
+              {current && <><span aria-hidden="true">/</span><b aria-current="page">{current.label}</b></>}
+            </nav>
+            <LedgerSearch />
+            <div className="adm-top-actions">
+              {publish > 0 && (
+                <Link href="/quan-tri/duyet-cong-khai" className="adm-pending" aria-label={`${publish} yêu cầu chờ duyệt`}>
+                  <Icon name="alert" /><b>{publish}</b><span>yêu cầu chờ duyệt</span>
+                </Link>
+              )}
+              <ThemeToggle />
+              {user && <NotificationBell key={user.id} userId={user.id} />}
+            </div>
           </div>
         </header>
         <main className="adm-content" id="main"><SkinOff />{children}</main>
