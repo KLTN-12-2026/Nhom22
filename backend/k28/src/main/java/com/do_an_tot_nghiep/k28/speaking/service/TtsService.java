@@ -60,10 +60,6 @@ public class TtsService {
         return mapper.toResponse(audio.file(), audio.nguon(), audio.moPhong());
     }
 
-    public FileResponse wordAudio(Long userId, Long cardId) {
-        return audio(userId, cardId, LoaiAmThanh.TU).file();
-    }
-
     private Audio audio(Long userId, Long cardId, LoaiAmThanh loai) {
         CardAudioSource card = cards.audioSource(userId, cardId);
         Long uploaded = loai == LoaiAmThanh.TU ? card.amTuId() : card.amCauId();

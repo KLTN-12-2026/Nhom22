@@ -8,6 +8,7 @@ import com.do_an_tot_nghiep.k28.content.service.CardService;
 import com.do_an_tot_nghiep.k28.content.service.FileService;
 import com.do_an_tot_nghiep.k28.learning.entity.enums.TrangThaiTienDo;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeAudioResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeQuestionResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeSessionResponse;
@@ -23,6 +24,8 @@ import com.do_an_tot_nghiep.k28.practice.repository.BaiLuyenRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.CauHoiBaiLuyenRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.LanLamBaiRepository;
 import com.do_an_tot_nghiep.k28.practice.repository.TraLoiBaiLuyenRepository;
+import com.do_an_tot_nghiep.k28.speaking.dto.CardAudioResponse;
+import com.do_an_tot_nghiep.k28.speaking.entity.enums.LoaiAmThanh;
 import com.do_an_tot_nghiep.k28.speaking.service.TtsService;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -140,7 +143,7 @@ public class PracticeService {
         return toResponse(practice, boTheTen, questions.findByBaiIdOrderByThuTu(practice.getId()), ketQua);
     }
 
-    public FileResponse audio(Long userId, Long id, Long questionId) {
+    public PracticeAudioResponse audio(Long userId, Long id, Long questionId) {
         BaiLuyen practice = practices.findByIdAndNguoiDungId(id, userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
         CauHoiBaiLuyen question = questions.findByIdAndBaiId(questionId, practice.getId())
@@ -150,13 +153,19 @@ public class PracticeService {
         }
         JsonNode amTuId = json.readTree(question.getDeBaiJson()).get("amTuId");
         if (amTuId == null || amTuId.isNull()) {
-            return ttsService.wordAudio(userId, question.getTheId());
+            CardAudioResponse tts = ttsService.cardAudio(userId, question.getTheId(), LoaiAmThanh.TU);
+            String vanBanDoc = tts.moPhong() ? json.readTree(question.getDapAnJson()).path("noiDung").asText(null) : null;
+            return new PracticeAudioResponse(tts.id(), tts.loai(), tts.mimeType(), tts.kichThuoc(), tts.checksum(),
+                    tts.hoanTatAt(), tts.downloadUrl(), tts.expiresAt(), tts.nguon(), tts.moPhong(), vanBanDoc);
         }
+        FileResponse file;
         try {
-            return fileService.get(userId, Long.valueOf(amTuId.asText()));
+            file = fileService.get(userId, Long.valueOf(amTuId.asText()));
         } catch (NumberFormatException e) {
             throw new ApiException(ErrorCode.NOT_FOUND, "Câu hỏi không có âm thanh");
         }
+        return new PracticeAudioResponse(file.id(), file.loai(), file.mimeType(), file.kichThuoc(), file.checksum(),
+                file.hoanTatAt(), file.downloadUrl(), file.expiresAt(), TtsService.NGUON_TAI_LEN, false, null);
     }
 
     @Transactional

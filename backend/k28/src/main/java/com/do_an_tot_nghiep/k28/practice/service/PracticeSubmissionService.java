@@ -5,6 +5,8 @@ import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.engagement.service.RewardService;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeAnswerRequest;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeCheckRequest;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeCheckResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticePairRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.SubmitPracticeRequest;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
@@ -87,6 +90,7 @@ public class PracticeSubmissionService {
         Map<Long, PracticeGrader.Question> keys = new HashMap<>();
         rows.forEach(row -> keys.put(row.getId(), results.question(row)));
         Map<Long, PracticeGrader.Answer> given = answersOf(request.traLoi(), keys);
+        rows.forEach(row -> locked(row).ifPresent(answer -> given.put(row.getId(), answer)));
         List<PracticeGrader.Graded> graded = rows.stream()
                 .map(row -> PracticeGrader.grade(keys.get(row.getId()), given.get(row.getId())))
                 .toList();
@@ -109,6 +113,59 @@ public class PracticeSubmissionService {
                 practice.isLaLuyenLai(),
                 LocalDate.ofInstant(nopAt, accountService.zoneOf(userId)));
         return new Outcome(false, results.result(practice, results.boTheTen(practice), attempt));
+    }
+
+    @Transactional
+    public PracticeCheckResponse check(Long userId, Long baiId, Long questionId, PracticeCheckRequest request) {
+        BaiLuyen practice = practices.lockOwned(baiId, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
+        CauHoiBaiLuyen row = questions.findByIdAndBaiId(questionId, practice.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy câu hỏi"));
+        PracticeGrader.Question key = results.question(row);
+        String cauHoiId = String.valueOf(row.getId());
+        if (key.loaiCau() == LoaiCau.GHEP_TU) {
+            Map<String, String> chosen = pairs(key, request.cap(), "cap");
+            List<Map<String, Object>> cap = chosen.entrySet().stream()
+                    .map(entry -> PracticeGrader.map(
+                            "traiId", entry.getKey(),
+                            "phaiId", entry.getValue(),
+                            "dung", key.dapAn().cap().stream().anyMatch(link ->
+                                    link.traiId().equals(entry.getKey()) && link.phaiId().equals(entry.getValue()))))
+                    .toList();
+            boolean dung = !cap.isEmpty() && cap.stream().allMatch(item -> Boolean.TRUE.equals(item.get("dung")));
+            return new PracticeCheckResponse(cauHoiId, dung, null, null, null, null, cap);
+        }
+        PracticeGrader.Answer answer = locked(row).orElseGet(() -> {
+            PracticeGrader.Answer first = answer(key,
+                    new PracticeAnswerRequest(cauHoiId, request.luaChonId(), request.noiDung(), null), "");
+            if (attempts.findByBaiId(baiId).isEmpty()) {
+                row.lockCheck(json.writeValueAsString(PracticeGrader.map(
+                        "luaChonId", first.luaChonId(),
+                        "noiDung", first.noiDung())));
+            }
+            return first;
+        });
+        PracticeGrader.Graded graded = PracticeGrader.grade(key, answer);
+        PracticeGrader.DapAn dapAn = json.readValue(row.getDapAnJson(), PracticeGrader.DapAn.class);
+        return new PracticeCheckResponse(
+                cauHoiId,
+                graded.dung(),
+                graded.nhomLoi(),
+                graded.traLoi() == null ? null : json.valueToTree(graded.traLoi()),
+                PracticeResults.publicAnswer(row.getLoaiCau(), dapAn),
+                json.readTree(row.getGiaiThichJson()),
+                null);
+    }
+
+    private Optional<PracticeGrader.Answer> locked(CauHoiBaiLuyen row) {
+        if (row.getTraLoiKiemTraJson() == null || row.getLoaiCau() == LoaiCau.GHEP_TU) {
+            return Optional.empty();
+        }
+        JsonNode node = json.readTree(row.getTraLoiKiemTraJson());
+        return Optional.of(new PracticeGrader.Answer(
+                node.path("luaChonId").isString() ? node.get("luaChonId").asString() : null,
+                node.path("noiDung").isString() ? node.get("noiDung").asString() : null,
+                null));
     }
 
     private void save(

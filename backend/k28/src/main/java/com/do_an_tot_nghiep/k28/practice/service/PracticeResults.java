@@ -135,7 +135,7 @@ class PracticeResults {
                 json.readTree(row.getGiaiThichJson()));
     }
 
-    private static Map<String, Object> publicAnswer(LoaiCau loaiCau, PracticeGrader.DapAn dapAn) {
+    static Map<String, Object> publicAnswer(LoaiCau loaiCau, PracticeGrader.DapAn dapAn) {
         return switch (loaiCau) {
             case CHON_NGHIA, CHON_TU, PHAN_BIET_CAP -> PracticeGrader.map(
                     "luaChonId", dapAn.luaChonId(),

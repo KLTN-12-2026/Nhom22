@@ -83,7 +83,8 @@ async function makeQuestion(req, type, card, distract, thuTu) {
   if (type === 'DIEN_CHO_TRONG') {
     const blank = blankOf(card);
     if (!blank) return null;
-    return { ...base, deBai: { cau: blank.cau, goiY: card.nghiaVi, tuLoai: card.tuLoai || null }, answer: { chapNhan: [blank.dapAn], noiDung: blank.dapAn } };
+    const words = shuffle([blank.dapAn, ...shuffle(distract.filter(other => normalize(other.tu) !== normalize(card.tu))).slice(0, 3).map(other => other.tu)]);
+    return { ...base, deBai: { cau: blank.cau, goiY: card.nghiaVi, dichVi: card.dichVi || null, tuLoai: card.tuLoai || null, phuongAnTu: words }, answer: { chapNhan: [blank.dapAn], noiDung: blank.dapAn } };
   }
   if (type === 'NHAP_TU_THEO_NGHIA') {
     return { ...base, deBai: { nghiaVi: card.nghiaVi, tuLoai: card.tuLoai || null, viDuVi: card.dichVi || null }, answer: { chapNhan: [card.tu], noiDung: card.tu } };
@@ -246,6 +247,25 @@ function grade(store, session, given, createdAt) {
   });
 }
 
+async function check(req, session, questionId) {
+  const q = session.cauHoi.find(item => item.id === questionId);
+  if (!q) return jsonError(404, 'NOT_FOUND', 'Không tìm thấy câu hỏi');
+  const body = await req.json().catch(() => ({}));
+  if (q.loaiCau === 'GHEP_TU') {
+    const cap = (Array.isArray(body.cap) ? body.cap : []).map(pair => ({ traiId: pair.traiId, phaiId: pair.phaiId, dung: q.answer.cap.some(c => c.traiId === pair.traiId && c.phaiId === pair.phaiId) }));
+    return NextResponse.json({ cauHoiId: q.id, dung: cap.length > 0 && cap.every(item => item.dung), nhomLoi: null, traLoi: null, dapAn: null, giaiThich: null, cap });
+  }
+  q.locked ??= { luaChonId: body.luaChonId || null, noiDung: body.noiDung || '' };
+  const dung = q.phuongAn
+    ? q.locked.luaChonId === q.answer.luaChonId
+    : !!normalize(q.locked.noiDung) && q.answer.chapNhan.some(accepted => normalize(accepted) === normalize(q.locked.noiDung));
+  return NextResponse.json({
+    cauHoiId: q.id, dung, nhomLoi: null, traLoi: q.locked,
+    dapAn: { luaChonId: q.answer.luaChonId || null, noiDung: q.answer.noiDung, chapNhan: q.answer.chapNhan || null },
+    giaiThich: q.snap ? explanation(q.snap) : null, cap: null
+  });
+}
+
 async function submit(req, store, session) {
   const body = await req.json().catch(() => ({}));
   const existing = session.lanLamId ? store.attempts.find(a => a.lanLamId === session.lanLamId) : null;
@@ -258,6 +278,7 @@ async function submit(req, store, session) {
   }
   const given = {};
   (Array.isArray(body.traLoi) ? body.traLoi : []).forEach(reply => { if (reply?.cauHoiId) given[reply.cauHoiId] = reply; });
+  session.cauHoi.forEach(q => { if (q.locked && q.loaiCau !== 'GHEP_TU') given[q.id] = { cauHoiId: q.id, ...q.locked }; });
   const lanLamId = newId('lan');
   const nopAt = new Date().toISOString();
   const ketQua = grade(store, session, given, nopAt);
@@ -290,7 +311,7 @@ async function retry(req, store) {
   if (!wrong.length) return jsonError(422, 'BUSINESS_RULE', 'Bài này không có câu sai để luyện lại.');
   const session = {
     ...source, id: newId('bai'), taoAt: new Date().toISOString(), laLuyenLai: true, lanLamId: null,
-    soCauYeuCau: wrong.length, cauHoi: wrong.map((q, i) => ({ ...q, id: newId('q'), thuTu: i + 1 }))
+    soCauYeuCau: wrong.length, cauHoi: wrong.map((q, i) => ({ ...q, locked: undefined, id: newId('q'), thuTu: i + 1 }))
   };
   store.sessions.set(session.id, session);
   return NextResponse.json(practiceView(store, session), { status: 201 });
@@ -331,6 +352,10 @@ function mockPost(req, slug) {
     return session ? submit(req, store, session) : jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài luyện');
   }
   if (slug.length === 2 && slug[0] === 'mistakes' && slug[1] === 'retry') return retry(req, store);
+  if (slug.length === 5 && slug[0] === 'sessions' && slug[2] === 'questions' && slug[4] === 'check') {
+    const session = store.sessions.get(slug[1]);
+    return session ? check(req, session, slug[3]) : jsonError(404, 'NOT_FOUND', 'Không tìm thấy bài luyện');
+  }
   return jsonError(404, 'NOT_FOUND', 'Không tìm thấy đường dẫn');
 }
 
