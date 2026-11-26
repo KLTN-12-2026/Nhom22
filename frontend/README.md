@@ -151,10 +151,21 @@ phân trang 6 phiếu và tab trạng thái đồng bộ URL. Chi tiết có l�
 2000 ký tự, giải quyết/mở lại và đổi ưu tiên. Khi giải quyết phải nhập kết quả xử lý;
 lưu lỗi giữ bản nháp và xung đột yêu cầu mở lại phiếu.
 
-Đây là giao diện dùng dữ liệu mẫu trên trình duyệt, chưa tích hợp API hỗ trợ.
-Dùng chung `vocab:support-tickets:v1:<userId>` với `/phieu-ho-tro`; mặc định có
-12 phiếu của Nguyễn An, bổ sung những tài khoản đã lưu phiếu trên cùng origin.
-Phiếu mới lưu kèm tên/email người gửi; dữ liệu cũ thiếu thông tin hiển thị mã tài khoản.
-Hai màn tự làm mới cache khi tạo/cập nhật hoặc storage thay đổi giữa các tab.
-Không gửi email, thông báo hay yêu cầu thật. Kiểm tra quy tắc lưu và xung đột bằng
-`node --test tests/support-admin.test.mjs tests/support-tickets.test.mjs`.
+Hai trang sử dụng API backend thật qua `src/lib/support-api.js`, cookie đăng nhập và CSRF:
+
+- `/phieu-ho-tro`: `GET /api/v1/support-tickets` lấy phiếu của tài khoản hiện tại;
+  `POST /api/v1/support-tickets` tạo phiếu với tiêu đề tối đa 150 và mô tả tối đa 5000 ký tự.
+  Bấm tiêu đề phiếu để xem nội dung đầy đủ, trạng thái và toàn bộ lịch sử phản hồi.
+- `/quan-tri/tiep-nhan-ho-tro`: `GET /api/v1/admin/support-tickets` lấy danh sách kèm người gửi;
+  `POST /api/v1/admin/support-tickets/{id}/respond` gửi phản hồi, trạng thái, ưu tiên và `version`.
+  Khi có xung đột phiên bản, đóng chi tiết rồi mở lại trước khi lưu tiếp.
+
+Danh sách tải hết các trang API (100 phiếu/yêu cầu) rồi tìm kiếm, lọc và phân trang trên giao diện.
+Hai màn làm mới cache sau khi tạo/xử lý, khi nhận sự kiện SSE, mỗi 30 giây khi đang mở trang và
+khi quay lại cửa sổ. Có nút Làm mới để tải thủ công; phản hồi mới cũng cập nhật trong chi tiết học viên đang mở.
+Lỗi gửi giữ nguyên nội dung để thử lại. Không dùng localStorage hoặc phiếu mẫu làm nguồn dữ liệu.
+Backend cần áp dụng migration `V46__support_tickets.sql` và `V48__support_ticket_notifications.sql`.
+Thông báo phản hồi do backend tạo. Mockup HTML vẫn là demo độc lập.
+
+Kiểm tra kết nối HTTP (giả lập phản hồi backend), ánh xạ dữ liệu và quy tắc nhập liệu bằng
+`node --test tests/support-api.test.mjs tests/support-admin.test.mjs tests/support-tickets.test.mjs tests/realtime.test.mjs`.

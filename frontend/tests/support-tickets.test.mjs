@@ -35,3 +35,14 @@ test('blank or overlong values are rejected', () => {
   assert.ok(validateTicket({ title: 'x', description: ' ' }).description);
   assert.deepEqual(validateTicket({ title: 'x', description: 'y' }), {});
 });
+
+test('description accepts the API limit and rejects larger payloads', () => {
+  assert.deepEqual(validateTicket({ title: 'x'.repeat(150), description: 'y'.repeat(5000), category: 'technical', priority: 'medium' }), {});
+  assert.match(validateTicket({ title: 'x', description: 'y'.repeat(5001) }).description, /5000/);
+});
+
+test('invalid category and priority cannot produce an API create request', () => {
+  const errors = validateTicket({ title: 'x', description: 'y', category: 'unknown', priority: '' });
+  assert.ok(errors.category);
+  assert.ok(errors.priority);
+});
