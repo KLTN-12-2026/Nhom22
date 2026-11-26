@@ -87,6 +87,14 @@
   .rail-dot { position: absolute; left: 38px; top: 8px; z-index: 2; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--desk); transition: opacity var(--dur-1); }
   .rail[data-open] .rail-dot { opacity: 0; }
 
+  .rail-row { display: flex; align-items: center; gap: 2px; }
+  .rail-row > .rail-item { flex: 1; min-width: 0; }
+  .rail-toggle { flex: none; display: grid; place-items: center; width: 0; height: 28px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--ink-3); cursor: pointer; overflow: hidden; opacity: 0; transition: opacity var(--dur-1), width var(--dur-2) var(--ease); }
+  .rail[data-open] .rail-toggle { width: 28px; opacity: 1; transition-delay: 60ms; }
+  .rail-toggle:hover { background: color-mix(in srgb, var(--primary) 7%, transparent); color: var(--ink); }
+  .rail-toggle:focus-visible { outline: none; box-shadow: var(--focus); }
+  .rail-toggle .icon { width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease); }
+  .rail-toggle[aria-expanded="false"] .icon { transform: rotate(-90deg); }
   .rail-subs { display: none; margin: 0 0 4px 33px; padding-left: 14px; border-left: 1.5px solid var(--line-2); }
   .rail[data-open] .rail-subs { display: grid; }
   .rail-sub { display: flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 8px; color: var(--ink-3); font-size: 13.5px; text-decoration: none; white-space: nowrap; }
@@ -167,6 +175,6 @@
   .app-header .sound-toggle { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app-header .btn-icon, .app-header .user-chip, .app-rail, .rail, .rail-label, .rail-extra, .rail-group-title, .rail-who, .rail-card, .rail-bubble, .rail-skin, .rail-find, .settings-switch::after { transition: none; }
+  .app-header .btn-icon, .app-header .user-chip, .app-rail, .rail, .rail-label, .rail-extra, .rail-group-title, .rail-toggle, .rail-toggle .icon, .rail-who, .rail-card, .rail-bubble, .rail-skin, .rail-find, .settings-switch::after { transition: none; }
   .settings-menu, .rail-scene i, .rail-bubble.is-pop::before { animation: none; }
 }
