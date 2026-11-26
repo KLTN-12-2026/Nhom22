@@ -7,6 +7,7 @@ import { Button, ConfirmDialog, Icon } from '@/components/ui';
 import { SoundToggle } from '@/components/ui/SoundToggle';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import styles from './page.module.css';
+import '../../../../public/speech.js';
 import { fx } from '@/lib/fx';
 import { PRACTICE_TYPE, label, splitBlank } from '@/lib/practice-labels.mjs';
 
@@ -31,6 +32,19 @@ function playAudio(url, rate) {
   return audio.play();
 }
 
+function speakText(text, rate) {
+  return new Promise((resolve, reject) => {
+    const speech = window.VocabSpeech;
+    if (!speech?.supported()) { reject(new Error('Trình duyệt này chưa hỗ trợ giọng đọc.')); return; }
+    const settings = speech.preference();
+    let started = false;
+    speech.speak(text, (state, message) => {
+      if (state === 'speaking' && !started) { started = true; resolve(); }
+      if (state === 'error') reject(new Error(message || 'Chưa phát được giọng đọc. Thử lại.'));
+    }, { ...settings, rate: settings.rate * rate });
+  });
+}
+
 const now = () => Date.now();
 
 function BlankSentence({ sentence, mark = '' }) {
@@ -46,17 +60,18 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
   if (!hasAudio) return <p className="notice notice-warning">Câu này chưa có âm thanh.</p>;
   const audioUrl = async () => {
     const c = cached.current;
-    if (c && (!c.expiresAt || new Date(c.expiresAt).getTime() - 30000 > now())) return c.downloadUrl;
+    if (c && (!c.expiresAt || new Date(c.expiresAt).getTime() - 30000 > now())) return c;
     const file = await apiFetch(`/api/v1/practice/sessions/${practiceId}/questions/${questionId}/audio`);
     cached.current = file;
-    return file.downloadUrl;
+    return file;
   };
   const listen = async (rate) => {
     setError('');
     setLoadingAudio(true);
     try {
-      const url = await audioUrl();
-      await playAudio(url, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
+      const file = await audioUrl();
+      if (file.moPhong && file.vanBanDoc) await speakText(file.vanBanDoc, rate);
+      else await playAudio(file.downloadUrl, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
     } catch (err) {
       cached.current = null;
       setError(err.message || 'Không tải được âm thanh. Thử lại.');

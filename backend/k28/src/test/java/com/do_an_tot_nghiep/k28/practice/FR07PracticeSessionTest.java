@@ -279,6 +279,8 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.downloadUrl").isNotEmpty()));
         assertThat(file.get("id").asText()).isEqualTo(String.valueOf(audio));
         assertThat(file.get("loai").asText()).isEqualTo("AM_THANH");
+        assertThat(file.get("moPhong").asBoolean()).isFalse();
+        assertThat(file.get("vanBanDoc").isNull()).isTrue();
         assertThat(file.toString()).doesNotContain("theId", "boTheId");
 
         mockMvc.perform(get(audioPath).cookie(stranger.session()))

@@ -2,8 +2,8 @@ package com.do_an_tot_nghiep.k28.practice.controller;
 
 import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
-import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeAudioResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryQuery;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
@@ -52,7 +52,7 @@ public class PracticeController {
     }
 
     @GetMapping("/sessions/{id}/questions/{questionId}/audio")
-    public FileResponse audio(@PathVariable("id") Long id, @PathVariable("questionId") Long questionId) {
+    public PracticeAudioResponse audio(@PathVariable("id") Long id, @PathVariable("questionId") Long questionId) {
         return practiceService.audio(currentUser.id(), id, questionId);
     }
 

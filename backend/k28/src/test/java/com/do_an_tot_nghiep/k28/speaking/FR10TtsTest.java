@@ -236,7 +236,10 @@ class FR10TtsTest extends AbstractIntegrationTest {
         JsonNode file = body(mockMvc.perform(get(path).cookie(learner.session())).andExpect(status().isOk()));
         assertThat(file.get("mimeType").asText()).isEqualTo("audio/vnd.wave");
         assertThat(file.get("downloadUrl").asText()).isNotBlank();
-        assertThat(file.toString()).doesNotContain(secret, "nguon", "theId");
+        assertThat(file.get("moPhong").asBoolean()).isTrue();
+        assertThat(file.get("nguon").asText()).isEqualTo("TTS");
+        assertThat(file.get("vanBanDoc").asText()).isNotBlank();
+        assertThat(file.toString()).doesNotContain("theId");
         assertThat(used(learner)).isEqualTo(1);
     }
 
