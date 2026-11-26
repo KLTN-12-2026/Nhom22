@@ -181,8 +181,8 @@ final class PracticeGenerator {
                     type,
                     Long.valueOf(card.id()),
                     card.amTuId() == null
-                            ? map("amThanhTts", true, "tuLoai", card.tuLoai())
-                            : map("amTuId", card.amTuId(), "tuLoai", card.tuLoai()),
+                            ? map("amThanhTts", true, "tu", card.tu(), "tuLoai", card.tuLoai())
+                            : map("amTuId", card.amTuId(), "tu", card.tu(), "tuLoai", card.tuLoai()),
                     null,
                     typedAnswer(card.tu()),
                     explain(card));
@@ -229,7 +229,7 @@ final class PracticeGenerator {
         return new Draft(
                 LoaiCau.DIEN_CHO_TRONG,
                 Long.valueOf(card.id()),
-                map("cau", blank.cau(), "goiY", card.nghiaVi(), "tuLoai", card.tuLoai()),
+                map("cau", blank.cau(), "tu", blank.dapAn(), "tuGoc", card.tu(), "dichVi", card.dichVi(), "goiY", card.nghiaVi(), "tuLoai", card.tuLoai()),
                 null,
                 typedAnswer(blank.dapAn()),
                 explain(card));
@@ -273,8 +273,8 @@ final class PracticeGenerator {
         List<Map<String, Object>> cotPhai = new ArrayList<>();
         List<Map<String, Object>> cap = new ArrayList<>();
         for (int i = 0; i < left.size(); i++) {
-            cotTrai.add(map("id", "t" + (i + 1), "noiDung", left.get(i).tu()));
-            cotPhai.add(map("id", "n" + (i + 1), "noiDung", right.get(i).nghiaVi()));
+            cotTrai.add(map("id", "t" + (i + 1), "noiDung", left.get(i).tu(), "maCap", "m" + group.indexOf(left.get(i))));
+            cotPhai.add(map("id", "n" + (i + 1), "noiDung", right.get(i).nghiaVi(), "maCap", "m" + group.indexOf(right.get(i))));
         }
         for (int i = 0; i < left.size(); i++) {
             StudyCardResponse card = left.get(i);
