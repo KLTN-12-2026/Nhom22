@@ -33,18 +33,21 @@ public class GoiDichVu extends BaseEntity {
     @Column(nullable = false)
     private boolean phatAm;
     @Column(nullable = false)
+    private boolean thongKeNangCao;
+    @Column(nullable = false)
     private boolean hoatDong;
 
     @Version
     private Long version;
 
     public void capNhat(String ten, long giaThang, long giaNam, Integer gioiHanThe, boolean phatAm,
-                        boolean hoatDong) {
+                        boolean thongKeNangCao, boolean hoatDong) {
         this.ten = ten;
         this.giaThang = giaThang;
         this.giaNam = giaNam;
         this.gioiHanThe = gioiHanThe;
         this.phatAm = phatAm;
+        this.thongKeNangCao = thongKeNangCao;
         this.hoatDong = hoatDong;
     }
 

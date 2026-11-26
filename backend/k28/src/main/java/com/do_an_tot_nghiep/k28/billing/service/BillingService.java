@@ -78,7 +78,8 @@ public class BillingService {
                 .map(goi -> {
                     Map<LoaiDichVu, Integer> hanMuc = quota.hanMucNgay(goi.getMa());
                     return mapper.toResponse(goi, hanMuc.get(LoaiDichVu.AI), hanMuc.get(LoaiDichVu.ANH),
-                            hanMuc.get(LoaiDichVu.PHAT_AM), hanMuc.get(LoaiDichVu.TTS));
+                            hanMuc.get(LoaiDichVu.PHAT_AM), hanMuc.get(LoaiDichVu.TTS),
+                            hanMuc.get(LoaiDichVu.LUYEN_TAP));
                 })
                 .toList();
     }

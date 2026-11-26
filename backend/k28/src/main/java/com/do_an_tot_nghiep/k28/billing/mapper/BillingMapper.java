@@ -13,7 +13,8 @@ import org.mapstruct.Mapper;
 @Mapper
 public interface BillingMapper {
 
-    PlanResponse toResponse(GoiDichVu goi, Integer hanMucAi, Integer hanMucAnh, Integer hanMucPhatAm, Integer hanMucTts);
+    PlanResponse toResponse(GoiDichVu goi, Integer hanMucAi, Integer hanMucAnh, Integer hanMucPhatAm, Integer hanMucTts,
+                            Integer hanMucLuyenTap);
 
     TransactionResponse toResponse(GiaoDichThanhToan giaoDich, String tenGoi);
 

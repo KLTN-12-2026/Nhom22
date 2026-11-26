@@ -1,0 +1,8 @@
+.wide { grid-column: 1 / -1; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.head h2 { margin: 0; }
+.head p { margin: 0; font-size: var(--fs-small); color: var(--ink-2); }
+.list :global(.answer-row) { grid-template-columns: 2.25rem minmax(0, 1fr); align-items: center; }
+.list :global(.answer-meta) > span + span::before { content: "·"; margin-right: var(--sp-3); color: var(--ink-3); }
+.empty { display: grid; padding-block: var(--sp-4); gap: var(--sp-2); justify-items: start; padding: var(--sp-2) 0; }
+.empty p { margin: 0; font-size: var(--fs-small); color: var(--ink-2); }

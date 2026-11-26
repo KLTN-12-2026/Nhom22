@@ -29,10 +29,11 @@ function unitText(feature, value) {
   const f = FEATURES[feature];
   if (f.limit) return value == null || value === Infinity ? 'Không giới hạn' : `${formatLimit(value)} thẻ`;
   if (f.quota) return value > 0 ? `${formatLimit(value)} ${f.unit}/ngày` : 'Không có';
+  if (feature === 'THONG_KE_NANG_CAO') return value > 0 ? 'Mọi khoảng ngày, từng bộ thẻ' : '7 ngày gần nhất';
   return value > 0 ? 'Có' : 'Không có';
 }
 
-const HIGHLIGHTS = ['GIOI_HAN_THE', 'AI', 'ANH', 'PHAT_AM'];
+const HIGHLIGHTS = ['GIOI_HAN_THE', 'AI', 'ANH', 'PHAT_AM', 'LUYEN_TAP', 'THONG_KE_NANG_CAO'];
 
 export function UpgradeDialog() {
   const client = useQueryClient();

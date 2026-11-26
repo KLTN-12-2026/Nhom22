@@ -1,10 +1,13 @@
 package com.do_an_tot_nghiep.k28.content.service;
 
+import com.do_an_tot_nghiep.k28.account.entity.HoSoHocTap;
+import com.do_an_tot_nghiep.k28.account.repository.HoSoHocTapRepository;
 import com.do_an_tot_nghiep.k28.account.service.AccountService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CardSort;
+import com.do_an_tot_nghiep.k28.content.dto.ForYouDecksResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardQuery;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryCardResponse;
 import com.do_an_tot_nghiep.k28.content.dto.LibraryDeckDetailResponse;
@@ -59,6 +62,7 @@ public class LibraryService {
     private final CardLinkRepository links;
     private final LibraryCardMapper cardMapper;
     private final LibraryHighlightRepository highlightQueries;
+    private final HoSoHocTapRepository profiles;
     private final Clock clock;
 
     public PageResponse<LibraryDeckResponse> list(
@@ -85,6 +89,22 @@ public class LibraryService {
         );
 
         return responses(result);
+    }
+
+    public ForYouDecksResponse forYou(Long userId, int size) {
+        HoSoHocTap profile = profiles.findById(userId).orElse(null);
+        if (profile == null || profile.getChuDeIds().isEmpty()) {
+            return new ForYouDecksResponse(false, List.of());
+        }
+        Page<BoThe> result = decks.findAll(
+                LibraryDeckSpecifications.forYou(
+                        userId,
+                        List.copyOf(profile.getChuDeIds()),
+                        profile.getTrinhDo()
+                ),
+                PageRequest.of(0, size)
+        );
+        return new ForYouDecksResponse(true, responses(result).items());
     }
 
     public LibraryDeckDetailResponse get(Long id, LibraryCardQuery request) {

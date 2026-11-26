@@ -18,17 +18,19 @@ export const NAV = [
     { key: 'notebook', label: 'Sổ tay', icon: 'notebook', href: '/so-tay' }
   ] },
   { group: 'Công cụ AI', items: [
-    { key: 'ai-workshop', label: 'Xưởng thẻ AI', icon: 'sparkles', href: '/ai-xuong-the', feature: 'AI', subs: [{ key: 'ai-history', label: 'Lịch sử AI', icon: 'clock', href: '/ai-lich-su' }] },
-    { key: 'ai-sentence', label: 'Viết câu', icon: 'edit', href: '/ai-viet-cau', feature: 'AI' },
+    { key: 'ai-workshop', label: 'Xưởng thẻ AI', icon: 'sparkles', href: '/ai-xuong-the', feature: 'AI', subs: [
+      { key: 'ai-sentence', label: 'Viết câu', icon: 'edit', href: '/ai-viet-cau' },
+      { key: 'ai-history', label: 'Lịch sử AI', icon: 'clock', href: '/ai-lich-su' }
+    ] },
     { key: 'pronunciation', label: 'Phát âm', icon: 'mic', href: '/phat-am', feature: 'PHAT_AM', subs: [{ key: 'pronunciation-history', label: 'Lịch sử phát âm', icon: 'clock', href: '/phat-am-lich-su' }] }
   ] },
   { group: 'Tiến bộ', items: [
-    { key: 'stats', label: 'Thống kê', icon: 'chart', href: '/thong-ke' },
-    { key: 'recommendations', label: 'Gợi ý ôn tập', icon: 'target', href: '/goi-y' },
-    { key: 'mastery-map', label: 'Bản đồ làm chủ', icon: 'globe', href: '/ban-do-lam-chu' },
-    { key: 'weekly-summary', label: 'Tổng kết tuần', icon: 'calendar', href: '/tong-ket-tuan' },
-    { key: 'achievements', label: 'Thành tích', icon: 'shield', href: '/thanh-tich' },
-    { key: 'leaderboard', label: 'Bảng xếp hạng', icon: 'star', href: '/bang-xep-hang' }
+    { key: 'stats', label: 'Thống kê', icon: 'chart', href: '/thong-ke', subs: [
+      { key: 'recommendations', label: 'Gợi ý ôn tập', icon: 'target', href: '/goi-y' },
+      { key: 'mastery-map', label: 'Bản đồ làm chủ', icon: 'globe', href: '/ban-do-lam-chu' },
+      { key: 'weekly-summary', label: 'Tổng kết tuần', icon: 'calendar', href: '/tong-ket-tuan' }
+    ] },
+    { key: 'achievements', label: 'Thành tích', icon: 'shield', href: '/thanh-tich', subs: [{ key: 'leaderboard', label: 'Bảng xếp hạng', icon: 'star', href: '/bang-xep-hang' }] }
   ] }
 ];
 
@@ -47,6 +49,12 @@ const readFolded = () => { try { return localStorage.getItem(FOLD_KEY) || ''; } 
 const foldSubscribe = listener => {
   window.addEventListener('vocab-rail-fold', listener);
   return () => window.removeEventListener('vocab-rail-fold', listener);
+};
+const SUBS_KEY = 'vocab:rail-subs';
+const readSubs = () => { try { return localStorage.getItem(SUBS_KEY) || ''; } catch { return ''; } };
+const subsSubscribe = listener => {
+  window.addEventListener('vocab-rail-subs', listener);
+  return () => window.removeEventListener('vocab-rail-subs', listener);
 };
 const parseFolded = raw => { try { return raw ? JSON.parse(raw) : null; } catch { return null; } };
 const fold = text => text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
@@ -82,6 +90,8 @@ export function Rail({ groups, user, isActive, foot, menuOpen }) {
   const pinned = useSyncExternalStore(pinSubscribe, readPinned, () => false);
   const foldedRaw = useSyncExternalStore(foldSubscribe, readFolded, () => '');
   const folded = parseFolded(foldedRaw);
+  const subsRaw = useSyncExternalStore(subsSubscribe, readSubs, () => '');
+  const expanded = parseFolded(subsRaw) || {};
   const due = useDueCount(Boolean(user));
   const skinName = useSkinName(Boolean(user));
   const open = pinned || hovered || focused || menuOpen || Boolean(query);
@@ -124,7 +134,7 @@ export function Rail({ groups, user, isActive, foot, menuOpen }) {
     place();
     const timer = setTimeout(place, 260);
     return () => clearTimeout(timer);
-  }, [activeKey, open, q, foldedRaw]);
+  }, [activeKey, open, q, foldedRaw, subsRaw]);
 
   useEffect(() => {
     const bubble = bubbleRef.current;
@@ -147,6 +157,11 @@ export function Rail({ groups, user, isActive, foot, menuOpen }) {
     const next = { ...(folded || {}), [name]: !closed };
     try { localStorage.setItem(FOLD_KEY, JSON.stringify(next)); } catch { }
     window.dispatchEvent(new Event('vocab-rail-fold'));
+  };
+  const toggleSubs = (key, isOpen) => {
+    const next = { ...expanded, [key]: !isOpen };
+    try { localStorage.setItem(SUBS_KEY, JSON.stringify(next)); } catch { }
+    window.dispatchEvent(new Event('vocab-rail-subs'));
   };
   const onEnter = () => { clearTimeout(hoverTimer.current); hoverTimer.current = setTimeout(() => setHovered(true), 90); };
   const onLeave = () => { clearTimeout(hoverTimer.current); setHovered(false); };
@@ -192,24 +207,38 @@ export function Rail({ groups, user, isActive, foot, menuOpen }) {
           {shown.map(g => (
             <div key={g.group} className="rail-group" data-closed={g.closed || undefined}>
               <button type="button" className="rail-group-title" aria-expanded={!g.closed} tabIndex={open ? 0 : -1} onClick={() => toggleGroup(g.group, g.closed)}>
-                <span className="rail-no" aria-hidden="true">{g.index + 1}</span>{g.group}<Icon name="chevron" className="rail-chev" />
+                <span className="rail-no" aria-hidden="true">{g.index + 1}</span>{g.group}<Icon name="chevron-down" className="rail-chev" />
               </button>
               <div className="rail-items">
                 {g.items.map(it => {
                   const subActive = (it.subs || []).some(s => isActive(s.href));
                   const active = isActive(it.href) || subActive;
-                  const showSubs = it.subs && (active || (q && it.subs.some(s => fold(s.label).includes(fold(q)))));
+                  const hasSubs = Boolean(it.subs?.length);
+                  const subsOpen = hasSubs && (expanded[it.key] ?? active);
+                  const showSubs = hasSubs && (subsOpen || (q && it.subs.some(s => fold(s.label).includes(fold(q)))));
                   const extra = meta(it);
+                  const link = (
+                    <Link className="rail-item" href={it.href} title={it.label} aria-current={active ? 'page' : undefined} onClick={() => setQuery('')}>
+                      <Icon name={it.icon} />
+                      {it.count === 'due' && due > 0 && <span className="rail-dot" aria-hidden="true" />}
+                      <span className="rail-label"><Mark text={it.label} query={q} /></span>
+                      {extra && <span className="rail-extra">{extra}</span>}
+                    </Link>
+                  );
                   return (
                     <div key={it.key}>
-                      <Link className="rail-item" href={it.href} title={it.label} aria-current={active ? 'page' : undefined} onClick={() => setQuery('')}>
-                        <Icon name={it.icon} />
-                        {it.count === 'due' && due > 0 && <span className="rail-dot" aria-hidden="true" />}
-                        <span className="rail-label"><Mark text={it.label} query={q} /></span>
-                        {extra && <span className="rail-extra">{extra}</span>}
-                      </Link>
+                      {hasSubs ? (
+                        <div className="rail-row">
+                          {link}
+                          <button type="button" className="rail-toggle" aria-expanded={Boolean(showSubs)} aria-controls={`rail-subs-${it.key}`}
+                            aria-label={`${showSubs ? 'Thu gọn' : 'Mở'} trang con của ${it.label}`} title={showSubs ? 'Thu gọn' : `Mở ${it.subs.length} trang con`}
+                            tabIndex={open ? 0 : -1} onClick={() => toggleSubs(it.key, Boolean(showSubs))}>
+                            <Icon name="chevron-down" />
+                          </button>
+                        </div>
+                      ) : link}
                       {showSubs && (
-                        <div className="rail-subs">
+                        <div className="rail-subs" id={`rail-subs-${it.key}`}>
                           {it.subs.map(s => (
                             <Link key={s.key} href={s.href} className="rail-sub" aria-current={isActive(s.href) ? 'page' : undefined} onClick={() => setQuery('')}>
                               <Mark text={s.label} query={q} />

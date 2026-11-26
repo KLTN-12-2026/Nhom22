@@ -59,7 +59,7 @@ class FR13ServiceOpsTest extends AbstractIntegrationTest {
                             .cookie(admin.session()))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString());
-            assertThat(list.size()).isEqualTo(12);
+            assertThat(list.size()).isEqualTo(15);
             JsonNode ai = find(list, "PRO", "AI");
             JsonNode tts = find(list, "PRO", "TTS");
             assertThat(ai.get("soLuotNgay").asInt()).isEqualTo(proAi);
@@ -135,7 +135,7 @@ class FR13ServiceOpsTest extends AbstractIntegrationTest {
 
         mockMvc.perform(get("/api/v1/admin/service-usage").cookie(admin.session()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dichVu.length()").value(4));
+                .andExpect(jsonPath("$.dichVu.length()").value(5));
         mockMvc.perform(get("/api/v1/admin/service-usage").cookie(admin.session())
                         .param("tuNgay", "2020-01-01").param("denNgay", "2020-06-01"))
                 .andExpect(status().isBadRequest())

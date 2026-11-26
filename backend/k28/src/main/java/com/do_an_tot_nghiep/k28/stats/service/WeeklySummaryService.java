@@ -69,7 +69,7 @@ public class WeeklySummaryService {
         }
         boolean tuanHienTai = !denNgay.isBefore(homNay);
         LocalDate denNgayDaQua = tuanHienTai ? homNay : denNgay;
-        StatisticsOverviewResponse overview = statisticsService.overview(userId,
+        StatisticsOverviewResponse overview = statisticsService.weekOverview(userId,
                 new OverviewQuery(tuNgay.toString(), denNgayDaQua.toString(), null));
 
         Instant batDau = tuNgay.atStartOfDay(zone).toInstant();

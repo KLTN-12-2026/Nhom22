@@ -183,51 +183,61 @@ frontend/
 
 **Cắt phạm vi (áp 07/11/2026):** theo [KE_HOACH_CAT_DOT3.md](../docs/KE_HOACH_CAT_DOT3.md). **Cắt** UI52, UI54, UI46 và tab "Tác vụ nền" của UI53. F2.2 (phần mất mạng + 409) làm đầu S7.
 
-### [ ] F3.1 Xưởng thẻ AI — UI29 ← B3.1, B3.2
+### [x] F3.1 Xưởng thẻ AI — UI29 ← B3.1, B3.2
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Trái đoạn văn, phải thẻ nháp: chọn, sửa, nghe, cảnh báo trùng, liên kết đoạn nguồn; 202 → hỏi trạng thái định kỳ; "Lưu N thẻ đã chọn" với `Idempotency-Key`.
 - **Bổ sung 07/11/2026** (theo demo nhóm FE, [KE_HOACH_CAT_DOT3.md §7](../docs/KE_HOACH_CAT_DOT3.md)): **X-01** nút "Tải tệp (Word/TXT/CSV)" — `.txt`/`.csv` đọc tại trình duyệt, `.docx` tải qua `/files/upload-requests` rồi gửi `tepId`; **X-02** chọn bộ có sẵn *hoặc* nhập tên bộ mới (khóa ô còn lại); **X-03** "Hoàn thiện với AI (IPA + Ví dụ)" từng thẻ (API của F3.2); **X-04** "Sinh ảnh AI" (Imagen 3, **Giữ**) có "Tạo lại"/"Bỏ ảnh", nhãn "Ảnh AI"; hết hạn mức ảnh của gói → nút "Nâng cấp gói" sang UI55 (S8, sau B3.3); **X-05** loa nghe từng thẻ nháp; **X-06** sửa/xóa từng thẻ, "Xóa tất cả" có xác nhận, đếm số thẻ.
 - Mã demo của nhóm FE chưa có trên `main`; khi đưa vào phải bỏ gọi backend Node (`newduan/backend`) và gọi API Spring.
 - **Giữ** (S7; X-03, X-04 xong ở S8).
 
 ### [ ] F3.2 Giải thích ngữ cảnh, viết câu & tự điền thẻ — UI30, UI31, UI16 ← B3.3
+- **Đối chiếu 27/11/2026:** UI31 `/ai-viet-cau` đã gọi `sentence-feedback`; còn thiếu UI30 và R-02 (FE chưa gọi `POST /ai/context-explanations`).
 - Không render HTML từ AI; hiển thị câu gốc, bản sửa, lỗi, giải thích tiếng Việt; nút báo cáo đầu ra sai.
 - Hiện trạng 07/11/2026: nhóm FE đã có giao diện mô phỏng UI31 `/ai-viet-cau` (bản sửa, "Vì sao sửa?", "Báo cáo phản hồi") và ngăn UI30 "Giải thích theo ngữ cảnh" trên mặt thẻ ("Đọc câu ví dụ", "Giải thích câu này", "Báo cáo đầu ra"); chờ B3.3 để thay dữ liệu mô phỏng.
 - **R-02:** trong `CardEditor`, gõ từ → nút "Gợi ý" gọi `context-explanations` → điền IPA, nghĩa, ví dụ, bản dịch vào form (không tự lưu); AI lỗi/429 hiện thông báo, form vẫn lưu tay được.
 - **Gọn** (S8).
 
-### [ ] F3.3 Lịch sử AI & hạn mức — UI32 ← B3.3
+### [x] F3.3 Lịch sử AI & hạn mức — UI32 ← B3.3
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Hết hạn mức (429) hiển thị thời điểm được dùng lại; AI lỗi không chặn học. Lịch sử dạng danh sách.
 - **Gọn** (S8).
 
-### [ ] F3.4 Gợi ý có lý do — UI28 ← B3.5
+### [x] F3.4 Gợi ý có lý do — UI28 ← B3.5
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Hiển thị mã lý do + minh chứng ("sai 3/5 lượt gần đây") + liên kết tới các lượt liên quan.
 - **R-04:** thẻ gợi ý `TIEN_BO` trên UI12 ("đúng 5/5 tuần này"); ẩn khi API không trả.
 - **Giữ** (S8).
 
-### [ ] F3.5 Góc phát âm — UI33, UI34 ← B3.4a, B3.4b
+### [x] F3.5 Góc phát âm — UI33, UI34 ← B3.4a, B3.4b
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Nghe mẫu (B3.4a, dùng cả trên UI19 và bài nghe viết từ S7); xin quyền micro khi bấm ghi; ghi ≤ 15 giây, phát lại, ghi lại; gửi; chỉ hiện chỉ số có thật; so sánh 2 lần gần nhất cùng từ; xóa bản ghi. Kết quả Fake hiện nhãn "Mô phỏng".
 - **Gọn** (S9).
 
-### [ ] F3.6 Động lực — UI38 ← B3.6
+### [x] F3.6 Động lực — UI38 ← B3.6
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Điểm, chuỗi ngày, huy hiệu, thử thách tuần, lịch sử thưởng.
 - **R-03:** UI12 hiện "Đã dùng ngày nghỉ tuần này" khi chuỗi được giữ nhờ ngày đóng băng.
 - **Gọn** (S8). **Cắt:** UI54 quản trị huy hiệu/thử thách.
 
-### [ ] F3.7 Thông báo — UI39 ← B3.7
+### [x] F3.7 Thông báo — UI39 ← B3.7
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Chuông có số chưa đọc, trang thông báo, đánh dấu đã đọc.
 - **Gọn** (S8). **Cắt:** UI52 quản trị gửi thông báo hệ thống. **Hoãn:** web push + PWA.
 
-### [ ] F3.8 Báo cáo & kiểm duyệt — UI45, UI50 ← B3.8
+### [x] F3.8 Báo cáo & kiểm duyệt — UI45, UI50 ← B3.8
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Hộp báo cáo (lý do + mô tả) trên bộ/thẻ/đầu ra AI; hàng đợi xử lý: giữ/ẩn kèm lý do.
 - **Gọn** (S9).
 - **Đã làm UI50 (21/11/2026, F3.15 E):** `/quan-tri/bao-cao`: tab Chờ xử lý/Đã giữ/Đã ẩn/Tất cả (lọc qua URL), lọc loại nội dung, bảng + phân trang, ngăn chi tiết (bản chụp `noiDung`, mô tả, link nội dung hiện tại), form giữ/ẩn + lý do 10–500, 409 → tải lại; số chờ xử lý trên menu. Kiểm với BE 8080 thật: 4 báo cáo, mở ngăn, kiểm lỗi nhập (không gửi quyết định). **Còn:** UI45 hộp báo cáo phía người học, nên chưa tick.
 
-### [ ] F3.9 Tổng kết tuần & bản đồ làm chủ — UI36, UI37 ← B3.9, B2.10
+### [x] F3.9 Tổng kết tuần & bản đồ làm chủ — UI36, UI37 ← B3.9, B2.10
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Màu không phải dấu hiệu duy nhất; không tô xanh khi mới đúng một lần.
 - UI36 = bảng bộ thẻ × kỹ năng, có "Chưa đủ dữ liệu"; UI37 có mục "Từ đã vượt qua" (R-04).
 - **Gọn** (S9). **Cắt:** lưới màu từng từ.
 
 ### [ ] F3.10 Dữ liệu & xóa tài khoản — UI44 ← B3.10
+- **Đối chiếu 27/11/2026:** FE chưa gọi `POST /me/deletion-requests`; chưa có nút xóa tài khoản trong `/ca-nhan`.
 - Xác nhận hai bước, hiển thị trạng thái xử lý.
 - **Gọn** (S9).
 
@@ -236,7 +246,8 @@ frontend/
 - **Gọn mạnh** (S9). **Cắt:** chi phí, tab "Tác vụ nền" UI53, yêu cầu xóa dữ liệu. (UI46 khôi phục 21/11/2026 ở F3.15.)
 - **Đã làm 21/11/2026 (F3.15 E):** `/quan-tri/dich-vu`: bảng lượt dùng (hôm nay/7/30/90 ngày; đang giữ, người dùng, lỗi, chưa rõ, tỷ lệ lỗi; TTS/phát âm "Không ghi nhận"), bảng hạn mức gói × dịch vụ sửa tại chỗ (0–10.000, đánh dấu ô đổi, Hoàn tác), lý do bắt buộc, gửi chỉ ô đổi kèm `version`, 409 → tải lại; link lịch sử `nhat-ky?loai=HAN_MUC_DICH_VU`. `src/lib/admin-ops.mjs` + `tests/admin-ops.test.mjs` (9 test). Kiểm với BE 8080 thật: số liệu khớp, kiểm lỗi ô/lý do, 375px không tràn; không bấm lưu để giữ dữ liệu dev.
 
-### [ ] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
+### [x] F3.12 Gói dịch vụ & thanh toán — UI55, UI56, UI57 ← B3.12a, B3.12b (bổ sung 07/11/2026)
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Hiện trạng: UI55 `/thanh-toan-goi`, UI56 `/thanh-toan-lich-su` đã có giao diện (commit `ff3c54e`), dữ liệu cứng. **15/11/2026:** đã bỏ khỏi mockup và FE mọi mục ở dòng "Bỏ khỏi giao diện" dưới đây, cùng "Hủy gói", "Đổi gói" và tạo hóa đơn ở trình duyệt; giá/quyền lợi theo TK §6.9; nút "Thanh toán qua VNPay" còn mô phỏng; UI56 có "Gia hạn gói" và trạng thái `THANH_CONG`/`THAT_BAI`/`HET_HAN`. Kiểm chứng: lint hai trang sạch, `npm run build` pass, `npm test` 53/53, xem trên trình duyệt 1280/390 px cả theme sáng và tối. Chưa nối API (chờ B3.12a/B3.12b).
 - Nối API (S8): UI55 đọc `GET /billing/plans`, `GET /me/subscription` (bỏ mảng `PLANS` cứng); "Xác nhận thanh toán" gọi `POST /billing/checkouts` rồi `window.location.assign(paymentUrl)`. Thêm **UI57** `/thanh-toan-ket-qua?maDon=` đọc `GET /billing/transactions/{maDon}` (thành công/thất bại/đang chờ, nút thử lại).
 - **Bỏ khỏi giao diện:** form số thẻ/tên chủ thẻ/hạn/CVV (thẻ nhập trên trang VNPay), "Chuyển khoản ngân hàng" mã cứng, MoMo/ZaloPay (chưa có cổng), danh sách "thẻ đã lưu", dòng "Hỗ trợ ưu tiên"; toàn bộ thẻ gói Miễn phí (không còn gói miễn phí, sửa 10/11/2026: chỉ `PRO`, `PREMIUM`); xuất CSV không phụ thuộc gói. Phương thức còn lại: "Thẻ ATM / VISA / Mastercard / VNPAY-QR qua VNPay".
@@ -246,7 +257,8 @@ frontend/
 - Mọi chỗ bị chặn vì quyền lợi gói (422 `goiCanNangCap`, 429 hạn mức) hiện thông báo + liên kết UI55; `AppShell` hiện tên gói đang dùng.
 - **Giữ** (UI55, UI57: S8; UI56, tab UI51: S9).
 
-### [ ] F3.13 Quản lý thanh toán & doanh thu (Admin) — UI58, UI59 ← B3.12c (góp ý GVHD 10/11/2026)
+### [x] F3.13 Quản lý thanh toán & doanh thu (Admin) — UI58, UI59 ← B3.12c (góp ý GVHD 10/11/2026)
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - UI59 `/quan-tri/thanh-toan`, 3 tab: **Giao dịch** (`GET /admin/payments`, lọc trạng thái/gói/ngày/email, xem chi tiết), **Gói người dùng** (`GET /admin/subscriptions`, lọc "Sắp hết hạn 7 ngày"; nút "Sửa ngày hết hạn" và "Chạy kiểm tra ngay" chỉ hiện khi API công cụ demo bật, bắt nhập lý do), **Cấu hình gói** (`GET/PUT /admin/plans`, 409 tải lại).
 - UI58 `/quan-tri/doanh-thu`: chuyển kỳ Tháng / Quý / Năm, chọn năm; thẻ tổng (doanh thu, số giao dịch, so với kỳ trước, gói hiệu lực, sắp hết hạn, tỷ lệ thành công); biểu đồ cột chồng theo gói; bảng số liệu bên dưới. Đọc `GET /admin/revenue`.
 - Thêm 2 mục vào menu quản trị.
@@ -259,7 +271,8 @@ frontend/
 - Bản sao: ô quyền truy cập không cho chọn công khai trực tiếp; nút "Xin công khai" (lời nhắn tùy chọn), trạng thái `yeuCauCongKhai` (chờ, đã duyệt, bị từ chối kèm lý do và thời điểm gửi lại, hết hạn), nút rút yêu cầu.
 - UI60 `/yeu-cau-cong-khai` cho tác giả, UI61 `/quan-tri/duyet-cong-khai` cho Admin: danh sách lọc trạng thái, xem bản sao, duyệt/từ chối/thu hồi kèm lý do, 409 tải lại. Thông báo `YEU_CAU_CONG_KHAI`/`KET_QUA_CONG_KHAI` mở đúng trang.
 
-### [ ] F3.15 Admin Console — khung riêng, bảng điều khiển, bảng dữ liệu chung (yêu cầu 21/11/2026; demo duyệt `mockups/_previews/quan-tri-2026-11-21.html`)
+### [x] F3.15 Admin Console — khung riêng, bảng điều khiển, bảng dữ liệu chung (yêu cầu 21/11/2026; demo duyệt `mockups/_previews/quan-tri-2026-11-21.html`)
+- **Tick 27/11/2026 theo đối chiếu code:** trang có trong `src/app/(app)` và gọi API Spring thật qua `apiFetch`; DoD 360px, bàn phím, tương phản kiểm ở F4.2.
 - Thứ tự: A khung → B bảng điều khiển `/quan-tri` (cần BE `GET /admin/dashboard`, khôi phục UI46) → E trang UI50 `/quan-tri/bao-cao`, UI51 `/quan-tri/dich-vu` → C bảng dữ liệu dùng chung → D ngăn chi tiết người dùng (cần BE `GET /admin/users/{id}`).
 - **Đã làm giao diện "Sổ quản trị" (21/11/2026, theo yêu cầu "nhìn AI quá, đại trà"; demo duyệt: `mockups/_previews/quan-tri-so-2026-11-21.html`):** `admin.css` viết lại theo token chung của phiếu trả lời (bỏ bảng màu slate/indigo riêng, bỏ Inter và JetBrains Mono, bỏ chữ in hoa, bỏ thẻ chỉ số); thanh bên thành mục lục giấy với ô tròn tô chì, nhóm Hằng ngày / Hồ sơ / Sổ sách; khung dùng dấu căn lề trái, bảng kẻ dòng, trạng thái dạng con dấu. Tổng quan đổi thành "Sổ trực ban": con dấu ngày, danh sách việc chờ đánh số với số khoanh bút đỏ, "Sổ số liệu" (kỳ này / kỳ trước / thanh so sánh / chênh), biểu đồ trên giấy kẻ, gói đang dùng thành thanh ngang, tình trạng hệ thống thành danh sách. Quy tắc ghi ở `DESIGN.md` (The Exam Office Rule). Kiểm chứng: `npm test` 101/101, eslint 0 lỗi; trình duyệt với BE thật: tổng quan, Tài khoản + ngăn hồ sơ ở 1440px, 390px (không tràn ngang), sáng và tối.
 - **Đã làm D (21/11/2026):** ngăn hồ sơ người dùng `src/components/admin/UserDetailDrawer.js` mở khi bấm một dòng ở Tài khoản (URL `?nguoi={id}`, chia sẻ được): đầu ngăn có avatar, trạng thái, nút khóa/mở khóa/cấp/thu quyền (cùng hộp xác nhận có lý do); 4 tab Tổng quan (mục cần chú ý: bị khóa, chưa xác thực, báo cáo chờ xử lý, gói sắp hết hạn, giao dịch thất bại, lâu không học; 4 chỉ số; thông tin tài khoản và kiểm duyệt), Học tập (lưới nhiệt 30 ngày, thẻ đến hạn, 5 bộ thẻ gần nhất, dịch vụ AI), Thanh toán (giao dịch, lịch sử gói), Nhật ký (dòng thời gian theo `doiTuongId`, phân trang). `src/lib/admin-user-detail.mjs` + `tests/admin-user-detail.test.mjs` (5 test). API: B3.16. Kiểm chứng: `npm test` 97/97, eslint 0 lỗi; trình duyệt với API thật: 3 tài khoản (có học, có gói/thanh toán, đang xóa có nhật ký), 4 tab, nút Khóa mở hộp lý do rồi Hủy (không đổi dữ liệu), ngăn 548px không tràn ngang.
@@ -286,7 +299,24 @@ frontend/
 - **Kiểm chứng 22/11/2026:** eslint 0 lỗi, `tests/realtime.test.mjs` 5/5, `next build` thành công.
 - **Trình duyệt thật 22/11/2026:** BE dev 8081 + FE `next start` 3003 (proxy Next), tài khoản thử `rt*@test.local`. Admin 1 mở báo cáo #5, Admin 2 xử lý qua API → ngăn kéo của Admin 1 tự đóng, hiện báo vàng, danh sách tự tải lại. Đang học phiên 29, mở phiên 31 từ thiết bị khác → báo phiên học khác. Chèn tác vụ nền loại lạ → worker đánh `LOI`/`CHUA_DANG_KY`, Admin thấy toast "Có tác vụ nền vừa lỗi", sổ trực ban tự tải lại. Không thử dừng Redis/CSDL thật (sẽ làm gián đoạn BE dev khác); nhánh này có trong `FR12RealtimeTest`. Đã xóa tác vụ thử và gỡ quyền ADMIN tạm.
 
+### [x] F3.25 Phiếu hỗ trợ — UI62 `/phieu-ho-tro`, UI63 `/quan-tri/tiep-nhan-ho-tro` ← B3.25 (đưa vào TK 27/11/2026)
+- Nhóm FE làm trước khi có trong TK (commit `5aa40f1`): gửi phiếu, danh sách phiếu của tôi, hàng đợi Admin có lọc, phản hồi, đổi trạng thái và ưu tiên. `/tiep-nhan-ho-tro` chuyển hướng sang `/quan-tri/tiep-nhan-ho-tro`.
+
+### [ ] F3.26 Giới hạn gói Free trên giao diện — UI23 `/luyen-tap`, UI25 `/luyen-tap-ket-qua`, UI35 `/thong-ke`, UI59 ← B3.26 (yêu cầu 27/11/2026)
+- Màn chọn luyện tập: "Hôm nay còn x/5 bài" từ `GET /me/service-quota` (`LUYEN_TAP`); hết lượt → nút Làm bài thành nút nâng cấp, vẫn mời "Luyện lại câu sai" và ôn SRS.
+- Kết quả bài: nút "AI giải thích" ở câu sai, kèm "còn x/3 lượt AI"; chờ kết quả qua realtime / `GET /ai/requests/{id}`; hiện `giaiThich`, `meoNho`, `viDu`; mở lại bài thì đọc `giaiThichAi`.
+- Thống kê: lựa chọn khoảng > 7 ngày và lọc bộ thẻ có biểu tượng khóa với tài khoản không có `thongKeNangCao`; 422 `THONG_KE_NANG_CAO` mở hộp nâng cấp.
+- Hộp nâng cấp dùng chung: nói rõ quyền lợi bị chạm (`LUYEN_TAP`, `AI`, `THONG_KE_NANG_CAO`), gói mở khóa và mức được thêm. UI59 thêm công tắc "Thống kê nâng cao"; màn hạn mức dịch vụ hiện loại `LUYEN_TAP`.
+- Cập nhật mockup tương ứng trước (`/ui-mockup`), rồi Next.js.
+- **Đã làm 27/11/2026:** `plan-access.mjs` thêm quyền lợi `LUYEN_TAP` (hạn mức `hanMucLuyenTap`) và `THONG_KE_NANG_CAO` (cờ `thongKeNangCao`), nên hộp nâng cấp chung tự mở với 429/422 mới; `UpgradeDialog` liệt kê thêm 2 quyền lợi. `/luyen-tap`: `QuotaMeter LUYEN_TAP`, hết lượt → nút khóa mở hộp nâng cấp + lời nhắc vẫn ôn SRS và luyện lại câu sai; làm mới hạn mức sau khi tạo bài. `/luyen-tap-ket-qua`: `components/practice/AiMistakeExplain.js` ở mỗi câu sai (nút khóa theo hạn mức `AI`, "còn x/y lượt AI", chờ qua `useAiRequest`, hiện `giaiThich`/`meoNho`/`viDu`, mở lại bài thì đọc `giaiThichAi`). `/thong-ke`: "30 ngày" và lọc bộ thẻ có nhãn khóa, chọn thì mở hộp nâng cấp; "Tự chọn" giới hạn 7 ngày gần nhất. `/ban-do-lam-chu`: lọc bộ thẻ khóa tương tự. `/quan-tri/thanh-toan` (UI59): ô "Thống kê nâng cao", `billing-api` gửi `thongKeNangCao`. `/quan-tri/dich-vu`: loại `LUYEN_TAP`.
+- **Kiểm chứng 27/11/2026:** `npm test` 158/160 (`plan-access` thêm 1 test, `billing-api` cập nhật payload `thongKeNangCao`; 2 lỗi mascot có sẵn ở `api-client.test.mjs`, file không đổi); `next build` OK; eslint các file đã sửa sạch, trừ `current` không dùng ở `/luyen-tap` có từ trước. HTTP thật qua proxy FE 3000 → BE 8080 (V50), tài khoản thử `b326.*@test.local` (Free): 5 bài 201, bài 6 → 429 `LUYEN_TAP`; nộp sai → AI giải thích 202, gọi lại 200 cùng `requestId`, `HOAN_TAT` (fake), `giaiThichAi` có trong bài; luyện lại 201; thống kê 7 ngày 200, 30 ngày 422 `THONG_KE_NANG_CAO`, `skills?boTheId` 422, tổng kết tuần cũ 200.
+- **Trình duyệt thật 27/11/2026** (FE dev 3000, BE 8080, tài khoản thử Free `b326.*@test.local`, bỏ qua màn thiết lập lần đầu trong DB dev để không tự bật dùng thử): `/luyen-tap` hiện "Còn 0/5 bài luyện tập hôm nay", lời nhắc vẫn ôn SRS và luyện lại câu sai, nút Làm bài khóa → hộp "Bạn đã dùng hết bài luyện tập hôm nay" (Free 5 → Pro 50); `/luyen-tap-ket-qua?id=101` câu đã giải thích hiện ngay khi mở lại, bấm "AI giải thích vì sao sai" ở câu khác → hiện giải thích, mẹo nhớ, ví dụ, các nút còn lại đổi "còn 1/3 lượt AI hôm nay"; `/thong-ke` "30 ngày" và "Bộ thẻ" có nhãn PRO, chọn 30 ngày → hộp "Thống kê nâng cao là quyền lợi của gói Pro"; `/ban-do-lam-chu` nhãn PRO ở Bộ thẻ; console không lỗi.
+- **Chưa kiểm chứng:** mobile 390 px, trang quản trị UI59 / hạn mức trên trình duyệt; mockup chưa cập nhật.
+
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
+
+### [x] F3.27 Gợi ý "Dành cho bạn" — UI thư viện `/thu-vien` (tab "Dành cho bạn" đầu hàng tab và trong ô Sắp xếp, `?sort=forYou`, chỉ khi đã đăng nhập; bộ lọc không áp dụng), UI `/hom-nay` (khối "Gợi ý theo chủ đề quan tâm") ← B3.27 (27/11/2026)
+- `components/content/ForYouDecks.js` (`ForYouEmpty`, `ForYouSection`), hook `useForYouDecks`; chưa chọn chủ đề → nút tới `/ca-nhan/hoc-tap`; hết gợi ý → nút đổi chủ đề. Kiểm tra trên trình duyệt: hai khối hiện, không lỗi console.
 
 ### [ ] F4.1 E2E Playwright cho kịch bản demo TK §20.2
 - **Gọn:** 1 kịch bản theo bước 1–4 và 8.

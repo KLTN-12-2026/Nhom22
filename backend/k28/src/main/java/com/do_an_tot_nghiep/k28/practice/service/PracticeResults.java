@@ -1,5 +1,8 @@
 package com.do_an_tot_nghiep.k28.practice.service;
 
+import com.do_an_tot_nghiep.k28.ai.dto.AiRequestAcceptedResponse;
+import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiYeuCauAi;
+import com.do_an_tot_nghiep.k28.ai.service.AiTaskService;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultItemResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.SkillScoreResponse;
@@ -19,6 +22,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -42,6 +46,7 @@ class PracticeResults {
     private final BaiLuyenRepository practices;
     private final CauHoiBaiLuyenRepository questions;
     private final TraLoiBaiLuyenRepository answers;
+    private final AiTaskService aiTasks;
     private final JsonMapper json;
 
     static String deckLabel(String ten, NguonBaiLuyen nguon) {
@@ -97,8 +102,12 @@ class PracticeResults {
     PracticeResultResponse result(BaiLuyen practice, String boTheTen, LanLamBai attempt) {
         Map<Long, TraLoiBaiLuyen> byQuestion = new HashMap<>();
         answers.findByLanLamId(attempt.getId()).forEach(answer -> byQuestion.put(answer.getCauHoiId(), answer));
+        Map<Long, TrangThaiYeuCauAi> giaiThich = aiTasks.statuses(practice.getNguoiDungId(), byQuestion.values().stream()
+                .map(TraLoiBaiLuyen::getYeuCauGiaiThichId)
+                .filter(Objects::nonNull)
+                .toList());
         List<PracticeResultItemResponse> items = questions.findByBaiIdOrderByThuTu(practice.getId()).stream()
-                .map(row -> item(row, byQuestion.get(row.getId())))
+                .map(row -> item(row, byQuestion.get(row.getId()), giaiThich))
                 .toList();
         return new PracticeResultResponse(
                 String.valueOf(attempt.getId()),
@@ -116,7 +125,10 @@ class PracticeResults {
                 items);
     }
 
-    private PracticeResultItemResponse item(CauHoiBaiLuyen row, TraLoiBaiLuyen answer) {
+    private PracticeResultItemResponse item(CauHoiBaiLuyen row, TraLoiBaiLuyen answer,
+                                            Map<Long, TrangThaiYeuCauAi> giaiThich) {
+        Long yeuCauId = answer.getYeuCauGiaiThichId();
+        TrangThaiYeuCauAi trangThai = yeuCauId == null ? null : giaiThich.get(yeuCauId);
         Stored stored = stored(answer);
         PracticeGrader.DapAn dapAn = json.readValue(row.getDapAnJson(), PracticeGrader.DapAn.class);
         return new PracticeResultItemResponse(
@@ -132,7 +144,8 @@ class PracticeResults {
                 stored.diem(),
                 stored.nhomLoi(),
                 stored.chiTiet(),
-                json.readTree(row.getGiaiThichJson()));
+                json.readTree(row.getGiaiThichJson()),
+                trangThai == null ? null : new AiRequestAcceptedResponse(String.valueOf(yeuCauId), trangThai));
     }
 
     static Map<String, Object> publicAnswer(LoaiCau loaiCau, PracticeGrader.DapAn dapAn) {

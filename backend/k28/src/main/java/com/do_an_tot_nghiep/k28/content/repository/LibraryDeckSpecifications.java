@@ -13,8 +13,10 @@ import com.do_an_tot_nghiep.k28.content.entity.TheTuVung;
 import com.do_an_tot_nghiep.k28.content.entity.enums.NguonBo;
 import com.do_an_tot_nghiep.k28.content.entity.enums.QuyenTruyCap;
 import com.do_an_tot_nghiep.k28.content.entity.enums.TrangThaiKiemDuyet;
+import com.do_an_tot_nghiep.k28.learning.entity.TienDoThe;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -23,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class LibraryDeckSpecifications {
@@ -116,6 +119,47 @@ public final class LibraryDeckSpecifications {
             }
 
             return cb.and(predicates.toArray(Predicate[]::new));
+        });
+    }
+
+    public static Specification<BoThe> forYou(Long userId, Collection<Long> topicIds, TrinhDo trinhDo) {
+        return publiclyVisible().and((root, query, cb) -> {
+            Subquery<Long> copied = query.subquery(Long.class);
+            Root<BoThe> copy = copied.from(BoThe.class);
+            copied.select(copy.get("id")).where(
+                    cb.equal(copy.get("boNguonId"), root.get("id")),
+                    cb.equal(copy.get("chuSoHuuId"), userId),
+                    cb.isNull(copy.get("xoaAt"))
+            );
+
+            Subquery<Long> learned = query.subquery(Long.class);
+            Root<TienDoThe> progress = learned.from(TienDoThe.class);
+            Root<TheTuVung> card = learned.from(TheTuVung.class);
+            learned.select(progress.get("id")).where(
+                    cb.equal(progress.get("theId"), card.get("id")),
+                    cb.equal(card.get("boTheId"), root.get("id")),
+                    cb.equal(progress.get("nguoiDungId"), userId)
+            );
+
+            if (query.getResultType() != null && !Long.class.equals(query.getResultType())) {
+                List<Order> orders = new ArrayList<>();
+                if (trinhDo != null) {
+                    orders.add(cb.asc(cb.selectCase()
+                            .when(cb.equal(root.get("trinhDo"), trinhDo), 0)
+                            .otherwise(1)));
+                }
+                orders.add(cb.desc(favoriteCount(root, query, cb, null)));
+                orders.add(cb.desc(root.get("updatedAt")));
+                orders.add(cb.desc(root.get("id")));
+                query.orderBy(orders);
+            }
+
+            return cb.and(
+                    root.get("chuDeId").in(topicIds),
+                    cb.notEqual(root.get("chuSoHuuId"), userId),
+                    cb.not(cb.exists(copied)),
+                    cb.not(cb.exists(learned))
+            );
         });
     }
 

@@ -49,6 +49,7 @@ public class QuotaService {
                         case ANH -> "tạo ảnh AI";
                         case TTS -> "giọng đọc mẫu";
                         case PHAT_AM -> "đánh giá phát âm";
+                        case LUYEN_TAP -> "tạo bài luyện tập";
                     } + " hôm nay, vui lòng thử lại vào ngày mai",
                     Math.max(1, Duration.between(now, nuaDem).getSeconds()),
                     Map.of("quyenLoi", "HAN_MUC", "loai", loai.name(), "gioiHan", gioiHan));

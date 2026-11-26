@@ -7,9 +7,11 @@ public record PlanResponse(
         long giaNam,
         Integer gioiHanThe,
         boolean phatAm,
+        boolean thongKeNangCao,
         Integer hanMucAi,
         Integer hanMucAnh,
         Integer hanMucPhatAm,
-        Integer hanMucTts
+        Integer hanMucTts,
+        Integer hanMucLuyenTap
 ) {
 }

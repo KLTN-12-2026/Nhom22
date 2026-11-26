@@ -1,7 +1,13 @@
 package com.do_an_tot_nghiep.k28.practice.service;
 
+import com.do_an_tot_nghiep.k28.ai.dto.AiRequestAcceptedResponse;
+import com.do_an_tot_nghiep.k28.ai.dto.MistakeExplanationInput;
+import com.do_an_tot_nghiep.k28.ai.entity.enums.TrangThaiYeuCauAi;
+import com.do_an_tot_nghiep.k28.ai.service.AiTaskService;
 import com.do_an_tot_nghiep.k28.common.exception.ApiException;
 import com.do_an_tot_nghiep.k28.common.exception.ErrorCode;
+import com.do_an_tot_nghiep.k28.common.quota.QuotaService;
+import com.do_an_tot_nghiep.k28.common.quota.entity.enums.LoaiDichVu;
 import com.do_an_tot_nghiep.k28.content.dto.FileResponse;
 import com.do_an_tot_nghiep.k28.content.dto.StudyCardResponse;
 import com.do_an_tot_nghiep.k28.content.service.CardService;
@@ -52,6 +58,7 @@ public class PracticeService {
     static final String TAT_CA_BO = "Tất cả bộ của tôi";
     static final String SO_TAY_TEN = "Sổ tay từ khó";
     static final String VUA_HOC_TEN = "Từ vừa học cần ôn";
+    static final int GIOI_HAN_DU_LIEU_AI = 2000;
 
     private final BaiLuyenRepository practices;
     private final CauHoiBaiLuyenRepository questions;
@@ -63,6 +70,8 @@ public class PracticeService {
     private final TtsService ttsService;
     private final NotebookService notebookService;
     private final RecentReviewService recentReviewService;
+    private final QuotaService quota;
+    private final AiTaskService aiTasks;
     private final JsonMapper json;
 
     @Transactional
@@ -127,6 +136,7 @@ public class PracticeService {
                 : List.of();
         List<PracticeGenerator.Draft> drafts = new PracticeGenerator(ThreadLocalRandom.current())
                 .generate(loaiBai, request.soCau(), pool, distract, pairs);
+        quota.xacNhan(userId, quota.giuCho(userId, LoaiDichVu.LUYEN_TAP));
 
         BaiLuyen practice = practices.save(BaiLuyen.create(userId, loaiBai, boTheId, nguon, request.soCau()));
         return toResponse(practice, boTheTen, saveQuestions(practice, drafts), null);
@@ -166,6 +176,51 @@ public class PracticeService {
         }
         return new PracticeAudioResponse(file.id(), file.loai(), file.mimeType(), file.kichThuoc(), file.checksum(),
                 file.hoanTatAt(), file.downloadUrl(), file.expiresAt(), TtsService.NGUON_TAI_LEN, false, null);
+    }
+
+    @Transactional
+    public Explanation explain(Long userId, Long id, Long questionId) {
+        BaiLuyen practice = practices.findByIdAndNguoiDungId(id, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy bài luyện"));
+        CauHoiBaiLuyen row = questions.findByIdAndBaiId(questionId, practice.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy câu hỏi"));
+        LanLamBai attempt = attempts.findByBaiId(practice.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.BUSINESS_RULE, "Nộp bài trước khi nhờ AI giải thích"));
+        TraLoiBaiLuyen answer = answers.findByLanLamIdAndCauHoiId(attempt.getId(), row.getId())
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Không tìm thấy câu trả lời"));
+        if (answer.isDung()) {
+            throw new ApiException(ErrorCode.BUSINESS_RULE, "Câu này bạn đã làm đúng, không cần AI giải thích");
+        }
+        Long cu = answer.getYeuCauGiaiThichId();
+        if (cu != null) {
+            TrangThaiYeuCauAi trangThai = aiTasks.statuses(userId, List.of(cu)).get(cu);
+            if (trangThai != null && trangThai != TrangThaiYeuCauAi.LOI && trangThai != TrangThaiYeuCauAi.KHONG_XAC_DINH) {
+                return new Explanation(new AiRequestAcceptedResponse(String.valueOf(cu), trangThai), false);
+            }
+        }
+        StudyCardResponse card = row.getTheId() == null
+                ? null
+                : cardService.studyCards(userId, List.of(row.getTheId())).get(row.getTheId());
+        Map<String, Object> deBai = new LinkedHashMap<>();
+        deBai.put("deBai", json.readTree(row.getDeBaiJson()));
+        deBai.put("phuongAn", row.getPhuongAnJson() == null ? null : json.readTree(row.getPhuongAnJson()));
+        String dapAn = json.writeValueAsString(PracticeResults.publicAnswer(row.getLoaiCau(), results.question(row).dapAn()));
+        AiRequestAcceptedResponse accepted = aiTasks.explainMistake(userId, new MistakeExplanationInput(
+                card == null ? null : card.tu(),
+                card == null ? null : card.nghiaVi(),
+                row.getLoaiCau().name(),
+                limit(json.writeValueAsString(deBai)),
+                limit(dapAn),
+                answer.getTraLoiJson() == null ? null : limit(answer.getTraLoiJson())));
+        answer.ganGiaiThich(Long.valueOf(accepted.requestId()));
+        return new Explanation(accepted, true);
+    }
+
+    public record Explanation(AiRequestAcceptedResponse body, boolean created) {
+    }
+
+    private static String limit(String value) {
+        return value.length() <= GIOI_HAN_DU_LIEU_AI ? value : value.substring(0, GIOI_HAN_DU_LIEU_AI);
     }
 
     @Transactional

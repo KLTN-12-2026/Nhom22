@@ -28,6 +28,7 @@ public class FakeAiClient implements AiClient {
     public static final String MODEL = "fake-card-draft";
     static final String SCHEMA_NGU_CANH = "context_explanation";
     static final String SCHEMA_SUA_CAU = "sentence_feedback";
+    static final String SCHEMA_GIAI_THICH_LOI = "mistake_explanation";
     private static final Pattern TU = Pattern.compile("<tu>(.*?)</tu>", Pattern.DOTALL);
     private static final Pattern CAU = Pattern.compile("<cau>\n(.*)\n</cau>", Pattern.DOTALL);
     private static final Pattern NGU_CANH = Pattern.compile("<ngu_canh>\n(.*)\n</ngu_canh>", Pattern.DOTALL);
@@ -62,11 +63,11 @@ public class FakeAiClient implements AiClient {
             case THU_LAI -> throw new JobException(Kieu.THU_LAI, "MO_PHONG_TAM_THOI");
             case SAI_SCHEMA -> response(request, "{\"ketQua\":\"không đúng schema\"}");
             case INJECTION -> response(request, json.writeValueAsString(switch (request.schemaName()) {
-                case SCHEMA_NGU_CANH, SCHEMA_SUA_CAU -> withInjection(task(request.schemaName(), text));
+                case SCHEMA_NGU_CANH, SCHEMA_SUA_CAU, SCHEMA_GIAI_THICH_LOI -> withInjection(task(request.schemaName(), text));
                 default -> injected(drafts(text, request.maxThe()));
             }));
             case THANH_CONG -> response(request, json.writeValueAsString(switch (request.schemaName()) {
-                case SCHEMA_NGU_CANH, SCHEMA_SUA_CAU -> task(request.schemaName(), text);
+                case SCHEMA_NGU_CANH, SCHEMA_SUA_CAU, SCHEMA_GIAI_THICH_LOI -> task(request.schemaName(), text);
                 default -> Map.of("the", drafts(text, request.maxThe()));
             }));
         };
@@ -105,6 +106,12 @@ public class FakeAiClient implements AiClient {
     private Map<String, Object> task(String schema, String prompt) {
         String tu = group(TU, prompt, "word").strip().toLowerCase(Locale.ROOT);
         Map<String, Object> result = new LinkedHashMap<>();
+        if (SCHEMA_GIAI_THICH_LOI.equals(schema)) {
+            result.put("giaiThich", "Giải thích mô phỏng vì sao câu trả lời về \"" + tu + "\" chưa đúng, chưa gọi dịch vụ AI thật.");
+            result.put("meoNho", "Mẹo nhớ mô phỏng cho \"" + tu + "\".");
+            result.put("viDu", "This is a simple example with " + tu + ". (Đây là ví dụ đơn giản có từ " + tu + ".)");
+            return result;
+        }
         if (SCHEMA_NGU_CANH.equals(schema)) {
             String nguCanh = group(NGU_CANH, prompt, "").strip();
             result.put("tu", tu);

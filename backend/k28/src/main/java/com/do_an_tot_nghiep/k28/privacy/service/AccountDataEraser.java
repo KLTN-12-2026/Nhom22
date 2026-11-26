@@ -80,6 +80,7 @@ public class AccountDataEraser {
         run(u, "DELETE FROM cai_dat_rieng_tu WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM vinh_danh_tuan WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM khoi_phuc_chuoi WHERE nguoi_dung_id = :u");
+        run(u, "DELETE FROM phieu_ho_tro WHERE nguoi_dung_id = :u");
         run(u, "DELETE FROM nguoi_dung_vai_tro WHERE nguoi_dung_id = :u");
 
         update("""
