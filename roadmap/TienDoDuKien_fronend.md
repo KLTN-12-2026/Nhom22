@@ -302,7 +302,17 @@ frontend/
 ### [x] F3.25 Phiếu hỗ trợ — UI62 `/phieu-ho-tro`, UI63 `/quan-tri/tiep-nhan-ho-tro` ← B3.25 (đưa vào TK 27/11/2026)
 - Nhóm FE làm trước khi có trong TK (commit `5aa40f1`): gửi phiếu, danh sách phiếu của tôi, hàng đợi Admin có lọc, phản hồi, đổi trạng thái và ưu tiên. `/tiep-nhan-ho-tro` chuyển hướng sang `/quan-tri/tiep-nhan-ho-tro`.
 
+### [ ] F3.26 Giới hạn gói Free trên giao diện — UI23 `/luyen-tap`, UI25 `/luyen-tap-ket-qua`, UI35 `/thong-ke`, UI59 ← B3.26 (yêu cầu 27/11/2026)
+- Màn chọn luyện tập: "Hôm nay còn x/5 bài" từ `GET /me/service-quota` (`LUYEN_TAP`); hết lượt → nút Làm bài thành nút nâng cấp, vẫn mời "Luyện lại câu sai" và ôn SRS.
+- Kết quả bài: nút "AI giải thích" ở câu sai, kèm "còn x/3 lượt AI"; chờ kết quả qua realtime / `GET /ai/requests/{id}`; hiện `giaiThich`, `meoNho`, `viDu`; mở lại bài thì đọc `giaiThichAi`.
+- Thống kê: lựa chọn khoảng > 7 ngày và lọc bộ thẻ có biểu tượng khóa với tài khoản không có `thongKeNangCao`; 422 `THONG_KE_NANG_CAO` mở hộp nâng cấp.
+- Hộp nâng cấp dùng chung: nói rõ quyền lợi bị chạm (`LUYEN_TAP`, `AI`, `THONG_KE_NANG_CAO`), gói mở khóa và mức được thêm. UI59 thêm công tắc "Thống kê nâng cao"; màn hạn mức dịch vụ hiện loại `LUYEN_TAP`.
+- Cập nhật mockup tương ứng trước (`/ui-mockup`), rồi Next.js.
+
 ## GĐ4 — Kiểm thử & ổn định (S10 · 30/11–06/12)
+
+### [x] F3.27 Gợi ý "Dành cho bạn" — UI thư viện `/thu-vien` (panel cột phải, khi đã đăng nhập), UI `/hom-nay` (khối "Gợi ý theo chủ đề quan tâm") ← B3.27 (27/11/2026)
+- `components/content/ForYouDecks.js` (`ForYouPanel`, `ForYouSection`), hook `useForYouDecks`; chưa chọn chủ đề → nút tới `/ca-nhan/hoc-tap`; hết gợi ý → nút đổi chủ đề. Kiểm tra trên trình duyệt: hai khối hiện, không lỗi console.
 
 ### [ ] F4.1 E2E Playwright cho kịch bản demo TK §20.2
 - **Gọn:** 1 kịch bản theo bước 1–4 và 8.

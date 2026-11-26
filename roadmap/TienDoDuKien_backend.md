@@ -675,7 +675,20 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 - **Đã làm 27/11/2026:** đối chiếu code ↔ TK, viết TK §6.8a và TC-28; `AccountDataEraser` xóa `phieu_ho_tro` của người xóa tài khoản (phản hồi xóa theo khóa ngoại `ON DELETE CASCADE`), trước đó mô tả phiếu còn lại sau khi xóa tài khoản.
 - **Còn lại để tick:** test TC-28 (chưa có test nào cho package `support`); Postman (`/postman-sync B3.25`).
 
+### [ ] B3.26 Giới hạn gói Free: AI giải thích câu sai, hạn mức luyện tập, thống kê nâng cao — FR-15, FR-07, FR-11, TC-29 (yêu cầu 27/11/2026)
+- Phạm vi (người dùng chốt 27/11/2026, phương án A + B + C): TK §6.9 "Giới hạn gói Free để mời nâng cấp", §13.2 mục B3.26, §14.2, TC-29. Ôn SRS, luyện lại câu sai, tổng kết tuần, lịch hoạt động năm, xuất dữ liệu không bị giới hạn.
+- Migration `V50__free_tier_limits.sql`: CHECK `yeu_cau_ai.loai` thêm `GIAI_THICH_LOI`; CHECK `loai` của `han_muc_dich_vu`, `su_dung_dich_vu` (và `yeu_cau_ai.han_muc_loai` nếu có CHECK) thêm `LUYEN_TAP`; seed `LUYEN_TAP` FREE 5, PRO 50, PREMIUM 200; cột `goi_dich_vu.thong_ke_nang_cao BOOLEAN NOT NULL DEFAULT FALSE` (PRO, PREMIUM = TRUE); cột `tra_loi_bai_luyen.yeu_cau_giai_thich_id` FK `yeu_cau_ai` unique nullable.
+- A: `LoaiYeuCauAi.GIAI_THICH_LOI`, prompt + parser `{giaiThich, meoNho, viDu}`; `POST /practice/sessions/{id}/questions/{questionId}/ai-explanation` (202 / 200 khi đã có / 404 / 422 / 429), đầu vào dựng từ bản chụp câu hỏi + câu trả lời đã lưu; `ketQua[].giaiThichAi`.
+- B: `LoaiDichVu.LUYEN_TAP`; `PracticeService.create` giữ và xác nhận 1 lượt sau khi kiểm dữ liệu; `retry` không tính; `GET /me/service-quota`, `GET/PUT /admin/service-quotas`, `GET /admin/service-usage` nhận loại mới.
+- C: `GoiDichVu.thongKeNangCao`, `EntitlementService.requireAdvancedStats`; chặn ở `StatisticsService.overview` (khoảng ngoài 7 ngày gần nhất hoặc có `boTheId`) và `skills` (có `boTheId`) → 422 `THONG_KE_NANG_CAO`; UI59 sửa được cờ (`PUT /admin/plans/{ma}`), `GET /billing/plans` trả cờ.
+- Kiểm chứng cần có: test TC-29 (Free/Pro/Admin), hồi quy `FR07*`, `FR11*`, `FR15*`, `FR09*`; Postman (`/postman-sync B3.26`). FE: F3.26.
+
 ## GĐ4 — Kiểm thử & ổn định (30/11–06/12)
+
+### [x] B3.27 Gợi ý "Dành cho bạn" theo chủ đề quan tâm — FR-04, TC-30 (yêu cầu + xong 27/11/2026)
+- **Đã làm 27/11/2026:** `GET /api/v1/decks/for-you?size=1..20` (`DeckController` → `LibraryService.forYou`, `LibraryDeckSpecifications.forYou`, DTO `ForYouDecksResponse{daChonChuDe, boThe}`); lọc bộ công khai `BINH_THUONG` thuộc `chu_de_yeu_thich`, loại bộ của mình, bộ đã sao chép, bộ đã có `tien_do_the`; xếp cùng trình độ → lượt yêu thích → `updatedAt`. Không cần migration.
+- **Kiểm chứng:** `FR04LibraryForYouTest` (2 test) + `FR04LibraryTest`, `FR11StatisticsTest` — 28/28 đạt. Sửa kèm `FR11StatisticsTest` thiếu tham số `EntitlementService` (lỗi biên dịch có sẵn).
+- **Còn:** Postman.
 
 ### [x] B4.1 Phủ kiểm thử nghiệm thu TC-01…TC-24
 - Mỗi TC ở TK §19 có ít nhất một test tự động (trừ TC-18 thủ công, TC-19/20 có biên bản). Bảng truy vết `FR ↔ API ↔ TC` trong `docs/`.

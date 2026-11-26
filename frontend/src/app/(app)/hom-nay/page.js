@@ -6,6 +6,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Button, Icon, ErrorState } from '@/components/ui';
 import { AnnouncementBanner, CommunitySection } from '@/components/dashboard/DashboardHighlights';
+import { ForYouSection } from '@/components/content/ForYouDecks';
 import { LeaderboardMini } from '@/components/engagement/LeaderboardMini';
 import { TodayRoadmap } from '@/components/dashboard/TodayRoadmap';
 import { ReviewSchedule } from '@/components/dashboard/ReviewSchedule';
@@ -381,6 +382,7 @@ export default function TodayPage() {
             </div>
           </div>
         </section>
+        <ForYouSection />
         <CommunitySection />
         </>
       )}
@@ -579,6 +581,7 @@ export default function TodayPage() {
 
           </aside>
 
+          <ForYouSection />
           <CommunitySection />
         </>
       )}

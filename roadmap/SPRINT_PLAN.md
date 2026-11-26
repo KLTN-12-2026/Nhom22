@@ -163,6 +163,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | B3.18 Hồ sơ công khai tác giả (21/11) | `GET /library/authors/{id}` (thêm ảnh, ngày tham gia, huy hiệu) | F3.18 | UI40 `/ca-nhan`, `/tac-gia/{id}` |
 | B3.19 Cập nhật thời gian thực SSE (22/11) | `GET /events/stream`, `GET /admin/dashboard/queue` | F3.19 | chuông, gói, thanh toán, AI, menu quản trị |
 | B3.20 Realtime giai đoạn 2 (22/11) | (dùng lại `GET /events/stream`) | F3.20 | báo cáo, duyệt công khai, sổ trực ban, phiên học |
+| B3.26 Giới hạn gói Free: AI giải thích câu sai, hạn mức luyện tập, thống kê nâng cao (27/11) | `POST /practice/sessions/{id}/questions/{questionId}/ai-explanation`; hạn mức `LUYEN_TAP` ở `POST /practice/sessions`; cờ `thongKeNangCao` ở `GET /statistics/overview`, `/statistics/skills` | F3.26 | UI23 `/luyen-tap`, UI25 `/luyen-tap-ket-qua`, UI35 `/thong-ke`, UI59 |
 | B3.12c Quản lý thanh toán & doanh thu (góp ý GVHD 10/11) | `GET /admin/payments`, `GET /admin/payments/{maDon}`, `GET /admin/subscriptions`, `GET/PUT /admin/plans`, `GET /admin/revenue`, demo `PATCH /admin/subscriptions/{id}/expiry`, `POST /admin/subscriptions/expiry-check` | F3.13 | UI58 `/quan-tri/doanh-thu`, UI59 `/quan-tri/thanh-toan` |
 
 **Xong khi:** TC-14, TC-16, TC-17, TC-21…TC-24 qua; micro bị từ chối có thông báo đúng. **Demo Đợt 3 (28–29/11):** chạy đủ 10 bước TK §20.2 + bước 9b (bắt buộc mua gói qua VNPay sandbox) + 9c (sửa hạn, nhắc hết hạn, khóa, doanh thu) trên dữ liệu minh họa.
@@ -204,7 +205,7 @@ Cập nhật13/10/2026: [bàn giao chung](../ban-giao-cho%20fe/SPRINT_1_BAO_CAO_
 | FR-12 | Thưởng/nhắc | P1 | B3.6, B3.7 | F3.6, F3.7 | S8 | TC-15 |
 | FR-13 | Quản trị | P0/P1 | B1.7, B2.11, B3.8, B3.11 | F1.12, F2.8, F3.8, F3.11 | S4, S6, S9 | TC-17 |
 | FR-14 | Dữ liệu cá nhân | P1 | B3.10 | F3.10 | S9 | TC-16 |
-| FR-15 | Gói dịch vụ bắt buộc & thanh toán, doanh thu (bổ sung 07/11/2026, sửa 10/11/2026) | P1 | B3.12a, B3.12b, B3.12c | F3.12, F3.13 | S8, S9 | TC-21…24 |
+| FR-15 | Gói dịch vụ bắt buộc & thanh toán, doanh thu (bổ sung 07/11/2026, sửa 10/11/2026) | P1 | B3.12a, B3.12b, B3.12c, B3.26 | F3.12, F3.13, F3.26 | S8, S9 | TC-21…24, TC-27, TC-29 |
 | — | Phi chức năng | — | B4.1–B4.5 | F4.1–F4.4 | S10 | TC-18…20 |
 
 ---

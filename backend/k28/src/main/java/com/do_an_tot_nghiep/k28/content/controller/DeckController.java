@@ -6,6 +6,8 @@ import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.content.dto.CreateDeckRequest;
 import com.do_an_tot_nghiep.k28.content.dto.DeckResponse;
+import com.do_an_tot_nghiep.k28.content.dto.ForYouDecksResponse;
+import com.do_an_tot_nghiep.k28.content.service.LibraryService;
 import com.do_an_tot_nghiep.k28.content.dto.UpdateDeckRequest;
 import com.do_an_tot_nghiep.k28.content.service.DeckService;
 import com.do_an_tot_nghiep.k28.content.service.DeckCopyService;
@@ -31,6 +33,17 @@ public class DeckController {
     private final CurrentUser currentUser;
     private final DeckCopyService copies;
     private final DeckMediaService media;
+    private final LibraryService library;
+
+    @GetMapping("/for-you")
+    public ForYouDecksResponse forYou(
+            @RequestParam(value = "size", defaultValue = "6") int size
+    ) {
+        if (size < 1 || size > 20) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "size", "size phải từ 1 đến 20");
+        }
+        return library.forYou(currentUser.id(), size);
+    }
 
     @PostMapping("/{id}/copy")
     public ResponseEntity<DeckResponse> copy(

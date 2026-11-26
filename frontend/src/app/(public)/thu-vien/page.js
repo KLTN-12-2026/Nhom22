@@ -11,6 +11,7 @@ import { useTopics } from '@/hooks/useTopics';
 import { useLibraryDecks } from '@/hooks/useLibraryDecks';
 import { DeckCover } from '@/components/ui/DeckCover';
 import { AuthorTag } from '@/components/content/AuthorTag';
+import { ForYouPanel } from '@/components/content/ForYouDecks';
 
 const VIEW_TABS = [
   { value: 'trending', label: 'Thịnh hành' },
@@ -298,6 +299,7 @@ function LibraryContent() {
       </section>
 
       <aside className="side-col">
+        <ForYouPanel enabled={!!me} />
         <section className={`panel ${styles.sideTopics}`} aria-labelledby="t-title">
           <h2 className="panel-title" id="t-title">Chủ đề</h2>
           <ul className={styles.topicLinks} id="topic-links">
