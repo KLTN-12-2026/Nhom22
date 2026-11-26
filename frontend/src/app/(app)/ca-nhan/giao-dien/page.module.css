@@ -6,6 +6,9 @@
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-pop); }
 .card[data-active] { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-tint-2); }
 .preview { position: relative; height: 104px; background: linear-gradient(180deg, var(--sk-a, var(--primary-tint)), var(--sk-b, var(--sheet))); border-bottom: var(--rule) solid var(--line); }
+.preview[data-preview="nha-giao"] { background: radial-gradient(ellipse at 45% 30%, var(--sk-a), transparent 75%), var(--sk-b); }
+.preview[data-preview="nha-giao"]::before { content: ""; position: absolute; inset: 0; background: url('/skins/nha-giao-board.svg') center / auto 150px no-repeat; filter: var(--sk-chalk-filter); }
+.preview[data-preview="nha-giao"]::after, .preview[data-preview="nha-giao"] .previewSheet, .preview[data-preview="nha-giao"] .previewDot { display: none; }
 .preview::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px; background: var(--sk-c, transparent); opacity: .8; }
 .previewSheet { position: absolute; left: 18px; top: 16px; width: 58%; height: 66px; display: grid; align-content: start; gap: 7px; padding: 10px; border-radius: 6px; background: var(--sheet); box-shadow: var(--shadow-sheet); z-index: 1; }
 .previewSheet i { display: block; height: 6px; border-radius: 3px; background: var(--line-2); }

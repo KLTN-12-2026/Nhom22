@@ -19,8 +19,8 @@
   display: grid; grid-template-columns: 2.25rem minmax(0, 1fr) 5.5rem 8rem; align-items: center; gap: var(--sp-3);
   min-height: 56px; border-top: var(--rule) solid var(--adm-ledger);
 }
-.duty li:first-child { border-top: var(--rule-strong) solid var(--graphite); }
-.duty li:last-child { border-bottom: var(--rule-strong) solid var(--graphite); }
+.duty li:first-child { border-top-color: var(--line-2); }
+.duty li:last-child { border-bottom: var(--rule) solid var(--line-2); }
 .duty li::before { content: counter(duty, decimal-leading-zero); color: var(--ink-3); font-weight: 650; font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 .duty li > :last-child { justify-self: end; }
 .what { min-width: 0; }

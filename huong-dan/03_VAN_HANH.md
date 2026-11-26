@@ -45,6 +45,21 @@ docker compose --profile app up -d --build --no-deps api
 
 Script áp dụng các thay đổi còn thiếu từ V28–V34, giữ các cột `version` đã có và các loại nhật ký của nhánh FE, rồi mới cập nhật lịch sử Flyway theo source hiện tại. Lịch sử cũ, SQL đã chạy và kết quả kiểm tra được lưu trong thư mục sao lưu. Script so sánh số dòng và SHA-256 dữ liệu cũ của từng bảng trước/sau; ba huy hiệu tuần mới từ V33 được bổ sung riêng. Cuối cùng kiểm tra Flyway, health API và các kiểu sắp xếp thư viện. Không dùng `flyway repair` đơn thuần để bỏ qua việc thiếu cấu trúc database.
 
+### API lặp restart sau lỗi V39 `ck_nkqt_hanh_dong`
+
+V39 thiếu các loại nhật ký huy hiệu/thử thách từ V34. Database có dữ liệu này sẽ lỗi khi thêm lại CHECK và lưu trạng thái V39 thất bại; một số ALTER trước đó đã có hiệu lực. Không chạy lại toàn bộ V39 hoặc chỉ xóa dòng lỗi Flyway vì có thể gặp cột trùng.
+
+Trong `backend/k28`, chạy `python3 scripts/repair_failed_v39.py` để kiểm tra mà không sửa database. Script chỉ nhận V39 có checksum `418267366`, các migration trước khớp source và các thay đổi V39 trước CHECK đã hoàn tất.
+
+```bash
+docker compose --profile app stop api
+python3 scripts/repair_failed_v39.py --apply
+docker compose --profile app up -d --no-deps api
+docker compose logs -f --tail=100 api
+```
+
+Chỉ chạy lệnh tiếp theo nếu lệnh trước thành công. Chế độ `--apply` tự sao lưu database vào thư mục riêng `backups/<thời điểm>-v39-<database>/`, kiểm tra file nén và ghi SHA-256. Sau đó script thêm CHECK hợp nhất từ V42, xác minh dữ liệu mọi bảng hiện có bằng số dòng/SHA-256, rồi mới chuyển đúng bản ghi V39 từ thất bại sang hoàn tất. Không sửa các file migration đã phát hành. Backend sẽ tự chạy V40–V45 khi khởi động. Có thể dùng `--database TEN_DB_THU` để diễn tập trên bản sao; script từ chối áp dụng lại khi V39 đã hoàn tất.
+
 ## Kiểm tra tải
 
 Xem [TC20](../docs/kiem-thu/TC20_BIEN_BAN_HIEU_NANG.md). Tóm tắt: nạp `scripts/k6/seed_load_users.sql`, chạy `scripts/k6/tc20.js` bằng image `grafana/k6:1.3.0`.

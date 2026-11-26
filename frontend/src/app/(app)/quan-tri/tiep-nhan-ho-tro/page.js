@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default function SupportIntakePage() {
-  return <Suspense fallback={<div className="page sheet" role="status">Đang tải phiếu hỗ trợ…</div>}>
+  return <Suspense fallback={<div className="adm-card"><div className="adm-empty" role="status">Đang tải phiếu hỗ trợ…</div></div>}>
     <SupportIntake />
   </Suspense>;
 }

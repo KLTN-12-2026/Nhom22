@@ -5,11 +5,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Icon, Input, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
-import { apiFetch } from '@/lib/api-client';
-import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { createSupportTicket, listSupportTickets } from '@/lib/support-api';
 import {
   TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES, TICKETS_PAGE_SIZE,
-  filterTickets, fromApiTicket, toApiCreate, validateTicket,
+  TICKET_DESCRIPTION_MAX_LENGTH, filterTickets, validateTicket,
 } from '@/lib/support-tickets.mjs';
 import styles from './page.module.css';
 
@@ -23,6 +22,7 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
   const [errors, setErrors] = useState({});
   const [attempted, setAttempted] = useState(false);
   const titleInput = useRef(null);
+  const submitting = useRef(false);
   useEffect(() => { titleInput.current?.focus(); }, []);
   function update(name, value) {
     const next = { ...values, [name]: value };
@@ -31,13 +31,16 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
   }
   function submit(event) {
     event.preventDefault();
-    if (saving) return;
+    if (saving || submitting.current) return;
     setAttempted(true);
     const nextErrors = validateTicket(values);
     setErrors(nextErrors);
     const firstError = Object.keys(nextErrors)[0];
     if (firstError) event.currentTarget.elements.namedItem(firstError)?.focus();
-    else onSave(values);
+    else {
+      submitting.current = true;
+      onSave(values, { onSettled: () => { submitting.current = false; } });
+    }
   }
   return <Modal isOpen onClose={onClose} loading={saving} title="Tạo phiếu hỗ trợ" className={styles.dialog}>
     <form className={styles.form} noValidate onSubmit={submit} aria-busy={saving}>
@@ -48,16 +51,17 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
         onBlur={() => setErrors(previous => ({ ...previous, title: validateTicket(values).title }))}
         error={errors.title} aria-describedby={`${errors.title ? 'ticket-title-error ' : ''}ticket-title-counter`} id="ticket-title" />
       <p className={`field-counter ${styles.counter}`} id="ticket-title-counter">{values.title.length}/150 ký tự</p>
-      <Textarea name="description" label="Mô tả" required rows={5}
+      <Textarea id="ticket-description" name="description" label="Mô tả" required rows={5} maxLength={TICKET_DESCRIPTION_MAX_LENGTH}
         placeholder="Mô tả vấn đề bạn gặp phải và các bước đã thực hiện…" value={values.description} disabled={saving}
         onChange={event => update('description', event.target.value)}
         onBlur={() => setErrors(previous => ({ ...previous, description: validateTicket(values).description }))}
-        error={errors.description} />
+        error={errors.description} aria-describedby={`${errors.description ? 'ticket-description-error ' : ''}ticket-description-counter`} />
+      <p className={`field-counter ${styles.counter}`} id="ticket-description-counter">{values.description.length}/{TICKET_DESCRIPTION_MAX_LENGTH} ký tự</p>
       <div className={styles.formGrid}>
         <Select name="category" label="Loại vấn đề" options={options(TICKET_CATEGORIES)} value={values.category}
-          disabled={saving} onChange={event => update('category', event.target.value)} />
+          disabled={saving} error={errors.category} onChange={event => update('category', event.target.value)} />
         <Select name="priority" label="Độ ưu tiên" options={options(TICKET_PRIORITIES)} value={values.priority}
-          disabled={saving} onChange={event => update('priority', event.target.value)} />
+          disabled={saving} error={errors.priority} onChange={event => update('priority', event.target.value)} />
       </div>
       {saveError && <p className={styles.saveError} role="alert">{saveError.message || 'Không gửi được phiếu hỗ trợ. Vui lòng thử lại.'}</p>}
       <div className={styles.dialogActions}>
@@ -65,6 +69,32 @@ function CreateTicketDialog({ onClose, onSave, saving, saveError }) {
         <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Đang lưu…' : 'Tạo phiếu hỗ trợ'}</button>
       </div>
     </form>
+  </Modal>;
+}
+
+function TicketDetailDialog({ ticket, onClose }) {
+  return <Modal isOpen onClose={onClose} title={ticket.title} className={styles.dialog}>
+    <div className={styles.detail}>
+      <div className={styles.meta}>
+        <span>#{ticket.id}</span><span>{TICKET_CATEGORIES[ticket.category]}</span>
+        <span className={styles.priority} data-priority={ticket.priority}>{TICKET_PRIORITIES[ticket.priority]}</span>
+        <span className={styles.status} data-state={ticket.status}>{TICKET_STATUSES[ticket.status]}</span>
+      </div>
+      <p className={styles.fullMessage}>{ticket.description}</p>
+      <time dateTime={ticket.createdAt}>Gửi lúc {dateTimeFormat.format(new Date(ticket.createdAt))}</time>
+      <section aria-labelledby="ticket-history-title">
+        <h3 id="ticket-history-title">Lịch sử xử lý</h3>
+        {ticket.history.length ? <ol className={styles.history}>
+          {ticket.history.map((reply, index) => <li key={`${reply.createdAt}-${index}`}>
+            <strong>{reply.author || 'Quản trị viên'}</strong>
+            {reply.message && <p className={styles.fullMessage}>{reply.message}</p>}
+            {reply.action && <p className="muted">{reply.action}</p>}
+            <time dateTime={reply.createdAt}>{dateTimeFormat.format(new Date(reply.createdAt))}</time>
+          </li>)}
+        </ol> : <p className="muted">Chưa có phản hồi. Đội ngũ hỗ trợ sẽ phản hồi sớm.</p>}
+      </section>
+      <div className={styles.dialogActions}><button type="button" className="btn btn-secondary" onClick={onClose}>Đóng</button></div>
+    </div>
   </Modal>;
 }
 
@@ -83,6 +113,8 @@ export default function SupportTickets() {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const detailTrigger = useRef(null);
   const searchInput = useRef(null);
   const createButton = useRef(null);
   const filterButton = useRef(null);
@@ -91,10 +123,13 @@ export default function SupportTickets() {
   const queryKey = ['support-tickets', user?.id];
   const ticketsQuery = useQuery({
     queryKey,
-    queryFn: async () => (await fetchAllPages('/api/v1/support-tickets')).map(fromApiTicket),
+    queryFn: listSupportTickets,
     enabled: user?.id != null,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: 'always',
   });
   const tickets = ticketsQuery.data || [];
+  const selectedTicket = tickets.find(ticket => ticket.rawId === selectedId);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -118,9 +153,17 @@ export default function SupportTickets() {
     setCreating(false);
     requestAnimationFrame(() => createButton.current?.focus());
   }
+  function closeDetail() {
+    setSelectedId(null);
+    requestAnimationFrame(() => {
+      if (detailTrigger.current?.isConnected) detailTrigger.current.focus();
+      else panel.current?.focus();
+    });
+  }
   const createTicket = useMutation({
-    mutationFn: values => apiFetch('/api/v1/support-tickets', { method: 'POST', body: JSON.stringify(toApiCreate(values)) }),
-    onSuccess: () => {
+    mutationFn: createSupportTicket,
+    onSuccess: ticket => {
+      queryClient.setQueryData(queryKey, previous => [ticket, ...(previous || []).filter(item => item.rawId !== ticket.rawId)]);
       void queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
       resetFilters(); setShowFilters(false); closeDialog();
@@ -163,7 +206,10 @@ export default function SupportTickets() {
         <div><p className={styles.eyebrow}>Tài khoản / Hỗ trợ học viên</p>
           <h1 id="support-page-title">Phiếu hỗ trợ</h1><p className="muted">Quản lý và theo dõi các yêu cầu hỗ trợ</p>
         </div>
-        <button ref={createButton} type="button" className="btn btn-primary" disabled={!ticketsQuery.data} onClick={() => { createTicket.reset(); setCreating(true); }}><Icon name="plus" />Tạo phiếu hỗ trợ</button>
+        <div className={styles.headingActions}>
+          <button type="button" className="btn btn-secondary" disabled={ticketsQuery.isFetching} onClick={() => ticketsQuery.refetch()}><Icon name="refresh" />{ticketsQuery.isFetching ? 'Đang tải…' : 'Làm mới'}</button>
+          <button ref={createButton} type="button" className="btn btn-primary" disabled={user?.id == null} onClick={() => { createTicket.reset(); setCreating(true); }}><Icon name="plus" />Tạo phiếu hỗ trợ</button>
+        </div>
       </header>
       <section className={styles.workspace} aria-label="Quản lý phiếu hỗ trợ">
         <div className={styles.toolbar}>
@@ -201,8 +247,8 @@ export default function SupportTickets() {
             : ticketsQuery.isPending ? <div className="skeleton" aria-hidden="true"><div className="sk sk-row" /></div>
               : matches.length > 0 ? <ul className={styles.list} aria-label="Danh sách phiếu hỗ trợ">
                 {matches.slice(start, start + TICKETS_PAGE_SIZE).map(ticket => <li key={ticket.id} className={styles.row}>
-                  <div><h2>{ticket.title}</h2><p className={styles.description} title={ticket.description}>{ticket.description}</p>
-                    {ticket.history.at(-1)?.message && <p className={styles.description} title={ticket.history.at(-1).message}><strong>Phản hồi:</strong> {ticket.history.at(-1).message}</p>}
+                  <div><h2><button type="button" className={styles.ticketTitle} aria-haspopup="dialog" onClick={event => { detailTrigger.current = event.currentTarget; setSelectedId(ticket.rawId); }}>{ticket.title}</button></h2><p className={styles.description} title={ticket.description}>{ticket.description}</p>
+                    {ticket.history.at(-1) && <p className={styles.description}><strong>Cập nhật:</strong> {ticket.history.at(-1).message || ticket.history.at(-1).action}</p>}
                     <div className={styles.meta}><span className={styles.ticketId}>#{ticket.id}</span><span className={styles.category}><Icon name="tag" />{TICKET_CATEGORIES[ticket.category]}</span><span className={styles.priority} data-priority={ticket.priority}>{TICKET_PRIORITIES[ticket.priority]}</span></div>
                   </div>
                   <div className={styles.side}><span className={styles.status} data-state={ticket.status}><Icon name={ticket.status === 'resolved' ? 'check' : 'clock'} />{TICKET_STATUSES[ticket.status]}</span><time dateTime={ticket.createdAt} title={dateTimeFormat.format(new Date(ticket.createdAt))}>{dateFormat.format(new Date(ticket.createdAt))}</time></div>
@@ -222,5 +268,6 @@ export default function SupportTickets() {
       <footer className={styles.footer}><Icon name="info" /><p>Bạn cần giúp đỡ? Tạo phiếu để đội ngũ hỗ trợ theo dõi và xử lý yêu cầu của bạn.</p></footer>
     </article>
     {creating && <CreateTicketDialog onClose={closeDialog} onSave={createTicket.mutate} saving={createTicket.isPending} saveError={createTicket.error} />}
+    {selectedTicket && <TicketDetailDialog ticket={selectedTicket} onClose={closeDetail} />}
   </div>;
 }

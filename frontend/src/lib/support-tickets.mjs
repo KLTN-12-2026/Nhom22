@@ -4,6 +4,7 @@ export const TICKET_CATEGORIES = { technical: 'Kỹ thuật', academic: 'Học v
 export const TICKET_PRIORITIES = { low: 'Thấp', medium: 'Trung bình', high: 'Cao', critical: 'Nghiêm trọng' };
 export const TICKET_STATUSES = { open: 'Đang mở', resolved: 'Đã giải quyết' };
 export const TICKETS_PAGE_SIZE = 6;
+export const TICKET_DESCRIPTION_MAX_LENGTH = 5000;
 
 const CATEGORY_FROM_API = { KY_THUAT: 'technical', HOC_VU: 'academic', THANH_TOAN: 'payment', KHAC: 'other' };
 const PRIORITY_FROM_API = { THAP: 'low', TRUNG_BINH: 'medium', CAO: 'high', NGHIEM_TRONG: 'critical' };
@@ -39,6 +40,9 @@ export function validateTicket(values) {
   if (!values.title.trim()) errors.title = 'Vui lòng nhập tiêu đề.';
   else if (values.title.length > 150) errors.title = 'Tiêu đề không được vượt quá 150 ký tự.';
   if (!values.description.trim()) errors.description = 'Vui lòng nhập mô tả.';
+  else if (values.description.length > TICKET_DESCRIPTION_MAX_LENGTH) errors.description = 'Mô tả tối đa 5000 ký tự.';
+  if (values.category !== undefined && !Object.hasOwn(TICKET_CATEGORIES, values.category)) errors.category = 'Vui lòng chọn loại vấn đề hợp lệ.';
+  if (values.priority !== undefined && !Object.hasOwn(TICKET_PRIORITIES, values.priority)) errors.priority = 'Vui lòng chọn độ ưu tiên hợp lệ.';
   return errors;
 }
 

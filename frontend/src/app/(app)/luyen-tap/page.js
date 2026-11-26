@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { fetchAllPages } from '@/lib/fetch-all-pages';
-import { PracticeHowTo, PracticeSample } from '@/components/practice/PracticeGuide';
+import { PracticeSample } from '@/components/practice/PracticeGuide';
 import { Icon } from '@/components/ui';
 import { useMucTip } from '@/components/mascot/useMucTip';
 import { SKILL, SKILL_PRACTICE } from '@/lib/practice-labels.mjs';
@@ -15,12 +15,13 @@ import {
 import styles from './page.module.css';
 
 const TYPES = [
+  { id: 'FLASHCARD', name: 'Luyện Flashcard (SRS)', desc: 'Lật thẻ ghi nhớ 2 mặt, tự đánh giá theo 4 mức ngắt quãng (SRS)', skill: 'Ghi nhớ cốt lõi' },
   { id: 'CHON_NGHIA', name: 'Chọn nghĩa', desc: 'Thấy từ tiếng Anh, chọn nghĩa đúng trong 4 phương án', skill: 'Nhận nghĩa' },
   { id: 'CHON_TU', name: 'Chọn từ', desc: 'Thấy nghĩa tiếng Việt, chọn từ đúng', skill: 'Nhận nghĩa' },
-  { id: 'GHEP_TU', name: 'Ghép từ', desc: 'Nối từ với nghĩa, chấm từng cặp', skill: 'Nhận nghĩa' },
-  { id: 'DIEN_CHO_TRONG', name: 'Điền chỗ trống', desc: 'Điền từ còn thiếu vào câu ví dụ', skill: 'Dùng từ trong câu' },
+  { id: 'GHEP_TU', name: 'Ghép từ', desc: 'Chạm nối từ tiếng Anh với nghĩa tương ứng (Ma trận thẻ)', skill: 'Nhận nghĩa' },
+  { id: 'DIEN_CHO_TRONG', name: 'Điền chỗ trống', desc: 'Điền từ còn thiếu vào câu ví dụ (A/B/C/D - 20s/câu)', skill: 'Dùng từ trong câu' },
   { id: 'NHAP_TU_THEO_NGHIA', name: 'Nhập từ theo nghĩa', desc: 'Gõ từ tiếng Anh theo nghĩa cho sẵn', skill: 'Viết đúng chính tả' },
-  { id: 'NGHE_VIET', name: 'Nghe viết', desc: 'Nghe phát âm rồi gõ lại từ', skill: 'Nghe và viết' },
+  { id: 'NGHE_VIET', name: 'Nghe viết', desc: 'Nghe phát âm chuẩn từ trình duyệt rồi gõ lại từ', skill: 'Nghe và viết' },
   { id: 'PHAN_BIET_CAP', name: 'Phân biệt cặp dễ nhầm', desc: 'Chọn đúng từ giữa hai từ bạn hay nhầm', skill: 'Phân biệt cặp dễ nhầm' },
   { id: 'TONG_HOP', name: 'Tổng hợp', desc: 'Trộn nhiều dạng, báo kết quả theo từng kỹ năng', skill: 'Nhiều kỹ năng' }
 ];
@@ -90,9 +91,35 @@ function PracticeForm() {
     }
   });
 
+  const flashcardMutation = useMutation({
+    mutationFn: (body) => apiFetch('/api/v1/learning/sessions', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: (res) => {
+      router.push(`/hoc-phien?id=${res.id}`);
+    },
+    onError: (err) => {
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+      setErrorMsg(err.message || 'Lỗi khi bắt đầu phiên học Flashcard');
+    }
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMsg('');
+    if (loaiBai === 'FLASHCARD') {
+      const boTheId = source.startsWith('deck:') ? source.slice(5) : null;
+      if (source === 'SO_TAY') {
+        setErrorMsg('Học Flashcard SRS áp dụng cho Tất cả bộ của tôi hoặc từng Bộ thẻ cụ thể. Để luyện từ trong Sổ tay, vui lòng chọn các dạng bài khác.');
+        return;
+      }
+      if (focusFull && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+      flashcardMutation.mutate({
+        boTheId: boTheId ? String(boTheId) : null,
+        chieuHoc: 'EN_VI',
+        quyThoiGian: Number(soCau),
+        hocTuDo: true
+      });
+      return;
+    }
     if (recentBlocked) {
       setErrorMsg('Chưa có từ nào khớp mức chấm đã chọn. Chọn thêm mức hoặc đổi nguồn.');
       return;
@@ -130,7 +157,6 @@ function PracticeForm() {
                 </label>
               ))}
             </div>
-            <PracticeHowTo type={loaiBai} name={current.name} skill={current.skill} />
             <p className="field-error"></p>
           </fieldset>
 
@@ -239,20 +265,24 @@ function PracticeForm() {
           </fieldset>
 
           <fieldset className="fieldset field" data-field="soCau">
-            <legend>Số câu</legend>
+            <legend>{loaiBai === 'FLASHCARD' ? 'Thời gian học' : 'Số câu'}</legend>
             <div className="choice-grid cols-3">
               {[5, 10, 20].map(m => (
                 <label key={m} className="choice choice-card">
                   <input type="radio" name="soCau" value={m} checked={soCau === m} onChange={() => setSoCau(m)} />
                   <span className="bubble" aria-hidden="true"></span>
                   <span className="choice-body">
-                    <span className="choice-title">{m} câu</span>
-                    <span className="choice-desc">khoảng {m === 5 ? 3 : m === 10 ? 6 : 12} phút</span>
+                    <span className="choice-title">{loaiBai === 'FLASHCARD' ? `${m} phút` : `${m} câu`}</span>
+                    <span className="choice-desc">{loaiBai === 'FLASHCARD' ? `Khoảng ${m * 3} thẻ` : `khoảng ${m === 5 ? 3 : m === 10 ? 6 : 12} phút`}</span>
                   </span>
                 </label>
               ))}
             </div>
-            <p className="field-hint">Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.</p>
+            <p className="field-hint">
+              {loaiBai === 'FLASHCARD'
+                ? 'Hệ thống tự động xếp thẻ theo thuật toán ngắt quãng SRS (thẻ quá hạn, đến hạn và từ mới).'
+                : 'Nếu nguồn có ít thẻ hơn, đề sẽ ngắn hơn. Với ghép từ, mỗi câu gồm tối đa 5 cặp.'}
+            </p>
             <p className="field-error"></p>
           </fieldset>
 
@@ -268,8 +298,15 @@ function PracticeForm() {
           <div data-form-error hidden={!errorMsg}>{errorMsg}</div>
 
           <div className={styles.formFoot}>
-            <button type="submit" className="btn btn-accent btn-lg" id="submit" disabled={sessionMutation.isPending || recentBlocked}>
-              {sessionMutation.isPending ? 'Đang tạo...' : 'Làm bài'}
+            <button
+              type="submit"
+              className="btn btn-accent btn-lg"
+              id="submit"
+              disabled={sessionMutation.isPending || flashcardMutation.isPending || (loaiBai !== 'FLASHCARD' && recentBlocked)}
+            >
+              {sessionMutation.isPending || flashcardMutation.isPending
+                ? 'Đang tạo...'
+                : (loaiBai === 'FLASHCARD' ? 'Bắt đầu học' : 'Làm bài')}
             </button>
             <Link className="btn btn-quiet" href="/luyen-tap-lich-su">Xem lịch sử bài làm</Link>
           </div>

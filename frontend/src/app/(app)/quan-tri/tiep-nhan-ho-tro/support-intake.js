@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Icon, Modal, Pagination, Select, Textarea, useToast } from '@/components/ui';
+import { AdminPageHead, Pill, Who } from '@/components/admin/AdminPageHead';
+import { AdminTable } from '@/components/admin/AdminTable';
+import { Drawer, Icon, Select, Textarea, useToast } from '@/components/ui';
 import { useMe } from '@/hooks/useMe';
-import { apiFetch } from '@/lib/api-client';
-import { fetchAllPages } from '@/lib/fetch-all-pages';
+import { listAdminSupportTickets, respondToSupportTicket } from '@/lib/support-api';
 import { TICKET_CATEGORIES, TICKET_PRIORITIES, TICKET_STATUSES, TICKETS_PAGE_SIZE } from '@/lib/support-tickets.mjs';
-import { filterAdminTickets, toAdminEntry, toApiRespond, validateSupportUpdate, SUPPORT_SORTS } from '@/lib/support-admin.mjs';
+import { filterAdminTickets, validateSupportUpdate, SUPPORT_SORTS } from '@/lib/support-admin.mjs';
 import styles from './page.module.css';
 
 const options = labels => Object.entries(labels).map(([value, label]) => ({ value, label }));
@@ -16,12 +17,15 @@ const tabs = [{ value: '', label: 'Tất cả', id: 'all' }, ...options(TICKET_S
 const date = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
 const dateTime = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', dateStyle: 'short', timeStyle: 'short' });
 const EMPTY_FILTERS = { category: '', priority: '', sort: 'newest' };
+const PRIORITY_TONES = { low: 'mute', medium: 'acc', high: 'warn', critical: 'bad' };
+const STATUS_TONES = { open: 'acc', resolved: 'ok' };
 
 function Badge({ priority, status }) {
-  return <span className={styles.badge} data-priority={priority} data-state={status}>{priority ? TICKET_PRIORITIES[priority] : TICKET_STATUSES[status]}</span>;
+  return priority ? <Pill tone={PRIORITY_TONES[priority]}>{TICKET_PRIORITIES[priority]}</Pill>
+    : <Pill tone={STATUS_TONES[status]}>{TICKET_STATUSES[status]}</Pill>;
 }
 
-function TicketDetail({ selected, actor, onClose, onSaved }) {
+function TicketDetail({ selected, onClose, onSaved }) {
   const { ticket, owner } = selected;
   const client = useQueryClient();
   const [values, setValues] = useState({ message: '', status: ticket.status, priority: ticket.priority });
@@ -29,7 +33,7 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
   const textarea = useRef(null);
   const busy = useRef(false);
   const mutation = useMutation({
-    mutationFn: next => apiFetch(`/api/v1/admin/support-tickets/${ticket.rawId}/respond`, { method: 'POST', body: JSON.stringify(toApiRespond(ticket, next)) }),
+    mutationFn: next => respondToSupportTicket(ticket, next),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['admin-support-tickets'] });
       void client.invalidateQueries({ queryKey: ['support-tickets'] });
@@ -48,33 +52,42 @@ function TicketDetail({ selected, actor, onClose, onSaved }) {
     mutation.mutate(values, { onSettled: () => { busy.current = false; } });
   }
   const history = Array.isArray(ticket.history) ? ticket.history.filter(item => item && typeof item === 'object') : [];
-  return <Modal isOpen title={ticket.title} onClose={onClose} loading={mutation.isPending} className={styles.dialog}>
-    <p className={styles.eyebrow}>Phiếu #{ticket.id}</p>
-    <div className={styles.detailMeta}><Badge status={ticket.status} /><Badge priority={ticket.priority} /><span>{TICKET_CATEGORIES[ticket.category]}</span></div>
-    <section className={styles.message} aria-label="Nội dung yêu cầu">
-      <div className={styles.sender}><strong>{owner.tenHienThi}</strong><small>{owner.email || 'Chưa có email'}</small></div>
-      <p>{ticket.description}</p><time dateTime={ticket.createdAt}>Gửi lúc {dateTime.format(new Date(ticket.createdAt))}</time>
-    </section>
-    <section className={styles.history} aria-labelledby="history-title"><h3 id="history-title">Lịch sử xử lý</h3>
+  return <Drawer isOpen title={ticket.title} onClose={onClose} loading={mutation.isPending} footer={
+    <div className={styles.drawerActions}>
+      <button className="adm-btn" type="button" onClick={onClose} disabled={mutation.isPending}>Đóng</button>
+      <button className="adm-btn adm-btn-primary" type="submit" form="reply-form" disabled={mutation.isPending || conflict}><Icon name="check" />{mutation.isPending ? 'Đang lưu…' : 'Lưu xử lý'}</button>
+    </div>
+  }>
+    <h3 className="adm-section-title">Thông tin phiếu</h3>
+    <dl className={`adm-kv ${styles.ticketDetails}`}>
+      <dt>Mã phiếu</dt><dd>#{ticket.id}</dd>
+      <dt>Học viên</dt><dd><Who name={owner.tenHienThi || 'Học viên'} sub={owner.email || 'Chưa có email'} /></dd>
+      <dt>Loại vấn đề</dt><dd>{TICKET_CATEGORIES[ticket.category]}</dd>
+      <dt>Trạng thái</dt><dd><Badge status={ticket.status} /></dd>
+      <dt>Độ ưu tiên</dt><dd><Badge priority={ticket.priority} /></dd>
+      <dt>Thời điểm gửi</dt><dd><time dateTime={ticket.createdAt}>{dateTime.format(new Date(ticket.createdAt))}</time></dd>
+    </dl>
+    <h3 className="adm-section-title">Nội dung yêu cầu</h3>
+    <p className={`adm-quote ${styles.message}`}>{ticket.description}</p>
+    <section className={styles.history} aria-labelledby="history-title"><h3 className="adm-section-title" id="history-title">Lịch sử xử lý</h3>
       <ol>{history.length ? history.map((item, index) => <li key={`${item.createdAt}-${index}`}>
         <strong>{typeof item.author === 'string' ? item.author : 'Quản trị viên'}</strong>
-        <p>{typeof item.message === 'string' ? item.message : ''}</p><p className="muted">{typeof item.action === 'string' ? item.action : ''}</p>
+        <p>{typeof item.message === 'string' ? item.message : ''}</p><p className="adm-muted">{typeof item.action === 'string' ? item.action : ''}</p>
         {Number.isFinite(Date.parse(item.createdAt)) && <time dateTime={item.createdAt}>{dateTime.format(new Date(item.createdAt))}</time>}
-      </li>) : <li className="muted">Chưa có phản hồi.</li>}</ol>
+      </li>) : <li className="adm-muted">Chưa có phản hồi.</li>}</ol>
     </section>
     <form id="reply-form" noValidate onSubmit={submit} aria-busy={mutation.isPending}>
-      <div className={styles.replyHeading}><h3>Phản hồi học viên</h3><span id="reply-counter">{values.message.length}/2000</span></div>
-      <Textarea ref={textarea} id="reply-content" label="Nội dung phản hồi" rows={4} maxLength={2000}
+      <div className={styles.replyHeading}><h3 className="adm-section-title">Phản hồi học viên</h3><span className="adm-muted" id="reply-counter">{values.message.length}/2000</span></div>
+      <Textarea className="adm-textarea" ref={textarea} id="reply-content" label="Nội dung phản hồi" rows={4} maxLength={2000}
         value={values.message} disabled={mutation.isPending} error={error} aria-describedby={`reply-counter${error ? ' reply-content-error' : ''}`}
         placeholder="Nhập hướng dẫn hoặc kết quả xử lý cho học viên…" onChange={event => setValues(previous => ({ ...previous, message: event.target.value }))} />
       <div className={styles.replyOptions}>
-        <Select id="detail-status" label="Trạng thái sau khi lưu" options={options(TICKET_STATUSES)} value={values.status} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, status: event.target.value }))} />
-        <Select id="detail-priority" label="Độ ưu tiên" options={options(TICKET_PRIORITIES)} value={values.priority} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, priority: event.target.value }))} />
+        <Select className="adm-select" id="detail-status" label="Trạng thái sau khi lưu" options={options(TICKET_STATUSES)} value={values.status} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, status: event.target.value }))} />
+        <Select className="adm-select" id="detail-priority" label="Độ ưu tiên" options={options(TICKET_PRIORITIES)} value={values.priority} disabled={mutation.isPending} onChange={event => setValues(previous => ({ ...previous, priority: event.target.value }))} />
       </div>
-      {mutation.isError && <p className={styles.saveError} role="alert">{mutation.error.message || 'Không lưu được thay đổi. Vui lòng thử lại.'}</p>}
-      <div className={styles.dialogActions}><button className="btn btn-quiet" type="button" onClick={onClose} disabled={mutation.isPending}>Đóng</button><button className="btn btn-primary" type="submit" disabled={mutation.isPending || conflict}><Icon name="check" />{mutation.isPending ? 'Đang lưu…' : 'Lưu xử lý'}</button></div>
+      {mutation.isError && <p className={`adm-notice adm-notice-bad ${styles.saveError}`} role="alert"><Icon name="alert" />{mutation.error.message || 'Không lưu được thay đổi. Vui lòng thử lại.'}</p>}
     </form>
-  </Modal>;
+  </Drawer>;
 }
 
 export default function SupportIntake() {
@@ -88,8 +101,10 @@ export default function SupportIntake() {
   const searchInput = useRef(null), categorySelect = useRef(null), filterButton = useRef(null), panel = useRef(null), trigger = useRef(null);
   const query = useQuery({
     queryKey: ['admin-support-tickets', user?.id],
-    queryFn: async () => (await fetchAllPages('/api/v1/admin/support-tickets')).map(toAdminEntry),
+    queryFn: listAdminSupportTickets,
     enabled: !!user?.vaiTro?.includes('ADMIN'),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: 'always',
   });
   const entries = query.data || [];
   useEffect(() => { const timer = setTimeout(() => setDebounced(search.trim()), 300); return () => clearTimeout(timer); }, [search]);
@@ -124,43 +139,109 @@ export default function SupportIntake() {
     { key: 'category', label: TICKET_CATEGORIES[filters.category] }, { key: 'priority', label: filters.priority && `Ưu tiên: ${TICKET_PRIORITIES[filters.priority]}` },
   ].filter(chip => chip.label);
   const summary = [
-    { label: 'Tổng số phiếu', count: entries.length, note: 'Tất cả yêu cầu của học viên', tone: 'all' },
-    { label: 'Đang mở', count: entries.filter(({ ticket }) => ticket.status === 'open').length, note: 'Cần theo dõi và phản hồi', tone: 'open' },
-    { label: 'Ưu tiên cao', count: entries.filter(({ ticket }) => ticket.status === 'open' && ['high', 'critical'].includes(ticket.priority)).length, note: 'Phiếu đang mở cần chú ý', tone: 'urgent' },
-    { label: 'Đã giải quyết', count: entries.filter(({ ticket }) => ticket.status === 'resolved').length, note: 'Yêu cầu đã được xử lý', tone: 'resolved' },
+    { label: 'Tổng số phiếu', count: entries.length, tone: 'all' },
+    { label: 'Đang mở', count: entries.filter(({ ticket }) => ticket.status === 'open').length, tone: 'open' },
+    { label: 'Ưu tiên cao', count: entries.filter(({ ticket }) => ticket.status === 'open' && ['high', 'critical'].includes(ticket.priority)).length, tone: 'urgent' },
+    { label: 'Đã giải quyết', count: entries.filter(({ ticket }) => ticket.status === 'resolved').length, tone: 'resolved' },
   ];
-  return <div className={`page ${styles.page}`}>
-    <article className="sheet" aria-labelledby="support-page-title">
-      <header className={styles.heading}><div><p className={styles.eyebrow}>Quản trị / Hỗ trợ học viên</p><h1 id="support-page-title">Tiếp nhận hỗ trợ</h1><p className="muted">Lắng nghe, phản hồi và giải quyết yêu cầu của học viên.</p></div>
-        <button className="btn btn-secondary" type="button" disabled={query.isFetching} onClick={async () => { const result = await query.refetch(); if (!result.isError) toast('Đã làm mới danh sách phiếu hỗ trợ.', { variant: 'success' }); }}><Icon name="refresh" />{query.isFetching ? 'Đang tải…' : 'Làm mới'}</button>
-      </header>
-      <section className={styles.summary} aria-label="Tổng quan phiếu hỗ trợ">{summary.map(item => <article key={item.tone}><span>{item.label}</span><strong data-count-tone={item.tone}>{query.isPending ? '—' : item.count}</strong><small>{item.note}</small></article>)}</section>
-      <div className={styles.toolbar}><div className={`input-with-icon ${styles.search}`}><Icon name="search" /><label className="sr-only" htmlFor="support-search">Tìm theo mã phiếu, nội dung, tên hoặc email học viên</label><input ref={searchInput} className="input" id="support-search" type="search" placeholder="Tìm mã phiếu, nội dung, email học viên…" autoComplete="off" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} /></div>
-        <button ref={filterButton} className="btn btn-secondary" type="button" aria-expanded={showFilters} aria-controls="support-filters" onClick={() => { setDraft(filters); setShowFilters(!showFilters); }}><Icon name="filter" />Bộ lọc{chips.length > 0 && <span className={styles.count}>{chips.length}</span>}</button>
-      </div>
-      {showFilters && <form className={styles.filters} id="support-filters" onSubmit={event => { event.preventDefault(); setFilters(draft); setPage(1); setShowFilters(false); filterButton.current?.focus(); }}>
-        <Select ref={categorySelect} id="filter-category" label="Loại vấn đề" placeholder="Tất cả loại vấn đề" options={options(TICKET_CATEGORIES)} value={draft.category} onChange={event => setDraft(previous => ({ ...previous, category: event.target.value }))} />
-        <Select id="filter-priority" label="Độ ưu tiên" placeholder="Tất cả độ ưu tiên" options={options(TICKET_PRIORITIES)} value={draft.priority} onChange={event => setDraft(previous => ({ ...previous, priority: event.target.value }))} />
-        <Select id="filter-sort" label="Sắp xếp" options={options(SUPPORT_SORTS)} value={draft.sort} onChange={event => setDraft(previous => ({ ...previous, sort: event.target.value }))} /><button className="btn btn-primary" type="submit">Áp dụng</button>
-      </form>}
-      <div className={`tabs ${styles.tabs}`} role="tablist" aria-label="Trạng thái phiếu hỗ trợ">{tabs.map((tab, index) => <button key={tab.id} className="tab" type="button" id={`support-tab-${tab.id}`} role="tab" aria-controls="support-panel" aria-selected={status === tab.value} tabIndex={status === tab.value ? 0 : -1} onClick={() => setStatus(tab.value)} onKeyDown={event => selectTab(event, index)}>{tab.label}<span className={styles.count}>{tab.value ? withoutStatus.filter(({ ticket }) => ticket.status === tab.value).length : withoutStatus.length}</span></button>)}</div>
-      {chips.length > 0 && <div className={styles.chips} aria-label="Bộ lọc đang áp dụng">{chips.map(chip => <button key={chip.key} className={styles.chip} type="button" aria-label={`Gỡ bộ lọc ${chip.label}`} onClick={() => removeFilter(chip.key)}><span>{chip.label}</span><Icon name="x" /></button>)}<button className="btn btn-quiet btn-sm" type="button" data-reset onClick={reset}>Đặt lại</button></div>}
-      <div className={styles.listHeading}><p role="status" aria-live="polite">{query.isPending ? 'Đang tải phiếu hỗ trợ…' : `${matches.length} phiếu hỗ trợ`}</p><span>{SUPPORT_SORTS[filters.sort]}</span></div>
-      <section ref={panel} id="support-panel" role="tabpanel" aria-labelledby={`support-tab-${status || 'all'}`} tabIndex={0} aria-busy={query.isPending}>
-        {query.isError ? <div className={styles.empty} role="alert"><Icon name="alert" /><h2>Không tải được phiếu hỗ trợ</h2><button className="btn btn-secondary" type="button" onClick={() => query.refetch()}>Thử lại</button></div>
-          : query.isPending ? <div className="skeleton" aria-hidden="true"><div className="sk sk-row" /></div>
-            : matches.length > 0 ? <div className={styles.tableWrap}><table className={styles.table}><caption className="sr-only">Danh sách yêu cầu hỗ trợ của học viên</caption><thead><tr><th scope="col">Phiếu hỗ trợ</th><th scope="col">Học viên</th><th scope="col">Độ ưu tiên</th><th scope="col">Trạng thái</th><th scope="col"><span className="sr-only">Thao tác</span></th></tr></thead><tbody>
-              {matches.slice(start, start + TICKETS_PAGE_SIZE).map(entry => <tr key={entry.key}>
-                <td><button className={styles.ticketTitle} type="button" data-ticket={entry.key} onClick={event => { trigger.current = event.currentTarget; setSelected(entry); }}>{entry.ticket.title}</button><div className={styles.ticketMeta}><span>#{entry.ticket.id}</span><span>{TICKET_CATEGORIES[entry.ticket.category]}</span><time dateTime={entry.ticket.createdAt}>{date.format(new Date(entry.ticket.createdAt))}</time></div></td>
-                <td><span className={styles.student}>{entry.owner.tenHienThi}</span><span className={styles.email}>{entry.owner.email || 'Chưa có email'}</span></td>
-                <td><Badge priority={entry.ticket.priority} /></td><td><Badge status={entry.ticket.status} /></td>
-                <td><button className="btn btn-quiet btn-icon" type="button" aria-label={`Xem phiếu ${entry.ticket.id} của ${entry.owner.tenHienThi}`} onClick={event => { trigger.current = event.currentTarget; setSelected(entry); }}><Icon name="eye" /></button></td>
-              </tr>)}
-            </tbody></table></div> : <div className={styles.empty}><Icon name="mail" /><h2>{chips.length ? 'Không tìm thấy phiếu hỗ trợ' : 'Chưa có phiếu hỗ trợ'}</h2><p>{chips.length ? 'Thử tìm từ khóa khác hoặc thay đổi bộ lọc.' : 'Các yêu cầu mới của học viên sẽ xuất hiện tại đây.'}</p>{chips.length > 0 && <button className="btn btn-secondary" type="button" data-reset onClick={reset}>Đặt lại bộ lọc</button>}</div>}
+
+  function openDetail(event, entry) {
+    trigger.current = event.currentTarget;
+    setSelected(entry);
+  }
+
+  async function refresh() {
+    const result = await query.refetch();
+    if (!result.isError) toast('Đã làm mới danh sách phiếu hỗ trợ.', { variant: 'success' });
+  }
+
+  const columns = [
+    {
+      key: 'ticket', header: 'Phiếu hỗ trợ', className: styles.ticketCell,
+      render: entry => (
+        <>
+          <button className={`adm-a ${styles.ticketTitle}`} type="button" onClick={event => openDetail(event, entry)}>{entry.ticket.title}</button>
+          <div className={`adm-muted ${styles.ticketMeta}`}>
+            <span>#{entry.ticket.id}</span><span>{TICKET_CATEGORIES[entry.ticket.category]}</span>
+            <time dateTime={entry.ticket.createdAt}>{date.format(new Date(entry.ticket.createdAt))}</time>
+          </div>
+        </>
+      ),
+    },
+    {
+      key: 'owner', header: 'Học viên',
+      render: ({ owner }) => <Who name={owner.tenHienThi || 'Học viên'} sub={owner.email || 'Chưa có email'} />,
+    },
+    { key: 'priority', header: 'Độ ưu tiên', render: ({ ticket }) => <Badge priority={ticket.priority} /> },
+    { key: 'status', header: 'Trạng thái', render: ({ ticket }) => <Badge status={ticket.status} /> },
+    {
+      key: 'actions', header: 'Thao tác', srHeader: true, align: 'right',
+      render: entry => <button className="adm-btn adm-btn-sm" type="button" aria-label={`Xem phiếu ${entry.ticket.id} của ${entry.owner.tenHienThi}`} onClick={event => openDetail(event, entry)}><Icon name="eye" />Xem</button>,
+    },
+  ];
+
+  return (
+    <div className={`adm-page ${styles.page}`}>
+      <AdminPageHead title="Tiếp nhận hỗ trợ" description="Lắng nghe, phản hồi và giải quyết yêu cầu của học viên." actions={
+        <button className="adm-btn" type="button" disabled={query.isFetching} onClick={refresh}><Icon name="refresh" />{query.isFetching ? 'Đang tải…' : 'Làm mới'}</button>
+      } />
+
+      <section className="adm-card" aria-label="Tổng quan phiếu hỗ trợ">
+        <div className={`adm-card-body ${styles.summaryBody}`}>
+          <dl className={styles.summary}>{summary.map(item => (
+            <div key={item.tone}><dt>{item.label}</dt><dd data-count-tone={item.tone}>{query.isPending ? '—' : item.count}</dd></div>
+          ))}</dl>
+        </div>
       </section>
-      {matches.length > 0 && <div className={styles.pagination}><p>Hiển thị {start + 1}–{Math.min(start + TICKETS_PAGE_SIZE, matches.length)} trên {matches.length} phiếu</p><Pagination page={currentPage} totalPages={totalPages} onPageChange={next => { setPage(next); panel.current?.focus(); }} /></div>}
-      <footer className={styles.footer}><Icon name="info" /><p>Phản hồi và trạng thái được lưu cho học viên xem trong trang Phiếu hỗ trợ của họ.</p></footer>
-    </article>
-    {selected && <TicketDetail key={selected.key} selected={selected} actor={user} onClose={closeDetail} onSaved={() => { closeDetail(); toast('Đã lưu xử lý phiếu hỗ trợ.', { variant: 'success' }); }} />}
-  </div>;
+
+      <section className="adm-card" aria-label="Danh sách phiếu hỗ trợ">
+        <div className={`adm-toolbar ${styles.toolbar}`}>
+          <div className={styles.searchRow}>
+            <label className="sr-only" htmlFor="support-search">Tìm theo mã phiếu, nội dung, tên hoặc email học viên</label>
+            <input ref={searchInput} className={`adm-input ${styles.search}`} id="support-search" type="search" placeholder="Tìm mã phiếu, nội dung, email học viên…" autoComplete="off" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} />
+            <button ref={filterButton} className="adm-btn" type="button" aria-expanded={showFilters} aria-controls="support-filters" onClick={() => { setDraft(filters); setShowFilters(!showFilters); }}><Icon name="filter" />Bộ lọc{chips.length > 0 && <span className={styles.count}>{chips.length}</span>}</button>
+          </div>
+          <form className={styles.filters} id="support-filters" hidden={!showFilters} onSubmit={event => { event.preventDefault(); setFilters(draft); setPage(1); setShowFilters(false); filterButton.current?.focus(); }}>
+            <Select className="adm-select" ref={categorySelect} id="filter-category" label="Loại vấn đề" placeholder="Tất cả loại vấn đề" options={options(TICKET_CATEGORIES)} value={draft.category} onChange={event => setDraft(previous => ({ ...previous, category: event.target.value }))} />
+            <Select className="adm-select" id="filter-priority" label="Độ ưu tiên" placeholder="Tất cả độ ưu tiên" options={options(TICKET_PRIORITIES)} value={draft.priority} onChange={event => setDraft(previous => ({ ...previous, priority: event.target.value }))} />
+            <Select className="adm-select" id="filter-sort" label="Sắp xếp" options={options(SUPPORT_SORTS)} value={draft.sort} onChange={event => setDraft(previous => ({ ...previous, sort: event.target.value }))} />
+            <button className="adm-btn adm-btn-primary" type="submit">Áp dụng</button>
+          </form>
+          <div className={styles.statusRow}>
+            <div className={`adm-seg ${styles.tabs}`} role="tablist" aria-label="Trạng thái phiếu hỗ trợ">{tabs.map((tab, index) => (
+              <button key={tab.id} type="button" id={`support-tab-${tab.id}`} role="tab" aria-controls="support-panel" aria-selected={status === tab.value} tabIndex={status === tab.value ? 0 : -1} onClick={() => setStatus(tab.value)} onKeyDown={event => selectTab(event, index)}>
+                {tab.label}<span className={styles.count}>{tab.value ? withoutStatus.filter(({ ticket }) => ticket.status === tab.value).length : withoutStatus.length}</span>
+              </button>
+            ))}</div>
+            <span className="adm-muted">{SUPPORT_SORTS[filters.sort]}</span>
+          </div>
+          {chips.length > 0 && <div className={styles.chips} aria-label="Bộ lọc đang áp dụng">{chips.map(chip => (
+            <button key={chip.key} className={`adm-btn adm-btn-sm ${styles.chip}`} type="button" aria-label={`Gỡ bộ lọc ${chip.label}`} onClick={() => removeFilter(chip.key)}><span>{chip.label}</span><Icon name="x" /></button>
+          ))}<button className="adm-btn adm-btn-sm" type="button" onClick={reset}>Đặt lại</button></div>}
+        </div>
+
+        <section ref={panel} id="support-panel" role="tabpanel" aria-labelledby={`support-tab-${status || 'all'}`} tabIndex={0} aria-busy={query.isPending}>
+          <AdminTable
+            caption="Danh sách yêu cầu hỗ trợ của học viên"
+            columns={columns}
+            rows={matches.slice(start, start + TICKETS_PAGE_SIZE)}
+            rowKey="key"
+            loading={query.isPending}
+            error={query.isError ? query.error : null}
+            onRetry={query.refetch}
+            emptyTitle={chips.length ? 'Không tìm thấy phiếu hỗ trợ' : 'Chưa có phiếu hỗ trợ'}
+            emptyText={chips.length ? 'Thử tìm từ khóa khác hoặc thay đổi bộ lọc.' : 'Các yêu cầu mới của học viên sẽ xuất hiện tại đây.'}
+            emptyAction={chips.length > 0 && <button className="adm-btn" type="button" onClick={reset}>Đặt lại bộ lọc</button>}
+            pagination={matches.length > 0 ? {
+              page: currentPage - 1, size: TICKETS_PAGE_SIZE, totalPages, totalElements: matches.length,
+              onPageChange: next => { setPage(next + 1); panel.current?.focus(); },
+            } : null}
+          />
+        </section>
+      </section>
+
+      <p className={`adm-muted ${styles.footer}`}><Icon name="info" />Phản hồi và trạng thái được lưu cho học viên xem trong trang Phiếu hỗ trợ của họ.</p>
+      {selected && <TicketDetail key={selected.key} selected={selected} onClose={closeDetail} onSaved={() => { closeDetail(); toast('Đã lưu xử lý phiếu hỗ trợ.', { variant: 'success' }); }} />}
+    </div>
+  );
 }
