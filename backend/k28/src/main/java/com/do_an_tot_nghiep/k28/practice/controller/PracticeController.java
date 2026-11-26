@@ -4,6 +4,8 @@ import com.do_an_tot_nghiep.k28.common.security.CurrentUser;
 import com.do_an_tot_nghiep.k28.common.web.PageResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.CreatePracticeRequest;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeAudioResponse;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeCheckRequest;
+import com.do_an_tot_nghiep.k28.practice.dto.PracticeCheckResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryQuery;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeHistoryResponse;
 import com.do_an_tot_nghiep.k28.practice.dto.PracticeResultResponse;
@@ -54,6 +56,15 @@ public class PracticeController {
     @GetMapping("/sessions/{id}/questions/{questionId}/audio")
     public PracticeAudioResponse audio(@PathVariable("id") Long id, @PathVariable("questionId") Long questionId) {
         return practiceService.audio(currentUser.id(), id, questionId);
+    }
+
+    @PostMapping("/sessions/{id}/questions/{questionId}/check")
+    public PracticeCheckResponse check(
+            @PathVariable("id") Long id,
+            @PathVariable("questionId") Long questionId,
+            @Valid @RequestBody PracticeCheckRequest request
+    ) {
+        return submissionService.check(currentUser.id(), id, questionId, request);
     }
 
     @PostMapping("/sessions/{id}/submissions")

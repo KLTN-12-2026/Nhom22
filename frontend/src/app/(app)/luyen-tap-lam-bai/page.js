@@ -51,16 +51,14 @@ const now = () => Date.now();
 const HINI_TIME_LIMIT = 20;
 const HINI_LABELS = ['A', 'B', 'C', 'D'];
 
-const FALLBACK_DISTRACTORS = [
-  { tu: 'achievement', nghiaVi: 'thành tựu' },
-  { tu: 'challenge', nghiaVi: 'thử thách' },
-  { tu: 'development', nghiaVi: 'sự phát triển' },
-  { tu: 'opportunity', nghiaVi: 'cơ hội' },
-  { tu: 'experience', nghiaVi: 'kinh nghiệm' },
-  { tu: 'knowledge', nghiaVi: 'kiến thức' },
-  { tu: 'solution', nghiaVi: 'giải pháp' },
-  { tu: 'progress', nghiaVi: 'sự tiến bộ' }
-];
+const sameWord = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+function checkAnswer(practiceId, questionId, body) {
+  return apiFetch(`/api/v1/practice/sessions/${practiceId}/questions/${questionId}/check`, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+}
 
 let audioCtx = null;
 function getAudioCtx() {
@@ -155,64 +153,33 @@ function HiniGameView({ session, id }) {
     startRef.current = now();
   }, []);
 
+  const revealed = useRef({});
+
   const questionOptionsMap = useMemo(() => {
-    if (!session?.cauHoi) return {};
     const map = {};
-    const allCards = session.cauHoi
-      .map(q => ({
-        tu: q.deBai?.tu || q.deBai?.tuGoc || '',
-        nghiaVi: q.deBai?.goiY || q.deBai?.dichVi || ''
-      }))
-      .filter(c => c.tu);
-
-    session.cauHoi.forEach(q => {
-      if (q.phuongAn && Array.isArray(q.phuongAn) && q.phuongAn.length > 0) {
-        map[q.id] = q.phuongAn;
-        return;
-      }
-
-      const targetWord = q.deBai?.tu || q.deBai?.tuGoc || '';
-      const targetMeaning = q.deBai?.goiY || q.deBai?.dichVi || '';
-
-      const pool = allCards.filter(c => c.tu.toLowerCase() !== targetWord.toLowerCase());
-      const uniquePool = [];
-      const seen = new Set();
-      pool.forEach(item => {
-        const key = item.tu.toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniquePool.push(item);
-        }
-      });
-
-      const shuffledPool = shuffle(uniquePool);
-      const chosenDistractors = shuffledPool.slice(0, 3);
-
-      if (chosenDistractors.length < 3) {
-        for (const fb of FALLBACK_DISTRACTORS) {
-          if (chosenDistractors.length >= 3) break;
-          const key = fb.tu.toLowerCase();
-          if (key !== targetWord.toLowerCase() && !seen.has(key)) {
-            chosenDistractors.push(fb);
-            seen.add(key);
-          }
-        }
-      }
-
-      const rawOpts = [
-        { id: `opt_corr_${q.id}`, noiDung: targetWord, nghiaVi: targetMeaning, isCorrect: true },
-        ...chosenDistractors.map((d, i) => ({
-          id: `opt_dist_${q.id}_${i}`,
-          noiDung: d.tu,
-          nghiaVi: d.nghiaVi,
-          isCorrect: false
-        }))
-      ];
-
-      map[q.id] = shuffle(rawOpts);
+    (session?.cauHoi || []).forEach(q => {
+      if (Array.isArray(q.phuongAn) && q.phuongAn.length > 0) map[q.id] = q.phuongAn;
+      else map[q.id] = (q.deBai?.phuongAnTu || []).map((word, i) => ({ id: `w${i + 1}`, noiDung: word }));
     });
     return map;
   }, [session]);
+
+  const gradeQuestion = async (q, opt) => {
+    const known = revealed.current[q.id];
+    if (known) {
+      const dung = opt ? (known.luaChonId ? opt.id === known.luaChonId : sameWord(opt.noiDung, known.noiDung)) : false;
+      return { dung, ...known };
+    }
+    const body = opt && q.phuongAn?.length ? { luaChonId: opt.id } : { noiDung: opt?.noiDung || '' };
+    const result = await checkAnswer(id, q.id, body);
+    const info = {
+      luaChonId: result.dapAn?.luaChonId || null,
+      noiDung: result.dapAn?.noiDung || '',
+      nghiaVi: result.giaiThich?.nghiaVi || result.giaiThich?.the?.nghiaVi || ''
+    };
+    revealed.current[q.id] = info;
+    return { dung: result.dung, ...info };
+  };
 
   const submitMutation = useMutation({
     mutationFn: (body) =>
@@ -267,73 +234,70 @@ function HiniGameView({ session, id }) {
     return () => clearInterval(interval);
   }, [isTimerActive, isFinished, currentIndex]);
 
-  const handleTimeout = () => {
+  const handleTimeout = async () => {
     if (!currentQ || answers[currentQ.id]) return;
     SFX.timeup();
-    const qId = currentQ.id;
-    setAnswers((prev) => ({ ...prev, [qId]: '__TIMEOUT__' }));
-
-    const targetWord = currentQ.deBai?.tu || currentQ.deBai?.tuGoc || '';
-    const targetMeaning = currentQ.deBai?.goiY || currentQ.deBai?.dichVi || '';
-
-    setWrongQuestions((prev) => {
-      if (prev.some((wq) => wq.id === currentQ.id)) return prev;
-      return [...prev, currentQ];
-    });
-
+    const q = currentQ;
+    setAnswers((prev) => ({ ...prev, [q.id]: '__TIMEOUT__' }));
+    setWrongQuestions((prev) => (prev.some((wq) => wq.id === q.id) ? prev : [...prev, q]));
+    let info = { noiDung: '', nghiaVi: '' };
+    try {
+      info = await gradeQuestion(q, null);
+    } catch (err) {
+      setSubmitError(err.message || 'Chưa lấy được đáp án. Thử lại.');
+    }
     setFeedback((prev) => ({
       ...prev,
-      [qId]: {
+      [q.id]: {
         isCorrect: false,
         isTimeout: true,
         selectedText: '(Hết thời gian)',
-        selectedMeaning: '',
-        correctText: targetWord,
-        correctMeaning: targetMeaning
+        correctText: info.noiDung,
+        correctMeaning: info.nghiaVi
       }
     }));
   };
 
-  const handleSelectOption = (questionId, opt) => {
+  const handleSelectOption = async (questionId, opt) => {
     if (answers[questionId] || !isTimerActive) return;
     setIsTimerActive(false);
     SFX.select();
     speak(opt.noiDung);
-
-    const isCorrect =
-      opt.isCorrect !== undefined
-        ? opt.isCorrect
-        : currentQ.dapAnDung
-        ? opt.id === currentQ.dapAnDung
-        : true;
-
-    const selectedText = opt.noiDung;
-    const targetWord = currentQ.deBai?.tu || currentQ.deBai?.tuGoc || currentQ.dapAnText || opt.noiDung;
-    const targetMeaning = currentQ.deBai?.goiY || currentQ.deBai?.dichVi || '';
-
+    const q = currentQ;
     setAnswers((prev) => ({ ...prev, [questionId]: opt.noiDung || opt.id }));
 
-    if (isCorrect) {
+    let graded;
+    try {
+      graded = await gradeQuestion(q, opt);
+    } catch (err) {
+      setAnswers((prev) => {
+        const next = { ...prev };
+        delete next[questionId];
+        return next;
+      });
+      setSubmitError(err.message || 'Chưa chấm được câu này. Thử lại.');
+      setIsTimerActive(true);
+      return;
+    }
+    setSubmitError('');
+
+    if (graded.dung) {
       setScore((prev) => prev + 10);
       setCorrectCount((prev) => prev + 1);
       SFX.correct();
     } else {
       SFX.wrong();
-      setWrongQuestions((prev) => {
-        if (prev.some((wq) => wq.id === currentQ.id)) return prev;
-        return [...prev, currentQ];
-      });
+      setWrongQuestions((prev) => (prev.some((wq) => wq.id === q.id) ? prev : [...prev, q]));
     }
 
     setFeedback((prev) => ({
       ...prev,
       [questionId]: {
-        isCorrect,
+        isCorrect: graded.dung,
         isTimeout: false,
-        selectedText,
-        selectedMeaning: opt.nghiaVi || '',
-        correctText: targetWord,
-        correctMeaning: targetMeaning
+        selectedText: opt.noiDung,
+        correctText: graded.noiDung,
+        correctMeaning: graded.nghiaVi
       }
     }));
   };
@@ -343,7 +307,8 @@ function HiniGameView({ session, id }) {
     const traLoi = originalQuestions.map((q) => {
       const ansVal = answers[q.id];
       const noiDung = ansVal === '__TIMEOUT__' ? '' : typeof ansVal === 'string' ? ansVal : '';
-      return { cauHoiId: q.id, noiDung };
+      const chosen = q.phuongAn?.length ? q.phuongAn.find(opt => opt.noiDung === noiDung) : null;
+      return chosen ? { cauHoiId: q.id, luaChonId: chosen.id } : { cauHoiId: q.id, noiDung };
     });
 
     if (!submitKey.current) submitKey.current = submitKeyFor(id);
@@ -530,7 +495,7 @@ function HiniGameView({ session, id }) {
             {currentQ?.deBai?.cau ? (
               renderSentenceWithBlank(currentQ.deBai.cau)
             ) : (
-              currentQ?.deBai?.tu || currentQ?.deBai?.nghiaVi || 'Câu hỏi'
+              currentQ?.deBai?.nghiaVi || 'Câu hỏi'
             )}
           </div>
         </div>
@@ -553,7 +518,7 @@ function HiniGameView({ session, id }) {
               const letter = HINI_LABELS[i] || String.fromCharCode(65 + i);
               const isSelected = currentAnswer === opt.noiDung || currentAnswer === opt.id;
               const hasAnswered = !!currentFb;
-              const isOptionCorrect = opt.isCorrect !== undefined ? opt.isCorrect : opt.id === currentQ.dapAnDung;
+              const isOptionCorrect = !!currentFb && sameWord(opt.noiDung, currentFb.correctText);
 
               let cardClass = styles.hiniOptionCard;
               if (hasAnswered) {
@@ -575,14 +540,6 @@ function HiniGameView({ session, id }) {
                   <span className={styles.hiniOptionBadge}>{letter}</span>
                   <span className={styles.hiniOptionContent}>
                     <span className={styles.hiniOptionMain}>{opt.noiDung}</span>
-                    {opt.nghiaVi && (
-                      <span
-                        className={styles.hiniOptionSub}
-                        style={{ display: hasAnswered ? 'block' : 'none' }}
-                      >
-                        {opt.nghiaVi}
-                      </span>
-                    )}
                   </span>
                 </button>
               );
@@ -604,9 +561,6 @@ function HiniGameView({ session, id }) {
                     </>
                   )}
                 </div>
-                {currentFb.selectedMeaning && (
-                  <div className={styles.hiniAnalysisDesc}>Nghĩa: "{currentFb.selectedMeaning}"</div>
-                )}
               </div>
             )}
 
@@ -616,7 +570,7 @@ function HiniGameView({ session, id }) {
                 ĐÁP ÁN ĐÚNG: <strong>{currentFb.correctText}</strong>
               </div>
               {currentFb.correctMeaning && (
-                <div className={styles.hiniAnalysisDesc}>Nghĩa: "{currentFb.correctMeaning}"</div>
+                <div className={styles.hiniAnalysisDesc}>Nghĩa: &ldquo;{currentFb.correctMeaning}&rdquo;</div>
               )}
             </div>
           </div>
@@ -751,7 +705,6 @@ function MatchingGameView({ session, id }) {
         id: t.id,
         text: t.noiDung,
         type: 'en',
-        maCap: t.maCap || t.id,
         speakText: t.noiDung
       });
     });
@@ -761,7 +714,6 @@ function MatchingGameView({ session, id }) {
         id: n.id,
         text: n.noiDung,
         type: 'vi',
-        maCap: n.maCap || n.id,
         speakText: ''
       });
     });
@@ -827,7 +779,7 @@ function MatchingGameView({ session, id }) {
     }, 800);
   };
 
-  const handleCardClick = (card, e) => {
+  const handleCardClick = async (card, e) => {
     if (isPaused || timeLeft <= 0 || isFinished) return;
     if (matchedUids.has(card.uid) || correctUids.has(card.uid)) return;
 
@@ -844,7 +796,21 @@ function MatchingGameView({ session, id }) {
 
     if (newSelected.length === 2) {
       const [cardA, cardB] = newSelected;
-      const isMatch = cardA.maCap === cardB.maCap && cardA.type !== cardB.type;
+      const rect = e?.currentTarget?.getBoundingClientRect?.();
+      const at = rect ? { currentTarget: { getBoundingClientRect: () => rect } } : null;
+      let isMatch = false;
+      if (cardA.type !== cardB.type) {
+        const en = cardA.type === 'en' ? cardA : cardB;
+        const vi = cardA.type === 'vi' ? cardA : cardB;
+        try {
+          const result = await checkAnswer(id, currentQ.id, { cap: [{ traiId: en.id, phaiId: vi.id }] });
+          isMatch = !!result.dung;
+        } catch (err) {
+          showToast(err.message || 'Chưa chấm được cặp này. Thử lại.');
+          setSelectedCards([]);
+          return;
+        }
+      }
 
       if (isMatch) {
         setCorrectUids((prev) => new Set([...prev, cardA.uid, cardB.uid]));
@@ -857,7 +823,7 @@ function MatchingGameView({ session, id }) {
         setScore((prev) => prev + 25);
         setPairsMatched((prev) => prev + 1);
         setTimeLeft((prev) => Math.min(ROUND_TIME, prev + 3));
-        triggerFloatingScore(e, '+25');
+        triggerFloatingScore(at, '+25');
 
         const pairObj = { traiId: enCard.id, phaiId: viCard.id };
         const updatedAnswers = {
@@ -1106,7 +1072,7 @@ function BlankSentence({ sentence, mark = '' }) {
   return <>{before}<span className={styles.blank}>{mark}</span>{after}</>;
 }
 
-function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai, word }) {
+function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai }) {
   const [error, setError] = useState('');
   const [loadingAudio, setLoadingAudio] = useState(false);
   const cached = useRef(null);
@@ -1121,12 +1087,9 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai, word }) {
     setError('');
     setLoadingAudio(true);
     try {
-      if (word) await speakText(word, rate);
-      else {
-        const file = await audioFile();
-        if (file.moPhong && file.vanBanDoc) await speakText(file.vanBanDoc, rate);
-        else await playAudio(file.downloadUrl, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
-      }
+      const file = await audioFile();
+      if (file.moPhong && file.vanBanDoc) await speakText(file.vanBanDoc, rate);
+      else await playAudio(file.downloadUrl, rate).catch(() => { throw new Error('Trình duyệt chưa phát được âm thanh. Thử lại hoặc kiểm tra loa.'); });
     } catch (err) {
       cached.current = null;
       setError(err.message || 'Không tải được âm thanh. Thử lại.');
@@ -1135,8 +1098,7 @@ function ListenPrompt({ practiceId, questionId, hasAudio, tuLoai, word }) {
     }
   };
 
-  const isAvailable = hasAudio || !!word;
-  if (!isAvailable) return <p className="notice notice-warning">Câu này chưa có âm thanh.</p>;
+  if (!hasAudio) return <p className="notice notice-warning">Câu này chưa có âm thanh.</p>;
 
   return (
     <div className={styles.listen}>
@@ -1398,14 +1360,13 @@ function PracticeSessionContent() {
         <ListenPrompt
           practiceId={id}
           questionId={q.id}
-          hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts || q.deBai?.tu)}
+          hasAudio={!!(q.deBai?.amTuId || q.deBai?.amThanhTts)}
           tuLoai={q.deBai?.tuLoai}
-          word={q.deBai?.tu}
         />
       ) : q.deBai?.cau ? (
         <div className={styles.sentence} lang="en"><BlankSentence sentence={q.deBai.cau} /></div>
       ) : (
-        <div className={styles.prompt}>{q.deBai?.nghiaVi || q.deBai?.tu}</div>
+        <div className={styles.prompt}>{q.deBai?.nghiaVi}</div>
       )}
       {!listening && (
         <p className={styles.hint}>

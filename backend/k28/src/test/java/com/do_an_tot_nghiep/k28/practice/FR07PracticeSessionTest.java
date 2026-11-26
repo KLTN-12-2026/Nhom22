@@ -306,6 +306,94 @@ class FR07PracticeSessionTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void fr07_checkGradesOneQuestionLocksFirstAnswerAndHidesMatchKeys() throws Exception {
+        Learner learner = learner();
+        cards(learner, 6);
+
+        JsonNode blank = body(create(learner, Map.of("loaiBai", "DIEN_CHO_TRONG", "soCau", 5))
+                .andExpect(status().isCreated()));
+        String practiceId = blank.get("id").asText();
+        JsonNode first = blank.get("cauHoi").get(0);
+        JsonNode second = blank.get("cauHoi").get(1);
+        assertThat(first.get("deBai").has("tu")).isFalse();
+        assertThat(first.get("deBai").has("tuGoc")).isFalse();
+        assertThat(first.get("deBai").get("phuongAnTu").size()).isEqualTo(4);
+        String firstAnswer = acceptedOf(first.get("id").asText());
+        String secondAnswer = acceptedOf(second.get("id").asText());
+        List<String> options = new ArrayList<>();
+        first.get("deBai").get("phuongAnTu").forEach(option -> options.add(option.asText()));
+        assertThat(options).contains(firstAnswer);
+
+        JsonNode wrong = body(check(learner, practiceId, first.get("id").asText(), Map.of("noiDung", "zzz"))
+                .andExpect(status().isOk()));
+        assertThat(wrong.get("dung").asBoolean()).isFalse();
+        assertThat(wrong.get("nhomLoi").asText()).isEqualTo("NGU_CANH");
+        assertThat(wrong.get("dapAn").get("noiDung").asText()).isEqualTo(firstAnswer);
+        assertThat(wrong.get("giaiThich").get("tu").isString()).isTrue();
+
+        JsonNode retried = body(check(learner, practiceId, first.get("id").asText(), Map.of("noiDung", firstAnswer))
+                .andExpect(status().isOk()));
+        assertThat(retried.get("dung").asBoolean()).isFalse();
+        assertThat(retried.get("traLoi").get("noiDung").asText()).isEqualTo("zzz");
+
+        JsonNode right = body(check(learner, practiceId, second.get("id").asText(), Map.of("noiDung", secondAnswer))
+                .andExpect(status().isOk()));
+        assertThat(right.get("dung").asBoolean()).isTrue();
+
+        List<Map<String, Object>> traLoi = new ArrayList<>();
+        for (JsonNode question : blank.get("cauHoi")) {
+            traLoi.add(Map.of("cauHoiId", question.get("id").asText(), "noiDung", acceptedOf(question.get("id").asText())));
+        }
+        JsonNode result = body(send(learner.session(), "/api/v1/practice/sessions/" + practiceId + "/submissions",
+                Map.of("submitKey", "check-" + UUID.randomUUID(), "thoiGian", 1000, "traLoi", traLoi))
+                .andExpect(status().isCreated()));
+        assertThat(result.get("soCauDung").asInt()).isEqualTo(blank.get("cauHoi").size() - 1);
+
+        JsonNode matching = body(create(learner, Map.of("loaiBai", "GHEP_TU", "soCau", 5))
+                .andExpect(status().isCreated()));
+        JsonNode match = matching.get("cauHoi").get(0);
+        assertThat(match.get("deBai").toString()).doesNotContain("maCap");
+        String matchPath = match.get("id").asText();
+        String traiId = jdbc.queryForObject(
+                "SELECT JSON_UNQUOTE(JSON_EXTRACT(dap_an_json, '$.cap[0].traiId')) FROM cau_hoi_bai_luyen WHERE id = ?",
+                String.class, Long.valueOf(matchPath));
+        String phaiId = jdbc.queryForObject(
+                "SELECT JSON_UNQUOTE(JSON_EXTRACT(dap_an_json, '$.cap[0].phaiId')) FROM cau_hoi_bai_luyen WHERE id = ?",
+                String.class, Long.valueOf(matchPath));
+        String otherPhai = jdbc.queryForObject(
+                "SELECT JSON_UNQUOTE(JSON_EXTRACT(dap_an_json, '$.cap[1].phaiId')) FROM cau_hoi_bai_luyen WHERE id = ?",
+                String.class, Long.valueOf(matchPath));
+        String matchId = matching.get("id").asText();
+
+        JsonNode pair = body(check(learner, matchId, matchPath,
+                Map.of("cap", List.of(Map.of("traiId", traiId, "phaiId", phaiId)))).andExpect(status().isOk()));
+        assertThat(pair.get("dung").asBoolean()).isTrue();
+        assertThat(pair.get("cap").get(0).get("dung").asBoolean()).isTrue();
+        assertThat(pair.get("dapAn").isNull()).isTrue();
+        JsonNode miss = body(check(learner, matchId, matchPath,
+                Map.of("cap", List.of(Map.of("traiId", traiId, "phaiId", otherPhai)))).andExpect(status().isOk()));
+        assertThat(miss.get("dung").asBoolean()).isFalse();
+        assertThat(miss.toString()).doesNotContain(phaiId);
+
+        check(learner(), practiceId, second.get("id").asText(), Map.of("noiDung", secondAnswer))
+                .andExpect(status().isNotFound());
+        check(learner, matchId, matchPath, Map.of("cap", List.of(Map.of("traiId", "t9", "phaiId", phaiId))))
+                .andExpect(status().isBadRequest());
+    }
+
+    private ResultActions check(Learner learner, String practiceId, String questionId, Map<String, Object> body)
+            throws Exception {
+        return send(learner.session(),
+                "/api/v1/practice/sessions/" + practiceId + "/questions/" + questionId + "/check", body);
+    }
+
+    private String acceptedOf(String questionId) {
+        return jdbc.queryForObject(
+                "SELECT JSON_UNQUOTE(JSON_EXTRACT(dap_an_json, '$.chapNhan[0]')) FROM cau_hoi_bai_luyen WHERE id = ?",
+                String.class, Long.valueOf(questionId));
+    }
+
     private void expectField(Learner learner, Map<String, Object> body, String field) throws Exception {
         create(learner, body)
                 .andExpect(status().isBadRequest())

@@ -169,7 +169,7 @@ final class PracticeGenerator {
     private Draft single(LoaiCau type, StudyCardResponse card, List<StudyCardResponse> distract) {
         return switch (type) {
             case CHON_NGHIA, CHON_TU -> choiceQuestion(type, card, distract);
-            case DIEN_CHO_TRONG -> blankQuestion(card);
+            case DIEN_CHO_TRONG -> blankQuestion(card, distract);
             case NHAP_TU_THEO_NGHIA -> new Draft(
                     type,
                     Long.valueOf(card.id()),
@@ -181,8 +181,8 @@ final class PracticeGenerator {
                     type,
                     Long.valueOf(card.id()),
                     card.amTuId() == null
-                            ? map("amThanhTts", true, "tu", card.tu(), "tuLoai", card.tuLoai())
-                            : map("amTuId", card.amTuId(), "tu", card.tu(), "tuLoai", card.tuLoai()),
+                            ? map("amThanhTts", true, "tuLoai", card.tuLoai())
+                            : map("amTuId", card.amTuId(), "tuLoai", card.tuLoai()),
                     null,
                     typedAnswer(card.tu()),
                     explain(card));
@@ -221,15 +221,18 @@ final class PracticeGenerator {
                 explain(card));
     }
 
-    private Draft blankQuestion(StudyCardResponse card) {
+    private Draft blankQuestion(StudyCardResponse card, List<StudyCardResponse> distract) {
         Blank blank = blankOf(card);
         if (blank == null) {
             return null;
         }
+        List<String> luaChon = shuffled(distinctCards(shuffled(distract), List.of(card), SO_PHUONG_AN)).stream()
+                .map(option -> option.id().equals(card.id()) ? blank.dapAn() : option.tu())
+                .toList();
         return new Draft(
                 LoaiCau.DIEN_CHO_TRONG,
                 Long.valueOf(card.id()),
-                map("cau", blank.cau(), "tu", blank.dapAn(), "tuGoc", card.tu(), "dichVi", card.dichVi(), "goiY", card.nghiaVi(), "tuLoai", card.tuLoai()),
+                map("cau", blank.cau(), "goiY", card.nghiaVi(), "dichVi", card.dichVi(), "tuLoai", card.tuLoai(), "phuongAnTu", luaChon),
                 null,
                 typedAnswer(blank.dapAn()),
                 explain(card));
@@ -273,8 +276,8 @@ final class PracticeGenerator {
         List<Map<String, Object>> cotPhai = new ArrayList<>();
         List<Map<String, Object>> cap = new ArrayList<>();
         for (int i = 0; i < left.size(); i++) {
-            cotTrai.add(map("id", "t" + (i + 1), "noiDung", left.get(i).tu(), "maCap", "m" + group.indexOf(left.get(i))));
-            cotPhai.add(map("id", "n" + (i + 1), "noiDung", right.get(i).nghiaVi(), "maCap", "m" + group.indexOf(right.get(i))));
+            cotTrai.add(map("id", "t" + (i + 1), "noiDung", left.get(i).tu()));
+            cotPhai.add(map("id", "n" + (i + 1), "noiDung", right.get(i).nghiaVi()));
         }
         for (int i = 0; i < left.size(); i++) {
             StudyCardResponse card = left.get(i);

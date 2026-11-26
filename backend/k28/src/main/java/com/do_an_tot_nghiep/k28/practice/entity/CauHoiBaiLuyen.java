@@ -49,6 +49,9 @@ public class CauHoiBaiLuyen extends BaseEntity {
     @Column(nullable = false, columnDefinition = "json")
     private String giaiThichJson;
 
+    @Column(columnDefinition = "json")
+    private String traLoiKiemTraJson;
+
     public static CauHoiBaiLuyen create(
             Long baiId,
             int thuTu,
@@ -69,5 +72,9 @@ public class CauHoiBaiLuyen extends BaseEntity {
         question.dapAnJson = dapAnJson;
         question.giaiThichJson = giaiThichJson;
         return question;
+    }
+
+    public void lockCheck(String traLoiJson) {
+        this.traLoiKiemTraJson = traLoiJson;
     }
 }
